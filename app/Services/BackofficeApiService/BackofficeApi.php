@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\BackofficeApiService;
 
 use App\Models\Fund;
@@ -18,8 +17,6 @@ use Throwable;
 
 class BackofficeApi
 {
-    protected Fund $fund;
-
     public const string ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
     public const string ACTION_RESIDENCY_CHECK = 'residency_check';
 
@@ -36,6 +33,8 @@ class BackofficeApi
     public const int TOTAL_ATTEMPTS = 5;
     public const int ATTEMPTS_INTERVAL = 8;
 
+    protected Fund $fund;
+
     /**
      * @param Fund $fund
      */
@@ -45,7 +44,7 @@ class BackofficeApi
     }
 
     /**
-     * Check BSN-number for eligibility
+     * Check BSN-number for eligibility.
      *
      * @param string $bsn
      * @param string|null $requestId
@@ -75,7 +74,7 @@ class BackofficeApi
     }
 
     /**
-     * Report to the API that a voucher was received by identity
+     * Report to the API that a voucher was received by identity.
      *
      * @param string $bsn
      * @param string|null $requestId
@@ -87,7 +86,7 @@ class BackofficeApi
     }
 
     /**
-     * Report to the API that a voucher was used for the first time
+     * Report to the API that a voucher was used for the first time.
      *
      * @param string $bsn
      * @param string|null $requestId
@@ -99,7 +98,7 @@ class BackofficeApi
     }
 
     /**
-     * Check API status
+     * Check API status.
      *
      * @return FundBackofficeLog
      */
@@ -131,129 +130,7 @@ class BackofficeApi
     }
 
     /**
-     * Make the request to the API to check BSN-number residency
-     *
-     * @param string $bsn
-     * @param string|null $requestId
-     * @return FundBackofficeLog
-     */
-    protected function checkResidency(string $bsn, ?string $requestId): FundBackofficeLog
-    {
-        return $this->makeCheckRequest(self::ACTION_RESIDENCY_CHECK, $bsn, $requestId);
-    }
-
-    /**
-     * Make the request to the API to check BSN-number eligibility
-     *
-     * @param string $bsn
-     * @param string|null $requestId
-     * @return FundBackofficeLog
-     */
-    protected function checkEligibility(string $bsn, ?string $requestId): FundBackofficeLog
-    {
-        return $this->makeCheckRequest(self::ACTION_ELIGIBILITY_CHECK, $bsn, $requestId);
-    }
-
-    /**
-     * Make the request to the API to check BSN-number residency
-     *
-     * @param string $bsn
-     * @param string|null $requestId
-     * @return FundBackofficeLog
-     */
-    protected function getPartnerBsn(string $bsn, ?string $requestId): FundBackofficeLog
-    {
-        return $this->makeCheckRequest(self::ACTION_PARTNER_BSN, $bsn, $requestId);
-    }
-
-    /**
-     * @param string $action
-     * @param string $bsn
-     * @param string|null $requestId
-     * @return FundBackofficeLog
-     */
-    protected function makeCheckRequest(
-        string $action,
-        string $bsn,
-        ?string $requestId
-    ): FundBackofficeLog {
-        $log = $this->makeLog($action, $bsn);
-        $endpoint = $this->getEndpoint($action);
-        $body = $this->makeRequestBody($action);
-        $response = $this->request('POST', $endpoint, array_merge($body, [
-            'id' => $requestId,
-            'bsn' => $bsn,
-        ]));
-
-        if ($response['success'] ?? false) {
-            return $log->updateModel(array_merge(Arr::only($response, [
-                'response_code', 'response_body',
-            ]), [
-                'state' => self::STATE_SUCCESS,
-                'response_id' => ($response['response_body']['id'] ?? null) ?: $log->request_id,
-            ]));
-        }
-
-        self::logError(sprintf(
-            "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
-            Arr::get($response, 'response_code', ''),
-            Arr::get($response, 'response_error', ''),
-            Arr::get($response, 'response_body', ''),
-        ));
-
-        return $log->updateModel(array_merge(Arr::only($response, [
-            'response_code', 'response_error',
-        ]), [
-            'state' => self::STATE_ERROR,
-        ]));
-    }
-
-    /**
-     * @return string
-     */
-    protected static function makeRequestId(): string
-    {
-        do {
-            $value = token_generator()->generate(16);
-        } while(FundBackofficeLog::where('response_id', $value)->exists());
-
-        return "forus-" . $value;
-    }
-
-    /**
-     * Add backoffice log
-     *
-     * @param string $action
-     * @param string|null $bsn
-     * @param string|null $requestId
-     * @return FundBackofficeLog|null
-     */
-    protected function makeLog(
-        string $action,
-        ?string $bsn = null,
-        ?string $requestId = null
-    ): ?FundBackofficeLog {
-        if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
-            $requestId = $requestId ?: self::makeRequestId();
-        }
-
-        /** @var FundBackofficeLog $fundLog */
-        $fundLog = $this->fund->backoffice_logs()->create([
-            'identity_address'  => Identity::findByBsn($bsn)?->address,
-            'bsn'               => $bsn,
-            'action'            => $action,
-            'request_id'        => $requestId,
-            'response'          => null,
-            'state'             => self::STATE_PENDING,
-            'attempts'          => 0,
-            'last_attempt_at'   => null,
-        ]);
-
-        return $fundLog ?? null;
-    }
-
-    /**
-     * Make the request to the API
+     * Make the request to the API.
      *
      * @param string $method
      * @param string $url
@@ -276,10 +153,10 @@ class BackofficeApi
 
             return [
                 'success' => true,
-                'response_code'  => $response->getStatusCode(),
+                'response_code' => $response->getStatusCode(),
                 'response_body' => json_decode($response->getBody()->getContents(), true),
             ];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $responseBody = $e instanceof RequestException && $e->hasResponse()
                 ? $e->getResponse()->getBody()->getContents()
                 : null;
@@ -298,7 +175,7 @@ class BackofficeApi
     }
 
     /**
-     * Get API endpoints by action
+     * Get API endpoints by action.
      *
      * @param string $action
      * @return string
@@ -318,7 +195,7 @@ class BackofficeApi
     }
 
     /**
-     * Make request headers
+     * Make request headers.
      *
      * @return string[]
      */
@@ -332,44 +209,7 @@ class BackofficeApi
     }
 
     /**
-     * Make request body
-     *
-     * @param string $action
-     * @return array
-     */
-    protected function makeRequestBody(string $action): array
-    {
-        if ($action === self::ACTION_STATUS) {
-            return [];
-        }
-
-        return [
-            "action" => $action,
-            "fund_key" => $this->fund->fund_config->key,
-        ];
-    }
-
-    /**
-     * Make Guzzle request options
-     *
-     * @param string $method
-     * @param array $data
-     * @param array $options
-     * @return array
-     */
-    protected function makeOptions(string $method, array $data, array $options = []): array
-    {
-        $dataKey = $method === 'GET' ? 'query' : 'json';
-
-        return array_merge([
-            'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => 10,
-            $dataKey => $data,
-        ], $options);
-    }
-
-    /**
-     * Get list of logs to be sent to the API
+     * Get list of logs to be sent to the API.
      *
      * @param array $fundsId
      * @return FundBackofficeLog|Builder
@@ -379,11 +219,11 @@ class BackofficeApi
         return FundBackofficeLog::where([])
             ->whereIn('fund_id', $fundsId)
             ->orderBy('created_at', 'ASC')
-            ->where(function(Builder $builder) {
+            ->where(function (Builder $builder) {
                 $builder->where('action', self::ACTION_REPORT_RECEIVED);
-                $builder->orWhere(function(Builder $builder) {
+                $builder->orWhere(function (Builder $builder) {
                     $builder->where('action', self::ACTION_REPORT_FIRST_USE);
-                    $builder->whereHas('voucher.backoffice_log_received', function(Builder $builder) {
+                    $builder->whereHas('voucher.backoffice_log_received', function (Builder $builder) {
                         $builder->where('state', self::STATE_SUCCESS);
                         $builder->whereNotNull('response_id');
                     });
@@ -391,31 +231,20 @@ class BackofficeApi
             })
             ->where('state', '!=', self::STATE_SUCCESS)
             ->where('attempts', '<', self::TOTAL_ATTEMPTS)
-            ->where(function(Builder $query) {
+            ->where(function (Builder $query) {
                 $query->where('last_attempt_at', '<', now()->subHours(self::ATTEMPTS_INTERVAL));
                 $query->orWhereNull('last_attempt_at');
             });
     }
 
     /**
-     * Get next log int the queue to be sent to the API
-     *
-     * @param array $fundsId
-     * @return FundBackofficeLog|null
-     */
-    protected static function getNextLogInQueue(array $fundsId = []): ?FundBackofficeLog
-    {
-        return self::getNextLogInQueueQuery($fundsId)->first();
-    }
-
-    /**
-     * Send pending logs to the API
+     * Send pending logs to the API.
      *
      * @return void
      */
     public static function sendLogs(): void
     {
-        $funds = Fund::get()->filter(fn(Fund $fund) => $fund->isBackofficeApiAvailable());
+        $funds = Fund::get()->filter(fn (Fund $fund) => $fund->isBackofficeApiAvailable());
 
         while ($log = self::getNextLogInQueue($funds->pluck('id')->toArray())) {
             if (!$backofficeApi = $log->fund->getBackofficeApi()) {
@@ -479,5 +308,175 @@ class BackofficeApi
             $e?->getMessage(),
             $e?->getTraceAsString(),
         ])));
+    }
+
+    /**
+     * Make the request to the API to check BSN-number residency.
+     *
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function checkResidency(string $bsn, ?string $requestId): FundBackofficeLog
+    {
+        return $this->makeCheckRequest(self::ACTION_RESIDENCY_CHECK, $bsn, $requestId);
+    }
+
+    /**
+     * Make the request to the API to check BSN-number eligibility.
+     *
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function checkEligibility(string $bsn, ?string $requestId): FundBackofficeLog
+    {
+        return $this->makeCheckRequest(self::ACTION_ELIGIBILITY_CHECK, $bsn, $requestId);
+    }
+
+    /**
+     * Make the request to the API to check BSN-number residency.
+     *
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function getPartnerBsn(string $bsn, ?string $requestId): FundBackofficeLog
+    {
+        return $this->makeCheckRequest(self::ACTION_PARTNER_BSN, $bsn, $requestId);
+    }
+
+    /**
+     * @param string $action
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function makeCheckRequest(
+        string $action,
+        string $bsn,
+        ?string $requestId
+    ): FundBackofficeLog {
+        $log = $this->makeLog($action, $bsn);
+        $endpoint = $this->getEndpoint($action);
+        $body = $this->makeRequestBody($action);
+        $response = $this->request('POST', $endpoint, array_merge($body, [
+            'id' => $requestId,
+            'bsn' => $bsn,
+        ]));
+
+        if ($response['success'] ?? false) {
+            return $log->updateModel(array_merge(Arr::only($response, [
+                'response_code', 'response_body',
+            ]), [
+                'state' => self::STATE_SUCCESS,
+                'response_id' => ($response['response_body']['id'] ?? null) ?: $log->request_id,
+            ]));
+        }
+
+        self::logError(sprintf(
+            "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
+            Arr::get($response, 'response_code', ''),
+            Arr::get($response, 'response_error', ''),
+            Arr::get($response, 'response_body', ''),
+        ));
+
+        return $log->updateModel(array_merge(Arr::only($response, [
+            'response_code', 'response_error',
+        ]), [
+            'state' => self::STATE_ERROR,
+        ]));
+    }
+
+    /**
+     * @return string
+     */
+    protected static function makeRequestId(): string
+    {
+        do {
+            $value = token_generator()->generate(16);
+        } while (FundBackofficeLog::where('response_id', $value)->exists());
+
+        return 'forus-' . $value;
+    }
+
+    /**
+     * Add backoffice log.
+     *
+     * @param string $action
+     * @param string|null $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog|null
+     */
+    protected function makeLog(
+        string $action,
+        ?string $bsn = null,
+        ?string $requestId = null
+    ): ?FundBackofficeLog {
+        if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
+            $requestId = $requestId ?: self::makeRequestId();
+        }
+
+        /** @var FundBackofficeLog $fundLog */
+        $fundLog = $this->fund->backoffice_logs()->create([
+            'identity_address' => Identity::findByBsn($bsn)?->address,
+            'bsn' => $bsn,
+            'action' => $action,
+            'request_id' => $requestId,
+            'response' => null,
+            'state' => self::STATE_PENDING,
+            'attempts' => 0,
+            'last_attempt_at' => null,
+        ]);
+
+        return $fundLog ?? null;
+    }
+
+    /**
+     * Make request body.
+     *
+     * @param string $action
+     * @return array
+     */
+    protected function makeRequestBody(string $action): array
+    {
+        if ($action === self::ACTION_STATUS) {
+            return [];
+        }
+
+        return [
+            'action' => $action,
+            'fund_key' => $this->fund->fund_config->key,
+        ];
+    }
+
+    /**
+     * Make Guzzle request options.
+     *
+     * @param string $method
+     * @param array $data
+     * @param array $options
+     * @return array
+     */
+    protected function makeOptions(string $method, array $data, array $options = []): array
+    {
+        $dataKey = $method === 'GET' ? 'query' : 'json';
+
+        return array_merge([
+            'headers' => $this->makeRequestHeaders(),
+            'connect_timeout' => 10,
+            $dataKey => $data,
+        ], $options);
+    }
+
+    /**
+     * Get next log int the queue to be sent to the API.
+     *
+     * @param array $fundsId
+     * @return FundBackofficeLog|null
+     */
+    protected static function getNextLogInQueue(array $fundsId = []): ?FundBackofficeLog
+    {
+        return self::getNextLogInQueueQuery($fundsId)->first();
     }
 }

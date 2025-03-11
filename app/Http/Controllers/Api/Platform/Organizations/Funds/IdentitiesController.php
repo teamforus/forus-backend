@@ -29,8 +29,8 @@ class IdentitiesController extends Controller
      * @param IndexIdentitiesRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
      */
     public function index(
         IndexIdentitiesRequest $request,
@@ -82,8 +82,8 @@ class IdentitiesController extends Controller
     /**
      * @param Organization $organization
      * @param Fund $fund
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function exportFields(
@@ -100,10 +100,10 @@ class IdentitiesController extends Controller
      * @param ExportIdentitiesRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function export(
@@ -131,8 +131,8 @@ class IdentitiesController extends Controller
      * @param SendIdentityNotificationRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|JsonResponse
      * @noinspection PhpUnused
      */
     public function sendIdentityNotification(
@@ -150,18 +150,18 @@ class IdentitiesController extends Controller
             $identities = $request->identity()->id;
         } elseif ($request->input('target') === 'providers_all') {
             $providers = FundProvider::whereFundId($fund->id)->get();
-            $providers->load("organization.identity");
+            $providers->load('organization.identity');
             $identities = $providers->pluck('organization.identity.id')->toArray();
         } elseif ($request->input('target') === 'providers_approved') {
-            $providers = FundProvider::with("organization.identity")->where(function (Builder $builder) use ($fund) {
+            $providers = FundProvider::with('organization.identity')->where(function (Builder $builder) use ($fund) {
                 FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id);
             })->get();
-            $identities = $providers->pluck("organization.identity.id")->toArray();
+            $identities = $providers->pluck('organization.identity.id')->toArray();
         } elseif ($request->input('target') === 'providers_rejected') {
-            $declinedProviders = FundProvider::with("organization.identity")->where(function (Builder $builder) use ($fund) {
+            $declinedProviders = FundProvider::with('organization.identity')->where(function (Builder $builder) use ($fund) {
                 FundProviderQuery::whereDeclinedForFundsFilter($builder, $fund->id);
             })->get();
-            $identities = $declinedProviders->pluck("organization.identity.id")->toArray();
+            $identities = $declinedProviders->pluck('organization.identity.id')->toArray();
         } else {
             $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
             $identities = $search->query()->pluck('id')->toArray();

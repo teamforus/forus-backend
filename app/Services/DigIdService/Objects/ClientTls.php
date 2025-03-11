@@ -11,7 +11,8 @@ class ClientTls
     public function __construct(
         protected string $key,
         protected string $cert,
-    ) {}
+    ) {
+    }
 
     /**
      * @return string

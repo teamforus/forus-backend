@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * App\Models\SystemNotification
+ * App\Models\SystemNotification.
  *
  * @property int $id
  * @property string $key

@@ -86,7 +86,7 @@ class BulkPayment
      */
     public function getPaymentsAmountSum(): string
     {
-        return number_format(array_sum(array_map(function(Payment $payment) {
+        return number_format(array_sum(array_map(function (Payment $payment) {
             return floatval($payment->getAmount()->getAmount());
         }, $this->payments)), 2, '.', '');
     }
@@ -120,7 +120,6 @@ class BulkPayment
         $groupHeader->addChild('NbOfTxs', count($this->payments));
         $groupHeader->addChild('CtrlSum', $this->getPaymentsAmountSum());
         $groupHeader->addChild('InitgPty')->addChild('Nm', htmlspecialchars($this->paymentInitiator->getName()));
-
 
         $paymentInformation = $customerCreditTransferInitiation->addChild('PmtInf');
         $paymentInformation->addChild('PmtInfId', $this->getBulkPaymentId());

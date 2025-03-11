@@ -70,8 +70,8 @@ class BNGService
 
     /**
      * @param Payment $payment
-     * @return PaymentValue
      * @throws ApiException
+     * @return PaymentValue
      * @noinspection PhpUnused
      */
     public function payment(Payment $payment): PaymentValue
@@ -81,8 +81,8 @@ class BNGService
             'debtorAccount' => $payment->getDebtor()->toArray(),
             'instructedAmount' => $payment->getAmount()->toArray(),
             'creditorAccount' => $payment->getCreditor()->toArray(),
-            'creditorName'=> $payment->getCreditor()->getName(),
-            'requestedExecutionDate'=> $payment->getRequestedExecutionDate(),
+            'creditorName' => $payment->getCreditor()->getName(),
+            'requestedExecutionDate' => $payment->getRequestedExecutionDate(),
             'remittanceInformationUnstructured' => $payment->getDescription(),
         ]));
 
@@ -91,8 +91,8 @@ class BNGService
 
     /**
      * @param BulkPayment $bulkPayment
-     * @return BulkPaymentConsentValue
      * @throws ApiException
+     * @return BulkPaymentConsentValue
      */
     public function bulkPayment(BulkPayment $bulkPayment): BulkPaymentConsentValue
     {
@@ -105,8 +105,8 @@ class BNGService
     /**
      * @param string $code
      * @param AuthData $data
-     * @return AccessTokenResponseValue
      * @throws ApiException
+     * @return AccessTokenResponseValue
      */
     public function exchangeAuthCode(string $code, AuthData $data): AccessTokenResponseValue
     {
@@ -128,31 +128,31 @@ class BNGService
     /**
      * @param string $paymentId
      * @param string $accessToken
-     * @return BulkPaymentValue
      * @throws ApiException
+     * @return BulkPaymentValue
      */
     public function getBulkDetails(string $paymentId, string $accessToken): BulkPaymentValue
     {
         $url = $this->getEndpoint('payment_bulk', [$paymentId]);
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
+            'Authorization' => sprintf('Bearer %s', $accessToken),
         ]);
 
         return new BulkPaymentValue(new ResponseData($res));
     }
-    
+
     /**
      * @param string $paymentId
      * @param string $accessToken
-     * @return BulkPaymentValue
      * @throws ApiException
+     * @return BulkPaymentValue
      * @noinspection PhpUnused
      */
     public function getBulkDetailsStatus(string $paymentId, string $accessToken): BulkPaymentValue
     {
         $url = $this->getEndpoint('payment_bulk', [$paymentId, 'status']);
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
+            'Authorization' => sprintf('Bearer %s', $accessToken),
         ]);
 
         return new BulkPaymentValue(new ResponseData($res));
@@ -161,16 +161,16 @@ class BNGService
     /**
      * @param string $consentId
      * @param string $accessToken
-     * @return AccountsValue
      * @throws ApiException
+     * @return AccountsValue
      * @noinspection PhpUnused
      */
     public function getAccounts(string $consentId, string $accessToken): AccountsValue
     {
         $url = $this->getEndpoint('accounts');
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
-            "Consent-ID" => $consentId,
+            'Authorization' => sprintf('Bearer %s', $accessToken),
+            'Consent-ID' => $consentId,
         ]);
 
         return new AccountsValue(new ResponseData($res));
@@ -181,8 +181,8 @@ class BNGService
      * @param string $consentId
      * @param string $accessToken
      * @param array $params
-     * @return TransactionsValue
      * @throws ApiException
+     * @return TransactionsValue
      */
     public function getTransactions(
         string $accountId,
@@ -195,8 +195,8 @@ class BNGService
         $url = $this->getEndpoint('accounts', [$accountId, 'transactions'], $params);
 
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
-            "Consent-ID" => $consentId,
+            'Authorization' => sprintf('Bearer %s', $accessToken),
+            'Consent-ID' => $consentId,
         ]);
 
         return new TransactionsValue(new ResponseData($res));
@@ -207,8 +207,8 @@ class BNGService
      * @param string $consentId
      * @param string $accessToken
      * @param string $transactionId
-     * @return ?TransactionValue
      * @throws ApiException
+     * @return ?TransactionValue
      */
     public function getTransaction(
         string $accountId,
@@ -219,8 +219,8 @@ class BNGService
         $url = $this->getEndpoint('accounts', [$accountId, 'transactions', $transactionId]);
 
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
-            "Consent-ID" => $consentId,
+            'Authorization' => sprintf('Bearer %s', $accessToken),
+            'Consent-ID' => $consentId,
         ]);
 
         if ($res->getStatusCode() == 200) {
@@ -241,8 +241,8 @@ class BNGService
      * @param string $consentId
      * @param string $accessToken
      * @param array $params
-     * @return Balances
      * @throws ApiException
+     * @return Balances
      */
     public function getBalance(
         string $accountId,
@@ -252,8 +252,8 @@ class BNGService
     ): Balances {
         $url = $this->getEndpoint('accounts', [$accountId, 'balances'], $params);
         $res = $this->requestJson('get', $url, null, [
-            "Authorization" => sprintf("Bearer %s", $accessToken),
-            "Consent-ID" => $consentId,
+            'Authorization' => sprintf('Bearer %s', $accessToken),
+            'Consent-ID' => $consentId,
         ]);
 
         return new Balances(new ResponseData($res));
@@ -262,28 +262,108 @@ class BNGService
     /**
      * @param string $redirectToken
      * @param array $params
-     * @return AccountConsentValue
      * @throws ApiException
+     * @return AccountConsentValue
      */
     public function makeAccountConsentRequest(string $redirectToken, array $params = []): AccountConsentValue
     {
         $url = $this->getEndpoint('consent');
         $res = $this->requestJson('post', $url, array_merge_recursive([
-            "access" => [
-                "accounts" => null,
-                "balances" => null,
-                "transactions" => null,
-                "availableAccounts" => null,
-                "availableAccountsWithBalances" => null,
-                "allPsd2" => "allAccounts",
+            'access' => [
+                'accounts' => null,
+                'balances' => null,
+                'transactions' => null,
+                'availableAccounts' => null,
+                'availableAccountsWithBalances' => null,
+                'allPsd2' => 'allAccounts',
             ],
-            "combinedServiceIndicator" => false,
-            "recurringIndicator" => true,
-            "validUntil" => date('Y-m-d', strtotime('+2 years')),
-            "frequencyPerDay" => 4,
+            'combinedServiceIndicator' => false,
+            'recurringIndicator' => true,
+            'validUntil' => date('Y-m-d', strtotime('+2 years')),
+            'frequencyPerDay' => 4,
         ], $params));
 
         return new AccountConsentValue(new ResponseData($res), $redirectToken, $this);
+    }
+
+    /**
+     * @param string $name
+     * @param array $segments
+     * @param array $query
+     * @return string|null
+     */
+    public function getEndpoint(string $name, array $segments = [], array $query = []): ?string
+    {
+        $url = [
+            static::ENV_SANDBOX => static::URL_SANDBOX,
+            static::ENV_PRODUCTION => static::URL_PRODUCTION,
+        ][$this->env] ?? static::URL_SANDBOX;
+
+        switch ($name) {
+            case 'token': $endpoint = static::ENDPOINT_TOKEN;
+                break;
+            case 'consent': $endpoint = static::ENDPOINT_CONSENT;
+                break;
+            case 'accounts': $endpoint = static::ENDPOINT_ACCOUNTS;
+                break;
+            case 'authorise': $endpoint = static::ENDPOINT_AUTHORISE;
+                break;
+            case 'authorise_account': $endpoint = static::ENDPOINT_AUTHORISE_ACCOUNT;
+                break;
+            case 'payment': $endpoint = static::ENDPOINT_PAYMENT;
+                break;
+            case 'payment_bulk': $endpoint = static::ENDPOINT_PAYMENT_BULK;
+                break;
+            default: return null;
+        }
+
+        return implode('?', array_filter([
+            $url . implode('/', array_merge([$endpoint], $segments)),
+            $query ? http_build_query($query) : '',
+        ]));
+    }
+
+    /**
+     * @param int $length
+     * @return string
+     */
+    public function makeToken(int $length = 100): string
+    {
+        try {
+            return bin2hex(random_bytes($length / 2));
+        } catch (Throwable) {
+            throw new RuntimeException('Failed to generate token.');
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function clientId(): string
+    {
+        return $this->clientId;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAuthRedirectUrl(): ?string
+    {
+        return $this->authRedirectUrl;
+    }
+
+    /**
+     * @param string $message
+     * @param Throwable|null $e
+     * @return void
+     */
+    public static function logError(string $message, ?Throwable $e): void
+    {
+        Log::channel('bng')->error(implode("\n", array_filter([
+            $message,
+            $e?->getMessage(),
+            $e?->getTraceAsString(),
+        ])));
     }
 
     /**
@@ -291,8 +371,8 @@ class BNGService
      * @param string $url
      * @param string $data
      * @param array $headers
-     * @return ResponseInterface
      * @throws ApiException
+     * @return ResponseInterface
      */
     protected function requestFormUrlEncoded(string $method, string $url, string $data, array $headers = []): ResponseInterface
     {
@@ -304,8 +384,8 @@ class BNGService
      * @param string $url
      * @param string $data
      * @param array $headers
-     * @return ResponseInterface
      * @throws ApiException
+     * @return ResponseInterface
      */
     protected function requestXml(string $method, string $url, string $data, array $headers = []): ResponseInterface
     {
@@ -317,8 +397,8 @@ class BNGService
      * @param string $url
      * @param array|null $data
      * @param array $headers
-     * @return ResponseInterface
      * @throws ApiException
+     * @return ResponseInterface
      */
     protected function requestJson(string $method, string $url, ?array $data = null, array $headers = []): ResponseInterface
     {
@@ -331,8 +411,8 @@ class BNGService
      * @param string $data
      * @param string $contentType
      * @param array $headers
-     * @return ResponseInterface
      * @throws ApiException
+     * @return ResponseInterface
      */
     protected function request(
         string $method,
@@ -381,7 +461,7 @@ class BNGService
         string $method,
         string $url,
         string $request_id,
-        string $bodyString = "",
+        string $bodyString = '',
         string $contentType = 'application/json',
         array $cHeaders = []
     ): array {
@@ -389,18 +469,18 @@ class BNGService
         $digest = $this->makeDigest($bodyString);
 
         $headers = array_merge([
-            "request-target" => $url,
-            "Accept" => "application/json",
-            "Content-Type" => $contentType,
-            "Date" => $date,
-            "Digest" => $digest,
-            "X-Request-ID" => $request_id,
-            "PSU-IP-Address" => $this->psuIpAddress(),
+            'request-target' => $url,
+            'Accept' => 'application/json',
+            'Content-Type' => $contentType,
+            'Date' => $date,
+            'Digest' => $digest,
+            'X-Request-ID' => $request_id,
+            'PSU-IP-Address' => $this->psuIpAddress(),
         ], $cHeaders);
 
         return array_merge($headers, [
-            "Signature" => $this->makeSignature(strtolower($method), $headers),
-            "TPP-Signature-Certificate" => $this->getSignatureCertificate(),
+            'Signature' => $this->makeSignature(strtolower($method), $headers),
+            'TPP-Signature-Certificate' => $this->getSignatureCertificate(),
         ]);
     }
 
@@ -417,7 +497,7 @@ class BNGService
      */
     protected function getSignatureCertificate(): string
     {
-        return str_replace(["\n", "\r"], "", $this->signatureCertificate);
+        return str_replace(["\n", "\r"], '', $this->signatureCertificate);
     }
 
     /**
@@ -441,8 +521,8 @@ class BNGService
             parse_url($headers['request-target'])['query'] ?? '',
         ]));
 
-        $signatureHeaders = array_map(function($header) use ($headers) {
-            return sprintf("%s: %s", strtolower($header), $headers[$header]);
+        $signatureHeaders = array_map(function ($header) use ($headers) {
+            return sprintf('%s: %s', strtolower($header), $headers[$header]);
         }, array_keys($headers));
 
         $signatureHeaders = str_replace(
@@ -452,7 +532,7 @@ class BNGService
         );
 
         $signatureHeadersList = implode(' ', array_map(function ($header) {
-            return strtolower(explode(": ", $header)[0]);
+            return strtolower(explode(': ', $header)[0]);
         }, explode("\n", $signatureHeaders)));
 
         return sprintf(
@@ -491,37 +571,7 @@ class BNGService
      */
     protected function makeDigest(string $body): string
     {
-        return "SHA-256=" . base64_encode(hash("sha256", $body, true));
-    }
-
-    /**
-     * @param string $name
-     * @param array $segments
-     * @param array $query
-     * @return string|null
-     */
-    public function getEndpoint(string $name, array $segments = [], array $query = []): ?string
-    {
-        $url = [
-            static::ENV_SANDBOX => static::URL_SANDBOX,
-            static::ENV_PRODUCTION => static::URL_PRODUCTION,
-        ][$this->env] ?? static::URL_SANDBOX;
-
-        switch ($name) {
-            case 'token': $endpoint = static::ENDPOINT_TOKEN; break;
-            case 'consent': $endpoint = static::ENDPOINT_CONSENT; break;
-            case 'accounts': $endpoint = static::ENDPOINT_ACCOUNTS; break;
-            case 'authorise': $endpoint = static::ENDPOINT_AUTHORISE; break;
-            case 'authorise_account': $endpoint = static::ENDPOINT_AUTHORISE_ACCOUNT; break;
-            case 'payment': $endpoint = static::ENDPOINT_PAYMENT; break;
-            case 'payment_bulk': $endpoint = static::ENDPOINT_PAYMENT_BULK; break;
-            default: return null;
-        }
-
-        return implode("?", array_filter([
-            $url . implode("/", array_merge([$endpoint], $segments)),
-            $query ? http_build_query($query) : '',
-        ]));
+        return 'SHA-256=' . base64_encode(hash('sha256', $body, true));
     }
 
     /**
@@ -530,48 +580,5 @@ class BNGService
     protected function makeRequestId(): string
     {
         return Str::uuid();
-    }
-
-    /**
-     * @param int $length
-     * @return string
-     */
-    public function makeToken(int $length = 100): string
-    {
-        try {
-            return bin2hex(random_bytes($length / 2));
-        } catch (Throwable) {
-            throw new RuntimeException("Failed to generate token.");
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function clientId(): string
-    {
-        return $this->clientId;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getAuthRedirectUrl(): ?string
-    {
-        return $this->authRedirectUrl;
-    }
-
-    /**
-     * @param string $message
-     * @param Throwable|null $e
-     * @return void
-     */
-    public static function logError(string $message, ?Throwable $e): void
-    {
-        Log::channel('bng')->error(implode("\n", array_filter([
-            $message,
-            $e?->getMessage(),
-            $e?->getTraceAsString(),
-        ])));
     }
 }

@@ -41,29 +41,29 @@ class UpdateOrganizationRequest extends BaseFormRequest
 
         $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
             $this->organization->id
-        ): Rule::unique('organizations', 'kvk');
+        ) : Rule::unique('organizations', 'kvk');
 
         return [
-            'name'                  => 'nullable|string|between:2,64',
-            'description'           => 'nullable|string|max:4096',
-            'iban'                  => ['nullable', new IbanRule()],
-            'email'                 => [
+            'name' => 'nullable|string|between:2,64',
+            'description' => 'nullable|string|max:4096',
+            'iban' => ['nullable', new IbanRule()],
+            'email' => [
                 'nullable',
                 ...$this->emailRules(),
             ],
-            'email_public'          => 'nullable|boolean',
-            'phone'                 => 'nullable|digits_between:4,20',
-            'phone_public'          => 'nullable|boolean',
-            'kvk'                   => [
+            'email_public' => 'nullable|boolean',
+            'phone' => 'nullable|digits_between:4,20',
+            'phone_public' => 'nullable|boolean',
+            'kvk' => [
                 'nullable',
                 'digits:8',
                 $kvkDebug || $kvkGeneric ? null : $kvkUniqueRule,
                 $kvkGeneric ? null : new KvkRule(),
             ],
-            'btw'                   => ['nullable', new BtwRule()],
-            'website'               => 'nullable|max:200|url',
-            'website_public'        => 'nullable|boolean',
-            'business_type_id'      => 'nullable|exists:business_types,id',
+            'btw' => ['nullable', new BtwRule()],
+            'website' => 'nullable|max:200|url',
+            'website_public' => 'nullable|boolean',
+            'business_type_id' => 'nullable|exists:business_types,id',
             ...$this->auth2FARules(),
             ...$this->contactsRules(),
             ...$this->translationsRules(),

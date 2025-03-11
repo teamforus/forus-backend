@@ -31,13 +31,13 @@ class VoucherTransactionResource extends BaseJsonResource
             'amount_extra_cash_locale' => currency_format_locale($transaction->amount_extra_cash),
             'timestamp' => $transaction->created_at->timestamp,
             'organization' => $transaction->provider ? array_merge($transaction->provider->only([
-                'id', 'name'
+                'id', 'name',
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
             ]) : null,
             'product' => new ProductResource($transaction->product),
             'fund' => array_merge($transaction->voucher->fund->only([
-                'id', 'name', 'organization_id'
+                'id', 'name', 'organization_id',
             ]), [
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
             ]),

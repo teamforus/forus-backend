@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * App\Models\BankConnection
+ * App\Models\BankConnection.
  *
  * @property int $id
  * @property int $bank_id
@@ -88,7 +88,9 @@ use Throwable;
  */
 class BankConnection extends BaseModel
 {
-    use HasLogs, HasDbTokens, HasAnnouncements;
+    use HasLogs;
+    use HasDbTokens;
+    use HasAnnouncements;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_REPLACED = 'replaced';
@@ -263,47 +265,6 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @return string
-     */
-    protected function makeOauthUrlBunq(): string
-    {
-        $this->bank->useContext();
-
-        return OauthAuthorizationUri::create(
-            BunqEnumOauthResponseType::CODE(),
-            $this->bank->oauth_redirect_url,
-            $this->bank->getOauthClient(),
-            $this->redirect_token
-        )->getAuthorizationUriString();
-    }
-
-    /**
-     * @return ?string
-     */
-    protected function makeOauthUrlBNG(): ?string
-    {
-        /** @var BNGService $bngService */
-        $bngService = resolve('bng_service');
-
-        try {
-            $response = $bngService->makeAccountConsentRequest($this->redirect_token);
-            $authData = $response->getAuthData();
-            $consentId = $response->getConsentId();
-
-            $this->update([
-                'auth_url' => $authData->getUrl(),
-                'auth_params' => $authData->getParams(),
-                'consent_id' => $consentId,
-            ]);
-        } catch (ApiException $e) {
-            $this->logBngError('Oauth url', $e);
-            return null;
-        }
-
-        return $authData->getUrl();
-    }
-
-    /**
      * @return bool
      */
     public function isPending(): bool
@@ -339,8 +300,8 @@ class BankConnection extends BaseModel
 
     /**
      * @param ApiContext $apiContext
-     * @return BankConnection
      * @throws \bunq\Exception\BunqException
+     * @return BankConnection
      */
     public function updateContext(ApiContext $apiContext): self
     {
@@ -415,9 +376,10 @@ class BankConnection extends BaseModel
     {
         try {
             BunqContext::loadApiContext(ApiContext::fromJson(json_encode($this->context)));
+
             return true;
         } catch (Throwable $e) {
-            $hasAuthError = str_contains($e->getMessage(), "Incorrect API key or IP address");
+            $hasAuthError = str_contains($e->getMessage(), 'Incorrect API key or IP address');
 
             if ($e instanceof ForbiddenException || $hasAuthError) {
                 $this->disableAsInvalid($e->getMessage());
@@ -445,49 +407,6 @@ class BankConnection extends BaseModel
         }
 
         return null;
-    }
-
-    /**
-     * @return array
-     * @throws ApiException
-     */
-    protected function fetchConnectionMonetaryAccountsBNG(): array
-    {
-        $bngService = resolve('bng_service');
-
-        return array_map(function(array $account) {
-            return new BankMonetaryAccount(
-                $account['resourceId'] ?? null,
-                $account['iban'] ?? null,
-                $account['name'] ?? null
-            );
-        }, $bngService->getAccounts($this->consent_id, $this->access_token)->getAccounts());
-    }
-
-    /**
-     * @return null|array
-     */
-    protected function fetchConnectionMonetaryAccountsBunq(): ?array
-    {
-        if (!$this->useContext()) {
-            return null;
-        }
-
-        $bankAccountBanks = array_map(function (MonetaryAccount $monetaryAccount) {
-            return $monetaryAccount->getMonetaryAccountBank();
-        }, MonetaryAccount::listing()->getValue());
-
-        return array_map(function(MonetaryAccountBank $bankAccount) {
-            $pointerValues = array_reduce($bankAccount->getAlias(), function(array $arr, Pointer $pointer) {
-                return array_merge($arr, [strtolower($pointer->getType()) => $pointer->getValue()]);
-            }, []);
-
-            return new BankMonetaryAccount(
-                $bankAccount->getId(),
-                $pointerValues['iban'],
-                $bankAccount->getDescription()
-            );
-        }, array_filter($bankAccountBanks));
     }
 
     /**
@@ -544,43 +463,6 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @param string $monetary_account_id
-     * @return BankBalance|null
-     */
-    protected function fetchBalanceBunq(string $monetary_account_id): ?BankBalance
-    {
-        if (!$this->useContext()) {
-            return null;
-        }
-
-        $account = MonetaryAccount::get($monetary_account_id);
-        $balance = $account->getValue()->getMonetaryAccountBank()->getBalance();
-
-        return new BankBalance($balance->getValue(), $balance->getCurrency());
-    }
-
-    /**
-     * @param string $monetary_account_id
-     * @return ?BankBalance
-     */
-    protected function fetchBalanceBNG(string $monetary_account_id): ?BankBalance
-    {
-        /** @var BNGService $bngService */
-        $bngService = resolve('bng_service');
-
-        try {
-            $response = $bngService->getBalance($monetary_account_id, $this->consent_id, $this->access_token);
-            $balance = $response->getClosingBookedBalance();
-
-            return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
-        } catch (Throwable $e) {
-            $bngService::logError('Fetch balance', $e);
-        }
-
-        return null;
-    }
-
-    /**
      * @param int $count
      * @return ?BankPayment[]
      */
@@ -601,67 +483,9 @@ class BankConnection extends BaseModel
     }
 
     /**
-     * @param string $monetary_account_id
-     * @param int $count
-     * @return BankPayment[]|null
-     */
-    protected function fetchPaymentsBunq(string $monetary_account_id, int $count = 100): ?array
-    {
-        if (!$this->useContext()) {
-            return null;
-        }
-
-        return array_map(function(Payment $payment) {
-            $bankPayment = new BankPayment($payment->getId(), $payment->getAmount()->getValue());
-
-            return $bankPayment
-                ->setCurrency($payment->getAmount()->getCurrency())
-                ->setDescription($payment->getDescription());
-        }, Payment::listing($monetary_account_id, compact('count'))->getValue());
-    }
-
-    /**
-     * @param string $monetary_account_id
-     * @param int $count
-     * @return BankPayment[]|null
-     */
-    protected function fetchPaymentsBNG(string $monetary_account_id, int $count = 100): ?array
-    {
-        /** @var BNGService $bngService */
-        $bngService = resolve('bng_service');
-
-        try {
-            $page = 1;
-            $transactions = [];
-            $totalPages = $count / 10;
-
-            do {
-                $response = $bngService->getTransactions(
-                    $monetary_account_id,
-                    $this->consent_id,
-                    $this->access_token,
-                    ['bookingStatus' => 'booked', 'page' => $page++]
-                );
-
-                $parsedLastPage = $response->getTransactionsLinks()->getLast()?->getParams()['page'] ?? 0;
-                $totalPages = min($totalPages, $parsedLastPage);
-                $transactions = array_merge($transactions, $response->getTransactionsBooked());
-            } while ($page <= $totalPages);
-
-            return array_map(function(TransactionValue $transaction) {
-                return $this->transactionBngToBankPayment($transaction);
-            }, $transactions);
-        } catch (Throwable $e) {
-            $bngService::logError('Fetch payments', $e);
-        }
-
-        return null;
-    }
-
-    /**
      * @param string $transactionId
-     * @return BankPayment|null
      * @throws ApiException
+     * @return BankPayment|null
      */
     public function fetchPayment(string $transactionId): ?BankPayment
     {
@@ -677,63 +501,6 @@ class BankConnection extends BaseModel
         }
 
         return null;
-    }
-
-    /**
-     * @param string $monetary_account_id
-     * @param string $payment_id
-     * @return BankPayment|null
-     * @throws ApiException
-     */
-    protected function fetchPaymentBNG(string $monetary_account_id, string $payment_id): ?BankPayment
-    {
-        /** @var BNGService $bngService */
-        $bngService = resolve('bng_service');
-        $transaction = $bngService->getTransaction(
-            $monetary_account_id,
-            $this->consent_id,
-            $this->access_token,
-            $payment_id,
-        );
-
-        return $transaction ? $this->transactionBngToBankPayment($transaction) : null;
-    }
-
-    /**
-     * @param string $monetary_account_id
-     * @param string $payment_id
-     * @return BankPayment|null
-     */
-    protected function fetchPaymentBunq(string $monetary_account_id, string $payment_id): ?array
-    {
-        if (!$this->useContext()) {
-            return null;
-        }
-
-        $payment = Payment::get($payment_id, $monetary_account_id)->getValue();
-        $bankPayment = new BankPayment($payment->getId(), $payment->getAmount()->getValue());
-
-        return $bankPayment
-            ->setCurrency($payment->getAmount()->getCurrency())
-            ->setDescription($payment->getDescription());
-    }
-
-    /**
-     * @param TransactionValue $transaction
-     * @return BankPayment
-     */
-    protected function transactionBngToBankPayment(TransactionValue $transaction): BankPayment
-    {
-        $payment = new BankPayment(
-            $transaction->getTransactionId(),
-            $transaction->getTransactionAmount()
-        );
-
-        return $payment
-            ->setDate($transaction->getTransactionDate())
-            ->setCurrency($transaction->getTransactionCurrency())
-            ->setDescription($transaction->getTransactionDescription())
-            ->setRaw($transaction->getRaw());
     }
 
     /**
@@ -789,8 +556,245 @@ class BankConnection extends BaseModel
     public function dashboardDetailsUrl(?string $success = null, ?string $error = null): string
     {
         return $this->implementation->urlSponsorDashboard(sprintf(
-            "/organizations/%s/bank-connections",
+            '/organizations/%s/bank-connections',
             $this->organization_id
         ), array_filter(compact('success', 'error')));
+    }
+
+    /**
+     * @return string
+     */
+    protected function makeOauthUrlBunq(): string
+    {
+        $this->bank->useContext();
+
+        return OauthAuthorizationUri::create(
+            BunqEnumOauthResponseType::CODE(),
+            $this->bank->oauth_redirect_url,
+            $this->bank->getOauthClient(),
+            $this->redirect_token
+        )->getAuthorizationUriString();
+    }
+
+    /**
+     * @return ?string
+     */
+    protected function makeOauthUrlBNG(): ?string
+    {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+
+        try {
+            $response = $bngService->makeAccountConsentRequest($this->redirect_token);
+            $authData = $response->getAuthData();
+            $consentId = $response->getConsentId();
+
+            $this->update([
+                'auth_url' => $authData->getUrl(),
+                'auth_params' => $authData->getParams(),
+                'consent_id' => $consentId,
+            ]);
+        } catch (ApiException $e) {
+            $this->logBngError('Oauth url', $e);
+
+            return null;
+        }
+
+        return $authData->getUrl();
+    }
+
+    /**
+     * @throws ApiException
+     * @return array
+     */
+    protected function fetchConnectionMonetaryAccountsBNG(): array
+    {
+        $bngService = resolve('bng_service');
+
+        return array_map(function (array $account) {
+            return new BankMonetaryAccount(
+                $account['resourceId'] ?? null,
+                $account['iban'] ?? null,
+                $account['name'] ?? null
+            );
+        }, $bngService->getAccounts($this->consent_id, $this->access_token)->getAccounts());
+    }
+
+    /**
+     * @return null|array
+     */
+    protected function fetchConnectionMonetaryAccountsBunq(): ?array
+    {
+        if (!$this->useContext()) {
+            return null;
+        }
+
+        $bankAccountBanks = array_map(function (MonetaryAccount $monetaryAccount) {
+            return $monetaryAccount->getMonetaryAccountBank();
+        }, MonetaryAccount::listing()->getValue());
+
+        return array_map(function (MonetaryAccountBank $bankAccount) {
+            $pointerValues = array_reduce($bankAccount->getAlias(), function (array $arr, Pointer $pointer) {
+                return array_merge($arr, [strtolower($pointer->getType()) => $pointer->getValue()]);
+            }, []);
+
+            return new BankMonetaryAccount(
+                $bankAccount->getId(),
+                $pointerValues['iban'],
+                $bankAccount->getDescription()
+            );
+        }, array_filter($bankAccountBanks));
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @return BankBalance|null
+     */
+    protected function fetchBalanceBunq(string $monetary_account_id): ?BankBalance
+    {
+        if (!$this->useContext()) {
+            return null;
+        }
+
+        $account = MonetaryAccount::get($monetary_account_id);
+        $balance = $account->getValue()->getMonetaryAccountBank()->getBalance();
+
+        return new BankBalance($balance->getValue(), $balance->getCurrency());
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @return ?BankBalance
+     */
+    protected function fetchBalanceBNG(string $monetary_account_id): ?BankBalance
+    {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+
+        try {
+            $response = $bngService->getBalance($monetary_account_id, $this->consent_id, $this->access_token);
+            $balance = $response->getClosingBookedBalance();
+
+            return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
+        } catch (Throwable $e) {
+            $bngService::logError('Fetch balance', $e);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param int $count
+     * @return BankPayment[]|null
+     */
+    protected function fetchPaymentsBunq(string $monetary_account_id, int $count = 100): ?array
+    {
+        if (!$this->useContext()) {
+            return null;
+        }
+
+        return array_map(function (Payment $payment) {
+            $bankPayment = new BankPayment($payment->getId(), $payment->getAmount()->getValue());
+
+            return $bankPayment
+                ->setCurrency($payment->getAmount()->getCurrency())
+                ->setDescription($payment->getDescription());
+        }, Payment::listing($monetary_account_id, compact('count'))->getValue());
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param int $count
+     * @return BankPayment[]|null
+     */
+    protected function fetchPaymentsBNG(string $monetary_account_id, int $count = 100): ?array
+    {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+
+        try {
+            $page = 1;
+            $transactions = [];
+            $totalPages = $count / 10;
+
+            do {
+                $response = $bngService->getTransactions(
+                    $monetary_account_id,
+                    $this->consent_id,
+                    $this->access_token,
+                    ['bookingStatus' => 'booked', 'page' => $page++]
+                );
+
+                $parsedLastPage = $response->getTransactionsLinks()->getLast()?->getParams()['page'] ?? 0;
+                $totalPages = min($totalPages, $parsedLastPage);
+                $transactions = array_merge($transactions, $response->getTransactionsBooked());
+            } while ($page <= $totalPages);
+
+            return array_map(function (TransactionValue $transaction) {
+                return $this->transactionBngToBankPayment($transaction);
+            }, $transactions);
+        } catch (Throwable $e) {
+            $bngService::logError('Fetch payments', $e);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param string $payment_id
+     * @throws ApiException
+     * @return BankPayment|null
+     */
+    protected function fetchPaymentBNG(string $monetary_account_id, string $payment_id): ?BankPayment
+    {
+        /** @var BNGService $bngService */
+        $bngService = resolve('bng_service');
+        $transaction = $bngService->getTransaction(
+            $monetary_account_id,
+            $this->consent_id,
+            $this->access_token,
+            $payment_id,
+        );
+
+        return $transaction ? $this->transactionBngToBankPayment($transaction) : null;
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param string $payment_id
+     * @return BankPayment|null
+     */
+    protected function fetchPaymentBunq(string $monetary_account_id, string $payment_id): ?array
+    {
+        if (!$this->useContext()) {
+            return null;
+        }
+
+        $payment = Payment::get($payment_id, $monetary_account_id)->getValue();
+        $bankPayment = new BankPayment($payment->getId(), $payment->getAmount()->getValue());
+
+        return $bankPayment
+            ->setCurrency($payment->getAmount()->getCurrency())
+            ->setDescription($payment->getDescription());
+    }
+
+    /**
+     * @param TransactionValue $transaction
+     * @return BankPayment
+     */
+    protected function transactionBngToBankPayment(TransactionValue $transaction): BankPayment
+    {
+        $payment = new BankPayment(
+            $transaction->getTransactionId(),
+            $transaction->getTransactionAmount()
+        );
+
+        return $payment
+            ->setDate($transaction->getTransactionDate())
+            ->setCurrency($transaction->getTransactionCurrency())
+            ->setDescription($transaction->getTransactionDescription())
+            ->setRaw($transaction->getRaw());
     }
 }

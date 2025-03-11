@@ -11,8 +11,8 @@ class ContactFormMail extends ImplementationMail
     public $subject = 'New message from contact form';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

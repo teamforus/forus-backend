@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\AuthService;
 
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -73,6 +74,7 @@ class BearerTokenGuard implements Guard
 
         if (!is_null($user)) {
             $this->setUser($user);
+
             return true;
         }
 

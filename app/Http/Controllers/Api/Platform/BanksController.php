@@ -14,8 +14,8 @@ class BanksController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexBanksRequest $request
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(IndexBanksRequest $request): AnonymousResourceCollection
     {
@@ -28,8 +28,8 @@ class BanksController extends Controller
      * Display the specified resource.
      *
      * @param Bank $bank
-     * @return BankResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BankResource
      */
     public function show(Bank $bank): BankResource
     {

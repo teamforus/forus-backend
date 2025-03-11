@@ -68,19 +68,19 @@ class StoreTransactionRequest extends BaseFormRequest
         $targets = [
             $allowDirectPayments ? VoucherTransaction::TARGET_IBAN : null,
             $allowTopUps ? VoucherTransaction::TARGET_TOP_UP : null,
-            VoucherTransaction::TARGET_PROVIDER
+            VoucherTransaction::TARGET_PROVIDER,
         ];
 
         return array_merge([
-            'target' => ['required', Rule::in(array_filter($targets))]
+            'target' => ['required', Rule::in(array_filter($targets))],
         ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
             'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
             'target_name' => 'required_without:target_reimbursement_id|string|min:3|max:200',
             'target_reimbursement_id' => [
                 'required_without:target_iban',
-                Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher))
+                Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher)),
             ],
-        ]: []);
+        ] : []);
     }
 
     /**
@@ -109,7 +109,7 @@ class StoreTransactionRequest extends BaseFormRequest
     {
         $builder = VoucherQuery::whereNotExpiredAndActive(Voucher::query());
 
-        $builder = $builder->whereHas('fund', function(Builder $builder) {
+        $builder = $builder->whereHas('fund', function (Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_BUDGET);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
@@ -130,7 +130,7 @@ class StoreTransactionRequest extends BaseFormRequest
             FundProvider::query(),
             $voucher->fund_id,
             'budget'
-        )->whereHas('fund', function(Builder $builder) {
+        )->whereHas('fund', function (Builder $builder) {
             $builder->where('type', Fund::TYPE_BUDGET);
         })->pluck('fund_providers.organization_id')->toArray() : [];
     }
@@ -153,5 +153,4 @@ class StoreTransactionRequest extends BaseFormRequest
             ->where('state', Reimbursement::STATE_APPROVED)
             ->select('id');
     }
-
 }

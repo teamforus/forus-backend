@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundConfigRecord
+ * App\Models\FundConfigRecord.
  *
  * @property int $id
  * @property int $fund_id
@@ -29,14 +29,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FundConfigRecord extends Model
 {
     protected $fillable = [
-        'fund_id', 'record_type_id', 'record_validity_days'
+        'fund_id', 'record_type_id', 'record_validity_days',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
@@ -44,7 +45,8 @@ class FundConfigRecord extends Model
      * @return BelongsTo
      * @noinspection PhpUnused
      */
-    public function record_type(): BelongsTo {
+    public function record_type(): BelongsTo
+    {
         return $this->belongsTo(RecordType::class);
     }
 }

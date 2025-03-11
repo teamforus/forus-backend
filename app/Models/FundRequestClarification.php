@@ -6,7 +6,7 @@ use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundRequestClarification
+ * App\Models\FundRequestClarification.
  *
  * @property int $id
  * @property int $fund_request_record_id

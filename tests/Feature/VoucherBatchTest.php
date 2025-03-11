@@ -6,14 +6,17 @@ use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
-use Tests\TestCases\VoucherBatchTestCases;
 use Tests\TestCase;
+use Tests\TestCases\VoucherBatchTestCases;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\VoucherTestTrait;
+use Throwable;
 
 class VoucherBatchTest extends TestCase
 {
-    use VoucherTestTrait, DatabaseTransactions, MakesTestFunds;
+    use VoucherTestTrait;
+    use DatabaseTransactions;
+    use MakesTestFunds;
 
     /**
      * @var string
@@ -21,8 +24,8 @@ class VoucherBatchTest extends TestCase
     protected string $apiUrl = '/api/v1/platform/organizations/%s/sponsor/vouchers/batch';
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetVouchers(): void
     {
@@ -30,8 +33,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseProductVouchers(): void
     {
@@ -39,8 +42,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetVouchersAllowedDirectPayments(): void
     {
@@ -48,8 +51,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetVouchersNoBSNExceedAmount(): void
     {
@@ -57,8 +60,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetAndProductVouchersEdgeCases(): void
     {
@@ -66,8 +69,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetVouchersSameAssign(): void
     {
@@ -75,8 +78,8 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBatchCaseBudgetVouchersAllowedDirectPaymentsErrors(): void
     {
@@ -84,7 +87,7 @@ class VoucherBatchTest extends TestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function processVoucherBatchTestCase(array $testCase): void
     {
@@ -112,8 +115,8 @@ class VoucherBatchTest extends TestCase
      * @param Fund $fund
      * @param array $assert
      * @param Product[] $products
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function storeVouchers(Fund $fund, array $assert, array $products): void
     {

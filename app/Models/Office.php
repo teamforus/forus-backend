@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
- * App\Models\Office
+ * App\Models\Office.
  *
  * @property int $id
  * @property int $organization_id
@@ -113,17 +113,19 @@ class Office extends BaseModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
     /**
-     * Get fund logo
+     * Get fund logo.
      * @return MorphOne
      */
-    public function photo(): MorphOne {
+    public function photo(): MorphOne
+    {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'office_photo'
+            'type' => 'office_photo',
         ]);
     }
 
@@ -134,7 +136,8 @@ class Office extends BaseModel
     public function updateSchedule(?array $schedules = []): self
     {
         $this->schedules()->whereNotIn('week_day', array_pluck(
-            $schedules, 'week_day'
+            $schedules,
+            'week_day'
         ))->delete();
 
         foreach ($schedules as $schedule) {
@@ -151,7 +154,7 @@ class Office extends BaseModel
     }
 
     /**
-     * Update postcode and coordinates by google api
+     * Update postcode and coordinates by google api.
      */
     public function updateGeoData(): void
     {

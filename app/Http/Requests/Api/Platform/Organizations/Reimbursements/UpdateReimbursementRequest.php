@@ -33,7 +33,7 @@ class UpdateReimbursementRequest extends FormRequest
             'reimbursement_category_id' => [
                 'nullable',
                 Rule::exists('reimbursement_categories', 'id')
-                    ->where('organization_id', $this->organization->id)
+                    ->where('organization_id', $this->organization->id),
             ],
         ];
     }

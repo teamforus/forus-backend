@@ -28,8 +28,8 @@ class Artifact
     }
 
     /**
-     * @return Response
      * @throws
+     * @return Response
      */
     public function resolve(): Response
     {
@@ -57,8 +57,22 @@ class Artifact
     }
 
     /**
-     * @return ArtifactResolve
+     * A validator which returns true if the ArtifactResponse was signed with the given key.
+     *
+     * @param ArtifactResponse $message
+     * @param XMLSecurityKey $key
+     * @throws Exception
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public static function validateSignature(ArtifactResponse $message, XMLSecurityKey $key): bool
+    {
+        return $message->validate($key);
+    }
+
+    /**
      * @throws Throwable
+     * @return ArtifactResolve
      */
     protected function makeArtifactResolve(): ArtifactResolve
     {
@@ -75,19 +89,5 @@ class Artifact
         $artifactResolve->setCertificates([$this->settings->getSPcert()]);
 
         return $artifactResolve;
-    }
-
-    /**
-     * A validator which returns true if the ArtifactResponse was signed with the given key
-     *
-     * @param ArtifactResponse $message
-     * @param XMLSecurityKey $key
-     * @return bool
-     * @throws Exception
-     * @noinspection PhpUnused
-     */
-    public static function validateSignature(ArtifactResponse $message, XMLSecurityKey $key) : bool
-    {
-        return $message->validate($key);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace Tests\Traits;
 
-use App\Models\ProductReservation;
-use Illuminate\Testing\TestResponse;
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -48,7 +48,6 @@ trait TestsReservations
             $this->makeApiHeaders($this->makeIdentityProxy($reservation->voucher->identity)),
         );
     }
-
 
     /**
      * @param ProductReservation $reservation

@@ -2,6 +2,7 @@
 
 namespace App\Services\FileService\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 
 class FilesCleanupCommand extends Command
@@ -35,7 +36,7 @@ class FilesCleanupCommand extends Command
     /**
      * Execute the console command.
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(): void
     {
@@ -56,7 +57,7 @@ class FilesCleanupCommand extends Command
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function filesWithoutFileable(): void
     {
@@ -66,7 +67,7 @@ class FilesCleanupCommand extends Command
         if ($countFiles > 0) {
             echo sprintf("%s files without fileble where found.\n", $countFiles);
 
-            if ($this->option('force') || $this->confirm("Would you like to delete them?")) {
+            if ($this->option('force') || $this->confirm('Would you like to delete them?')) {
                 echo "√ {${$files->clearFilesWithoutFileable()}} files deleted.\n";
             } else {
                 echo "√ Skipped.\n";
@@ -78,7 +79,7 @@ class FilesCleanupCommand extends Command
 
     /**
      * @param int $minutes
-     * @throws \Exception
+     * @throws Exception
      */
     public function expiredFiles(int $minutes): void
     {
@@ -89,7 +90,7 @@ class FilesCleanupCommand extends Command
             echo sprintf("%s expired files found.\n", $countFiles);
 
             if ($this->option('force') ||
-                $this->confirm("Would you like to delete them?")) {
+                $this->confirm('Would you like to delete them?')) {
                 echo "√ {$files->clearExpiredFiles($minutes ?: 5 * 60)} files deleted.\n";
             } else {
                 echo "√ Skipped.\n";
@@ -100,7 +101,7 @@ class FilesCleanupCommand extends Command
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function unusedFiles(): void
     {
@@ -110,7 +111,7 @@ class FilesCleanupCommand extends Command
         if ($countFiles > 0) {
             echo sprintf("%s unused files found.\n", $countFiles);
 
-            if ($this->option('force') || $this->confirm("Would you like to delete them?")) {
+            if ($this->option('force') || $this->confirm('Would you like to delete them?')) {
                 echo "√ {$file->clearStorage()} files deleted.\n";
             } else {
                 echo "√ Skipped.\n";

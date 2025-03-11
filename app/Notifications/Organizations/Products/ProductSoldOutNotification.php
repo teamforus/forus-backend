@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 
 /**
- * The product was sold out
+ * The product was sold out.
  */
 class ProductSoldOutNotification extends BaseProductsNotification
 {

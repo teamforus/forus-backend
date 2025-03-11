@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseMollieConnectionEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -23,7 +25,8 @@ abstract class BaseMollieConnectionEvent
         protected MollieConnection $mollieConnection,
         protected ?Employee $employee = null,
         protected array $data = [],
-    ) {}
+    ) {
+    }
 
     /**
      * @return MollieConnection

@@ -10,7 +10,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseProductEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected Product $product;
 
@@ -25,7 +27,7 @@ abstract class BaseProductEvent
     }
 
     /**
-     * Get the product
+     * Get the product.
      *
      * @return Product
      */

@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use App\Services\FileService\Models\File;
 use App\Services\EventLogService\Models\EventLog;
+use App\Services\FileService\Models\File;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     protected array $keysToMigrate = [
         'fund_request_record' => 'App\Models\FundRequestRecord',
         'fund_request_clarification' => 'App\Models\FundRequestClarification',

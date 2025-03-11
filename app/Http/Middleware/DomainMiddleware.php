@@ -23,7 +23,7 @@ class DomainMiddleware
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -36,7 +36,7 @@ class DomainMiddleware
 
             if ($appDomain !== $requestDomain) {
                 return new JsonResponse([
-                    "message" => 'invalid_host_name',
+                    'message' => 'invalid_host_name',
                 ], 403);
             }
         }

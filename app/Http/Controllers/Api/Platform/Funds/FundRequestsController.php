@@ -19,8 +19,8 @@ class FundRequestsController extends Controller
      *
      * @param IndexFundRequestsRequest $request
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundRequestsRequest $request,
@@ -29,7 +29,7 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
         return FundRequestResource::queryCollection($fund->fund_requests()->where([
-            'identity_id' => $request->auth_id()
+            'identity_id' => $request->auth_id(),
         ]), $request);
     }
 
@@ -38,8 +38,8 @@ class FundRequestsController extends Controller
      *
      * @param StoreFundRequestRequest $request
      * @param Fund $fund
-     * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestResource
      */
     public function store(
         StoreFundRequestRequest $request,
@@ -67,15 +67,16 @@ class FundRequestsController extends Controller
     public function storeValidate(
         StoreFundRequestValidationRequest $request,
         Fund $fund
-    ): void {}
+    ): void {
+    }
 
     /**
      * Display the specified resource.
      *
      * @param Fund $fund
      * @param FundRequest $fundRequest
-     * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestResource
      */
     public function show(Fund $fund, FundRequest $fundRequest): FundRequestResource
     {

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\RecordTypeTranslation
+ * App\Models\RecordTypeTranslation.
  *
  * @property int $id
  * @property int $record_type_id
@@ -32,13 +32,13 @@ class RecordTypeTranslation extends Model
      * @var array
      */
     protected $fillable = [
-        'name'
+        'name',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function record_type():BelongsTo
+    public function record_type(): BelongsTo
     {
         return $this->belongsTo(RecordType::class);
     }

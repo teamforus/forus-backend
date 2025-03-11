@@ -126,8 +126,8 @@ class ProviderVoucherResource extends BaseJsonResource
     protected function fundDetails(Fund $fund): array
     {
         return array_merge($fund->only('id', 'name', 'state', 'type'), [
-            'organization'  => (new OrganizationBasicResource($fund->organization))->toArray($this->request),
-            'logo'          => (new MediaCompactResource($fund->logo))->toArray($this->request),
+            'organization' => (new OrganizationBasicResource($fund->organization))->toArray($this->request),
+            'logo' => (new MediaCompactResource($fund->logo))->toArray($this->request),
         ]);
     }
 
@@ -138,7 +138,7 @@ class ProviderVoucherResource extends BaseJsonResource
      */
     protected function getAllowedOrganizations(Voucher $voucher, ?string $identityAddress): Collection
     {
-        $builder = Organization::where(static function(Builder $builder) use ($voucher, $identityAddress) {
+        $builder = Organization::where(static function (Builder $builder) use ($voucher, $identityAddress) {
             OrganizationQuery::whereHasPermissionToScanVoucher($builder, $identityAddress, $voucher);
 
             if ($voucher->product_id) {
@@ -156,20 +156,20 @@ class ProviderVoucherResource extends BaseJsonResource
      */
     protected function getAllowedProductOrganizations(Voucher $voucher, ?string $identityAddress): Collection
     {
-        $builder = Organization::where(static function(Builder $builder) use ($voucher, $identityAddress) {
+        $builder = Organization::where(static function (Builder $builder) use ($voucher, $identityAddress) {
             // Has products available for purchase
-            $builder->where(function(Builder $builder) use ($voucher, $identityAddress) {
+            $builder->where(function (Builder $builder) use ($voucher, $identityAddress) {
                 OrganizationQuery::whereHasPermissions($builder, $identityAddress, 'scan_vouchers');
 
                 if ($voucher->fund->isTypeSubsidy()) {
-                    $builder->whereHas('fund_providers', function(Builder $builder) use ($voucher) {
-                        $builder->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+                    $builder->whereHas('fund_providers', function (Builder $builder) use ($voucher) {
+                        $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
                             FundProviderProductQuery::whereAvailableForSubsidyVoucher($builder, $voucher);
                         });
                     });
                 } else {
                     // Product approved to be bought by target voucher
-                    $builder->whereHas('products', function(Builder $builder) use ($voucher) {
+                    $builder->whereHas('products', function (Builder $builder) use ($voucher) {
                         ProductQuery::whereAvailableForVoucher($builder, $voucher, null, false);
                     });
                 }
@@ -177,7 +177,7 @@ class ProviderVoucherResource extends BaseJsonResource
 
             foreach ($voucher->product_vouchers as $product_voucher) {
                 // Or where at least one of the product vouchers is available for usage
-                $builder->orWhere(function(Builder $builder) use ($identityAddress, $product_voucher) {
+                $builder->orWhere(function (Builder $builder) use ($identityAddress, $product_voucher) {
                     OrganizationQuery::whereHasPermissionToScanVoucher($builder, $identityAddress, $product_voucher);
                 });
             }
@@ -194,7 +194,7 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         $organizations = $builder->orderBy('name')->get();
 
-        return $organizations->map(function(Organization $organization) {
+        return $organizations->map(function (Organization $organization) {
             return array_merge($organization->only('id', 'name'), [
                 'logo' => (new MediaCompactResource($organization->logo))->toArray($this->request),
             ]);
@@ -208,7 +208,7 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         if ($this->resource instanceof VoucherToken) {
             return $this->resource;
-        } else if ($this->resource instanceof Voucher) {
+        } elseif ($this->resource instanceof Voucher) {
             return $this->resource->token_without_confirmation;
         }
 

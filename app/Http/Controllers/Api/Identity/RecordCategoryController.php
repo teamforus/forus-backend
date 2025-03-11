@@ -8,12 +8,13 @@ use App\Http\Requests\Api\RecordCategories\RecordCategoryUpdateRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\RecordCategoryResource;
 use App\Models\RecordCategory;
+use Exception;
 use Illuminate\Http\JsonResponse;
 
 class RecordCategoryController extends Controller
 {
     /**
-     * Get list categories
+     * Get list categories.
      * @param BaseFormRequest $request
      * @return JsonResponse
      */
@@ -25,7 +26,7 @@ class RecordCategoryController extends Controller
     }
 
     /**
-     * Create new record category
+     * Create new record category.
      * @param RecordCategoryStoreRequest $request
      * @return RecordCategoryResource
      */
@@ -40,7 +41,7 @@ class RecordCategoryController extends Controller
     }
 
     /**
-     * Get record category
+     * Get record category.
      * @param BaseFormRequest $request
      * @param int $recordCategoryId
      * @return RecordCategoryResource
@@ -59,7 +60,7 @@ class RecordCategoryController extends Controller
     }
 
     /**
-     * Update record category
+     * Update record category.
      * @param RecordCategoryUpdateRequest $request
      * @param int $recordCategoryId
      * @return RecordCategoryResource
@@ -80,12 +81,12 @@ class RecordCategoryController extends Controller
     }
 
     /**
-     * Delete record category
+     * Delete record category.
      *
      * @param BaseFormRequest $request
      * @param int $recordCategoryId
+     * @throws Exception
      * @return JsonResponse
-     * @throws \Exception
      */
     public function destroy(BaseFormRequest $request, int $recordCategoryId): JsonResponse
     {
@@ -108,7 +109,7 @@ class RecordCategoryController extends Controller
     }
 
     /**
-     * Sort record categories
+     * Sort record categories.
      * @param BaseFormRequest $request
      * @return JsonResponse
      */

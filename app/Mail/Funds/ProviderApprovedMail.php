@@ -11,8 +11,8 @@ class ProviderApprovedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_fund_providers.approved_budget';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

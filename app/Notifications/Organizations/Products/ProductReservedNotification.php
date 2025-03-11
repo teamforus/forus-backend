@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 
 /**
- * The product was reserved
+ * The product was reserved.
  */
 class ProductReservedNotification extends BaseProductsNotification
 {

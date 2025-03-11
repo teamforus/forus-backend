@@ -9,6 +9,7 @@ use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Services\MediaService\Models\Media;
+use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -18,7 +19,9 @@ use Throwable;
 
 class ImplementationCMSTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, AssertsSentEmails;
+    use DatabaseTransactions;
+    use WithFaker;
+    use AssertsSentEmails;
 
     /**
      * @var string
@@ -51,7 +54,7 @@ class ImplementationCMSTest extends TestCase
             'id', 'label', 'title', 'description', 'description_html',
             'button_text', 'button_link', 'button_target_blank', 'button_enabled',
         ],
-        'data.faq.*'  => [
+        'data.faq.*' => [
             'id', 'title', 'description', 'description_html',
         ],
         'data.blocks.*.media' => [
@@ -87,8 +90,8 @@ class ImplementationCMSTest extends TestCase
     ];
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreImplementationPage(): void
     {
@@ -102,8 +105,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testStoreInvalidImplementationPage(): void
     {
@@ -119,13 +122,13 @@ class ImplementationCMSTest extends TestCase
         );
 
         $response->assertJsonValidationErrors(array_keys(array_except($pageData, [
-            'state', 'description', 'description_position', 'description_alignment', 'blocks', 'external_url'
+            'state', 'description', 'description_position', 'description_alignment', 'blocks', 'external_url',
         ])));
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUpdateImplementationPage(): void
     {
@@ -167,8 +170,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSyncImplementationPageBlocks(): void
     {
@@ -197,8 +200,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSyncImplementationPageFaq(): void
     {
@@ -237,8 +240,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUpdateInvalidImplementationPage(): void
     {
@@ -263,8 +266,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testDeleteImplementationPage(): void
     {
@@ -287,8 +290,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testUpdateImplementationCMS(): void
     {
@@ -305,8 +308,8 @@ class ImplementationCMSTest extends TestCase
 
     /**
      * @param string $mediaType
+     * @throws Exception
      * @return Media
-     * @throws \Exception
      */
     protected function makeMedia(string $mediaType): Media
     {
@@ -320,17 +323,18 @@ class ImplementationCMSTest extends TestCase
      * @param Media $media
      * @return string
      */
-    protected function makeMarkdownDescription(Media $media): string {
+    protected function makeMarkdownDescription(Media $media): string
+    {
         return implode("  \n", [
-            '# '.$this->faker->text(50),
-            '![]('. $media->urlPublic('public') .')',
-            '# '.$this->faker->text(50),
+            '# ' . $this->faker->text(50),
+            '![](' . $media->urlPublic('public') . ')',
+            '# ' . $this->faker->text(50),
         ]);
     }
 
     /**
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     protected function makePageBlockData(): array
     {
@@ -348,8 +352,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     protected function makeFAQData(): array
     {
@@ -375,8 +379,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     protected function makeCMSData(): array
     {
@@ -402,8 +406,8 @@ class ImplementationCMSTest extends TestCase
 
     /**
      * @param array $replace
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     protected function makePageData(array $replace = []): array
     {
@@ -413,10 +417,10 @@ class ImplementationCMSTest extends TestCase
         $external = (bool) rand(0, 1);
 
         return array_merge([
-            'state'=> ImplementationPage::STATE_DRAFT,
+            'state' => ImplementationPage::STATE_DRAFT,
             'blocks' => array_map(fn () => $this->makePageBlockData(), range(0, rand(1, 5))),
             'external' => $external,
-            'page_type'=> Arr::random($pageTypes),
+            'page_type' => Arr::random($pageTypes),
             'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
             'external_url' => $external ? $this->faker->url : null,
             'description_position' => Arr::random(ImplementationPage::DESCRIPTION_POSITIONS),
@@ -436,8 +440,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     protected function blockKeys(): array
     {
@@ -445,8 +449,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     protected function announcementKeys(): array
     {
@@ -454,8 +458,8 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     protected function faqKeys(): array
     {
@@ -472,7 +476,7 @@ class ImplementationCMSTest extends TestCase
         ?ImplementationPage $implementationPage = null
     ): string {
         return sprintf(
-            $this->apiUrl . ($implementationPage ? "/pages/%s" : '/pages'),
+            $this->apiUrl . ($implementationPage ? '/pages/%s' : '/pages'),
             $implementation->organization_id,
             $implementation->id,
             $implementationPage?->id,
@@ -491,8 +495,8 @@ class ImplementationCMSTest extends TestCase
     /**
      * @param int $id
      * @param array $body
-     * @return void
      * @throws Throwable
+     * @return void
      */
     private function assertImplementationPageSaved(int $id, array $body): void
     {
@@ -535,8 +539,8 @@ class ImplementationCMSTest extends TestCase
     /**
      * @param int $id
      * @param array $body
-     * @return void
      * @throws Throwable
+     * @return void
      */
     private function assertImplementationCMSSaved(int $id, array $body): void
     {

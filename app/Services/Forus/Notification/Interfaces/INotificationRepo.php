@@ -1,13 +1,13 @@
 <?php
 
-
 namespace App\Services\Forus\Notification\Interfaces;
 
+use Exception;
 
 interface INotificationRepo
 {
     /**
-     * Is email unsubscribed from all emails
+     * Is email unsubscribed from all emails.
      *
      * @param string $email
      * @return bool
@@ -15,21 +15,21 @@ interface INotificationRepo
     public function isEmailUnsubscribed(string $email): bool;
 
     /**
-     * Check if Mail class can be unsubscribed
+     * Check if Mail class can be unsubscribed.
      * @param string $emailClass
      * @return bool
      */
     public function isMailUnsubscribable(string $emailClass): bool;
 
     /**
-     * Check if Push notification can be unsubscribed
+     * Check if Push notification can be unsubscribed.
      * @param string $pushKey
      * @return bool
      */
     public function isPushNotificationUnsubscribable(string $pushKey): bool;
 
     /**
-     * Check if Push notification can be unsubscribed
+     * Check if Push notification can be unsubscribed.
      *
      * @param string $identity_address
      * @param string $pushKey
@@ -38,17 +38,17 @@ interface INotificationRepo
     public function isPushNotificationUnsubscribed(string $identity_address, string $pushKey): bool;
 
     /**
-     * Is email unsubscribed for specific email
+     * Is email unsubscribed for specific email.
      *
      * @param string $identity_address
      * @param string $emailClass
+     * @throws Exception
      * @return bool
-     * @throws \Exception
      */
     public function isEmailTypeUnsubscribed($identity_address, $emailClass): bool;
 
     /**
-     * Create new unsubscription from all emails link
+     * Create new unsubscription from all emails link.
      * @param string $email
      * @param string|null $token
      * @return string
@@ -56,7 +56,7 @@ interface INotificationRepo
     public function makeUnsubLink(string $email, string $token = null): string;
 
     /**
-     * Create new unsubscription from all emails link
+     * Create new unsubscription from all emails link.
      * @param string $email
      * @param string|null $token
      * @return string
@@ -64,13 +64,13 @@ interface INotificationRepo
     public function makeReSubLink(string $email, string $token = null): string;
 
     /**
-     * Unsubscribe email from all notifications
+     * Unsubscribe email from all notifications.
      * @param string $email
      */
     public function unsubscribeEmail(string $email): void;
 
     /**
-     * Remove email unsubscription from all notifications
+     * Remove email unsubscription from all notifications.
      * @param string $email
      */
     public function reSubscribeEmail(string $email): void;

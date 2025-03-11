@@ -11,7 +11,7 @@ class Saml2Exception extends Exception
      * @param string|Throwable $message
      * @param int $code
      */
-    public function __construct(string|Throwable $message = "", int $code = 1)
+    public function __construct(string|Throwable $message = '', int $code = 1)
     {
         if ($message instanceof Throwable) {
             return parent::__construct($message->getMessage(), $code, $message);

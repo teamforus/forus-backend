@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 /**
- * Send voucher to owner's email
+ * Send voucher to owner's email.
  */
 class IdentityVoucherSharedByEmailNotification extends BaseIdentityVoucherNotification
 {

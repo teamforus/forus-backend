@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\ProductReservation;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
+            'ALTER TABLE `product_reservations` CHANGE `state` `state` ' .
             "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'complete') DEFAULT 'pending';"
         );
 
@@ -30,17 +29,6 @@ return new class extends Migration
 
             $reservation->restore();
         }
-    }
-
-    /**
-     * @return Builder|ProductReservation
-     */
-    protected function getPendingReservationsQuery(): Builder|ProductReservation
-    {
-        return ProductReservation::query()
-            ->whereNull('employee_id')
-            ->whereNull('voucher_transaction_id')
-            ->whereDoesntHave('product_voucher');
     }
 
     /**
@@ -62,8 +50,19 @@ return new class extends Migration
         }
 
         DB::statement(
-            "ALTER TABLE `product_reservations` CHANGE `state` `state` ".
+            'ALTER TABLE `product_reservations` CHANGE `state` `state` ' .
             "ENUM('pending', 'accepted', 'rejected', 'canceled', 'complete') DEFAULT 'pending';"
         );
+    }
+
+    /**
+     * @return Builder|ProductReservation
+     */
+    protected function getPendingReservationsQuery(): Builder|ProductReservation
+    {
+        return ProductReservation::query()
+            ->whereNull('employee_id')
+            ->whereNull('voucher_transaction_id')
+            ->whereDoesntHave('product_voucher');
     }
 };

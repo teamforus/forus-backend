@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Role;
+use Illuminate\Database\Seeder;
 
 class RolesTableSeeder extends Seeder
 {
@@ -55,7 +55,7 @@ class RolesTableSeeder extends Seeder
         'voucher_reader' => [
             'en' => 'Voucher viewer',
             'nl' => 'Raadpleger',
-        ]
+        ],
     ];
 
     /**
@@ -76,7 +76,7 @@ class RolesTableSeeder extends Seeder
     }
 
     /**
-     * @return array|\string[][]
+     * @return array|string[][]
      */
     public function getRoles(): array
     {

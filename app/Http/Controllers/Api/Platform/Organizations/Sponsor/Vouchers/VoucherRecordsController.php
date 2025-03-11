@@ -26,8 +26,8 @@ class VoucherRecordsController extends Controller
      * @param IndexVoucherRecordRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexVoucherRecordRequest $request,
@@ -49,8 +49,8 @@ class VoucherRecordsController extends Controller
      * @param StoreVoucherRecordRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherRecordResource
      * @throws AuthorizationException
+     * @return SponsorVoucherRecordResource
      */
     public function store(
         StoreVoucherRecordRequest $request,
@@ -72,8 +72,8 @@ class VoucherRecordsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @param VoucherRecord $voucherRecord
-     * @return SponsorVoucherRecordResource
      * @throws AuthorizationException
+     * @return SponsorVoucherRecordResource
      */
     public function show(
         Organization $organization,
@@ -92,8 +92,8 @@ class VoucherRecordsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @param VoucherRecord $voucherRecord
-     * @return SponsorVoucherRecordResource
      * @throws AuthorizationException
+     * @return SponsorVoucherRecordResource
      */
     public function update(
         UpdateVoucherRecordRequest $request,
@@ -118,8 +118,8 @@ class VoucherRecordsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @param VoucherRecord $voucherRecord
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      */
     public function destroy(
         Organization $organization,

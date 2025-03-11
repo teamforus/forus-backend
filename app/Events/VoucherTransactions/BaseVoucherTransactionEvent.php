@@ -11,7 +11,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseVoucherTransactionEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     private VoucherTransaction $voucherTransaction;
     private array $logData;
@@ -29,7 +31,7 @@ abstract class BaseVoucherTransactionEvent
     }
 
     /**
-     * Get the voucher transaction
+     * Get the voucher transaction.
      *
      * @return VoucherTransaction
      */
@@ -39,7 +41,7 @@ abstract class BaseVoucherTransactionEvent
     }
 
     /**
-     * Get raw log data
+     * Get raw log data.
      *
      * @return array
      */

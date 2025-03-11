@@ -37,8 +37,8 @@ class StoreFundProviderInvitationsRequest extends FormRequest
         return [
             'fund_id' => [
                 'required',
-                Rule::in($fromFunds)
-            ]
+                Rule::in($fromFunds),
+            ],
         ];
     }
 }

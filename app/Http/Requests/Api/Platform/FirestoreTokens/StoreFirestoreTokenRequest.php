@@ -27,7 +27,7 @@ class StoreFirestoreTokenRequest extends BaseFormRequest
         $keys = SystemConfig::where('key', 'firestore_key')->pluck('value');
 
         return [
-            'key' => 'required|in:' . $keys->implode(',')
+            'key' => 'required|in:' . $keys->implode(','),
         ];
     }
 }

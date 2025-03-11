@@ -17,7 +17,7 @@ class VoucherRecordSearch extends BaseSearch
         $builder = $this->appendSortColumns(parent::getBuilder());
 
         if ($q = $this->getFilter('q')) {
-            $builder->where(function(Builder $builder) use ($q) {
+            $builder->where(function (Builder $builder) use ($q) {
                 $builder->where('value', 'LIKE', "%$q%");
                 $builder->orWhere('note', 'LIKE', "%$q%");
                 $builder->orWhere('record_type_name', 'LIKE', "%$q%");

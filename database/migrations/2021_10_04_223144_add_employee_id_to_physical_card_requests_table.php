@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -16,8 +15,10 @@ return new class extends Migration
         Schema::table('physical_card_requests', function (Blueprint $table) {
             $table->unsignedInteger('employee_id')->nullable()->after('voucher_id');
 
-            $table->foreign('employee_id')->references('id')
-                ->on('employees')->onDelete('restrict');
+            $table->foreign('employee_id')
+                ->references('id')
+                ->on('employees')
+                ->onDelete('restrict');
         });
     }
 

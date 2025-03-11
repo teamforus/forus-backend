@@ -9,6 +9,7 @@ use App\Http\Resources\FundProviderInvitationResource;
 use App\Models\Fund;
 use App\Models\FundProviderInvitation;
 use App\Models\Organization;
+use Exception;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderInvitationsController extends Controller
@@ -19,8 +20,8 @@ class FundProviderInvitationsController extends Controller
      * @param IndexFundProviderInvitationsRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderInvitationsRequest $request,
@@ -28,14 +29,14 @@ class FundProviderInvitationsController extends Controller
         Fund $fund
     ): AnonymousResourceCollection {
         $this->authorize('viewAnySponsor', [
-            FundProviderInvitation::class, $fund, $organization
+            FundProviderInvitation::class, $fund, $organization,
         ]);
 
         $providers = $fund->provider_invitations()->getQuery();
 
         if ($request->has('state')) {
             $providers->where([
-                'state' => $request->input('state')
+                'state' => $request->input('state'),
             ]);
         }
 
@@ -43,13 +44,13 @@ class FundProviderInvitationsController extends Controller
     }
 
     /**
-     * Display the specified resource
+     * Display the specified resource.
      *
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProviderInvitation $invitation
-     * @return FundProviderInvitationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderInvitationResource
      */
     public function show(
         Organization $organization,
@@ -67,9 +68,9 @@ class FundProviderInvitationsController extends Controller
      * @param StoreFundProviderInvitationsRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function store(
         StoreFundProviderInvitationsRequest $request,
@@ -79,7 +80,7 @@ class FundProviderInvitationsController extends Controller
         $fromFund = Fund::find($request->input('fund_id'));
 
         $this->authorize('storeSponsor', [
-            FundProviderInvitation::class, $fromFund, $fund, $organization
+            FundProviderInvitation::class, $fromFund, $fund, $organization,
         ]);
 
         return FundProviderInvitationResource::collection(

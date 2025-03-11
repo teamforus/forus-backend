@@ -30,24 +30,6 @@ abstract class ConsentValue extends Value
     }
 
     /**
-     * @param BNGService $BNGService
-     * @param array $params
-     * @return array
-     */
-    protected function getParams(BNGService $BNGService, array $params = []): array
-    {
-        return array_merge([
-            "scope" => $this->getScope(),
-            "redirect_uri" => $this->getRedirectUri(),
-            "response_type" => "code",
-            "state" => $BNGService->makeToken(40),
-            "code_challenge" => $BNGService->makeToken(40),
-            "code_challenge_method" => "Plain",
-            "client_id" => $BNGService->clientId(),
-        ], $params);
-    }
-
-    /**
      * @return string
      */
     public function getRedirectUri(): string
@@ -64,14 +46,32 @@ abstract class ConsentValue extends Value
     }
 
     /**
+     * @return mixed
+     */
+    abstract public function getScope(): string;
+
+    /**
+     * @param BNGService $BNGService
+     * @param array $params
+     * @return array
+     */
+    protected function getParams(BNGService $BNGService, array $params = []): array
+    {
+        return array_merge([
+            'scope' => $this->getScope(),
+            'redirect_uri' => $this->getRedirectUri(),
+            'response_type' => 'code',
+            'state' => $BNGService->makeToken(40),
+            'code_challenge' => $BNGService->makeToken(40),
+            'code_challenge_method' => 'Plain',
+            'client_id' => $BNGService->clientId(),
+        ], $params);
+    }
+
+    /**
      * @param string $authRedirectUri
      * @param string $redirectToken
      * @return string
      */
     abstract protected function makeRedirectUri(string $authRedirectUri, string $redirectToken): string;
-
-    /**
-     * @return mixed
-     */
-    abstract function getScope(): string;
 }

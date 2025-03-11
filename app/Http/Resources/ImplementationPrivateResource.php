@@ -59,7 +59,7 @@ class ImplementationPrivateResource extends BaseJsonResource
 
         $data = array_merge($data, [
             'pages' => ImplementationPageResource::collection($implementation->pages),
-            'page_types' => array_map(fn(array $pageType) => array_merge($pageType, [
+            'page_types' => array_map(fn (array $pageType) => array_merge($pageType, [
                 'webshop_url' => $implementation->urlWebshop(ImplementationPage::webshopUriByPageType($pageType['key'])),
             ]), ImplementationPage::PAGE_TYPES),
         ]);
@@ -95,8 +95,8 @@ class ImplementationPrivateResource extends BaseJsonResource
     /**
      * @param BaseFormRequest $request
      * @param Implementation $implementation
-     * @return array
      * @throws CommonMarkException
+     * @return array
      */
     protected function managerCMSDetails(
         BaseFormRequest $request,

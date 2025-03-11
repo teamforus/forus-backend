@@ -29,7 +29,7 @@ abstract class DigidData
      */
     public function setMeta(array $meta): self
     {
-        return $this->tap(fn() => $this->meta = $meta);
+        return $this->tap(fn () => $this->meta = $meta);
     }
 
     /**
@@ -39,6 +39,7 @@ abstract class DigidData
     protected function tap(callable $callback): self
     {
         $callback();
+
         return $this;
     }
 }

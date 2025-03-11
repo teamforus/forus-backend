@@ -2,4 +2,6 @@
 
 namespace App\Events\BankConnections;
 
-class BankConnectionActivated extends BaseBankConnectionEvent {}
+class BankConnectionActivated extends BaseBankConnectionEvent
+{
+}

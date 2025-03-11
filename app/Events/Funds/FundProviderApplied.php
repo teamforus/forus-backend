@@ -22,7 +22,7 @@ class FundProviderApplied extends BaseFundEvent
     }
 
     /**
-     * Get the voucher
+     * Get the voucher.
      *
      * @return FundProvider
      */

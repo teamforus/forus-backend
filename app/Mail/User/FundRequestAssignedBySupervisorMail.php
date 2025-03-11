@@ -11,8 +11,8 @@ class FundRequestAssignedBySupervisorMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.assigned_to_fund_request_by_supervisor';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

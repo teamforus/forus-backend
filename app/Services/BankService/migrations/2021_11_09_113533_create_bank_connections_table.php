@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -29,15 +28,18 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('bank_id')
-                ->references('id')->on('banks')
+                ->references('id')
+                ->on('banks')
                 ->onDelete('RESTRICT');
 
             $table->foreign('organization_id')
-                ->references('id')->on('organizations')
+                ->references('id')
+                ->on('organizations')
                 ->onDelete('RESTRICT');
 
             $table->foreign('implementation_id')
-                ->references('id')->on('implementations')
+                ->references('id')
+                ->on('implementations')
                 ->onDelete('RESTRICT');
         });
     }

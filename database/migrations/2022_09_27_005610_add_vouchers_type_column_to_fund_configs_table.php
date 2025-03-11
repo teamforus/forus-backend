@@ -1,13 +1,12 @@
 <?php
 
+use App\Models\Fund;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Fund;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,7 +20,7 @@ return new class extends Migration
                 ->default('internal');
         });
 
-        Fund::whereHas('fund_config', function(Builder $builder) {
+        Fund::whereHas('fund_config', function (Builder $builder) {
             $builder->where('show_voucher_qr', 0);
             $builder->where('show_voucher_amount', 0);
         })->each(function (Fund $fund) {

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,14 +20,18 @@ return new class extends Migration
 
             $table->unique([
                 'organization_id',
-                'validator_organization_id'
+                'validator_organization_id',
             ], 'organization_validators_organization_id_validator_id_unique');
 
-            $table->foreign('validator_organization_id'
-            )->references('id')->on('organizations')->onDelete('cascade');
+            $table->foreign('validator_organization_id')
+                ->references('id')
+                ->on('organizations')
+                ->onDelete('cascade');
 
-            $table->foreign('organization_id'
-            )->references('id')->on('organizations')->onDelete('cascade');
+            $table->foreign('organization_id')
+                ->references('id')
+                ->on('organizations')
+                ->onDelete('cascade');
         });
     }
 

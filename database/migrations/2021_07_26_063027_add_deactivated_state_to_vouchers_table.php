@@ -1,12 +1,11 @@
 <?php
 
+use App\Models\Voucher;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Voucher;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vouchers', function(Blueprint $table) {
+        Schema::table('vouchers', function (Blueprint $table) {
             $table->string('state_tmp', 200)->default('active')->after('identity_address');
         });
 
@@ -22,11 +21,11 @@ return new class extends Migration
             'state_tmp' => DB::raw('state'),
         ]);
 
-        Schema::table('vouchers', function(Blueprint $table) {
+        Schema::table('vouchers', function (Blueprint $table) {
             $table->dropColumn('state');
         });
 
-        Schema::table('vouchers', function(Blueprint $table) {
+        Schema::table('vouchers', function (Blueprint $table) {
             $table->renameColumn('state_tmp', 'state');
         });
     }
@@ -36,5 +35,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

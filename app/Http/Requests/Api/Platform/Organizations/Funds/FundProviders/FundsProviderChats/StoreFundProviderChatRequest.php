@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Funds
 use App\Exceptions\MissingRequiredRequestPropertyException;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
+use Exception;
 use Illuminate\Validation\Rule;
 
 /**
@@ -25,8 +26,8 @@ class StoreFundProviderChatRequest extends BaseFormRequest
     /**
      * Get the validation rules that apply to the request.
      *
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     public function rules(): array
     {
@@ -49,8 +50,8 @@ class StoreFundProviderChatRequest extends BaseFormRequest
                 'required',
                 'string',
                 'min:1',
-                'max:2000'
-            ]
+                'max:2000',
+            ],
         ];
     }
 }

@@ -12,8 +12,8 @@ class RedirectBankConnectionRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {

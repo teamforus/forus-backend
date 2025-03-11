@@ -24,7 +24,7 @@ class ProductTinyResource extends BaseJsonResource
     public function toArray($request): array
     {
         return array_merge($this->resource->only([
-            "id", "name",
+            'id', 'name',
         ]), [
             'photo' => new MediaResource($this->resource->photo),
         ]);

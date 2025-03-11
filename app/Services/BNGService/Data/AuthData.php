@@ -22,7 +22,7 @@ class AuthData
      */
     public function getUrl(): string
     {
-        return implode("?", [$this->url, http_build_query($this->getParams())]);
+        return implode('?', [$this->url, http_build_query($this->getParams())]);
     }
 
     /**

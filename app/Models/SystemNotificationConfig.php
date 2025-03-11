@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\SystemNotificationConfig
+ * App\Models\SystemNotificationConfig.
  *
  * @property int $id
  * @property int $system_notification_id

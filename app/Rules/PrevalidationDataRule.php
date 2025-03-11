@@ -11,7 +11,9 @@ class PrevalidationDataRule extends BaseRule
      *
      * @param Fund|null $fund
      */
-    public function __construct(protected ?Fund $fund = null) {}
+    public function __construct(protected ?Fund $fund = null)
+    {
+    }
 
     /**
      * Determine if the validation rule passes.

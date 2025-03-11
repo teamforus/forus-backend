@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -15,6 +16,7 @@ use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
+use Throwable;
 
 class ProductReservationTest extends TestCase
 {
@@ -26,8 +28,8 @@ class ProductReservationTest extends TestCase
     use MakesProductReservations;
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithBudgetVoucher(): void
     {
@@ -43,8 +45,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithSubsidyVoucherAsUser(): void
     {
@@ -60,8 +62,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithBudgetVoucherAsGuest(): void
     {
@@ -77,8 +79,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithSubsidyVoucherAsGuest(): void
     {
@@ -94,8 +96,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithInvalidVoucher(): void
     {
@@ -123,8 +125,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationWithInvalidProduct(): void
     {
@@ -151,8 +153,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationProviderWithBudgetVoucher(): void
     {
@@ -168,8 +170,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     public function testReservationProviderWithSubsidyVoucher(): void
     {
@@ -185,8 +187,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testReservationArchiving(): void
     {
@@ -202,8 +204,8 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testReservationExpireOffset(): void
     {
@@ -231,47 +233,6 @@ class ProductReservationTest extends TestCase
         ]);
 
         $this->acceptReservation($originalAmount, $reservation, true);
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Product $product
-     * @return void
-     */
-    private function checkValidReservation(Voucher $voucher, Product $product): void
-    {
-        $reservation = $this->makeReservation($voucher, $product);
-        $response = $this->makeReservationGetRequest($reservation);
-
-        $response->assertSuccessful();
-        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
-
-        $this->makeReservationCancelRequest($reservation)->assertSuccessful();
-
-        $reservation = ProductReservation::find($reservation->id);
-        $this->assertTrue($reservation->isCanceledByClient());
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Product $product
-     * @return void
-     * @throws \Throwable
-     */
-    private function checkReservationArchiving(
-        Voucher $voucher,
-        Product $product,
-    ): void {
-        $reservation = $this->makeReservation($voucher, $product);
-        $this->archiveReservationAsProvider($reservation, false);
-
-        $reservation->acceptProvider();
-        /*$this->archiveReservation($reservation, $headers);
-        $this->unarchiveReservation($reservation, $headers);*/
-
-        $reservation->rejectOrCancelProvider();
-        /*$this->archiveReservation($reservation, $headers);
-        $this->unarchiveReservation($reservation, $headers);*/
     }
 
     /**
@@ -337,6 +298,90 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @param float $originalAmount
+     * @param ProductReservation $reservation
+     * @param bool $assertSuccess
+     * @return void
+     */
+    protected function acceptReservation(
+        float $originalAmount,
+        ProductReservation $reservation,
+        bool $assertSuccess,
+    ): void {
+        $startTime = now();
+        $provider = $reservation->product->organization;
+
+        // accept reservation
+        $response = $this->post(
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/accept",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->employees[0]->identity)),
+        );
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonFragment([
+                'state' => ProductReservation::STATE_ACCEPTED,
+            ]);
+
+            $this->assertSame((float) $reservation->voucher->amount_available, $originalAmount - $reservation->amount);
+
+            $reservation = ProductReservation::find($reservation->id);
+            $this->assertTrue($reservation->isAccepted());
+
+            // check transaction exists
+            $transaction = $reservation->product_voucher->transactions()
+                ->where('created_at', '>=', $startTime)
+                ->first();
+
+            $this->assertNotNull($transaction);
+        } else {
+            $response->assertForbidden();
+        }
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return void
+     */
+    private function checkValidReservation(Voucher $voucher, Product $product): void
+    {
+        $reservation = $this->makeReservation($voucher, $product);
+        $response = $this->makeReservationGetRequest($reservation);
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
+
+        $this->makeReservationCancelRequest($reservation)->assertSuccessful();
+
+        $reservation = ProductReservation::find($reservation->id);
+        $this->assertTrue($reservation->isCanceledByClient());
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @throws Throwable
+     * @return void
+     */
+    private function checkReservationArchiving(
+        Voucher $voucher,
+        Product $product,
+    ): void {
+        $reservation = $this->makeReservation($voucher, $product);
+        $this->archiveReservationAsProvider($reservation, false);
+
+        $reservation->acceptProvider();
+        /*$this->archiveReservation($reservation, $headers);
+        $this->unarchiveReservation($reservation, $headers);*/
+
+        $reservation->rejectOrCancelProvider();
+        /*$this->archiveReservation($reservation, $headers);
+        $this->unarchiveReservation($reservation, $headers);*/
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @return void
@@ -366,55 +411,12 @@ class ProductReservationTest extends TestCase
             [],
             $headers
         )->assertJsonFragment([
-            'state' => ProductReservation::STATE_CANCELED_BY_PROVIDER
+            'state' => ProductReservation::STATE_CANCELED_BY_PROVIDER,
         ]);
 
         $this->assertSame((float) $voucher->amount_available, $originalAmount);
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByProvider());
-    }
-
-    /**
-     * @param float $originalAmount
-     * @param ProductReservation $reservation
-     * @param bool $assertSuccess
-     * @return void
-     */
-    protected function acceptReservation(
-        float $originalAmount,
-        ProductReservation $reservation,
-        bool $assertSuccess,
-    ): void {
-        $startTime = now();
-        $provider = $reservation->product->organization;
-
-        // accept reservation
-        $response = $this->post(
-            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/accept",
-            [],
-            $this->makeApiHeaders($this->makeIdentityProxy($provider->employees[0]->identity)),
-        );
-
-        if ($assertSuccess) {
-            $response->assertSuccessful();
-            $response->assertJsonFragment([
-                'state' => ProductReservation::STATE_ACCEPTED
-            ]);
-
-            $this->assertSame((float) $reservation->voucher->amount_available, $originalAmount - $reservation->amount);
-
-            $reservation = ProductReservation::find($reservation->id);
-            $this->assertTrue($reservation->isAccepted());
-
-            // check transaction exists
-            $transaction = $reservation->product_voucher->transactions()
-                ->where('created_at', '>=', $startTime)
-                ->first();
-
-            $this->assertNotNull($transaction);
-        } else {
-            $response->assertForbidden();
-        }
     }
 }

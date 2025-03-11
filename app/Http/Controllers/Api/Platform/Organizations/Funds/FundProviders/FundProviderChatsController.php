@@ -23,8 +23,8 @@ class FundProviderChatsController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $fundProvider
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderChatRequest $request,
@@ -35,7 +35,7 @@ class FundProviderChatsController extends Controller
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
         $this->authorize('viewAnySponsor', [
-            FundProviderChat::class, $fundProvider, $fund, $organization
+            FundProviderChat::class, $fundProvider, $fund, $organization,
         ]);
 
         $query = $fundProvider->fund_provider_chats();
@@ -56,8 +56,8 @@ class FundProviderChatsController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $fundProvider
-     * @return FundProviderChatResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatResource
      */
     public function store(
         StoreFundProviderChatRequest $request,
@@ -68,7 +68,7 @@ class FundProviderChatsController extends Controller
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
         $this->authorize('createSponsor', [
-            FundProviderChat::class, $fundProvider, $fund, $organization
+            FundProviderChat::class, $fundProvider, $fund, $organization,
         ]);
 
         $chatMessage = $fundProvider->startChat(
@@ -89,8 +89,8 @@ class FundProviderChatsController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @param FundProviderChat $fundProviderChat
-     * @return FundProviderChatResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatResource
      */
     public function show(
         Organization $organization,

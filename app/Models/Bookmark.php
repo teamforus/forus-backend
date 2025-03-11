@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Eloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * App\Models\Bookmark
+ * App\Models\Bookmark.
  *
  * @property int $id
  * @property string $identity_address
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $bookmarkable_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $bookmarkable
+ * @property-read Model|Eloquent $bookmarkable
  * @property-read \App\Models\Identity $identity
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Bookmark newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Bookmark newQuery()
@@ -46,7 +47,7 @@ class Bookmark extends Model
      * @return MorphTo
      * @noinspection PhpUnused
      */
-    public function bookmarkable() : MorphTo
+    public function bookmarkable(): MorphTo
     {
         return $this->morphTo();
     }

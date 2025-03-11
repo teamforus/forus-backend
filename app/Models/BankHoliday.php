@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-
 /**
- * App\Models\BankHoliday
+ * App\Models\BankHoliday.
  *
  * @property int $id
  * @property \Illuminate\Support\Carbon $date
