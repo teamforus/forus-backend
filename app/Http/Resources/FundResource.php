@@ -49,6 +49,7 @@ class FundResource extends BaseJsonResource
         'fund_formulas.record_type.record_type_options.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
+        'fund_form',
     ];
 
     /**
@@ -86,6 +87,7 @@ class FundResource extends BaseJsonResource
                     ? $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title'])
                     : $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title', 'description_html']),
             ),
+            'fund_form_id' => $fund->fund_form?->id,
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
             'contact_info_message_default' => $fund->fund_config->getDefaultContactInfoMessage(),
             'tags' => TagResource::collection($fund->tags_webshop->load('translations')),

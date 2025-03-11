@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundForm;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -33,6 +34,7 @@ use App\Policies\BankConnectionPolicy;
 use App\Policies\BIConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
+use App\Policies\FundFormPolicy;
 use App\Policies\FundPolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
@@ -88,6 +90,7 @@ class AuthServiceProvider extends ServiceProvider
         Product::class => ProductPolicy::class,
         Voucher::class => VoucherPolicy::class,
         Employee::class => EmployeePolicy::class,
+        FundForm::class => FundFormPolicy::class,
         FundRequest::class => FundRequestPolicy::class,
         Organization::class => OrganizationPolicy::class,
         FundProvider::class => FundProviderPolicy::class,
