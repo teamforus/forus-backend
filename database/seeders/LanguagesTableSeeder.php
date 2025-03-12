@@ -10,15 +10,15 @@ class LanguagesTableSeeder extends DatabaseSeeder
      * The list of languages.
      */
     public const array LANGUAGES = [
-        ['name' => 'Dutch', 'locale' => 'nl', 'base' => true],
+        ['name' => 'Nederlands', 'locale' => 'nl', 'base' => true],
         ['name' => 'English', 'locale' => 'en'],
-        ['name' => 'Polish', 'locale' => 'pl'],
-        ['name' => 'Arabic', 'locale' => 'ar'],
-        ['name' => 'Turkish', 'locale' => 'tr'],
-        ['name' => 'German', 'locale' => 'de'],
-        ['name' => 'Ukrainian', 'locale' => 'uk'],
-        ['name' => 'Russian', 'locale' => 'ru'],
-        ['name' => 'French', 'locale' => 'fr'],
+        ['name' => 'Polski', 'locale' => 'pl'],
+        ['name' => 'عربي', 'locale' => 'ar'],
+        ['name' => 'Türkçe', 'locale' => 'tr'],
+        ['name' => 'Deutsch', 'locale' => 'de'],
+        ['name' => 'Українська', 'locale' => 'uk'],
+        ['name' => 'Русский', 'locale' => 'ru'],
+        ['name' => 'Français', 'locale' => 'fr'],
     ];
 
     /**
