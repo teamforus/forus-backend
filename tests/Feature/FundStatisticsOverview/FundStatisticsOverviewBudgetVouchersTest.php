@@ -278,8 +278,8 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
      * @param int $vouchersCount
      * @param int $childrenCount
      * @param float $transactionAmount
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function createDeactivatedVouchers(
         Fund $fund,

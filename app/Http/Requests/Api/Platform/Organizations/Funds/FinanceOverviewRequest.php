@@ -28,9 +28,9 @@ class FinanceOverviewRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'export_type'       => 'nullable|in:xls,csv',
-            'detailed'          => 'nullable|boolean',
-            'year'              => 'nullable|integer',
+            'export_type' => 'nullable|in:xls,csv',
+            'detailed' => 'nullable|boolean',
+            'year' => 'nullable|integer',
         ];
     }
 }

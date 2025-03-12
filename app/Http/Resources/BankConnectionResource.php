@@ -28,7 +28,7 @@ class BankConnectionResource extends BaseJsonResource
             'iban' => $this->resource->iban,
             'account_default' => new BankConnectionAccountResource($this->resource->bank_connection_default_account),
             'accounts' => BankConnectionAccountResource::collection($this->resource->bank_connection_accounts),
-            'state_locale' => trans( "bank-connections.states." . $this->resource->state),
+            'state_locale' => trans('bank-connections.states.' . $this->resource->state),
         ], $this->resource->isPending() && $this->resource->auth_url ? [
             'auth_url' => $this->resource->auth_url,
         ] : [], array_merge(

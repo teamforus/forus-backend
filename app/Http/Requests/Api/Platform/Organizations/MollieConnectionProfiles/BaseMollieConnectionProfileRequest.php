@@ -15,12 +15,13 @@ abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {
         $this->throttle();
+
         return true;
     }
 
@@ -42,14 +43,14 @@ abstract class BaseMollieConnectionProfileRequest extends BaseFormRequest
             'phone' => [
                 'required',
                 'string',
-                'regex:/^\+[1-9]\d{10,14}$/'
+                'regex:/^\+[1-9]\d{10,14}$/',
             ],
         ];
     }
 
     /**
-     * @return void
      * @throws AuthorizationJsonException
+     * @return void
      */
     protected function throttle(): void
     {

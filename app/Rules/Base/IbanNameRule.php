@@ -25,6 +25,7 @@ class IbanNameRule implements Rule
         }
 
         $this->errorMessage = $rules->errors()?->first();
+
         return false;
     }
 

@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
 use App\Traits\DoesTesting;
+use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Tests\CreatesApplication;
@@ -14,11 +15,13 @@ use Throwable;
 
 class SyncMarkdownDescriptionMediaTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication;
+    use DoesTesting;
+    use DatabaseTransactions;
+    use CreatesApplication;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testSyncMarkdownDescriptionMedia(): void
     {
@@ -28,13 +31,13 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
 
         $description1 = implode("  \n", [
             '# Title 1',
-            '![]('. $media1->urlPublic('public') .')',
+            '![](' . $media1->urlPublic('public') . ')',
             '# Title 2',
         ]);
 
         $description2 = implode("  \n", [
             '# Title 3',
-            '![]('. $media2->urlPublic('public') .')',
+            '![](' . $media2->urlPublic('public') . ')',
         ]);
 
         // Add first media and assert that it's linked to the fund
@@ -64,8 +67,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testCopyMarkdownDescriptionWithMediaSameModelSameType(): void
     {
@@ -73,8 +76,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testCopyMarkdownDescriptionWithMediaSameModelDifferentType(): void
     {
@@ -83,8 +86,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testCopyMarkdownDescriptionWithMediaDifferentModelSameType(): void
     {
@@ -93,8 +96,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testCopyMarkdownDescriptionWithMediaDifferentModelDifferentType(): void
     {
@@ -107,8 +110,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
      * @param Fund|Organization $model2
      * @param string $mediaType1
      * @param string $mediaType2
-     * @return void
      * @throws Throwable
+     * @return void
      */
     protected function cloneMarkdownMedia(
         Fund|Organization $model1,
@@ -121,7 +124,7 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
 
         $description = implode("  \n", [
             '# Title 1',
-            '![]('. $media1->urlPublic('public') .')',
+            '![](' . $media1->urlPublic('public') . ')',
             '# Title 2',
         ]);
 
@@ -149,7 +152,7 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
             ->where('type', $mediaType2);
 
         // assert that exactly one new media was created and linked to the second fund
-        self::assertTrue($fund2NewMedias->count() == 1, "The media was not copied.");
+        self::assertTrue($fund2NewMedias->count() == 1, 'The media was not copied.');
     }
 
     /**
@@ -165,8 +168,8 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
 
     /**
      * @param string $mediaType
+     * @throws Exception
      * @return Media
-     * @throws \Exception
      */
     protected function uploadMedia(string $mediaType): Media
     {

@@ -31,7 +31,7 @@ class StoreFundRequestClarificationsRequest extends BaseFormRequest
         return [
             'fund_request_record_id' => [
                 'required',
-                Rule::in($this->fund_request->records()->pluck('id')->toArray())
+                Rule::in($this->fund_request->records()->pluck('id')->toArray()),
             ],
             'question' => 'required|string|between:2,2000',
         ];

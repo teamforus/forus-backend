@@ -13,6 +13,7 @@ use App\Models\Organization;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 /**
  * @noinspection PhpUnused
@@ -24,8 +25,8 @@ class ImplementationPagesController extends Controller
      *
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         Organization $organization,
@@ -44,8 +45,8 @@ class ImplementationPagesController extends Controller
      * @param StoreImplementationPageRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return ImplementationPageResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function store(
         StoreImplementationPageRequest $request,
@@ -82,8 +83,8 @@ class ImplementationPagesController extends Controller
      * @param ValidateImplementationPageBlocksRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function storeBlocksValidate(
@@ -103,8 +104,8 @@ class ImplementationPagesController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
-     * @return ImplementationPageResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPageResource
      */
     public function show(
         Organization $organization,
@@ -125,8 +126,8 @@ class ImplementationPagesController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
+     * @throws AuthorizationException|Throwable
      * @return ImplementationPageResource
-     * @throws AuthorizationException|\Throwable
      */
     public function update(
         UpdateImplementationPageRequest $request,
@@ -165,8 +166,8 @@ class ImplementationPagesController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationPage $implementationPage
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      */
     public function destroy(
         Organization $organization,

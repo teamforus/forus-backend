@@ -16,8 +16,8 @@ class SamlAuth extends Auth
 {
     /**
      * @param $config
-     * @return self
      * @throws Saml2Exception
+     * @return self
      */
     public static function make($config): self
     {
@@ -36,8 +36,8 @@ class SamlAuth extends Auth
 
     /**
      * @param string $artifact
-     * @return SamlArtifactResponse
      * @throws Saml2Exception
+     * @return SamlArtifactResponse
      */
     public function resolveArtifact(string $artifact): SamlArtifactResponse
     {
@@ -53,8 +53,8 @@ class SamlAuth extends Auth
     }
 
     /**
-     * @return Settings
      * @throws InvalidConfigsException
+     * @return Settings
      */
     public function getSettings(): Settings
     {
@@ -68,8 +68,8 @@ class SamlAuth extends Auth
     /**
      * Get metadata about the local SP. Use this to configure your Saml2 IdP.
      *
-     * @return string
      * @throws Saml2Exception
+     * @return string
      */
     public function getMetadata(): string
     {

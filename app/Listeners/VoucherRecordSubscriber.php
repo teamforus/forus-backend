@@ -5,13 +5,14 @@ namespace App\Listeners;
 use App\Events\VoucherRecords\VoucherRecordCreated;
 use App\Events\VoucherRecords\VoucherRecordDeleted;
 use App\Events\VoucherRecords\VoucherRecordUpdated;
+use Exception;
 use Illuminate\Events\Dispatcher;
 
 class VoucherRecordSubscriber
 {
     /**
      * @param VoucherRecordCreated $event
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onVoucherRecordCreated(VoucherRecordCreated $event): void
@@ -26,7 +27,7 @@ class VoucherRecordSubscriber
 
     /**
      * @param VoucherRecordUpdated $event
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onVoucherRecordUpdated(VoucherRecordUpdated $event): void
@@ -41,7 +42,7 @@ class VoucherRecordSubscriber
 
     /**
      * @param VoucherRecordDeleted $event
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function VoucherRecordDeleted(VoucherRecordDeleted $event): void
@@ -55,7 +56,7 @@ class VoucherRecordSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @return void

@@ -2,19 +2,19 @@
 
 return [
     // Sets whether the apm reporting should be active or not
-    'active'        => env('APM_ACTIVE', false),
+    'active' => env('APM_ACTIVE', false),
 
     'app' => [
         // The app name that will identify your app in Kibana / Elastic APM
-        'appName'       => env('APM_APPNAME', 'Laravel'),
+        'appName' => env('APM_APPNAME', 'Laravel'),
 
         // The version of your app
-        'appVersion'    => env('APM_APPVERSION', ''),
+        'appVersion' => env('APM_APPVERSION', ''),
     ],
 
     'env' => [
         // whitelist environment variables OR send everything
-        'env' => ['DOCUMENT_ROOT', 'REMOTE_ADDR']
+        'env' => ['DOCUMENT_ROOT', 'REMOTE_ADDR'],
         //'env' => []
     ],
 
@@ -23,16 +23,16 @@ return [
 
     'server' => [
         // The apm-server to connect to
-        'serverUrl'     => env('APM_SERVERURL', 'http://127.0.0.1:8200'),
+        'serverUrl' => env('APM_SERVERURL', 'http://127.0.0.1:8200'),
 
         // Token for x
-        'secretToken'   => env('APM_SECRETTOKEN', null),
+        'secretToken' => env('APM_SECRETTOKEN', null),
 
         // API version of the apm agent you connect to
-        'apmVersion'    => env('APM_APIVERSION', 'v1'),
+        'apmVersion' => env('APM_APIVERSION', 'v1'),
 
         // Hostname of the system the agent is running on.
-        'hostname'      => gethostname(),
+        'hostname' => gethostname(),
     ],
 
     'transactions' => [
@@ -44,7 +44,7 @@ return [
 
     'spans' => [
         // Depth of backtraces
-        'backtraceDepth'=> 25,
+        'backtraceDepth' => 25,
 
         // Add source code to span
         'renderSource' => true,

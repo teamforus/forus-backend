@@ -18,12 +18,12 @@ class PhysicalCardsController extends Controller
     private $decayMinutes = 60 * 24;
 
     /**
-     * Link existing physical card to existing voucher
+     * Link existing physical card to existing voucher.
      * @param StorePhysicalCardRequest $request
      * @param Voucher $voucher
-     * @return PhysicalCardResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return PhysicalCardResource
      */
     public function store(StorePhysicalCardRequest $request, Voucher $voucher): PhysicalCardResource
     {
@@ -34,12 +34,12 @@ class PhysicalCardsController extends Controller
     }
 
     /**
-     * Unlink physical card from voucher
+     * Unlink physical card from voucher.
      *
      * @param Voucher $voucher
      * @param PhysicalCard $physicalCard
-     * @return Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return Response
      */
     public function destroy(Voucher $voucher, PhysicalCard $physicalCard): Response
     {
@@ -47,7 +47,7 @@ class PhysicalCardsController extends Controller
         $this->authorize('delete', [$physicalCard, $voucher]);
 
         $voucher->physical_cards()->where([
-            'physical_cards.id' => $physicalCard->id
+            'physical_cards.id' => $physicalCard->id,
         ])->delete();
 
         return new Response('', 200);

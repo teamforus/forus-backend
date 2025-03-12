@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\ProductReservation;
 
 /**
- * The product reservation was rejected
+ * The product reservation was rejected.
  */
 class IdentityProductReservationRejectedNotification extends BaseProductReservationNotification
 {

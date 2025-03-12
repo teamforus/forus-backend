@@ -7,16 +7,18 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use string;
 
 class FundIdentitiesExport extends BaseFieldedExport
 {
-    use Exportable, RegistersEventListeners;
+    use Exportable;
+    use RegistersEventListeners;
 
     protected Collection $data;
     protected array $fields;
 
     /**
-     * @var array|\string[][]
+     * @var array|string[][]
      */
     protected static array $exportFields = [
         'id' => 'ID',
@@ -41,7 +43,7 @@ class FundIdentitiesExport extends BaseFieldedExport
      */
     public function collection(): Collection
     {
-        $data = $this->data->map(function(Identity $identity) {
+        $data = $this->data->map(function (Identity $identity) {
             return array_only([
                 'id' => $identity->id,
                 'email' => $identity->email,
@@ -51,8 +53,8 @@ class FundIdentitiesExport extends BaseFieldedExport
             ], $this->fields);
         });
 
-        return $data->map(function($item) {
-            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+        return $data->map(function ($item) {
+            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
                 static::$exportFields[$key] => (string) $item[$key],
             ]), []);
         });

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,11 +14,11 @@ return new class extends Migration
     {
         Schema::table('announcements', function (Blueprint $table) {
             $table->string('key', 200)->nullable()->after('type');
-            $table->string("announceable_type")->nullable()->after('implementation_id');
-            $table->unsignedBigInteger("announceable_id")->nullable()->after('announceable_type');
+            $table->string('announceable_type')->nullable()->after('implementation_id');
+            $table->unsignedBigInteger('announceable_id')->nullable()->after('announceable_type');
             $table->boolean('dismissible')->default(true)->after('announceable_id');
 
-            $table->index(["announceable_type", "announceable_id"]);
+            $table->index(['announceable_type', 'announceable_id']);
         });
     }
 

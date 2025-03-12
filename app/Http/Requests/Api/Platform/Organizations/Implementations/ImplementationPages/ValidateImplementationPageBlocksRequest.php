@@ -26,32 +26,20 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'blocks.*'                      => 'nullable|array',
-            'blocks.*.label'                => 'nullable|string|max:30',
-            'blocks.*.title'                => 'required|string|max:100',
-            'blocks.*.description'          => [
+            'blocks.*' => 'nullable|array',
+            'blocks.*.label' => 'nullable|string|max:30',
+            'blocks.*.title' => 'required|string|max:100',
+            'blocks.*.description' => [
                 'required',
                 'string',
                 new MaxStringRule(500),
             ],
-            'blocks.*.button_enabled'       => 'nullable|boolean',
-            'blocks.*.button_text'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
-            'blocks.*.button_link'          => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
-            'blocks.*.button_link_label'    => 'nullable|required_if:blocks.*.button_enabled,true|string|max:500',
-            'blocks.*.button_target_blank'  => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
-            'blocks.*.media_uid.*'          => $this->blockMediaRule(),
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    private function blockMediaRule(): array {
-        return [
-            'nullable',
-            'string',
-            'exists:media,uid',
-            new MediaUidRule('implementation_block_media')
+            'blocks.*.button_enabled' => 'nullable|boolean',
+            'blocks.*.button_text' => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link' => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link_label' => 'nullable|required_if:blocks.*.button_enabled,true|string|max:500',
+            'blocks.*.button_target_blank' => 'nullable|required_if:blocks.*.button_enabled,true|boolean',
+            'blocks.*.media_uid.*' => $this->blockMediaRule(),
         ];
     }
 
@@ -66,6 +54,19 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*.button_text.required_if' => 'Het button text veld is verplicht',
             'blocks.*.button_link.required_if' => 'Het button link veld is verplicht',
             'blocks.*.button_link_label.required_if' => 'Het button link label veld is verplicht',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function blockMediaRule(): array
+    {
+        return [
+            'nullable',
+            'string',
+            'exists:media,uid',
+            new MediaUidRule('implementation_block_media'),
         ];
     }
 }

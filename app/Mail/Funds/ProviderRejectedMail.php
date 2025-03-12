@@ -11,8 +11,8 @@ class ProviderRejectedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_fund_providers.revoked_budget';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

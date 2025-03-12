@@ -21,27 +21,27 @@ return [
             'allowValidationRequests' => false,
 
             /**
-             * Sponsor may set/edit criteria from dashboard
+             * Sponsor may set/edit criteria from dashboard.
              */
             'criteria' => env('FUND_CRITERIA_EDITABLE_BY_USER', false),
 
             /**
              * Enable fund requests in dashboard
              * Hides elements from validator panel and disable responsible
-             * api endpoints when disabled
+             * api endpoints when disabled.
              */
             'fund_requests' => env('ENABLE_FUND_REQUESTS_PANEL', true),
-            
+
             /**
-             * Sponsor may set/edit fund formula products from dashboard
+             * Sponsor may set/edit fund formula products from dashboard.
              */
             'formula_products' => env('FUND_FORMULA_PRODUCTS_EDITABLE_BY_USER', false),
         ],
-        "products" => [
+        'products' => [
             // list all funds
-            "list" => true,
-            "hard_limit" => env('PRODUCT_MAX_COUNT', 25),
-            "soft_limit" => env('PRODUCT_MAX_COUNT_SOFT_LIMIT', 15)
+            'list' => true,
+            'hard_limit' => env('PRODUCT_MAX_COUNT', 25),
+            'soft_limit' => env('PRODUCT_MAX_COUNT_SOFT_LIMIT', 15),
         ],
     ],
 ];

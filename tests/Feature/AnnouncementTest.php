@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class AnnouncementTest extends TestCase
 {
@@ -35,12 +36,12 @@ class AnnouncementTest extends TestCase
     protected array $announcementStructure = [
         'data.*' => [
             'id', 'type', 'title', 'description_html', 'scope', 'dismissible',
-        ]
+        ],
     ];
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSystemAnnouncementVisible(): void
     {
@@ -65,8 +66,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSystemAnnouncementVisibleForAllWebshops(): void
     {
@@ -114,8 +115,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSystemAnnouncementVisibleForSingleImplementationOnWebshop(): void
     {
@@ -166,8 +167,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testOrganizationAnnouncementVisibleOnlyForOrganization(): void
     {
@@ -206,8 +207,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testOrganizationAnnouncementVisibleOnlyForRole(): void
     {
@@ -254,8 +255,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testOrganizationAnnouncementVisibleOnlyForOrganizationAndRole(): void
     {
@@ -335,8 +336,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSystemAnnouncementStartAtDateVisibility(): void
     {
@@ -364,8 +365,8 @@ class AnnouncementTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testSystemAnnouncementExpireAtDateVisibility(): void
     {

@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\ProductReservation;
 
 /**
- * The product reservation was canceled
+ * The product reservation was canceled.
  */
 class IdentityProductReservationCanceledNotification extends BaseProductReservationNotification
 {

@@ -24,18 +24,18 @@ class FinanceRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'filters'           => 'nullable|bool',
-            'type'              => 'nullable|in:year,quarter,month',
-            'type_value'        => 'required_with:type|date_format:Y-m-d',
-            'fund_ids'          => 'nullable|array',
-            'fund_ids.*'        => 'required|exists:funds,id',
-            'postcodes'         => 'nullable|array',
-            'postcodes.*'       => 'nullable|string|max:100',
-            'provider_ids'      => 'nullable|array',
-            'provider_ids.*'    => 'nullable|exists:organizations,id',
-            'product_category_ids'   => 'nullable|array',
+            'filters' => 'nullable|bool',
+            'type' => 'nullable|in:year,quarter,month',
+            'type_value' => 'required_with:type|date_format:Y-m-d',
+            'fund_ids' => 'nullable|array',
+            'fund_ids.*' => 'required|exists:funds,id',
+            'postcodes' => 'nullable|array',
+            'postcodes.*' => 'nullable|string|max:100',
+            'provider_ids' => 'nullable|array',
+            'provider_ids.*' => 'nullable|exists:organizations,id',
+            'product_category_ids' => 'nullable|array',
             'product_category_ids.*' => 'nullable|exists:product_categories,id',
-            'business_type_ids'   => 'nullable|array',
+            'business_type_ids' => 'nullable|array',
             'business_type_ids.*' => 'nullable|exists:business_types,id',
         ];
     }

@@ -22,8 +22,8 @@ class IndexTransactionBulksRequest extends BaseFormRequest
     public function authorize(): bool
     {
         return $this->gateAllows([
-            'show'      => $this->organization,
-            'viewAny'   => [VoucherTransactionBulk::class, $this->organization],
+            'show' => $this->organization,
+            'viewAny' => [VoucherTransactionBulk::class, $this->organization],
         ]);
     }
 
@@ -37,19 +37,19 @@ class IndexTransactionBulksRequest extends BaseFormRequest
         $fields = Arr::pluck(VoucherTransactionBulksExport::getExportFields(), 'key');
 
         return [
-            'per_page'      => $this->perPageRule(),
-            'state'         => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
-            'from'          => 'nullable|date_format:Y-m-d',
-            'to'            => 'nullable|date_format:Y-m-d',
-            'amount_min'    => 'nullable|numeric|min:0',
-            'amount_max'    => 'nullable|numeric|min:0',
-            'quantity_min'  => 'nullable|numeric|min:0',
-            'quantity_max'  => 'nullable|numeric|min:0',
-            'data_format'   => 'nullable|in:csv,xls',
-            'order_by'      => 'nullable|in:' . implode(',', VoucherTransactionBulk::SORT_BY_FIELDS),
-            'order_dir'     => 'nullable|in:asc,desc',
-            'fields'        => 'nullable|array',
-            'fields.*'      => ['nullable', Rule::in($fields)],
+            'per_page' => $this->perPageRule(),
+            'state' => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
+            'from' => 'nullable|date_format:Y-m-d',
+            'to' => 'nullable|date_format:Y-m-d',
+            'amount_min' => 'nullable|numeric|min:0',
+            'amount_max' => 'nullable|numeric|min:0',
+            'quantity_min' => 'nullable|numeric|min:0',
+            'quantity_max' => 'nullable|numeric|min:0',
+            'data_format' => 'nullable|in:csv,xls',
+            'order_by' => 'nullable|in:' . implode(',', VoucherTransactionBulk::SORT_BY_FIELDS),
+            'order_dir' => 'nullable|in:asc,desc',
+            'fields' => 'nullable|array',
+            'fields.*' => ['nullable', Rule::in($fields)],
         ];
     }
 }

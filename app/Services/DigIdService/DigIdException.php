@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\DigIdService;
 
 use Exception;

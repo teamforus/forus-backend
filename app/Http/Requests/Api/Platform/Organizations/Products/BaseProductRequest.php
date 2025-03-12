@@ -15,6 +15,31 @@ use Illuminate\Validation\Rule;
 abstract class BaseProductRequest extends BaseFormRequest
 {
     /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'price_discount.required_if' => 'Het kortingsveld is verplicht.',
+            'expire_at.after' => trans('validation.after', [
+                'date' => trans('validation.attributes.today'),
+            ]),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
+    {
+        return [
+            'price_type.free' => 'gratis',
+            'price_type.discount_fixed' => 'korting',
+            'price_type.discount_percentage' => 'korting',
+        ];
+    }
+
+    /**
      * @param string|null $price_type
      * @return array
      */
@@ -54,8 +79,8 @@ abstract class BaseProductRequest extends BaseFormRequest
         ] : [];
 
         return [
-            'reservation_enabled' => "nullable|boolean",
-            'reservation_fields' => "nullable|boolean",
+            'reservation_enabled' => 'nullable|boolean',
+            'reservation_fields' => 'nullable|boolean',
             'reservation_policy' => "nullable|in:$policies",
             'reservation_phone' => "nullable|in:$options",
             'reservation_address' => "nullable|in:$options",
@@ -63,30 +88,4 @@ abstract class BaseProductRequest extends BaseFormRequest
             'reservation_extra_payments' => ['nullable', ...$extraPaymentRules],
         ];
     }
-
-    /**
-     * @return array
-     */
-    public function messages(): array
-    {
-        return [
-            'price_discount.required_if' => 'Het kortingsveld is verplicht.',
-            'expire_at.after' => trans('validation.after', [
-                'date' => trans('validation.attributes.today')
-            ]),
-        ];
-    }
-
-    /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return [
-            'price_type.free' => 'gratis',
-            'price_type.discount_fixed' => 'korting',
-            'price_type.discount_percentage' => 'korting',
-        ];
-    }
 }
-    

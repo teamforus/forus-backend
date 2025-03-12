@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\OfficeSchedule
+ * App\Models\OfficeSchedule.
  *
  * @property int $id
  * @property int $office_id
@@ -38,7 +38,7 @@ class OfficeSchedule extends BaseModel
      */
     protected $fillable = [
         'office_id', 'week_day', 'start_time', 'end_time',
-        'break_start_time', 'break_end_time'
+        'break_start_time', 'break_end_time',
     ];
 
     /**
@@ -47,13 +47,14 @@ class OfficeSchedule extends BaseModel
      * @var array
      */
     protected $hidden = [
-        'break_start', 'break_end'
+        'break_start', 'break_end',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function office() {
+    public function office()
+    {
         return $this->belongsTo(Office::class);
     }
- }
+}

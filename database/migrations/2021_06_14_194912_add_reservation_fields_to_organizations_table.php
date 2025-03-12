@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -36,7 +35,7 @@ return new class extends Migration
             $table->dropColumn([
                 'reservations_budget_enabled',
                 'reservations_subsidy_enabled',
-                'reservations_auto_accept'
+                'reservations_auto_accept',
             ]);
         });
     }

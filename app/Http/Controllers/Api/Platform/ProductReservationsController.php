@@ -24,14 +24,14 @@ class ProductReservationsController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexProductReservationsRequest $request
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(IndexProductReservationsRequest $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', ProductReservation::class);
 
-        $builder = ProductReservation::whereHas('voucher', function(Builder $builder) use ($request) {
+        $builder = ProductReservation::whereHas('voucher', function (Builder $builder) use ($request) {
             $builder->where('identity_id', $request->auth_id());
         });
 
@@ -51,9 +51,9 @@ class ProductReservationsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param StoreProductReservationRequest $request
-     * @return ProductReservationResource|JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ProductReservationResource|JsonResponse
      */
     public function store(StoreProductReservationRequest $request): ProductReservationResource|JsonResponse
     {
@@ -78,7 +78,7 @@ class ProductReservationsController extends Controller
                     'phone', 'birth_date', 'custom_fields',
                     'street', 'house_nr', 'house_nr_addition', 'city',
                 ]),
-                'postal_code' => strtoupper(preg_replace("/\s+/", "", $postCode)),
+                'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
             ] : [];
 
             $reservation = $voucher->reserveProduct($product, null, [
@@ -102,7 +102,7 @@ class ProductReservationsController extends Controller
                 DB::rollBack();
 
                 return new JsonResponse([
-                    'message' => "Could prepare the extra payment.",
+                    'message' => 'Could prepare the extra payment.',
                 ], 503);
             }
 
@@ -111,34 +111,39 @@ class ProductReservationsController extends Controller
             }
 
             DB::commit();
+
             return ProductReservationResource::create($reservation);
         } catch (Throwable) {
             DB::rollBack();
         }
 
         return new JsonResponse([
-            'message' => "Something went wrong, please try again later.",
+            'message' => 'Something went wrong, please try again later.',
         ], 503);
     }
 
     /**
-     * Validate product reservation request
+     * Validate product reservation request.
      * @param ValidateProductReservationFieldsRequest $request
      */
-    public function storeValidateFields(ValidateProductReservationFieldsRequest $request): void {}
+    public function storeValidateFields(ValidateProductReservationFieldsRequest $request): void
+    {
+    }
 
     /**
-     * Validate product reservation request
+     * Validate product reservation request.
      * @param ValidateProductReservationAddressRequest $request
      */
-    public function storeValidateAddress(ValidateProductReservationAddressRequest $request): void {}
+    public function storeValidateAddress(ValidateProductReservationAddressRequest $request): void
+    {
+    }
 
     /**
      * Display the specified resource.
      *
      * @param \App\Models\ProductReservation $productReservation
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProductReservationResource
      */
     public function show(ProductReservation $productReservation): ProductReservationResource
     {
@@ -151,8 +156,8 @@ class ProductReservationsController extends Controller
      * Update the specified resource in storage.
      *
      * @param ProductReservation $reservation
-     * @return ProductReservationResource
      * @throws Throwable
+     * @return ProductReservationResource
      */
     public function cancel(
         ProductReservation $reservation,
@@ -166,9 +171,9 @@ class ProductReservationsController extends Controller
 
     /**
      * @param ProductReservation $reservation
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return JsonResponse
      */
     public function checkoutExtraPayment(
         ProductReservation $reservation,
@@ -178,15 +183,15 @@ class ProductReservationsController extends Controller
         $payment = $reservation->extra_payment?->getPayment();
 
         if (!$payment) {
-            abort(503, "Extra payment not found!");
+            abort(503, 'Extra payment not found!');
         }
 
         if ($payment->isPaid()) {
-            abort(503, "Extra payment already paid!");
+            abort(503, 'Extra payment already paid!');
         }
 
         if (!$payment->isOpen()) {
-            abort(503, "Extra payment not open for payment!");
+            abort(503, 'Extra payment not open for payment!');
         }
 
         return new JsonResponse([

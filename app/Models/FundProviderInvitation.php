@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundProviderInvitation
+ * App\Models\FundProviderInvitation.
  *
  * @property int $id
  * @property int $organization_id
@@ -101,24 +101,24 @@ class FundProviderInvitation extends BaseModel
     {
         $alreadyProviders = $fundTo->provider_organizations_approved->pluck('id');
         $alreadyInvited = $fundFrom->provider_invitations()->where([
-            'state' => self::STATE_PENDING
+            'state' => self::STATE_PENDING,
         ])->pluck('organization_id');
 
         $skipProviders = $alreadyProviders->merge($alreadyInvited)->toArray();
 
-        $providers = $fundFrom->providers()->where(function(Builder $builder) use ($fundFrom) {
+        $providers = $fundFrom->providers()->where(function (Builder $builder) use ($fundFrom) {
             FundProviderQuery::whereApprovedForFundsFilter($builder, $fundFrom->id);
         })->whereNotIn('organization_id', $skipProviders)->get();
 
         return $providers->map(function (FundProvider $provider) use ($fundFrom, $fundTo) {
             /** @var FundProviderInvitation $providerInvitation */
             $providerInvitation = $fundFrom->provider_invitations()->create([
-                'token'             => token_generator()->generate(200),
-                'fund_id'           => $fundTo->id,
-                'organization_id'   => $provider->organization_id,
-                'state'             => self::STATE_PENDING,
-                'allow_budget'      => $provider->allow_budget,
-                'allow_products'    => $provider->allow_products || $provider->allow_some_products
+                'token' => token_generator()->generate(200),
+                'fund_id' => $fundTo->id,
+                'organization_id' => $provider->organization_id,
+                'state' => self::STATE_PENDING,
+                'allow_budget' => $provider->allow_budget,
+                'allow_products' => $provider->allow_products || $provider->allow_some_products,
             ]);
 
             FundProviderInvitedEvent::dispatch($fundTo, $providerInvitation);
@@ -128,7 +128,7 @@ class FundProviderInvitation extends BaseModel
     }
 
     /**
-     * Invitation is expired
+     * Invitation is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -141,7 +141,7 @@ class FundProviderInvitation extends BaseModel
     }
 
     /**
-     * Date when invitation will expire
+     * Date when invitation will expire.
      *
      * @return \Carbon\Carbon
      * @noinspection PhpUnused

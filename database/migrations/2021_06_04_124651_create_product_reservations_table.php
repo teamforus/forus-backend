@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -42,20 +41,30 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->foreign('employee_id')->references('id')
-                ->on('employees')->onDelete('NO ACTION');
+            $table->foreign('employee_id')
+                ->references('id')
+                ->on('employees')
+                ->onDelete('NO ACTION');
 
-            $table->foreign('product_id')->references('id')
-                ->on('products')->onDelete('NO ACTION');
+            $table->foreign('product_id')
+                ->references('id')
+                ->on('products')
+                ->onDelete('NO ACTION');
 
-            $table->foreign('voucher_id')->references('id')
-                ->on('vouchers')->onDelete('NO ACTION');
+            $table->foreign('voucher_id')
+                ->references('id')
+                ->on('vouchers')
+                ->onDelete('NO ACTION');
 
-            $table->foreign('voucher_transaction_id')->references('id')
-                ->on('voucher_transactions')->onDelete('NO ACTION');
+            $table->foreign('voucher_transaction_id')
+                ->references('id')
+                ->on('voucher_transactions')
+                ->onDelete('NO ACTION');
 
-            $table->foreign('fund_provider_product_id')->references('id')
-                ->on('fund_provider_products')->onDelete('NO ACTION');
+            $table->foreign('fund_provider_product_id')
+                ->references('id')
+                ->on('fund_provider_products')
+                ->onDelete('NO ACTION');
         });
     }
 

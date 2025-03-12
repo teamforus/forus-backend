@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         /** @var EventLog[] $eventLogs */
-        $eventLogs = EventLog::whereHasMorph('loggable', Voucher::class, function(Builder $builder) {
+        $eventLogs = EventLog::whereHasMorph('loggable', Voucher::class, function (Builder $builder) {
             $builder->whereNotNull('note');
         })->whereIn('event', Voucher::EVENTS_CREATED)->get();
 
@@ -33,5 +32,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

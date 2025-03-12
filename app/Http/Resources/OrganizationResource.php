@@ -210,7 +210,7 @@ class OrganizationResource extends BaseJsonResource
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
-            ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : []
+            ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],
         ]) : [];
     }
 
@@ -221,7 +221,7 @@ class OrganizationResource extends BaseJsonResource
     protected function getBIConnectionData(Organization $organization): array
     {
         return $organization->allow_bi_connection ? [
-            'bi_connection_url' => route('biConnection')
+            'bi_connection_url' => route('biConnection'),
         ] : [];
     }
 

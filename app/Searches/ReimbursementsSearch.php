@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Searches;
 
 use App\Models\Reimbursement;
@@ -49,7 +48,7 @@ class ReimbursementsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('identity_address')) {
-            $builder->whereHas('voucher.identity', function(Builder $builder) {
+            $builder->whereHas('voucher.identity', function (Builder $builder) {
                 $builder->where('address', $this->getFilter('identity_address'));
             });
         }
@@ -110,7 +109,7 @@ class ReimbursementsSearch extends BaseSearch
         Builder|Relation|Reimbursement $builder
     ): Builder|Relation|Reimbursement {
         if ($this->hasFilter('q') && $this->getFilter('q')) {
-            return $builder->whereHas('voucher.identity', function(Builder $builder) {
+            return $builder->whereHas('voucher.identity', function (Builder $builder) {
                 $q = $this->getFilter('q');
                 $builder->whereRelation('primary_email', 'email', 'LIKE', "%$q%");
                 $builder->orWhereRelation('record_bsn', 'value', 'LIKE', "%$q%");

@@ -36,7 +36,7 @@ class ExportPhysicalCardsRequestsCommand extends BaseCommand
 
         if ($disc === 'ftp_physical_cards' &&
             !config('filesystems.disks.ftp_physical_cards.host')) {
-            $this->alert("Physical card request ftp not configured.");
+            $this->alert('Physical card request ftp not configured.');
             exit();
         }
 

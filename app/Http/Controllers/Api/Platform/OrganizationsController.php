@@ -31,8 +31,8 @@ class OrganizationsController extends Controller
      * Display a listing of all identity organizations.
      *
      * @param IndexOrganizationRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(IndexOrganizationRequest $request): AnonymousResourceCollection
     {
@@ -59,8 +59,8 @@ class OrganizationsController extends Controller
      * Store a newly created identity organization in storage.
      *
      * @param StoreOrganizationRequest $request
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      */
     public function store(StoreOrganizationRequest $request): OrganizationResource
     {
@@ -96,8 +96,8 @@ class OrganizationsController extends Controller
      *
      * @param BaseFormRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      */
     public function show(BaseFormRequest $request, Organization $organization): OrganizationResource
     {
@@ -111,8 +111,8 @@ class OrganizationsController extends Controller
      *
      * @param UpdateOrganizationRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      */
     public function update(
         UpdateOrganizationRequest $request,
@@ -163,8 +163,8 @@ class OrganizationsController extends Controller
     /**
      * @param UpdateOrganizationRolesRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      * @noinspection PhpUnused
      */
     public function updateRoles(
@@ -183,8 +183,8 @@ class OrganizationsController extends Controller
     /**
      * @param UpdateBankStatementFieldsRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      * @noinspection PhpUnused
      */
     public function updateBankStatementFields(
@@ -205,8 +205,8 @@ class OrganizationsController extends Controller
     /**
      * @param UpdateOrganizationAcceptReservationsRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      * @noinspection PhpUnused
      */
     public function updateAcceptReservations(
@@ -225,8 +225,8 @@ class OrganizationsController extends Controller
     /**
      * @param UpdateOrganizationReservationSettingsRequest $request
      * @param Organization $organization
-     * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationResource
      * @noinspection PhpUnused
      */
     public function updateReservationFields(
@@ -250,8 +250,8 @@ class OrganizationsController extends Controller
     /**
      * @param TransferOrganizationOwnershipRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function transferOwnership(
@@ -274,8 +274,8 @@ class OrganizationsController extends Controller
 
     /**
      * @param Organization $organization
-     * @return OrganizationFeaturesResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return OrganizationFeaturesResource
      */
     public function getFeatures(Organization $organization): OrganizationFeaturesResource
     {

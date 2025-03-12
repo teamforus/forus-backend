@@ -7,7 +7,7 @@ use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * App\Models\Tag
+ * App\Models\Tag.
  *
  * @property int $id
  * @property string $key
@@ -43,15 +43,6 @@ class Tag extends BaseModel
     use HasTranslationCaches;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'key', 'scope', 'fund_id',
-    ];
-
-    /**
      * The attributes that are translatable.
      *
      * @var array
@@ -62,17 +53,26 @@ class Tag extends BaseModel
     ];
 
     /**
-     * @var int
-     */
-    protected $perPage = 100;
-
-    /**
      * @var bool
      */
     public $timestamps = false;
 
     /**
-     * Get all funds with the tag
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'key', 'scope', 'fund_id',
+    ];
+
+    /**
+     * @var int
+     */
+    protected $perPage = 100;
+
+    /**
+     * Get all funds with the tag.
      *
      * @return MorphToMany
      */

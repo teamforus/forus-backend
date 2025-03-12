@@ -9,6 +9,7 @@ use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class UpdateSessionsExpirationCommand extends BaseCommand
 {
@@ -37,8 +38,8 @@ class UpdateSessionsExpirationCommand extends BaseCommand
     /**
      * Execute the console command.
      *
+     * @throws Throwable
      * @return int
-     * @throws \Throwable
      */
     public function handle(): int
     {
@@ -63,11 +64,12 @@ class UpdateSessionsExpirationCommand extends BaseCommand
 
         if ($this->dryRun && $verbose) {
             if ((clone $query)->count() === 0) {
-                $this->printText("No tokens have to be deactivated.");
+                $this->printText('No tokens have to be deactivated.');
+
                 return 0;
             }
 
-            $this->printHeader("Deactivated tokens:", 2);
+            $this->printHeader('Deactivated tokens:', 2);
             $this->printDeactivatedProxies((clone $query), $this->chunkSize);
         }
 
@@ -75,84 +77,21 @@ class UpdateSessionsExpirationCommand extends BaseCommand
     }
 
     /**
-     * @param Builder|IdentityProxy $query
-     * @param int $total
-     * @return void
-     */
-    protected function deactivateTokens(Builder|IdentityProxy $query, int $total): void
-    {
-        $chunks = ceil($total / $this->chunkSize);
-
-        (clone $query)->chunkById($this->chunkSize, function(Collection $proxies, $chunk) use ($chunks) {
-            if (!$this->dryRun) {
-                $proxies
-                    ->filter(fn (IdentityProxy $proxy) => !$proxy->isDeactivated())
-                    ->each(fn (IdentityProxy $proxy) => $proxy->deactivateBySession());
-            }
-
-            if ($this->progress) {
-                $this->printProgress($chunk, $chunks);
-            }
-        });
-    }
-
-    /**
-     * @param int $page
-     * @param int $total
-     * @return void
-     */
-    protected function printProgress(int $page, int $total): void
-    {
-        echo implode([
-            $page !== 1 ? chr(27) . "[0G" : "",
-            "Progress: $page/$total",
-            $page == $total ? "\n\n" : "",
-        ]);
-    }
-
-    /**
-     * @param Builder|IdentityProxy $builder
-     * @param int $chunkSize
-     * @return void
-     */
-    protected function printDeactivatedProxies(Builder|IdentityProxy $builder, int $chunkSize): void
-    {
-        $builder->with('sessions_with_trashed');
-
-        $builder->chunk($chunkSize, function($identityProxies) {
-            $this->printList($identityProxies->map(function(IdentityProxy $proxy) {
-                $line = sprintf("Token: #%s, date: %s", $proxy->id, $proxy->created_at);
-
-                return [$line, $proxy->sessions_with_trashed->map(function(Session $session) {
-                    return sprintf(
-                        "Session: #%s, start: %s, end: %s, client: %s, trashed: %s",
-                        $session->id,
-                        $session->first_request->created_at,
-                        $session->last_request->created_at,
-                        $session->initial_client_type,
-                        $session->deleted_at ? 'yes' : 'no',
-                    );
-                })->toArray()];
-            })->toArray());
-        });
-    }
-
-    /**
      * @return Builder
      */
     public function getIdentityProxiesQuery(): Builder
     {
-        return IdentityProxy::where(function(Builder $builder) {
+        return IdentityProxy::where(function (Builder $builder) {
             // is older than 8 years
             $builder->where('created_at', '<', now()->subYears(8));
 
             // or is active, older than a month and has no sessions
-            $builder->orWhere(fn(Builder $builder) => $this->queryActiveAndNoSessions($builder));
+            $builder->orWhere(fn (Builder $builder) => $this->queryActiveAndNoSessions($builder));
 
             // or is active has sessions and they all expired
-            $builder->orWhere(function(Builder $builder) {
+            $builder->orWhere(function (Builder $builder) {
                 $builder->where('state', IdentityProxy::STATE_ACTIVE);
-                $builder->where(fn(Builder $builder) => $this->queryHasOnlyExpiredSessions($builder));
+                $builder->where(fn (Builder $builder) => $this->queryHasOnlyExpiredSessions($builder));
             });
         });
     }
@@ -186,15 +125,78 @@ class UpdateSessionsExpirationCommand extends BaseCommand
      */
     public function queryExpiredSessions(Builder $builder): Builder
     {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             // expired webshop sessions
-            $builder->where(fn(Builder $builder) => $this->querySessionExpiredWebshop($builder));
+            $builder->where(fn (Builder $builder) => $this->querySessionExpiredWebshop($builder));
 
             // expired dashboard sessions
-            $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredDashboard($builder));
+            $builder->orWhere(fn (Builder $builder) => $this->querySessionExpiredDashboard($builder));
 
             // expired app sessions
-            $builder->orWhere(fn(Builder $builder) => $this->querySessionExpiredApp($builder));
+            $builder->orWhere(fn (Builder $builder) => $this->querySessionExpiredApp($builder));
+        });
+    }
+
+    /**
+     * @param Builder|IdentityProxy $query
+     * @param int $total
+     * @return void
+     */
+    protected function deactivateTokens(Builder|IdentityProxy $query, int $total): void
+    {
+        $chunks = ceil($total / $this->chunkSize);
+
+        (clone $query)->chunkById($this->chunkSize, function (Collection $proxies, $chunk) use ($chunks) {
+            if (!$this->dryRun) {
+                $proxies
+                    ->filter(fn (IdentityProxy $proxy) => !$proxy->isDeactivated())
+                    ->each(fn (IdentityProxy $proxy) => $proxy->deactivateBySession());
+            }
+
+            if ($this->progress) {
+                $this->printProgress($chunk, $chunks);
+            }
+        });
+    }
+
+    /**
+     * @param int $page
+     * @param int $total
+     * @return void
+     */
+    protected function printProgress(int $page, int $total): void
+    {
+        echo implode([
+            $page !== 1 ? chr(27) . '[0G' : '',
+            "Progress: $page/$total",
+            $page == $total ? "\n\n" : '',
+        ]);
+    }
+
+    /**
+     * @param Builder|IdentityProxy $builder
+     * @param int $chunkSize
+     * @return void
+     */
+    protected function printDeactivatedProxies(Builder|IdentityProxy $builder, int $chunkSize): void
+    {
+        $builder->with('sessions_with_trashed');
+
+        $builder->chunk($chunkSize, function ($identityProxies) {
+            $this->printList($identityProxies->map(function (IdentityProxy $proxy) {
+                $line = sprintf('Token: #%s, date: %s', $proxy->id, $proxy->created_at);
+
+                return [$line, $proxy->sessions_with_trashed->map(function (Session $session) {
+                    return sprintf(
+                        'Session: #%s, start: %s, end: %s, client: %s, trashed: %s',
+                        $session->id,
+                        $session->first_request->created_at,
+                        $session->last_request->created_at,
+                        $session->initial_client_type,
+                        $session->deleted_at ? 'yes' : 'no',
+                    );
+                })->toArray()];
+            })->toArray());
         });
     }
 
@@ -207,13 +209,13 @@ class UpdateSessionsExpirationCommand extends BaseCommand
         $builder->where('state', IdentityProxy::STATE_ACTIVE);
         $builder->whereDoesntHave('sessions');
 
-        $builder->where(function(Builder $builder) {
-            $builder->where(function(Builder $builder) {
+        $builder->where(function (Builder $builder) {
+            $builder->where(function (Builder $builder) {
                 $builder->whereNotNull('activated_at');
                 $builder->where('activated_at', '<', now()->subMonth());
             });
 
-            $builder->orWhere(function(Builder $builder) {
+            $builder->orWhere(function (Builder $builder) {
                 $builder->whereNull('activated_at');
                 $builder->where('created_at', '<', now()->subMonth());
             });

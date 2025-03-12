@@ -2,4 +2,6 @@
 
 namespace App\Events\ReservationExtraPayments;
 
-class ReservationExtraPaymentUpdated extends BaseReservationExtraPaymentEvent {}
+class ReservationExtraPaymentUpdated extends BaseReservationExtraPaymentEvent
+{
+}

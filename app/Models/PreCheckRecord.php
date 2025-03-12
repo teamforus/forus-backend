@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\PreCheckRecord
+ * App\Models\PreCheckRecord.
  *
  * @property int $id
  * @property string $record_type_key

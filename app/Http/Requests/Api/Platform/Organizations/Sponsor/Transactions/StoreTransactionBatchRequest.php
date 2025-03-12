@@ -53,6 +53,59 @@ class StoreTransactionBatchRequest extends BaseFormRequest
     }
 
     /**
+     * @param array $transactions
+     * @return \Illuminate\Validation\Validator
+     */
+    public function validateRows(array $transactions = []): \Illuminate\Validation\Validator
+    {
+        return Validator::make(compact('transactions'), $this->rules($transactions));
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        $keys = Arr::dot([
+            'transactions.*.uid',
+            'transactions.*.note',
+            'transactions.*.amount',
+            'transactions.*.voucher_id',
+            'transactions.*.direct_payment_iban',
+            'transactions.*.direct_payment_name',
+        ]);
+
+        return array_combine($keys, array_map(static function ($key) {
+            $value = last(explode('.', $key));
+
+            return trans_fb('validation.attributes.' . $value, $value);
+        }, $keys));
+    }
+
+    /**
+     * @param array $transactions
+     * @return array
+     */
+    public function inflateReservationsData(array $transactions = []): array
+    {
+        /** @var Voucher[] $vouchers */
+        $vouchers = $this->getVouchersQuery()
+            ->whereIn('number', Arr::pluck($transactions, 'voucher_number'))
+            ->with('transactions', 'product_vouchers', 'reimbursements_pending', 'top_up_transactions')
+            ->get()
+            ->keyBy('number');
+
+        return array_map(function ($transaction) use ($vouchers) {
+            $voucher = $vouchers[$transaction['voucher_number'] ?? null] ?? null;
+
+            return array_merge($transaction, [
+                'voucher' => $voucher,
+                'voucher_id' => $voucher?->id,
+            ]);
+        }, $transactions);
+    }
+
+    /**
      * @param array|null $transactions
      * @return array
      */
@@ -83,60 +136,8 @@ class StoreTransactionBatchRequest extends BaseFormRequest
         return [
             'required',
             Rule::exists('vouchers', 'number')
-                ->where(fn(QBuilder $builder) => $builder->whereIn('id', $query)),
+                ->where(fn (QBuilder $builder) => $builder->whereIn('id', $query)),
         ];
-    }
-
-    /**
-     * @param array $transactions
-     * @return \Illuminate\Validation\Validator
-     */
-    public function validateRows(array $transactions = []): \Illuminate\Validation\Validator
-    {
-        return Validator::make(compact('transactions'), $this->rules($transactions));
-    }
-
-    /**
-     * @return array
-     */
-    public function attributes(): array
-    {
-        $keys = Arr::dot([
-            'transactions.*.uid',
-            'transactions.*.note',
-            'transactions.*.amount',
-            'transactions.*.voucher_id',
-            'transactions.*.direct_payment_iban',
-            'transactions.*.direct_payment_name',
-        ]);
-
-        return array_combine($keys, array_map(static function($key) {
-            $value = last(explode('.', $key));
-            return trans_fb("validation.attributes." . $value, $value);
-        }, $keys));
-    }
-
-    /**
-     * @param array $transactions
-     * @return array
-     */
-    public function inflateReservationsData(array $transactions = []): array
-    {
-        /** @var Voucher[] $vouchers */
-        $vouchers = $this->getVouchersQuery()
-            ->whereIn('number', Arr::pluck($transactions, 'voucher_number'))
-            ->with('transactions', 'product_vouchers', 'reimbursements_pending', 'top_up_transactions')
-            ->get()
-            ->keyBy('number');
-
-        return array_map(function ($transaction) use ($vouchers) {
-            $voucher = $vouchers[$transaction['voucher_number'] ?? null] ?? null;
-
-            return array_merge($transaction, [
-                'voucher' => $voucher,
-                'voucher_id' => $voucher?->id,
-            ]);
-        }, $transactions);
     }
 
     /**
@@ -148,7 +149,7 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             ->where(fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
             ->whereNull('product_id');
 
-        $builder->whereHas('fund', function(Builder $builder) {
+        $builder->whereHas('fund', function (Builder $builder) {
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([

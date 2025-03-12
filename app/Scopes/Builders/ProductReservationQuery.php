@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
@@ -19,20 +18,20 @@ class ProductReservationQuery
         Builder|Relation|ProductReservation $query,
         string $q = '',
     ): Builder|Relation|ProductReservation {
-        return $query->where(function(Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q) {
             $builder->where('code', 'LIKE', "%$q%");
             $builder->orWhere('first_name', 'LIKE', "%$q%");
             $builder->orWhere('last_name', 'LIKE', "%$q%");
 
-            $builder->orWhereHas('voucher.identity.primary_email', function(Builder $builder) use ($q) {
+            $builder->orWhereHas('voucher.identity.primary_email', function (Builder $builder) use ($q) {
                 return $builder->where('email', 'LIKE', "%$q%");
             });
 
-            $builder->orWhereHas('product', function(Builder $builder) use ($q) {
+            $builder->orWhereHas('product', function (Builder $builder) use ($q) {
                 ProductQuery::queryFilter($builder, $q);
             });
 
-            $builder->orWhereHas('voucher.fund', function(Builder $builder) use ($q) {
+            $builder->orWhereHas('voucher.fund', function (Builder $builder) use ($q) {
                 FundQuery::whereQueryFilter($builder, $q);
             });
         });
@@ -47,8 +46,8 @@ class ProductReservationQuery
         Builder|Relation|ProductReservation $query,
         mixed $organization,
     ): Builder|Relation|ProductReservation {
-        return $query->where(function(Builder $builder) use ($organization) {
-            $builder->whereHas('product', function(Builder $builder) use ($organization) {
+        return $query->where(function (Builder $builder) use ($organization) {
+            $builder->whereHas('product', function (Builder $builder) use ($organization) {
                 $builder->whereIn('organization_id', (array) $organization);
             });
         });
@@ -144,10 +143,10 @@ class ProductReservationQuery
             $query->where('state', '=', ProductReservation::STATE_WAITING);
             $query->where('amount_extra', '>', 0);
 
-            $query->where(function(Builder $query) use ($expiredAt) {
+            $query->where(function (Builder $query) use ($expiredAt) {
                 $query->where('created_at', '<', $expiredAt);
 
-                $query->orWhereHas('extra_payment', function(Builder $query) {
+                $query->orWhereHas('extra_payment', function (Builder $query) {
                     $query->where('expires_at', '<', now());
                     $query->where('state', '!=', ReservationExtraPayment::STATE_PAID);
                 });

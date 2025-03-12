@@ -38,7 +38,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
 
         return array_map(fn ($step) => [
             ...$step,
-            'record_types' => array_values(Arr::sort(Arr::where($preCheckRecords, function($type) use ($step) {
+            'record_types' => array_values(Arr::sort(Arr::where($preCheckRecords, function ($type) use ($step) {
                 if ($type['pre_check_id'] === null) {
                     return $step['default'];
                 }
@@ -57,7 +57,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
         $preChecks = $implementation->pre_checks->sortBy('order');
 
         return [
-            ...$preChecks->map(fn(PreCheck $preCheck) => $preCheck->only([
+            ...$preChecks->map(fn (PreCheck $preCheck) => $preCheck->only([
                 'id', 'title', 'title_short', 'description', 'default',
             ]))->toArray(),
             ...$preChecks->where('default', true)->isEmpty() ? [[
@@ -94,13 +94,13 @@ class ImplementationPreChecksResource extends BaseJsonResource
             /** @var PreCheckRecord $preChecksRecord */
             /** @var FundCriterion $fundCriterion */
             $fundCriterion = $fundCriteria->first();
-            $funds = $fundCriteria->map(fn(FundCriterion $fundCriterion) => $fundCriterion->fund)->unique('id');
+            $funds = $fundCriteria->map(fn (FundCriterion $fundCriterion) => $fundCriterion->fund)->unique('id');
             $recordType = $fundCriterion->record_type;
             $preChecksRecord = $preChecksRecords->firstWhere('record_type_key', $recordType->key);
 
             if ($recordType->type == 'string') {
                 $values = $fundCriteria
-                    ->filter(fn(FundCriterion $fundCriterion) => $fundCriterion->operator == '=')
+                    ->filter(fn (FundCriterion $fundCriterion) => $fundCriterion->operator == '=')
                     ->pluck('value')->toArray();
             } else {
                 $values = [$fundCriterion->value];
@@ -108,7 +108,7 @@ class ImplementationPreChecksResource extends BaseJsonResource
 
             $data = [
                 'value' => $values[0] ?? '',
-                'funds' => $funds->map(fn(Fund $fund) => [
+                'funds' => $funds->map(fn (Fund $fund) => [
                     'id' => $fund->id,
                     'name' => $fund->name,
                     'implementation' => [

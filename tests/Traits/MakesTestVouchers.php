@@ -3,18 +3,10 @@
 namespace Tests\Traits;
 
 use App\Models\Fund;
-use App\Models\FundCriterion;
 use App\Models\Identity;
-use App\Models\Implementation;
-use App\Models\Organization;
-use App\Models\Prevalidation;
-use App\Models\RecordType;
-use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Traits\DoesTesting;
 use Carbon\Carbon;
-use Illuminate\Testing\TestResponse;
-use Throwable;
 
 trait MakesTestVouchers
 {

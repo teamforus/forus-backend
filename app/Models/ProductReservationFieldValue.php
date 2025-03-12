@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\ProductReservationFieldValue
+ * App\Models\ProductReservationFieldValue.
  *
  * @property int $id
  * @property int $organization_reservation_field_id
@@ -28,7 +28,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ProductReservationFieldValue extends BaseModel
 {
-
     /**
      * The attributes that are mass assignable.
      *

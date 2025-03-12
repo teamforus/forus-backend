@@ -4,6 +4,7 @@ namespace App\Services\Forus\SmsNotification;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 use Twilio\Rest\Client;
 
 class SmsService
@@ -17,6 +18,7 @@ class SmsService
     {
         if (Config::get('forus.twilio.debug', false)) {
             Log::debug(json_encode(compact('body', 'phoneNumber'), 128));
+
             return true;
         }
 
@@ -34,8 +36,9 @@ class SmsService
             ]);
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error('Error during sms sending: ' . $e->getMessage());
+
             return false;
         }
     }

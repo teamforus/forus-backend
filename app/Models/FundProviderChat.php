@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\FundProviderChat
+ * App\Models\FundProviderChat.
  *
  * @property int $id
  * @property int|null $product_id
@@ -31,11 +31,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FundProviderChat extends Model
 {
-    const string TYPE_SYSTEM = 'system';
-    const string TYPE_SPONSOR = 'sponsor';
-    const string TYPE_PROVIDER = 'provider';
+    public const string TYPE_SYSTEM = 'system';
+    public const string TYPE_SPONSOR = 'sponsor';
+    public const string TYPE_PROVIDER = 'provider';
 
-    const array TYPE = [
+    public const array TYPE = [
         self::TYPE_SYSTEM,
         self::TYPE_SPONSOR,
         self::TYPE_PROVIDER,
@@ -51,21 +51,24 @@ class FundProviderChat extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund_provider() {
+    public function fund_provider()
+    {
         return $this->belongsTo(FundProvider::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function messages(): HasMany {
+    public function messages(): HasMany
+    {
         return $this->hasMany(FundProviderChatMessage::class);
     }
 
@@ -81,7 +84,9 @@ class FundProviderChat extends Model
         ?string $identity_address = null
     ): FundProviderChatMessage|Model {
         return $this->messages()->create(array_merge(compact(
-            'identity_address', 'message', 'counterpart'
+            'identity_address',
+            'message',
+            'counterpart'
         ), [
             'sponsor_seen' => $counterpart == 'sponsor',
             'provider_seen' => $counterpart == 'provider',
@@ -93,7 +98,8 @@ class FundProviderChat extends Model
      * @param string $identity_address
      * @return FundProviderChatMessage
      */
-    public function addSponsorMessage(string $message, string $identity_address) {
+    public function addSponsorMessage(string $message, string $identity_address)
+    {
         return $this->addMessage(self::TYPE_SPONSOR, $message, $identity_address);
     }
 
@@ -102,7 +108,8 @@ class FundProviderChat extends Model
      * @param string $identity_address
      * @return FundProviderChatMessage
      */
-    public function addProviderMessage(string $message, string $identity_address) {
+    public function addProviderMessage(string $message, string $identity_address)
+    {
         return $this->addMessage(self::TYPE_PROVIDER, $message, $identity_address);
     }
 
@@ -111,7 +118,8 @@ class FundProviderChat extends Model
      * @param string|null $identity_address
      * @return FundProviderChatMessage
      */
-    public function addSystemMessage(string $message, ?string $identity_address = null) {
+    public function addSystemMessage(string $message, ?string $identity_address = null)
+    {
         return $this->addMessage(self::TYPE_SYSTEM, $message, $identity_address);
     }
 }

@@ -14,7 +14,9 @@ class MollieConnectionTokenData implements MollieToken
     /**
      * @param MollieConnection $connection
      */
-    public function __construct(protected MollieConnection $connection) {}
+    public function __construct(protected MollieConnection $connection)
+    {
+    }
 
     /**
      * @return string|null

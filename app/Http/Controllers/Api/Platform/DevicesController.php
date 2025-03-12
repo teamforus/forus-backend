@@ -22,11 +22,11 @@ class DevicesController extends Controller
     }
 
     /**
-     * Register identity push notification token
+     * Register identity push notification token.
      *
      * @param RegisterDevicePushRequest $request
-     * @return JsonResponse
      * @throws Exception
+     * @return JsonResponse
      */
     public function registerPush(RegisterDevicePushRequest $request): JsonResponse
     {
@@ -40,13 +40,14 @@ class DevicesController extends Controller
     }
 
     /**
-     * Delete identity push notification token
+     * Delete identity push notification token.
      *
      * @param DeleteDevicePushRequest $request
-     * @return JsonResponse
      * @throws Exception
+     * @return JsonResponse
      */
-    public function deletePush(DeleteDevicePushRequest $request): JsonResponse {
+    public function deletePush(DeleteDevicePushRequest $request): JsonResponse
+    {
         $token = $request->input('id');
 
         $this->mailNotification->removeNotificationToken($token, null, $request->auth_address());

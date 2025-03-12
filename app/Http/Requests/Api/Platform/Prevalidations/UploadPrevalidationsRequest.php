@@ -64,11 +64,11 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     private function getAvailableFunds(): Builder
     {
-        return Fund::whereHas('organization', function(Builder $builder) {
+        return Fund::whereHas('organization', function (Builder $builder) {
             OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), [
                 Permission::VALIDATE_RECORDS,
             ]);
-        })->where(function(Builder $builder) {
+        })->where(function (Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
         })->where('state', '!=', Fund::STATE_CLOSED);

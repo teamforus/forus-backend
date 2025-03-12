@@ -2,4 +2,6 @@
 
 namespace App\Events\ProductReservations;
 
-class ProductReservationRejected extends BaseProductReservationEvent {}
+class ProductReservationRejected extends BaseProductReservationEvent
+{
+}

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\OrganizationValidator
+ * App\Models\OrganizationValidator.
  *
  * @property int $id
  * @property int $organization_id

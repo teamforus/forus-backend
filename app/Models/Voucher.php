@@ -26,6 +26,7 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -45,10 +46,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
 use ZipArchive;
 
 /**
- * App\Models\Voucher
+ * App\Models\Voucher.
  *
  * @property int $id
  * @property int|null $identity_id
@@ -483,7 +485,8 @@ class Voucher extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
-    public function last_transaction(): HasOne {
+    public function last_transaction(): HasOne
+    {
         return $this->hasOne(VoucherTransaction::class)
             ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING)
             ->orderByDesc('created_at');
@@ -494,7 +497,7 @@ class Voucher extends BaseModel
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
+        return $this->hasMany(self::class, 'parent_id')->where(function (Builder $builder) {
             VoucherQuery::whereIsProductVoucher($builder);
         });
     }
@@ -659,7 +662,7 @@ class Voucher extends BaseModel
     public function token_without_confirmation(): HasOne
     {
         return $this->hasOne(VoucherToken::class)->where([
-            'need_confirmation' => false
+            'need_confirmation' => false,
         ]);
     }
 
@@ -675,7 +678,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is expired
+     * The voucher is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -686,7 +689,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is expired
+     * The voucher is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -701,7 +704,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is expired
+     * The voucher is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -716,7 +719,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is deactivated
+     * The voucher is deactivated.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -727,7 +730,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is activated
+     * The voucher is activated.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -760,7 +763,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * The voucher is expired
+     * The voucher is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -797,7 +800,7 @@ class Voucher extends BaseModel
     {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
-            'need_confirmation' => false
+            'need_confirmation' => false,
         ])->first();
 
         $voucher = $voucherToken->voucher;
@@ -832,14 +835,22 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('from')) {
-            $query->where('created_at', '>=', Carbon::parse(
-                $request->input('from'))->startOfDay()
+            $query->where(
+                'created_at',
+                '>=',
+                Carbon::parse(
+                    $request->input('from')
+                )->startOfDay()
             );
         }
 
         if ($request->has('to')) {
-            $query->where('created_at', '<=', Carbon::parse(
-                $request->input('to'))->endOfDay()
+            $query->where(
+                'created_at',
+                '<=',
+                Carbon::parse(
+                    $request->input('to')
+                )->endOfDay()
             );
         }
 
@@ -863,8 +874,8 @@ class Voucher extends BaseModel
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
+     * @throws Exception
      * @return Builder
-     * @throws \Exception
      */
     public static function searchSponsorQuery(
         BaseFormRequest $request,
@@ -884,7 +895,7 @@ class Voucher extends BaseModel
 
         $query->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
 
-        $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
+        $query->whereHas('fund', static function (Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
 
             if ($fund) {
@@ -902,21 +913,25 @@ class Voucher extends BaseModel
 
         if ($unassignedOnly) {
             $query->whereNull('identity_id');
-        } else if ($unassignedOnly !== null) {
+        } elseif ($unassignedOnly !== null) {
             $query->whereNotNull('identity_id');
         }
 
         switch ($request->input('type')) {
             case 'all': break;
-            case 'fund_voucher': $query->whereNull('product_id'); break;
-            case 'product_voucher': $query->whereNotNull('product_id'); break;
+            case 'fund_voucher': $query->whereNull('product_id');
+                break;
+            case 'product_voucher': $query->whereNotNull('product_id');
+                break;
             default: abort(403);
         }
 
         switch ($request->input('source', 'employee')) {
             case 'all': break;
-            case 'user': $query->whereNull('employee_id'); break;
-            case 'employee': $query->whereNotNull('employee_id'); break;
+            case 'user': $query->whereNull('employee_id');
+                break;
+            case 'employee': $query->whereNotNull('employee_id');
+                break;
             default: abort(403);
         }
 
@@ -929,7 +944,7 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where(static function(Builder $builder) use ($bsn) {
+            $query->where(static function (Builder $builder) use ($bsn) {
                 $builder->where('identity_id', Identity::findByBsn($bsn)?->id ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
@@ -952,7 +967,7 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('in_use')) {
-            $query->where(function(Builder $builder) use ($in_use) {
+            $query->where(function (Builder $builder) use ($in_use) {
                 if ($in_use) {
                     VoucherQuery::whereInUseQuery($builder);
                 } else {
@@ -962,7 +977,7 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('has_payouts')) {
-            $query->where(function(Builder $builder) use ($has_payouts) {
+            $query->where(function (Builder $builder) use ($has_payouts) {
                 if ($has_payouts) {
                     $builder->whereHas('paid_out_transactions');
                 } else {
@@ -972,13 +987,13 @@ class Voucher extends BaseModel
         }
 
         if ($count_per_identity_min) {
-            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+            $query->whereHas('identity.vouchers', function (Builder $builder) use ($query) {
                 $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
             }, '>=', $count_per_identity_min);
         }
 
         if ($count_per_identity_max) {
-            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+            $query->whereHas('identity.vouchers', function (Builder $builder) use ($query) {
                 $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
             }, '<=', $count_per_identity_max);
         }
@@ -1052,7 +1067,7 @@ class Voucher extends BaseModel
     }
 
     /**
-     * Assign voucher to identity
+     * Assign voucher to identity.
      *
      * @param Identity $identity
      * @return $this
@@ -1081,7 +1096,7 @@ class Voucher extends BaseModel
         $voucherExpireAt = array_first(array_sort(array_filter([
             $product->expire_at,
             $this->expire_at,
-            $this->fund->end_date
+            $this->fund->end_date,
         ])));
 
         $voucher = self::create([
@@ -1157,8 +1172,8 @@ class Voucher extends BaseModel
      * @param Product $product
      * @param Employee|null $employee
      * @param array $extraData
+     * @throws Exception
      * @return ProductReservation
-     * @throws \Exception
      */
     public function reserveProduct(
         Product $product,
@@ -1180,13 +1195,13 @@ class Voucher extends BaseModel
 
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create(array_merge([
-            'code'                      => ProductReservation::makeCode(),
-            'amount'                    => $amount,
-            'state'                     => $state,
-            'product_id'                => $product->id,
-            'employee_id'               => $employee?->id,
-            'fund_provider_product_id'  => $fundProviderProduct?->id,
-            'amount_extra'              => $extraAmount,
+            'code' => ProductReservation::makeCode(),
+            'amount' => $amount,
+            'state' => $state,
+            'product_id' => $product->id,
+            'employee_id' => $employee?->id,
+            'fund_provider_product_id' => $fundProviderProduct?->id,
+            'amount_extra' => $extraAmount,
         ], array_only($extraData, [
             'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
             'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
@@ -1209,8 +1224,8 @@ class Voucher extends BaseModel
 
     /**
      * @param array $data
+     * @throws Exception
      * @return Reimbursement
-     * @throws \Exception
      */
     public function makeReimbursement(array $data = []): Reimbursement
     {
@@ -1218,9 +1233,9 @@ class Voucher extends BaseModel
 
         /** @var Reimbursement $reimbursement */
         $reimbursement = $this->reimbursements()->create(array_merge([
-            'code'          => Reimbursement::makeCode(),
-            'state'         => Reimbursement::STATE_DRAFT,
-            'submitted_at'  => $submitNow ? now() : null,
+            'code' => Reimbursement::makeCode(),
+            'state' => Reimbursement::STATE_DRAFT,
+            'submitted_at' => $submitNow ? now() : null,
         ], array_only($data, [
             'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
         ])));
@@ -1281,7 +1296,7 @@ class Voucher extends BaseModel
         foreach ($vouchers as $voucher) {
             do {
                 $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
-            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $dataItem = $data[] = [
                 'name' => $voucherData->getName(),
@@ -1321,7 +1336,7 @@ class Voucher extends BaseModel
 
         $zip->close();
 
-        $data = array_map(function($item) use ($qrFormat) {
+        $data = array_map(function ($item) use ($qrFormat) {
             return array_merge($item['values'], array_only($item, $qrFormat === 'data' ? [
                 'name', 'value',
             ] : []));
@@ -1344,7 +1359,7 @@ class Voucher extends BaseModel
         foreach ($vouchers as $voucher) {
             do {
                 $voucherData = new VoucherExportData($voucher, $fields, true);
-            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $data[] = [
                 'name' => $voucherData->getName(),
@@ -1379,7 +1394,7 @@ class Voucher extends BaseModel
     {
         return self::query()->where([
             'voucher_type' => Voucher::VOUCHER_TYPE_VOUCHER,
-        ])->whereHas('tokens', static function(Builder $builder) use ($address) {
+        ])->whereHas('tokens', static function (Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->firstOrFail();
     }
@@ -1459,11 +1474,11 @@ class Voucher extends BaseModel
      */
     public function makeActivationCode(string $client_uid = null): self
     {
-        $queryUnused = self::whereHas('fund', function(Builder $builder) {
+        $queryUnused = self::whereHas('fund', function (Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
         })->whereNull('identity_id')->where(compact('client_uid'));
 
-        $queryUsed = self::whereHas('fund', function(Builder $builder) {
+        $queryUsed = self::whereHas('fund', function (Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
         })->whereNotNull('identity_id')->where(compact('client_uid'));
 
@@ -1553,8 +1568,8 @@ class Voucher extends BaseModel
      * @param string $note
      * @param bool $notifyByEmail
      * @param Employee|null $employee
+     * @throws Throwable
      * @return $this
-     * @throws \Throwable
      */
     public function deactivate(
         string $note = '',
@@ -1752,19 +1767,6 @@ class Voucher extends BaseModel
 
     /**
      * @param int|null $seconds
-     * @return Relation|null
-     */
-    protected function transactionsWithinQuery(?int $seconds): ?Relation
-    {
-        if (!is_null($seconds)) {
-            return $this->transactions()->where('created_at', '>=', now()->subSeconds($seconds));
-        }
-
-        return null;
-    }
-
-    /**
-     * @param int|null $seconds
      * @return bool|null
      */
     public function hasTransactionsWithin(?int $seconds): ?bool
@@ -1778,9 +1780,9 @@ class Voucher extends BaseModel
      */
     public function appendRecords(array $records): Collection
     {
-         return new Collection(array_map(function ($key) use ($records) {
-             $this->appendRecord($key, $records[$key]);
-         }, array_keys($records)));
+        return new Collection(array_map(function ($key) use ($records) {
+            $this->appendRecord($key, $records[$key]);
+        }, array_keys($records)));
     }
 
     /**
@@ -1813,5 +1815,18 @@ class Voucher extends BaseModel
         $familyName = Arr::get($recordsMap, 'family_name');
 
         return $givenName ? trim("$givenName $familyName") : null;
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return Relation|null
+     */
+    protected function transactionsWithinQuery(?int $seconds): ?Relation
+    {
+        if (!is_null($seconds)) {
+            return $this->transactions()->where('created_at', '>=', now()->subSeconds($seconds));
+        }
+
+        return null;
     }
 }

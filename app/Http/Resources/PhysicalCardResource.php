@@ -20,7 +20,7 @@ class PhysicalCardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return $this->resource->only([
-            'id', 'code'
+            'id', 'code',
         ]);
     }
 }

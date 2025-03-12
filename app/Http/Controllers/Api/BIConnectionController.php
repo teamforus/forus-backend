@@ -13,8 +13,8 @@ class BIConnectionController extends Controller
 {
     /**
      * @param ExportBIConnectionRequest $request
-     * @return JsonResponse
      * @throws Throwable
+     * @return JsonResponse
      */
     public function index(ExportBIConnectionRequest $request): JsonResponse
     {

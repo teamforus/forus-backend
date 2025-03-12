@@ -11,8 +11,8 @@ class UserLoginMail extends ImplementationMail
     public $subject = 'Log in op :platform geldig tot :time';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {
@@ -26,8 +26,8 @@ class UserLoginMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
-            'time'          => strftime('%e %B %H:%M', strtotime("+1 hours")),
-            'auth_button'   => $this->makeButton($data['auth_link'], 'INLOGGEN'),
+            'time' => strftime('%e %B %H:%M', strtotime('+1 hours')),
+            'auth_button' => $this->makeButton($data['auth_link'], 'INLOGGEN'),
         ];
     }
 }

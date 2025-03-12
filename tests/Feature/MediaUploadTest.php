@@ -15,7 +15,9 @@ use Tests\TestCase;
 
 class MediaUploadTest extends TestCase
 {
-    use UsesMediaService, DatabaseTransactions, WithFaker;
+    use UsesMediaService;
+    use DatabaseTransactions;
+    use WithFaker;
 
     /**
      * @var string
@@ -117,6 +119,19 @@ class MediaUploadTest extends TestCase
     /**
      * @return void
      */
+    public function testStoreMediaAsGuest(): void
+    {
+        $response = $this->post($this->apiMediaUrl, [
+            'file' => UploadedFile::fake()->image('media.jpg'),
+            'type' => 'cms_media',
+        ], $this->makeApiHeaders());
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * @return void
+     */
     protected function testDeleteAsAuthorMedia(): void
     {
         $mediaAuthor = $this->makeIdentityProxy($this->makeIdentity());
@@ -158,19 +173,6 @@ class MediaUploadTest extends TestCase
     }
 
     /**
-     * @return void
-     */
-    public function testStoreMediaAsGuest(): void
-    {
-        $response = $this->post($this->apiMediaUrl, [
-            'file' => UploadedFile::fake()->image('media.jpg'),
-            'type' => 'cms_media',
-        ], $this->makeApiHeaders());
-
-        $response->assertUnauthorized();
-    }
-
-    /**
      * @param string $type
      * @param int $assertedPresetsCount
      * @param IdentityProxy|bool|null $authProxy
@@ -194,7 +196,7 @@ class MediaUploadTest extends TestCase
         $this->assertCount($assertedPresetsCount, $media->presets);
 
         Storage::disk('public')->assertExists($media->presets->pluck('path')->toArray());
-        $media->presets->each(fn(MediaPreset $preset) => $this->assertTrue($preset->fileExists()));
+        $media->presets->each(fn (MediaPreset $preset) => $this->assertTrue($preset->fileExists()));
 
         return $media;
     }

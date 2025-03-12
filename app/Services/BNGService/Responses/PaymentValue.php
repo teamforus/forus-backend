@@ -2,4 +2,6 @@
 
 namespace App\Services\BNGService\Responses;
 
-class PaymentValue extends Value {}
+class PaymentValue extends Value
+{
+}

@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 /**
- * App\Models\FundProvider
+ * App\Models\FundProvider.
  *
  * @property int $id
  * @property int $organization_id
@@ -304,7 +304,7 @@ class FundProvider extends BaseModel
      * @return HasMany
      * @noinspection PhpUnused
      */
-    public function fund_unsubscribes() : HasMany
+    public function fund_unsubscribes(): HasMany
     {
         return $this->hasMany(FundProviderUnsubscribe::class);
     }
@@ -313,7 +313,7 @@ class FundProvider extends BaseModel
      * @return HasMany
      * @noinspection PhpUnused
      */
-    public function fund_unsubscribes_active() : HasMany
+    public function fund_unsubscribes_active(): HasMany
     {
         return $this->hasMany(FundProviderUnsubscribe::class)->where([
             'canceled' => false,
@@ -365,7 +365,7 @@ class FundProvider extends BaseModel
         $query = $query->whereIn('fund_id', $fundsQuery->select('id')->getQuery());
 
         if ($q = $request->input('q')) {
-            $query->where(static function(Builder $builder) use ($q) {
+            $query->where(static function (Builder $builder) use ($q) {
                 $builder->whereHas('organization', function (Builder $query) use ($q) {
                     $query->where('name', 'like', "%$q%");
                     $query->orWhere('kvk', 'like', "%$q%");
@@ -400,7 +400,7 @@ class FundProvider extends BaseModel
         }
 
         if ($allow_budget !== null) {
-            $query->whereHas('fund', function(Builder $builder) {
+            $query->whereHas('fund', function (Builder $builder) {
                 $builder->where('type', Fund::TYPE_BUDGET);
             })->where('allow_budget', (bool) $allow_budget);
         }
@@ -421,29 +421,29 @@ class FundProvider extends BaseModel
 
         if ($allow_products !== null) {
             if ($allow_products === 'some') {
-                $query->where(function(Builder $builder) {
-                    $builder->where(function(Builder $builder) {
-                        $builder->whereHas('fund', function(Builder $builder) {
+                $query->where(function (Builder $builder) {
+                    $builder->where(function (Builder $builder) {
+                        $builder->whereHas('fund', function (Builder $builder) {
                             $builder->where('type', Fund::TYPE_BUDGET);
                         })->whereHas('products');
                     });
 
-                    $builder->orWhere(function(Builder $builder) {
-                        $builder->whereHas('fund', function(Builder $builder) {
+                    $builder->orWhere(function (Builder $builder) {
+                        $builder->whereHas('fund', function (Builder $builder) {
                             $builder->where('type', Fund::TYPE_SUBSIDIES);
                         })->whereHas('fund_provider_products.product');
                     });
                 });
             } else {
-                $query->where(function(Builder $builder) use ($allow_products) {
-                    $builder->where(function(Builder $builder) use ($allow_products) {
-                        $builder->whereHas('fund', function(Builder $builder) {
+                $query->where(function (Builder $builder) use ($allow_products) {
+                    $builder->where(function (Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function (Builder $builder) {
                             $builder->where('type', Fund::TYPE_BUDGET);
                         })->where('allow_products', (bool) $allow_products);
                     });
 
-                    $builder->orWhere(function(Builder $builder) use ($allow_products) {
-                        $builder->whereHas('fund', function(Builder $builder) {
+                    $builder->orWhere(function (Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function (Builder $builder) {
                             $builder->where('type', Fund::TYPE_SUBSIDIES);
                         });
 
@@ -462,64 +462,6 @@ class FundProvider extends BaseModel
         }
 
         return $query->orderBy('created_at');
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(Builder $builder): mixed
-    {
-        return $builder->with([
-            'fund.fund_config.implementation',
-            'organization.last_employee_session',
-        ])->get()->map(function(FundProvider $fundProvider) {
-            $transKey = "export.providers";
-            $provider = $fundProvider->organization;
-            $lastActivity = $fundProvider->getLastActivity();
-
-            $providerProductsQuery = ProductQuery::whereNotExpired($provider->products_provider());
-            $individualProductsQuery = $fundProvider->fund_provider_products()->whereHas('product');
-
-            $sponsorProductsQuery = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
-                'sponsor_organization_id' => $fundProvider->fund->organization_id,
-            ]));
-
-            $activeProductsQuery = ProductQuery::approvedForFundsAndActiveFilter(
-                $fundProvider->products()->getQuery(),
-                $fundProvider->fund_id,
-            );
-
-            $result = DB::query()->select([
-                'individual_products_count' => $individualProductsQuery->selectRaw('count(*)'),
-                'provider_products_count' => $providerProductsQuery->selectRaw('count(*)'),
-                'sponsor_products_count' => $sponsorProductsQuery->selectRaw('count(*)'),
-                'active_products_count' => $activeProductsQuery->selectRaw('count(*)'),
-            ])->first();
-
-            $hasIndividualProducts = ($result->individual_products_count > 0 || $fundProvider->allow_products);
-
-            return [
-                trans("$transKey.fund") => $fundProvider->fund->name,
-                trans("$transKey.implementation") => $fundProvider->fund->fund_config?->implementation?->name,
-                trans("$transKey.fund_type") => $fundProvider->fund->type,
-                trans("$transKey.provider") => $provider->name,
-                trans("$transKey.iban") => $provider->iban,
-                trans("$transKey.provider_last_activity") => $lastActivity?->diffForHumans(now()),
-                trans("$transKey.products_provider_count") => $result->provider_products_count,
-                trans("$transKey.products_sponsor_count") => $result->sponsor_products_count,
-                trans("$transKey.products_active_count") => $result->active_products_count,
-                trans("$transKey.products_count") => $result->provider_products_count + $result->sponsor_products_count,
-                trans("$transKey.phone") => $provider->phone,
-                trans("$transKey.email") => $provider->email,
-                trans("$transKey.phone") => $provider->phone,
-                trans("$transKey.kvk") => $fundProvider->organization->kvk,
-                trans("$transKey.state") => $fundProvider->state_locale,
-                trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
-                trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
-                trans("$transKey.allow_some_products") => $hasIndividualProducts ? 'Ja' : 'Nee',
-            ];
-        })->values();
     }
 
     /**
@@ -568,6 +510,113 @@ class FundProvider extends BaseModel
         }
 
         return $this;
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function resetProducts(array $products): self
+    {
+        foreach ($products as $product) {
+            $this->resetProduct($product);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function declineProducts(array $products): self
+    {
+        $attachedProducts = $this->products()->pluck('products.id')->toArray();
+        $products = Product::whereIn('id', array_intersect($products, $attachedProducts))->get();
+
+        $this->fund_provider_products()->whereIn('product_id', $products->pluck('id'))->delete();
+        $chats = $this->fund_provider_chats()->whereIn('product_id', $products->pluck('id'))->get();
+
+        foreach ($products as $product) {
+            Event::dispatch(new ProductRevoked($product, $this->fund));
+        }
+
+        foreach ($chats as $chat) {
+            $chat->addSystemMessage('Aanbieding afgewezen.', auth()->id());
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return FundProviderQuery::whereApprovedForFundsFilter(
+            self::query()->where('id', $this->id),
+            $this->fund_id
+        )->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTransactions(): bool
+    {
+        return FundProviderQuery::whereHasTransactions(
+            self::query()->where('id', $this->id),
+            $this->fund_id
+        )->exists();
+    }
+
+    /**
+     * @param Product $product
+     * @param string $message
+     * @param string $identity_address
+     * @return FundProviderChatMessage
+     */
+    public function startChat(
+        Product $product,
+        string $message,
+        string $identity_address
+    ): FundProviderChatMessage {
+        /** @var FundProviderChat $chat */
+        $chat = $this->fund_provider_chats()->create([
+            'product_id' => $product->id,
+            'identity_address' => $identity_address,
+        ]);
+
+        return $chat->addSponsorMessage($message, $identity_address);
+    }
+
+    /**
+     * @param string $state
+     * @return void
+     */
+    public function setState(string $state): void
+    {
+        $originalState = $this->state;
+
+        $approvedBefore = $this->isApproved();
+        $this->update(compact('state'));
+        $approvedAfter = $this->isApproved();
+
+        FundProviderStateUpdated::dispatch($this, compact([
+            'originalState', 'approvedBefore', 'approvedAfter',
+        ]));
+    }
+
+    /**
+     * @return bool
+     */
+    public function canUnsubscribe(): bool
+    {
+        return
+            $this->isAccepted() &&
+            $this->fund_unsubscribes->where(fn (
+                FundProviderUnsubscribe $unsubscribe
+            ) => $unsubscribe->isPending() && !$unsubscribe->canceled)->isEmpty();
     }
 
     /**
@@ -663,19 +712,6 @@ class FundProvider extends BaseModel
     }
 
     /**
-     * @param array $products
-     * @return $this
-     */
-    public function resetProducts(array $products): self
-    {
-        foreach ($products as $product) {
-            $this->resetProduct($product);
-        }
-
-        return $this;
-    }
-
-    /**
      * @param array $data
      * @return FundProviderProduct|null
      */
@@ -686,7 +722,7 @@ class FundProvider extends BaseModel
 
         if ($this->fund->isTypeBudget()) {
             $fundProviderProducts = (clone $query)->where('product_id', $data['id'])->latest()->get();
-            $fundProviderProducts->each(fn(FundProviderProduct $product) => $product->delete());
+            $fundProviderProducts->each(fn (FundProviderProduct $product) => $product->delete());
 
             return $query->firstOrCreate([
                 'product_id' => $data['id'],
@@ -697,93 +733,60 @@ class FundProvider extends BaseModel
     }
 
     /**
-     * @param array $products
-     * @return $this
+     * @param Builder $builder
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public function declineProducts(array $products): self
+    private static function exportTransform(Builder $builder): mixed
     {
-        $attachedProducts = $this->products()->pluck('products.id')->toArray();
-        $products = Product::whereIn('id', array_intersect($products, $attachedProducts))->get();
+        return $builder->with([
+            'fund.fund_config.implementation',
+            'organization.last_employee_session',
+        ])->get()->map(function (FundProvider $fundProvider) {
+            $transKey = 'export.providers';
+            $provider = $fundProvider->organization;
+            $lastActivity = $fundProvider->getLastActivity();
 
-        $this->fund_provider_products()->whereIn('product_id', $products->pluck('id'))->delete();
-        $chats = $this->fund_provider_chats()->whereIn('product_id', $products->pluck('id'))->get();
+            $providerProductsQuery = ProductQuery::whereNotExpired($provider->products_provider());
+            $individualProductsQuery = $fundProvider->fund_provider_products()->whereHas('product');
 
-        foreach ($products as $product) {
-            Event::dispatch(new ProductRevoked($product, $this->fund));
-        }
+            $sponsorProductsQuery = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
+                'sponsor_organization_id' => $fundProvider->fund->organization_id,
+            ]));
 
-        foreach ($chats as $chat) {
-            $chat->addSystemMessage('Aanbieding afgewezen.', auth()->id());
-        }
+            $activeProductsQuery = ProductQuery::approvedForFundsAndActiveFilter(
+                $fundProvider->products()->getQuery(),
+                $fundProvider->fund_id,
+            );
 
-        return $this;
-    }
+            $result = DB::query()->select([
+                'individual_products_count' => $individualProductsQuery->selectRaw('count(*)'),
+                'provider_products_count' => $providerProductsQuery->selectRaw('count(*)'),
+                'sponsor_products_count' => $sponsorProductsQuery->selectRaw('count(*)'),
+                'active_products_count' => $activeProductsQuery->selectRaw('count(*)'),
+            ])->first();
 
-    /**
-     * @return bool
-     */
-    public function isApproved(): bool
-    {
-        return FundProviderQuery::whereApprovedForFundsFilter(
-            self::query()->where('id', $this->id), $this->fund_id
-        )->exists();
-    }
+            $hasIndividualProducts = ($result->individual_products_count > 0 || $fundProvider->allow_products);
 
-    /**
-     * @return bool
-     */
-    public function hasTransactions(): bool {
-        return FundProviderQuery::whereHasTransactions(
-            self::query()->where('id', $this->id), $this->fund_id
-        )->exists();
-    }
-
-    /**
-     * @param Product $product
-     * @param string $message
-     * @param string $identity_address
-     * @return FundProviderChatMessage
-     */
-    public function startChat(
-        Product $product,
-        string $message,
-        string $identity_address
-    ): FundProviderChatMessage {
-        /** @var FundProviderChat $chat */
-        $chat = $this->fund_provider_chats()->create([
-            'product_id' => $product->id,
-            'identity_address' => $identity_address,
-        ]);
-
-        return $chat->addSponsorMessage($message, $identity_address);
-    }
-
-    /**
-     * @param string $state
-     * @return void
-     */
-    public function setState(string $state): void
-    {
-        $originalState = $this->state;
-
-        $approvedBefore = $this->isApproved();
-        $this->update(compact('state'));
-        $approvedAfter = $this->isApproved();
-
-        FundProviderStateUpdated::dispatch($this, compact([
-            'originalState', 'approvedBefore', 'approvedAfter',
-        ]));
-    }
-
-    /**
-     * @return bool
-     */
-    public function canUnsubscribe(): bool
-    {
-        return
-            $this->isAccepted() &&
-            $this->fund_unsubscribes->where(fn (
-                FundProviderUnsubscribe $unsubscribe
-            ) => $unsubscribe->isPending() && !$unsubscribe->canceled)->isEmpty();
+            return [
+                trans("$transKey.fund") => $fundProvider->fund->name,
+                trans("$transKey.implementation") => $fundProvider->fund->fund_config?->implementation?->name,
+                trans("$transKey.fund_type") => $fundProvider->fund->type,
+                trans("$transKey.provider") => $provider->name,
+                trans("$transKey.iban") => $provider->iban,
+                trans("$transKey.provider_last_activity") => $lastActivity?->diffForHumans(now()),
+                trans("$transKey.products_provider_count") => $result->provider_products_count,
+                trans("$transKey.products_sponsor_count") => $result->sponsor_products_count,
+                trans("$transKey.products_active_count") => $result->active_products_count,
+                trans("$transKey.products_count") => $result->provider_products_count + $result->sponsor_products_count,
+                trans("$transKey.phone") => $provider->phone,
+                trans("$transKey.email") => $provider->email,
+                trans("$transKey.phone") => $provider->phone,
+                trans("$transKey.kvk") => $fundProvider->organization->kvk,
+                trans("$transKey.state") => $fundProvider->state_locale,
+                trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
+                trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $hasIndividualProducts ? 'Ja' : 'Nee',
+            ];
+        })->values();
     }
 }

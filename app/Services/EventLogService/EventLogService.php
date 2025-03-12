@@ -39,33 +39,33 @@ class EventLogService implements IEventLogService
     public function modelToMeta(string $type, $model): array
     {
         $modelMeta = [
-            'fund' => fn() => $this->fundMeta($model),
-            'fund_config' => fn() => $this->fundConfigMeta($model),
-            'fund_period' => fn() => $this->fundPeriodMeta($model),
-            'fund_request' => fn() => $this->fundRequestMeta($model),
-            'fund_request_record' => fn() => $this->fundRequestRecordMeta($model),
-            'fund_request_clarification' => fn() => $this->fundRequestClarificationMeta($model),
-            'fund_top_up_transaction' => fn() => $this->fundTopUpTransactionMeta($model),
-            'sponsor' => fn() => $this->sponsorMeta($model),
-            'provider' => fn() => $this->providerMeta($model),
-            'product' => fn() => $this->productMeta($model),
-            'voucher' => fn() => $this->voucherMeta($model),
-            'organization' => fn() => $this->organizationMeta($model),
-            'employee' => fn() => $this->employeeMeta($model),
-            'product_reservation' => fn() => $this->productReservationMeta($model),
-            'voucher_transaction' => fn() => $this->voucherTransactionMeta($model),
-            'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
-            'voucher_record' => fn() => $this->voucherRecordMeta($model),
-            'physical_card' => fn() => $this->physicalCardMeta($model),
-            'physical_card_request' => fn() => $this->physicalCardRequestMeta($model),
-            'bank' => fn() => $this->bankMeta($model),
-            'bank_connection' => fn() => $this->bankConnectionMeta($model),
-            'bank_connection_account' => fn() => $this->bankConnectionAccountMeta($model),
-            'implementation' => fn() => $this->implementationMeta($model),
-            'reimbursement' => fn() => $this->reimbursementMeta($model),
-            'mollie_connection' => fn() => $this->mollieConnectionMeta($model),
-            'reservation_extra_payment' => fn() => $this->reservationExtraPaymentMeta($model),
-            'bi_connection' => fn() => $this->biConnectionMeta($model),
+            'fund' => fn () => $this->fundMeta($model),
+            'fund_config' => fn () => $this->fundConfigMeta($model),
+            'fund_period' => fn () => $this->fundPeriodMeta($model),
+            'fund_request' => fn () => $this->fundRequestMeta($model),
+            'fund_request_record' => fn () => $this->fundRequestRecordMeta($model),
+            'fund_request_clarification' => fn () => $this->fundRequestClarificationMeta($model),
+            'fund_top_up_transaction' => fn () => $this->fundTopUpTransactionMeta($model),
+            'sponsor' => fn () => $this->sponsorMeta($model),
+            'provider' => fn () => $this->providerMeta($model),
+            'product' => fn () => $this->productMeta($model),
+            'voucher' => fn () => $this->voucherMeta($model),
+            'organization' => fn () => $this->organizationMeta($model),
+            'employee' => fn () => $this->employeeMeta($model),
+            'product_reservation' => fn () => $this->productReservationMeta($model),
+            'voucher_transaction' => fn () => $this->voucherTransactionMeta($model),
+            'voucher_transaction_bulk' => fn () => $this->voucherTransactionBulkMeta($model),
+            'voucher_record' => fn () => $this->voucherRecordMeta($model),
+            'physical_card' => fn () => $this->physicalCardMeta($model),
+            'physical_card_request' => fn () => $this->physicalCardRequestMeta($model),
+            'bank' => fn () => $this->bankMeta($model),
+            'bank_connection' => fn () => $this->bankConnectionMeta($model),
+            'bank_connection_account' => fn () => $this->bankConnectionAccountMeta($model),
+            'implementation' => fn () => $this->implementationMeta($model),
+            'reimbursement' => fn () => $this->reimbursementMeta($model),
+            'mollie_connection' => fn () => $this->mollieConnectionMeta($model),
+            'reservation_extra_payment' => fn () => $this->reservationExtraPaymentMeta($model),
+            'bi_connection' => fn () => $this->biConnectionMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -524,7 +524,7 @@ class EventLogService implements IEventLogService
      */
     protected function keyPrepend(array $data, string $prefix): array
     {
-        return array_reduce(array_keys($data), fn($arr, $key) => array_merge($arr, [
+        return array_reduce(array_keys($data), fn ($arr, $key) => array_merge($arr, [
             $prefix . $key => $data[$key],
         ]), []);
     }

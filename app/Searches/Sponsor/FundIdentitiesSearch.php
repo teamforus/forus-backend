@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches\Sponsor;
-
 
 use App\Models\Fund;
 use App\Scopes\Builders\IdentityQuery;
@@ -38,7 +36,7 @@ class FundIdentitiesSearch extends BaseSearch
         $builder = parent::query();
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
-            $builder->having('email', 'like', "%" . $this->getFilter('q') . "%");
+            $builder->having('email', 'like', '%' . $this->getFilter('q') . '%');
         }
 
         return $builder->orderBy(

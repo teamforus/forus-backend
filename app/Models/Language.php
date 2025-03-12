@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * App\Models\Language
+ * App\Models\Language.
  *
  * @property int $id
  * @property string $locale
@@ -41,7 +41,7 @@ class Language extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'locale', 'name', 'base'
+        'locale', 'name', 'base',
     ];
 
     /**

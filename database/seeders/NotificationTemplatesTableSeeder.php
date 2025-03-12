@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Implementation;
-use App\Models\NotificationTemplate;
-use App\Models\SystemNotification;
 use App\Services\Forus\Notification\Repositories\NotificationRepo;
 use Illuminate\Console\Command;
 use Illuminate\Database\Seeder;
@@ -126,9 +124,9 @@ class NotificationTemplatesTableSeeder extends Seeder
      */
     protected function confirmUpdate(Command $command, string $overview): bool
     {
-        $command->info("The following default template have been changed:");
+        $command->info('The following default template have been changed:');
         $command->info($overview);
 
-        return $command->confirm(" Would you like to update?");
+        return $command->confirm(' Would you like to update?');
     }
 }

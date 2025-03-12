@@ -6,31 +6,34 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Notifications\BaseNotification;
 use App\Services\EventLogService\Models\EventLog;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use LogicException;
 
 abstract class BaseOrganizationNotification extends BaseNotification
 {
     protected static ?string $scope;
 
     /**
-     * Permissions required to get the notification
+     * Permissions required to get the notification.
      *
      * @var array|string
      */
     protected static string|array $permissions = [];
 
     /**
-     * Get the permissions required for the identity to receive the notification
+     * Get the permissions required for the identity to receive the notification.
      *
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     public static function getPermissions(): array
     {
         if (empty(static::$permissions) || (
-            !is_array(static::$permissions) && !is_string(static::$permissions))) {
-            throw new \LogicException(sprintf(
+            !is_array(static::$permissions) && !is_string(static::$permissions)
+        )) {
+            throw new LogicException(sprintf(
                 'Permissions list is required for "%s"!',
                 static::class
             ));
@@ -40,12 +43,12 @@ abstract class BaseOrganizationNotification extends BaseNotification
     }
 
     /**
-     * Get identities which are eligible for the notification
+     * Get identities which are eligible for the notification.
      *
      * @param Model $loggable
      * @param EventLog $eventLog
+     * @throws Exception
      * @return Collection
-     * @throws \Exception
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
@@ -58,8 +61,8 @@ abstract class BaseOrganizationNotification extends BaseNotification
 
     /**
      * @param Model $loggable
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     public static function getMeta($loggable): array
     {
@@ -70,11 +73,11 @@ abstract class BaseOrganizationNotification extends BaseNotification
 
     /**
      * Get the organization owner of the resource,
-     * the permissions will be checked against this organization
+     * the permissions will be checked against this organization.
      *
      * @param Model $loggable
+     * @throws Exception
      * @return Organization
-     * @throws \Exception
      */
     abstract public static function getOrganization(mixed $loggable): Organization;
 }

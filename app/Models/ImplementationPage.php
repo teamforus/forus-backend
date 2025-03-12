@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 
 /**
- * App\Models\ImplementationPage
+ * App\Models\ImplementationPage.
  *
  * @property int $id
  * @property int $implementation_id
@@ -69,39 +69,39 @@ class ImplementationPage extends BaseModel
     use HasMarkdownDescription;
     use HasOnDemandTranslations;
 
-    const string TYPE_HOME = 'home';
-    const string TYPE_PRODUCTS = 'products';
-    const string TYPE_PROVIDERS = 'providers';
-    const string TYPE_FUNDS = 'funds';
-    const string TYPE_EXPLANATION = 'explanation';
-    const string TYPE_PROVIDER = 'provider';
-    const string TYPE_PRIVACY = 'privacy';
-    const string TYPE_ACCESSIBILITY = 'accessibility';
-    const string TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
-    const string TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
-    const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
-    const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
-    const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
+    public const string TYPE_HOME = 'home';
+    public const string TYPE_PRODUCTS = 'products';
+    public const string TYPE_PROVIDERS = 'providers';
+    public const string TYPE_FUNDS = 'funds';
+    public const string TYPE_EXPLANATION = 'explanation';
+    public const string TYPE_PROVIDER = 'provider';
+    public const string TYPE_PRIVACY = 'privacy';
+    public const string TYPE_ACCESSIBILITY = 'accessibility';
+    public const string TYPE_TERMS_AND_CONDITIONS = 'terms_and_conditions';
+    public const string TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
+    public const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
+    public const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
+    public const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
 
-    const string STATE_DRAFT = 'draft';
-    const string STATE_PUBLIC = 'public';
+    public const string STATE_DRAFT = 'draft';
+    public const string STATE_PUBLIC = 'public';
 
-    const array STATES = [
+    public const array STATES = [
         self::STATE_DRAFT,
         self::STATE_PUBLIC,
     ];
 
-    const string DESCRIPTION_POSITION_AFTER = 'after';
-    const string DESCRIPTION_POSITION_BEFORE = 'before';
-    const string DESCRIPTION_POSITION_REPLACE = 'replace';
+    public const string DESCRIPTION_POSITION_AFTER = 'after';
+    public const string DESCRIPTION_POSITION_BEFORE = 'before';
+    public const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const array DESCRIPTION_POSITIONS = [
+    public const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
-    const array PAGE_TYPES = [[
+    public const array PAGE_TYPES = [[
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,

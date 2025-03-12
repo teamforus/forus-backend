@@ -20,8 +20,8 @@ class BankPayment
     public function __construct(
         string $id,
         string $amount,
-        string $currency = "EUR",
-        string $description = ""
+        string $currency = 'EUR',
+        string $description = ''
     ) {
         $this->id = $id;
         $this->amount = $amount;
@@ -39,8 +39,8 @@ class BankPayment
     public static function make(
         string $id,
         string $amount,
-        string $currency = "EUR",
-        string $description = ""
+        string $currency = 'EUR',
+        string $description = ''
     ): static {
         return new static($id, $amount, $currency, $description);
     }
