@@ -42,9 +42,11 @@ class BaseJsonResource extends JsonResource
      */
     public static function load(?string $append = null): array
     {
-        return $append ? array_map(function ($load) use ($append) {
-            return "$append.$load";
-        }, static::LOAD) : static::LOAD;
+        if ($append) {
+            return array_map(fn ($load) => "$append.$load", static::LOAD);
+        }
+
+        return static::LOAD;
     }
 
     /**
