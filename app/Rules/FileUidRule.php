@@ -36,26 +36,31 @@ class FileUidRule implements Rule
     {
         if (!is_string($value)) {
             $this->errorMessage = trans('validation.string');
+
             return false;
         }
 
         if (!$file = File::findByUid($value)) {
             $this->errorMessage = trans('validation.exists');
+
             return false;
         }
 
         if (!Gate::allows('destroy', $file)) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 
         if ($file->type !== $this->type) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 
         if ($file->fileable && !$this->isSameFileable($file->fileable, $this->targetFileable)) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 

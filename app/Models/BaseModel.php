@@ -5,7 +5,7 @@ namespace App\Models;
 use Closure;
 
 /**
- * App\Models\BaseModel
+ * App\Models\BaseModel.
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BaseModel newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BaseModel newQuery()

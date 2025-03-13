@@ -94,7 +94,7 @@ class OrganizationPolicy
     public function listSponsorProviders(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            'manage_providers', 'view_finances'
+            'manage_providers', 'view_finances',
         ], false);
     }
 
@@ -110,7 +110,7 @@ class OrganizationPolicy
         Organization $organization,
         Organization $provider
     ): bool {
-        return $organization->whereHas('funds.providers', function(Builder $builder) use ($provider) {
+        return $organization->whereHas('funds.providers', function (Builder $builder) use ($provider) {
             $builder->where('organization_id', $provider->id);
         })->exists() && $this->listSponsorProviders($identity, $organization);
     }
@@ -139,7 +139,7 @@ class OrganizationPolicy
             ->whereRelation('organization.funds.fund_config', 'is_configured', true)
             ->exists();
 
-         return $organization->isEmployee($identity) && $hasFunds;
+        return $organization->isEmployee($identity) && $hasFunds;
     }
 
     /**

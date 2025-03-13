@@ -18,8 +18,8 @@ class FundUnsubscribeController extends Controller
      *
      * @param IndexFundUnsubscribeRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundUnsubscribeRequest $request,

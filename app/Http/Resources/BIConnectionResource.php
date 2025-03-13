@@ -28,7 +28,8 @@ class BIConnectionResource extends BaseJsonResource
                 'organization_id', 'created_at', 'expire_at',
             ]),
             'expire_after_locale' => $connection->expire_at->diffForHumans(
-                now(), CarbonInterface::DIFF_RELATIVE_TO_NOW,
+                now(),
+                CarbonInterface::DIFF_RELATIVE_TO_NOW,
             ),
             'expired' => $connection->isExpired(),
             ...$this->makeTimestamps($connection->only([

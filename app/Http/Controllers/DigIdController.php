@@ -6,14 +6,16 @@ use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Identity;
 use App\Services\DigIdService\Models\DigIdSession;
+use Exception;
 use Illuminate\Http\RedirectResponse;
+use Throwable;
 
 class DigIdController extends Controller
 {
     /**
      * @param StartDigIdRequest $request
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function start(StartDigIdRequest $request): array
     {
@@ -42,8 +44,8 @@ class DigIdController extends Controller
     /**
      * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
+     * @throws Exception
      * @return RedirectResponse
-     * @throws \Exception
      */
     public function resolve(ResolveDigIdRequest $request, DigIdSession $session): RedirectResponse
     {
@@ -66,6 +68,35 @@ class DigIdController extends Controller
 
         // Default unknown request type error
         return $session->makeRedirectErrorResponse('unknown_session_type');
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @return RedirectResponse|bool
+     */
+    protected function handleBsnAssign(DigIdSession $session): RedirectResponse|bool
+    {
+        $digidBsn = $session->digidBsn();
+        $digidBsnIdentity = $session->digidBsnIdentity();
+        $sessionIdentity = $session->sessionIdentity();
+        $sessionIdentityBsn = $session->sessionIdentityBsn();
+
+        // Identity already has a bsn attached, and it's different
+        if ($sessionIdentityBsn && $sessionIdentityBsn !== $digidBsn) {
+            return $session->makeRedirectErrorResponse('uid_dont_match');
+        }
+
+        // The digid bsn is already in the system but belongs to someone else
+        if ($digidBsnIdentity && $digidBsnIdentity->address !== $sessionIdentity->address) {
+            return $session->makeRedirectErrorResponse('uid_used');
+        }
+
+        // The session organization have bsn_enabled and
+        if ($session->sessionOrganization()->bsn_enabled) {
+            return (bool) $session->identity->setBsnRecord($session->digid_uid);
+        }
+
+        return false;
     }
 
     /**
@@ -117,34 +148,5 @@ class DigIdController extends Controller
         return $session->makeRedirectResponse(array_merge([
             'digid_success' => $assignResult ? 'signed_up' : 'signed_in',
         ]));
-    }
-
-    /**
-     * @param DigIdSession $session
-     * @return RedirectResponse|bool
-     */
-    protected function handleBsnAssign(DigIdSession $session): RedirectResponse|bool
-    {
-        $digidBsn = $session->digidBsn();
-        $digidBsnIdentity = $session->digidBsnIdentity();
-        $sessionIdentity = $session->sessionIdentity();
-        $sessionIdentityBsn = $session->sessionIdentityBsn();
-
-        // Identity already has a bsn attached, and it's different
-        if ($sessionIdentityBsn && $sessionIdentityBsn !== $digidBsn) {
-            return $session->makeRedirectErrorResponse('uid_dont_match');
-        }
-
-        // The digid bsn is already in the system but belongs to someone else
-        if ($digidBsnIdentity && $digidBsnIdentity->address !== $sessionIdentity->address) {
-            return $session->makeRedirectErrorResponse('uid_used');
-        }
-
-        // The session organization have bsn_enabled and
-        if ($session->sessionOrganization()->bsn_enabled) {
-            return (bool) $session->identity->setBsnRecord($session->digid_uid);
-        }
-
-        return false;
     }
 }

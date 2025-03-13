@@ -22,8 +22,8 @@ class SystemNotificationsController extends Controller
      * @param IndexSystemNotificationsRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexSystemNotificationsRequest $request,
@@ -59,7 +59,7 @@ class SystemNotificationsController extends Controller
         $this->authorize('viewAny', [Implementation::class, $organization]);
         $this->authorize('view', [$implementation, $organization]);
 
-        $funds =  $organization->funds;
+        $funds = $organization->funds;
 
         return SystemNotificationResource::create($systemNotification, [
             'fundIds' => (array) $request->get('fund_id') ?: $funds->pluck('id')->toArray(),
@@ -73,8 +73,8 @@ class SystemNotificationsController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param SystemNotification $systemNotification
-     * @return SystemNotificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SystemNotificationResource
      */
     public function update(
         UpdateSystemNotificationsRequest $request,

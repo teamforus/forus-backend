@@ -18,6 +18,7 @@ abstract class BaseMollieConnectionRequest extends BaseFormRequest
     public function authorize(): bool
     {
         $this->throttle();
+
         return true;
     }
 

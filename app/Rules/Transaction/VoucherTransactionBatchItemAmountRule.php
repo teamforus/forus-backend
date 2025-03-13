@@ -15,7 +15,8 @@ class VoucherTransactionBatchItemAmountRule extends BaseRule
     public function __construct(
         protected Organization $organization,
         protected array $transactions = [],
-    ) {}
+    ) {
+    }
 
     /**
      * Determine if the validation rule passes.

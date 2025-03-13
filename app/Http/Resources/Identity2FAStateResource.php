@@ -60,19 +60,35 @@ class Identity2FAStateResource extends BaseJsonResource
     public function forceForgetVoucher(): bool
     {
         return $this->resource->funds()->where(function (Builder|Fund $builder) {
-            $builder->whereHas('fund_config', function(Builder|FundConfig $builder) {
+            $builder->whereHas('fund_config', function (Builder|FundConfig $builder) {
                 $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_REQUIRED);
                 $builder->where('auth_2fa_remember_ip', false);
             });
 
-            $builder->orWhereHas('fund_config', function(Builder|FundConfig $builder) {
+            $builder->orWhereHas('fund_config', function (Builder|FundConfig $builder) {
                 $builder->where('auth_2fa_policy', FundConfig::AUTH_2FA_POLICY_GLOBAL);
-                $builder->whereHas('fund.organization', function(Builder|Organization $builder) {
+                $builder->whereHas('fund.organization', function (Builder|Organization $builder) {
                     $builder->where('auth_2fa_funds_policy', Organization::AUTH_2FA_FUNDS_POLICY_REQUIRED);
                     $builder->where('auth_2fa_funds_remember_ip', false);
                 });
             });
         })->exists();
+    }
+
+    /**
+     * @return array[]
+     */
+    public static function getProviderTypes(): array
+    {
+        return [[
+            'type' => 'authenticator',
+            'title' => 'Authenticator app',
+            'subtitle' => 'Gebruik een authenticator app',
+        ], [
+            'type' => 'phone',
+            'title' => 'SMS Verificatie',
+            'subtitle' => 'Gebruik je telefoonnummer als verificatie',
+        ]];
     }
 
     /**
@@ -118,21 +134,5 @@ class Identity2FAStateResource extends BaseJsonResource
             'restricted' => $restricted && !$isConfirmed,
             'organizations' => OrganizationTinyResource::collection($organizations),
         ];
-    }
-
-    /**
-     * @return array[]
-     */
-    static function getProviderTypes(): array
-    {
-        return [[
-            'type' => 'authenticator',
-            'title' => 'Authenticator app',
-            'subtitle' => 'Gebruik een authenticator app',
-        ], [
-            'type' => 'phone',
-            'title' => 'SMS Verificatie',
-            'subtitle' => 'Gebruik je telefoonnummer als verificatie',
-        ]];
     }
 }

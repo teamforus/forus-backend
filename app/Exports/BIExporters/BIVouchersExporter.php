@@ -7,6 +7,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
+use Exception;
 
 class BIVouchersExporter extends BaseBIExporter
 {
@@ -14,8 +15,8 @@ class BIVouchersExporter extends BaseBIExporter
     protected string $name = 'Tegoeden';
 
     /**
+     * @throws Exception
      * @return array
-     * @throws \Exception
      */
     public function toArray(): array
     {

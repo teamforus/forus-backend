@@ -26,9 +26,9 @@ class AcceptProductReservationRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationJsonException
      * @throws InvalidArgumentException
+     * @return bool
      */
     public function authorize(): bool
     {

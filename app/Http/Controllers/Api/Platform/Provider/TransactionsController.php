@@ -15,8 +15,8 @@ class TransactionsController extends Controller
 {
     /**
      * @param IndexTransactionsRequest $request
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(IndexTransactionsRequest $request): AnonymousResourceCollection
     {
@@ -28,11 +28,11 @@ class TransactionsController extends Controller
         ]), VoucherTransaction::query());
         $query = $query->query();
 
-        $query->whereHas('employee', fn(Builder $builder) => $builder->where(array_merge([
+        $query->whereHas('employee', fn (Builder $builder) => $builder->where(array_merge([
             'identity_address' => $request->auth_address(),
         ], $request->input('organization_id') ? [
             'organization_id' => $request->input('organization_id'),
-        ]: [])))->where('initiator', VoucherTransaction::INITIATOR_PROVIDER);
+        ] : [])))->where('initiator', VoucherTransaction::INITIATOR_PROVIDER);
 
         return ProviderVoucherTransactionEmployeeResource::queryCollection(VoucherTransactionQuery::order(
             $query,

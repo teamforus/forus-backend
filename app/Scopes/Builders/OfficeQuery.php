@@ -20,7 +20,7 @@ class OfficeQuery
         bool $withBranches = false,
     ): Builder|Relation|Office {
         return $query->where(function (Builder $query) use ($q, $withBranches) {
-            $query->where('address','LIKE', "%$q%");
+            $query->where('address', 'LIKE', "%$q%");
 
             if ($withBranches) {
                 $query->orWhere('branch_id', 'LIKE', "%$q%");
@@ -28,24 +28,24 @@ class OfficeQuery
                 $query->orWhere('branch_number', 'LIKE', "%$q%");
             }
 
-            $query->orWhereHas('organization', function(Builder $query) use ($q) {
+            $query->orWhereHas('organization', function (Builder $query) use ($q) {
                 $query->where('name', 'LIKE', "%$q%");
 
-                $query->orWhereHas('business_type.translations', function(Builder $builder) use ($q) {
+                $query->orWhereHas('business_type.translations', function (Builder $builder) use ($q) {
                     $builder->where('name', 'LIKE', "%$q%");
                 });
 
-                $query->orWhere(function(Builder $builder) use ($q) {
+                $query->orWhere(function (Builder $builder) use ($q) {
                     $builder->where('email_public', true);
                     $builder->where('email', 'LIKE', "%$q%");
                 });
 
-                $query->orWhere(function(Builder $builder) use ($q) {
+                $query->orWhere(function (Builder $builder) use ($q) {
                     $builder->where('phone_public', true);
                     $builder->where('phone', 'LIKE', "%$q%");
                 });
 
-                $query->orWhere(function(Builder $builder) use ($q) {
+                $query->orWhere(function (Builder $builder) use ($q) {
                     $builder->where('website_public', true);
                     $builder->where('website', 'LIKE', "%$q%");
                 });
@@ -68,12 +68,12 @@ class OfficeQuery
         $lat = number_format($location['lat'], 6, '.', '');
         $distance = number_format($distance, 2, '.', '');
 
-        return $query->where(function(Builder $builder) use ($distance, $lng, $lat) {
-            $builder->whereRaw("6371 * acos(cos(radians(" . $lat . "))
+        return $query->where(function (Builder $builder) use ($distance, $lng, $lat) {
+            $builder->whereRaw('6371 * acos(cos(radians(' . $lat . '))
                 * cos(radians(lat)) 
-                * cos(radians(lon) - radians(" . $lng . ")) 
-                + sin(radians(" . $lat . ")) 
-                * sin(radians(lat))) < " . $distance);
+                * cos(radians(lon) - radians(' . $lng . ')) 
+                + sin(radians(' . $lat . ')) 
+                * sin(radians(lat))) < ' . $distance);
         });
     }
 }

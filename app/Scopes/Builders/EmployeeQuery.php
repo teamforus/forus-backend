@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Employee;
@@ -18,7 +17,7 @@ class EmployeeQuery
         Builder|Relation|Employee $builder,
         string|array $permissions,
     ): Builder|Relation|Employee {
-        return $builder->whereHas('roles.permissions', function(Builder $builder) use ($permissions) {
+        return $builder->whereHas('roles.permissions', function (Builder $builder) use ($permissions) {
             $builder->whereIn('permissions.key', (array) $permissions);
         });
     }
@@ -32,7 +31,7 @@ class EmployeeQuery
         Builder|Relation|Employee $builder,
         string|array $roles,
     ): Builder|Relation|Employee {
-        return $builder->whereHas('roles', function(Builder $builder) use ($roles) {
+        return $builder->whereHas('roles', function (Builder $builder) use ($roles) {
             $builder->whereIn('roles.key', (array) $roles);
         });
     }

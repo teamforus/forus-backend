@@ -10,11 +10,16 @@ use App\Models\Organization;
 use App\Models\Role;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
+use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class DumpConfigCommand extends BaseCommand
 {
+    public const string ACTION_ADD_OWNER = 'action_add_owner';
+    public const string ACTION_GENERATE_MEDIA = 'action_generate_media';
+    public const string ACTION_UPDATE_FRONTENDS = 'action_add_employee';
     /**
      * The name and signature of the console command.
      *
@@ -33,27 +38,23 @@ class DumpConfigCommand extends BaseCommand
      */
     protected $description = 'Config dump database for local usage.';
 
-
     protected string $action;
-
-    public const string ACTION_ADD_OWNER = 'action_add_owner';
-    public const string ACTION_GENERATE_MEDIA = 'action_generate_media';
-    public const string ACTION_UPDATE_FRONTENDS = 'action_add_employee';
 
     /**
      * Execute the console command.
      *
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function handle(): void
     {
         Config::set('mail.disable', true);
 
-        $this->printHeader("Dump config tool", 2);
+        $this->printHeader('Dump config tool', 2);
 
         if (App::isProduction()) {
             $this->error('This command is not allowed on production environment.');
+
             return;
         }
 
@@ -88,24 +89,28 @@ class DumpConfigCommand extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function askAction(): void
     {
         $actionCli = $this->getOption('action');
 
         if (!$actionCli) {
-            $this->printHeader("Select next action:");
+            $this->printHeader('Select next action:');
             $this->printList($this->askActionList());
-            $action = $this->ask("Please select next step:", 1);
+            $action = $this->ask('Please select next step:', 1);
         }
 
         switch ($actionCli ?: $action) {
-            case 1: $this->addOwner(); break;
-            case 2: $this->updateFrontends(); break;
-            case 3: $this->generateMedia(!!$actionCli); break;
+            case 1: $this->addOwner();
+                break;
+            case 2: $this->updateFrontends();
+                break;
+            case 3: $this->generateMedia(!!$actionCli);
+                break;
             case 4: $this->exit();
+                // no break
             default: $this->printText("Invalid input!\nPlease try again:\n");
         }
 
@@ -123,14 +128,14 @@ class DumpConfigCommand extends BaseCommand
 
         do {
             $emailCli = $this->getOption('email');
-            $email = $emailCli ?: $this->ask("Identity email (or type cancel)");
-            $isValid = Validation::check($email,'required|email')->passes() || $email == 'cancel';
+            $email = $emailCli ?: $this->ask('Identity email (or type cancel)');
+            $isValid = Validation::check($email, 'required|email')->passes() || $email == 'cancel';
 
             if (!$isValid) {
-                $this->warn("Invalid email provided, please try again.");
+                $this->warn('Invalid email provided, please try again.');
                 $this->printSeparator();
             }
-        } while(!$isValid);
+        } while (!$isValid);
 
         if ($email == 'cancel') {
             return;
@@ -157,7 +162,7 @@ class DumpConfigCommand extends BaseCommand
 
             if (!$frontend) {
                 $this->printList($this->askFrontendTypeList());
-                $frontend = $this->ask("Please select frontend type", 1);
+                $frontend = $this->ask('Please select frontend type', 1);
             }
 
             $frontend = [
@@ -169,7 +174,7 @@ class DumpConfigCommand extends BaseCommand
             ][$frontend] ?? null;
 
             if (!$frontend) {
-                $this->warn("Invalid value selected, please try again.");
+                $this->warn('Invalid value selected, please try again.');
                 $this->printSeparator();
                 continue;
             }
@@ -193,13 +198,13 @@ class DumpConfigCommand extends BaseCommand
             if ($frontendUrlOption) {
                 break;
             }
-        } while(true);
+        } while (true);
     }
 
     /**
      * @param bool $quiet
+     * @throws Exception
      * @return void
-     * @throws \Exception
      */
     protected function generateMedia(bool $quiet = false): void
     {
@@ -214,7 +219,7 @@ class DumpConfigCommand extends BaseCommand
         $files = [];
 
         $this->printHeader('Step 1 of 3: replace original media paths');
-        $this->withProgressBar($media, function(Media $media) use (&$files) {
+        $this->withProgressBar($media, function (Media $media) use (&$files) {
             $path = '/media/' . token_generator()->generate(8, 4) . '.jpeg';
             $media->size_original()->updateOrCreate([
                 'key' => 'original',
@@ -230,7 +235,7 @@ class DumpConfigCommand extends BaseCommand
         $this->printSeparator();
 
         $this->printHeader('Step 2 of 3: copy images to the new paths');
-        $this->withProgressBar($files, function(string $file) use ($mediaService) {
+        $this->withProgressBar($files, function (string $file) use ($mediaService) {
             $sourceFile = str_pad(random_int(1, 10), 3, '0', STR_PAD_LEFT);
             $mediaService->storage()->put($file, file_get_contents(storage_path("/dump-assets/$sourceFile.jpg")));
         });
@@ -240,7 +245,7 @@ class DumpConfigCommand extends BaseCommand
 
         $this->printHeader('Step 3 of 3: generate all media presets');
 
-        $this->withProgressBar($media, function(Media $media) use ($mediaService) {
+        $this->withProgressBar($media, function (Media $media) use ($mediaService) {
             $mediaService->regenerateMedia(MediaService::getMediaConfig($media->type), $media);
         });
 

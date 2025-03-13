@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\ReservationExtraPaymentRefund
+ * App\Models\ReservationExtraPaymentRefund.
  *
  * @property int $id
  * @property int $reservation_extra_payment_id

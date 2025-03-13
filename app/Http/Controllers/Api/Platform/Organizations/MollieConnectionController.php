@@ -22,8 +22,8 @@ class MollieConnectionController extends Controller
 {
     /**
      * @param Organization $organization
-     * @return MollieConnectionResource
      * @throws AuthorizationException
+     * @return MollieConnectionResource
      */
     public function getActive(Organization $organization): MollieConnectionResource
     {
@@ -35,8 +35,8 @@ class MollieConnectionController extends Controller
     /**
      * @param StoreMollieConnectionRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      */
     public function store(
         StoreMollieConnectionRequest $request,
@@ -54,9 +54,9 @@ class MollieConnectionController extends Controller
         try {
             $mollieService = MollieConnection::getMollieServiceByForusToken();
             $connectAuthUrl = $mollieService->createClientLink($state, $request->get('name'), [
-                "email" => Arr::get($data, 'email'),
-                "givenName" => Arr::get($data, 'first_name'),
-                "familyName" => Arr::get($data, 'last_name'),
+                'email' => Arr::get($data, 'email'),
+                'givenName' => Arr::get($data, 'first_name'),
+                'familyName' => Arr::get($data, 'last_name'),
             ], [
                 'streetAndNumber' => Arr::get($data, 'street'),
                 'postalCode' => Arr::get($data, 'postcode'),
@@ -88,8 +88,8 @@ class MollieConnectionController extends Controller
     /**
      * @param OauthMollieConnectionRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws MollieException
+     * @return JsonResponse
      */
     public function connectOAuth(
         OauthMollieConnectionRequest $request,
@@ -159,8 +159,8 @@ class MollieConnectionController extends Controller
     /**
      * @param BaseFormRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws MollieException
+     * @return JsonResponse
      */
     public function destroy(BaseFormRequest $request, Organization $organization): JsonResponse
     {

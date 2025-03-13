@@ -37,11 +37,11 @@ class UpdateFundProviderInvitationExpireStateCommand extends Command
     public function handle()
     {
         FundProviderInvitation::where([
-            'state' => FundProviderInvitation::STATE_PENDING
-        ])->get()->each(function(FundProviderInvitation $invitation) {
+            'state' => FundProviderInvitation::STATE_PENDING,
+        ])->get()->each(function (FundProviderInvitation $invitation) {
             if ($invitation->expired) {
                 $invitation->update([
-                    'state' => FundProviderInvitation::STATE_EXPIRED
+                    'state' => FundProviderInvitation::STATE_EXPIRED,
                 ]);
             }
         });

@@ -58,7 +58,7 @@ class FundRequestPersonArrResource extends JsonResource
      */
     public function relationToArray(array $relations): array
     {
-        return array_map(fn(BasePerson $person) => $this->baseFieldsToArray($person), $relations);
+        return array_map(fn (BasePerson $person) => $this->baseFieldsToArray($person), $relations);
     }
 
     /**
@@ -71,12 +71,12 @@ class FundRequestPersonArrResource extends JsonResource
         $baseFields = [];
 
         foreach ($this->personFields as $personField) {
-            if (key_exists($personField, $personData)) {
+            if (array_key_exists($personField, $personData)) {
                 $baseFields[$personField] = $personData[$personField];
             }
         }
 
-        return array_reduce(array_keys($baseFields), fn($arr, $key) => array_merge($arr, [[
+        return array_reduce(array_keys($baseFields), fn ($arr, $key) => array_merge($arr, [[
             'label' => trans_fb("iconnect.person_fields.$key", $key),
             'value' => $baseFields[$key],
         ]]), []);

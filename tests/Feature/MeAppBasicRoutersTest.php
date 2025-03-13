@@ -12,6 +12,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class MeAppBasicRoutersTest extends TestCase
 {
@@ -20,8 +21,8 @@ class MeAppBasicRoutersTest extends TestCase
     use MakesTestFundProviders;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testPushNotificationTokenEndpoints(): void
     {
@@ -39,8 +40,8 @@ class MeAppBasicRoutersTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testProviderTransactionsEmployeesAndDemoTransactionsRoutes(): void
     {
@@ -51,8 +52,8 @@ class MeAppBasicRoutersTest extends TestCase
         $this->getJson('/api/v1/platform/provider/transactions', $headers)->assertSuccessful();
 
         //platform/employees?role=validation
-        $this->getJson("/api/v1/platform/employees?role=" . Role::first()->key, $headers)->assertSuccessful();
-        $this->getJson("/api/v1/platform/employees?role=invalid", $headers)->assertJsonValidationErrorFor('role');
+        $this->getJson('/api/v1/platform/employees?role=' . Role::first()->key, $headers)->assertSuccessful();
+        $this->getJson('/api/v1/platform/employees?role=invalid', $headers)->assertJsonValidationErrorFor('role');
 
         //platform/demo/transactions/{token}
         $response = $this->post('/api/v1/platform/demo/transactions', [], $headers);
@@ -177,7 +178,7 @@ class MeAppBasicRoutersTest extends TestCase
         $this->assertCount(1, $response->json());
 
         //identity/records/{id}
-        $this->getJson("/api/v1/identity/records/" . $recordId, $headers)->assertSuccessful();
+        $this->getJson('/api/v1/identity/records/' . $recordId, $headers)->assertSuccessful();
 
         //identity/record-types
         $this->getJson('/api/v1/identity/records', $headers)->assertSuccessful();

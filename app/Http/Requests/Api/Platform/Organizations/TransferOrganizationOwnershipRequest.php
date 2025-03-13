@@ -32,12 +32,12 @@ class TransferOrganizationOwnershipRequest extends BaseFormRequest
         return [
             'employee_id' => [
                 'required',
-                Rule::exists('employees', 'id')->where(function(Builder $builder) {
+                Rule::exists('employees', 'id')->where(function (Builder $builder) {
                     $adminEmployeesQuery = $this->organization->employeesOfRoleQuery('admin')->getQuery();
 
                     $builder->where('organization_id', $this->organization->id);
                     $builder->whereIn('id', $adminEmployeesQuery->select('employees.id'));
-                })
+                }),
             ],
         ];
     }

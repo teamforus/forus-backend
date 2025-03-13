@@ -7,13 +7,14 @@ use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundActionsTest extends DuskTestCase
 {
@@ -24,7 +25,7 @@ class FundActionsTest extends DuskTestCase
     use MakesTestOrganizations;
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundDetailsActions(string $type = 'voucher')
     {
@@ -72,8 +73,8 @@ class FundActionsTest extends DuskTestCase
             $browser->waitFor('@fundTitle')->assertSeeIn('@fundTitle', $fund->name);
             $browser->assertMissing('@requestButton');
             $browser->assertMissing('@activateButton');
-            $browser->assertMissing( $type === 'voucher' ? '@payoutsButton' : '@voucherButton');
-            $browser->assertPresent( $type === 'voucher' ? '@voucherButton' : '@payoutsButton');
+            $browser->assertMissing($type === 'voucher' ? '@payoutsButton' : '@voucherButton');
+            $browser->assertPresent($type === 'voucher' ? '@voucherButton' : '@payoutsButton');
             $browser->assertMissing('@pendingButton');
 
             // Create fund with same criteria
@@ -92,7 +93,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundDetailsActionsOnPayoutFund()
     {
@@ -100,7 +101,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundsListActions(string $type = 'voucher')
     {
@@ -120,7 +121,7 @@ class FundActionsTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
             $this->loginIdentity($browser, $requester);
 
-            $browser->visit($implementation->urlWebshop("fondsen"));
+            $browser->visit($implementation->urlWebshop('fondsen'));
             $browser->waitFor('@fundsSearchInput')->type('@fundsSearchInput', $fund->name);
             $browser->waitFor("@fundItem$fund->id")->assertMissing("@fundItem$fund->id @pendingButton");
             $browser->waitFor("@fundItem$fund->id")->assertMissing("@fundItem$fund->id @activateButton");
@@ -146,7 +147,7 @@ class FundActionsTest extends DuskTestCase
             $browser->refresh();
 
             // Assert activate button is shown due to valid records from previous fund
-            $browser->visit($implementation->urlWebshop("fondsen"));
+            $browser->visit($implementation->urlWebshop('fondsen'));
             $browser->waitFor('@fundsSearchInput')->type('@fundsSearchInput', $fund2->name);
             $browser->waitFor("@fundItem$fund2->id")->assertMissing("@fundItem$fund2->id @pendingButton");
             $browser->waitFor("@fundItem$fund2->id")->assertPresent("@fundItem$fund2->id @activateButton");
@@ -154,7 +155,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundsListActionsOnPayoutFund()
     {
@@ -162,7 +163,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundActivatePageActions(string $type = 'voucher')
     {
@@ -217,7 +218,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundActivatePageActionsOnPayoutFund()
     {
@@ -225,7 +226,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundActivatePageWithFundRequestsFromPreviousPeriods(string $type = 'voucher')
     {
@@ -265,7 +266,7 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function testFundActivatePageWithFundRequestsFromPreviousPeriodsOnPayoutFund()
     {
@@ -304,22 +305,6 @@ class FundActionsTest extends DuskTestCase
         $this->assertNotNull($fundRequest);
 
         return $fundRequest;
-    }
-
-    /**
-     * @param FundRequest $fundRequest
-     * @return void
-     */
-    private function approveFundRequest(FundRequest $fundRequest): void
-    {
-        $employee = $fundRequest->fund->organization->employees[0];
-        $this->assertNotNull($employee);
-
-        $fundRequest->assignEmployee($employee);
-        $fundRequest->refresh();
-
-        $fundRequest->approve();
-        $fundRequest->refresh();
     }
 
     /**
@@ -376,5 +361,21 @@ class FundActionsTest extends DuskTestCase
                 'children_nth' => 3,
             ],
         ];
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return void
+     */
+    private function approveFundRequest(FundRequest $fundRequest): void
+    {
+        $employee = $fundRequest->fund->organization->employees[0];
+        $this->assertNotNull($employee);
+
+        $fundRequest->assignEmployee($employee);
+        $fundRequest->refresh();
+
+        $fundRequest->approve();
+        $fundRequest->refresh();
     }
 }

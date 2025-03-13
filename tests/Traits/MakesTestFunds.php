@@ -33,6 +33,37 @@ trait MakesTestFunds
 
     /**
      * @param Organization $organization
+     * @param Fund $fund
+     * @param string|null $primaryKey
+     * @return Prevalidation
+     */
+    public function makePrevalidationForTestCriteria(
+        Organization $organization,
+        Fund $fund,
+        ?string $primaryKey = null,
+    ): Prevalidation {
+        // create prevalidation
+        $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
+        ], [
+            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
+        ]);
+
+        $response->assertSuccessful();
+
+        return Prevalidation::find($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
      * @param array $fundData
      * @param array $fundConfigsData
      * @return Fund
@@ -142,37 +173,6 @@ trait MakesTestFunds
     }
 
     /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param string|null $primaryKey
-     * @return Prevalidation
-     */
-    public function makePrevalidationForTestCriteria(
-        Organization $organization,
-        Fund $fund,
-        ?string $primaryKey = null,
-    ): Prevalidation {
-        // create prevalidation
-        $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
-            $this->makeRequestCriterionValue($fund, "test_bool", 'Ja'),
-            $this->makeRequestCriterionValue($fund, "test_iban", fake()->iban),
-            $this->makeRequestCriterionValue($fund, "test_date", '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, "test_email", fake()->email),
-            $this->makeRequestCriterionValue($fund, "test_string", 'lorem_ipsum'),
-            $this->makeRequestCriterionValue($fund, "test_string_any", 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, "test_number", 7),
-            $this->makeRequestCriterionValue($fund, "test_select", 'foo'),
-            $this->makeRequestCriterionValue($fund, "test_select_number", 2),
-        ], [
-            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
-        ]);
-
-        $response->assertSuccessful();
-
-        return Prevalidation::find($response->json('data.id'));
-    }
-
-    /**
      * @param Fund $fund
      * @param string $key
      * @param string|int|null $value
@@ -226,26 +226,26 @@ trait MakesTestFunds
         $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
         $fund->criteria()->forceDelete();
 
-        $this->makeRecordType($fund->organization, RecordType::TYPE_BOOL, "test_bool");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_IBAN, "test_iban");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, "test_date");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_EMAIL, "test_email");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, "test_string");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, "test_string_any");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_NUMBER, "test_number");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT, "test_select");
-        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT_NUMBER, "test_select_number");
+        $this->makeRecordType($fund->organization, RecordType::TYPE_BOOL, 'test_bool');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_IBAN, 'test_iban');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, 'test_date');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_EMAIL, 'test_email');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, 'test_string');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_STRING, 'test_string_any');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_NUMBER, 'test_number');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT, 'test_select');
+        $this->makeRecordType($fund->organization, RecordType::TYPE_SELECT_NUMBER, 'test_select_number');
 
         $response = $this->updateCriteriaRequest([
-            $this->makeCriterion("test_bool", 'Ja', '='),
-            $this->makeCriterion("test_iban", null, '*'),
-            $this->makeCriterion("test_date", '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
-            $this->makeCriterion("test_email", null, '*'),
-            $this->makeCriterion("test_string", 'lorem_ipsum', '=', 5, 20),
-            $this->makeCriterion("test_string_any", null, '*', 5, 20),
-            $this->makeCriterion("test_number", '7', '>=', 5, 10),
-            $this->makeCriterion("test_select", 'foo', '='),
-            $this->makeCriterion("test_select_number", 2, '>='),
+            $this->makeCriterion('test_bool', 'Ja', '='),
+            $this->makeCriterion('test_iban', null, '*'),
+            $this->makeCriterion('test_date', '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
+            $this->makeCriterion('test_email', null, '*'),
+            $this->makeCriterion('test_string', 'lorem_ipsum', '=', 5, 20),
+            $this->makeCriterion('test_string_any', null, '*', 5, 20),
+            $this->makeCriterion('test_number', '7', '>=', 5, 10),
+            $this->makeCriterion('test_select', 'foo', '='),
+            $this->makeCriterion('test_select_number', 2, '>='),
         ], $fund);
 
         $fund->organization->forceFill([

@@ -13,8 +13,8 @@ class ShareAppMail extends ImplementationMail
     /**
      * Build the message.
      *
-     * @return $this
      * @throws CommonMarkException
+     * @return $this
      */
     public function build(): Mailable
     {

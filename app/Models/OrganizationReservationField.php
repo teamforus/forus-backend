@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\OrganizationReservationField
+ * App\Models\OrganizationReservationField.
  *
  * @property int $id
  * @property int $organization_id
@@ -48,10 +47,12 @@ class OrganizationReservationField extends BaseModel
 
     public const string TYPE_TEXT = 'text';
     public const string TYPE_NUMBER = 'number';
+    public const string TYPE_BOOLEAN = 'boolean';
 
     public const array TYPES = [
         self::TYPE_TEXT,
         self::TYPE_NUMBER,
+        self::TYPE_BOOLEAN,
     ];
 
     /**

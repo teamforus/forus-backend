@@ -166,13 +166,13 @@ class VoucherExpirationNotificationsTest extends TestCase
         $expireDate = $fund->end_date->clone();
 
         $response = $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers", [
-            "email" => $identityRequester->email,
-            "amount" => "100",
-            "records" => [],
-            "fund_id" => $fund->id,
-            "expire_at" => $expireDate->format('Y-m-d'),
-            "activate" => 1,
-            "assign_by_type" => "email",
+            'email' => $identityRequester->email,
+            'amount' => '100',
+            'records' => [],
+            'fund_id' => $fund->id,
+            'expire_at' => $expireDate->format('Y-m-d'),
+            'activate' => 1,
+            'assign_by_type' => 'email',
         ], $this->makeApiHeaders($this->makeIdentityProxy($identitySponsor)));
 
         $response->assertSuccessful();

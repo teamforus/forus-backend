@@ -44,7 +44,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
             'state' => 'nullable|in:' . implode(',', Reimbursement::STATES),
             'identity_address' => 'nullable|exists:identities,address',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
-            ...$this->sortableResourceRules()
+            ...$this->sortableResourceRules(),
         ];
     }
 
@@ -57,7 +57,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
             'nullable',
             Rule::in(FundQuery::whereIsInternalAndConfigured(
                 $this->organization->funds()
-            )->pluck('id')->toArray())
+            )->pluck('id')->toArray()),
         ];
     }
 }

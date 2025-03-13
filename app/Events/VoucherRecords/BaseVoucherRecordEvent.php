@@ -9,7 +9,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseVoucherRecordEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected VoucherRecord $voucherRecord;
 

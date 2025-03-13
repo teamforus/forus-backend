@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 abstract class BaseProductReservationNotification extends BaseIdentityNotification
 {
     /**
-     * Get identities which are eligible for the notification
+     * Get identities which are eligible for the notification.
      *
      * @param ProductReservation $loggable
      * @param EventLog $eventLog

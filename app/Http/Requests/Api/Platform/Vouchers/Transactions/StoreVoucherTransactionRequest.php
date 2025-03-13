@@ -34,9 +34,9 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws AuthorizationException
      * @throws InvalidArgumentException|AuthorizationJsonException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -88,6 +88,16 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     }
 
     /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'amount.max' => trans('validation.voucher.not_enough_funds'),
+        ];
+    }
+
+    /**
      * @return string[]
      */
     private function commonRules(): array
@@ -105,11 +115,11 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     {
         return [
             'product_id' => [
-                $this->has('amount') ? 'nullable' :  'required',
-                'in:' . implode(',', $this->getValidBudgetProducts($voucher))
+                $this->has('amount') ? 'nullable' : 'required',
+                'in:' . implode(',', $this->getValidBudgetProducts($voucher)),
             ],
             'amount' => [
-                $this->has('product_id') ? 'nullable' :  'required',
+                $this->has('product_id') ? 'nullable' : 'required',
                 'numeric',
                 'min:.02',
                 'max:' . number_format($voucher->amount_available, 2, '.', ''),
@@ -119,13 +129,16 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
                 'numeric',
                 'min:.02',
                 'max:' . number_format(
-                    config('forus.transactions.max_amount_extra_cash'), 2, '.', ''
+                    config('forus.transactions.max_amount_extra_cash'),
+                    2,
+                    '.',
+                    ''
                 ),
             ],
             'organization_id' => [
-                $this->has('amount') ? 'required' :  'nullable',
+                $this->has('amount') ? 'required' : 'nullable',
                 'exists:organizations,id',
-                'in:' . $this->getValidOrganizations($voucher)->pluck('id')->implode(',')
+                'in:' . $this->getValidOrganizations($voucher)->pluck('id')->implode(','),
             ],
         ];
     }
@@ -152,11 +165,11 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     {
         $availableProducts = $this->getAvailableSubsidyProductIds($voucher);
         $products = $voucher->product_id ? array_intersect($availableProducts, [
-            $voucher->product_id
-        ]): $availableProducts;
+            $voucher->product_id,
+        ]) : $availableProducts;
 
         return [
-            'product_id' => 'required|exists:products,id|in:' . join(',', $products),
+            'product_id' => 'required|exists:products,id|in:' . implode(',', $products),
         ];
     }
 
@@ -170,18 +183,18 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
             return Organization::where('id', '<', -999);
         }
 
-        return Organization::query()->where(function(Builder $builder) use ($voucher) {
-            $builder->where(function(Builder $builder) use ($voucher) {
+        return Organization::query()->where(function (Builder $builder) use ($voucher) {
+            $builder->where(function (Builder $builder) use ($voucher) {
                 if ($this->has('product_id')) {
                     if ($voucher->fund->isTypeSubsidy()) {
-                        $builder->whereHas('fund_providers', function(Builder $builder) use ($voucher) {
-                            $builder->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+                        $builder->whereHas('fund_providers', function (Builder $builder) use ($voucher) {
+                            $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
                                 FundProviderProductQuery::whereAvailableForSubsidyVoucher($builder, $voucher);
                             });
                         });
                     } else {
                         // Product approved to be bought by target voucher
-                        $builder->whereHas('products', function(Builder $builder) use ($voucher) {
+                        $builder->whereHas('products', function (Builder $builder) use ($voucher) {
                             ProductQuery::whereAvailableForVoucher($builder, $voucher, null, false);
                         });
                     }
@@ -204,7 +217,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      */
     private function getAvailableSubsidyProductIds($voucher): array
     {
-        return Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+        return Product::whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
             $organizations = $this->getValidOrganizations($voucher);
 
             FundProviderProductQuery::whereAvailableForSubsidyVoucher(
@@ -213,15 +226,5 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
                 $organizations->select('id')
             );
         })->pluck('id')->toArray();
-    }
-
-    /**
-     * @return array
-     */
-    public function messages(): array
-    {
-        return [
-            'amount.max' => trans('validation.voucher.not_enough_funds')
-        ];
     }
 }

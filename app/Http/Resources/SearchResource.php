@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Throwable;
 
 /**
  * @property Model|Organization|Product|Fund $resource
@@ -19,8 +20,8 @@ class SearchResource extends JsonResource
      * Transform the resource into an array.
      *
      * @param Request$request
+     * @throws Throwable
      * @return array
-     * @throws \Throwable
      */
     public function toArray(Request $request): array
     {
@@ -28,9 +29,12 @@ class SearchResource extends JsonResource
         $model = $this->resource;
 
         switch ($this->resource->item_type ?? '') {
-            case 'fund': $model = Fund::find($this->resource->id); break;
-            case 'product': $model = Product::find($this->resource->id); break;
-            case 'provider': $model = Organization::find($this->resource->id); break;
+            case 'fund': $model = Fund::find($this->resource->id);
+                break;
+            case 'product': $model = Product::find($this->resource->id);
+                break;
+            case 'provider': $model = Organization::find($this->resource->id);
+                break;
         }
 
         $hasPrice = $model instanceof Product && !is_null($this->resource->price);
@@ -46,7 +50,7 @@ class SearchResource extends JsonResource
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function makeResource(Model $model): JsonResource
     {
@@ -62,7 +66,8 @@ class SearchResource extends JsonResource
      * @param Model $model
      * @return Fund|null
      */
-    public function typeFund(Model $model): ?Fund {
+    public function typeFund(Model $model): ?Fund
+    {
         return Fund::find($model->id);
     }
 
@@ -70,7 +75,8 @@ class SearchResource extends JsonResource
      * @param Model $model
      * @return Organization|null
      */
-    public function typeOrganization(Model $model): ?Organization {
+    public function typeOrganization(Model $model): ?Organization
+    {
         return Organization::find($model->id);
     }
 
@@ -78,7 +84,8 @@ class SearchResource extends JsonResource
      * @param Model $model
      * @return Product|null
      */
-    public function typeProduct(Model $model): ?Product {
+    public function typeProduct(Model $model): ?Product
+    {
         return Product::find($model->id);
     }
 }

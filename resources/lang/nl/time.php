@@ -2,5 +2,5 @@
 
 return [
     'quarter' => 'Kwartaal',
-    'to' => ':from_time tot :to_time'
+    'to' => ':from_time tot :to_time',
 ];

@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * Subsidy voucher was assigned to identity
+ * Subsidy voucher was assigned to identity.
  */
 class IdentityVoucherAssignedSubsidyNotification extends BaseIdentityVoucherNotification
 {

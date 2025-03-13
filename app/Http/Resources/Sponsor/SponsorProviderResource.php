@@ -91,8 +91,8 @@ class SponsorProviderResource extends BaseJsonResource
         Organization $providerOrganization
     ): Collection {
         $fund_providers = $providerOrganization->fund_providers
-            ->filter(fn(FundProvider $provider) => $provider->fund->organization_id == $sponsorOrganization->id)
-            ->filter(fn(FundProvider $provider) => $provider->fund->archived == false)
+            ->filter(fn (FundProvider $provider) => $provider->fund->organization_id == $sponsorOrganization->id)
+            ->filter(fn (FundProvider $provider) => $provider->fund->archived == false)
             ->values();
 
         return $fund_providers->map(fn (FundProvider $provider) => array_merge($provider->fund->only([

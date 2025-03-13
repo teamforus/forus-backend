@@ -11,8 +11,8 @@ class UpdateNotificationPreferencesRequest extends BaseFormRequest
     /**
      * Determine if the user is authorized to make this request.
      *
-     * @return bool
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -28,14 +28,15 @@ class UpdateNotificationPreferencesRequest extends BaseFormRequest
      *
      * @return array
      */
-    public function rules(): array {
+    public function rules(): array
+    {
         $keys = resolve(NotificationRepo::class)->allPreferenceKeys();
 
         return [
-            'email_unsubscribed'        => 'required|boolean',
-            'preferences'               => 'nullable|array',
-            'preferences.*.key'         => 'required|', Rule::in($keys),
-            'preferences.*.subscribed'  => 'required|boolean'
+            'email_unsubscribed' => 'required|boolean',
+            'preferences' => 'nullable|array',
+            'preferences.*.key' => 'required|', Rule::in($keys),
+            'preferences.*.subscribed' => 'required|boolean',
         ];
     }
 }

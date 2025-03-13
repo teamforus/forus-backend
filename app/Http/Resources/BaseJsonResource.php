@@ -37,14 +37,6 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
-     * @return void
-     */
-    private function markAsCollection(): void
-    {
-        $this->collection = true;
-    }
-
-    /**
      * @param string|null $append
      * @return array
      */
@@ -53,19 +45,6 @@ class BaseJsonResource extends JsonResource
         return $append ? array_map(function ($load) use ($append) {
             return "$append.$load";
         }, static::LOAD) : static::LOAD;
-    }
-
-    /**
-     * @param Model $builder
-     * @return Model
-     */
-    protected static function load_morph(Model $builder): Model
-    {
-        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
-            $builder->loadMorph($morphKey, $morphRelations);
-        }
-
-        return $builder;
     }
 
     /**
@@ -132,6 +111,32 @@ class BaseJsonResource extends JsonResource
         $collection->collection->map(fn (self $resource) => $resource->markAsCollection());
 
         return $collection;
+    }
+
+    /**
+     * @param array $attributes
+     * @return $this
+     */
+    public function setAttributes(array $attributes = []): static
+    {
+        foreach ($attributes as $key => $value) {
+            $this->$key = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Model $builder
+     * @return Model
+     */
+    protected static function load_morph(Model $builder): Model
+    {
+        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
+            $builder->loadMorph($morphKey, $morphRelations);
+        }
+
+        return $builder;
     }
 
     /**
@@ -209,15 +214,10 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
-     * @param array $attributes
-     * @return $this
+     * @return void
      */
-    public function setAttributes(array $attributes = []): static
+    private function markAsCollection(): void
     {
-        foreach ($attributes as $key => $value) {
-            $this->$key = $value;
-        }
-
-        return $this;
+        $this->collection = true;
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Helpers;
 
 class Arr extends \Illuminate\Support\Arr
@@ -33,7 +32,7 @@ class Arr extends \Illuminate\Support\Arr
      */
     public static function duplicates($array): array
     {
-        return array_filter($array, function($value, $key) use ($array) {
+        return array_filter($array, function ($value, $key) use ($array) {
             return array_search($value, $array) != $key;
         }, ARRAY_FILTER_USE_BOTH);
     }

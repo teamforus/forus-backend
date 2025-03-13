@@ -5,6 +5,7 @@ namespace App\Console\Commands\BankConnections;
 use App\Console\Commands\BaseCommand;
 use App\Models\Organization;
 use App\Services\BankService\Values\BankPayment;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 
 class BankConnectionsInspectCommand extends BaseCommand
@@ -30,7 +31,7 @@ class BankConnectionsInspectCommand extends BaseCommand
      */
     public function handle(): void
     {
-        $this->printHeader("BNG inspection", 2);
+        $this->printHeader('BNG inspection', 2);
         $this->showMainMenu();
     }
 
@@ -40,14 +41,14 @@ class BankConnectionsInspectCommand extends BaseCommand
     protected function showMainMenu(): void
     {
         do {
-            $this->printHeader("Select action:");
+            $this->printHeader('Select action:');
             $this->printList([
                 '[1] Inspect bank connections (' . $this->getOrganizationsQuery()->count() . ' organizations)',
                 null,
                 '[q] Quit',
             ]);
 
-            $value = $this->ask("Select action:", 1);
+            $value = $this->ask('Select action:', 1);
 
             if ($value == 1) {
                 $this->selectOrganizationCommand();
@@ -69,19 +70,20 @@ class BankConnectionsInspectCommand extends BaseCommand
             $this->printText('No organizations with active bank connection found.');
             $this->printSeparator();
             $this->showMainMenu();
+
             return;
         }
 
         do {
-            $this->printHeader("Select target organization:");
+            $this->printHeader('Select target organization:');
             $this->printList($organizations
-                ->map(fn (Organization $organization, int $index) => "[" . ($index + 1) . "] " . $organization->name)
+                ->map(fn (Organization $organization, int $index) => '[' . ($index + 1) . '] ' . $organization->name)
                 ->merge([null])
                 ->merge(['[b] Back'])
                 ->merge(['[q] Quit'])
                 ->toArray());
 
-            $value = $this->ask("Select target organization:", 1);
+            $value = $this->ask('Select target organization:', 1);
 
             if ($organization = is_numeric($value) ? $organizations[$value - 1] ?? null : null) {
                 $this->askTargetOrganizationActions($organization);
@@ -93,7 +95,7 @@ class BankConnectionsInspectCommand extends BaseCommand
 
             $this->handleGlobalCommands($value);
             $this->printInvalidCommand($value);
-        } while(true);
+        } while (true);
     }
 
     /**
@@ -103,7 +105,7 @@ class BankConnectionsInspectCommand extends BaseCommand
     protected function askTargetOrganizationActions(Organization $organization): void
     {
         do {
-            $this->printHeader("Select organization action:");
+            $this->printHeader('Select organization action:');
             $this->printList([
                 '[1] View payments',
                 '[2] Find payment by ID',
@@ -113,7 +115,7 @@ class BankConnectionsInspectCommand extends BaseCommand
                 '[q] Quit',
             ]);
 
-            $value = $this->ask("Select action", 1);
+            $value = $this->ask('Select action', 1);
 
             if ($value == 1) {
                 $this->showPayments($organization);
@@ -150,19 +152,21 @@ class BankConnectionsInspectCommand extends BaseCommand
             } else {
                 $this->printText("Fetching last $perPage payments.");
             }
-        }  while (!is_numeric($perPage));
+        } while (!is_numeric($perPage));
 
         $payments = $organization->bank_connection_active->fetchPayments($perPage);
 
         if (is_null($payments)) {
             $this->printBankApiError("Could not fetch payments for \"$organization->name\".");
             $this->askTargetOrganizationActions($organization);
+
             return;
         }
 
         if (count($payments) == 0) {
             $this->info("No payments found on \"$organization->name\" account.");
             $this->askTargetOrganizationActions($organization);
+
             return;
         }
 
@@ -191,10 +195,10 @@ class BankConnectionsInspectCommand extends BaseCommand
             $this->table(array_keys($payments[0]), $payments);
             $this->printText(json_encode($payment->getRaw(), JSON_PRETTY_PRINT));
             $this->printSeparator();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->printBankApiError(
                 $exception->getMessage(),
-                "The payment_id could be invalid or the token could be invalid/expired.",
+                'The payment_id could be invalid or the token could be invalid/expired.',
             );
         }
 
@@ -212,12 +216,13 @@ class BankConnectionsInspectCommand extends BaseCommand
         if (is_null($balance)) {
             $this->printBankApiError("Could not fetch balance for \"$organization->name\".");
             $this->askTargetOrganizationActions($organization);
+
             return;
         }
 
         $data = [
             'amount' => $balance->getAmount(),
-            'currency' => $balance->getCurrency()
+            'currency' => $balance->getCurrency(),
         ];
 
         $this->table(array_keys($data), [$data]);
@@ -250,7 +255,7 @@ class BankConnectionsInspectCommand extends BaseCommand
      */
     protected function printBankApiError(
         string $message,
-        string $reason = "The token could be expired or invalid.",
+        string $reason = 'The token could be expired or invalid.',
     ): void {
         $this->error($message);
         $this->error($reason);

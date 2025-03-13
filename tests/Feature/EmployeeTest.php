@@ -12,7 +12,9 @@ use Tests\Traits\MakesTestIdentities;
 
 class EmployeeTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, MakesTestIdentities;
+    use DatabaseTransactions;
+    use WithFaker;
+    use MakesTestIdentities;
 
     /**
      * @var string
@@ -29,7 +31,7 @@ class EmployeeTest extends TestCase
         'organization',
         'organization_id',
         'permissions',
-        'roles'
+        'roles',
     ];
 
     /**
@@ -107,6 +109,7 @@ class EmployeeTest extends TestCase
 
         $this->storeEmployee($organization, $this->makeEmployeeData(), $headers);
     }
+
     /**
      * @return void
      */
@@ -211,6 +214,6 @@ class EmployeeTest extends TestCase
      */
     protected function getItemUrl(Organization $organization, Employee $employee): string
     {
-        return sprintf($this->apiMediaUrl, $organization->id) . '/'. $employee->id;
+        return sprintf($this->apiMediaUrl, $organization->id) . '/' . $employee->id;
     }
 }

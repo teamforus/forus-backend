@@ -11,8 +11,8 @@ class IdentityEmailVerificationMail extends ImplementationMail
     public $subject = 'E-mailadres bevestigen';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

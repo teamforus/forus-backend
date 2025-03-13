@@ -4,6 +4,7 @@ namespace App\Services\MediaService\Commands;
 
 use App\Services\MediaService\MediaService;
 use Illuminate\Console\Command;
+use Throwable;
 
 class MediaRegenerateCommand extends Command
 {
@@ -35,7 +36,7 @@ class MediaRegenerateCommand extends Command
     /**
      * Execute the console command.
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function handle(): void
     {
@@ -47,7 +48,7 @@ class MediaRegenerateCommand extends Command
 
         if ($mediaType == 'all') {
             $mediaConfigs = array_values(MediaService::getMediaConfigs());
-        } else if ($mediaConfig = MediaService::getMediaConfig($mediaType)) {
+        } elseif ($mediaConfig = MediaService::getMediaConfig($mediaType)) {
             $mediaConfigs = [$mediaConfig];
         }
 
@@ -65,7 +66,7 @@ class MediaRegenerateCommand extends Command
         $this->header('Media Regeneration Tool', $width);
         $this->info('');
 
-        $callback = function(int $total, int $current) use ($width) {
+        $callback = function (int $total, int $current) use ($width) {
             $this->textCenter(' - Item: ' . $current . ' / ' . $total, $width);
         };
 

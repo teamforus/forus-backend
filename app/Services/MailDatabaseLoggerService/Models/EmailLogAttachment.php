@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Services\MailDatabaseLoggerService\Models\EmailLogAttachment
+ * App\Services\MailDatabaseLoggerService\Models\EmailLogAttachment.
  *
  * @property int $id
  * @property int $email_log_id

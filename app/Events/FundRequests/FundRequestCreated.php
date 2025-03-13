@@ -2,4 +2,6 @@
 
 namespace App\Events\FundRequests;
 
-class FundRequestCreated extends BaseFundRequestEvent {}
+class FundRequestCreated extends BaseFundRequestEvent
+{
+}

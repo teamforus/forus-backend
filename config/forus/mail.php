@@ -11,7 +11,7 @@ return [
 
     'from' => [
         'no-reply' => env('MAIL_FROM_ADDRESS', 'no-reply@forus.io'),
-        'name' => env('MAIL_FROM_NAME', 'Stichting Forus')
+        'name' => env('MAIL_FROM_NAME', 'Stichting Forus'),
     ],
 
     'email-preferences-link' => env('EMAIL_PREFERENCES_LINK'),

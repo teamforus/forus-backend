@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Reimbursement;
 
 /**
- * Notify requester about their fund request being submitted
+ * Notify requester about their fund request being submitted.
  */
 class IdentityReimbursementSubmittedNotification extends BaseIdentityReimbursementNotification
 {

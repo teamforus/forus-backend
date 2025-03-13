@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * App\Models\RecordValidation
+ * App\Models\RecordValidation.
  *
  * @property int $id
  * @property string $uuid
@@ -52,15 +52,6 @@ class RecordValidation extends Model
         'identity_address', 'record_id', 'state', 'uuid',
         'organization_id', 'prevalidation_id',
     ];
-
-    /**
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    private function isPending(): bool
-    {
-        return $this->state === self::STATE_PENDING;
-    }
 
     /**
      * @return bool
@@ -172,5 +163,14 @@ class RecordValidation extends Model
             'prevalidation_id' => $prevalidation?->id,
             'identity_address' => $identity->address,
         ]);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    private function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
     }
 }

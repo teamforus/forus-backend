@@ -33,7 +33,7 @@ class FundProviderPolicy
         }
 
         return $organization->identityCan($identity, [
-            'view_finances', 'manage_providers'
+            'view_finances', 'manage_providers',
         ], false);
     }
 

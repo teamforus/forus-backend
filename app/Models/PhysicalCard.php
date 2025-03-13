@@ -6,7 +6,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\PhysicalCard
+ * App\Models\PhysicalCard.
  *
  * @property int $id
  * @property int $voucher_id

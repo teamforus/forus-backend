@@ -16,22 +16,6 @@ trait MakesTestFundProviders
     use MakesTestOrganizations;
 
     /**
-     * @param Organization $providerOrganization
-     * @param Fund $fund
-     * @return FundProvider
-     */
-    private function makeTestFundProvider(Organization $providerOrganization, Fund $fund): FundProvider
-    {
-        return FundProvider::create([
-            'state' => FundProvider::STATE_ACCEPTED,
-            'fund_id' => $fund->id,
-            'allow_budget' => true,
-            'organization_id' => $providerOrganization->id,
-            'allow_products' => true,
-        ])->refresh();
-    }
-
-    /**
      * @param Fund $fund
      * @param int $countProducts
      * @return array
@@ -144,5 +128,21 @@ trait MakesTestFundProviders
         );
 
         $response->assertSuccessful();
+    }
+
+    /**
+     * @param Organization $providerOrganization
+     * @param Fund $fund
+     * @return FundProvider
+     */
+    private function makeTestFundProvider(Organization $providerOrganization, Fund $fund): FundProvider
+    {
+        return FundProvider::create([
+            'state' => FundProvider::STATE_ACCEPTED,
+            'fund_id' => $fund->id,
+            'allow_budget' => true,
+            'organization_id' => $providerOrganization->id,
+            'allow_products' => true,
+        ])->refresh();
     }
 }

@@ -1,12 +1,11 @@
 <?php
 
 use App\Models\Fund;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,11 +21,11 @@ return new class extends Migration
             }
         }
 
-        Schema::table('funds', function(Blueprint $table) {
+        Schema::table('funds', function (Blueprint $table) {
             $table->dropColumn('state');
         });
 
-        Schema::table('funds', function(Blueprint $table) {
+        Schema::table('funds', function (Blueprint $table) {
             $table->enum('state', Fund::STATES)->default(
                 Fund::STATE_WAITING
             )->after('name');
@@ -46,12 +45,12 @@ return new class extends Migration
     {
         $fundStates = Fund::query()->pluck('state', 'id');
 
-        Schema::table('funds', function(Blueprint $table) {
+        Schema::table('funds', function (Blueprint $table) {
             $table->dropColumn('state');
         });
 
-        Schema::table('funds', function(Blueprint $table) {
-            $table->string('state', 20)->default("waiting")->after('name');
+        Schema::table('funds', function (Blueprint $table) {
+            $table->string('state', 20)->default('waiting')->after('name');
         });
 
         foreach ($fundStates as $id => $state) {

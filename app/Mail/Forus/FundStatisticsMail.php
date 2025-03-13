@@ -11,8 +11,8 @@ class FundStatisticsMail extends ImplementationMail
     public $subject = 'Totaal aantal gebruikers :sponsor_name - :fund_name';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

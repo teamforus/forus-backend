@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Helpers\Arr;
 use Illuminate\Http\Request;
 
 class VoucherTransactionPayoutResource extends VoucherTransactionResource

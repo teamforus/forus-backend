@@ -28,8 +28,8 @@ class UpdateTransactionRequest extends FormRequest
         return [
             'state' => [
                 'required',
-                Rule::in(DemoTransaction::STATES)
-            ]
+                Rule::in(DemoTransaction::STATES),
+            ],
         ];
     }
 }

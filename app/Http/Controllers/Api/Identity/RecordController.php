@@ -19,7 +19,7 @@ use Illuminate\Http\JsonResponse;
 class RecordController extends Controller
 {
     /**
-     * Get list records
+     * Get list records.
      * @param IndexRecordsRequest $request
      * @return JsonResponse
      */
@@ -39,7 +39,7 @@ class RecordController extends Controller
     }
 
     /**
-     * Create new record
+     * Create new record.
      * @param RecordStoreRequest $request
      * @return RecordResource|null
      */
@@ -54,14 +54,16 @@ class RecordController extends Controller
     }
 
     /**
-     * Validate records store request
+     * Validate records store request.
      * @param RecordStoreRequest $request
      * @noinspection PhpUnused
      */
-    public function storeValidate(RecordStoreRequest $request): void {}
+    public function storeValidate(RecordStoreRequest $request): void
+    {
+    }
 
     /**
-     * Get record
+     * Get record.
      * @param BaseFormRequest $request
      * @param int $recordId
      * @return RecordResource
@@ -103,14 +105,16 @@ class RecordController extends Controller
     }
 
     /**
-     * Validate records update request
+     * Validate records update request.
      * @param RecordUpdateRequest $request
      * @noinspection PhpUnused
      */
-    public function updateValidate(RecordUpdateRequest $request): void {}
+    public function updateValidate(RecordUpdateRequest $request): void
+    {
+    }
 
     /**
-     * Delete record
+     * Delete record.
      * @param BaseFormRequest $request
      * @param int $recordId
      * @return JsonResponse
@@ -125,8 +129,8 @@ class RecordController extends Controller
         }
 
         if ($record->record_type->key === 'primary_email') {
-            abort(403,'record.exceptions.cant_delete_primary_email', [
-                'record_type_name' => $record->record_type->name
+            abort(403, 'record.exceptions.cant_delete_primary_email', [
+                'record_type_name' => $record->record_type->name,
             ]);
         }
 
@@ -136,7 +140,7 @@ class RecordController extends Controller
     }
 
     /**
-     * Sort records
+     * Sort records.
      * @param SortRecordsRequest $request
      * @return JsonResponse
      */

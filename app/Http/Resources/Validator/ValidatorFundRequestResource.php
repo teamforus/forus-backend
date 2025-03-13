@@ -76,13 +76,83 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'records' => $this->getRecordsDetails($baseFormRequest, $organization, $fundRequest),
             'replaced' => $this->isReplaced($fundRequest),
             'employee' => new EmployeeResource($fundRequest->employee),
-            'allowed_employees' => $allowedEmployees->map(fn(Employee $employee) => [
+            'allowed_employees' => $allowedEmployees->map(fn (Employee $employee) => [
                 ...$employee->only([
                     'id', 'organization_id', 'identity_address',
                 ]),
                 'email' => $employee->identity?->email,
             ])->toArray(),
         ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return array
+     */
+    public function getRecordsDetails(
+        BaseFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): array {
+        $employee = $request->employee($organization) or abort(403);
+        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+
+        return $fundRequest->records->filter(function (FundRequestRecord $record) use ($organization, $bsnFields) {
+            return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
+        })->map(function (FundRequestRecord $record) use ($employee) {
+            return static::recordToArray($record, $employee);
+        })->toArray();
+    }
+
+    /**
+     * Transform the resource into an array.
+     *
+     * @param FundRequestRecord $record
+     * @param Employee $employee
+     * @return array
+     */
+    public static function recordToArray(
+        FundRequestRecord $record,
+        Employee $employee,
+    ): array {
+        $is_assigned = $record->fund_request->employee_id === $employee->id;
+        $is_assignable = !$is_assigned && !$record->fund_request->employee_id && $record->fund_request->isPending();
+
+        $baseFields = array_merge($record->only([
+            'id', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
+        ]), [
+            'value' => $is_assignable || $is_assigned ? $record->value : null,
+        ]);
+
+        $relations = [
+            'files' => FileResource::collection($record->files),
+            'history' => $is_assignable || $is_assigned ? self::getHistory($record)->values() : [],
+            'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
+        ];
+
+        return array_merge($baseFields, $relations, [
+            'record_type' => [
+                ...$record->record_type->only(['name', 'key', 'type']),
+                'options' => $record->record_type->getOptions(),
+            ],
+
+        ], static::staticTimestamps($record, 'created_at', 'updated_at'));
+    }
+
+    /**
+     * @param FundRequestRecord $record
+     * @return \Illuminate\Support\Collection
+     */
+    public static function getHistory(FundRequestRecord $record): Collection
+    {
+        return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
+            'id' => $eventLog->id,
+            'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
+            'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
+            'employee_email' => $eventLog->data['employee_email'] ?? '',
+        ], self::makeTimestampsStatic($eventLog->only('created_at'))));
     }
 
     /**
@@ -146,75 +216,5 @@ class ValidatorFundRequestResource extends BaseJsonResource
             $request->fund->fund_requests()->where('id', '!=', $request->id),
             $request->id,
         )->exists();
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return array
-     */
-    public function getRecordsDetails(
-        BaseFormRequest $request,
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): array {
-        $employee = $request->employee($organization) or abort(403);
-        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
-
-        return $fundRequest->records->filter(function(FundRequestRecord $record) use ($organization, $bsnFields) {
-            return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
-        })->map(function(FundRequestRecord $record) use ($employee) {
-            return static::recordToArray($record, $employee);
-        })->toArray();
-    }
-
-    /**
-     * Transform the resource into an array.
-     *
-     * @param FundRequestRecord $record
-     * @param Employee $employee
-     * @return array
-     */
-    static function recordToArray(
-        FundRequestRecord $record,
-        Employee $employee,
-    ): array {
-        $is_assigned = $record->fund_request->employee_id === $employee->id;
-        $is_assignable = !$is_assigned && !$record->fund_request->employee_id && $record->fund_request->isPending();
-
-        $baseFields = array_merge($record->only([
-            'id', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
-        ]), [
-            'value' => $is_assignable || $is_assigned ? $record->value : null,
-        ]);
-
-        $relations = [
-            'files' => FileResource::collection($record->files),
-            'history' => $is_assignable || $is_assigned ? self::getHistory($record)->values() : [],
-            'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
-        ];
-
-        return array_merge($baseFields, $relations, [
-            'record_type' => [
-                ...$record->record_type->only(['name', 'key', 'type']),
-                'options' => $record->record_type->getOptions(),
-            ],
-
-        ], static::staticTimestamps($record, 'created_at', 'updated_at'));
-    }
-
-    /**
-     * @param FundRequestRecord $record
-     * @return \Illuminate\Support\Collection
-     */
-    static function getHistory(FundRequestRecord $record): Collection
-    {
-        return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
-            'id' => $eventLog->id,
-            'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
-            'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
-            'employee_email' => $eventLog->data['employee_email'] ?? '',
-        ], self::makeTimestampsStatic($eventLog->only('created_at'))));
     }
 }

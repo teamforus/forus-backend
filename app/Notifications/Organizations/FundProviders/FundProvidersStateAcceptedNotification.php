@@ -7,7 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 
 /**
- * Notify fund provider that they can scan budget vouchers now
+ * Notify fund provider that they can scan budget vouchers now.
  */
 class FundProvidersStateAcceptedNotification extends BaseFundProvidersNotification
 {

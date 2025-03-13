@@ -22,7 +22,7 @@ class ProductRevoked extends BaseProductEvent
     }
 
     /**
-     * Get the fund
+     * Get the fund.
      *
      * @return Fund
      */

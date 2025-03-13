@@ -11,8 +11,8 @@ class VoucherExpireSoonBudgetMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.voucher_expire_soon_budget';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

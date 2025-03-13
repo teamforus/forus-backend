@@ -23,9 +23,9 @@ class UpdateMollieConnectionRequest extends BaseFormRequest
         return [
             'mollie_connection_profile_id' => [
                 'required',
-                Rule::exists('mollie_connection_profiles', 'id')->where(function($query) {
+                Rule::exists('mollie_connection_profiles', 'id')->where(function ($query) {
                     $query->where('mollie_connection_id', $this->organization->mollie_connection->id);
-                })
+                }),
             ],
         ];
     }

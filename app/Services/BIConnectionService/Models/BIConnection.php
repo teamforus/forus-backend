@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * App\Services\BIConnectionService\Models\BIConnection
+ * App\Services\BIConnectionService\Models\BIConnection.
  *
  * @property int $id
  * @property int $organization_id
@@ -43,9 +43,8 @@ use Illuminate\Support\Carbon;
  */
 class BIConnection extends Model
 {
-    use HasLogs, HasDbTokens;
-
-    protected $table = 'bi_connections';
+    use HasLogs;
+    use HasDbTokens;
 
     public const string AUTH_TYPE_HEADER_NAME = 'X-API-KEY';
 
@@ -53,6 +52,8 @@ class BIConnection extends Model
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_UPDATED = 'replaced';
+
+    protected $table = 'bi_connections';
 
     /**
      * @var string[]
@@ -130,7 +131,7 @@ class BIConnection extends Model
 
         $this->update($enable ? Arr::only($config, [
             'enabled', 'expiration_period', 'data_types', 'ips',
-        ]): [
+        ]) : [
             'enabled' => false,
         ]);
 

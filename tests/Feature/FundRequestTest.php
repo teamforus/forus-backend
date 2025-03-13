@@ -208,8 +208,8 @@ class FundRequestTest extends TestCase
             'show_attachment' => false,
             'record_type_key' => $key,
             'operator' => '=',
-            'value' => is_array($value) ? null: $value,
-            ...is_array($value)? $value : [],
+            'value' => is_array($value) ? null : $value,
+            ...is_array($value) ? $value : [],
         ])->toArray());
     }
 

@@ -12,7 +12,7 @@ class CriteriaRuleTypeDateRule extends BaseCriteriaRuleTypeRule
     public function rules(): array
     {
         return array_filter([
-            "date",
+            'date',
             "date_format:$this->dateFormat",
             match($this->rule->operator) {
                 '=' => "date_equals:{$this->rule->value}",

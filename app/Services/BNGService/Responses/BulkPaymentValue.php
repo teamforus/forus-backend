@@ -2,7 +2,8 @@
 
 namespace App\Services\BNGService\Responses;
 
-class BulkPaymentValue extends Value {
+class BulkPaymentValue extends Value
+{
     /**
      * @return string|null
      */

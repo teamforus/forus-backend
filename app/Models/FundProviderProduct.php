@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Scopes\Builders\ProductSubQuery;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\FundProviderProduct
+ * App\Models\FundProviderProduct.
  *
  * @property int $id
  * @property int $fund_provider_id
@@ -173,7 +174,6 @@ class FundProviderProduct extends BaseModel
         }
     }
 
-
     /**
      * @param string $price_type
      * @param string $price_discount
@@ -184,7 +184,8 @@ class FundProviderProduct extends BaseModel
         switch ($price_type) {
             case $this->product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
             case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = (double) ($price_discount - round($price_discount)) === 0.0;
+                $isWhole = (float) ($price_discount - round($price_discount)) === 0.0;
+
                 return currency_format($price_discount, $isWhole ? 0 : 2) . '%';
             }
             default: return '';
@@ -193,8 +194,8 @@ class FundProviderProduct extends BaseModel
 
     /**
      * @param Voucher $voucher
+     * @throws Exception
      * @return int|null
-     * @throws \Exception
      */
     public function stockAvailableForVoucher(Voucher $voucher): ?int
     {
