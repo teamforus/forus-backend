@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\ProductCategoryTranslation;
-use Illuminate\Support\Facades\Schema;
 
 class ProductCategoriesTableSeeder extends DatabaseSeeder
 {
@@ -16,159 +13,43 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
      */
     public function run(): void
     {
-        self::seedProducts();
-    }
+        $categoriesPath = database_path('/seeders/db/product_categories.json');
+        $categoriesData = json_decode(file_get_contents($categoriesPath), JSON_OBJECT_AS_ARRAY);
 
-    /**
-     * @param false $deleteExisting
-     */
-    public static function seedProducts(bool $deleteExisting = false): void
-    {
-        if ($deleteExisting) {
-            Schema::disableForeignKeyConstraints();
+        $this->createCategories($categoriesData);
 
-            ProductCategory::query()->forceDelete();
-            ProductCategoryTranslation::query()->forceDelete();
+        ProductCategory::fixTree();
 
-            Schema::enableForeignKeyConstraints();
-        }
-
-        self::seedFile('taxonomy-with-ids');
-        self::seedFile('services-with-ids');
-
-        $model = new ProductCategory();
-
-        if (Schema::hasColumns($model->getTable(), [$model->getLftName(), $model->getRgtName()])) {
-            ProductCategory::fixTree();
-
-            ProductCategory::whereIsRoot()->each(function (ProductCategory $category) {
-                $category->descendants()->update([
-                    'root_id' => $category->id,
-                ]);
-            });
-        }
-    }
-
-    /**
-     * @param $list
-     */
-    public static function migrateProducts($list): void
-    {
-        foreach ($list as $oldId => $newId) {
-            Product::withTrashed()->where('product_category_id', $oldId)->update([
-                'product_category_id' => $newId,
+        ProductCategory::whereIsRoot()->each(function (ProductCategory $category) {
+            $category->descendants()->update([
+                'root_id' => $category->id,
             ]);
-        }
-    }
-
-    /**
-     * @param array $rows
-     * @param int $depth
-     * @return array|bool
-     */
-    public static function filterByDepth(array $rows, int $depth = 1): bool|array
-    {
-        return array_filter($rows, static function ($row) use ($depth) {
-            return $row['depth'] === $depth;
-        }) ?: false;
-    }
-
-    /**
-     * @param string $file
-     * @param array $locales
-     * @param string $keyLocale
-     * @return mixed
-     */
-    public static function loadTaxonomies(string $file, array $locales, string $keyLocale): mixed
-    {
-        $taxonomiesRaw = [];
-        $taxonomiesNames = [];
-
-        foreach ($locales as $localeKey => $locale) {
-            $data = file_get_contents(database_path(sprintf('/seeders/db/%s.%s.txt', $file, $locale)));
-            $data = explode(PHP_EOL, str_replace("\r\n", PHP_EOL, $data));
-
-            array_set($taxonomiesRaw, $localeKey, collect($data)->filter(function ($row) {
-                return !empty($row) && !starts_with($row, ['#']);
-            })->map(function ($row) use ($localeKey, &$taxonomiesNames) {
-                [$id, $names] = explode(' - ', $row);
-
-                $names = explode(' > ', $names);
-                $keys = array_map('str_slug', $names);
-                $depth = count($names);
-
-                if (!isset($taxonomiesNames[$id])) {
-                    $taxonomiesNames[$id] = [];
-                }
-
-                array_set($taxonomiesNames[$id], $localeKey, $names);
-
-                return compact('id', 'names', 'keys', 'depth');
-            })->values());
-        }
-
-        return $taxonomiesRaw[$keyLocale]->map(function ($taxonomy) use ($taxonomiesNames) {
-            return array_set($taxonomy, 'names', array_map(static function ($nameKey) use (
-                $taxonomiesNames,
-                $taxonomy
-            ) {
-                return array_map(static function ($names) use ($nameKey) {
-                    return $names[$nameKey];
-                }, $taxonomiesNames[$taxonomy['id']]);
-            }, array_keys($taxonomy['names'])));
         });
     }
 
     /**
-     * @param $file
+     * @param array $categories
+     * @param ProductCategory|null $parent
+     * @return void
      */
-    private static function seedFile($file): void
+    protected function createCategories(array $categories, ?ProductCategory $parent = null): void
     {
-        $taxonomies = self::loadTaxonomies($file, [
-            'en' => 'en-US',
-            'nl' => 'nl-NL',
-        ], 'en')->toArray();
+        foreach ($categories as $category) {
+            $model = ProductCategory::create([
+                'id' => $category['id'],
+                'key' => $category['id'],
+                'parent_id' => $parent?->id,
+            ]);
 
-        $depth = 1;
-        $translations = [];
-        $depths = ['categories' => [], 'keys' => []];
+            $model->translateOrNew('en')->fill([
+                'name' => $category['name']['en'],
+            ])->save();
 
-        while ($list = self::filterByDepth($taxonomies, $depth)) {
-            $parents = $depths['keys'][$depth - 1] ?? [];
+            $model->translateOrNew('nl')->fill([
+                'name' => $category['name']['nl'],
+            ])->save();
 
-            $categories = array_values(array_map(static function ($category) use (
-                $depth,
-                $parents,
-                &$translations
-            ) {
-                $names = $category['names'][$depth - 1];
-
-                foreach ($names as $locale => $name) {
-                    $translations[] = [
-                        'locale' => $locale,
-                        'name' => $name,
-                        'product_category_id' => $category['id'],
-                    ];
-                }
-
-                return [
-                    'id' => $category['id'],
-                    'key' => $category['keys'][$depth - 1],
-                    'parent_id' => $depth > 1 ? $parents[$category['keys'][$depth - 2]] ?? null : null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }, $list));
-
-            $depths['categories'][$depth] = $categories;
-            $depths['keys'][$depth] = array_pluck($categories, 'id', 'key');
-
-            $depth++;
+            $this->createCategories($category['children'] ?? [], $model);
         }
-
-        $categories = array_flatten($depths['categories'], 1);
-
-        ProductCategory::query()->insert($categories);
-        ProductCategoryTranslation::query()->insert($translations);
     }
 }
