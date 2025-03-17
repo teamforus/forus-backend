@@ -8236,16 +8236,16 @@
         },
         {
             "name": "simplesamlphp/saml2",
-            "version": "v4.6.14",
+            "version": "v4.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/simplesamlphp/saml2.git",
-                "reference": "6fc78c90cd13c2d11907f077b313b2cd606a744d"
+                "reference": "bdf16d1021363a0819c35806124a20e74a78c2c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/simplesamlphp/saml2/zipball/6fc78c90cd13c2d11907f077b313b2cd606a744d",
-                "reference": "6fc78c90cd13c2d11907f077b313b2cd606a744d",
+                "url": "https://api.github.com/repos/simplesamlphp/saml2/zipball/bdf16d1021363a0819c35806124a20e74a78c2c9",
+                "reference": "bdf16d1021363a0819c35806124a20e74a78c2c9",
                 "shasum": ""
             },
             "require": {
@@ -8291,9 +8291,9 @@
             "description": "SAML2 PHP library from SimpleSAMLphp",
             "support": {
                 "issues": "https://github.com/simplesamlphp/saml2/issues",
-                "source": "https://github.com/simplesamlphp/saml2/tree/v4.6.14"
+                "source": "https://github.com/simplesamlphp/saml2/tree/v4.17.0"
             },
-            "time": "2024-12-01T22:30:11+00:00"
+            "time": "2025-03-11T17:35:33+00:00"
         },
         {
             "name": "simplesoftwareio/simple-qrcode",
