@@ -99,6 +99,7 @@ use Illuminate\Support\Facades\Log;
  * @property-read \App\Models\FundConfig|null $fund_config
  * @property-read Collection|\App\Models\FundConfigRecord[] $fund_config_records
  * @property-read int|null $fund_config_records_count
+ * @property-read \App\Models\FundForm|null $fund_form
  * @property-read Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read Collection|\App\Models\FundFormula[] $fund_formulas
@@ -332,6 +333,15 @@ class Fund extends BaseModel
     public function fund_periods(): HasMany
     {
         return $this->hasMany(FundPeriod::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function fund_form(): HasOne
+    {
+        return $this->hasOne(FundForm::class);
     }
 
     /**
