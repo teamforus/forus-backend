@@ -5,11 +5,11 @@ return [
         'announcement' => [
             'title' => 'De bankverbinding verloopt binnenkort',
             'description' => 'De bankverbinding van uw organisatie verloopt binnenkort. Breng voor :expire_at_locale de verbinding opnieuw tot stand.',
-        ]
+        ],
     ],
     'notifications_physical_card_requests' => [
         'physical_card_request_created' => [
-            'title'       => 'Pas besteld',
+            'title' => 'Pas besteld',
             'description' => 'Adresgegevens: :address',
         ],
     ],
@@ -19,7 +19,7 @@ return [
             'title_informal' => 'Er is een :fund_name aan je toegekend.',
             'description' => implode(' ', [
                 'Hierbij ontvangt u uw :fund_name-tegoed.',
-                'Het tegoed heeft een waarde van € :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
+                'Het tegoed heeft een waarde van € :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
             ]),
         ],
         'created_product' => [
@@ -27,7 +27,7 @@ return [
             'title_informal' => 'Aanbod :product_name bij :provider_name gereserveerd!',
             'description' => implode(' ', [
                 'Aanbod :product_name bij :provider_name gereserveerd!',
-                'De reservering heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
+                'De reservering heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
             ]),
         ],
         'assigned' => [
@@ -35,7 +35,7 @@ return [
             'title_informal' => 'Alsjeblieft je :fund_name QR-code.',
             'description' => implode(' ', [
                 'Hierbij ontvangt u uw :fund_name.',
-                'Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
+                'Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
             ]),
         ],
         'shared' => [
@@ -48,16 +48,16 @@ return [
             'title' => ':fund_name verloopt binnenkort',
             'description' => implode(' ', [
                 'Uw :fund_name is geldig tot en met :fund_last_active_date.',
-                'Vanaf :expire_at_minus_day is het budget niet meer geldig.'
+                'Vanaf :expire_at_minus_day is het budget niet meer geldig.',
             ]),
             'description_informal' => implode([
                 'Je :fund_name is geldig tot en met :fund_last_active_date.',
-                'Vanaf :expire_at_minus_day is het tegoed niet meer geldig.'
+                'Vanaf :expire_at_minus_day is het tegoed niet meer geldig.',
             ]),
         ],
         'expired' => [
             'title' => 'Uw :fund_name-tegoed is verlopen.',
-            'title_informal'  => 'Je :fund_name-tegoed is verlopen',
+            'title_informal' => 'Je :fund_name-tegoed is verlopen',
             'description' => implode(' ', [
                 'Vanaf vandaag is uw :fund_name-tegoed niet meer geldig. ',
                 'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.',
@@ -66,6 +66,6 @@ return [
                 'Vanaf vandaag is je tegoed voor :fund_name niet meer geldig. ',
                 'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.',
             ]),
-        ]
+        ],
     ],
 ];

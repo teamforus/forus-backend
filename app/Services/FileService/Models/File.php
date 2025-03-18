@@ -5,6 +5,8 @@ namespace App\Services\FileService\Models;
 use App\Models\Traits\HasDbTokens;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use Eloquent;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -13,7 +15,7 @@ use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * App\Services\FileService\Models\File
+ * App\Services\FileService\Models\File.
  *
  * @property int $id
  * @property string|null $uid
@@ -28,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent|null $fileable
+ * @property-read Model|Eloquent|null $fileable
  * @property-read string $url_public
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
@@ -57,21 +59,22 @@ class File extends Model
     use HasDbTokens;
 
     /**
-     * @return MorphTo
-     */
-    public function fileable(): MorphTo {
-        return $this->morphTo();
-    }
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
         'identity_address', 'original_name', 'fileable_id',
-        'fileable_type', 'ext', 'uid', 'path', 'size', 'type', 'order'
+        'fileable_type', 'ext', 'uid', 'path', 'size', 'type', 'order',
     ];
+
+    /**
+     * @return MorphTo
+     */
+    public function fileable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 
     /**
      * @return MorphOne
@@ -118,8 +121,8 @@ class File extends Model
     }
 
     /**
+     * @throws Exception
      * @return bool|null
-     * @throws \Exception
      */
     public function unlink(): ?bool
     {
@@ -145,8 +148,8 @@ class File extends Model
     /**
      * @param UploadedFile $uploadedFile
      * @param string $type
+     * @throws Exception
      * @return Media
-     * @throws \Exception
      */
     public function makePreview(UploadedFile $uploadedFile, string $type): Media
     {

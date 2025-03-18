@@ -24,7 +24,7 @@ class LocaleMiddleware
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -54,6 +54,7 @@ class LocaleMiddleware
     protected function isExcluded(Request $request): bool
     {
         $route = $request->route();
+
         return $route && in_array($route->getName(), $this->excludedRoutes, true);
     }
 }

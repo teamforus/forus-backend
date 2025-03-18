@@ -11,8 +11,8 @@ class ForusFundCreatedMail extends ImplementationMail
     public $subject = 'Er is een nieuw fonds toegevoegd: :fund_name';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

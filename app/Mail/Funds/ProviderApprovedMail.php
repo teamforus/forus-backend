@@ -11,8 +11,8 @@ class ProviderApprovedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_fund_providers.approved_budget';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {
@@ -28,8 +28,8 @@ class ProviderApprovedMail extends ImplementationMail
         $link = $data['provider_dashboard_link'];
 
         return [
-            'provider_dashboard_button' => $this->makeButton($link, 'DASHBOARD'),
-            'provider_dashboard_link' => $this->makeLink($link, 'hier'),
+            'provider_dashboard_link' => $this->makeLink($link, 'hier', '#315EFD'),
+            'provider_dashboard_button' => $this->makeButton($link, 'GA NAAR DE BEHEEROMGEVING', '#315EFD'),
         ];
     }
 }

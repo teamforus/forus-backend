@@ -11,7 +11,7 @@ use GuzzleHttp\Exception\BadResponseException;
 class BankConnectionsController extends Controller
 {
     /**
-     * Redirect user to the sponsor dashboard after bank authorization approval
+     * Redirect user to the sponsor dashboard after bank authorization approval.
      *
      * @param RedirectBankConnectionRequest $request
      * @throws BunqException

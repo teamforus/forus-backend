@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Notify sponsor that the fund has started
+ * Notify sponsor that the fund has started.
  */
 class FundStartedNotification extends BaseFundsNotification
 {

@@ -23,6 +23,7 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRe
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceivedNotification;
 use App\Scopes\Builders\FundQuery;
+use Exception;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,7 +31,7 @@ class FundRequestSubscriber
 {
     /**
      * @param FundRequestCreated $fundRequestCreated
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onFundRequestCreated(FundRequestCreated $fundRequestCreated): void
@@ -87,7 +88,6 @@ class FundRequestSubscriber
             IdentityFundRequestDisregardedNotification::send($eventLog);
         }
 
-
         if ($fundRequest->isApproved()) {
             /** @var Fund[] $funds */
             $funds = [];
@@ -98,7 +98,7 @@ class FundRequestSubscriber
 
             if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_REQUESTED) {
                 $funds = $sponsorFundsQuery->where('funds.id', $fundRequest->fund_id)->get();
-            } else if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_AVAILABLE) {
+            } elseif ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_AVAILABLE) {
                 $funds = $sponsorFundsQuery->get();
             }
 
@@ -239,6 +239,28 @@ class FundRequestSubscriber
     }
 
     /**
+     * The events dispatcher.
+     *
+     * @param Dispatcher $events
+     * @noinspection PhpUnused
+     */
+    public function subscribe(Dispatcher $events): void
+    {
+        $class = '\\' . static::class;
+
+        $events->listen(FundRequestCreated::class, "$class@onFundRequestCreated");
+        $events->listen(FundRequestResolved::class, "$class@onFundRequestResolved");
+
+        $events->listen(FundRequestAssigned::class, "$class@onFundRequestAssigned");
+        $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
+
+        $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
+
+        $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
+        $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
+    }
+
+    /**
      * @param FundRequest $fundRequest
      * @param array $extraModels
      * @return array
@@ -280,27 +302,5 @@ class FundRequestSubscriber
             'supervisor_employee_roles' => $supervisor->roles->pluck('name')->join(', '),
             'supervisor_employee_email' => $supervisor->identity?->email,
         ];
-    }
-
-    /**
-     * The events dispatcher
-     *
-     * @param Dispatcher $events
-     * @noinspection PhpUnused
-     */
-    public function subscribe(Dispatcher $events): void
-    {
-        $class = '\\' . static::class;
-
-        $events->listen(FundRequestCreated::class, "$class@onFundRequestCreated");
-        $events->listen(FundRequestResolved::class, "$class@onFundRequestResolved");
-
-        $events->listen(FundRequestAssigned::class, "$class@onFundRequestAssigned");
-        $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
-
-        $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
-
-        $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
-        $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
     }
 }

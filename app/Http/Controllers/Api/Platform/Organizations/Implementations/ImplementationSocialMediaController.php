@@ -44,8 +44,8 @@ class ImplementationSocialMediaController extends Controller
      * @param StoreImplementationSocialMediaRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationSocialMediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationSocialMediaResource
      */
     public function store(
         StoreImplementationSocialMediaRequest $request,
@@ -69,8 +69,8 @@ class ImplementationSocialMediaController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationSocialMedia $socialMedia
-     * @return ImplementationSocialMediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationSocialMediaResource
      */
     public function show(
         Organization $organization,
@@ -91,8 +91,8 @@ class ImplementationSocialMediaController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationSocialMedia $socialMedia
-     * @return ImplementationSocialMediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationSocialMediaResource
      */
     public function update(
         UpdateImplementationSocialMediaRequest $request,
@@ -117,8 +117,8 @@ class ImplementationSocialMediaController extends Controller
      * @param Organization $organization
      * @param Implementation $implementation
      * @param ImplementationSocialMedia $socialMedia
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      */
     public function destroy(
         Organization $organization,

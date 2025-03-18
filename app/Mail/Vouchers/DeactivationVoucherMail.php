@@ -10,13 +10,14 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class DeactivationVoucherMail extends ImplementationMail
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public ?string $notificationTemplateKey = 'notifications_identities.voucher_deactivated';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

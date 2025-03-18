@@ -8,11 +8,11 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class ReimbursementSubmittedMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = "notifications_identities.reimbursement_submitted";
+    public ?string $notificationTemplateKey = 'notifications_identities.reimbursement_submitted';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

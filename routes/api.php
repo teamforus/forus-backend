@@ -12,14 +12,14 @@
 */
 
 /**
- * No authorization required
+ * No authorization required.
  */
-Route::group([], static function() {
-    Route::group(['prefix' => '/identity'], static function()  {
+Route::group([], static function () {
+    Route::group(['prefix' => '/identity'], static function () {
         Route::post('/', 'Api\IdentityController@store');
         Route::post('/validate/email', 'Api\IdentityController@storeValidateEmail');
 
-        Route::group(['prefix' => '/proxy'], static function()  {
+        Route::group(['prefix' => '/proxy'], static function () {
             Route::post('/code', 'Api\IdentityController@proxyAuthorizationCode');
             Route::post('/token', 'Api\IdentityController@proxyAuthorizationToken');
             Route::post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
@@ -41,14 +41,14 @@ Route::group([], static function() {
         });
 
         /**
-         * Record types
+         * Record types.
          */
-        Route::group(['prefix' => '/record-types'], static function()  {
+        Route::group(['prefix' => '/record-types'], static function () {
             Route::get('/', 'Api\Identity\RecordTypeController@index');
         });
 
         /**
-         * Notification preferences
+         * Notification preferences.
          */
         Route::get(
             'notification-preferences/{identity_address}/{exchange_token}',
@@ -68,10 +68,10 @@ Route::group([], static function() {
 });
 
 /**
- * Authorization required
+ * Authorization required.
  */
-Route::group(['middleware' => ['api.auth']], static function()  {
-    Route::group(['prefix' => '/identity'], static function()  {
+Route::group(['middleware' => ['api.auth']], static function () {
+    Route::group(['prefix' => '/identity'], static function () {
         Route::get('/', 'Api\IdentityController@getPublic');
         Route::delete('/', 'Api\IdentityController@destroy');
         Route::resource('emails', 'Api\Identity\IdentityEmailsController')
@@ -82,21 +82,21 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         Route::patch('emails/{identity_email}/primary', 'Api\Identity\IdentityEmailsController@primary');
 
         /**
-         * Identity proxies
+         * Identity proxies.
          */
-        Route::group(['prefix' => '/proxy'], static function()  {
+        Route::group(['prefix' => '/proxy'], static function () {
             Route::delete('/', 'Api\IdentityController@proxyDestroy')->name('proxyDestroy');
 
-            Route::group(['prefix' => '/authorize'], static function()  {
+            Route::group(['prefix' => '/authorize'], static function () {
                 Route::post('/code', 'Api\IdentityController@proxyAuthorizeCode');
                 Route::post('/token', 'Api\IdentityController@proxyAuthorizeToken');
             });
         });
 
         /**
-         * Record categories
+         * Record categories.
          */
-        Route::group(['prefix' => '/record-categories'], static function()  {
+        Route::group(['prefix' => '/record-categories'], static function () {
             Route::get('/', 'Api\Identity\RecordCategoryController@index');
             Route::post('/', 'Api\Identity\RecordCategoryController@store');
             Route::patch('/sort', 'Api\Identity\RecordCategoryController@sort');
@@ -106,9 +106,9 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         });
 
         /**
-         * Record
+         * Record.
          */
-        Route::group(['prefix' => '/records'], static function()  {
+        Route::group(['prefix' => '/records'], static function () {
             Route::get('/', 'Api\Identity\RecordController@index');
             Route::post('/', 'Api\Identity\RecordController@store');
             Route::post('/validate', 'Api\Identity\RecordController@storeValidate');
@@ -121,9 +121,9 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         });
 
         /**
-         * Record validations
+         * Record validations.
          */
-        Route::group(['prefix' => '/record-validations'], static function()  {
+        Route::group(['prefix' => '/record-validations'], static function () {
             Route::post('/', 'Api\Identity\RecordValidationController@store');
             Route::get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
             Route::patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
@@ -131,9 +131,9 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         });
 
         /**
-         * 2FA
+         * 2FA.
          */
-        Route::group(['prefix' => '/2fa'], static function() {
+        Route::group(['prefix' => '/2fa'], static function () {
             Route::get('/', 'Api\Identity\Identity2FA\Identity2FAController@state')->name('auth2FAState');
             Route::post('/', 'Api\Identity\Identity2FA\Identity2FAController@store')->name('auth2FAStore');
             Route::post('/update', 'Api\Identity\Identity2FA\Identity2FAController@update')->name('auth2FAUpdate');
@@ -144,11 +144,11 @@ Route::group(['middleware' => ['api.auth']], static function()  {
         });
 
         /**
-         * Sessions validations
+         * Sessions validations.
          */
         Route::resource('sessions', 'Api\Identity\SessionController')
             ->parameter('sessions', 'sessionUid')
-            ->only( 'index', 'show');
+            ->only('index', 'show');
 
         Route::patch('sessions/{sessionUid}/terminate', 'Api\Identity\SessionController@terminate');
         Route::patch('sessions/terminate', 'Api\Identity\SessionController@terminateAll');

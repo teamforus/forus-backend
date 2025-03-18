@@ -22,7 +22,7 @@ class EmployeeUpdated extends BaseEmployeeEvent
     }
 
     /**
-     * Get employee roles before update
+     * Get employee roles before update.
      *
      * @return array
      */

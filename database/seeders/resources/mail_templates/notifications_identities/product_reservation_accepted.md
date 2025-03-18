@@ -1,11 +1,11 @@
-# Hierbij ontvang je :product_name
+# Uw reservering voor :product_name is bevestigd
 
 Beste deelnemer,
 
-:sponsor_name heeft een :product_name van :provider_name geaccepteerd.
+:provider_name heeft uw reservering voor het aanbod :product_name geaccepteerd. U kunt gebruik maken van dit aanbod.
 &nbsp;
 
-Heb je vragen over het aanbod? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
+Heeft u vragen over het aanbod? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
 &nbsp;
 
-Veel plezier met je :product_name!
+Veel plezier met uw aankoop!

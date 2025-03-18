@@ -30,7 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 /**
- * App\Models\Product
+ * App\Models\Product.
  *
  * @property int $id
  * @property int $organization_id
@@ -281,7 +281,7 @@ class Product extends BaseModel
         return $this->product_reservations()->whereIn('state', [
             ProductReservation::STATE_WAITING,
             ProductReservation::STATE_PENDING,
-            ProductReservation::STATE_ACCEPTED
+            ProductReservation::STATE_ACCEPTED,
         ])->whereDoesntHave('voucher_transaction');
     }
 
@@ -336,13 +336,13 @@ class Product extends BaseModel
     }
 
     /**
-     * Get fund logo
+     * Get fund logo.
      * @return MorphOne
      */
     public function photo(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'product_photo'
+            'type' => 'product_photo',
         ]);
     }
 
@@ -448,12 +448,12 @@ class Product extends BaseModel
 
         $extraPaymentsAllowed = $this->organization
             ->fund_providers_allowed_extra_payments
-            ->filter(fn(FundProvider $provider) => $provider->fund_id === $fund->id)
+            ->filter(fn (FundProvider $provider) => $provider->fund_id === $fund->id)
             ->isNotEmpty();
 
         $extraPaymentsFullAllowed = $voucherBalance !== false ? $this->organization
             ->fund_providers_allowed_extra_payments_full
-            ->filter(fn(FundProvider $provider) => $provider->fund_id === $fund->id)
+            ->filter(fn (FundProvider $provider) => $provider->fund_id === $fund->id)
             ->isNotEmpty() : null;
 
         $voucherBalanceIsValid =
@@ -464,7 +464,7 @@ class Product extends BaseModel
     }
 
     /**
-     * The product is sold out
+     * The product is sold out.
      *
      * @param $value
      * @return bool
@@ -476,7 +476,7 @@ class Product extends BaseModel
     }
 
     /**
-     * The product is expired
+     * The product is expired.
      *
      * @return bool
      * @noinspection PhpUnused
@@ -487,7 +487,7 @@ class Product extends BaseModel
     }
 
     /**
-     * Count vouchers generated for this product but not used
+     * Count vouchers generated for this product but not used.
      *
      * @param Fund|null $fund
      * @return int
@@ -502,20 +502,20 @@ class Product extends BaseModel
     }
 
     /**
-     * Count vouchers generated for this product but not used
+     * Count vouchers generated for this product but not used.
      *
      * @param Fund|null $fund
      * @return int
      */
     public function countReservedCached(?Fund $fund = null): int
     {
-        return $this->product_reservations_pending->filter(function(ProductReservation $reservation) use ($fund) {
+        return $this->product_reservations_pending->filter(function (ProductReservation $reservation) use ($fund) {
             return !$fund || $reservation->voucher->fund_id === $fund->id;
         })->count();
     }
 
     /**
-     * Count actually sold products
+     * Count actually sold products.
      *
      * @param Fund|null $fund
      * @return int
@@ -545,7 +545,7 @@ class Product extends BaseModel
     }
 
     /**
-     * Update sold out state for the product
+     * Update sold out state for the product.
      */
     public function updateSoldOutState(): void
     {
@@ -664,7 +664,7 @@ class Product extends BaseModel
     public static function filterFundType(Builder $builder, string $fundType): Builder
     {
         $fundIds = Implementation::activeFundsQuery()->where([
-            'type' => $fundType
+            'type' => $fundType,
         ])->pluck('id')->toArray();
 
         return ProductQuery::approvedForFundsAndActiveFilter($builder, $fundIds);
@@ -675,7 +675,8 @@ class Product extends BaseModel
      * @param Builder|null $query
      * @return Builder
      */
-    public static function searchAny(Request $request, Builder $query = null): Builder {
+    public static function searchAny(Request $request, Builder $query = null): Builder
+    {
         $query = $query ?: self::query();
 
         // filter by unlimited stock
@@ -793,14 +794,14 @@ class Product extends BaseModel
         foreach ($request->input('disable_funds', []) as $fund_id) {
             /** @var FundProvider $fundProvider */
             if ($fundProvider = $this->organization->fund_providers()->where([
-                'fund_id' => $fund_id
+                'fund_id' => $fund_id,
             ])->first()) {
                 $fundProvider->product_exclusions()->firstOrCreate([
-                    'product_id' => $this->id
+                    'product_id' => $this->id,
                 ]);
 
                 $fundProvider->fund_provider_products()->where([
-                    'product_id' => $this->id
+                    'product_id' => $this->id,
                 ])->delete();
             }
         }
@@ -808,10 +809,10 @@ class Product extends BaseModel
         foreach ($request->input('enable_funds', []) as $fund_id) {
             /** @var FundProvider $fundProvider */
             if ($fundProvider = $this->organization->fund_providers()->where([
-                'fund_id' => $fund_id
+                'fund_id' => $fund_id,
             ])->first()) {
                 $fundProvider->product_exclusions()->where([
-                    'product_id' => $this->id
+                    'product_id' => $this->id,
                 ])->delete();
             }
         }
@@ -823,28 +824,29 @@ class Product extends BaseModel
     public function resetSubsidyApprovals(): void
     {
         $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(Fund::query(), $this)->where([
-            'type' =>  Fund::TYPE_SUBSIDIES
+            'type' => Fund::TYPE_SUBSIDIES,
         ])->get();
 
-        $subsidyFunds->each(function(Fund $fund) {
+        $subsidyFunds->each(function (Fund $fund) {
             FundProductSubsidyRemovedNotification::send(
                 $fund->log($fund::EVENT_PRODUCT_SUBSIDY_REMOVED, [
-                    'product'  => $this,
-                    'fund'     => $fund,
-                    'sponsor'  => $fund->organization,
-                    'provider' => $this->organization
-            ]));
+                    'product' => $this,
+                    'fund' => $fund,
+                    'sponsor' => $fund->organization,
+                    'provider' => $this->organization,
+                ])
+            );
         });
 
-        $this->fund_provider_products()->whereHas('fund_provider', function(Builder $builder) {
-            $builder->whereHas('fund', function(Builder $builder) {
+        $this->fund_provider_products()->whereHas('fund_provider', function (Builder $builder) {
+            $builder->whereHas('fund', function (Builder $builder) {
                 $builder->where('type', '=', Fund::TYPE_SUBSIDIES);
             });
         })->delete();
     }
 
     /**
-     * Check if price will change after update
+     * Check if price will change after update.
      * @param string $price_type
      * @param float $price
      * @param float $price_discount
@@ -883,7 +885,7 @@ class Product extends BaseModel
 
         $price_discount = in_array($price_type, [
             self::PRICE_TYPE_DISCOUNT_FIXED,
-            self::PRICE_TYPE_DISCOUNT_PERCENTAGE
+            self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
         ], true) ? $request->input('price_discount') : 0;
 
         /** @var Product $product */
@@ -922,7 +924,7 @@ class Product extends BaseModel
 
         $price_discount = in_array($price_type, [
             self::PRICE_TYPE_DISCOUNT_FIXED,
-            self::PRICE_TYPE_DISCOUNT_PERCENTAGE
+            self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
         ], true) ? $request->input('price_discount') : 0;
 
         $this->attachMediaByUid($request->input('media_uid'));
@@ -942,7 +944,7 @@ class Product extends BaseModel
                 'reservation_extra_payments',
             ]) : [],
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
-            ...compact('price', 'price_type', 'price_discount')
+            ...compact('price', 'price_type', 'price_discount'),
         ]);
 
         ProductUpdated::dispatch($this);
@@ -962,7 +964,8 @@ class Product extends BaseModel
     {
         return $this->reservation_enabled && (
             ($fund->isTypeSubsidy() && $this->organization->reservations_subsidy_enabled) ||
-            ($fund->isTypeBudget() && $this->organization->reservations_budget_enabled));
+            ($fund->isTypeBudget() && $this->organization->reservations_budget_enabled)
+        );
     }
 
     /**

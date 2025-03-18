@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundFormula
+ * App\Models\FundFormula.
  *
  * @property int $id
  * @property int $fund_id
@@ -56,7 +56,7 @@ class FundFormula extends BaseModel
     {
         return match ($this->type) {
             self::TYPE_FIXED => trans('fund.fund_formulas.fixed'),
-            self::TYPE_MULTIPLY=> trans('fund.fund_formulas.multiply'),
+            self::TYPE_MULTIPLY => trans('fund.fund_formulas.multiply'),
             default => $this->type,
         };
     }

@@ -43,11 +43,11 @@ class IndexOrganizationRequest extends BaseFormRequest
             ],
             'dependency' => [
                 'nullable',
-                new DependencyRule(OrganizationResource::DEPENDENCIES)
+                new DependencyRule(OrganizationResource::DEPENDENCIES),
             ],
             ...$this->sortableResourceRules(500, [
                 'created_at', 'is_sponsor', 'is_provider', 'is_validator',
-                'name', 'phone', 'email', 'website'
+                'name', 'phone', 'email', 'website',
             ]),
         ];
     }

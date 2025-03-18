@@ -28,7 +28,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
             'q' => 'nullable|string',
             'to' => 'date|date_format:Y-m-d',
             'from' => 'date|date_format:Y-m-d',
-            'state' => 'nullable|in:' . join(',', ProductReservation::STATES),
+            'state' => 'nullable|in:' . implode(',', ProductReservation::STATES),
             'fund_id' => 'nullable|exists:funds,id',
             'per_page' => 'nullable|numeric|max:100',
             'archived' => 'nullable|boolean',

@@ -11,7 +11,7 @@ use bunq\Model\Generated\Endpoint\OauthClient;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\BankService\Models\Bank
+ * App\Services\BankService\Models\Bank.
  *
  * @property int $id
  * @property string $key
@@ -50,7 +50,7 @@ class Bank extends Model
      * @var string[]
      */
     protected $hidden = [
-        'data'
+        'data',
     ];
 
     /**
@@ -66,7 +66,7 @@ class Bank extends Model
      */
     public function buildOauthRedirectUrl(array $params = []): string
     {
-        return implode("?", array_filter([
+        return implode('?', array_filter([
             url('/api/v1/platform/bank-connections/redirect'),
             http_build_query($params),
         ]));

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\RecordTypeOption
+ * App\Models\RecordTypeOption.
  *
  * @property int $id
  * @property int $record_type_id
@@ -47,14 +47,6 @@ class RecordTypeOption extends Model
     use HasTranslationCaches;
 
     /**
-     * @return BelongsTo
-     */
-    public function record_type(): BelongsTo
-    {
-        return $this->belongsTo(RecordType::class);
-    }
-
-    /**
      * The attributes that are translatable.
      *
      * @var array
@@ -70,4 +62,12 @@ class RecordTypeOption extends Model
     protected $fillable = [
         'value',
     ];
+
+    /**
+     * @return BelongsTo
+     */
+    public function record_type(): BelongsTo
+    {
+        return $this->belongsTo(RecordType::class);
+    }
 }

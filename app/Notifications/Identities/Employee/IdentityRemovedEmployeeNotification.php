@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Employee;
 
 /**
- * Notify identity about them being removed from an organization
+ * Notify identity about them being removed from an organization.
  */
 class IdentityRemovedEmployeeNotification extends BaseIdentityEmployeeNotification
 {

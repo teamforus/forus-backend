@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 /**
- * Notify fund provider that they got approved to sell all of their products on the webshop
+ * Notify fund provider that they got approved to sell all of their products on the webshop.
  */
 class FundProvidersApprovedProductsNotification extends BaseFundProvidersNotification
 {

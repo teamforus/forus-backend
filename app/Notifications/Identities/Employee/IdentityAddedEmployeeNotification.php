@@ -6,9 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Mail\User\EmployeeAddedMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use Exception;
 
 /**
- * Notify identity about them becoming an employee for the organization
+ * Notify identity about them becoming an employee for the organization.
  */
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
@@ -17,7 +18,7 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 
     /**
      * @param Identity $identity
-     * @throws \Exception
+     * @throws Exception
      */
     public function toMail(Identity $identity): void
     {
@@ -26,7 +27,7 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
         $implementation_key = $this->eventLog->data['implementation_key'] ?? $request->implementation_key();
 
         $confirmationLink = sprintf(
-            "%s/confirmation/email/%s",
+            '%s/confirmation/email/%s',
             rtrim(Implementation::byKey($implementation_key)['url_' . $client_type], '/'),
             $identity->makeIdentityPoxy()->exchange_token,
         );

@@ -23,8 +23,8 @@ class NotificationResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
      * @throws Throwable
+     * @return array
      */
     public function toArray(Request $request): array
     {
@@ -44,8 +44,8 @@ class NotificationResource extends BaseJsonResource
 
     /**
      * @param EventLog $event
-     * @return NotificationTemplate|null
      * @throws Throwable
+     * @return NotificationTemplate|null
      */
     public function getTemplate(EventLog $event): ?NotificationTemplate
     {

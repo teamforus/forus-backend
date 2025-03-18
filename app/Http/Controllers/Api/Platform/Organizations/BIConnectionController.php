@@ -39,8 +39,8 @@ class BIConnectionController extends Controller
     /**
      * @param StoreBIConnectionRequest $request
      * @param Organization $organization
-     * @return BIConnectionResource
      * @throws AuthorizationException
+     * @return BIConnectionResource
      */
     public function store(
         StoreBIConnectionRequest $request,
@@ -103,8 +103,8 @@ class BIConnectionController extends Controller
     /**
      * @param AvailableTypesBIConnectionRequest $request
      * @param Organization $organization
-     * @return JsonResponse
      * @throws Throwable
+     * @return JsonResponse
      */
     public function getAvailableDataTypes(
         AvailableTypesBIConnectionRequest $request,

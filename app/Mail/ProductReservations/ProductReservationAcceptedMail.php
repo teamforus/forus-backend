@@ -11,8 +11,8 @@ class ProductReservationAcceptedMail extends ImplementationMail
     public ?string $notificationTemplateKey = 'notifications_identities.product_reservation_accepted';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

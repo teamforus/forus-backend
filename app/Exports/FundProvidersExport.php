@@ -30,8 +30,8 @@ class FundProvidersExport implements FromCollection, WithHeadings
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection(): Collection
     {
         return $this->data;

@@ -1,17 +1,16 @@
 <?php
 
+use Database\Seeders\NotificationTemplatesTableSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Database\Seeders\NotificationTemplatesTableSeeder;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
-     * @return void
      * @throws Exception
+     * @return void
      */
     public function up(): void
     {
@@ -30,11 +29,13 @@ return new class extends Migration
             ], 'notification_templates_fields_unique');
 
             $table->foreign('system_notification_id')
-                ->references('id')->on('system_notifications')
+                ->references('id')
+                ->on('system_notifications')
                 ->onDelete('cascade');
 
             $table->foreign('implementation_id')
-                ->references('id')->on('implementations')
+                ->references('id')
+                ->on('implementations')
                 ->onDelete('cascade');
         });
 

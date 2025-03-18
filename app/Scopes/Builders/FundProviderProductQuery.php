@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
@@ -34,10 +33,13 @@ class FundProviderProductQuery
         null|int|array|Builder $organization_id = null,
         bool $validateLimits = true,
     ): Builder|Relation|FundProviderProduct {
-        $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
-            $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
+        $query->whereHas('product', static function (Builder $query) use ($voucher, $organization_id) {
+            $query->where(static function (Builder $builder) use ($voucher, $organization_id) {
                 $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
-                    FundProvider::query(), $voucher->fund_id,'subsidy', $voucher->product_id
+                    FundProvider::query(),
+                    $voucher->fund_id,
+                    'subsidy',
+                    $voucher->product_id
                 );
 
                 if (is_numeric($organization_id) || is_array($organization_id)) {
@@ -54,7 +56,7 @@ class FundProviderProductQuery
             return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
         });
 
-        $query->whereHas('fund_provider', static function(Builder $builder) use ($voucher) {
+        $query->whereHas('fund_provider', static function (Builder $builder) use ($voucher) {
             $builder->where('fund_id', '=', $voucher->fund_id);
         });
 
@@ -74,12 +76,12 @@ class FundProviderProductQuery
         Builder|Relation|FundProviderProduct $builder,
         Voucher $voucher,
     ): Builder|Relation|FundProviderProduct {
-        return $builder->whereHas('product', function(Builder $builder) use ($voucher) {
+        return $builder->whereHas('product', function (Builder $builder) use ($voucher) {
             $query = ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher->id,
             ], (clone $builder));
 
-            $query->where(function(Builder $builder) use ($voucher) {
+            $query->where(function (Builder $builder) use ($voucher) {
                 $builder->where('limit_available', '>', 0);
 
                 if ($voucher->fund->isTypeBudget()) {
@@ -98,7 +100,7 @@ class FundProviderProductQuery
     public static function whereConfigured(
         Builder|Relation|FundProviderProduct $builder,
     ): Builder|Relation|FundProviderProduct {
-        return $builder->where(function(Builder|FundProviderProduct $builder) {
+        return $builder->where(function (Builder|FundProviderProduct $builder) {
             $builder->whereNotNull('expire_at');
             $builder->whereNotNull('limit_total');
             $builder->orWhereNotNull('limit_per_identity');

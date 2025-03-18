@@ -11,8 +11,8 @@ class IdentityDestroyRequestMail extends ImplementationMail
     public $subject = 'Verzoek tot verwijdering van account';
 
     /**
-     * @return Mailable
      * @throws CommonMarkException
+     * @return Mailable
      */
     public function build(): Mailable
     {

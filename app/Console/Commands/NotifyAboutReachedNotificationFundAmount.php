@@ -42,7 +42,8 @@ class NotifyAboutReachedNotificationFundAmount extends Command
                     FundBalanceLowEvent::dispatch($fund);
                 }
             }
-        } catch (Throwable) {}
+        } catch (Throwable) {
+        }
     }
 
     /**

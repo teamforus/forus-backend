@@ -5,7 +5,7 @@ namespace App\Notifications\Organizations\FundRequests;
 use App\Models\Permission;
 
 /**
- * Notify sponsor/validator about new fund request
+ * Notify sponsor/validator about new fund request.
  */
 class FundRequestCreatedValidatorNotification extends BaseFundsRequestsNotification
 {

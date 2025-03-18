@@ -37,7 +37,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
 /**
- * App\Models\Organization
+ * App\Models\Organization.
  *
  * @property int $id
  * @property string|null $identity_address
@@ -101,6 +101,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_transaction_date
  * @property bool $bank_transaction_time
  * @property bool $bank_reservation_number
+ * @property bool $bank_reservation_first_name
+ * @property bool $bank_reservation_last_name
  * @property bool $bank_branch_number
  * @property bool $bank_branch_id
  * @property bool $bank_branch_name
@@ -208,6 +210,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereBankCronTime($value)
  * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
  * @method static EloquentBuilder<static>|Organization whereBankNote($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationFirstName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationLastName($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
  * @method static EloquentBuilder<static>|Organization whereBankTransactionDate($value)
@@ -311,6 +315,7 @@ class Organization extends BaseModel
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
+        'bank_reservation_first_name', 'bank_reservation_last_name',
     ];
 
     /**
@@ -356,6 +361,8 @@ class Organization extends BaseModel
         'bank_transaction_date' => 'boolean',
         'bank_transaction_time' => 'boolean',
         'bank_reservation_number' => 'boolean',
+        'bank_reservation_first_name' => 'boolean',
+        'bank_reservation_last_name' => 'boolean',
         'bank_branch_number' => 'boolean',
         'bank_branch_id' => 'boolean',
         'bank_branch_name' => 'boolean',
@@ -557,15 +564,16 @@ class Organization extends BaseModel
     {
         return $this->hasMany(FundProvider::class);
     }
+
     /**
-     * Get organization logo
+     * Get organization logo.
      * @return MorphOne
      * @noinspection PhpUnused
      */
     public function logo(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'organization_logo'
+            'type' => 'organization_logo',
         ]);
     }
 
@@ -767,7 +775,7 @@ class Organization extends BaseModel
     }
 
     /**
-     * Returns identity organization permissions
+     * Returns identity organization permissions.
      * @param ?Identity $identity
      * @return Collection
      */
@@ -781,7 +789,7 @@ class Organization extends BaseModel
     }
 
     /**
-     * Check if identity is organization employee
+     * Check if identity is organization employee.
      * @param Identity $identity
      * @param bool $fresh
      * @return bool
@@ -803,7 +811,7 @@ class Organization extends BaseModel
      */
     public function identityCan(
         Identity $identity = null,
-        array|string  $permissions = [],
+        array|string $permissions = [],
         bool $all = true
     ): bool {
         // convert string to array
@@ -838,27 +846,29 @@ class Organization extends BaseModel
 
         /**
          * Query all the organizations where identity_address has permissions
-         * or is the creator
+         * or is the creator.
          */
-        return self::query()->where(static function(EloquentBuilder $builder) use (
-            $identityAddress, $permissions
+        return self::query()->where(static function (EloquentBuilder $builder) use (
+            $identityAddress,
+            $permissions
         ) {
-            return $builder->whereIn('id', function(Builder $query) use (
-                $identityAddress, $permissions
+            return $builder->whereIn('id', function (Builder $query) use (
+                $identityAddress,
+                $permissions
             ) {
-                $query->select(['organization_id'])->from((new Employee)->getTable())->where([
-                    'identity_address' => $identityAddress
+                $query->select(['organization_id'])->from((new Employee())->getTable())->where([
+                    'identity_address' => $identityAddress,
                 ])->whereNull('deleted_at')->whereIn('id', function (Builder $query) use ($permissions) {
                     $query->select('employee_id')->from(
-                        (new EmployeeRole)->getTable()
+                        (new EmployeeRole())->getTable()
                     )->whereIn('role_id', function (Builder $query) use ($permissions) {
-                        $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
+                        $query->select(['id'])->from((new Role())->getTable())->whereIn('id', function (
                             Builder $query
-                        )  use ($permissions) {
+                        ) use ($permissions) {
                             return $query->select(['role_id'])->from(
-                                (new RolePermission)->getTable()
+                                (new RolePermission())->getTable()
                             )->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                                $query->select('id')->from((new Permission)->getTable());
+                                $query->select('id')->from((new Permission())->getTable());
 
                                 // allow any permission
                                 if ($permissions !== false) {
@@ -930,7 +940,7 @@ class Organization extends BaseModel
         }
 
         if ($postcodes) {
-            $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
+            $query->whereHas('offices', static function (EloquentBuilder $builder) use ($postcodes) {
                 $builder->whereIn('postcode_number', (array) $postcodes);
             });
         }
@@ -940,7 +950,7 @@ class Organization extends BaseModel
         }
 
         if ($dateFrom && $dateTo) {
-            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
+            $query->whereHas('voucher_transactions', function (EloquentBuilder $builder) use ($dateFrom, $dateTo) {
                 $builder->where('created_at', '>=', $dateFrom->clone()->startOfDay());
                 $builder->where('created_at', '<=', $dateTo->clone()->endOfDay());
             });

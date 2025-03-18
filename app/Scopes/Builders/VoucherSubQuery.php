@@ -52,12 +52,12 @@ class VoucherSubQuery
     private static function getFirstTransactionSubQuery(): Builder|Relation|VoucherTransaction
     {
         return VoucherTransactionQuery::whereOutgoing(VoucherTransaction::whereColumn([
-            'voucher_transactions.voucher_id' => 'vouchers.id'
+            'voucher_transactions.voucher_id' => 'vouchers.id',
         ]));
     }
 
     /**
-     * Product vouchers and product vouchers from reservations
+     * Product vouchers and product vouchers from reservations.
      * @return Builder|Relation|Voucher
      */
     private static function getFirstReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
@@ -65,6 +65,6 @@ class VoucherSubQuery
         return Voucher::query()
             ->from('vouchers as product_vouchers')
             ->whereColumn('product_vouchers.parent_id', 'vouchers.id')
-            ->where(fn(Builder $builder) => VoucherQuery::whereIsProductVoucher($builder));
+            ->where(fn (Builder $builder) => VoucherQuery::whereIsProductVoucher($builder));
     }
 }

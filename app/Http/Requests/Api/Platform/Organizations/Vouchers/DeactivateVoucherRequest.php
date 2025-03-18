@@ -29,8 +29,8 @@ class DeactivateVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'notify_by_email'   => 'nullable|bool',
-            'note'              => 'nullable|string|max:140',
+            'notify_by_email' => 'nullable|bool',
+            'note' => 'nullable|string|max:140',
         ];
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Statistics\Funds;
 
 use App\Models\BaseModel;
@@ -34,20 +33,21 @@ class FinancialStatisticQueries
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('product_category', function(Builder $builder) {
+            'transactions' => $transactionsQuery->where(function (Builder $builder) {
+                $builder->whereHas('product_category', function (Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
-                $builder->orWhereHas('voucher.product_category', function(Builder $builder) {
+                $builder->orWhereHas('voucher.product_category', function (Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get(), [
-            'id', 'name', 'transactions'
+            'id', 'name', 'transactions',
         ]);
     }
+
     /**
      * @param Organization $sponsor
      * @param array $options
@@ -62,8 +62,8 @@ class FinancialStatisticQueries
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->where(function(Builder $builder) {
-                $builder->whereHas('provider_business_type', function(Builder $builder) {
+            'transactions' => $transactionsQuery->where(function (Builder $builder) {
+                $builder->whereHas('provider_business_type', function (Builder $builder) {
                     $builder->from('business_types', 'business_types2');
                     $builder->whereColumn('business_types.id', 'business_types2.id');
                 });
@@ -71,7 +71,7 @@ class FinancialStatisticQueries
         ])->orderByDesc('transactions');
 
         return $this->collectionOnly($query->get(), [
-            'id', 'name', 'transactions'
+            'id', 'name', 'transactions',
         ]);
     }
 
@@ -86,7 +86,7 @@ class FinancialStatisticQueries
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->where(function(Builder $builder) {
+            'transactions' => $transactionsQuery->where(function (Builder $builder) {
                 $builder->whereColumn('voucher_transactions.organization_id', 'organizations.id');
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
@@ -104,18 +104,18 @@ class FinancialStatisticQueries
         $query = Office::query()->distinct();
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
-        $query->whereHas('organization', function(Builder $builder) use ($sponsor) {
+        $query->whereHas('organization', function (Builder $builder) use ($sponsor) {
             OrganizationQuery::whereIsProviderOrganization($builder, $sponsor);
         })->whereNotNull('postcode_number')->select('postcode_number');
 
         $query->addSelect([
-            'transactions' => $transactionsQuery->whereHas('provider_offices', function(Builder $builder) {
+            'transactions' => $transactionsQuery->whereHas('provider_offices', function (Builder $builder) {
                 $builder->from('offices', 'offices2');
                 $builder->whereColumn('offices.postcode_number', 'offices2.postcode_number');
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
-        return $this->collectionOnly($query->get()->map(function(Office $office) {
+        return $this->collectionOnly($query->get()->map(function (Office $office) {
             return (new BaseModel())->forceFill([
                 'id' => $office->postcode_number,
                 'name' => $office->postcode_number,
@@ -135,7 +135,7 @@ class FinancialStatisticQueries
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
         $query->select(['id', 'name'])->addSelect([
-            'transactions' => $transactionsQuery->whereHas('voucher', function(Builder $builder) {
+            'transactions' => $transactionsQuery->whereHas('voucher', function (Builder $builder) {
                 $builder->whereColumn('vouchers.fund_id', 'funds.id');
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
@@ -143,17 +143,6 @@ class FinancialStatisticQueries
         return $this->collectionOnly($query->get(), [
             'id', 'name', 'transactions',
         ]);
-    }
-
-    /**
-     * @param Collection $collection
-     * @param array $only
-     * @return array
-     */
-    protected function collectionOnly(BaseCollection $collection, array $only): array {
-        return $collection->map(function(BaseModel $model) use ($only) {
-            return $model->only($only);
-        })->values()->toArray();
     }
 
     /**
@@ -180,15 +169,15 @@ class FinancialStatisticQueries
         $dateTo = array_get($options, 'date_to');
 
         $query = $query ?: VoucherTransaction::query();
-        $query = $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor) {
+        $query = $query->whereHas('voucher.fund', function (Builder $builder) use ($sponsor) {
             FundQuery::whereActiveOrClosedFilter($builder->where([
-                'organization_id' => $sponsor->id
+                'organization_id' => $sponsor->id,
             ]), false, false);
         });
 
         // Filter by selected funds
         if ($fundIds) {
-            $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor, $fundIds) {
+            $query->whereHas('voucher.fund', function (Builder $builder) use ($sponsor, $fundIds) {
                 $builder->whereIn('funds.id', $sponsor->funds()->getQuery()->select('funds.id'));
                 $builder->whereIn('id', $fundIds);
             });
@@ -196,8 +185,11 @@ class FinancialStatisticQueries
 
         // Filter by selected providers
         if ($providerIds || $postcodes || $businessTypeIds) {
-            $query->whereHas('provider', function(Builder $builder) use (
-                $sponsor, $providerIds, $postcodes, $businessTypeIds,
+            $query->whereHas('provider', function (Builder $builder) use (
+                $sponsor,
+                $providerIds,
+                $postcodes,
+                $businessTypeIds,
             ) {
                 $providerIds && $builder->whereIn('id', $providerIds);
                 $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
@@ -207,12 +199,12 @@ class FinancialStatisticQueries
 
         // filter by category (include children categories)
         if ($productCategoryIds) {
-            $query->where(function(Builder $builder) use ($productCategoryIds) {
-                $builder->whereHas('product.product_category', function(Builder $builder) use ($productCategoryIds) {
+            $query->where(function (Builder $builder) use ($productCategoryIds) {
+                $builder->whereHas('product.product_category', function (Builder $builder) use ($productCategoryIds) {
                     $builder->whereIn('root_id', $productCategoryIds);
                 });
 
-                $builder->orWhereHas('voucher.product.product_category', function(Builder $builder) use ($productCategoryIds) {
+                $builder->orWhereHas('voucher.product.product_category', function (Builder $builder) use ($productCategoryIds) {
                     $builder->whereIn('root_id', $productCategoryIds);
                 });
             });
@@ -229,5 +221,17 @@ class FinancialStatisticQueries
         }
 
         return $query->whereIn('target', is_array($targets) ? $targets : []);
+    }
+
+    /**
+     * @param Collection $collection
+     * @param array $only
+     * @return array
+     */
+    protected function collectionOnly(BaseCollection $collection, array $only): array
+    {
+        return $collection->map(function (BaseModel $model) use ($only) {
+            return $model->only($only);
+        })->values()->toArray();
     }
 }

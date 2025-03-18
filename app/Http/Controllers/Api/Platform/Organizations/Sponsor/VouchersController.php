@@ -29,6 +29,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class VouchersController extends Controller
 {
@@ -37,9 +38,9 @@ class VouchersController extends Controller
      *
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
      * @throws Exception
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -50,7 +51,9 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         return SponsorVoucherResource::queryCollection(Voucher::searchSponsorQuery(
-            $request, $organization, $organization->findFund($request->get('fund_id'))
+            $request,
+            $organization,
+            $organization->findFund($request->get('fund_id'))
         ), $request);
     }
 
@@ -59,8 +62,8 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function store(
@@ -133,15 +136,16 @@ class VouchersController extends Controller
     public function storeValidate(
         StoreVoucherRequest $request,
         Organization $organization
-    ): void {}
+    ): void {
+    }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param StoreBatchVoucherRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function storeBatch(
@@ -159,8 +163,12 @@ class VouchersController extends Controller
 
         $event = $employee->logCsvUpload($employee::EVENT_UPLOADED_VOUCHERS, $file, $vouchers);
 
-        $voucherModels = collect($vouchers)->map(function($voucher) use (
-            $fund, $organization, $request, $employee, $allowVoucherRecords,
+        $voucherModels = collect($vouchers)->map(function ($voucher) use (
+            $fund,
+            $organization,
+            $request,
+            $employee,
+            $allowVoucherRecords,
         ) {
             $note = $voucher['note'] ?? null;
             $email = $voucher['email'] ?? false;
@@ -235,15 +243,16 @@ class VouchersController extends Controller
     public function storeBatchValidate(
         StoreBatchVoucherRequest $request,
         Organization $organization,
-    ): void {}
+    ): void {
+    }
 
     /**
      * Display the specified resource.
      *
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function show(
@@ -260,8 +269,8 @@ class VouchersController extends Controller
      * @param AssignVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function assign(
@@ -277,7 +286,7 @@ class VouchersController extends Controller
 
         if ($email) {
             $voucher->assignToIdentity(Identity::findOrMake($email));
-        } else if ($organization->bsn_enabled && $bsn) {
+        } elseif ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
         }
 
@@ -288,8 +297,8 @@ class VouchersController extends Controller
      * @param UpdateVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException
+     * @return SponsorVoucherResource
      */
     public function update(
         UpdateVoucherRequest $request,
@@ -317,8 +326,8 @@ class VouchersController extends Controller
      * @param ActivateVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function activate(
@@ -341,8 +350,8 @@ class VouchersController extends Controller
      * @param DeactivateVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
+     * @throws AuthorizationException|Exception|Throwable
      * @return SponsorVoucherResource
-     * @throws AuthorizationException|Exception|\Throwable
      * @noinspection PhpUnused
      */
     public function deactivate(
@@ -366,8 +375,8 @@ class VouchersController extends Controller
      * @param ActivationCodeVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function makeActivationCode(
@@ -388,8 +397,8 @@ class VouchersController extends Controller
      * @param SendVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
-     * @return SponsorVoucherResource
      * @throws AuthorizationException
+     * @return SponsorVoucherResource
      * @noinspection PhpUnused
      */
     public function sendByEmail(
@@ -408,8 +417,8 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersExportFieldsRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(
@@ -427,8 +436,8 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @return VoucherExportArrResource
      * @throws AuthorizationException|Exception
+     * @return VoucherExportArrResource
      */
     public function export(
         IndexVouchersRequest $request,

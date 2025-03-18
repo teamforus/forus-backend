@@ -2,4 +2,6 @@
 
 namespace SimpleSAML\Utils;
 
-class System {}
+class System
+{
+}

@@ -2,24 +2,25 @@
 
 namespace Browser;
 
-use Tests\DuskTestCase;
-use Laravel\Dusk\Browser;
 use App\Models\Implementation;
+use Laravel\Dusk\Browser;
+use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
+use Throwable;
 
 class MarkdownTableCaptionAndHeadersTest extends DuskTestCase
 {
     use MakesTestFunds;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testMarkdownTableReplaceHeadingsAndCaption(): void
     {
         $implementation = Implementation::byKey('nijmegen');
         $fund = $implementation->funds[0];
-        $description  = $fund->description;
+        $description = $fund->description;
 
         $caption = '1.1 Omnis doloremque et repudiandae doloremque ullam quasi.';
         $header1 = 'header 1';
@@ -40,7 +41,13 @@ class MarkdownTableCaptionAndHeadersTest extends DuskTestCase
         ]);
 
         $this->browse(function (Browser $browser) use (
-            $implementation, $fund, $caption, $header1, $header2, $header3, $description,
+            $implementation,
+            $fund,
+            $caption,
+            $header1,
+            $header2,
+            $header3,
+            $description,
         ) {
             $browser->visit($implementation->urlWebshop("/funds/$fund->id"));
             $browser->waitFor('.block.block-markdown table caption');

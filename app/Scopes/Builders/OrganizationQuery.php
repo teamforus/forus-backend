@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
@@ -22,8 +21,8 @@ class OrganizationQuery
         Builder|Relation|Organization $builder,
         string|array $identityAddress,
     ): Builder|Relation|Organization {
-        return $builder->where(static function(Builder $builder) use ($identityAddress) {
-            $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress) {
+        return $builder->where(static function (Builder $builder) use ($identityAddress) {
+            $builder->whereHas('employees', static function (Builder $builder) use ($identityAddress) {
                 $builder->whereIn('identity_address', (array) $identityAddress);
             });
         });
@@ -40,11 +39,11 @@ class OrganizationQuery
         string|array $identityAddress,
         string|array $permissions,
     ): Builder|Relation|Organization {
-        return $builder->where(static function(Builder $builder) use ($identityAddress, $permissions) {
-            $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress, $permissions) {
+        return $builder->where(static function (Builder $builder) use ($identityAddress, $permissions) {
+            $builder->whereHas('employees', static function (Builder $builder) use ($identityAddress, $permissions) {
                 $builder->where('employees.identity_address', $identityAddress);
 
-                $builder->whereHas('roles.permissions', static function(Builder $builder) use ($permissions) {
+                $builder->whereHas('roles.permissions', static function (Builder $builder) use ($permissions) {
                     $builder->whereIn('permissions.key', (array) $permissions);
                 });
             })->orWhere('organizations.identity_address', $identityAddress);
@@ -62,9 +61,9 @@ class OrganizationQuery
         string $identity_address,
         Voucher $voucher,
     ): Builder|Relation|Organization {
-        $query = self::whereHasPermissions($query, $identity_address,'scan_vouchers');
+        $query = self::whereHasPermissions($query, $identity_address, 'scan_vouchers');
 
-        return $query->whereHas('fund_providers', static function(Builder $builder) use ($voucher) {
+        return $query->whereHas('fund_providers', static function (Builder $builder) use ($voucher) {
             if ($voucher->isProductType()) {
                 FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
@@ -91,7 +90,7 @@ class OrganizationQuery
         Builder|Relation|Organization $query,
         Organization $sponsor,
     ): Builder|Relation|Organization {
-        return $query->whereHas('fund_providers.fund', function(Builder $builder) use ($sponsor) {
+        return $query->whereHas('fund_providers.fund', function (Builder $builder) use ($sponsor) {
             $builder->where('organization_id', $sponsor->id);
         });
     }
@@ -105,7 +104,7 @@ class OrganizationQuery
         Builder|Relation|Organization $builder,
         array $postcodes,
     ): Builder|Relation|Organization {
-        return $builder->whereHas('offices', function(Builder $builder) use ($postcodes) {
+        return $builder->whereHas('offices', function (Builder $builder) use ($postcodes) {
             $builder->whereIn('postcode_number', $postcodes);
         });
     }
@@ -119,7 +118,7 @@ class OrganizationQuery
         Builder|Relation|Organization $builder,
         array $businessTypes,
     ): Builder|Relation|Organization {
-        return $builder->whereHas('business_type', function(Builder $builder) use ($businessTypes) {
+        return $builder->whereHas('business_type', function (Builder $builder) use ($businessTypes) {
             $builder->whereIn('id', $businessTypes);
         });
     }
@@ -157,7 +156,7 @@ class OrganizationQuery
         return $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
             $query->where('state', FundProvider::STATE_PENDING);
 
-            $query->whereHas('fund', function(Builder|Fund $builder) use ($fundsBuilder) {
+            $query->whereHas('fund', function (Builder|Fund $builder) use ($fundsBuilder) {
                 $builder->whereIn('id', $fundsBuilder->select('id'));
                 $builder->where(fn (Builder|Fund $builder) => FundQuery::whereActiveFilter($builder));
             });
@@ -266,7 +265,7 @@ class OrganizationQuery
         Builder|Relation|Organization $query,
         string $q = null,
     ): Builder|Relation|Organization {
-        return $query->where(function(Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
             $builder->orWhere('description_text', 'LIKE', "%$q%");
 

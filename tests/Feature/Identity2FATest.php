@@ -18,10 +18,15 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class Identity2FATest extends TestCase
 {
-    use DatabaseTransactions, WithFaker, MakesTestIdentities, MakesTestOrganizations, MakesTestFunds;
+    use DatabaseTransactions;
+    use WithFaker;
+    use MakesTestIdentities;
+    use MakesTestOrganizations;
+    use MakesTestFunds;
 
     /**
      * @return void
@@ -76,7 +81,10 @@ class Identity2FATest extends TestCase
 
         foreach (range(1, $maxAttempts) as $item) {
             $this->setup2FAProvider(
-                $identityProxy, 'authenticator', [], $item === $maxAttempts ? 429 : null
+                $identityProxy,
+                'authenticator',
+                [],
+                $item === $maxAttempts ? 429 : null
             );
         }
 
@@ -205,7 +213,7 @@ class Identity2FATest extends TestCase
         $response = $this->getJson('/api/v1/identity', $apiHeaders);
         $response->assertStatus(401);
         $response->assertExactJson([
-            "error" => "2fa",
+            'error' => '2fa',
         ]);
 
         $this->assertIdentity2FAHasActiveProviders($identityProxy, true, $active_provider_types);
@@ -232,7 +240,7 @@ class Identity2FATest extends TestCase
                 'providers',
                 'provider_types',
                 'active_providers',
-            ]
+            ],
         ]);
 
         if ($required) {
@@ -244,7 +252,7 @@ class Identity2FATest extends TestCase
         $providers = $response->json('data.active_providers');
         $this->assertIsArray($providers);
 
-        $active_keys = array_map(fn($provider) => Arr::get($provider, 'provider_type.type'), $providers);
+        $active_keys = array_map(fn ($provider) => Arr::get($provider, 'provider_type.type'), $providers);
         array_walk($active_provider_types, fn ($key) => $this->assertContains($key, $active_keys));
     }
 
@@ -396,46 +404,7 @@ class Identity2FATest extends TestCase
     }
 
     /**
-     * @param IdentityProxy $identityProxy
-     * @param string $type
-     * @param bool $assertThrottle
-     * @return void
-     */
-    private function authenticateBy2FA(
-        IdentityProxy $identityProxy,
-        string $type,
-        bool $assertThrottle = false
-    ): void {
-        /** @var Identity2FA $identity2FA */
-        $identity2FA = $identityProxy->identity
-            ->identity_2fa_active()
-            ->whereRelation('auth_2fa_provider', 'type', $type)
-            ->first();
-
-        $this->assertNotNull($identity2FA);
-
-        /** @var TestResponse $response */
-        $response = $this->assertNoException(function () use ($identityProxy, $identity2FA) {
-            if ($identity2FA->isTypeAuthenticator()) {
-                $code = $identity2FA->makeAuthenticatorCode();
-            } else {
-                $deactivatedCode = $this->sendCodeToPhone($identity2FA);
-                sleep(1);
-
-                $code = $this->sendCodeToPhone($identity2FA);
-                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
-            }
-
-            return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
-                'code' => $code,
-            ], $this->makeApiHeaders($identityProxy));
-        });
-
-        $assertThrottle ? $response->assertTooManyRequests() : $response->assertStatus(200);
-    }
-
-    /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function sendCodeToPhone(Identity2FA $identity2FA): string
     {
@@ -490,7 +459,6 @@ class Identity2FATest extends TestCase
         return $identity2FA;
     }
 
-
     /**
      * @param IdentityProxy $identityProxy
      * @param Identity2FA $identity2FA
@@ -513,5 +481,44 @@ class Identity2FATest extends TestCase
         }
 
         return $identity2FA->refresh();
+    }
+
+    /**
+     * @param IdentityProxy $identityProxy
+     * @param string $type
+     * @param bool $assertThrottle
+     * @return void
+     */
+    private function authenticateBy2FA(
+        IdentityProxy $identityProxy,
+        string $type,
+        bool $assertThrottle = false
+    ): void {
+        /** @var Identity2FA $identity2FA */
+        $identity2FA = $identityProxy->identity
+            ->identity_2fa_active()
+            ->whereRelation('auth_2fa_provider', 'type', $type)
+            ->first();
+
+        $this->assertNotNull($identity2FA);
+
+        /** @var TestResponse $response */
+        $response = $this->assertNoException(function () use ($identityProxy, $identity2FA) {
+            if ($identity2FA->isTypeAuthenticator()) {
+                $code = $identity2FA->makeAuthenticatorCode();
+            } else {
+                $deactivatedCode = $this->sendCodeToPhone($identity2FA);
+                sleep(1);
+
+                $code = $this->sendCodeToPhone($identity2FA);
+                $this->assertInvalidCode($identity2FA, $deactivatedCode, $this->makeApiHeaders($identityProxy));
+            }
+
+            return $this->postJson("/api/v1/identity/2fa/$identity2FA->uuid/authenticate", [
+                'code' => $code,
+            ], $this->makeApiHeaders($identityProxy));
+        });
+
+        $assertThrottle ? $response->assertTooManyRequests() : $response->assertStatus(200);
     }
 }

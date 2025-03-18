@@ -31,7 +31,8 @@ abstract class BaseFundRequestRule extends BaseRule
     public function __construct(
         protected ?Fund $fund,
         protected ?BaseFormRequest $request = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param FundCriterion $criterion

@@ -9,7 +9,9 @@ use Illuminate\Queue\SerializesModels;
 
 abstract class BaseFundRequestClarificationEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     protected FundRequestClarification $fundRequestClarification;
 
@@ -24,7 +26,7 @@ abstract class BaseFundRequestClarificationEvent
     }
 
     /**
-     * Get the fund request
+     * Get the fund request.
      *
      * @return FundRequestClarification
      */

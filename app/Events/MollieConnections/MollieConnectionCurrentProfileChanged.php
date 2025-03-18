@@ -2,4 +2,6 @@
 
 namespace App\Events\MollieConnections;
 
-class MollieConnectionCurrentProfileChanged extends BaseMollieConnectionEvent {}
+class MollieConnectionCurrentProfileChanged extends BaseMollieConnectionEvent
+{
+}

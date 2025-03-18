@@ -23,20 +23,6 @@ use Illuminate\Events\Dispatcher;
 class FundProviderSubscriber
 {
     /**
-     * @param FundProvider $fundProvider
-     * @return array
-     */
-    private function getFundProviderLogModels(FundProvider $fundProvider): array
-    {
-        return [
-            'implementation' => $fundProvider->fund->getImplementation(),
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ];
-    }
-
-    /**
      * @param FundProviderStateUpdated $event
      * @noinspection PhpUnused
      */
@@ -162,7 +148,7 @@ class FundProviderSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused
@@ -177,5 +163,19 @@ class FundProviderSubscriber
         $events->listen(FundProviderRevokedBudget::class, "$class@onRevokedBudget");
         $events->listen(FundProviderRevokedProducts::class, "$class@onRevokedProducts");
         $events->listen(FundProviderSponsorChatMessage::class, "$class@onSponsorMessage");
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @return array
+     */
+    private function getFundProviderLogModels(FundProvider $fundProvider): array
+    {
+        return [
+            'implementation' => $fundProvider->fund->getImplementation(),
+            'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
+            'fund' => $fundProvider->fund,
+        ];
     }
 }

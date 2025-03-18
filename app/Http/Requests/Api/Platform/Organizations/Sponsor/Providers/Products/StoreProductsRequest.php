@@ -4,4 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\Product
 
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 
-class StoreProductsRequest extends StoreProductRequest {}
+class StoreProductsRequest extends StoreProductRequest
+{
+}

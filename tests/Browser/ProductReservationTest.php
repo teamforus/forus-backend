@@ -14,18 +14,19 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
-use Illuminate\Support\Facades\Cache;
-use Tests\Traits\MakesProductReservations;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Throwable;
 
 class ProductReservationTest extends DuskTestCase
 {
@@ -42,8 +43,8 @@ class ProductReservationTest extends DuskTestCase
     protected ?Identity $identity;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testProductReservationSimple(): void
     {
@@ -68,8 +69,8 @@ class ProductReservationTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testProductReservationRequiredAddress(): void
     {
@@ -89,7 +90,7 @@ class ProductReservationTest extends DuskTestCase
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
-            $addressData =  [
+            $addressData = [
                 'city' => 'Kraigmouth',
                 'street' => 'Hodkiewicz Parks',
                 'house_nr' => '8',
@@ -142,8 +143,8 @@ class ProductReservationTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testReservationState(): void
     {
@@ -212,7 +213,7 @@ class ProductReservationTest extends DuskTestCase
         $funds = Fund::query()
             ->where('id', $fund->id)
             ->get()
-            ->filter(fn(Fund $fund) => FundProviderQuery::whereApprovedForFundsFilter(
+            ->filter(fn (Fund $fund) => FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(),
                 $fund->id,
             )->exists());
@@ -222,10 +223,36 @@ class ProductReservationTest extends DuskTestCase
     }
 
     /**
+     * @param Identity $identity
+     * @param Product $product
+     * @param Fund $fund
+     * @param array $data
+     * @return ProductReservation
+     */
+    protected function findProductReservation(
+        Identity $identity,
+        Product $product,
+        Fund $fund,
+        array $data,
+    ): ProductReservation {
+        // Assert reservation is created
+        $productReservation = ProductReservation::query()
+            ->where($data)
+            ->whereRelation('voucher.identity', 'address', $identity->address)
+            ->whereRelation('voucher.fund', 'id', $fund->id)
+            ->whereRelation('product', 'id', $product->id)
+            ->first();
+
+        self::assertNotEmpty($productReservation);
+
+        return $productReservation;
+    }
+
+    /**
      * @param Browser $browser
      * @param ProductReservation $reservation
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function checkReservationState(Browser $browser, ProductReservation $reservation): void
     {
@@ -240,8 +267,8 @@ class ProductReservationTest extends DuskTestCase
      * @param Identity $identity
      * @param array|null $userData
      * @param array|null $addressData
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     private function assertProductCanBeReservedByIdentity(
         Fund $fund,
@@ -288,8 +315,8 @@ class ProductReservationTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function openFirstProductAvailableForVoucher(Browser $browser): void
     {
@@ -302,8 +329,8 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param Identity $identity
      * @param Fund $fund
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function loginAndGoToFundVoucher(Browser $browser, Identity $identity, Fund $fund): void
     {
@@ -319,8 +346,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function openReservationModal(Browser $browser, Fund $fund): void
     {
@@ -335,14 +362,14 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function skipReservationModalEmailAndSelectVoucher(Browser $browser, Identity $identity): void
     {
         $browser->waitFor('@modalProductReserve');
 
-        $browser->within('@modalProductReserve', function(Browser $browser) use ($identity) {
+        $browser->within('@modalProductReserve', function (Browser $browser) use ($identity) {
             if (!$identity->email) {
                 $browser->waitFor('@reserveSkipEmailStep');
                 $browser->click('@reserveSkipEmailStep');
@@ -357,8 +384,8 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param string $firstName
      * @param string $lastName
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function fillReservationModalNameAndLastName(
         Browser $browser,
@@ -382,7 +409,8 @@ class ProductReservationTest extends DuskTestCase
      * @param array $data
      * @return string
      */
-    private function makeAddressString(array $data): string  {
+    private function makeAddressString(array $data): string
+    {
         return implode(', ', array_filter([
             $data['city'],
             $data['street'],
@@ -395,10 +423,11 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param array $data
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
-    private function fillReservationModalAddress(Browser $browser, array $data): void {
+    private function fillReservationModalAddress(Browser $browser, array $data): void
+    {
         $browser->waitFor('@productReserveAddress', 100000);
 
         $browser->within('@productReserveAddress', function (Browser $browser) use ($data) {
@@ -411,6 +440,7 @@ class ProductReservationTest extends DuskTestCase
                 $browser->waitFor('@productReserveAddress');
                 $browser->assertMissing('@btnSkip');
                 $browser->press('@btnSubmit');
+
                 return;
             }
 
@@ -491,6 +521,7 @@ class ProductReservationTest extends DuskTestCase
 
             if ($skip) {
                 $browser->press('@btnSkip');
+
                 return;
             }
 
@@ -500,8 +531,8 @@ class ProductReservationTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function fillReservationModalNote(Browser $browser): void
     {
@@ -518,8 +549,8 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param string $firstName
      * @param array|null $address
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function assertReservationModalConfirmationDetails(
         Browser $browser,
@@ -543,22 +574,22 @@ class ProductReservationTest extends DuskTestCase
             $browser->waitForTextIn('@overviewValueStreet', 'Leeg');
             $browser->waitForTextIn('@overviewValueHouseNr', 'Leeg');
             $browser->waitForTextIn('@overviewValueHouseNrAddition', 'Leeg');
-            $browser->waitForTextIn('@overviewValuePostalCode',  'Leeg');
-            $browser->waitForTextIn('@overviewValueCity',  'Leeg');
+            $browser->waitForTextIn('@overviewValuePostalCode', 'Leeg');
+            $browser->waitForTextIn('@overviewValueCity', 'Leeg');
         }
     }
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function submitReservationModal(Browser $browser): void
     {
         $browser->press('@btnConfirmSubmit');
 
         $browser->waitFor('@productReserveSuccess');
-        $browser->within('@productReserveSuccess', fn(Browser $el) => $el->click('@btnReservationFinish'));
+        $browser->within('@productReserveSuccess', fn (Browser $el) => $el->click('@btnReservationFinish'));
 
         // Assert redirected to reservations list
         $browser->waitFor('@reservationsTitle');
@@ -578,36 +609,10 @@ class ProductReservationTest extends DuskTestCase
     }
 
     /**
-     * @param Identity $identity
-     * @param Product $product
-     * @param Fund $fund
-     * @param array $data
-     * @return ProductReservation
-     */
-    protected function findProductReservation(
-        Identity $identity,
-        Product $product,
-        Fund $fund,
-        array $data,
-    ): ProductReservation {
-        // Assert reservation is created
-        $productReservation = ProductReservation::query()
-            ->where($data)
-            ->whereRelation('voucher.identity', 'address', $identity->address)
-            ->whereRelation('voucher.fund', 'id', $fund->id)
-            ->whereRelation('product', 'id', $product->id)
-            ->first();
-
-        self::assertNotEmpty($productReservation);
-
-        return $productReservation;
-    }
-
-    /**
      * @param Browser $browser
      * @param ProductReservation $reservation
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function cancelReservation(Browser $browser, ProductReservation $reservation): void
     {
@@ -615,10 +620,10 @@ class ProductReservationTest extends DuskTestCase
         $this->assertReservationElementExists($browser, $reservation);
 
         // cancel reservation
-        $browser->within("@reservationItem$reservation->id", fn(Browser $el) => $el->press('@btnCancelReservation'));
+        $browser->within("@reservationItem$reservation->id", fn (Browser $el) => $el->press('@btnCancelReservation'));
 
         $browser->waitFor('@modalProductReserveCancel');
-        $browser->within('@modalProductReserveCancel', fn(Browser $el) => $el->press('@btnSubmit'));
+        $browser->within('@modalProductReserveCancel', fn (Browser $el) => $el->press('@btnSubmit'));
 
         $browser->waitUntilMissingText($reservation->code);
         $browser->assertMissing("@reservationItem$reservation->id");
@@ -630,8 +635,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $voucherTitle
-     * @return RemoteWebElement|null
      * @throws TimeOutException
+     * @return RemoteWebElement|null
      */
     private function findVoucherElement(Browser $browser, string $voucherTitle): ?RemoteWebElement
     {
@@ -653,8 +658,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $fundTitle
-     * @return RemoteWebElement|null
      * @throws TimeOutException
+     * @return RemoteWebElement|null
      */
     private function findFundReservationOptionElement(Browser $browser, string $fundTitle): ?RemoteWebElement
     {
@@ -677,14 +682,13 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param ProductReservation $reservation
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function assertReservationElementExists(
-        Browser            $browser,
+        Browser $browser,
         ProductReservation $reservation,
-    ): void
-    {
+    ): void {
         $selector = "@reservationItem$reservation->id";
         $browser->waitFor($selector);
 
@@ -705,8 +709,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function goToVouchersPage(Browser $browser, Identity $identity): void
     {
@@ -719,8 +723,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function goToVoucherPage(Browser $browser, Fund $fund): void
     {

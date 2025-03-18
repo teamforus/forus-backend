@@ -2,4 +2,6 @@
 
 namespace App\Events\Funds;
 
-class FundExpiringEvent extends BaseFundEvent {}
+class FundExpiringEvent extends BaseFundEvent
+{
+}

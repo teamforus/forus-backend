@@ -30,9 +30,9 @@ class StoreFundUnsubscribeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'note'              => 'nullable|string|max:2000',
-            'unsubscribe_at'    => 'required|date_format:Y-m-d|after:today',
-            'fund_provider_id'  => $this->fundProviderIdRule(),
+            'note' => 'nullable|string|max:2000',
+            'unsubscribe_at' => 'required|date_format:Y-m-d|after:today',
+            'fund_provider_id' => $this->fundProviderIdRule(),
         ];
     }
 

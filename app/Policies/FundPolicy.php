@@ -7,8 +7,10 @@ use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use Exception;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
+use Throwable;
 
 class FundPolicy
 {
@@ -54,7 +56,7 @@ class FundPolicy
         }
 
         return $fund->public || $fund->organization->identityCan($identity, [
-            Permission::MANAGE_FUNDS, 'view_finances', 'view_funds'
+            Permission::MANAGE_FUNDS, 'view_finances', 'view_funds',
         ], false);
     }
 
@@ -156,11 +158,11 @@ class FundPolicy
         }
 
         if (!$bankConnection || ($bankConnection->bank->isBunq() && !$bankConnection->useContext())) {
-            return $this->deny("Bank connection invalid or expired.", 403);
+            return $this->deny('Bank connection invalid or expired.', 403);
         }
 
         if ($fund->isExternal()) {
-            return $this->deny("Top-up not allowed for external funds", 403);
+            return $this->deny('Top-up not allowed for external funds', 403);
         }
 
         return $hasPermission;
@@ -275,8 +277,8 @@ class FundPolicy
                 $response = $fund->getBackofficeApi()->partnerBsn($identity->bsn);
 
                 if (!$response->getLog()->success()) {
-                    throw new \Exception(implode("", [
-                        "Backoffice partner check response error: ",
+                    throw new Exception(implode('', [
+                        'Backoffice partner check response error: ',
                         "scope: $logScope, fund_id: $fund->id, identity_address: $identity->address",
                     ]));
                 }
@@ -287,8 +289,9 @@ class FundPolicy
                 if ($partner && $fund->identityHasActiveVoucher($partner)) {
                     return $this->deny(trans('fund.taken_by_partner'));
                 }
-            } catch (\Throwable $e) {
-                logger()->error("FundPolicy@apply: " . $e->getMessage());
+            } catch (Throwable $e) {
+                logger()->error('FundPolicy@apply: ' . $e->getMessage());
+
                 return $this->deny(trans('fund.backoffice_error'));
             }
         }

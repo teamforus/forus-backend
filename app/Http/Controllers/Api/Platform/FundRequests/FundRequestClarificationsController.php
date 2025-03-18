@@ -17,8 +17,8 @@ class FundRequestClarificationsController extends Controller
      * @param UpdateFundRequestClarificationRequest $request
      * @param FundRequest $fundRequest
      * @param FundRequestClarification $requestClarification
-     * @return FundRequestClarificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundRequestClarificationResource
      */
     public function update(
         UpdateFundRequestClarificationRequest $request,

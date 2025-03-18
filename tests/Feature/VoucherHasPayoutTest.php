@@ -10,9 +10,10 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
-use Tests\Traits\TestsReservations;
 use Tests\Traits\MakesTestBankConnections;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\TestsReservations;
+use Throwable;
 
 class VoucherHasPayoutTest extends TestCase
 {
@@ -23,8 +24,8 @@ class VoucherHasPayoutTest extends TestCase
     use MakesTestBankConnections;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherHasPayoutsWithReservation(): void
     {
@@ -70,8 +71,8 @@ class VoucherHasPayoutTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherHasPayoutsWithTransaction(): void
     {

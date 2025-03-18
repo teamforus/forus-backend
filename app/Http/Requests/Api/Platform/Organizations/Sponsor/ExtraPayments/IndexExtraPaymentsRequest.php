@@ -35,7 +35,7 @@ class IndexExtraPaymentsRequest extends BaseFormRequest
             ...$this->sortableResourceRules(100, [
                 'id', 'price', 'amount', 'method', 'paid_at', 'fund_name',
                 'product_name', 'provider_name',
-            ])
+            ]),
         ];
     }
 }

@@ -45,6 +45,32 @@ class SyncPreCheckRequest extends BaseFormRequest
     /**
      * @return string[]
      */
+    public function attributes(): array
+    {
+        return [
+            'pre_checks.*.title' => 'title',
+            'pre_checks.*.title_short' => 'short title',
+            'pre_checks.*.description' => 'description',
+            'pre_checks.*.record_types.*.title' => 'title',
+            'pre_checks.*.record_types.*.title_short' => 'short title',
+            'pre_checks.*.record_types.*.record_type_key' => 'key',
+            'exclusion_remove.*' => 'fonds',
+            'exclusion.fund_id' => 'fonds',
+            'exclusion.note' => 'uitleg',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            ...parent::messages(),
+            'exclusion.note.required_if' => trans('validation.required'),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
     private function preCheckRules(): array
     {
         return [
@@ -139,32 +165,6 @@ class SyncPreCheckRequest extends BaseFormRequest
                 'exists:funds,id',
                 Rule::in($this->organization->funds->pluck('id')->toArray()),
             ],
-        ];
-    }
-
-    /**
-     * @return string[]
-     */
-    public function attributes(): array
-    {
-        return [
-            'pre_checks.*.title' => 'title',
-            'pre_checks.*.title_short' => 'short title',
-            'pre_checks.*.description' => 'description',
-            'pre_checks.*.record_types.*.title' => 'title',
-            'pre_checks.*.record_types.*.title_short' => 'short title',
-            'pre_checks.*.record_types.*.record_type_key' => 'key',
-            'exclusion_remove.*' => 'fonds',
-            'exclusion.fund_id' => 'fonds',
-            'exclusion.note' => 'uitleg',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            ...parent::messages(),
-            'exclusion.note.required_if' => trans('validation.required'),
         ];
     }
 }

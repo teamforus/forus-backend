@@ -1,11 +1,10 @@
 <?php
 
-use App\Models\Role;
 use App\Models\Organization;
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *

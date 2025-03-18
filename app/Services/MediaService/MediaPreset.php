@@ -4,6 +4,7 @@ namespace App\Services\MediaService;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset as PresetModel;
+use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
 
 abstract class MediaPreset
@@ -24,46 +25,25 @@ abstract class MediaPreset
         public string $name,
         public ?string $format = 'jpg',
         public int $quality = 75,
-    ) {}
-
-    /**
-     * Returns a unique string that is free to be used as media name
-     *
-     * @param Filesystem $storage
-     * @param string $path
-     * @param string $ext
-     * @return string
-     * @throws \Exception
-     */
-    protected function makeUniqueFileNme(
-        Filesystem $storage,
-        string $path,
-        string $ext
-    ): string {
-        do {
-            $name = bin2hex(random_bytes(64 / 2));
-        } while($storage->exists(sprintf('%s/%s.%s', $path, $name, $ext)));
-
-        return $name;
+    ) {
     }
 
     /**
      * @param Filesystem $storage
      * @param string $storagePath
      * @param string|null $extension
+     * @throws Exception
      * @return string
-     * @throws \Exception
      */
     public function makeUniquePath(
         Filesystem $storage,
         string $storagePath,
         string $extension = null
-    ): string
-    {
+    ): string {
         $extension = $extension ?: $this->format;
 
         return str_start(sprintf(
-            "%s/%s.%s",
+            '%s/%s.%s',
             $storagePath,
             $this->makeUniqueFileNme($storage, $storagePath, $extension),
             $extension
@@ -97,4 +77,25 @@ abstract class MediaPreset
         PresetModel $presetModel,
         Media $media,
     ): mixed;
+
+    /**
+     * Returns a unique string that is free to be used as media name.
+     *
+     * @param Filesystem $storage
+     * @param string $path
+     * @param string $ext
+     * @throws Exception
+     * @return string
+     */
+    protected function makeUniqueFileNme(
+        Filesystem $storage,
+        string $path,
+        string $ext
+    ): string {
+        do {
+            $name = bin2hex(random_bytes(64 / 2));
+        } while ($storage->exists(sprintf('%s/%s.%s', $path, $name, $ext)));
+
+        return $name;
+    }
 }

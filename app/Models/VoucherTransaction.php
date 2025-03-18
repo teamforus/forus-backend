@@ -23,7 +23,7 @@ use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Log;
 
 /**
- * App\Models\VoucherTransaction
+ * App\Models\VoucherTransaction.
  *
  * @property int $id
  * @property string|null $uid
@@ -135,9 +135,8 @@ use Illuminate\Support\Facades\Log;
  */
 class VoucherTransaction extends BaseModel
 {
-    use HasLogs, SoftDeletes;
-
-    protected $perPage = 25;
+    use HasLogs;
+    use SoftDeletes;
 
     public const float TRANSACTION_COST_OLD = .11;
 
@@ -191,6 +190,8 @@ class VoucherTransaction extends BaseModel
         'provider_name', 'product_name', 'target', 'uid', 'date_non_cancelable', 'bulk_state', 'bulk_id',
         'payment_type', 'employee_email', 'relation', 'transfer_at', 'target_iban', 'description',
     ];
+
+    protected $perPage = 25;
 
     /**
      * The attributes that are mass assignable.
@@ -481,55 +482,8 @@ class VoucherTransaction extends BaseModel
         ]), self::query());
 
         return $builder->query()->where([
-            'voucher_id' => $voucher->id
+            'voucher_id' => $voucher->id,
         ]);
-    }
-
-    /**
-     * @param Builder $builder
-     * @param array $fields
-     * @return SupportCollection
-     */
-    private static function exportTransform(Builder $builder, array $fields): SupportCollection
-    {
-        $fieldLabels = array_pluck(array_merge(
-            VoucherTransactionsSponsorExport::getExportFields(),
-            VoucherTransactionsProviderExport::getExportFields()
-        ), 'name', 'key');
-
-        $data = $builder->with([
-            'voucher.fund', 'provider', 'product',
-        ])->get();
-
-        $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
-            'id' => $transaction->id,
-            'amount' => currency_format($transaction->amount),
-            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
-            'method' => $transaction->product_reservation?->amount_extra > 0
-                ? 'iDeal + Tegoed'
-                : 'Tegoed',
-            'branch_name' => $transaction->branch_name,
-            'branch_id' => $transaction->branch_id,
-            'branch_number' => $transaction->branch_number,
-            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
-                currency_format($transaction->product_reservation?->amount_extra)
-                : '',
-            'date_transaction' => format_datetime_locale($transaction->created_at),
-            'date_payment' => format_datetime_locale($transaction->payment_time),
-            'fund_name' => $transaction->voucher->fund->name,
-            'product_id' => $transaction->product?->id,
-            'product_name' => $transaction->product?->name,
-            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
-            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
-            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
-            'bulk_status_locale' => $transaction->bulk_status_locale,
-        ], $fields))->values();
-
-        return $data->map(function($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $item[$key],
-            ]), []);
-        });
     }
 
     /**
@@ -546,7 +500,7 @@ class VoucherTransaction extends BaseModel
             $daysBefore = $this->daysBeforeTransaction() ?: 1;
             $shouldDelayTransaction = $this->transfer_at && $this->transfer_at->isAfter(now());
 
-            return implode(" ", [
+            return implode(' ', [
                 'In de wachtrij',
                 $shouldDelayTransaction ? sprintf('(%s dagen)', $daysBefore) : '',
             ]);
@@ -687,7 +641,7 @@ class VoucherTransaction extends BaseModel
     {
         return $this->updateModel([
             'attempts' => 50,
-            'last_attempt_at' => now()
+            'last_attempt_at' => now(),
         ]);
     }
 
@@ -700,15 +654,16 @@ class VoucherTransaction extends BaseModel
         if ($this->targetIsIban()) {
             return trans('bunq.transaction.from_fund', [
                 'fund_name' => $this->voucher->fund->name,
-                'transaction_id' => $this->id
+                'transaction_id' => $this->id,
             ]);
         }
 
         if (!$this->provider) {
             Log::channel('bng')->error("Unexpected transaction without provider found $this->id.");
+
             return trans('bunq.transaction.from_fund', [
                 'fund_name' => $this->voucher->fund->name,
-                'transaction_id' => $this->id
+                'transaction_id' => $this->id,
             ]);
         }
 
@@ -722,6 +677,8 @@ class VoucherTransaction extends BaseModel
             $this->provider->bank_branch_id ? $this->employee?->office?->branch_id : null,
             $this->provider->bank_branch_name ? $this->employee?->office?->branch_name : null,
             $this->provider->bank_fund_name ? $this->voucher?->fund?->name : null,
+            $this->provider->bank_reservation_first_name ? $this->product_reservation?->first_name : null,
+            $this->provider->bank_reservation_last_name ? $this->product_reservation?->last_name : null,
             $this->provider->bank_note ? $this->notes_provider->first()?->message : null,
         ])));
 
@@ -729,14 +686,14 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * Set all transactions with zero amount as paid when is payment time (skip bank payment)
+     * Set all transactions with zero amount as paid when is payment time (skip bank payment).
      * @return void
      */
     public static function processZeroAmount(): void
     {
         VoucherTransactionQuery::whereReadyForPayoutAndAmountIsZero(static::query())->update([
-            'state'         => static::STATE_SUCCESS,
-            'payment_time'  => now(),
+            'state' => static::STATE_SUCCESS,
+            'payment_time' => now(),
         ]);
     }
 
@@ -816,8 +773,8 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @return int
      * @throws \Random\RandomException
+     * @return int
      */
     public static function makeBatchUploadId(): int
     {
@@ -909,9 +866,23 @@ class VoucherTransaction extends BaseModel
         $this->log(
             event: self::EVENT_TRANSFER_DELAY_SKIPPED,
             models: $this->getLogModels($employee),
-            identity_address: $employee->identity_address);
+            identity_address: $employee->identity_address
+        );
 
         return $this;
+    }
+
+    /**
+     * @param string $type
+     * @param string $value
+     * @return PayoutRelation
+     */
+    public function addPayoutRelation(string $type, string $value): PayoutRelation
+    {
+        return $this->payout_relations()->create([
+            'type' => $type,
+            'value' => $value,
+        ]);
     }
 
     /**
@@ -926,15 +897,49 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @param string $type
-     * @param string $value
-     * @return PayoutRelation
+     * @param Builder $builder
+     * @param array $fields
+     * @return SupportCollection
      */
-    public function addPayoutRelation(string $type, string $value): PayoutRelation
+    private static function exportTransform(Builder $builder, array $fields): SupportCollection
     {
-        return $this->payout_relations()->create([
-            'type' => $type,
-            'value' => $value,
-        ]);
+        $fieldLabels = array_pluck(array_merge(
+            VoucherTransactionsSponsorExport::getExportFields(),
+            VoucherTransactionsProviderExport::getExportFields()
+        ), 'name', 'key');
+
+        $data = $builder->with([
+            'voucher.fund', 'provider', 'product',
+        ])->get();
+
+        $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
+            'id' => $transaction->id,
+            'amount' => currency_format($transaction->amount),
+            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
+            'method' => $transaction->product_reservation?->amount_extra > 0
+                ? 'iDeal + Tegoed'
+                : 'Tegoed',
+            'branch_name' => $transaction->branch_name,
+            'branch_id' => $transaction->branch_id,
+            'branch_number' => $transaction->branch_number,
+            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
+                currency_format($transaction->product_reservation?->amount_extra)
+                : '',
+            'date_transaction' => format_datetime_locale($transaction->created_at),
+            'date_payment' => format_datetime_locale($transaction->payment_time),
+            'fund_name' => $transaction->voucher->fund->name,
+            'product_id' => $transaction->product?->id,
+            'product_name' => $transaction->product?->name,
+            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
+            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
+            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
+            'bulk_status_locale' => $transaction->bulk_status_locale,
+        ], $fields))->values();
+
+        return $data->map(function ($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
+                $fieldLabels[$key] => $item[$key],
+            ]), []);
+        });
     }
 }

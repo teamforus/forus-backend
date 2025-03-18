@@ -5,7 +5,7 @@ namespace App\Services\Forus\Session\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\Forus\Session\Models\SessionRequest
+ * App\Services\Forus\Session\Models\SessionRequest.
  *
  * @property int $id
  * @property int $session_id

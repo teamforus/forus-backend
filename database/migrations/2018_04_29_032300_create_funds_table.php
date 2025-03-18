@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -17,13 +16,15 @@ return new class extends Migration
             $table->increments('id');
             $table->integer('organization_id')->unsigned();
             $table->string('name', 255);
-            $table->string('state', 20)->default("active");
+            $table->string('state', 20)->default('active');
             $table->timestamp('start_date');
             $table->timestamp('end_date');
             $table->timestamps();
 
-            $table->foreign('organization_id'
-            )->references('id')->on('organizations')->onDelete('cascade');
+            $table->foreign('organization_id')
+                ->references('id')
+                ->on('organizations')
+                ->onDelete('cascade');
         });
     }
 

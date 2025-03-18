@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Voucher;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,12 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vouchers', function(Blueprint $table) {
+        Schema::table('vouchers', function (Blueprint $table) {
             $table->boolean('returnable')->default(true)->after('amount');
         });
 
         Voucher::whereNull('parent_id')->update([
-            'returnable' => false
+            'returnable' => false,
         ]);
     }
 
@@ -30,7 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('vouchers', function(Blueprint $table) {
+        Schema::table('vouchers', function (Blueprint $table) {
             $table->dropColumn('returnable');
         });
     }

@@ -40,7 +40,7 @@ return [
             'payment_method' => [
                 'id' => 'ideal',
                 'description' => 'iDEAL',
-                'status' => 'activated'
+                'status' => 'activated',
             ],
 
             'organization_id' => 1,

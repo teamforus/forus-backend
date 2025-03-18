@@ -13,9 +13,9 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
-use Tests\TestCases\SponsorFinancialStatisticsTestCases;
 use Tests\CreatesApplication;
 use Tests\TestCase;
+use Tests\TestCases\SponsorFinancialStatisticsTestCases;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizationOffices;
@@ -93,57 +93,6 @@ class SponsorFinancialStatisticsTest extends TestCase
     }
 
     /**
-     * @param Organization $organization
-     * @param array $testCase
-     * @return void
-     */
-    private function createFundsAndVouchers(Organization $organization, array $testCase): void
-    {
-        foreach ($testCase['funds'] as $fundCases) {
-            $this->travelTo($testCase['date']);
-
-            $fund = $this->createFundAndTopUpBudget($organization, 40000, [
-                'name' => $fundCases['name']
-            ]);
-
-            $this->mapFunds = [
-                $fund->name => $fund->id,
-                ...$this->mapFunds,
-            ];
-
-            if ($fundCases['closed'] ?? false) {
-                $fund->update(['state' => Fund::STATE_CLOSED]);
-            }
-
-            $this->travelTo($fundCases['date']);
-            $this->makeVouchersWithTransactions($fund, $fundCases['vouchers']);
-        }
-    }
-
-    /**
-     * @param Organization $organization
-     * @param float|int $topUpAmount
-     * @param array $fundData
-     * @return Fund
-     */
-    private function createFundAndTopUpBudget(
-        Organization $organization,
-        float|int $topUpAmount,
-        array $fundData = [],
-    ): Fund {
-        $fund = $this->makeTestFund($organization, [
-            'start_date' => now()->startOfYear(),
-            'end_date' => now()->endOfYear(),
-            ...$fundData,
-        ]);
-
-        $fund->top_ups()->forceDelete();
-        $fund->getOrCreateTopUp()->transactions()->create(['amount' => $topUpAmount]);
-
-        return $fund;
-    }
-
-    /**
      * @param Fund $fund
      * @param array $vouchersArr
      * @return void
@@ -166,7 +115,7 @@ class SponsorFinancialStatisticsTest extends TestCase
                 if (!$category) {
                     /** @var ProductCategory $baseCategory */
                     $baseCategory = ProductCategory::firstOrCreate([
-                        'key' => "base_{$item['category']}"
+                        'key' => "base_{$item['category']}",
                     ]);
 
                     $category = $baseCategory->descendants()->create([
@@ -210,14 +159,11 @@ class SponsorFinancialStatisticsTest extends TestCase
 
                 if (!$officeExists) {
                     $this->makeOrganizationOffice($provider, [
-                        'postcode_number' => $item['provider_office_postcode_number']
+                        'postcode_number' => $item['provider_office_postcode_number'],
                     ]);
                 }
 
-                $product = $this->makeTestProduct($provider, [
-                    'price' => $item['product_price'],
-                    'product_category_id' => $category->id,
-                ]);
+                $product = $this->makeTestProduct($provider, $item['product_price'], $category->id);
 
                 $this->addProductFundToFund($fund, $product, false);
                 $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
@@ -236,6 +182,57 @@ class SponsorFinancialStatisticsTest extends TestCase
                 $voucher->makeTransaction($params)->setPaid(null, now());
             }
         }
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $testCase
+     * @return void
+     */
+    private function createFundsAndVouchers(Organization $organization, array $testCase): void
+    {
+        foreach ($testCase['funds'] as $fundCases) {
+            $this->travelTo($testCase['date']);
+
+            $fund = $this->createFundAndTopUpBudget($organization, 40000, [
+                'name' => $fundCases['name'],
+            ]);
+
+            $this->mapFunds = [
+                $fund->name => $fund->id,
+                ...$this->mapFunds,
+            ];
+
+            if ($fundCases['closed'] ?? false) {
+                $fund->update(['state' => Fund::STATE_CLOSED]);
+            }
+
+            $this->travelTo($fundCases['date']);
+            $this->makeVouchersWithTransactions($fund, $fundCases['vouchers']);
+        }
+    }
+
+    /**
+     * @param Organization $organization
+     * @param float|int $topUpAmount
+     * @param array $fundData
+     * @return Fund
+     */
+    private function createFundAndTopUpBudget(
+        Organization $organization,
+        float|int $topUpAmount,
+        array $fundData = [],
+    ): Fund {
+        $fund = $this->makeTestFund($organization, [
+            'start_date' => now()->startOfYear(),
+            'end_date' => now()->endOfYear(),
+            ...$fundData,
+        ]);
+
+        $fund->top_ups()->forceDelete();
+        $fund->getOrCreateTopUp()->transactions()->create(['amount' => $topUpAmount]);
+
+        return $fund;
     }
 
     /**
@@ -369,8 +366,8 @@ class SponsorFinancialStatisticsTest extends TestCase
     private function getAssertionDateBetween(Carbon $from, Carbon $to, array $dates): ?Carbon
     {
         return collect($dates)
-            ->map(fn(string $date) => Carbon::createFromFormat('Y-m-d', $date))
-            ->first(fn(Carbon $date) => $date->between($from, $to));
+            ->map(fn (string $date) => Carbon::createFromFormat('Y-m-d', $date))
+            ->first(fn (Carbon $date) => $date->between($from, $to));
     }
 
     /**
@@ -489,7 +486,7 @@ class SponsorFinancialStatisticsTest extends TestCase
 
         $response = $this->getJson(
             sprintf(
-                "/api/v1/platform/organizations/%s/sponsor/finances?type=%s&type_value=%s&filters=1",
+                '/api/v1/platform/organizations/%s/sponsor/finances?type=%s&type_value=%s&filters=1',
                 $organization->id,
                 $testCase['type'],
                 $assert['date']
@@ -503,7 +500,7 @@ class SponsorFinancialStatisticsTest extends TestCase
         $assertCategories = $assert['filters']['categories'];
 
         foreach ($assertCategories as $key => $count) {
-            $found = Arr::first($productCategories, fn($item) => $item['id'] === $this->mapCategories[$key]);
+            $found = Arr::first($productCategories, fn ($item) => $item['id'] === $this->mapCategories[$key]);
             $this->assertNotNull($found, "Not found product category $key");
             $message = "Filtered product category $key transactions count not equals";
             $this->assertEquals($count, $found['transactions'], $message);
@@ -513,7 +510,7 @@ class SponsorFinancialStatisticsTest extends TestCase
         $assertBusinessTypes = $assert['filters']['business_types'];
 
         foreach ($assertBusinessTypes as $key => $count) {
-            $found = Arr::first($businessTypes, fn($item) => $item['id'] === $this->mapBusinessTypes[$key]);
+            $found = Arr::first($businessTypes, fn ($item) => $item['id'] === $this->mapBusinessTypes[$key]);
             $this->assertNotNull($found, "Not found business type $key");
             $message = "Filtered business type $key transactions count not equals";
             $this->assertEquals($count, $found['transactions'], $message);
@@ -523,7 +520,7 @@ class SponsorFinancialStatisticsTest extends TestCase
         $assertPostCodes = $assert['filters']['postcodes'];
 
         foreach ($assertPostCodes as $key => $count) {
-            $found = Arr::first($postCodes, fn($item) => (string)$item['id'] === (string)$key);
+            $found = Arr::first($postCodes, fn ($item) => (string) $item['id'] === (string) $key);
             $this->assertNotNull($found, "Not found postcode $key");
             $message = "Filtered postcode $key transactions count not equals";
             $this->assertEquals($count, $found['transactions'], $message);
@@ -533,7 +530,7 @@ class SponsorFinancialStatisticsTest extends TestCase
         $assertFunds = $assert['filters']['funds'];
 
         foreach ($assertFunds as $key => $count) {
-            $found = Arr::first($funds, fn($item) => $item['name'] === $key);
+            $found = Arr::first($funds, fn ($item) => $item['name'] === $key);
             $this->assertNotNull($found, "Not found fund $key");
             $message = "Filtered funds $key transactions count not equals";
             $this->assertEquals($count, $found['transactions'], $message);
@@ -547,19 +544,22 @@ class SponsorFinancialStatisticsTest extends TestCase
     private function mapFilterParams(array $params): array
     {
         $data = [
-            'postcodes' => $params['postcodes']
+            'postcodes' => $params['postcodes'],
         ];
 
         $data['product_category_ids'] = array_map(
-            fn($item) => $this->mapCategories[$item], $params['product_categories']
+            fn ($item) => $this->mapCategories[$item],
+            $params['product_categories']
         );
 
         $data['business_type_ids'] = array_map(
-            fn($item) => $this->mapBusinessTypes[$item], $params['business_types']
+            fn ($item) => $this->mapBusinessTypes[$item],
+            $params['business_types']
         );
 
         $data['fund_ids'] = array_map(
-            fn($item) => $this->mapFunds[$item], $params['funds']
+            fn ($item) => $this->mapFunds[$item],
+            $params['funds']
         );
 
         return $data;

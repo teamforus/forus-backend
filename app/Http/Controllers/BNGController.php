@@ -43,6 +43,7 @@ class BNGController extends Controller
             $connection->setActive();
         } catch (Throwable $e) {
             $connection->logBngError('Connection redirect', $e);
+
             return redirect($connection->dashboardDetailsUrl(null, 'unknown'));
         }
 

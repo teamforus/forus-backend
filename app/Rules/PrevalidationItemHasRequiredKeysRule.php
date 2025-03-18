@@ -11,7 +11,9 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
      * @param Fund $fund
      * @param array $recordValues
      */
-    public function __construct(public Fund $fund, public array $recordValues = []) {}
+    public function __construct(public Fund $fund, public array $recordValues = [])
+    {
+    }
 
     /**
      * Determine if the validation rule passes.

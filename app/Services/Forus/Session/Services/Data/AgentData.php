@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Session\Services\Data;
 
+use Throwable;
 use WhichBrowser\Parser;
 
 class AgentData extends Parser
@@ -13,16 +14,6 @@ class AgentData extends Parser
     public static function parse(string $user_agent): AgentData
     {
         return new self($user_agent);
-    }
-
-    /**
-     * Return the input string prefixed with 'a' or 'an' depending on the first letter of the string
-     *
-     * @return string
-     */
-    private function a(): string
-    {
-        return trans('agent.a');
     }
 
     /**
@@ -88,8 +79,18 @@ class AgentData extends Parser
             }
 
             return trans('agent.unknown_client');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return parent::toString();
         }
+    }
+
+    /**
+     * Return the input string prefixed with 'a' or 'an' depending on the first letter of the string.
+     *
+     * @return string
+     */
+    private function a(): string
+    {
+        return trans('agent.a');
     }
 }

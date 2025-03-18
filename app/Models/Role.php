@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\Role
+ * App\Models\Role.
  *
  * @property int $id
  * @property string $key
@@ -47,10 +47,6 @@ class Role extends BaseModel
     use RoleTranslationsTrait;
     use HasTranslationCaches;
 
-    protected $fillable = [
-        'key'
-    ];
-
     public $timestamps = false;
 
     /**
@@ -62,12 +58,16 @@ class Role extends BaseModel
         'name', 'description',
     ];
 
+    protected $fillable = [
+        'key',
+    ];
+
     /**
      * @return BelongsToMany
      */
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(Employee::class, (new EmployeeRole)->getTable());
+        return $this->belongsToMany(Employee::class, (new EmployeeRole())->getTable());
     }
 
     /**
@@ -75,7 +75,7 @@ class Role extends BaseModel
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, (new RolePermission)->getTable());
+        return $this->belongsToMany(Permission::class, (new RolePermission())->getTable());
     }
 
     /**
@@ -85,7 +85,6 @@ class Role extends BaseModel
     {
         return $this->hasMany(RolePermission::class);
     }
-
 
     /**
      * @param array|string $permission

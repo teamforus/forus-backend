@@ -10,6 +10,6 @@ return [
     'unknown_browser_based_on' => 'een onbekende browser gebasseerd op :engine',
     'unknown_bot' => 'onbekende bot',
     'unknown_client' => 'Client onbekend',
-    'localhost' => "Local application",
-    'unknown' => "Locatie niet gedetecteerd",
+    'localhost' => 'Local application',
+    'unknown' => 'Locatie niet gedetecteerd',
 ];

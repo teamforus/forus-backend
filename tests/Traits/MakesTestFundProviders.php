@@ -16,22 +16,6 @@ trait MakesTestFundProviders
     use MakesTestOrganizations;
 
     /**
-     * @param Organization $providerOrganization
-     * @param Fund $fund
-     * @return FundProvider
-     */
-    private function makeTestFundProvider(Organization $providerOrganization, Fund $fund): FundProvider
-    {
-        return FundProvider::create([
-            'state' => FundProvider::STATE_ACCEPTED,
-            'fund_id' => $fund->id,
-            'allow_budget' => true,
-            'organization_id' => $providerOrganization->id,
-            'allow_products' => true,
-        ])->refresh();
-    }
-
-    /**
      * @param Fund $fund
      * @param int $countProducts
      * @return array
@@ -81,13 +65,14 @@ trait MakesTestFundProviders
 
     /**
      * @param int $count
+     * @param float $price
      * @return Product[]
      */
-    protected function makeProductsFundFund(int $count): array
+    protected function makeProductsFundFund(int $count, float $price = 10): array
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
         $provider = $this->makeTestProviderOrganization($identity);
-        $products = $this->makeTestProducts($provider, $count);
+        $products = $this->makeTestProducts($provider, $count, $price);
 
         $this->assertNotEmpty($products, 'Products not created');
 
@@ -143,5 +128,21 @@ trait MakesTestFundProviders
         );
 
         $response->assertSuccessful();
+    }
+
+    /**
+     * @param Organization $providerOrganization
+     * @param Fund $fund
+     * @return FundProvider
+     */
+    private function makeTestFundProvider(Organization $providerOrganization, Fund $fund): FundProvider
+    {
+        return FundProvider::create([
+            'state' => FundProvider::STATE_ACCEPTED,
+            'fund_id' => $fund->id,
+            'allow_budget' => true,
+            'organization_id' => $providerOrganization->id,
+            'allow_products' => true,
+        ])->refresh();
     }
 }

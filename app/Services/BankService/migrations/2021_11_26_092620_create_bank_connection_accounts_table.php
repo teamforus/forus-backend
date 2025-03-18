@@ -5,8 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -24,11 +23,13 @@ return new class extends Migration
         });
 
         Schema::table('bank_connections', function (Blueprint $table) {
-            $table->unsignedBigInteger('bank_connection_account_id')->nullable()
+            $table->unsignedBigInteger('bank_connection_account_id')
+                ->nullable()
                 ->after('implementation_id');
 
             $table->foreign('bank_connection_account_id')
-                ->references('id')->on('bank_connection_accounts')
+                ->references('id')
+                ->on('bank_connection_accounts')
                 ->onDelete('RESTRICT');
         });
 

@@ -45,7 +45,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         $currenRowNumber = array_search($this->index, array_keys($this->reservationsData)) + 1;
         $prevReservations = array_slice($this->reservationsData, 0, $currenRowNumber, true);
 
-        $prevReservations = array_filter($prevReservations, function($row) {
+        $prevReservations = array_filter($prevReservations, function ($row) {
             return $row['is_valid'] !== false;
         });
 
@@ -63,6 +63,16 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
     }
 
     /**
+     * Get the validation error message.
+     *
+     * @return string
+     */
+    public function message(): string
+    {
+        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @param array $prevReservations
@@ -74,12 +84,12 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         array $prevReservations = []
     ): bool|string {
         // total amount of reservations of the target product
-        $target_products_count = count(array_filter($prevReservations, function($reservation) use ($product) {
+        $target_products_count = count(array_filter($prevReservations, function ($reservation) use ($product) {
             return $reservation['product_id'] == $product->id;
         }));
 
         // total amount of reservations of the target product for the target voucher
-        $target_voucher_products_count = count(array_filter($prevReservations, function($reservation) use ($product, $voucher) {
+        $target_voucher_products_count = count(array_filter($prevReservations, function ($reservation) use ($product, $voucher) {
             return $reservation['product_id'] == $product->id && $reservation['voucher_id'] == $voucher->id;
         }));
 
@@ -111,7 +121,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         array $prevReservations = []
     ): bool|string {
         // filter reservations by voucher
-        $reservationsProducts = array_filter($prevReservations, function($reservation) use ($voucher) {
+        $reservationsProducts = array_filter($prevReservations, function ($reservation) use ($voucher) {
             return $reservation['voucher_id'] == $voucher->id;
         });
 
@@ -120,19 +130,9 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
 
         // Sponsor total limit for the product reached.
         if ($totalAmount > $voucher->amount_available) {
-            return "Onvoldoende tegoed.";
+            return 'Onvoldoende tegoed.';
         }
 
         return true;
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message(): string
-    {
-        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
     }
 }

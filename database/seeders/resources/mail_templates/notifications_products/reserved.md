@@ -9,3 +9,7 @@ De reservering duurt tot uiterlijke :expiration_date.
 &nbsp;
 
 We hopen u hiermee voldoende te hebben geïnformeerd.
+&nbsp;  
+&nbsp;
+
+:provider_dashboard_button

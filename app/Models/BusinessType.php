@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
- * App\Models\BusinessType
+ * App\Models\BusinessType.
  *
  * @property int $id
  * @property string $key
@@ -47,16 +47,9 @@ use Illuminate\Http\Request;
  */
 class BusinessType extends BaseModel
 {
-    use Translatable, BusinessTypeTranslationTrait, HasTranslationCaches;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'key', 'parent_id'
-    ];
+    use Translatable;
+    use BusinessTypeTranslationTrait;
+    use HasTranslationCaches;
 
     /**
      * The attributes that are translatable.
@@ -65,7 +58,16 @@ class BusinessType extends BaseModel
      * @noinspection PhpUnused
      */
     public array $translatedAttributes = [
-        'name'
+        'name',
+    ];
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'key', 'parent_id',
     ];
 
     /**
@@ -73,7 +75,7 @@ class BusinessType extends BaseModel
      */
     public function organizations(): HasMany
     {
-       return $this->hasMany(Organization::class);
+        return $this->hasMany(Organization::class);
     }
 
     /**
@@ -83,7 +85,7 @@ class BusinessType extends BaseModel
     public static function search(Request $request): Builder|BusinessType
     {
         if ($request->input('used', false)) {
-            return self::whereHas('organizations.fund_providers', function(Builder $builder) {
+            return self::whereHas('organizations.fund_providers', function (Builder $builder) {
                 $builder->whereIn('fund_id', Implementation::activeFundsQuery()->select('id'));
                 FundProviderQuery::whereApproved($builder);
             });

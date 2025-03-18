@@ -83,7 +83,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             'nullable',
             Rule::exists('voucher_transactions', 'upload_batch_id')
                 ->whereNotNull('employee_id')
-                ->where('employee_id', $this->employee($this->organization)?->id)
+                ->where('employee_id', $this->employee($this->organization)?->id),
         ];
     }
 
@@ -150,7 +150,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
         }
 
         return [
-            Rule::exists('fund_amount_presets', $column)->where('fund_id', $fund->id)
+            Rule::exists('fund_amount_presets', $column)->where('fund_id', $fund->id),
         ];
     }
 }

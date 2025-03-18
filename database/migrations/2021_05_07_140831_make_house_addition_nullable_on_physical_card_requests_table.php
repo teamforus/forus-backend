@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('physical_card_requests', function(Blueprint $table) {
+        Schema::table('physical_card_requests', function (Blueprint $table) {
             $table->string('house_addition', 20)->nullable()->change();
         });
     }
@@ -23,5 +22,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 };

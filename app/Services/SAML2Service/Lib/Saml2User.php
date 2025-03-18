@@ -25,7 +25,7 @@ class Saml2User
     }
 
     /**
-     * Get the attributes retrieved from assertion processed this request
+     * Get the attributes retrieved from assertion processed this request.
      *
      * @return array
      */
@@ -37,8 +37,8 @@ class Saml2User
     /**
      * Get user's name ID.
      *
-     * @return string|null
      * @throws Exception
+     * @return string|null
      */
     public function getNameId(): ?string
     {

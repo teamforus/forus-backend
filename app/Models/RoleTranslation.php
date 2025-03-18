@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\RoleTranslation
+ * App\Models\RoleTranslation.
  *
  * @property int $id
  * @property string $name
@@ -29,13 +29,14 @@ class RoleTranslation extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'name', 'description', 'locale'
+        'name', 'description', 'locale',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function role(): BelongsTo {
+    public function role(): BelongsTo
+    {
         return $this->belongsTo(Role::class);
     }
 }

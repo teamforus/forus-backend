@@ -8,17 +8,21 @@ use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesApplication;
 use Tests\TestCase;
-use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesTestOrganizations;
 use Throwable;
 
 class PaymentDescriptionTest extends TestCase
 {
-    use DoesTesting, DatabaseTransactions, CreatesApplication;
-    use MakesTestOrganizations, MakesTestFunds;
-    use MakesTestOrganizationOffices, MakesProductReservations;
+    use DoesTesting;
+    use DatabaseTransactions;
+    use CreatesApplication;
+    use MakesTestOrganizations;
+    use MakesTestFunds;
+    use MakesTestOrganizationOffices;
+    use MakesProductReservations;
 
     public function testPaymentDescriptionForDirectPayments()
     {
@@ -26,7 +30,7 @@ class PaymentDescriptionTest extends TestCase
 
         //- Check transactions with target 'iban'
         $transaction->update([
-            'target' => 'iban'
+            'target' => 'iban',
         ]);
 
         static::assertEquals(
@@ -37,8 +41,8 @@ class PaymentDescriptionTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testPaymentDescriptionWhenProviderIsMissing(): void
     {
@@ -70,8 +74,8 @@ class PaymentDescriptionTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testPaymentDescriptionProviderFlagsOneByOne(): void
     {
@@ -80,6 +84,8 @@ class PaymentDescriptionTest extends TestCase
             'bank_transaction_date',
             'bank_transaction_time',
             'bank_reservation_number',
+            'bank_reservation_first_name',
+            'bank_reservation_last_name',
             'bank_branch_number',
             'bank_branch_id',
             'bank_branch_name',
@@ -90,6 +96,20 @@ class PaymentDescriptionTest extends TestCase
         foreach ($providerFlags as $index => $flag) {
             $this->checkPaymentDescriptionFlags(array_slice($providerFlags, 0, $index + 1));
         }
+    }
+
+    /**
+     * @return array
+     */
+    protected function getDescriptionData(): array
+    {
+        return [
+            'bank_branch_number' => '123456789123',
+            'bank_branch_id' => '114324234',
+            'bank_branch_name' => 'JKE234',
+            'bank_note' => 'Test note',
+            'bank_note_long' => $this->faker->text(300),
+        ];
     }
 
     /**
@@ -132,8 +152,14 @@ class PaymentDescriptionTest extends TestCase
             $transaction->provider->bank_branch_id ? $transaction->employee?->office?->branch_id : null,
             $transaction->provider->bank_branch_name ? $transaction->employee?->office?->branch_name : null,
             $transaction->provider->bank_fund_name ? $transaction->voucher?->fund?->name : null,
+            $transaction->provider->bank_reservation_first_name ? $transaction->product_reservation?->first_name : null,
+            $transaction->provider->bank_reservation_last_name ? $transaction->product_reservation?->last_name : null,
             $transaction->provider->bank_note ? $transaction->notes_provider->first()?->message : null,
         ])));
+
+        $expectedDescription = strlen($expectedDescription) <= 140
+            ? $expectedDescription
+            : str_limit($expectedDescription, 140 - 3);
 
         self::assertEquals(
             $expectedDescription,
@@ -146,20 +172,6 @@ class PaymentDescriptionTest extends TestCase
         $transaction->notes_provider[0]->refresh();
 
         self::assertLessThanOrEqual(140, strlen($transaction->makePaymentDescription(140)));
-    }
-
-    /**
-     * @return array
-     */
-    protected function getDescriptionData(): array
-    {
-        return [
-            'bank_branch_number' => '123456789123',
-            'bank_branch_id' => '114324234',
-            'bank_branch_name' => 'JKE234',
-            'bank_note' => 'Test note',
-            'bank_note_long' => $this->faker->text(300),
-        ];
     }
 
     /**
@@ -178,6 +190,8 @@ class PaymentDescriptionTest extends TestCase
             'bank_transaction_date' => in_array('bank_transaction_date', $flags),
             'bank_transaction_time' => in_array('bank_transaction_time', $flags),
             'bank_reservation_number' => in_array('bank_reservation_number', $flags),
+            'bank_reservation_first_name' => in_array('bank_reservation_first_name', $flags),
+            'bank_reservation_last_name' => in_array('bank_reservation_last_name', $flags),
             'bank_branch_number' => in_array('bank_branch_number', $flags),
             'bank_branch_id' => in_array('bank_branch_id', $flags),
             'bank_branch_name' => in_array('bank_branch_name', $flags),

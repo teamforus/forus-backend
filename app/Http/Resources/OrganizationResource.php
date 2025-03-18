@@ -164,6 +164,7 @@ class OrganizationResource extends BaseJsonResource
                 'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time',
                 'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
                 'bank_note', 'bank_reservation_number', 'bank_separator',
+                'bank_reservation_first_name', 'bank_reservation_last_name',
             ]),
         ] : [];
     }
@@ -209,7 +210,7 @@ class OrganizationResource extends BaseJsonResource
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
-            ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : []
+            ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],
         ]) : [];
     }
 
@@ -220,7 +221,7 @@ class OrganizationResource extends BaseJsonResource
     protected function getBIConnectionData(Organization $organization): array
     {
         return $organization->allow_bi_connection ? [
-            'bi_connection_url' => route('biConnection')
+            'bi_connection_url' => route('biConnection'),
         ] : [];
     }
 

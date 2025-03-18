@@ -22,6 +22,7 @@ class TranslationServiceProvider extends ServiceProvider
     {
         $translationBuilder = function ($app) {
             $config = $app->make(TranslationConfig::class);
+
             return new TranslationService($config);
         };
 

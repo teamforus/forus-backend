@@ -31,8 +31,8 @@ trait HasLogs
         $identity_address = $identity_address ?: $request->auth_address();
 
         $meta = array_reduce(
-            array_keys(array_filter($models, fn($model) => $model !== null)),
-            fn($carry, $key) => array_merge($carry, $logService->modelToMeta($key, $models[$key])),
+            array_keys(array_filter($models, fn ($model) => $model !== null)),
+            fn ($carry, $key) => array_merge($carry, $logService->modelToMeta($key, $models[$key])),
             []
         );
 
