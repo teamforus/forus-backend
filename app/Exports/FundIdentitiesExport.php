@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
-use string;
 
 class FundIdentitiesExport extends BaseFieldedExport
 {

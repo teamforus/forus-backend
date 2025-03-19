@@ -256,7 +256,7 @@ class FundRequestsController extends Controller
         $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
 
         $fileData = new FundRequestsExport($request, $request->employee($organization));
-        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_format', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_type', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }
