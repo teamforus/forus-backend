@@ -46,7 +46,7 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('export_type', 'xls');
 
         return resolve('excel')->download(
             new FundProvidersExport($request, $organization),
