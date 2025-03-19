@@ -5,7 +5,6 @@ namespace App\Exports;
 use App\Models\ProductReservation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use string;
 
 class ProductReservationsExport extends BaseFieldedExport
 {

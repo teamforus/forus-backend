@@ -93,7 +93,7 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $exportData = new FundProvidersExport($request, $organization);
 
