@@ -94,6 +94,7 @@ trait HasFrontendActions
     {
         $browser->pause(100);
         $browser->waitFor('@userProfile');
+        $browser->scrollIntoView('@userProfile');
         $browser->element('@userProfile')->click();
 
         $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout');
