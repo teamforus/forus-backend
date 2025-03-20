@@ -4,14 +4,18 @@ namespace App\Http\Resources;
 
 use App\Models\Organization;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
 /**
  * @property Organization $resource
  */
-class OrganizationBasicResource extends JsonResource
+class OrganizationBasicResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'logo.presets',
+        'business_type.translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *

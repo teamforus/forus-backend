@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use App\Services\EventLogService\Models\EventLog;
@@ -15,7 +16,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Config;
 
 /**
  * @property Voucher $resource
@@ -28,39 +28,43 @@ class VoucherResource extends BaseJsonResource
     public const array LOAD = [
         'logs',
         'parent',
-        'tokens',
         'token_with_confirmation',
-        'token_without_confirmation',
         'last_transaction',
-        'transactions.voucher.fund.logo.presets',
-        'transactions.provider.logo.presets',
-        'transactions.product.photo.presets',
+        'transactions',
+        'product_vouchers.fund',
         'product_vouchers.product.photo.presets',
-        'product_vouchers.tokens',
         'product_vouchers.token_with_confirmation',
-        'product_vouchers.token_without_confirmation',
         'product_vouchers.product_reservation',
-        'product.photo.presets',
-        'product.product_category.translations',
-        'product.organization.business_type.translations',
-        'product.organization.logo.presets',
-        'product.organization.offices.schedules',
-        'product.organization.offices.photo.presets',
-        'product.organization.offices.organization.logo.presets',
+        'reimbursements_pending',
         'fund.fund_config.implementation',
-        'fund.provider_organizations_approved.offices.schedules',
-        'fund.provider_organizations_approved.offices.photo.presets',
-        'fund.provider_organizations_approved.offices.organization.logo.presets',
-        'fund.logo.presets',
-        'fund.organization.logo.presets',
         'physical_cards',
         'last_deactivation_log',
-        'voucher_records.record_type',
+        'top_up_transactions',
+        'voucher_records.record_type.translations',
     ];
 
     public const array LOAD_COUNT = [
         'transactions',
     ];
+
+    /**
+     * @param string|null $append
+     * @return array
+     */
+    public static function load(?string $append = null): array
+    {
+        $prepend = $append ? "$append." : '';
+
+        return [
+            ...parent::load($append),
+            ...MediaResource::load("{$prepend}fund.logo"),
+            ...MediaResource::load("{$prepend}product.photo"),
+            ...OfficeResource::load("{$prepend}fund.provider_organizations_approved.offices"),
+            ...OrganizationBasicResource::load("{$prepend}product.organization"),
+            ...OrganizationBasicResource::load("{$prepend}fund.organization"),
+            ...VoucherTransactionResource::load("{$prepend}all_transactions"),
+        ];
+    }
 
     /**
      * Transform the resource into an array.
@@ -75,10 +79,13 @@ class VoucherResource extends BaseJsonResource
         $physicalCard = $voucher->physical_cards[0] ?? null;
         $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher) : null;
 
-        return array_merge($voucher->only([
-            'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
-            'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
-        ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
+        return [
+            ...$voucher->only([
+                'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
+                'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
+            ]),
+            ...$this->getBaseFields($voucher),
+            ...$this->getOptionalFields($voucher),
             'deactivated_at' => $deactivationDate?->format('Y-m-d'),
             'deactivated_at_locale' => format_date_locale($deactivationDate),
             'history' => $this->getStateHistory($voucher),
@@ -94,19 +101,18 @@ class VoucherResource extends BaseJsonResource
                 $voucher->last_transaction->created_at
             ) : null,
             'address' => $voucher->token_with_confirmation->address,
-            'address_printable' => $voucher->token_without_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
             'fund' => $this->getFundResource($voucher->fund),
-            'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_id', 'fund_id'), [
+            'parent' => $voucher->parent ? [
+                ...$voucher->parent->only(['identity_id', 'fund_id']),
                 'created_at' => $voucher->parent->created_at_string,
-            ]) : null,
+            ] : null,
             'physical_card' => new PhysicalCardResource($physicalCard),
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
-        ], array_merge(
-            $this->getRecords($voucher),
-            $this->timestamps($voucher, 'created_at'),
-        ));
+            ...$this->getRecords($voucher),
+            ...$this->timestamps($voucher, 'created_at'),
+        ];
     }
 
     /**
@@ -213,17 +219,16 @@ class VoucherResource extends BaseJsonResource
         } elseif ($voucher->type === 'product') {
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
+
             $productResource = [
                 ...$voucher->product->only([
                     'id', 'name', 'description', 'description_html', 'price', 'price_locale',
-                    'total_amount', 'sold_amount', 'product_category_id',
-                    'organization_id',
+                    'total_amount', 'sold_amount', 'organization_id',
                 ]),
                 ...$voucher->product->translateColumns($voucher->product->only([
                     'name', 'description_html',
                 ])),
                 'price_locale' => $voucher->product->priceLocale(),
-                'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource($voucher->product->photo),
@@ -248,8 +253,8 @@ class VoucherResource extends BaseJsonResource
     protected function getOptionalFields(Voucher $voucher): array
     {
         return [
-            'transactions' => $this->getTransactions($voucher),
             'offices' => $this->getOffices($voucher),
+            'transactions' => $this->getTransactions($voucher),
         ];
     }
 
@@ -259,7 +264,8 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getFundResource(Fund $fund): array
     {
-        return array_merge($fund->only('id', 'state', 'type'), [
+        return  [
+            ...$fund->only('id', 'state', 'type'),
             ...$fund->translateColumns($fund->only(['name'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
@@ -270,9 +276,8 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
-        ], $fund->fund_config->only([
-            'allow_reimbursements', 'allow_reservations', 'key',
-        ]));
+            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key']),
+        ];
     }
 
     /**
@@ -282,20 +287,20 @@ class VoucherResource extends BaseJsonResource
     protected function getProductVouchers(
         Collection|array|null $product_vouchers
     ): SupportCollection|array|null {
-        return $product_vouchers?->map(function (Voucher $product_voucher) {
-            return array_merge($product_voucher->only([
+        return $product_vouchers?->map(fn (Voucher $product_voucher) => [
+            ...$product_voucher->only([
                 'identity_id', 'fund_id', 'returnable',
-            ]), [
-                'address' => $product_voucher->token_with_confirmation?->address,
-                'amount' => currency_format($product_voucher->amount),
-                'amount_locale' => currency_format_locale($product_voucher->amount),
-                'date' => $product_voucher->created_at->format('M d, Y'),
-                'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
-                'timestamp' => $product_voucher->created_at->timestamp,
-                'product' => self::getProductDetails($product_voucher),
-                'product_reservation' => $product_voucher->product_reservation?->only('id', 'code'),
-            ], $this->timestamps($product_voucher, 'created_at'));
-        })->values();
+            ]),
+            'address' => $product_voucher->token_with_confirmation?->address,
+            'amount' => currency_format($product_voucher->amount),
+            'amount_locale' => currency_format_locale($product_voucher->amount),
+            'date' => $product_voucher->created_at->format('M d, Y'),
+            'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
+            'timestamp' => $product_voucher->created_at->timestamp,
+            'product' => self::getProductDetails($product_voucher),
+            'product_reservation' => $product_voucher->product_reservation?->only('id', 'code'),
+            ...$this->timestamps($product_voucher, 'created_at'),
+        ])->values();
     }
 
     /**
@@ -304,12 +309,15 @@ class VoucherResource extends BaseJsonResource
      */
     protected static function getProductDetails(Voucher $product_voucher): array
     {
-        return array_merge($product_voucher->product->only([
-            'id', 'name', 'description', 'total_amount',
-            'sold_amount', 'product_category_id', 'organization_id',
-        ]), $product_voucher->fund->isTypeBudget() ? [
-            'price' => currency_format($product_voucher->product->price),
-        ] : []);
+        return [
+            ...$product_voucher->product->only([
+                'id', 'name', 'description', 'total_amount',
+                'sold_amount', 'product_category_id', 'organization_id',
+            ]),
+            ...$product_voucher->fund->isTypeBudget() ? [
+                'price' => currency_format($product_voucher->product->price),
+            ] : [],
+        ];
     }
 
     /**
@@ -318,15 +326,11 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getTransactions(Voucher $voucher): AnonymousResourceCollection
     {
-        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
+        $transactions = BaseFormRequest::createFromBase(request())->isMeApp() ?
+            $voucher->all_transactions->where('target', VoucherTransaction::TARGET_PROVIDER) :
+            $voucher->all_transactions;
 
-        if ($hideOnMeApp && BaseFormRequest::createFromBase(request())->isMeApp()) {
-            return VoucherTransactionResource::collection(
-                $voucher->all_transactions->where('target', 'provider')
-            );
-        }
-
-        return VoucherTransactionResource::collection($voucher->all_transactions);
+        return VoucherTransactionResource::collection($transactions);
     }
 
     /**
@@ -335,12 +339,10 @@ class VoucherResource extends BaseJsonResource
      */
     protected function getOffices(Voucher $voucher): AnonymousResourceCollection
     {
-        if ($voucher->isBudgetType()) {
-            return OfficeResource::collection(
-                $voucher->fund->provider_organizations_approved->pluck('offices')->flatten()
-            );
-        }
+        $offices = $voucher->isBudgetType() ?
+            $voucher->fund->provider_organizations_approved->pluck('offices')->flatten() :
+            $voucher->product->organization->offices;
 
-        return OfficeResource::collection($voucher->product->organization->offices);
+        return OfficeResource::collection($offices);
     }
 }
