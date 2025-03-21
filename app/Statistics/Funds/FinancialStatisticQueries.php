@@ -37,9 +37,6 @@ class FinancialStatisticQueries
                 $builder->whereHas('product_category', function (Builder $builder) {
                     $builder->whereColumn('categories.id', 'root_id');
                 });
-                $builder->orWhereHas('voucher.product_category', function (Builder $builder) {
-                    $builder->whereColumn('categories.id', 'root_id');
-                });
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
