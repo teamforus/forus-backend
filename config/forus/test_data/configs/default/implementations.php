@@ -29,7 +29,6 @@ return [
             'description_alignment' => 'left',
             'overlay_enabled' => false,
             'overlay_type' => 'color',
-            'header_text_color' => 'auto',
             'overlay_opacity' => 90,
             'lon' => '5.58338',
             'lat' => '52.137586',

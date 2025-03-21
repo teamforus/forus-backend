@@ -53,8 +53,17 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $page_title_suffix
  * @property bool $overlay_enabled
  * @property string $overlay_type
- * @property string $header_text_color
  * @property int $overlay_opacity
+ * @property string $banner_color
+ * @property string $banner_background
+ * @property bool $banner_button
+ * @property string $banner_button_url
+ * @property string $banner_button_text
+ * @property string $banner_button_target
+ * @property string $banner_button_type
+ * @property string $banner_position
+ * @property bool $banner_wide
+ * @property bool $banner_collapse
  * @property string $url_webshop
  * @property string $url_sponsor
  * @property string $url_provider
@@ -139,6 +148,16 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation newQuery()
  * @method static Builder<static>|Implementation query()
  * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
+ * @method static Builder<static>|Implementation whereBannerBackground($value)
+ * @method static Builder<static>|Implementation whereBannerButton($value)
+ * @method static Builder<static>|Implementation whereBannerButtonTarget($value)
+ * @method static Builder<static>|Implementation whereBannerButtonText($value)
+ * @method static Builder<static>|Implementation whereBannerButtonType($value)
+ * @method static Builder<static>|Implementation whereBannerButtonUrl($value)
+ * @method static Builder<static>|Implementation whereBannerCollapse($value)
+ * @method static Builder<static>|Implementation whereBannerColor($value)
+ * @method static Builder<static>|Implementation whereBannerPosition($value)
+ * @method static Builder<static>|Implementation whereBannerWide($value)
  * @method static Builder<static>|Implementation whereCreatedAt($value)
  * @method static Builder<static>|Implementation whereDescription($value)
  * @method static Builder<static>|Implementation whereDescriptionAlignment($value)
@@ -159,7 +178,6 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereEmailFromAddress($value)
  * @method static Builder<static>|Implementation whereEmailFromName($value)
  * @method static Builder<static>|Implementation whereEmailSignature($value)
- * @method static Builder<static>|Implementation whereHeaderTextColor($value)
  * @method static Builder<static>|Implementation whereId($value)
  * @method static Builder<static>|Implementation whereInformalCommunication($value)
  * @method static Builder<static>|Implementation whereKey($value)
@@ -237,13 +255,15 @@ class Implementation extends BaseModel
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
-        'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        'overlay_enabled', 'overlay_type', 'overlay_opacity',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
         'digid_cgi_tls_key', 'digid_cgi_tls_cert',
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
         'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
+        'banner_color', 'banner_background', 'banner_position', 'banner_wide', 'banner_collapse', 'banner_button',
+        'banner_button_url', 'banner_button_text', 'banner_button_target', 'banner_button_type',
     ];
 
     /**
@@ -279,6 +299,9 @@ class Implementation extends BaseModel
         'pre_check_enabled' => 'boolean',
         'show_privacy_checkbox' => 'boolean',
         'show_terms_checkbox' => 'boolean',
+        'banner_wide' => 'boolean',
+        'banner_button' => 'boolean',
+        'banner_collapse' => 'boolean',
     ];
 
     /**
@@ -766,12 +789,14 @@ class Implementation extends BaseModel
             'settings' => [
                 ...$implementation->only([
                     'description', 'description_alignment', 'overlay_enabled', 'overlay_type',
+                    'banner_button', 'banner_button_url', 'banner_button_text', 'banner_button_target',
+                    'banner_position', 'banner_color', 'banner_background', 'banner_wide', 'banner_collapse',
+                    'banner_button_type',
                 ]),
                 ...$implementation->translateColumns($implementation->only([
                     'title', 'description_html',
                 ])),
                 'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
-                'banner_text_color' => $implementation->getBannerTextColor(),
             ],
             'fronts' => [
                 ...$implementation->only([
@@ -1116,18 +1141,6 @@ class Implementation extends BaseModel
                 'size' => $sizes,
             ];
         }, MediaService::getMediaConfigs());
-    }
-
-    /**
-     * @return ?string
-     */
-    private function getBannerTextColor(): ?string
-    {
-        if ($this->header_text_color == 'auto') {
-            return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
-        }
-
-        return $this->header_text_color;
     }
 
     /**

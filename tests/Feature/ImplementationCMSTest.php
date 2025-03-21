@@ -19,9 +19,9 @@ use Throwable;
 
 class ImplementationCMSTest extends TestCase
 {
-    use DatabaseTransactions;
     use WithFaker;
     use AssertsSentEmails;
+    use DatabaseTransactions;
 
     /**
      * @var string
@@ -70,7 +70,7 @@ class ImplementationCMSTest extends TestCase
         'data' => [
             'id', 'key', 'name', 'url_webshop', 'title', 'organization_id',
             'description', 'description_alignment', 'description_html', 'informal_communication',
-            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'overlay_enabled', 'overlay_type', 'overlay_opacity',
             'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
             'show_office_map', 'show_voucher_map', 'show_product_map',
             'allow_per_fund_notification_templates', 'communication_type', 'overlay_opacity',
@@ -392,7 +392,6 @@ class ImplementationCMSTest extends TestCase
             'overlay_enabled' => (bool) rand(0, 1),
             'overlay_type' => Arr::random(['color', 'dots', 'lines', 'points', 'circles']),
             'overlay_opacity' => $this->faker->numberBetween(0, 100),
-            'header_text_color' => Arr::random(['bright', 'dark', 'auto']),
             'show_home_map' => (bool) rand(0, 1),
             'show_office_map' => (bool) rand(0, 1),
             'show_home_products' => (bool) rand(0, 1),
