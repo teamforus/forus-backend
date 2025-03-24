@@ -45,7 +45,7 @@ class IndexFundProviderRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|min:1|max:1000',
             'fund_id' => 'nullable|in:' . implode(',', $fundIds),
             'organization_id' => 'nullable|in:' . implode(',', $providerIds),
-            'export_format' => 'nullable|in:csv,xls',
+            'export_type' => 'nullable|in:csv,xls',
         ];
     }
 }
