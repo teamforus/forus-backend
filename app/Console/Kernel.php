@@ -29,7 +29,6 @@ use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
-use App\Console\Commands\UpdateProductCategoriesCommand;
 use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
@@ -115,7 +114,6 @@ class Kernel extends ConsoleKernel
         BankConnectionsInspectCommand::class,
 
         // seeders
-        UpdateProductCategoriesCommand::class,
         UpdateRolesCommand::class,
 
         // mollie
