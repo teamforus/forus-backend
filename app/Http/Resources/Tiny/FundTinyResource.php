@@ -12,6 +12,24 @@ use Illuminate\Http\Request;
  */
 class FundTinyResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'organization',
+    ];
+
+    /**
+     * @param string|null $append
+     * @return array
+     */
+    public static function load(?string $append = null): array
+    {
+        $prepend = $append ? "$append." : '';
+
+        return [
+            ...parent::load($append),
+            ...MediaResource::load("{$prepend}logo"),
+        ];
+    }
+
     /**
      * Transform the resource into an array.
      *
