@@ -30,7 +30,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'assigned' => 'nullable|boolean',
             'from' => 'nullable|date:Y-m-d',
             'to' => 'nullable|date:Y-m-d',
-            'export_format' => 'nullable|in:csv,xls',
+            'export_type' => 'nullable|in:csv,xls',
             'state_group' => 'nullable|in:all,pending,assigned,resolved',
             'identity_id' => 'nullable|exists:identities,id',
             ...$this->sortableResourceRules(100, [
