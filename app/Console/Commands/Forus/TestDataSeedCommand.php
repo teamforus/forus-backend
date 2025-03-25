@@ -33,6 +33,8 @@ class TestDataSeedCommand extends BaseCommand
             throw new Exception("Can't be used on production.");
         }
 
+        $startTime = microtime(true);
+
         $testData = new TestData();
         $testData->disableEmails();
 
@@ -81,5 +83,6 @@ class TestDataSeedCommand extends BaseCommand
         $testData->separator();
 
         $testData->enableEmails();
+        $testData->info("\n\TestData - time: " . round(microtime(true) - $startTime, 2) . ' seconds');
     }
 }
