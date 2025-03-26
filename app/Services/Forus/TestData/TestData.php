@@ -19,6 +19,7 @@ use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
+use App\Models\FundForm;
 use App\Models\FundFormula;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -579,6 +580,7 @@ class TestData
         $fundConfig = $fund->fund_config()->forceCreate($data);
 
         $this->makeFundCriteriaAndFormula($fund);
+        $this->makeFundForm($fund);
 
         return $fundConfig;
     }
@@ -661,6 +663,19 @@ class TestData
         $fund->fund_formulas()->createMany($fundFormula);
         $fund->fund_limit_multipliers()->createMany($limitMultiplier);
         $fund->syncAmountPresets($configFundPresets);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return void
+     */
+    public function makeFundForm(Fund $fund): void
+    {
+        $fund->fund_form()->firstOrCreate([
+            ...FundForm::doesntExist() ? ['id' => pow(2, 16) * 2] : [],
+            'name' => $fund->name,
+            'created_at' => $fund->start_date,
+        ]);
     }
 
     /**

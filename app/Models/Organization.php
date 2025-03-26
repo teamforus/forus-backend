@@ -124,6 +124,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
+ * @property-read Collection|\App\Models\FundForm[] $fund_forms
+ * @property-read int|null $fund_forms_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
@@ -509,6 +511,15 @@ class Organization extends BaseModel
     public function business_type(): BelongsTo
     {
         return $this->belongsTo(BusinessType::class);
+    }
+
+    /**
+     * @return Organization|EloquentBuilder|HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function fund_forms(): EloquentBuilder|HasManyThrough|Organization
+    {
+        return $this->hasManyThrough(FundForm::class, Fund::class);
     }
 
     /**
