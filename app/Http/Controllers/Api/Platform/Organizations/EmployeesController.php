@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\Identity;
@@ -145,6 +146,19 @@ class EmployeesController extends Controller
     }
 
     /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
+    {
+        $this->authorize('show', [$organization]);
+        $this->authorize('viewAny', [Employee::class, $organization]);
+
+        return ExportFieldArrResource::collection(EmployeesExport::getExportFields());
+    }
+
+    /**
      * @param IndexEmployeesRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -165,7 +179,8 @@ class EmployeesController extends Controller
 
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
-        $exportData = new EmployeesExport($search->query());
+        $fields = $request->input('fields', EmployeesExport::getExportFieldsRaw());
+        $exportData = new EmployeesExport($search->query(), $fields);
 
         return resolve('excel')->download($exportData, $fileName);
     }

@@ -14,7 +14,7 @@ class IndexTransactionsRequest extends BaseIndexTransactionsRequest
      */
     public function rules(): array
     {
-        $fields = Arr::pluck(VoucherTransactionsProviderExport::getExportFields(), 'key');
+        $fields = VoucherTransactionsProviderExport::getExportFieldsRaw();
 
         return array_merge(parent::rules(), [
             'fields' => 'nullable|array',

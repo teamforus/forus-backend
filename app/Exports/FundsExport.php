@@ -4,24 +4,44 @@ namespace App\Exports;
 
 use App\Exports\Traits\FormatsExportedData;
 use App\Models\Fund;
-use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting, WithEvents
+class FundsExport extends BaseFieldedExport implements WithColumnFormatting, WithEvents
 {
     use Exportable;
     use RegistersEventListeners;
     use FormatsExportedData;
+
+    protected static string $transKey = 'funds';
+
+    /**
+     * @var array|int[]
+     */
+    protected array $totals = [
+        'balance' => 0,
+        'expenses' => 0,
+        'transactions' => 0,
+        'total_top_up' => 0,
+    ];
+
+    /**
+     * @var array|string[]
+     */
+    protected static array $exportFields = [
+        'name',
+        'balance',
+        'expenses',
+        'transactions',
+        'total_top_up',
+    ];
 
     /**
      * @var array[]
@@ -32,81 +52,70 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
             'expenses',
             'transactions',
             'total_top_up',
-            'budget_amount_per_voucher',
-            'budget_average_per_voucher',
-            'budget_total_spent_amount',
-            'budget_total_left',
-            'budget_vouchers_amount',
-            'budget_vouchers_active_amount',
-            'budget_vouchers_inactive_amount',
-            'budget_vouchers_deactivated_amount',
-            'product_vouchers_amount',
-            'product_vouchers_active_amount',
-            'product_vouchers_inactive_amount',
-            'product_vouchers_deactivated_amount',
-        ],
-        NumberFormat::FORMAT_PERCENTAGE_00 => [
-            'budget_total_spent_percentage',
-            'budget_total_left_percentage',
-            'budget_vouchers_inactive_percentage',
-            'budget_vouchers_active_percentage',
-        ],
-        NumberFormat::FORMAT_TEXT => [
-            'budget_vouchers_count',
-            'budget_vouchers_inactive_count',
-            'budget_vouchers_active_count',
-            'budget_vouchers_deactivated_amount',
         ],
     ];
-
-    protected Collection $data;
 
     /**
      * FundsExport constructor.
      * @param EloquentCollection $funds
-     * @param bool $detailed
-     * @param bool $withTotal
      * @param Carbon $from
      * @param Carbon $to
+     * @param array $fields
      */
     public function __construct(
         EloquentCollection $funds,
         protected Carbon $from,
         protected Carbon $to,
-        protected bool $detailed = true,
-        protected bool $withTotal = true,
+        protected array $fields
     ) {
-        $this->data = $this->exportTransform($funds);
+        $this->data = $this->export($funds);
+        $this->data = $this->data->merge($this->getTotals());
     }
 
     /**
+     * @param Collection $data
      * @return Collection
      */
-    public function collection(): Collection
+    protected function export(Collection $data): Collection
     {
-        $data = $this->data->merge($this->getTotals());
-
-        return $data->map(function ($item) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                $this->trans($key) => (string) $item[$key],
-            ]), []);
-        });
+        return $this->exportTransform($data);
     }
 
     /**
-     * @return array|null
+     * @param Collection $data
+     * @return Collection
      */
-    public function first(): ?array
+    protected function exportTransform(Collection $data): Collection
     {
-        return $this->collection()->first();
+        return $this->transformKeys(
+            $data->map(fn (Fund $fund) => array_only($this->getRow($fund), $this->fields))
+        );
     }
 
     /**
+     * @param Fund $fund
      * @return array
      */
-    public function headings(): array
+    protected function getRow(Fund $fund): array
     {
-        return array_keys($this->first() ?: []);
+        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
+        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
+        $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+
+        $this->totals = [
+            'balance' => $this->totals['balance'] + ($total - $used),
+            'expenses' => $this->totals['expenses'] + $used,
+            'transactions' => $this->totals['transactions'] + $costs,
+            'total_top_up' => $this->totals['total_top_up'] + $total,
+        ];
+
+        return [
+            'name' => $fund->name,
+            'total_top_up' => currency_format($total),
+            'expenses' => currency_format($used),
+            'balance' => currency_format(round($total - $used, 2)),
+            'transactions' => currency_format($costs),
+        ];
     }
 
     /**
@@ -114,120 +123,20 @@ class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting,
      */
     protected function getTotals(): array
     {
-        return (!$this->detailed && $this->withTotal) ? [[
-            'name' => $this->trans('total'),
-            'total_top_up' => currency_format($this->data->sum('total_top_up')),
-            'expenses' => currency_format($this->data->sum('expenses')),
-            'balance' => currency_format($this->data->sum('balance')),
-            'transactions' => currency_format($this->data->sum('transactions')),
-        ]] : [];
-    }
+        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
 
-    /**
-     * @param Collection $funds
-     * @return Collection
-     */
-    protected function exportTransform(Collection $funds): Collection
-    {
-        if (!$this->detailed) {
-            return $funds->map(function (Fund $fund) {
-                $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
-                $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
-                $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+        $row = array_only([
+            'name' => static::trans('total'),
+            'total_top_up' => currency_format($this->totals['total_top_up']),
+            'expenses' => currency_format($this->totals['expenses']),
+            'balance' => currency_format($this->totals['balance']),
+            'transactions' => currency_format($this->totals['transactions']),
+        ], $this->fields);
 
-                return [
-                    'name' => $fund->name,
-                    'total_top_up' => currency_format($total),
-                    'expenses' => currency_format($used),
-                    'balance' => currency_format(round($total - $used, 2)),
-                    'transactions' => currency_format($costs),
-                ];
-            });
-        }
+        $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
+            $fieldLabels[$key] => $row[$key],
+        ]), []);
 
-        $funds = $funds->map(fn (Fund $fund) => $this->getVoucherData($fund));
-
-        if (!$funds->first(fn (array $item) => $item['budget_children_count'] > 0)) {
-            return $funds->map(function (array $item) {
-                unset($item['budget_children_count']);
-
-                return $item;
-            });
-        }
-
-        return $funds;
-    }
-
-    /**
-     * @param Fund $fund
-     * @return array
-     */
-    protected function getVoucherData(Fund $fund): array
-    {
-        $detailsByType = [
-            'budget' => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
-            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
-        ];
-        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
-
-        $voucherData = [
-            'name' => $fund->name,
-        ];
-
-        foreach ($detailsByType as $type => $details) {
-            if ($type == 'budget') {
-                $budgetUsedPercentage = (float) $details['vouchers_amount'] ? (
-                    $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100
-                ) : 0;
-
-                $averagePerVoucher = $details['vouchers_count'] ?
-                    $details['vouchers_amount'] / $details['vouchers_count'] : 0;
-
-                $budgetLeftAmount = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
-
-                $budgetLeftPercentage = (float) $details['vouchers_amount'] ?
-                    (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
-
-                $inactiveVouchersPercentage = (float) $details['vouchers_amount'] ?
-                    ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
-
-                $activeVouchersPercentage = (float) $details['vouchers_amount'] ?
-                    ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
-
-                $voucherData = array_merge($voucherData, [
-                    'budget_amount_per_voucher' => currency_format($fund->fund_formulas->sum('amount')),
-                    'budget_average_per_voucher' => currency_format($averagePerVoucher),
-                    'budget_total_spent_amount' => currency_format($usedActiveVouchers),
-                    'budget_total_left_amount' => currency_format($budgetLeftAmount),
-                    'budget_total_spent_percentage' => currency_format($budgetUsedPercentage / 100, 4),
-                    'budget_total_left_percentage' => currency_format($budgetLeftPercentage / 100, 4),
-                    'budget_vouchers_count' => currency_format($details['vouchers_count'], 0),
-                    'budget_vouchers_inactive_count' => currency_format($details['inactive_count'], 0),
-                    'budget_vouchers_inactive_percentage' => currency_format($inactiveVouchersPercentage / 100, 4),
-                    'budget_vouchers_active_percentage' => currency_format($activeVouchersPercentage / 100, 4),
-                    'budget_vouchers_active_count' => currency_format($details['active_count'], 0),
-                    'budget_vouchers_deactivated_count' => currency_format($details['deactivated_count'], 0),
-                    'budget_children_count' => $details['children_count'],
-                ]);
-            }
-
-            $voucherData = array_merge($voucherData, [
-                "{$type}_vouchers_amount" => currency_format($details['vouchers_amount']),
-                "{$type}_vouchers_active_amount" => currency_format($details['active_amount']),
-                "{$type}_vouchers_inactive_amount" => currency_format($details['inactive_amount']),
-                "{$type}_vouchers_deactivated_amount" => currency_format($details['deactivated_amount']),
-            ]);
-        }
-
-        return $voucherData;
-    }
-
-    /**
-     * @param string $key
-     * @return string|null
-     */
-    protected function trans(string $key): ?string
-    {
-        return trans("export.funds.$key");
+        return [$row];
     }
 }

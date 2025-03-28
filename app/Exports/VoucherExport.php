@@ -6,35 +6,34 @@ use Illuminate\Support\Collection;
 
 class VoucherExport extends BaseFieldedExport
 {
-    protected Collection $data;
-    protected array $fields;
+    protected static string $transKey = 'vouchers';
 
     /**
      * @var array|\string[][]
      */
     protected static array $exportFields = [
-        'number' => 'Nummer',
-        'granted' => 'Toegekend',
-        'identity_email' => 'E-mailadres',
-        'in_use' => 'In gebruik',
-        'has_payouts' => 'Heeft uitbetalingen',
-        'has_transactions' => 'Transactie gemaakt',
-        'has_reservations' => 'Reservering gemaakt',
-        'state' => 'Status',
-        'amount' => 'Bedrag',
-        'amount_available' => 'Huidig bedrag',
-        'in_use_date' => 'In gebruik datum',
-        'activation_code' => 'Activatiecode',
-        'fund_name' => 'Fondsnaam',
-        'implementation_name' => 'Website',
-        'reference_bsn' => 'BSN (door medewerker)',
-        'client_uid' => 'Uniek nummer',
-        'created_at' => 'Aangemaakt op',
-        'identity_bsn' => 'BSN (DigiD)',
-        'source' => 'Aangemaakt door',
-        'product_name' => 'Aanbod naam',
-        'note' => 'Notitie',
-        'expire_at' => 'Verlopen op',
+        'number',
+        'granted',
+        'identity_email',
+        'in_use',
+        'has_payouts',
+        'has_transactions',
+        'has_reservations',
+        'state',
+        'amount',
+        'amount_available',
+        'in_use_date',
+        'activation_code',
+        'fund_name',
+        'implementation_name',
+        'reference_bsn',
+        'client_uid',
+        'created_at',
+        'identity_bsn',
+        'source',
+        'product_name',
+        'note',
+        'expire_at',
     ];
 
     /**
@@ -48,10 +47,18 @@ class VoucherExport extends BaseFieldedExport
      * @param array $data
      * @param array $fields
      */
-    public function __construct(array $data, array $fields)
+    public function __construct(array $data, protected array $fields)
     {
-        $this->data = collect($data);
-        $this->fields = $fields;
+        $this->data = $this->exportTransform(collect($data));
+    }
+
+    /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys($data);
     }
 
     /**
@@ -69,19 +76,6 @@ class VoucherExport extends BaseFieldedExport
         return array_values(array_filter($fields, static function (array $item) {
             return !in_array($item['key'], static::$productVoucherOnlyKeys);
         }));
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        $collection = $this->collection();
-
-        return array_map(
-            fn ($key) => static::$exportFields[$key] ?? $key,
-            $collection->isNotEmpty() ? array_keys($collection->first()) : $this->fields
-        );
     }
 
     /**

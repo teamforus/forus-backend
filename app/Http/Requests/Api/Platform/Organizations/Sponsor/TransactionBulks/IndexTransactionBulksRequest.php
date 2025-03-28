@@ -34,7 +34,7 @@ class IndexTransactionBulksRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $fields = Arr::pluck(VoucherTransactionBulksExport::getExportFields(), 'key');
+        $fields = VoucherTransactionBulksExport::getExportFieldsRaw();
 
         return [
             'per_page' => $this->perPageRule(),

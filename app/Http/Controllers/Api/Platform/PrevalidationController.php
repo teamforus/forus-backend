@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
@@ -115,6 +116,17 @@ class PrevalidationController extends Controller
     }
 
     /**
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(): AnonymousResourceCollection
+    {
+        $this->authorize('viewAny', Prevalidation::class);
+
+        return ExportFieldArrResource::collection(PrevalidationsExport::getExportFields());
+    }
+
+    /**
      * @param SearchPrevalidationsRequest $request
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
@@ -128,7 +140,8 @@ class PrevalidationController extends Controller
 
         $type = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
-        $fileData = new PrevalidationsExport($request);
+        $fields = $request->input('fields', PrevalidationsExport::getExportFieldsRaw());
+        $fileData = new PrevalidationsExport($request, $fields);
 
         return resolve('excel')->download($fileData, $fileName);
     }
