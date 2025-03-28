@@ -69,7 +69,7 @@ class FundsExport extends BaseFieldedExport implements WithColumnFormatting, Wit
         protected array $fields
     ) {
         $this->data = $this->export($funds);
-        $this->data = $this->data->merge($this->getTotals());
+        $this->data = collect($this->data)->merge($this->getTotals());
     }
 
     /**
