@@ -171,6 +171,22 @@ class VoucherTransactionsSearch extends BaseSearch
             VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
 
+        if ($executionDateFrom = $this->getFilter('execution_date_from')) {
+            $from = Carbon::createFromFormat('Y-m-d', $executionDateFrom)
+                ->startOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->whereRelation('voucher_transaction_bulk', 'execution_date', '>=', $from);
+        }
+
+        if ($executionDateTo = $this->getFilter('execution_date_to')) {
+            $to = Carbon::createFromFormat('Y-m-d', $executionDateTo)
+                ->endOfDay()
+                ->format('Y-m-d H:i:s');
+
+            $builder->whereRelation('voucher_transaction_bulk', 'execution_date', '<=', $to);
+        }
+
         return self::appendSelectPaymentType(self::appendSelectRelation($builder));
     }
 
