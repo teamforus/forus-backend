@@ -446,7 +446,7 @@ class VoucherTransaction extends BaseModel
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
             'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
-            'identity_address',
+            'identity_address', 'execution_date_from', 'execution_date_to',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
