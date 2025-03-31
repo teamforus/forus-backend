@@ -111,10 +111,10 @@ class FundsExport extends BaseFieldedExport implements WithColumnFormatting, Wit
 
         return [
             'name' => $fund->name,
-            'total_top_up' => currency_format($total),
-            'expenses' => currency_format($used),
             'balance' => currency_format(round($total - $used, 2)),
+            'expenses' => currency_format($used),
             'transactions' => currency_format($costs),
+            'total_top_up' => currency_format($total),
         ];
     }
 
@@ -127,10 +127,10 @@ class FundsExport extends BaseFieldedExport implements WithColumnFormatting, Wit
 
         $row = array_only([
             'name' => static::trans('total'),
-            'total_top_up' => currency_format($this->totals['total_top_up']),
-            'expenses' => currency_format($this->totals['expenses']),
             'balance' => currency_format($this->totals['balance']),
+            'expenses' => currency_format($this->totals['expenses']),
             'transactions' => currency_format($this->totals['transactions']),
+            'total_top_up' => currency_format($this->totals['total_top_up']),
         ], $this->fields);
 
         $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [

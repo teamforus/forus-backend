@@ -108,7 +108,7 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $type = $request->input('export_type', 'xls');
+        $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fields = $request->input('fields', FundProvidersExport::getExportFieldsRaw());
         $exportData = new FundProvidersExport($request, $organization, $fields);
@@ -188,7 +188,7 @@ class ProvidersController extends Controller
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]))->with(ProviderFinancialResource::$load)->get();
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fields = $request->input('fields', ProviderFinancesExport::getExportFieldsRaw());
         $fileData = new ProviderFinancesExport($providers, $fields);

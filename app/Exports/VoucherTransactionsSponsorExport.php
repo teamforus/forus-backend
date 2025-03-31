@@ -16,16 +16,16 @@ class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
     protected static array $exportFields = [
         'id',
         'amount',
+        'amount_extra_cash',
         'date_transaction',
         'date_payment',
-        'date_non_cancelable',
-        'bulk_status_locale',
         'fund_name',
         'product_id',
         'product_name',
         'provider',
+        'date_non_cancelable',
         'state',
-        'amount_extra_cash',
+        'bulk_status_locale',
     ];
 
     /**

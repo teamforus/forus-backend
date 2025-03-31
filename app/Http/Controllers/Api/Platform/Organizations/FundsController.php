@@ -423,7 +423,7 @@ class FundsController extends Controller
         $year = $request->input('year');
         $from = Carbon::createFromFormat('Y', $year)->startOfYear();
         $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
-        $exportType = $request->input('export_type', 'xls');
+        $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         if ($detailed) {

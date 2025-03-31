@@ -138,7 +138,7 @@ class PrevalidationController extends Controller
     ): BinaryFileResponse {
         $this->authorize('viewAny', Prevalidation::class);
 
-        $type = $request->input('export_type', 'xls');
+        $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fields = $request->input('fields', PrevalidationsExport::getExportFieldsRaw());
         $fileData = new PrevalidationsExport($request, $fields);

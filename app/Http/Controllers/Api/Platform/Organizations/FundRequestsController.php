@@ -270,7 +270,7 @@ class FundRequestsController extends Controller
 
         $fields = $request->input('fields', FundRequestsExport::getExportFieldsRaw());
         $fileData = new FundRequestsExport($request, $request->employee($organization), $fields);
-        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_type', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }

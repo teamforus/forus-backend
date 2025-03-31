@@ -16,18 +16,18 @@ class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
     protected static array $exportFields = [
         'id',
         'amount',
+        'amount_extra',
+        'amount_extra_cash',
         'method',
         'branch_id',
         'branch_name',
         'branch_number',
-        'amount_extra',
         'date_transaction',
         'date_payment',
         'fund_name',
         'product_name',
         'provider',
         'state',
-        'amount_extra_cash',
     ];
 
     /**

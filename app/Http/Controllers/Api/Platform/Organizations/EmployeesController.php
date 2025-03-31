@@ -177,7 +177,7 @@ class EmployeesController extends Controller
             'role', 'roles', 'permission', 'permissions', 'q',
         ]), $organization->employees()->getQuery());
 
-        $exportType = $request->input('export_type', 'xls');
+        $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
         $fields = $request->input('fields', EmployeesExport::getExportFieldsRaw());
         $exportData = new EmployeesExport($search->query(), $fields);

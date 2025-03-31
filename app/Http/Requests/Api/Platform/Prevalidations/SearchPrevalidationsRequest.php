@@ -47,7 +47,7 @@ class SearchPrevalidationsRequest extends BaseFormRequest
             ],
             'per_page' => 'nullable|numeric|between:1,2500',
             'exported' => 'boolean',
-            'export_type' => 'nullable|string|in:csv,xls',
+            'data_format' => 'nullable|string|in:csv,xls',
         ];
     }
 }

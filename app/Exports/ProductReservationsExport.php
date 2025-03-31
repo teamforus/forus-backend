@@ -38,7 +38,7 @@ class ProductReservationsExport extends BaseFieldedExport
     public function __construct(EloquentCollection|array $reservations, array $fields = [])
     {
         $this->fields = $fields;
-        $this->data = $reservations;
+        $this->data = $this->export($reservations);
     }
 
     /**

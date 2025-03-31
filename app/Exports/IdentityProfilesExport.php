@@ -113,7 +113,7 @@ class IdentityProfilesExport extends BaseFieldedExport
             'id' => $identity->id ?: '',
             'given_name' => Arr::get($records, 'given_name.0.value_locale', '-'),
             'family_name' => Arr::get($records, 'family_name.0.value_locale', '-'),
-            'email' => $organization->email,
+            'email' => $identity->email,
             'bsn' => $organization->bsn_enabled ? $identity->bsn ?: '-' : '-',
             'client_number' => Arr::get($records, 'client_number.0.value_locale', '-'),
             'birth_date' => Arr::get($records, 'birth_date.0.value_locale', '-'),
