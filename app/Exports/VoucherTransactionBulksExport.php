@@ -17,11 +17,11 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
      */
     public static array $exportFields = [
         'id',
-        'state',
-        'amount',
         'quantity',
+        'amount',
         'bank_name',
         'date_transaction',
+        'state',
     ];
 
     /**

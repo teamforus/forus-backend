@@ -56,7 +56,7 @@ abstract class BaseFieldedExport implements FromCollection, WithHeadings
      * @param string $key
      * @return string|null
      */
-    protected static function trans(string $key): ?string
+    public static function trans(string $key): ?string
     {
         $transKey = static::$transKey;
 

@@ -54,16 +54,20 @@ abstract class DuskTestCase extends BaseTestCase
      */
     protected function driver(): RemoteWebDriver
     {
-        $options = (new ChromeOptions())->addArguments(collect([
-            $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
-        ])->unless($this->hasHeadlessDisabled(), function ($items) {
-            return $items->merge([
-                '--disable-gpu',
-                '--headless',
-                '--disable-images',
-                '--disable-dev-shm-usage',
+        $options = (new ChromeOptions())
+            ->addArguments(collect([
+                $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
+            ])->unless($this->hasHeadlessDisabled(), function ($items) {
+                return $items->merge([
+                    '--disable-gpu',
+                    '--headless',
+                    '--disable-images',
+                    '--disable-dev-shm-usage',
+                ]);
+            })->all())
+            ->setExperimentalOption('prefs', [
+                'download.default_directory' => storage_path('dusk-downloads'),
             ]);
-        })->all());
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',

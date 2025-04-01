@@ -3,6 +3,7 @@
 /public/storage
 /storage/*.key
 /storage/debugbar
+/storage/dusk-downloads
 /vendor
 /.idea
 /.vagrant
