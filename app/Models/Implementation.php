@@ -56,6 +56,7 @@ use Illuminate\Support\Facades\Gate;
  * @property int $overlay_opacity
  * @property string $banner_color
  * @property string $banner_background
+ * @property bool $banner_background_mobile
  * @property bool $banner_button
  * @property string $banner_button_url
  * @property string $banner_button_text
@@ -149,6 +150,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation query()
  * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
  * @method static Builder<static>|Implementation whereBannerBackground($value)
+ * @method static Builder<static>|Implementation whereBannerBackgroundMobile($value)
  * @method static Builder<static>|Implementation whereBannerButton($value)
  * @method static Builder<static>|Implementation whereBannerButtonTarget($value)
  * @method static Builder<static>|Implementation whereBannerButtonText($value)
@@ -262,8 +264,9 @@ class Implementation extends BaseModel
         'pre_check_enabled', 'pre_check_title', 'pre_check_banner_state', 'pre_check_banner_title',
         'pre_check_description', 'pre_check_banner_description', 'pre_check_banner_label',
         'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
-        'banner_color', 'banner_background', 'banner_position', 'banner_wide', 'banner_collapse', 'banner_button',
+        'banner_color', 'banner_position', 'banner_wide', 'banner_collapse', 'banner_button',
         'banner_button_url', 'banner_button_text', 'banner_button_target', 'banner_button_type',
+        'banner_background', 'banner_background_mobile',
     ];
 
     /**
@@ -302,6 +305,7 @@ class Implementation extends BaseModel
         'banner_wide' => 'boolean',
         'banner_button' => 'boolean',
         'banner_collapse' => 'boolean',
+        'banner_background_mobile' => 'boolean',
     ];
 
     /**
@@ -790,8 +794,8 @@ class Implementation extends BaseModel
                 ...$implementation->only([
                     'description', 'description_alignment', 'overlay_enabled', 'overlay_type',
                     'banner_button', 'banner_button_url', 'banner_button_text', 'banner_button_target',
-                    'banner_position', 'banner_color', 'banner_background', 'banner_wide', 'banner_collapse',
-                    'banner_button_type',
+                    'banner_position', 'banner_color', 'banner_wide', 'banner_collapse', 'banner_button_type',
+                    'banner_background', 'banner_background_mobile',
                 ]),
                 ...$implementation->translateColumns($implementation->only([
                     'title', 'description_html',

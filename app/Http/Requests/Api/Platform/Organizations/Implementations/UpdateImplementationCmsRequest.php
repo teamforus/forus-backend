@@ -49,6 +49,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'banner_position' => 'sometimes|in:left,center,right',
             'banner_color' => 'sometimes|hex_color',
             'banner_background' => 'sometimes|hex_color',
+            'banner_background_mobile' => 'sometimes|boolean',
             'page_title_suffix' => 'nullable|string|max:60',
             'languages' => 'array',
             'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
