@@ -62,6 +62,7 @@ abstract class DuskTestCase extends BaseTestCase
                     '--disable-gpu',
                     '--headless',
                     '--disable-images',
+                    '--no-sandbox',
                     '--disable-dev-shm-usage',
                 ]);
             })->all())
@@ -69,6 +70,7 @@ abstract class DuskTestCase extends BaseTestCase
                 'download.default_directory' => storage_path('dusk-downloads'),
                 'download.prompt_for_download' => false,
                 'download.directory_upgrade' => true,
+                'safebrowsing.enabled' => false,
             ]);
 
         return RemoteWebDriver::create(
