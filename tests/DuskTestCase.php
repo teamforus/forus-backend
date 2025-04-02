@@ -64,6 +64,7 @@ abstract class DuskTestCase extends BaseTestCase
                     '--disable-images',
                     '--no-sandbox',
                     '--disable-web-security',
+                    '--allow-running-insecure-content',
                     '--disable-dev-shm-usage',
                 ]);
             })->all())
