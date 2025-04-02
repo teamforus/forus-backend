@@ -67,6 +67,8 @@ abstract class DuskTestCase extends BaseTestCase
             })->all())
             ->setExperimentalOption('prefs', [
                 'download.default_directory' => storage_path('dusk-downloads'),
+                'download.prompt_for_download' => false,
+                'download.directory_upgrade' => true,
             ]);
 
         return RemoteWebDriver::create(
