@@ -22,6 +22,11 @@ trait ExportTrait
         $files = glob("$downloadPath/*.csv");
         $csvFile = $files ? array_reduce($files, fn($a, $b) => filectime($a) > filectime($b) ? $a : $b) : null;
 
+        $defaultDownloadPath = '/home/chrome/Downloads'; // Adjust this based on step 1
+        $downloadedFiles = glob("$defaultDownloadPath/*.csv");
+
+        log_debug('data-files', [$downloadedFiles, $csvFile]);
+
         if (!$csvFile) {
             $this->fail('CSV file was not downloaded.');
         }
