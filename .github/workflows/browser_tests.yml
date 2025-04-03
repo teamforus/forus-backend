@@ -118,4 +118,5 @@ jobs:
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
             forus-backend/storage/logs/laravel.log
+            forus-backend/storage/dusk-downloads/*
           retention-days: 5
