@@ -53,15 +53,6 @@ jobs:
       - name: Run base seeders
         run: docker compose exec -T app bash -c "php artisan key:generate && php artisan db:seed"
 
-      - name: Check files
-        run: docker compose exec -T app bash -c "find / -type d -name "Downloads" 2>/dev/null"
-
-      - name: Check files2
-        run: docker compose exec -T app bash -c "ls -lah /home/chrome/Downloads"
-
-      - name: Check files3
-        run: docker compose exec -T app bash -c "ls -lah /tmp"
-
       - name: Generate test data
         run: docker compose exec -T app php artisan test-data:seed
 

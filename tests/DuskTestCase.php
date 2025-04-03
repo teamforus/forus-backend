@@ -63,15 +63,13 @@ abstract class DuskTestCase extends BaseTestCase
                     '--headless',
                     '--disable-images',
                 ]);
-            })->all())
-            ->setExperimentalOption('prefs', [
-                'download.default_directory' => storage_path('dusk-downloads'),
-                'download.prompt_for_download' => false,
-                'download.directory_upgrade' => true,
-                'safebrowsing.enabled' => false,
-            ]);
-
-        log_debug('dusk-dir', [storage_path('dusk-downloads')]);
+            })->all());
+//            ->setExperimentalOption('prefs', [
+//                'download.default_directory' => storage_path('dusk-downloads'),
+//                'download.prompt_for_download' => false,
+//                'download.directory_upgrade' => true,
+//                'safebrowsing.enabled' => false,
+//            ]);
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
