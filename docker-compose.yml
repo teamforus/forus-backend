@@ -13,6 +13,7 @@ services:
     volumes:
       - ./:/var/www
       - ./docker/docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./storage/dusk-downloads:/home/chrome/Downloads
     ports:
       - "8000:80"
     depends_on:
