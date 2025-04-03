@@ -66,6 +66,8 @@ abstract class DuskTestCase extends BaseTestCase
                     '--disable-web-security',
                     '--allow-running-insecure-content',
                     '--disable-dev-shm-usage',
+                    '--ignore-certificate-errors',
+                    '--user-data-dir=/tmp/temp_chrome',
                 ]);
             })->all())
             ->setExperimentalOption('prefs', [
