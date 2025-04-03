@@ -5,6 +5,7 @@ namespace Tests\Browser\Traits;
 use App\Models\Fund;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 
 trait ExportTrait
@@ -22,7 +23,7 @@ trait ExportTrait
         $files = glob("$downloadPath/*.csv");
         $csvFile = $files ? array_reduce($files, fn($a, $b) => filectime($a) > filectime($b) ? $a : $b) : null;
 
-        $defaultDownloadPath = '/home/chrome/Downloads'; // Adjust this based on step 1
+        $defaultDownloadPath = '/home/seluser/Downloads'; // Adjust this based on step 1
         $downloadedFiles = glob("$defaultDownloadPath/*.csv");
 
         log_debug('data-files', [$downloadedFiles, $csvFile]);
