@@ -54,7 +54,7 @@ jobs:
         run: docker compose exec -T app bash -c "php artisan key:generate && php artisan db:seed"
 
       - name: Check files
-        run: docker compose exec -T app bash -c "cd storage/dusk-downloads && touch test_file.txt && ls -lah"
+        run: docker compose exec -T app bash -c "chmod -R 777 storage/dusk-downloads"
 
       - name: Generate test data
         run: docker compose exec -T app php artisan test-data:seed
