@@ -110,6 +110,9 @@ jobs:
       - name: --- RUN BROWSER TESTS ---
         run: docker compose exec -T app bash -c "php artisan dusk --testdox"
 
+      - name: Check download
+        run: docker compose exec -T app bash -c "find / -type d -name "Downloads" 2>/dev/null"
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -118,4 +121,5 @@ jobs:
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
             forus-backend/storage/logs/laravel.log
+            forus-backend/storage/dusk-downloads/*
           retention-days: 5

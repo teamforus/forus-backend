@@ -226,6 +226,11 @@ trait MakesTestFunds
         $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
         $fund->criteria()->forceDelete();
 
+        RecordType::whereIn('key', [
+            'test_bool', 'test_iban', 'test_date', 'test_email', 'test_string', 'test_string_any',
+            'test_number', 'test_select', 'test_select_number',
+        ])->delete();
+
         $this->makeRecordType($fund->organization, RecordType::TYPE_BOOL, 'test_bool');
         $this->makeRecordType($fund->organization, RecordType::TYPE_IBAN, 'test_iban');
         $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, 'test_date');
