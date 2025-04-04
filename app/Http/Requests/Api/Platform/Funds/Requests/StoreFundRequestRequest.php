@@ -8,6 +8,7 @@ use App\Models\FundRequest;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
@@ -84,7 +85,7 @@ class StoreFundRequestRequest extends BaseFormRequest
                 'string',
                 'min:5',
                 'max:2000',
-            ] : [],
+            ] : ['nullable', 'string'],
         ];
     }
 
@@ -95,10 +96,15 @@ class StoreFundRequestRequest extends BaseFormRequest
     protected function recordsRule(Fund $fund): array
     {
         $values = $this->input('records');
-        $values = is_array($values) ? array_pluck($values, 'value', 'fund_criterion_id') : [];
+        $values = is_array($values) ? Arr::pluck($values, 'value', 'fund_criterion_id') : [];
 
         return [
-            'records' => $this->isValidationRequest ? 'present|array' : 'present|array|min:1',
+            'records' => [
+                'present',
+                'array',
+                'min:1',
+                new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
+            ],
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
@@ -110,6 +116,7 @@ class StoreFundRequestRequest extends BaseFormRequest
             ],
             'records.*.fund_criterion_id' => [
                 'present',
+                'numeric',
                 new FundRequestRecordCriterionIdRule($fund, $this),
             ],
         ];

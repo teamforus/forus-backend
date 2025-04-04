@@ -113,8 +113,8 @@ use Throwable;
  */
 class ProductReservation extends BaseModel
 {
-    use SoftDeletes;
     use HasLogs;
+    use SoftDeletes;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_REJECTED = 'rejected';

@@ -19,6 +19,7 @@ use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use LogicException;
 
 abstract class BaseFundRequestRule extends BaseRule
 {
@@ -62,17 +63,35 @@ abstract class BaseFundRequestRule extends BaseRule
      */
     protected function findCriterion(string $attribute): ?FundCriterion
     {
-        $row = $this->getRecordRow($attribute);
+        if (!str_starts_with($attribute, 'records.')) {
+            throw new LogicException("Invalid attribute path in BaseFundRequestRule::findCriterion: '$attribute'");
+        }
 
-        return $this->fund->criteria()->find($row['fund_criterion_id'] ?? null);
+        $index = explode('.', $attribute)[1] ?? null;
+        $record = $this->request->input("records.$index");
+
+        return $this->fund->criteria()->find($record['fund_criterion_id'] ?? null);
     }
 
     /**
-     * @param string $attribute
+     * @param array $records
      * @return array
      */
-    protected function getRecordRow(string $attribute): array
+    protected function mapRecordValues(array $records): array
     {
-        return $this->request->input(implode('.', array_slice(explode('.', $attribute), 0, -1)));
+        $fundCriteriaById = $this->fund->criteria->pluck('record_type_key', 'id');
+
+        return array_reduce(array_keys($records), function ($list, $fund_criterion_id) use (
+            $fundCriteriaById,
+            $records,
+        ) {
+            $value = $records[$fund_criterion_id] ?? null;
+
+            if ($fundCriteriaById[$fund_criterion_id] ?? false) {
+                return [...$list, $fundCriteriaById[$fund_criterion_id] => $value];
+            }
+
+            return $list;
+        }, []);
     }
 }

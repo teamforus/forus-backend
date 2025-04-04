@@ -82,6 +82,9 @@ class TranslationLimitsTest extends TestCase
         $fund->forceFill(['name' => $name])->save();
         $data = $fund->translateColumns($fund->only('name'), 'nl', 'de', $request);
 
+        // 10 milliseconds
+        usleep(10_000);
+
         if ($assertTranslated) {
             self::assertTrue(Str::startsWith($data['name'], 'de'));
         } else {

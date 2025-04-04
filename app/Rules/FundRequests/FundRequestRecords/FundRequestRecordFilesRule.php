@@ -26,9 +26,18 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
             return $this->reject(trans('validation.in', compact('attribute')));
         }
 
-        // when attachments are not requested the files must not be provided
+        // when attachments are not requested the files must not be submitted
         if (!$criterion->show_attachment) {
-            return empty($value) || $this->reject(trans('validation.in', compact('attribute')));
+            if (!empty($value)) {
+                return $this->reject(trans('validation.in', compact('attribute')));
+            }
+
+            return true;
+        }
+
+        // value is an array
+        if (!is_array($value)) {
+            return $this->reject(trans('validation.array', compact('attribute')));
         }
 
         // files must be an array (if criterion not optional - not empty array)
@@ -49,7 +58,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
             ], $attribute . '.' . $index);
 
             if ($validation->fails()) {
-                return $this->reject($validation->errors()->first('value'));
+                return $this->reject($validation->errors()->first($attribute . '.' . $index));
             }
         }
 

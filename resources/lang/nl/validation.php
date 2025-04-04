@@ -224,6 +224,11 @@ return [
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
     ],
+    'fund_request' => [
+        'required_record' => 'Het veld :attribute is verplicht voor de fondaanvraag.',
+        'invalid_record' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
+        'extra_records' => 'Er zijn extra records ingediend die niet zijn toegestaan.',
+    ],
     'attributes' => [
         'pin_code' => 'pincode',
         'records' => 'Eigenschappen',
