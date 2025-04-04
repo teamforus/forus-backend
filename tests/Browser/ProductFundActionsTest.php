@@ -7,178 +7,192 @@ use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
+use Throwable;
 
 class ProductFundActionsTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
     use HasFrontendActions;
+    use RollbackModelsTrait;
     use MakesTestFundRequests;
 
     /**
      * Assert available fund actions on product page: reserve product, make fund request, fund activate,
-     * go to fund requests, go to voucher page, external link, not available text
-     * @throws \Throwable
+     * go to fund requests, go to voucher page, external link, not available text.
+     * @throws Throwable
      */
     public function testProductFundActions()
     {
-        $this->browse(function (Browser $browser) {
-            // Select implementation
-            $implementation = Implementation::byKey('nijmegen');
+        // Select implementation
+        $implementation = Implementation::byKey('nijmegen');
 
-            $requester = $this->makeIdentity($this->makeUniqueEmail());
-            $fundConfigs = $this->getVoucherFundSettings();
-            $fund = $this->createFund($implementation->organization, $fundConfigs);
+        $fundConfigs = $this->getVoucherFundSettings();
+        $payoutFundConfigs = $this->getPayoutFundSettings();
 
-            $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
-            $this->loginIdentity($browser, $requester);
+        $fund = $this->createFund($implementation->organization, $fundConfigs);
+        $fund2 = $this->createFund($implementation->organization, $fundConfigs);
+        $fundPayout = $this->createFund($implementation->organization, $payoutFundConfigs);
 
-            $product = $this->makeProductsFundFund(1)[0];
-            $this->addProductFundToFund($fund, $product, false);
+        $this->rollbackModels([], function () use ($implementation, $fund, $fund2, $fundPayout) {
+            $this->browse(function (Browser $browser) use ($implementation, $fund, $fund2, $fundPayout) {
+                $fundConfigs = $this->getVoucherFundSettings();
+                $payoutFundConfigs = $this->getPayoutFundSettings();
 
-            $browser->visit($implementation->urlWebshop("products/$product->id"));
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $requester = $this->makeIdentity($this->makeUniqueEmail());
 
-            // assert only fund request button present
-            $browser->waitFor("@fundItem$fund->id");
-            $browser->within("@fundItem$fund->id", function(Browser $browser) {
-                $browser->assertPresent('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertMissing('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertMissing('@notAvailable');
+                $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
+                $this->loginIdentity($browser, $requester);
+
+                $product = $this->makeProductsFundFund(1)[0];
+                $this->addProductFundToFund($fund, $product, false);
+
+                $browser->visit($implementation->urlWebshop("products/$product->id"));
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+
+                // assert only fund request button present
+                $browser->waitFor("@fundItem$fund->id");
+                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                    $browser->assertPresent('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertMissing('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertMissing('@notAvailable');
+                });
+
+                // create a fund request and assert only fund requests button present
+                $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, $fundConfigs['requester_records']);
+
+                $browser->refresh();
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fund->id");
+
+                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertPresent('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertMissing('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertMissing('@notAvailable');
+                });
+
+                // approve fund request and assert only reserve product button present
+                $this->approveFundRequest($fundRequest);
+
+                $browser->refresh();
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fund->id");
+
+                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertPresent('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertMissing('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertMissing('@notAvailable');
+                });
+
+                // Create fund with same criteria
+                $this->addProductFundToFund($fund2, $product, false);
+                $browser->visit($implementation->urlWebshop())->refresh();
+
+                // Assert only activate button is present
+                $browser->visit($implementation->urlWebshop("products/$product->id"));
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fund2->id");
+
+                $browser->within("@fundItem$fund2->id", function (Browser $browser) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertPresent('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertMissing('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertMissing('@notAvailable');
+                });
+
+                // not available text present for this fund
+                $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fundPayout, $payoutFundConfigs['requester_records']);
+
+                $this->approveFundRequest($fundRequest);
+                $this->addProductFundToFund($fundPayout, $product, false);
+
+                $browser->refresh();
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fundPayout->id");
+
+                $browser->within("@fundItem$fundPayout->id", function (Browser $browser) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertMissing('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertPresent('@notAvailable');
+                });
+
+                // set sold out product and assert only open voucher button visible for fund
+                $product->update([ 'total_amount' => 0 ]);
+                $product->updateSoldOutState();
+
+                $browser->refresh();
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fund->id");
+
+                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertPresent('@voucherButton');
+                    $browser->assertMissing('@externalLink');
+                    $browser->assertMissing('@notAvailable');
+                });
+
+                // add external link attributes to fund and assert also external link is visible
+                $btnText = $this->faker->word();
+
+                $fund->update([
+                    'external_link_text' => $btnText,
+                    'external_link_url' => $this->faker->url(),
+                ]);
+
+                $browser->refresh();
+                $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
+                $browser->waitFor("@fundItem$fund->id");
+
+                $browser->within("@fundItem$fund->id", function (Browser $browser) use ($btnText) {
+                    $browser->assertMissing('@fundRequest');
+                    $browser->assertMissing('@reserveProduct');
+                    $browser->assertMissing('@fundRequests');
+                    $browser->assertMissing('@fundActivate');
+                    $browser->assertMissing('@pendingButton');
+                    $browser->assertPresent('@voucherButton');
+                    $browser->assertPresent('@externalLink')->assertSeeIn('@externalLink', $btnText);
+                    $browser->assertMissing('@notAvailable');
+                });
             });
-
-            // create a fund request and assert only fund requests button present
-            $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, $fundConfigs['requester_records']);
-
-            $browser->refresh();
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fund->id");
-
-            $browser->within("@fundItem$fund->id", function(Browser $browser) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertPresent('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertMissing('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertMissing('@notAvailable');
-            });
-
-            // approve fund request and assert only reserve product button present
-            $this->approveFundRequest($fundRequest);
-
-            $browser->refresh();
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fund->id");
-
-            $browser->within("@fundItem$fund->id", function(Browser $browser) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertPresent('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertMissing('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertMissing('@notAvailable');
-            });
-
-            // Create fund with same criteria
-            $fund2 = $this->createFund($implementation->organization, $fundConfigs);
-            $this->addProductFundToFund($fund2, $product, false);
-            $browser->visit($implementation->urlWebshop())->refresh();
-
-            // Assert only activate button is present
-            $browser->visit($implementation->urlWebshop("products/$product->id"));
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fund2->id");
-
-            $browser->within("@fundItem$fund2->id", function(Browser $browser) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertPresent('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertMissing('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertMissing('@notAvailable');
-            });
-
-            // create payout fund, get voucher and assert not available text present for this fund
-            $fundConfigs = $this->getPayoutFundSettings();
-            $fundPayout = $this->createFund($implementation->organization, $fundConfigs);
-
-            $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fundPayout, $fundConfigs['requester_records']);
-            $this->approveFundRequest($fundRequest);
-            $this->addProductFundToFund($fundPayout, $product, false);
-
-            $browser->refresh();
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fundPayout->id");
-
-            $browser->within("@fundItem$fundPayout->id", function(Browser $browser) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertMissing('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertPresent('@notAvailable');
-            });
-
-            // set sold out product and assert only open voucher button visible for fund
-            $product->update([ 'total_amount' => 0 ]);
-            $product->updateSoldOutState();
-
-            $browser->refresh();
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fund->id");
-
-            $browser->within("@fundItem$fund->id", function(Browser $browser) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertPresent('@voucherButton');
-                $browser->assertMissing('@externalLink');
-                $browser->assertMissing('@notAvailable');
-            });
-
-            // add external link attributes to fund and assert also external link is visible
-            $btnText = $this->faker->word();
-
-            $fund->update([
-                'external_link_text' => $btnText,
-                'external_link_url' => $this->faker->url(),
-            ]);
-
-            $browser->refresh();
-            $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-            $browser->waitFor("@fundItem$fund->id");
-
-            $browser->within("@fundItem$fund->id", function(Browser $browser) use ($btnText) {
-                $browser->assertMissing('@fundRequest');
-                $browser->assertMissing('@reserveProduct');
-                $browser->assertMissing('@fundRequests');
-                $browser->assertMissing('@fundActivate');
-                $browser->assertMissing('@pendingButton');
-                $browser->assertPresent('@voucherButton');
-                $browser->assertPresent('@externalLink')->assertSeeIn('@externalLink', $btnText);
-                $browser->assertMissing('@notAvailable');
-            });
+        }, function () use ($fund, $fund2, $fundPayout) {
+            $fund && $this->deleteFund($fund);
+            $fund2 && $this->deleteFund($fund2);
+            $fundPayout && $this->deleteFund($fundPayout);
         });
     }
 
@@ -214,22 +228,6 @@ class ProductFundActionsTest extends DuskTestCase
         $this->assertNotNull($fundRequest);
 
         return $fundRequest;
-    }
-
-    /**
-     * @param FundRequest $fundRequest
-     * @return void
-     */
-    private function approveFundRequest(FundRequest $fundRequest): void
-    {
-        $employee = $fundRequest->fund->organization->employees[0];
-        $this->assertNotNull($employee);
-
-        $fundRequest->assignEmployee($employee);
-        $fundRequest->refresh();
-
-        $fundRequest->approve();
-        $fundRequest->refresh();
     }
 
     /**
@@ -286,5 +284,21 @@ class ProductFundActionsTest extends DuskTestCase
                 'children_nth' => 3,
             ],
         ];
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return void
+     */
+    private function approveFundRequest(FundRequest $fundRequest): void
+    {
+        $employee = $fundRequest->fund->organization->employees[0];
+        $this->assertNotNull($employee);
+
+        $fundRequest->assignEmployee($employee);
+        $fundRequest->refresh();
+
+        $fundRequest->approve();
+        $fundRequest->refresh();
     }
 }

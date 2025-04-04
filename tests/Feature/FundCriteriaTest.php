@@ -283,6 +283,7 @@ class FundCriteriaTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
+        $this->addTestCriteriaToFund($fund);
 
         array_map(fn (TestResponse $response) => $response->assertJsonValidationErrorFor('records'), [
             $this->makeFundRequest($identity, $fund, null, true),
@@ -290,7 +291,39 @@ class FundCriteriaTest extends TestCase
             $this->makeFundRequest($identity, $fund, '', true),
         ]);
 
-        $this->makeFundRequest($identity, $fund, [], true)->assertSuccessful();
+        $response = $this->makeFundRequest($identity, $fund, [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+        ], true);
+
+        $response->assertSuccessful();
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundRequestRecordsValidate(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->makeTestFund($organization);
+        $this->addTestCriteriaToFund($fund);
+
+        $records = [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
+        ];
+
+        // At least on records has to be submitted
+        $this->makeFundRequest($identity, $fund, [], true)->assertJsonValidationErrorFor('records');
+        $this->makeFundRequest($identity, $fund, [$records[0]], true)->assertSuccessful();
+        $this->makeFundRequest($identity, $fund, $records, true)->assertSuccessful();
     }
 
     /**
@@ -551,10 +584,10 @@ class FundCriteriaTest extends TestCase
 
         $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
         $fund->criteria()->forceDelete();
-        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, "test_date");
+        $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, 'test_date');
 
         $this->updateCriteriaRequest([[
-            ...$this->makeCriterion("test_date", '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
+            ...$this->makeCriterion('test_date', '01-01-2000', '>=', '01-01-1990', '01-01-2020'),
             'show_attachment' => true,
         ]], $fund)->assertSuccessful();
 

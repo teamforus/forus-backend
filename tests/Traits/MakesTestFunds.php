@@ -13,8 +13,8 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\ProductReservation;
 use App\Models\RecordType;
+use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use Throwable;
 
@@ -269,6 +269,16 @@ trait MakesTestFunds
         string $type,
         string $key,
     ): RecordType {
+        $existing = RecordType::where([
+            'organization_id' => $organization->id,
+            'criteria' => true,
+            'type' => $type,
+            'key' => $key,
+        ])->first();
+
+        $existing?->record_type_options()->forceDelete();
+        $existing?->forceDelete();
+
         $recordType = RecordType::create([
             'organization_id' => $organization->id,
             'criteria' => true,
@@ -379,19 +389,19 @@ trait MakesTestFunds
      */
     protected function deleteFund(Fund $fund): void
     {
-        Schema::disableForeignKeyConstraints();
-
         $fund->criteria()
             ->get()
-            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->delete());
+            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->forceDelete());
 
-        $fund->criteria()->delete();
-        $fund->criteria_steps()->delete();
-        ProductReservation::whereIn('voucher_id', $fund->vouchers()->pluck('id')->all())->forceDelete();
-        $fund->vouchers()->delete();
-        $fund->fund_requests()->delete();
-        $fund->delete();
+        $fund->criteria()->forceDelete();
+        $fund->criteria_steps()->forceDelete();
 
-        Schema::enableForeignKeyConstraints();
+        VoucherTransaction::whereIn('voucher_id', $fund->vouchers()->select('id'))->forceDelete();
+        $fund->vouchers()->whereNotNull('product_reservation_id')->forceDelete();
+        ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
+
+        $fund->vouchers()->forceDelete();
+        $fund->fund_requests()->forceDelete();
+        $fund->forceDelete();
     }
 }

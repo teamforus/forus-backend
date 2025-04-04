@@ -13,12 +13,14 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
      *
      * @param Fund|null $fund
      * @param BaseFormRequest|null $request
-     * @param array $records
+     * @param array $submittedRecords
+     * @param bool $isValidationRequest
      */
     public function __construct(
         protected ?Fund $fund,
         protected ?BaseFormRequest $request,
-        protected array $records,
+        protected array $submittedRecords,
+        protected bool $isValidationRequest = false,
     ) {
         parent::__construct($this->fund, $this->request);
     }
@@ -32,19 +34,57 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $requestCriteria = collect($value)->keyBy('fund_criterion_id')->toArray();
-        $values = $this->mapRecordValues($this->records);
+        // Skip full validation if in single-record validation mode
+        if ($this->isValidationRequest) {
+            return true;
+        }
+
+        // Map submitted records by criterion ID
+        $submittedCriteriaById = collect($value)->keyBy('fund_criterion_id')->toArray();
+        $submittedRecordValues = $this->mapRecordValues($this->submittedRecords);
+
+        // Track allowed criterion IDs (required and not excluded)
+        $expectedCriterionIds = [];
 
         foreach ($this->fund->criteria as $criterion) {
-            $records = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
-            $recordsValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $records);
-            $allValues = array_merge($recordsValues, $values);
+            $requiredRecordTypes = $criterion
+                ->fund_criterion_rules
+                ->pluck('record_type_key')
+                ->toArray();
 
-            if (!$criterion->isExcludedByRules($allValues) && !array_key_exists($criterion->id, $requestCriteria)) {
-                return $this->reject(trans('validation.required', [
+            $existingRecordValues = $this->fund->getTrustedRecordOfTypes(
+                $this->request->identity(),
+                $requiredRecordTypes
+            );
+
+            $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
+
+            if ($criterion->isExcludedByRules($allRecordValues)) {
+                // Excluded: must not be submitted
+                if (array_key_exists($criterion->id, $submittedCriteriaById)) {
+                    return $this->reject(trans('validation.fund_request.invalid_record', [
+                        'attribute' => $criterion->record_type_key,
+                    ]));
+                }
+                continue;
+            }
+
+            // Not excluded: required and must be submitted
+            $expectedCriterionIds[] = $criterion->id;
+
+            if (!array_key_exists($criterion->id, $submittedCriteriaById)) {
+                return $this->reject(trans('validation.fund_request.required_record', [
                     'attribute' => $criterion->record_type_key,
                 ]));
             }
+        }
+
+        // Disallow submission of criteria not in the allowed list
+        $submittedCriterionIds = array_keys($submittedCriteriaById);
+        $unexpectedIds = array_diff($submittedCriterionIds, $expectedCriterionIds);
+
+        if (!empty($unexpectedIds)) {
+            return $this->reject(trans('validation.fund_request.extra_records'));
         }
 
         return true;

@@ -19,9 +19,11 @@ class FundRequestCriteriaStepsTest extends TestCase
     use DatabaseTransactions;
     use MakesTestOrganizations;
 
+    use MakesTestFundRequests;
+
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordStringControlTypes(): void
     {
@@ -36,8 +38,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordBoolControlTypes(): void
     {
@@ -58,8 +60,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordEmailControlTypes(): void
     {
@@ -75,8 +77,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordIbanControlTypes(): void
     {
@@ -92,8 +94,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordNumberControlTypes(): void
     {
@@ -226,8 +228,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordSelectControlTypes(): void
     {
@@ -261,8 +263,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordSelectNumberControlTypes(): void
     {
@@ -323,8 +325,8 @@ class FundRequestCriteriaStepsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordDateControlTypes(): void
     {
@@ -578,7 +580,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 }
             })
             ->map(fn (array $criterion) => $this->makeRequestCriterionValue(
-                $fund, $criterion['record_type_key'], $criterion['input_value'],
+                $fund,
+                $criterion['record_type_key'],
+                $criterion['input_value'],
             ));
 
         $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
@@ -588,7 +592,9 @@ class FundRequestCriteriaStepsTest extends TestCase
         $recordsList = $criteria
             ->filter(fn (array $criterion) => !$criterion['exclude_value'])
             ->map(fn (array $criterion) => $this->makeRequestCriterionValue(
-                $fund, $criterion['record_type_key'], $criterion['input_value'],
+                $fund,
+                $criterion['record_type_key'],
+                $criterion['input_value'],
             ));
 
         $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
@@ -653,7 +659,6 @@ class FundRequestCriteriaStepsTest extends TestCase
         $this->assertFundResource($fund, $criteria);
     }
 
-    use MakesTestFundRequests;
     /**
      * @param Fund $fund
      * @param array $criteria
@@ -669,11 +674,12 @@ class FundRequestCriteriaStepsTest extends TestCase
         $response->assertSuccessful();
 
         $steps = collect($criteria)
-            ->filter(fn(array $criterion) => !is_null($criterion['step']))
+            ->filter(fn (array $criterion) => !is_null($criterion['step']))
             ->groupBy('step')
             ->toArray();
 
         $fundCriteriaSteps = $response->json('data.criteria_steps');
+
         foreach ($fundCriteriaSteps as $fundCriteriaStep) {
             $this->assertArrayHasKey($fundCriteriaStep['title'], $steps);
         }
@@ -681,6 +687,7 @@ class FundRequestCriteriaStepsTest extends TestCase
         $criteria = collect($criteria)->keyBy('record_type_key')->toArray();
         $fundCriteriaSteps = collect($fundCriteriaSteps)->keyBy('id')->toArray();
         $fundCriteria = $response->json('data.criteria');
+
         foreach ($fundCriteria as $fundCriterion) {
             $this->assertArrayHasKey($fundCriterion['record_type_key'], $criteria);
             $this->assertEquals($criteria[$fundCriterion['record_type_key']]['title'], $fundCriterion['title']);

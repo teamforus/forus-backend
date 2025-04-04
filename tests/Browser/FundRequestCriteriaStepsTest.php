@@ -33,8 +33,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     use RollbackModelsTrait;
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordStringControlTypes(): void
     {
@@ -49,8 +49,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordBoolControlTypes(): void
     {
@@ -71,8 +71,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordEmailControlTypes(): void
     {
@@ -88,8 +88,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordIbanControlTypes(): void
     {
@@ -105,8 +105,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordNumberControlTypes(): void
     {
@@ -239,8 +239,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordSelectControlTypes(): void
     {
@@ -274,8 +274,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordSelectNumberControlTypes(): void
     {
@@ -336,8 +336,8 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testWebshopFundRequestRecordDateControlTypes(): void
     {

@@ -19,6 +19,7 @@ use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use LogicException;
 
 abstract class BaseFundRequestRule extends BaseRule
 {
@@ -62,18 +63,14 @@ abstract class BaseFundRequestRule extends BaseRule
      */
     protected function findCriterion(string $attribute): ?FundCriterion
     {
-        $row = $this->getRecordRow($attribute);
+        if (!str_starts_with($attribute, 'records.')) {
+            throw new LogicException("Invalid attribute path in BaseFundRequestRule::findCriterion: '$attribute'");
+        }
 
-        return $this->fund->criteria()->find($row['fund_criterion_id'] ?? null);
-    }
+        $index = explode('.', $attribute)[1] ?? null;
+        $record = $this->request->input("records.$index");
 
-    /**
-     * @param string $attribute
-     * @return array
-     */
-    protected function getRecordRow(string $attribute): array
-    {
-        return $this->request->input(implode('.', array_slice(explode('.', $attribute), 0, -1)));
+        return $this->fund->criteria()->find($record['fund_criterion_id'] ?? null);
     }
 
     /**
