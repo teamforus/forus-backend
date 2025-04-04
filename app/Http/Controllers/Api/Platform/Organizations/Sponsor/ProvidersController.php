@@ -23,8 +23,8 @@ class ProvidersController extends Controller
      *
      * @param IndexProvidersRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexProvidersRequest $request,
@@ -36,12 +36,14 @@ class ProvidersController extends Controller
 
         $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
 
-        $query = $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
+        $query = $query->whereHas('fund_providers', function (Builder $builder) use ($request, $organization) {
             FundProvider::search($request, $organization, $builder);
         });
 
         $query = OrganizationQuery::whereGroupState(
-            $query, $organization, $request->get('state_group'),
+            $query,
+            $organization,
+            $request->get('state_group'),
         );
 
         $query = OrganizationQuery::orderProvidersBy($query, $organization, $request->only([
@@ -59,8 +61,8 @@ class ProvidersController extends Controller
      *
      * @param Organization $organization
      * @param Organization $provider
-     * @return SponsorProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorProviderResource
      */
     public function show(
         Organization $organization,
@@ -78,10 +80,10 @@ class ProvidersController extends Controller
     /**
      * @param IndexProvidersRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(
         IndexProvidersRequest $request,
@@ -91,7 +93,7 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $exportData = new FundProvidersExport($request, $organization);
 
@@ -101,8 +103,8 @@ class ProvidersController extends Controller
     /**
      * @param IndexProvidersRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function finances(
         IndexProvidersRequest $request,
@@ -131,10 +133,10 @@ class ProvidersController extends Controller
     /**
      * @param IndexProvidersRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportFinances(
         IndexProvidersRequest $request,

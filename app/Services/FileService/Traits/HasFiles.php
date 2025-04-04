@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 trait HasFiles
 {
     /**
-     * Append given files to the model
+     * Append given files to the model.
      *
      * @param string|array|null $uid
      * @return static
@@ -29,8 +29,8 @@ trait HasFiles
 
         foreach ($filesQuery->get() as $file) {
             $file->update([
-                'order'         => array_search($file->uid, $uid),
-                'fileable_id'   => $this->id,
+                'order' => array_search($file->uid, $uid),
+                'fileable_id' => $this->id,
                 'fileable_type' => $this->getMorphClass(),
             ]);
         }
@@ -39,7 +39,7 @@ trait HasFiles
     }
 
     /**
-     * Append given files to the model and remove the files that are not in the given list
+     * Append given files to the model and remove the files that are not in the given list.
      *
      * @param string|array|null $uid
      * @return static

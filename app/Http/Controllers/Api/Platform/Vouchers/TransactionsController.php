@@ -13,7 +13,6 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Config;
 use Throwable;
 
 class TransactionsController extends Controller
@@ -23,8 +22,8 @@ class TransactionsController extends Controller
      *
      * @param IndexVoucherTransactionsRequest $request
      * @param VoucherToken $voucherToken
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexVoucherTransactionsRequest $request,
@@ -34,10 +33,9 @@ class TransactionsController extends Controller
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
         $query = VoucherTransaction::searchVoucher($voucherToken->voucher, $request);
-        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
 
-        if ($hideOnMeApp && $request->isMeApp()) {
-            $query->where('target', 'provider');
+        if ($request->isMeApp()) {
+            $query->where('target', VoucherTransaction::TARGET_PROVIDER);
         }
 
         return VoucherTransactionResource::queryCollection($query, $request);
@@ -48,8 +46,8 @@ class TransactionsController extends Controller
      *
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
-     * @return VoucherTransactionResource
      * @throws AuthorizationException|Throwable
+     * @return VoucherTransactionResource
      */
     public function store(
         StoreVoucherTransactionRequest $request,
@@ -78,7 +76,7 @@ class TransactionsController extends Controller
         if ($voucher->product_reservation) {
             $this->authorize('acceptProvider', [
                 $voucher->product_reservation,
-                $voucher->product_reservation->product->organization
+                $voucher->product_reservation->product->organization,
             ]);
 
             return new VoucherTransactionResource(
@@ -150,13 +148,13 @@ class TransactionsController extends Controller
      *
      * @param VoucherToken $voucherToken
      * @param VoucherTransaction $voucherTransaction
-     * @return VoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherTransactionResource
      */
     public function show(
         VoucherToken $voucherToken,
         VoucherTransaction $voucherTransaction
-    ): VoucherTransactionResource  {
+    ): VoucherTransactionResource {
         $this->authorize('show', [$voucherTransaction, $voucherToken]);
 
         if ($voucherTransaction->voucher_id !== $voucherToken->voucher_id) {

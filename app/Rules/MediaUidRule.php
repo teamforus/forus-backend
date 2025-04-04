@@ -32,26 +32,31 @@ class MediaUidRule implements Rule
     {
         if (!is_string($value)) {
             $this->errorMessage = trans('validation.string');
+
             return false;
         }
 
         if (!$media = Media::findByUid($value)) {
             $this->errorMessage = trans('validation.exists');
+
             return false;
         }
 
         if (!Gate::allows('destroy', $media)) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 
         if ($media->type !== $this->type) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 
         if ($media->mediable) {
             $this->errorMessage = trans('validation.in');
+
             return false;
         }
 

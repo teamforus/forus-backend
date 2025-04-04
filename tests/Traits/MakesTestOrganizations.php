@@ -14,6 +14,23 @@ trait MakesTestOrganizations
      * @param array $organizationData
      * @return Organization
      */
+    public function makeTestProviderOrganization(Identity $identity, array $organizationData = []): Organization
+    {
+        $organization = $this->makeTestOrganization($identity, [
+            'reservations_budget_enabled' => true,
+            'reservations_subsidy_enabled' => true,
+            'reservation_allow_extra_payments' => true,
+            ...$organizationData,
+        ]);
+
+        return $organization->refresh();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $organizationData
+     * @return Organization
+     */
     protected function makeTestOrganization(Identity $identity, array $organizationData = []): Organization
     {
         $organization = Organization::create([
@@ -35,22 +52,5 @@ trait MakesTestOrganizations
         $organization->addEmployee($identity, Role::pluck('id')->toArray());
 
         return $organization;
-    }
-
-    /**
-     * @param Identity $identity
-     * @param array $organizationData
-     * @return Organization
-     */
-    public function makeTestProviderOrganization(Identity $identity, array $organizationData = []): Organization
-    {
-        $organization = $this->makeTestOrganization($identity, [
-            'reservations_budget_enabled' => true,
-            'reservations_subsidy_enabled' => true,
-            'reservation_allow_extra_payments' => true,
-            ...$organizationData,
-        ]);
-
-        return $organization->refresh();
     }
 }

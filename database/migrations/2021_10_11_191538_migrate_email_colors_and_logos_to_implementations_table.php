@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
+use Illuminate\Database\Migrations\Migration;
 
 /**
  * @noinspection PhpUnused
@@ -11,8 +11,8 @@ class MigrateEmailColorsAndLogosToImplementationsTable extends Migration
     /**
      * Run the migrations.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function up(): void
     {
@@ -24,5 +24,7 @@ class MigrateEmailColorsAndLogosToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down(): void {}
+    public function down(): void
+    {
+    }
 }

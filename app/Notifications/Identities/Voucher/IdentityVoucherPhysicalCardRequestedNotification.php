@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * A new physical card request was submitted
+ * A new physical card request was submitted.
  */
 class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVoucherNotification
 {

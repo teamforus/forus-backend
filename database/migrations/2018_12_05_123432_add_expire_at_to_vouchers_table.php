@@ -1,12 +1,11 @@
 <?php
 
 use App\Models\Voucher;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -24,7 +23,7 @@ return new class extends Migration
             $voucher->update([
                 'expire_at' => $voucher->fund->end_date->gt(
                     $voucher->product->expire_at
-                ) ? $voucher->product->expire_at : $voucher->fund->end_date
+                ) ? $voucher->product->expire_at : $voucher->fund->end_date,
             ]);
         }
     }

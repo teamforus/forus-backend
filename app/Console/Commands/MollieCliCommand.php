@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use Illuminate\Support\Facades\App;
 use Mollie\Api\Exceptions\ApiException;
+use Throwable;
 
 class MollieCliCommand extends BaseCommand
 {
@@ -27,8 +29,8 @@ class MollieCliCommand extends BaseCommand
     protected string $accessToken = '';
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function handle(): void
     {
@@ -76,40 +78,58 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function askAction(): void
     {
-        $this->printHeader("Select next action:");
+        $this->printHeader('Select next action:');
         $this->printList($this->askActionList());
-        $action = $this->ask("Please select next step:", 1);
+        $action = $this->ask('Please select next step:', 1);
 
         switch ($action) {
-            case 1: $this->mollieConnect(); break;
-            case 2: $this->exchangeOauthCode(); break;
-            case 3: $this->refreshToken(); break;
-            case 4: $this->createClientLink(); break;
+            case 1: $this->mollieConnect();
+                break;
+            case 2: $this->exchangeOauthCode();
+                break;
+            case 3: $this->refreshToken();
+                break;
+            case 4: $this->createClientLink();
+                break;
 
-            case 5: $this->readOrganization(); break;
-            case 6: $this->readOnboardingState(); break;
+            case 5: $this->readOrganization();
+                break;
+            case 6: $this->readOnboardingState();
+                break;
 
-            case 7: $this->createProfile(); break;
-            case 8: $this->readProfile(); break;
-            case 9: $this->readAllProfiles(); break;
+            case 7: $this->createProfile();
+                break;
+            case 8: $this->readProfile();
+                break;
+            case 9: $this->readAllProfiles();
+                break;
 
-            case 10: $this->readAllPaymentMethods(); break;
-            case 11: $this->readActivePaymentMethods(); break;
-            case 12: $this->enablePaymentMethod(); break;
-            case 13: $this->disablePaymentMethod(); break;
+            case 10: $this->readAllPaymentMethods();
+                break;
+            case 11: $this->readActivePaymentMethods();
+                break;
+            case 12: $this->enablePaymentMethod();
+                break;
+            case 13: $this->disablePaymentMethod();
+                break;
 
-            case 14: $this->createPayment(); break;
-            case 15: $this->readPayment(); break;
+            case 14: $this->createPayment();
+                break;
+            case 15: $this->readPayment();
+                break;
 
-            case 16: $this->refundPayment(); break;
-            case 17: $this->readPaymentRefund(); break;
+            case 16: $this->refundPayment();
+                break;
+            case 17: $this->readPaymentRefund();
+                break;
 
             case 18: $this->exit();
+                // no break
             default: $this->printText("Invalid input!\nPlease try again:\n");
         }
 
@@ -123,7 +143,9 @@ class MollieCliCommand extends BaseCommand
     {
         [$clientId, $clientSecret, $redirectUri] = $this->askMollieApp();
         $provider = new \Mollie\OAuth2\Client\Provider\Mollie(compact(
-            'clientId', 'clientSecret', 'redirectUri'
+            'clientId',
+            'clientSecret',
+            'redirectUri'
         ));
 
         $authorizationUrl = $provider->getAuthorizationUrl([
@@ -147,10 +169,13 @@ class MollieCliCommand extends BaseCommand
         $this->printSeparator();
     }
 
-    protected function exchangeOauthCode(): void {
+    protected function exchangeOauthCode(): void
+    {
         [$clientId, $clientSecret, $redirectUri] = $this->askMollieApp();
         $provider = new \Mollie\OAuth2\Client\Provider\Mollie(compact(
-            'clientId', 'clientSecret', 'redirectUri'
+            'clientId',
+            'clientSecret',
+            'redirectUri'
         ));
 
         $code = $this->ask('Please provide oAuth code');
@@ -162,28 +187,26 @@ class MollieCliCommand extends BaseCommand
                 'accessToken' => $provider->getAccessToken('authorization_code', compact('code')),
             ]));
             $this->printSeparator();
-        }
-
-        catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e)
-        {
+        } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
             // Failed to get the access token or user details.
             $this->error($e->getMessage());
         }
     }
 
     /**
-     * @return void
      * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
+     * @return void
      */
     protected function refreshToken(): void
     {
         [$clientId, $clientSecret, $redirectUri] = $this->askMollieApp();
 
         $provider = new \Mollie\OAuth2\Client\Provider\Mollie(compact(
-            'clientId', 'clientSecret', 'redirectUri'
+            'clientId',
+            'clientSecret',
+            'redirectUri'
         ));
         $refreshToken = $this->ask('Please provide refresh token');
-
 
         $grant = new \League\OAuth2\Client\Grant\RefreshToken();
         $token = $provider->getAccessToken($grant, ['refresh_token' => $refreshToken]);
@@ -194,9 +217,9 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return void
      */
     protected function createClientLink(): void
     {
@@ -211,18 +234,18 @@ class MollieCliCommand extends BaseCommand
         } while (empty($clientEmail));
 
         $response = $mollie->clientLinks->create([
-            "name" => $orgName,
-            "owner" => [
-                "email" => $clientEmail,
-                "givenName" => $this->ask('Owner given name', fake()->firstName),
-                "familyName" => $this->ask('Owner family name', fake()->lastName),
-                "locale" => $this->ask('Locale', "nl_NL"),
+            'name' => $orgName,
+            'owner' => [
+                'email' => $clientEmail,
+                'givenName' => $this->ask('Owner given name', fake()->firstName),
+                'familyName' => $this->ask('Owner family name', fake()->lastName),
+                'locale' => $this->ask('Locale', 'nl_NL'),
             ],
-            "address" => [
-                "streetAndNumber" => $this->ask('Street and number', fake()->streetAddress),
-                "postalCode" => $this->ask('Postal code', fake()->postcode),
-                "city" => $this->ask('City', "Amsterdam"),
-                "country" => $this->ask('Country', "NL"),
+            'address' => [
+                'streetAndNumber' => $this->ask('Street and number', fake()->streetAddress),
+                'postalCode' => $this->ask('Postal code', fake()->postcode),
+                'city' => $this->ask('City', 'Amsterdam'),
+                'country' => $this->ask('Country', 'NL'),
             ],
         ]);
 
@@ -249,8 +272,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readOrganization(): void
     {
@@ -265,8 +288,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readOnboardingState(): void
     {
@@ -281,9 +304,9 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
-     * @throws \Exception
+     * @throws Exception
+     * @return void
      */
     protected function createProfile(): void
     {
@@ -305,8 +328,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readProfile(): void
     {
@@ -322,8 +345,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readAllProfiles(): void
     {
@@ -338,8 +361,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readAllPaymentMethods(): void
     {
@@ -357,8 +380,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readActivePaymentMethods(): void
     {
@@ -376,8 +399,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function enablePaymentMethod(): void
     {
@@ -394,8 +417,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function disablePaymentMethod(): void
     {
@@ -412,8 +435,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function createPayment(): void
     {
@@ -423,8 +446,8 @@ class MollieCliCommand extends BaseCommand
         $response = $mollie->payments->create([
             'profileId' => $this->ask('Profile ID'),
             'amount' => [
-                "currency" => "EUR",
-                "value" => $this->ask('Amount', "2.00"),
+                'currency' => 'EUR',
+                'value' => $this->ask('Amount', '2.00'),
             ],
             'description' => $this->ask('description', 'Testing'),
             'redirectUrl' => $this->ask('Redirect url', 'https://example.com/mollie-success'),
@@ -445,8 +468,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readPayment(): void
     {
@@ -463,8 +486,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function refundPayment(): void
     {
@@ -480,8 +503,8 @@ class MollieCliCommand extends BaseCommand
 
         $response = $payment->refund([
             'amount' => [
-                "currency" => "EUR",
-                "value" => $this->ask('Amount', $payment->amount->value),
+                'currency' => 'EUR',
+                'value' => $this->ask('Amount', $payment->amount->value),
             ],
             'description' => $this->ask('description', 'Testing'),
             'metadata' => $this->ask('Metadata', "['foo' => 'bar']"),
@@ -494,8 +517,8 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @return void
      * @throws ApiException
+     * @return void
      */
     protected function readPaymentRefund(): void
     {
@@ -541,7 +564,6 @@ class MollieCliCommand extends BaseCommand
 
         return [$clientId, $clientSecret, $redirectUri];
     }
-
 
     /**
      * @return string

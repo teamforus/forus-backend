@@ -16,7 +16,7 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
         $fund_id = null,
         $date = null
     ) {
-        $this->data = $this->getRequests($fund_id, $date)->map(static function(
+        $this->data = $this->getRequests($fund_id, $date)->map(static function (
             PhysicalCardRequest $physicalCard
         ) {
             return array_combine([
@@ -25,6 +25,24 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
                 'address', 'house', 'house_addition', 'postcode', 'city',
             ]));
         });
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function collection(): Collection
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return array
+     */
+    public function headings(): array
+    {
+        return $this->data->map(static function ($row) {
+            return array_keys($row);
+        })->flatten()->unique()->toArray();
     }
 
     /**
@@ -40,7 +58,7 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
         $query = PhysicalCardRequest::query();
 
         if ($fund_id) {
-            $query->whereHas('voucher', static function(Builder $query) use ($fund_id) {
+            $query->whereHas('voucher', static function (Builder $query) use ($fund_id) {
                 $query->where('fund_id', $fund_id);
             });
         }
@@ -50,23 +68,5 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
         }
 
         return $query->get();
-    }
-
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection(): Collection
-    {
-        return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        return $this->data->map(static function ($row) {
-            return array_keys($row);
-        })->flatten()->unique()->toArray();
     }
 }

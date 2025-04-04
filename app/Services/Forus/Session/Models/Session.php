@@ -14,9 +14,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 /**
- * App\Services\Forus\Session\Models\Session
+ * App\Services\Forus\Session\Models\Session.
  *
  * @property int $id
  * @property string $uid
@@ -90,7 +91,7 @@ class Session extends Model
      */
     public function identity_proxy_with_trashed(): BelongsTo
     {
-        return $this->belongsTo(IdentityProxy::class)->where(function(Builder $builder) {
+        return $this->belongsTo(IdentityProxy::class)->where(function (Builder $builder) {
             /** @var Builder|SoftDeletes $builder */
             $builder->withTrashed();
         });
@@ -124,8 +125,8 @@ class Session extends Model
 
     /**
      * @param bool $expired
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function terminate(bool $expired = true): void
     {
@@ -140,7 +141,7 @@ class Session extends Model
         if (GeoIp::isAvailable()) {
             $ipAddresses = $this->requests()->distinct()->pluck('ip');
 
-            return $ipAddresses->map(function($ip) {
+            return $ipAddresses->map(function ($ip) {
                 return GeoIp::getLocation($ip);
             });
         }
@@ -150,7 +151,7 @@ class Session extends Model
 
     /**
      * An session is considered active if last request was made no more
-     * than 5 minutes ago
+     * than 5 minutes ago.
      *
      * @return bool
      */
@@ -196,15 +197,18 @@ class Session extends Model
 
         return match($this->initial_client_type) {
             Implementation::FRONTEND_WEBSHOP => $webshopTime['value'] ? $lastActivityTime->add(
-                $webshopTime['unit'] ?? 'minutes', $webshopTime['value'],
+                $webshopTime['unit'] ?? 'minutes',
+                $webshopTime['value'],
             ) : null,
             Implementation::FRONTEND_SPONSOR_DASHBOARD,
             Implementation::FRONTEND_PROVIDER_DASHBOARD,
             Implementation::FRONTEND_VALIDATOR_DASHBOARD => $dashboardTime['value'] ? $lastActivityTime->add(
-                $dashboardTime['unit'] ?? 'months', $dashboardTime['value'],
+                $dashboardTime['unit'] ?? 'months',
+                $dashboardTime['value'],
             ) : null,
             default => $appTime['value'] ? $lastActivityTime->add(
-                $appTime['unit'] ?? 'years', $appTime['value'],
+                $appTime['unit'] ?? 'years',
+                $appTime['value'],
             ) : null,
         };
     }

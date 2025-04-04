@@ -12,7 +12,7 @@ class CriteriaRuleTypeStringRule extends BaseCriteriaRuleTypeRule
     public function rules(): array
     {
         return array_filter([
-            "string",
+            'string',
             match($this->rule->operator) {
                 '=' => Rule::in($this->rule->value),
                 '!=' => Rule::notIn($this->rule->value),

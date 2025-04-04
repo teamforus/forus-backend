@@ -14,21 +14,6 @@ use Illuminate\Events\Dispatcher;
 class MollieConnectionSubscriber
 {
     /**
-     * @param BaseMollieConnectionEvent $event
-     * @param string $eventType
-     * @return EventLog
-     * @noinspection PhpUnused
-     */
-    protected function makeEvent(BaseMollieConnectionEvent $event, string $eventType): EventLog
-    {
-        return $event->getMollieConnection()->log(
-            $eventType,
-            $event->getMollieConnection()->getLogModels($event->getEmployee()),
-            $event->getData(),
-        );
-    }
-
-    /**
      * @param MollieConnectionCreated $event
      * @noinspection PhpUnused
      */
@@ -74,7 +59,7 @@ class MollieConnectionSubscriber
     }
 
     /**
-     * The events dispatcher
+     * The events dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused
@@ -88,5 +73,20 @@ class MollieConnectionSubscriber
         $events->listen(MollieConnectionUpdated::class, "$class@onMollieConnectionUpdated");
         $events->listen(MollieConnectionDeleted::class, "$class@onMollieConnectionDeleted");
         $events->listen(MollieConnectionCurrentProfileChanged::class, "$class@onMollieConnectionCurrentProfileChanged");
+    }
+
+    /**
+     * @param BaseMollieConnectionEvent $event
+     * @param string $eventType
+     * @return EventLog
+     * @noinspection PhpUnused
+     */
+    protected function makeEvent(BaseMollieConnectionEvent $event, string $eventType): EventLog
+    {
+        return $event->getMollieConnection()->log(
+            $eventType,
+            $event->getMollieConnection()->getLogModels($event->getEmployee()),
+            $event->getData(),
+        );
     }
 }

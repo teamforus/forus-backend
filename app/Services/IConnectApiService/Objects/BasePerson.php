@@ -37,7 +37,8 @@ abstract class BasePerson
      */
     public function getIndex(): int
     {
-        $array = explode("/", $this->data['_links']['self']['href'] ?? '');
+        $array = explode('/', $this->data['_links']['self']['href'] ?? '');
+
         return (int) end($array);
     }
 

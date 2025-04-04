@@ -18,6 +18,7 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Searches\ReimbursementsSearch;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,8 +32,8 @@ class ReimbursementsController extends Controller
      *
      * @param IndexReimbursementsRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexReimbursementsRequest $request,
@@ -56,8 +57,8 @@ class ReimbursementsController extends Controller
      *
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return SponsorReimbursementResource
      * @throws AuthorizationException
+     * @return SponsorReimbursementResource
      */
     public function show(
         Organization $organization,
@@ -69,13 +70,13 @@ class ReimbursementsController extends Controller
     }
 
     /**
-     * Update the specified resource in storage
+     * Update the specified resource in storage.
      *
      * @param UpdateReimbursementRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return SponsorReimbursementResource
      * @throws AuthorizationException
+     * @return SponsorReimbursementResource
      */
     public function update(
         UpdateReimbursementRequest $request,
@@ -93,13 +94,13 @@ class ReimbursementsController extends Controller
     }
 
     /**
-     * Assign fund request to employee
+     * Assign fund request to employee.
      *
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
      * @return SponsorReimbursementResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
         BaseFormRequest $request,
@@ -114,12 +115,12 @@ class ReimbursementsController extends Controller
     }
 
     /**
-     * Resign employee from fund request
+     * Resign employee from fund request.
      *
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return SponsorReimbursementResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorReimbursementResource
      * @noinspection PhpUnused
      */
     public function resign(
@@ -137,8 +138,8 @@ class ReimbursementsController extends Controller
      * @param ApproveReimbursementsRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return SponsorReimbursementResource
      * @throws Throwable
+     * @return SponsorReimbursementResource
      */
     public function approve(
         ApproveReimbursementsRequest $request,
@@ -158,8 +159,8 @@ class ReimbursementsController extends Controller
      * @param DeclineReimbursementsRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return SponsorReimbursementResource
      * @throws Throwable
+     * @return SponsorReimbursementResource
      */
     public function decline(
         DeclineReimbursementsRequest $request,
@@ -180,8 +181,8 @@ class ReimbursementsController extends Controller
      * @param BaseIndexFormRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function notes(
         BaseIndexFormRequest $request,
@@ -199,8 +200,8 @@ class ReimbursementsController extends Controller
      * @param StoreReimbursementNoteRequest $request
      * @param Organization $organization
      * @param Reimbursement $reimbursement
-     * @return NoteResource
      * @throws AuthorizationException
+     * @return NoteResource
      * @noinspection PhpUnused
      */
     public function storeNote(
@@ -222,8 +223,8 @@ class ReimbursementsController extends Controller
      * @param Organization $organization
      * @param Reimbursement $reimbursement
      * @param Note $note
-     * @return JsonResponse
      * @throws AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function destroyNote(
@@ -240,8 +241,8 @@ class ReimbursementsController extends Controller
 
     /**
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(
@@ -256,10 +257,10 @@ class ReimbursementsController extends Controller
     /**
      * @param IndexReimbursementsRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @noinspection PhpUnused
      */
     public function export(

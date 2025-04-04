@@ -2,11 +2,12 @@
 
 namespace App\Services\EventLogService\Models;
 
+use Eloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * App\Services\EventLogService\Models\Digest
+ * App\Services\EventLogService\Models\Digest.
  *
  * @property int $id
  * @property string $type
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $digestable_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $digestable
+ * @property-read Model|Eloquent $digestable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Digest query()

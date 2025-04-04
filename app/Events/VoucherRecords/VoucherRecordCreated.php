@@ -2,4 +2,6 @@
 
 namespace App\Events\VoucherRecords;
 
-class VoucherRecordCreated extends BaseVoucherRecordEvent {}
+class VoucherRecordCreated extends BaseVoucherRecordEvent
+{
+}

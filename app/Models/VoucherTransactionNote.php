@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\VoucherTransactionNote
+ * App\Models\VoucherTransactionNote.
  *
  * @property int $id
  * @property int $voucher_transaction_id

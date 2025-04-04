@@ -8,14 +8,15 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\ProductReservation;
 use App\Services\DigIdService\Models\DigIdSession;
+use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\TestsReservations;
+use Throwable;
 
 class AuthRedirectTest extends DuskTestCase
 {
@@ -27,8 +28,8 @@ class AuthRedirectTest extends DuskTestCase
     use MakesTestFundRequests;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithOneFundWithoutVoucher()
     {
@@ -45,7 +46,7 @@ class AuthRedirectTest extends DuskTestCase
 
         $this->rollbackModels([
             [$implementation, $implementation->only(['digid_enabled', 'digid_required'])],
-        ], function() use ($implementation, $organization, $fund) {
+        ], function () use ($implementation, $organization, $fund) {
             $implementation->forceFill([
                 'digid_enabled' => true,
                 'digid_required' => true,
@@ -71,7 +72,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($fund, $organization) {
+        }, function () use ($fund, $organization) {
             $fund && $this->deleteFund($fund);
             $organization->funds->each(function (Fund $fund) {
                 $fund->update(['state' => Fund::STATE_ACTIVE]);
@@ -80,8 +81,8 @@ class AuthRedirectTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithSeveralFundsWithoutVouchers()
     {
@@ -93,7 +94,7 @@ class AuthRedirectTest extends DuskTestCase
             $this->makeTestFund($implementation->organization),
         ]);
 
-        $this->rollbackModels([], function() use ($implementation, $organization, $funds) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $funds) {
             $organization
                 ->funds
                 ->filter(fn (Fund $item) => !in_array($item->id, $funds->pluck('id')->all()))
@@ -111,7 +112,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($funds, $organization) {
+        }, function () use ($funds, $organization) {
             $funds->each(fn (Fund $fund) => $this->deleteFund($fund));
             $organization->funds->each(function (Fund $fund) {
                 $fund->update(['state' => Fund::STATE_ACTIVE]);
@@ -120,8 +121,8 @@ class AuthRedirectTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithOneFundAndVoucher()
     {
@@ -129,7 +130,7 @@ class AuthRedirectTest extends DuskTestCase
         $organization = $implementation->organization;
         $fund = $this->makeTestFund($implementation->organization);
 
-        $this->rollbackModels([], function() use ($implementation, $organization, $fund) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
             $organization
                 ->funds
                 ->filter(fn (Fund $item) => $item->id !== $fund->id)
@@ -147,7 +148,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($fund, $organization) {
+        }, function () use ($fund, $organization) {
             $fund && $this->deleteFund($fund);
             $organization->funds->each(function (Fund $fund) {
                 $fund->update(['state' => Fund::STATE_ACTIVE]);
@@ -156,8 +157,8 @@ class AuthRedirectTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithSeveralFundsWithVouchers()
     {
@@ -169,7 +170,7 @@ class AuthRedirectTest extends DuskTestCase
             $this->makeTestFund($implementation->organization),
         ]);
 
-        $this->rollbackModels([], function() use ($implementation, $organization, $funds) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $funds) {
             $organization
                 ->funds
                 ->filter(fn (Fund $item) => !in_array($item->id, $funds->pluck('id')->all()))
@@ -188,7 +189,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($funds, $organization) {
+        }, function () use ($funds, $organization) {
             $funds->each(fn (Fund $fund) => $this->deleteFund($fund));
             $organization->funds->each(function (Fund $fund) {
                 $fund->update(['state' => Fund::STATE_ACTIVE]);
@@ -197,15 +198,15 @@ class AuthRedirectTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectToHomeWithoutFunds()
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
 
-        $this->rollbackModels([], function() use ($implementation, $organization) {
+        $this->rollbackModels([], function () use ($implementation, $organization) {
             $organization
                 ->funds
                 ->each(fn (Fund $fund) => $fund->update(['state' => Fund::STATE_CLOSED]));
@@ -222,7 +223,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($organization) {
+        }, function () use ($organization) {
             $organization->funds->each(function (Fund $fund) {
                 $fund->update(['state' => Fund::STATE_ACTIVE]);
             });
@@ -230,8 +231,8 @@ class AuthRedirectTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithTargetFundRequest()
     {
@@ -247,7 +248,7 @@ class AuthRedirectTest extends DuskTestCase
             ]])
             ->refresh();
 
-        $this->rollbackModels([], function() use ($implementation, $fund) {
+        $this->rollbackModels([], function () use ($implementation, $fund) {
             $requester = $this->makeIdentity($this->makeUniqueEmail());
 
             $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
@@ -269,21 +270,21 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($fund) {
+        }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithTargetVoucher()
     {
         $implementation = Implementation::byKey('nijmegen');
         $fund = $this->makeTestFund($implementation->organization);
 
-        $this->rollbackModels([], function() use ($implementation, $fund) {
+        $this->rollbackModels([], function () use ($implementation, $fund) {
             $requester = $this->makeIdentity($this->makeUniqueEmail());
             $voucher = $fund->makeVoucher($requester);
 
@@ -300,14 +301,14 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($fund) {
+        }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testAuthRedirectWithTargetProductReservation()
     {
@@ -316,7 +317,7 @@ class AuthRedirectTest extends DuskTestCase
             'allow_reservations' => true,
         ]);
 
-        $this->rollbackModels([], function() use ($implementation, $fund) {
+        $this->rollbackModels([], function () use ($implementation, $fund) {
             $requester = $this->makeIdentity($this->makeUniqueEmail());
             $reservation = $this->makeReservation($fund, $requester);
 
@@ -333,7 +334,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 $this->logout($browser);
             });
-        }, function() use ($fund) {
+        }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
     }

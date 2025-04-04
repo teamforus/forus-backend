@@ -18,24 +18,6 @@ use Illuminate\Events\Dispatcher;
 class ProductReservationSubscriber
 {
     /**
-     * @param ProductReservation $productReservation
-     * @return array
-     */
-    private function getReservationLogModels(ProductReservation $productReservation): array
-    {
-        return [
-            'fund' => $productReservation->voucher->fund,
-            'product' => $productReservation->product,
-            'sponsor' =>  $productReservation->voucher->fund->organization,
-            'provider' =>  $productReservation->product->organization,
-            'voucher' => $productReservation->voucher,
-            'employee' => $productReservation->employee,
-            'implementation' => $productReservation->voucher->fund->getImplementation(),
-            'product_reservation' => $productReservation,
-        ];
-    }
-
-    /**
      * @param ProductReservationCreated $event
      * @noinspection PhpUnused
      */
@@ -135,5 +117,23 @@ class ProductReservationSubscriber
         $events->listen(ProductReservationPending::class, "$class@onProductReservationPending");
         $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
         $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
+    }
+
+    /**
+     * @param ProductReservation $productReservation
+     * @return array
+     */
+    private function getReservationLogModels(ProductReservation $productReservation): array
+    {
+        return [
+            'fund' => $productReservation->voucher->fund,
+            'product' => $productReservation->product,
+            'sponsor' => $productReservation->voucher->fund->organization,
+            'provider' => $productReservation->product->organization,
+            'voucher' => $productReservation->voucher,
+            'employee' => $productReservation->employee,
+            'implementation' => $productReservation->voucher->fund->getImplementation(),
+            'product_reservation' => $productReservation,
+        ];
     }
 }

@@ -1,12 +1,11 @@
 <?php
 
+use App\Models\Fund;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Fund;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('funds', function(Blueprint $table) {
+        Schema::table('funds', function (Blueprint $table) {
             $table->string('description_short', 1000)->nullable()->after('description_text');
             $table->string('description', 4000)->nullable()->change();
         });

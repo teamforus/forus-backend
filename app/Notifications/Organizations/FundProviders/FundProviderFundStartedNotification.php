@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 /**
- * Notify provider about a fund going active
+ * Notify provider about a fund going active.
  */
 class FundProviderFundStartedNotification extends BaseFundProvidersNotification
 {

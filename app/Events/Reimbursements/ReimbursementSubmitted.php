@@ -2,4 +2,6 @@
 
 namespace App\Events\Reimbursements;
 
-class ReimbursementSubmitted extends BaseReimbursementEvent {}
+class ReimbursementSubmitted extends BaseReimbursementEvent
+{
+}

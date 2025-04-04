@@ -12,6 +12,7 @@ use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class FundProviderController extends Controller
 {
@@ -21,8 +22,8 @@ class FundProviderController extends Controller
      * @param IndexFundProviderRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderRequest $request,
@@ -49,13 +50,13 @@ class FundProviderController extends Controller
     }
 
     /**
-     * Display the specified resource
+     * Display the specified resource.
      *
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
-     * @return FundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderResource
      */
     public function show(
         Organization $organization,
@@ -74,9 +75,9 @@ class FundProviderController extends Controller
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $fundProvider
-     * @return FundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return FundProviderResource
      */
     public function update(
         UpdateFundProviderRequest $request,
@@ -88,7 +89,7 @@ class FundProviderController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('updateSponsor', [$fundProvider, $organization, $fund]);
 
-        DB::transaction(function() use ($organization, $fundProvider, $request, $fund) {
+        DB::transaction(function () use ($organization, $fundProvider, $request, $fund) {
             $fundProvider->update($request->only([
                 ...($fund->isTypeBudget() ? [
                     'allow_products', 'allow_budget', 'excluded',
@@ -115,7 +116,7 @@ class FundProviderController extends Controller
             }
 
             $fundProvider->update([
-                'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0
+                'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0,
             ]);
         });
 

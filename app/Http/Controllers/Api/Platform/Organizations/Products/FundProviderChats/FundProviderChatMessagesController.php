@@ -22,8 +22,8 @@ class FundProviderChatMessagesController extends Controller
      * @param Organization $organization
      * @param Product $product
      * @param FundProviderChat $fundProviderChat
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         Request $request,
@@ -35,11 +35,11 @@ class FundProviderChatMessagesController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         $this->authorize('viewAnyProvider', [
-            FundProviderChatMessage::class, $fundProviderChat, $product, $organization
+            FundProviderChatMessage::class, $fundProviderChat, $product, $organization,
         ]);
 
         $fundProviderChat->messages()->update([
-            'provider_seen' => true
+            'provider_seen' => true,
         ]);
 
         return FundProviderChatMessageResource::collection(
@@ -54,8 +54,8 @@ class FundProviderChatMessagesController extends Controller
      * @param Organization $organization
      * @param Product $product
      * @param FundProviderChat $fundProviderChat
-     * @return FundProviderChatMessageResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatMessageResource
      */
     public function store(
         StoreFundProviderChatMessageRequest $request,
@@ -67,7 +67,7 @@ class FundProviderChatMessagesController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         $this->authorize('createProvider', [
-            FundProviderChatMessage::class, $fundProviderChat, $product, $organization
+            FundProviderChatMessage::class, $fundProviderChat, $product, $organization,
         ]);
 
         $chatMessage = $fundProviderChat->addProviderMessage(
@@ -87,8 +87,8 @@ class FundProviderChatMessagesController extends Controller
      * @param Product $product
      * @param FundProviderChat $fundProviderChat
      * @param FundProviderChatMessage $fundProviderChatMessage
-     * @return FundProviderChatMessageResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderChatMessageResource
      */
     public function show(
         Organization $organization,
@@ -100,11 +100,11 @@ class FundProviderChatMessagesController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         $this->authorize('viewProvider', [
-            $fundProviderChatMessage, $fundProviderChat, $product, $organization
+            $fundProviderChatMessage, $fundProviderChat, $product, $organization,
         ]);
 
         $fundProviderChatMessage->update([
-            'provider_seen' => true
+            'provider_seen' => true,
         ]);
 
         return new FundProviderChatMessageResource(

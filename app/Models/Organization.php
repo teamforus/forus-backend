@@ -37,7 +37,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
 /**
- * App\Models\Organization
+ * App\Models\Organization.
  *
  * @property int $id
  * @property string|null $identity_address
@@ -124,6 +124,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_with_trashed
  * @property-read int|null $employees_with_trashed_count
+ * @property-read Collection|\App\Models\FundForm[] $fund_forms
+ * @property-read int|null $fund_forms_count
  * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
@@ -512,6 +514,15 @@ class Organization extends BaseModel
     }
 
     /**
+     * @return Organization|EloquentBuilder|HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function fund_forms(): EloquentBuilder|HasManyThrough|Organization
+    {
+        return $this->hasManyThrough(FundForm::class, Fund::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -564,15 +575,16 @@ class Organization extends BaseModel
     {
         return $this->hasMany(FundProvider::class);
     }
+
     /**
-     * Get organization logo
+     * Get organization logo.
      * @return MorphOne
      * @noinspection PhpUnused
      */
     public function logo(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'organization_logo'
+            'type' => 'organization_logo',
         ]);
     }
 
@@ -774,7 +786,7 @@ class Organization extends BaseModel
     }
 
     /**
-     * Returns identity organization permissions
+     * Returns identity organization permissions.
      * @param ?Identity $identity
      * @return Collection
      */
@@ -788,7 +800,7 @@ class Organization extends BaseModel
     }
 
     /**
-     * Check if identity is organization employee
+     * Check if identity is organization employee.
      * @param Identity $identity
      * @param bool $fresh
      * @return bool
@@ -810,7 +822,7 @@ class Organization extends BaseModel
      */
     public function identityCan(
         Identity $identity = null,
-        array|string  $permissions = [],
+        array|string $permissions = [],
         bool $all = true
     ): bool {
         // convert string to array
@@ -845,27 +857,29 @@ class Organization extends BaseModel
 
         /**
          * Query all the organizations where identity_address has permissions
-         * or is the creator
+         * or is the creator.
          */
-        return self::query()->where(static function(EloquentBuilder $builder) use (
-            $identityAddress, $permissions
+        return self::query()->where(static function (EloquentBuilder $builder) use (
+            $identityAddress,
+            $permissions
         ) {
-            return $builder->whereIn('id', function(Builder $query) use (
-                $identityAddress, $permissions
+            return $builder->whereIn('id', function (Builder $query) use (
+                $identityAddress,
+                $permissions
             ) {
-                $query->select(['organization_id'])->from((new Employee)->getTable())->where([
-                    'identity_address' => $identityAddress
+                $query->select(['organization_id'])->from((new Employee())->getTable())->where([
+                    'identity_address' => $identityAddress,
                 ])->whereNull('deleted_at')->whereIn('id', function (Builder $query) use ($permissions) {
                     $query->select('employee_id')->from(
-                        (new EmployeeRole)->getTable()
+                        (new EmployeeRole())->getTable()
                     )->whereIn('role_id', function (Builder $query) use ($permissions) {
-                        $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
+                        $query->select(['id'])->from((new Role())->getTable())->whereIn('id', function (
                             Builder $query
-                        )  use ($permissions) {
+                        ) use ($permissions) {
                             return $query->select(['role_id'])->from(
-                                (new RolePermission)->getTable()
+                                (new RolePermission())->getTable()
                             )->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                                $query->select('id')->from((new Permission)->getTable());
+                                $query->select('id')->from((new Permission())->getTable());
 
                                 // allow any permission
                                 if ($permissions !== false) {
@@ -937,7 +951,7 @@ class Organization extends BaseModel
         }
 
         if ($postcodes) {
-            $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
+            $query->whereHas('offices', static function (EloquentBuilder $builder) use ($postcodes) {
                 $builder->whereIn('postcode_number', (array) $postcodes);
             });
         }
@@ -947,7 +961,7 @@ class Organization extends BaseModel
         }
 
         if ($dateFrom && $dateTo) {
-            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
+            $query->whereHas('voucher_transactions', function (EloquentBuilder $builder) use ($dateFrom, $dateTo) {
                 $builder->where('created_at', '>=', $dateFrom->clone()->startOfDay());
                 $builder->where('created_at', '<=', $dateTo->clone()->endOfDay());
             });

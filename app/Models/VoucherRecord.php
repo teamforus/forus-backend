@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\VoucherRecord
+ * App\Models\VoucherRecord.
  *
  * @property int $id
  * @property int $voucher_id
@@ -42,7 +42,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class VoucherRecord extends Model
 {
-    use SoftDeletes, HasLogs;
+    use SoftDeletes;
+    use HasLogs;
 
     public const string EVENT_CREATED = 'created';
     public const string EVENT_UPDATED = 'updated';

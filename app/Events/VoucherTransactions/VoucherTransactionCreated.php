@@ -2,4 +2,6 @@
 
 namespace App\Events\VoucherTransactions;
 
-class VoucherTransactionCreated extends BaseVoucherTransactionEvent {}
+class VoucherTransactionCreated extends BaseVoucherTransactionEvent
+{
+}

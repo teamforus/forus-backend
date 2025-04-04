@@ -47,6 +47,29 @@ class StoreFundRequestRequest extends BaseFormRequest
     }
 
     /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        $messages = [];
+        $records = $this->get('records', []);
+
+        foreach (is_array($records) ? $records : [] as $val) {
+            $record_type_key = Arr::get($val, 'record_type_key', false);
+
+            if ($record_type_key) {
+                $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
+
+                $messages['records.*.value.required'] = trans(
+                    "validation.fund_request_request_{$prefix}field_incomplete",
+                );
+            }
+        }
+
+        return $messages;
+    }
+
+    /**
      * @param Fund $fund
      * @return array
      */
@@ -98,28 +121,5 @@ class StoreFundRequestRequest extends BaseFormRequest
                 new FundRequestRecordCriterionIdRule($fund, $this),
             ],
         ];
-    }
-
-    /**
-     * @return array
-     */
-    public function messages(): array
-    {
-        $messages = [];
-        $records = $this->get('records', []);
-
-        foreach (is_array($records) ? $records : [] as $val) {
-            $record_type_key = Arr::get($val, 'record_type_key', false);
-
-            if ($record_type_key) {
-                $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
-
-                $messages["records.*.value.required"] = trans(
-                    "validation.fund_request_request_{$prefix}field_incomplete",
-                );
-            }
-        }
-
-        return $messages;
     }
 }

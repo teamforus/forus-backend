@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Notification\Commands;
 
 use Illuminate\Console\Command;
+use Throwable;
 
 class NotificationsTokensImportCommand extends Command
 {
@@ -35,8 +36,8 @@ class NotificationsTokensImportCommand extends Command
 
         $tokens = [];
 
-        if (($h = fopen((string) $csvPath, 'rb')) !== FALSE) {
-            while (($data = fgetcsv($h, 1000)) !== FALSE) {
+        if (($h = fopen((string) $csvPath, 'rb')) !== false) {
+            while (($data = fgetcsv($h, 1000)) !== false) {
                 $tokens[] = $data;
             }
 
@@ -67,7 +68,7 @@ class NotificationsTokensImportCommand extends Command
             try {
                 $notificationService->storeNotificationToken($identity_address, $token, $type);
                 $countSuccess++;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->error(sprintf('Could not import a token, line %s', $tokenRowKey + 2));
                 $this->error(sprintf('The error: %s', $e->getMessage()));
                 $countError++;

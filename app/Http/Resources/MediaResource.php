@@ -5,13 +5,16 @@ namespace App\Http\Resources;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property Media $resource
  */
-class MediaResource extends JsonResource
+class MediaResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'presets',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -24,9 +27,9 @@ class MediaResource extends JsonResource
             return null;
         }
 
-        $sizes = $media->presets->filter(static function(MediaPreset $preset) {
+        $sizes = $media->presets->filter(static function (MediaPreset $preset) {
             return $preset->key !== 'original';
-        })->keyBy('key')->map(static function(MediaPreset $preset) {
+        })->keyBy('key')->map(static function (MediaPreset $preset) {
             return $preset->urlPublic();
         });
 

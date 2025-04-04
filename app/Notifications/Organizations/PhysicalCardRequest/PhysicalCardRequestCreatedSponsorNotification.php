@@ -3,7 +3,7 @@
 namespace App\Notifications\Organizations\PhysicalCardRequest;
 
 /**
- * Class PhysicalCardRequestCreatedSponsorNotification
+ * Class PhysicalCardRequestCreatedSponsorNotification.
  */
 class PhysicalCardRequestCreatedSponsorNotification extends BasePhysicalCardRequestNotification
 {

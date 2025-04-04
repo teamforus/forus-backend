@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * The voucher was deactivated
+ * The voucher was deactivated.
  */
 class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotification
 {

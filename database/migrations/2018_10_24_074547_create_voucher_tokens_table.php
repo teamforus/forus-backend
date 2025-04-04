@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 use App\Models\Voucher;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -21,8 +20,10 @@ return new class extends Migration
             $table->boolean('need_confirmation')->default(true);
             $table->timestamps();
 
-            $table->foreign('voucher_id'
-            )->references('id')->on('vouchers')->onDelete('cascade');
+            $table->foreign('voucher_id')
+                ->references('id')
+                ->on('vouchers')
+                ->onDelete('cascade');
         });
 
         Voucher::get()->each(function (Voucher $voucher) {
@@ -31,7 +32,7 @@ return new class extends Migration
             ]));
 
             $voucher->tokens()->create([
-                'address'           => resolve('token_generator')->address(),
+                'address' => resolve('token_generator')->address(),
                 'need_confirmation' => true,
             ]);
         });

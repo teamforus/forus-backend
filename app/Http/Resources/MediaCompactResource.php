@@ -26,14 +26,14 @@ class MediaCompactResource extends JsonResource
             return null;
         }
 
-        $presets = $media->presets->filter(static function(MediaPreset $preset) {
+        $presets = $media->presets->filter(static function (MediaPreset $preset) {
             return $preset->key !== 'original';
-        })->keyBy('key')->map(static function(MediaPreset $preset) {
+        })->keyBy('key')->map(static function (MediaPreset $preset) {
             return $preset->urlPublic();
         });
 
         return array_merge($media->only([
-            'original_name', 'type', 'ext', 'uid', 'dominant_color'
+            'original_name', 'type', 'ext', 'uid', 'dominant_color',
         ]), [
             'dominant_color' => $media->dominant_color ?? null,
             'sizes' => $presets,

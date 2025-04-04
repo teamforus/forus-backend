@@ -52,19 +52,20 @@ class ApproveFundRequestsRequest extends BaseFormRequest
         return
             $this->supportsChangingAmount($fund) &&
             $fund->organization->allow_payouts &&
-            $fund->fund_config->allow_custom_amounts_validator ? [
-            $this->hasFormula($fund) ? 'nullable' : (
-                $fund->organization->allow_payouts && $fund->fund_config->allow_preset_amounts_validator ?
-                    'required_without:fund_amount_preset_id' :
-                    'required'
-            ),
-            'numeric',
-            'min:' . currency_format($fund->fund_config->custom_amount_min),
-            'max:' . currency_format($fund->fund_config->custom_amount_max),
-        ] : [
-            'nullable',
-            'in:',
-        ];
+            $fund->fund_config->allow_custom_amounts_validator ?
+                [
+                    $this->hasFormula($fund) ? 'nullable' : (
+                        $fund->organization->allow_payouts && $fund->fund_config->allow_preset_amounts_validator ?
+                            'required_without:fund_amount_preset_id' :
+                            'required'
+                    ),
+                    'numeric',
+                    'min:' . currency_format($fund->fund_config->custom_amount_min),
+                    'max:' . currency_format($fund->fund_config->custom_amount_max),
+                ] : [
+                    'nullable',
+                    'in:',
+                ];
     }
 
     /**
@@ -76,17 +77,18 @@ class ApproveFundRequestsRequest extends BaseFormRequest
         return
             $this->supportsChangingAmount($fund) &&
             $fund->organization->allow_payouts &&
-            $fund->fund_config->allow_preset_amounts_validator ? [
-            $this->hasFormula($fund) ? 'nullable' : (
-            $fund->organization->allow_payouts && $fund->fund_config->allow_custom_amounts_validator ?
-                'required_without:amount' :
-                'required'
-            ),
-            Rule::exists('fund_amount_presets', 'id')->where('fund_id', $fund->id),
-        ] : [
-            'nullable',
-            'in:',
-        ];
+            $fund->fund_config->allow_preset_amounts_validator ?
+                [
+                    $this->hasFormula($fund) ? 'nullable' : (
+                        $fund->organization->allow_payouts && $fund->fund_config->allow_custom_amounts_validator ?
+                        'required_without:amount' :
+                        'required'
+                    ),
+                    Rule::exists('fund_amount_presets', 'id')->where('fund_id', $fund->id),
+                ] : [
+                    'nullable',
+                    'in:',
+                ];
     }
 
     /**
@@ -111,11 +113,11 @@ class ApproveFundRequestsRequest extends BaseFormRequest
     }
 
     /**
-     * @return void
      * @throws Exception
+     * @return void
      */
     protected function failedAuthorization(): void
     {
-        throw new Exception("Dit fonds ondersteunt geen wijziging van bedragen.", 403);
+        throw new Exception('Dit fonds ondersteunt geen wijziging van bedragen.', 403);
     }
 }

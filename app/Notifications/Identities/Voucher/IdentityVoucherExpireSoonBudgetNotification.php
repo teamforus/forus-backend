@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * The voucher will expire soon (budget/subsidy)
+ * The voucher will expire soon (budget/subsidy).
  */
 class IdentityVoucherExpireSoonBudgetNotification extends BaseIdentityVoucherNotification
 {

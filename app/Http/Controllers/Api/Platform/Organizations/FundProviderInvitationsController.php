@@ -20,8 +20,8 @@ class FundProviderInvitationsController extends Controller
      *
      * @param IndexFundProviderInvitationRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderInvitationRequest $request,
@@ -52,8 +52,8 @@ class FundProviderInvitationsController extends Controller
      *
      * @param Organization $organization
      * @param FundProviderInvitation $fundProviderInvitation
-     * @return FundProviderInvitationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderInvitationResource
      */
     public function show(
         Organization $organization,
@@ -71,8 +71,8 @@ class FundProviderInvitationsController extends Controller
      * @param UpdateFundProviderInvitationRequest $request
      * @param Organization $organization
      * @param FundProviderInvitation $fundProviderInvitation
-     * @return FundProviderInvitationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return FundProviderInvitationResource
      */
     public function update(
         UpdateFundProviderInvitationRequest $request,

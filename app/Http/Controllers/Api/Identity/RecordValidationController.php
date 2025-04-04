@@ -39,11 +39,12 @@ class RecordValidationController extends Controller
         $validationRequest = RecordValidation::whereUuid($recordUuid)->first();
 
         if (!$validationRequest) {
-            return new JsonResponse(['message' => "Not found"], 404);
+            return new JsonResponse(['message' => 'Not found'], 404);
         }
 
         $organizations = Organization::queryByIdentityPermissions(
-            $identityAddress, Permission::VALIDATE_RECORDS
+            $identityAddress,
+            Permission::VALIDATE_RECORDS
         )
             ->select('id', 'name')
             ->get();
@@ -53,18 +54,18 @@ class RecordValidationController extends Controller
         });
 
         return new JsonResponse(array_merge(array_merge($validationRequest->only([
-            'state', 'identity_address', 'uuid'
+            'state', 'identity_address', 'uuid',
         ]), $validationRequest->record->only([
-            'value'
+            'value',
         ]), $validationRequest->record->record_type->only([
-            'key', 'name'
+            'key', 'name',
         ])), [
             'organizations_available' => $organizations,
         ]));
     }
 
     /**
-     * Approve validation request
+     * Approve validation request.
      *
      * @param ApproveRecordValidationRequest $request
      * @param string $recordUuid
@@ -84,7 +85,7 @@ class RecordValidationController extends Controller
     }
 
     /**
-     * Decline validation request
+     * Decline validation request.
      * @param BaseFormRequest $request
      * @param string $recordUuid
      * @return JsonResponse
@@ -94,7 +95,7 @@ class RecordValidationController extends Controller
         $success = RecordValidation::findByUuid($recordUuid)?->decline($request->identity());
 
         if (!$success) {
-            return new JsonResponse(['message' => "Can't decline request.",], 403);
+            return new JsonResponse(['message' => "Can't decline request.", ], 403);
         }
 
         return new JsonResponse(compact('success'));

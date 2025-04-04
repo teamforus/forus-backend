@@ -27,8 +27,8 @@ class Settings extends OneLoginSettings
 
     /**
      * @param OneLoginSettings $settings
-     * @return static
      * @throws Error
+     * @return static
      */
     public static function fromBase(OneLoginSettings $settings): static
     {
@@ -75,8 +75,8 @@ class Settings extends OneLoginSettings
     }
 
     /**
-     * @return XMLSecurityKey
      * @throws Saml2Exception
+     * @return XMLSecurityKey
      */
     public function getSPXmlSecurityKey(): XMLSecurityKey
     {
@@ -84,31 +84,13 @@ class Settings extends OneLoginSettings
     }
 
     /**
-     * @return XMLSecurityKey
      * @throws Saml2Exception
+     * @return XMLSecurityKey
      * @noinspection PhpUnused
      */
     public function getSPXmlSecurityCertKey(): XMLSecurityKey
     {
         return $this->getXmlSecurityKey($this->getSPcert(), 'public');
-    }
-
-    /**
-     * @param string|null $certOrKey
-     * @param string $type
-     * @return XMLSecurityKey
-     * @throws Saml2Exception
-     */
-    protected function getXmlSecurityKey(?string $certOrKey, string $type = 'private'): XMLSecurityKey
-    {
-        try {
-            $key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, compact('type'));
-            $key->loadKey($certOrKey);
-
-            return $key;
-        } catch (Throwable $e) {
-            throw new Saml2Exception($e->getMessage());
-        }
     }
 
     /**
@@ -124,8 +106,26 @@ class Settings extends OneLoginSettings
      * @param mixed $default
      * @return mixed
      */
-    public function getOptional(string $key, mixed $default = null) : mixed
+    public function getOptional(string $key, mixed $default = null): mixed
     {
         return Arr::get($this->getSettings(), $key, $default);
+    }
+
+    /**
+     * @param string|null $certOrKey
+     * @param string $type
+     * @throws Saml2Exception
+     * @return XMLSecurityKey
+     */
+    protected function getXmlSecurityKey(?string $certOrKey, string $type = 'private'): XMLSecurityKey
+    {
+        try {
+            $key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, compact('type'));
+            $key->loadKey($certOrKey);
+
+            return $key;
+        } catch (Throwable $e) {
+            throw new Saml2Exception($e->getMessage());
+        }
     }
 }

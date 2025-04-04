@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\Forus\Notification\Messages;
 
 use Illuminate\Bus\Queueable;

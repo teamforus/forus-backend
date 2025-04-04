@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Searches;
-
 
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -44,8 +42,8 @@ class OrganizationSearch extends BaseSearch
         }
 
         if ($this->getFilter('has_reservations') && $this->getFilter('auth_address')) {
-            $builder->whereHas('products.product_reservations', function(Builder $builder) {
-                $builder->whereHas('voucher', function(Builder $builder) {
+            $builder->whereHas('products.product_reservations', function (Builder $builder) {
+                $builder->whereHas('voucher', function (Builder $builder) {
                     $builder->whereRelation('identity', 'address', $this->getFilter('auth_address'));
                 });
             });
@@ -65,7 +63,7 @@ class OrganizationSearch extends BaseSearch
                 $this->getFilter('implementation_id'),
                 $this->getFilter('fund_type', 'budget'),
             ),
-            default => $builder->where(function(Builder $builder) {
+            default => $builder->where(function (Builder $builder) {
                 if ($this->getFilter('auth_address')) {
                     OrganizationQuery::whereIsEmployee($builder, $this->getFilter('auth_address'));
                 } else {
@@ -89,7 +87,7 @@ class OrganizationSearch extends BaseSearch
         Builder|Relation|Organization $builder,
         int $implementationId,
     ): Builder|Relation|Organization {
-        return $builder->whereHas('funds', function(Builder $builder) use ($implementationId) {
+        return $builder->whereHas('funds', function (Builder $builder) use ($implementationId) {
             $builder = FundQuery::whereIsConfiguredByForus(FundQuery::whereActiveFilter($builder));
             $builder->whereRelation('fund_config', 'implementation_id', $implementationId);
         });
@@ -106,7 +104,7 @@ class OrganizationSearch extends BaseSearch
         int $implementationId,
         string $fundType,
     ): Builder|Relation|Organization {
-        return $builder->whereHas('products', function(Builder $builder) use ($fundType, $implementationId) {
+        return $builder->whereHas('products', function (Builder $builder) use ($fundType, $implementationId) {
             $activeFunds = Implementation::find($implementationId)->funds()->where('type', $fundType);
             $activeFunds = FundQuery::whereIsConfiguredByForus(FundQuery::whereActiveFilter($activeFunds));
 

@@ -19,7 +19,7 @@ trait HasFrontendActions
      */
     protected function loginIdentity(Browser $browser, Identity $identity): void
     {
-        $browser->script("localStorage.clear();");
+        $browser->script('localStorage.clear();');
         $browser->refresh();
         $proxy = $this->makeIdentityProxy($identity);
         $browser->script("localStorage.active_account = '$proxy->access_token';");
@@ -29,8 +29,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function assertIdentityAuthenticatedOnWebshop(Browser $browser, Identity $identity): void
     {
@@ -40,8 +40,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function assertIdentityAuthenticatedOnSponsorDashboard(
         Browser $browser,
@@ -53,8 +53,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function assertIdentityAuthenticatedOnProviderDashboard(Browser $browser, Identity $identity): void
     {
@@ -65,8 +65,8 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param Identity $identity
      * @param string $frontend
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     protected function assertIdentityAuthenticatedFrontend(
         Browser $browser,
@@ -87,13 +87,14 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function logout(Browser $browser): void
     {
         $browser->pause(100);
         $browser->waitFor('@userProfile');
+        $browser->scrollIntoView('@userProfile');
         $browser->element('@userProfile')->click();
 
         $browser->waitFor('@btnUserLogout')->waitFor('@btnUserLogout');
@@ -105,8 +106,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param Organization $organization
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function selectDashboardOrganization(
         Browser $browser,
@@ -121,13 +122,13 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param int $fundId
-     * @return void
      * @throws TimeOutException
+     * @return void
      */
     private function switchToFund(Browser $browser, int $fundId): void
     {
-        $browser->waitFor("@selectControlFunds");
-        $browser->element("@selectControlFunds")->click();
+        $browser->waitFor('@selectControlFunds');
+        $browser->element('@selectControlFunds')->click();
 
         $browser->waitFor("@selectControlFundItem$fundId");
         $browser->element("@selectControlFundItem$fundId")->click();

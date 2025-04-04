@@ -14,7 +14,7 @@ class ApiAuthMiddleware
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -23,31 +23,30 @@ class ApiAuthMiddleware
 
         if ($this->hasExpiredToken($baseRequest)) {
             return new JsonResponse([
-                "message" => 'session_expired',
+                'message' => 'session_expired',
             ], 401);
         }
 
         if (!$baseRequest->user() || !$baseRequest->identityProxy() || !$baseRequest->identity()) {
             return new JsonResponse([
-                "message" => 'invalid_access_token',
+                'message' => 'invalid_access_token',
             ], 401);
         }
 
         if ($baseRequest->identityProxy()->isPending()) {
             return new JsonResponse([
-                "message" => 'proxy_identity_pending',
+                'message' => 'proxy_identity_pending',
             ], 401);
         }
 
         if (!$baseRequest->identityProxy()->isActive()) {
             return new JsonResponse([
-                "message" => 'proxy_identity_not_active',
+                'message' => 'proxy_identity_not_active',
             ], 401);
         }
 
         return $next($request);
     }
-
 
     /**
      * @param BaseFormRequest $request

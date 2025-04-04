@@ -12,6 +12,7 @@ use App\Models\Reimbursement;
 use App\Notifications\Identities\Reimbursement\IdentityReimbursementApprovedNotification;
 use App\Notifications\Identities\Reimbursement\IdentityReimbursementDeclinedNotification;
 use App\Notifications\Identities\Reimbursement\IdentityReimbursementSubmittedNotification;
+use Exception;
 use Illuminate\Events\Dispatcher;
 
 class ReimbursementSubscriber
@@ -32,7 +33,7 @@ class ReimbursementSubscriber
 
     /**
      * @param ReimbursementSubmitted $reimbursementSubmitted
-     * @throws \Exception
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function onReimbursementSubmitted(ReimbursementSubmitted $reimbursementSubmitted): void
@@ -105,6 +106,24 @@ class ReimbursementSubscriber
     }
 
     /**
+     * The events dispatcher.
+     *
+     * @param Dispatcher $events
+     * @noinspection PhpUnused
+     */
+    public function subscribe(Dispatcher $events): void
+    {
+        $class = '\\' . static::class;
+
+        $events->listen(ReimbursementCreated::class, "$class@onReimbursementCreated");
+        $events->listen(ReimbursementSubmitted::class, "$class@onReimbursementSubmitted");
+        $events->listen(ReimbursementResolved::class, "$class@onReimbursementResolved");
+
+        $events->listen(ReimbursementAssigned::class, "$class@onReimbursementAssigned");
+        $events->listen(ReimbursementResigned::class, "$class@onReimbursementResigned");
+    }
+
+    /**
      * @param Reimbursement $reimbursement
      * @param array $extraModels
      * @return array
@@ -132,23 +151,5 @@ class ReimbursementSubscriber
             'supervisor_employee_roles' => $supervisor->roles->pluck('name')->join(', '),
             'supervisor_employee_email' => $supervisor->identity?->email,
         ];
-    }
-
-    /**
-     * The events dispatcher
-     *
-     * @param Dispatcher $events
-     * @noinspection PhpUnused
-     */
-    public function subscribe(Dispatcher $events): void
-    {
-        $class = '\\' . static::class;
-
-        $events->listen(ReimbursementCreated::class, "$class@onReimbursementCreated");
-        $events->listen(ReimbursementSubmitted::class, "$class@onReimbursementSubmitted");
-        $events->listen(ReimbursementResolved::class, "$class@onReimbursementResolved");
-
-        $events->listen(ReimbursementAssigned::class, "$class@onReimbursementAssigned");
-        $events->listen(ReimbursementResigned::class, "$class@onReimbursementResigned");
     }
 }

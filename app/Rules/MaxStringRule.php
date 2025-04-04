@@ -9,7 +9,9 @@ class MaxStringRule extends BaseRule
     /**
      * @param int $max
      */
-    public function __construct(protected int $max = 500) {}
+    public function __construct(protected int $max = 500)
+    {
+    }
 
     /**
      * @param $attribute

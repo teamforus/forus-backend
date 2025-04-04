@@ -29,7 +29,6 @@ use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
-use App\Console\Commands\UpdateProductCategoriesCommand;
 use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
@@ -115,7 +114,6 @@ class Kernel extends ConsoleKernel
         BankConnectionsInspectCommand::class,
 
         // seeders
-        UpdateProductCategoriesCommand::class,
         UpdateRolesCommand::class,
 
         // mollie
@@ -128,6 +126,120 @@ class Kernel extends ConsoleKernel
         // Email logger
         MailDatabaseLoggerClearUnusedAttachmentsCommand::class,
     ];
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleBank(Schedule $schedule): void
+    {
+        /**
+         * BankProcessFundTopUpsCommand.
+         */
+        $schedule->command('bank:process-top-ups')
+            ->hourly()
+            ->onOneServer()
+            ->withoutOverlapping();
+
+        /**
+         * BankUpdateContextSessionsCommand.
+         */
+        $schedule->command('bank:update-context-sessions')
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionBulksBuildCommand.
+         */
+        $schedule->command('bank:bulks-build')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionProcessZeroAmountCommand:
+         */
+        $schedule->command('bank:process-zero-amount')
+            ->dailyAt(Config::get('forus.kernel.bank_daily_bulk_build_time', '09:00'))
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionBulksUpdateStateCommand.
+         */
+        $schedule->command('bank:bulks-update')
+            ->hourly()
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankConnectionExpirationNotifyCommand:
+         */
+        $schedule->command('bank:notify-connection-expiration')
+            ->dailyAt('09:00')
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleDigest(Schedule $schedule): void
+    {
+        if (Config::get('forus.kernel.disable_digest', false)) {
+            return;
+        }
+
+        /**
+         * DigIdSessionsCleanupCommand.
+         */
+        $schedule->command('digid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
+
+        /**
+         * Digests.
+         */
+        $schedule->command(SendValidatorDigestCommand::class)
+            ->dailyAt('18:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendProviderFundsDigestCommand::class)
+            ->dailyAt('18:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendProviderProductsDigestCommand::class)
+            ->dailyAt('18:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendProviderReservationsDigestCommand::class)
+            ->weeklyOn(1, '18:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendSponsorDigestCommand::class)
+            ->dailyAt('18:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command(SendSponsorProductsUpdateDigest::class)
+            ->dailyAt('18:00')->withoutOverlapping()->onOneServer();
+
+        // $schedule->command(SendRequesterDigestCommand::class)
+        //     ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleQueue(Schedule $schedule): void
+    {
+        // use cron to send email/notifications
+        if (Config::get('forus.kernel.queue_use_cron', false)) {
+            $emailQueue = Config::get('forus.kernel.email_queue_name', 'emails');
+            $notificationsQueue = Config::get('forus.kernel.notifications_queue_name', 'push_notifications');
+
+            $schedule
+                ->command('queue:work --queue=' . $emailQueue)
+                ->everyMinute()->withoutOverlapping()->onOneServer();
+
+            $schedule
+                ->command('queue:work --queue=' . $notificationsQueue)
+                ->everyMinute()->withoutOverlapping()->onOneServer();
+        }
+    }
 
     /**
      * Define the application's command schedule.
@@ -168,25 +280,25 @@ class Kernel extends ConsoleKernel
             ->dailyAt('00:00')->withoutOverlapping()->onOneServer();
 
         /**
-         * UpdateFundProviderInvitationExpireStateCommand
+         * UpdateFundProviderInvitationExpireStateCommand.
          */
         $schedule->command('forus.funds.provider_invitations:check-expire')
             ->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 
         /**
-         * NotifyAboutReachedNotificationFundAmount
+         * NotifyAboutReachedNotificationFundAmount.
          */
         $schedule->command('forus.fund:check-amount')
             ->dailyAt('08:00')->withoutOverlapping()->onOneServer();
 
         /**
-         * CheckProductExpirationCommand
+         * CheckProductExpirationCommand.
          */
         $schedule->command('forus.product.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
 
         /**
-         * CheckActionExpirationCommand
+         * CheckActionExpirationCommand.
          */
         $schedule->command('forus.action.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
@@ -201,117 +313,15 @@ class Kernel extends ConsoleKernel
     }
 
     /**
-     * @param Schedule $schedule
+     * Register the commands for the application.
+     *
+     * @return void
      */
-    public function scheduleBank(Schedule $schedule): void
+    protected function commands(): void
     {
-        /**
-         * BankProcessFundTopUpsCommand
-         */
-        $schedule->command('bank:process-top-ups')
-            ->hourly()
-            ->onOneServer()
-            ->withoutOverlapping();
+        $this->load(__DIR__ . '/Commands');
 
-        /**
-         * BankUpdateContextSessionsCommand
-         */
-        $schedule->command('bank:update-context-sessions')
-            ->dailyAt("03:00")
-            ->withoutOverlapping()
-            ->onOneServer();
-
-        /**
-         * BankVoucherTransactionBulksBuildCommand
-         */
-        $schedule->command('bank:bulks-build')
-            ->everyMinute()
-            ->withoutOverlapping()
-            ->onOneServer();
-
-        /**
-         * BankVoucherTransactionProcessZeroAmountCommand:
-         */
-        $schedule->command('bank:process-zero-amount')
-            ->dailyAt(Config::get('forus.kernel.bank_daily_bulk_build_time', '09:00'))
-            ->withoutOverlapping()
-            ->onOneServer();
-
-        /**
-         * BankVoucherTransactionBulksUpdateStateCommand
-         */
-        $schedule->command('bank:bulks-update')
-            ->hourly()
-            ->withoutOverlapping()
-            ->onOneServer();
-
-        /**
-         * BankConnectionExpirationNotifyCommand:
-         */
-        $schedule->command('bank:notify-connection-expiration')
-            ->dailyAt('09:00')
-            ->withoutOverlapping()
-            ->onOneServer();
-    }
-
-    /**
-     * @param Schedule $schedule
-     */
-    public function scheduleDigest(Schedule $schedule): void
-    {
-        if (Config::get('forus.kernel.disable_digest', false)) {
-            return;
-        }
-
-        /**
-         * DigIdSessionsCleanupCommand
-         */
-        $schedule->command('digid:session-clean')
-            ->everyMinute()->withoutOverlapping()->onOneServer();
-
-        /**
-         * Digests
-         */
-        $schedule->command(SendValidatorDigestCommand::class)
-            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
-
-        $schedule->command(SendProviderFundsDigestCommand::class)
-            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
-
-        $schedule->command(SendProviderProductsDigestCommand::class)
-            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
-
-        $schedule->command(SendProviderReservationsDigestCommand::class)
-            ->weeklyOn(1, "18:00")->withoutOverlapping()->onOneServer();
-
-        $schedule->command(SendSponsorDigestCommand::class)
-            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
-
-        $schedule->command(SendSponsorProductsUpdateDigest::class)
-            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
-
-        // $schedule->command(SendRequesterDigestCommand::class)
-        //     ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
-    }
-
-    /**
-     * @param Schedule $schedule
-     */
-    public function scheduleQueue(Schedule $schedule): void
-    {
-        // use cron to send email/notifications
-        if (Config::get('forus.kernel.queue_use_cron', false)) {
-            $emailQueue = Config::get('forus.kernel.email_queue_name', 'emails');
-            $notificationsQueue = Config::get('forus.kernel.notifications_queue_name', 'push_notifications');
-
-            $schedule
-                ->command('queue:work --queue=' . $emailQueue)
-                ->everyMinute()->withoutOverlapping()->onOneServer();
-
-            $schedule
-                ->command('queue:work --queue=' . $notificationsQueue)
-                ->everyMinute()->withoutOverlapping()->onOneServer();
-        }
+        require base_path('routes/console.php');
     }
 
     /**
@@ -325,7 +335,7 @@ class Kernel extends ConsoleKernel
         }
 
         /**
-         * UpdateSessionsExpirationCommand
+         * UpdateSessionsExpirationCommand.
          */
         $schedule->command('auth_sessions:update-expiration --force')
             ->withoutOverlapping()
@@ -340,7 +350,7 @@ class Kernel extends ConsoleKernel
     private function scheduleBackoffice(Schedule $schedule): void
     {
         /**
-         * SendBackofficeLogsCommand
+         * SendBackofficeLogsCommand.
          */
         $schedule->command('funds.backoffice:send-logs')
             ->withoutOverlapping()
@@ -354,7 +364,7 @@ class Kernel extends ConsoleKernel
     private function scheduleMollieConnections(Schedule $schedule): void
     {
         /**
-         * UpdatePendingMollieConnectionsCommand
+         * UpdatePendingMollieConnectionsCommand.
          */
         $schedule->command('mollie:update-pending-connections')
             ->hourly()
@@ -362,10 +372,10 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping();
 
         /**
-         * UpdateCompletedMollieConnectionsCommand
+         * UpdateCompletedMollieConnectionsCommand.
          */
         $schedule->command('mollie:update-completed-connections')
-            ->dailyAt("09:00")
+            ->dailyAt('09:00')
             ->withoutOverlapping()
             ->onOneServer();
     }
@@ -377,23 +387,11 @@ class Kernel extends ConsoleKernel
     private function scheduleReservationExtraPayments(Schedule $schedule): void
     {
         /**
-         * UpdateCompletedMollieConnectionsCommand
+         * UpdateCompletedMollieConnectionsCommand.
          */
         $schedule->command('reservation:extra-payments-expire')
             ->everyMinute()
             ->withoutOverlapping()
             ->onOneServer();
-    }
-
-    /**
-     * Register the commands for the application.
-     *
-     * @return void
-     */
-    protected function commands(): void
-    {
-        $this->load(__DIR__.'/Commands');
-
-        require base_path('routes/console.php');
     }
 }

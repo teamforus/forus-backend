@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Routing\Router;
 
 /*
@@ -16,9 +17,9 @@ use Illuminate\Routing\Router;
 $router = resolve('router');
 
 /**
- * Public api routes
+ * Public api routes.
  */
-$router->group([], static function() use ($router) {
+$router->group([], static function () use ($router) {
     $router->resource('tags', "Api\Platform\TagsController")->only('index', 'show');
     $router->resource('funds', "Api\Platform\FundsController")->only('index', 'show');
     $router->resource('search', "Api\Platform\SearchController")->only('index');
@@ -26,17 +27,19 @@ $router->group([], static function() use ($router) {
     $router->resource('business-types', "Api\Platform\BusinessTypeController")->only('index', 'show');
     $router->resource('product-categories', "Api\Platform\ProductCategoriesController")->only('index', 'show');
 
-    if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
+    if (config('forus.features.webshop.funds.fund_requests', false)) {
         $router->resource(
             'funds/{fund}/requests',
-            "Api\Platform\Funds\FundRequestsController", [
-            'only' => [
-                'index', 'show', 'store'
+            "Api\Platform\Funds\FundRequestsController",
+            [
+                'only' => [
+                    'index', 'show', 'store',
+                ],
+                'parameters' => [
+                    'requests' => 'fund_request',
+                ],
             ],
-            'parameters' => [
-                'requests' => 'fund_request',
-            ]
-        ]);
+        );
 
         $router->post(
             'funds/{fund}/requests/validate',
@@ -45,23 +48,27 @@ $router->group([], static function() use ($router) {
 
         $router->resource(
             'funds/{fund}/requests/{fund_request}/records',
-            "Api\Platform\Funds\Requests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'show'
+            "Api\Platform\Funds\Requests\FundRequestRecordsController",
+            [
+                'only' => [
+                    'index', 'show',
+                ],
+                'parameters' => [
+                    'records' => 'fund_request_record',
+                ],
             ],
-            'parameters' => [
-                'records' => 'fund_request_record',
-            ]
-        ]);
+        );
     }
 
     $router->resource(
         'offices',
-        "Api\Platform\OfficesController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
+        "Api\Platform\OfficesController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+        ],
+    );
 
     $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
     $router->post('pre-checks/download-pdf', 'Api\Platform\PreCheckController@downloadPDF')->name('pre-check.download-pdf');
@@ -87,49 +94,69 @@ $router->group([], static function() use ($router) {
 
     $router->resource(
         'providers',
-        "Api\Platform\ProvidersController", [
-        'only' => [
-            'index', 'show'
+        "Api\Platform\ProvidersController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+            'parameters' => [
+                'providers' => 'organization',
+            ],
         ],
-        'parameters' => [
-            'providers' => 'organization'
-        ]
-    ]);
+    );
 
     $router->resource(
         'organizations.funds.providers',
-        "Api\Platform\Organizations\Funds\FundProviderController", [
-        'only' => [
-            'index', 'show'
+        "Api\Platform\Organizations\Funds\FundProviderController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+            'parameters' => [
+                'providers' => 'organization_fund',
+            ],
         ],
-        'parameters' => [
-            'providers' => 'organization_fund'
-        ]
-    ]);
+    );
 
     $router->post(
         'organizations/{organization}/funds/{fund}/archive',
-        "Api\Platform\Organizations\FundsController@archive");
+        "Api\Platform\Organizations\FundsController@archive"
+    );
 
     $router->post(
         'organizations/{organization}/funds/{fund}/unarchive',
-        "Api\Platform\Organizations\FundsController@unArchive");
+        "Api\Platform\Organizations\FundsController@unArchive"
+    );
 
     $router->resource(
         'organizations.funds',
-        "Api\Platform\Organizations\FundsController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
+        "Api\Platform\Organizations\FundsController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+        ],
+    );
+
+    $router->resource(
+        'organizations.fund-forms',
+        "Api\Platform\Organizations\FundFormsController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+        ],
+    );
 
     $router->resource(
         'organizations.reimbursement-categories',
-        "Api\Platform\Organizations\ReimbursementCategoriesController", [
-        'only' => [
-            'index', 'show', 'update', 'store', 'destroy'
-        ]
-    ]);
+        "Api\Platform\Organizations\ReimbursementCategoriesController",
+        [
+            'only' => [
+                'index', 'show', 'update', 'store', 'destroy',
+            ],
+        ],
+    );
 
     $router->get(
         'funds/{configured_fund}/ideal/issuers',
@@ -141,7 +168,7 @@ $router->group([], static function() use ($router) {
         "Api\Platform\FundsController@idealMakeRequest"
     );
 
-    $router->middleware('domain.digid')->group(function(Router $router) {
+    $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
         $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
         $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
@@ -158,14 +185,14 @@ $router->post('/share/sms', 'Api\Platform\ShareController@sendSms');
 $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
 
 /**
- * Authorization required
+ * Authorization required.
  */
-$router->group(['middleware' => 'api.auth'], static function() use ($router) {
+$router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->get('/profile', "Api\Platform\ProfileController@profile");
     $router->patch('/profile', "Api\Platform\ProfileController@updateProfile");
 
     // Organizations
-    $router->group(['prefix' => 'organizations/{organization}'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}'], function () use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
         $router->patch('bank-fields', "Api\Platform\OrganizationsController@updateBankStatementFields");
         $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
@@ -194,7 +221,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ->parameter('physical-cards', 'physical_card')
         ->only('index', 'store', 'show');
 
-
     $router->post(
         'vouchers/{voucher_number_or_address}/physical-card-requests/validate',
         'Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate',
@@ -215,11 +241,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->post(
         'product-reservations/{reservation}/extra-payment/checkout',
-        "Api\Platform\ProductReservationsController@checkoutExtraPayment");
+        "Api\Platform\ProductReservationsController@checkoutExtraPayment"
+    );
 
     $router->post(
         'product-reservations/{reservation}/cancel',
-        "Api\Platform\ProductReservationsController@cancel");
+        "Api\Platform\ProductReservationsController@cancel"
+    );
 
     $router->resource('product-reservations', "Api\Platform\ProductReservationsController")
         ->only('index', 'store', 'show');
@@ -227,7 +255,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->post('product-reservations/validate-fields', "Api\Platform\ProductReservationsController@storeValidateFields");
     $router->post('product-reservations/validate-address', "Api\Platform\ProductReservationsController@storeValidateAddress");
 
-    $router->group(['prefix' => '/provider'], static function() use ($router) {
+    $router->group(['prefix' => '/provider'], static function () use ($router) {
         $router->resource('vouchers', "Api\Platform\Provider\VouchersController")
             ->parameter('vouchers', 'voucher_address_or_physical_code')
             ->only('show');
@@ -256,14 +284,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'sponsor/{organization_id}/vouchers/{voucher}/physical-cards',
-        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController", [
-        'only' => [
-            'store', 'destroy',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController",
+        [
+            'only' => [
+                'store', 'destroy',
+            ],
+            'params' => [
+                'physical-cards' => 'physical_card',
+            ],
         ],
-        'params' => [
-            'physical-cards' => 'physical_card',
-        ]
-    ]);
+    );
 
     $router->post(
         'organizations/{organization}/sponsor/vouchers/{voucher_token_address}/physical-card-requests/validate',
@@ -297,23 +327,28 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/cms',
-        "Api\Platform\Organizations\ImplementationsController@updateCms");
+        "Api\Platform\Organizations\ImplementationsController@updateCms",
+    );
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/email',
-        "Api\Platform\Organizations\ImplementationsController@updateEmail");
+        "Api\Platform\Organizations\ImplementationsController@updateEmail",
+    );
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/email-branding',
-        "Api\Platform\Organizations\ImplementationsController@updateEmailBranding");
+        "Api\Platform\Organizations\ImplementationsController@updateEmailBranding",
+    );
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/pre-check-banner',
-        "Api\Platform\Organizations\ImplementationsController@updatePreCheckBanner");
+        "Api\Platform\Organizations\ImplementationsController@updatePreCheckBanner",
+    );
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
-        "Api\Platform\Organizations\ImplementationsController@updateDigiD");
+        "Api\Platform\Organizations\ImplementationsController@updateDigiD",
+    );
 
     $router->resource(
         'organizations/{organization}/implementations',
@@ -322,7 +357,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->post(
         'organizations/{organization}/implementations/{implementation}/pages/validate-blocks',
-        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate");
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate",
+    );
 
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/pages',
@@ -362,39 +398,48 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->post(
         'organizations/{organization}/funds/criteria/validate',
-        "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
+        "Api\Platform\Organizations\FundsController@storeCriteriaValidate",
+    );
 
     $router->post(
         'organizations/{organization}/faq/validate',
-        "Api\Platform\Organizations\FaqController@storeValidate");
+        "Api\Platform\Organizations\FaqController@storeValidate",
+    );
 
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
-        "Api\Platform\Organizations\FundsController@topUp");
+        "Api\Platform\Organizations\FundsController@topUp",
+    );
 
     $router->resource(
         'organizations.funds.top-up-transactions',
-        "Api\Platform\Organizations\Funds\FundTopUpTransactionsController");
+        "Api\Platform\Organizations\Funds\FundTopUpTransactionsController",
+    );
 
     $router->patch(
         'organizations/{organization}/funds/{fund}/criteria/validate',
-        "Api\Platform\Organizations\FundsController@updateCriteriaValidate");
+        "Api\Platform\Organizations\FundsController@updateCriteriaValidate",
+    );
 
     $router->patch(
         'organizations/{organization}/funds/{fund}/criteria',
-        "Api\Platform\Organizations\FundsController@updateCriteria");
+        "Api\Platform\Organizations\FundsController@updateCriteria",
+    );
 
     $router->patch(
         'organizations/{organization}/funds/{fund}/backoffice',
-        "Api\Platform\Organizations\FundsController@updateBackoffice");
+        "Api\Platform\Organizations\FundsController@updateBackoffice",
+    );
 
     $router->post(
         'organizations/{organization}/funds/{fund}/backoffice-test',
-        "Api\Platform\Organizations\FundsController@testBackofficeConnection");
+        "Api\Platform\Organizations\FundsController@testBackofficeConnection",
+    );
 
     $router->patch(
         'organizations/{organization}/transfer-ownership',
-        "Api\Platform\OrganizationsController@transferOwnership");
+        "Api\Platform\OrganizationsController@transferOwnership",
+    );
 
     $router->resource(
         'organizations.funds',
@@ -403,15 +448,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
-        "Api\Platform\Organizations\Funds\IdentitiesController@export");
+        "Api\Platform\Organizations\Funds\IdentitiesController@export",
+    );
 
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export-fields',
-        "Api\Platform\Organizations\Funds\IdentitiesController@exportFields");
+        "Api\Platform\Organizations\Funds\IdentitiesController@exportFields",
+    );
 
     $router->post(
         'organizations/{organization}/funds/{fund}/identities/notification',
-        "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification");
+        "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification",
+    );
 
     $router->resource(
         'organizations.funds.identities',
@@ -425,7 +473,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'provider-invitations' => 'fund_provider_invitations',
     ])->only('index', 'show', 'store');
 
-    if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+    if (config('forus.features.dashboard.organizations.funds.fund_requests', false)) {
         $router->get(
             'organizations/{organization}/fund-requests/{fund_request}/formula',
             "Api\Platform\Organizations\FundRequestsController@formula"
@@ -476,14 +524,14 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
         )->parameters([
             'records' => 'fund_request_record',
-        ])->only( 'index', 'show', 'update', 'store');
+        ])->only('index', 'show', 'update', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
             "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
         )->parameters([
             'clarifications' => 'fund_request_clarification',
-        ])->only( 'index', 'store', 'show');
+        ])->only('index', 'store', 'show');
 
         $router->get(
             'organizations/{organization}/fund-requests/export',
@@ -496,7 +544,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         // Fund requests notes
-        $router->group(['prefix' => 'organizations/{organization}/fund-requests/{fund_request}'], function() use ($router) {
+        $router->group(['prefix' => 'organizations/{organization}/fund-requests/{fund_request}'], function () use ($router) {
             $router->get('notes', "Api\Platform\Organizations\FundRequestsController@notes");
             $router->post('notes', "Api\Platform\Organizations\FundRequestsController@storeNote");
             $router->delete('notes/{note}', "Api\Platform\Organizations\FundRequestsController@destroyNote");
@@ -506,14 +554,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
         $router->resource(
             'organizations/{organization}/fund-requests',
-            "Api\Platform\Organizations\FundRequestsController", [
-            'only' => [
-                'index', 'show',
+            "Api\Platform\Organizations\FundRequestsController",
+            [
+                'only' => [
+                    'index', 'show',
+                ],
+                'parameters' => [
+                    'requests' => 'fund_request',
+                ],
             ],
-            'parameters' => [
-                'requests' => 'fund_request',
-            ]
-        ]);
+        );
 
         $router->resource('fund-requests', "Api\Platform\FundRequestsController")->only([
             'index', 'show',
@@ -528,7 +578,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     }
 
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
-        'index'
+        'index',
     ]);
 
     $router->get(
@@ -540,38 +590,42 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations.providers',
         "Api\Platform\Organizations\FundProviderController"
     )->parameters([
-        'providers' => 'organization_fund'
+        'providers' => 'organization_fund',
     ])->only('index');
 
     $router->resource(
         'organizations/{organization}/provider/fund-unsubscribes',
         "Api\Platform\Organizations\Provider\FundUnsubscribeController"
     )->parameters([
-        'unsubscribe' => 'fund-unsubscribe'
+        'unsubscribe' => 'fund-unsubscribe',
     ])->only('index', 'store', 'update');
 
     $router->resource(
         'organizations/{organization}/sponsor/fund-unsubscribes',
         "Api\Platform\Organizations\Sponsor\FundUnsubscribeController"
     )->parameters([
-        'unsubscribe' => 'fund-unsubscribe'
+        'unsubscribe' => 'fund-unsubscribe',
     ])->only('index');
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
-        "Api\Platform\Organizations\Funds\FundProviderController@finances");
+        "Api\Platform\Organizations\Funds\FundProviderController@finances",
+    );
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions',
-        "Api\Platform\Organizations\Funds\FundProviderController@transactions");
+        "Api\Platform\Organizations\Funds\FundProviderController@transactions",
+    );
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/export',
-        "Api\Platform\Organizations\Funds\FundProviderController@transactionsExport");
+        "Api\Platform\Organizations\Funds\FundProviderController@transactionsExport",
+    );
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
-        "Api\Platform\Organizations\Funds\FundProviderController@transaction");
+        "Api\Platform\Organizations\Funds\FundProviderController@transaction",
+    );
 
     $router->resource('organizations.funds.providers', "Api\Platform\Organizations\Funds\FundProviderController")
         ->parameter('providers', 'fund_provider')
@@ -598,11 +652,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->parameters([
         'providers' => 'fund_provider',
         'chats' => 'fund_provider_chats',
-        'messages' => 'fund_provider_chat_messages'
+        'messages' => 'fund_provider_chat_messages',
     ])->only('index', 'show', 'store');
 
     // Products
-    $router->group(['prefix' => 'organizations/{organization}/products/{product}'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}/products/{product}'], function () use ($router) {
         $router->patch('exclusions', "Api\Platform\Organizations\ProductsController@updateExclusions");
     });
 
@@ -627,7 +681,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ProductReservationsController@storeBatch"
     );
 
-    $router->group(['prefix' => 'organizations/{organization}/product-reservations/{product_reservation}'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}/product-reservations/{product_reservation}'], function () use ($router) {
         $router->post('accept', "Api\Platform\Organizations\ProductReservationsController@accept");
         $router->post('reject', "Api\Platform\Organizations\ProductReservationsController@reject");
         $router->post('archive', "Api\Platform\Organizations\ProductReservationsController@archive");
@@ -642,7 +696,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'store', 'show');
 
     // Reimbursements
-    $router->group(['prefix' => 'organizations/{organization}/reimbursements/{reimbursement}'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}/reimbursements/{reimbursement}'], function () use ($router) {
         $router->get('notes', "Api\Platform\Organizations\ReimbursementsController@notes");
         $router->post('notes', "Api\Platform\Organizations\ReimbursementsController@storeNote");
         $router->delete('notes/{note}', "Api\Platform\Organizations\ReimbursementsController@destroyNote");
@@ -703,11 +757,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.employees',
-        "Api\Platform\Organizations\EmployeesController", [
-        'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
-        ]
-    ]);
+        "Api\Platform\Organizations\EmployeesController",
+        [
+            'only' => [
+                'index', 'show', 'store', 'update', 'destroy',
+            ],
+        ],
+    );
 
     $router->get(
         'organizations/{organization}/provider/funds-available',
@@ -716,18 +772,21 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get(
         'organizations/{organization}/provider/funds-product-required',
-        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired");
+        "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired"
+    );
 
     $router->resource(
         'organizations/{organization}/provider/funds',
-        "Api\Platform\Organizations\Provider\FundProviderController", [
-        'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
+        "Api\Platform\Organizations\Provider\FundProviderController",
+        [
+            'only' => [
+                'index', 'show', 'store', 'update', 'destroy',
+            ],
+            'parameters' => [
+                'funds' => 'organization_fund',
+            ],
         ],
-        'parameters' => [
-            'funds' => 'organization_fund'
-        ]
-    ]);
+    );
 
     $router->get(
         'organizations/{organization}/provider/transactions/export-fields',
@@ -741,15 +800,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/provider/transactions',
-        "Api\Platform\Organizations\Provider\TransactionsController", [
+        "Api\Platform\Organizations\Provider\TransactionsController",
+        [
             'parameters' => [
                 'transactions' => 'transaction_address',
-            ]
-        ]
+            ],
+        ],
     );
 
     // Mollie
-    $router->group(['prefix' => 'organizations/{organization}/mollie-connection'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}/mollie-connection'], function () use ($router) {
         $router->get('', 'Api\Platform\Organizations\MollieConnectionController@getActive');
         $router->post('', 'Api\Platform\Organizations\MollieConnectionController@store');
         $router->patch('', 'Api\Platform\Organizations\MollieConnectionController@update');
@@ -764,7 +824,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('store', 'update');
 
     // BI connection
-    $router->group(['prefix' => 'organizations/{organization}/bi-connection'], function() use ($router) {
+    $router->group(['prefix' => 'organizations/{organization}/bi-connection'], function () use ($router) {
         $router->get('', 'Api\Platform\Organizations\BIConnectionController@getActive');
         $router->post('', 'Api\Platform\Organizations\BIConnectionController@store');
         $router->patch('', 'Api\Platform\Organizations\BIConnectionController@update');
@@ -774,11 +834,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get(
         'organizations/{organization}/sponsor/finances',
-        "Api\Platform\Organizations\FundsController@finances");
+        "Api\Platform\Organizations\FundsController@finances",
+    );
 
     $router->get(
         'organizations/{organization}/sponsor/finances-overview',
-        "Api\Platform\Organizations\FundsController@financesOverview");
+        "Api\Platform\Organizations\FundsController@financesOverview",
+    );
 
     $router->get(
         'organizations/{organization}/sponsor/finances-overview-export',
@@ -946,21 +1008,22 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\Vouchers\VoucherRecordsController",
     )->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
-    $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
+    $router->get('organizations/{organization}/sponsor/providers/finances', "Api\Platform\Organizations\Sponsor\ProvidersController@finances");
+    $router->get('organizations/{organization}/sponsor/providers/finances-export', "Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
     $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
 
     $router->resource(
         'organizations/{organization}/sponsor/providers',
-        "Api\Platform\Organizations\Sponsor\ProvidersController", [
+        "Api\Platform\Organizations\Sponsor\ProvidersController",
+        [
             'only' => [
                 'index', 'show',
             ],
             'parameters' => [
                 'providers' => 'organization_id',
-            ]
-        ]
+            ],
+        ],
     );
 
     $router->resource(
@@ -1005,11 +1068,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'employees',
-        "Api\Platform\EmployeesController", [
-        'only' => [
-            'index'
-        ]
-    ]);
+        "Api\Platform\EmployeesController",
+        [
+            'only' => [
+                'index',
+            ],
+        ],
+    );
 
     $router->post(
         '/devices/register-push',
@@ -1023,11 +1088,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'notifications',
-        "Api\Platform\NotificationsController", [
-        'only' => [
-            'index'
-        ]
-    ]);
+        "Api\Platform\NotificationsController",
+        [
+            'only' => [
+                'index',
+            ],
+        ],
+    );
 
     $router->get('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@index');
     $router->patch('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@update');

@@ -81,6 +81,7 @@ use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationPreference;
 use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -167,7 +168,7 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
-     * Map between type keys and Mail classes
+     * Map between type keys and Mail classes.
      * @var array
      */
     protected static array $mailMap = [
@@ -200,7 +201,7 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
-     * List all push notification keys
+     * List all push notification keys.
      * @var array
      */
     protected static array $pushNotificationKeys = [
@@ -213,7 +214,7 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
-     * Emails that you can't unsubscribe from
+     * Emails that you can't unsubscribe from.
      * @var array
      */
     protected static array $mandatoryEmail = [
@@ -222,7 +223,7 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
-     * Push notifications that you can't unsubscribe from (currently none)
+     * Push notifications that you can't unsubscribe from (currently none).
      * @var array
      */
     protected static array $mandatoryPushNotifications = [];
@@ -257,7 +258,7 @@ class NotificationRepo implements INotificationRepo
      */
     public function getSystemNotificationsQuery(bool $visibleOnly = false): Builder
     {
-        return SystemNotification::where(function(Builder $builder) use ($visibleOnly) {
+        return SystemNotification::where(function (Builder $builder) use ($visibleOnly) {
             if ($visibleOnly) {
                 $builder->where('visible', true);
             }
@@ -274,7 +275,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Is email unsubscribed from all emails
+     * Is email unsubscribed from all emails.
      * @param string $email
      * @return bool
      */
@@ -284,7 +285,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Check if Mail class can be unsubscribed
+     * Check if Mail class can be unsubscribed.
      * @param string $emailClass
      * @return bool
      */
@@ -300,7 +301,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Check if Push notification can be unsubscribed
+     * Check if Push notification can be unsubscribed.
      * @param string $pushKey
      * @return bool
      */
@@ -313,7 +314,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Check if Push notification can be unsubscribed
+     * Check if Push notification can be unsubscribed.
      * @param string $identity_address
      * @param string $pushKey
      * @return bool
@@ -321,19 +322,19 @@ class NotificationRepo implements INotificationRepo
     public function isPushNotificationUnsubscribed(string $identity_address, string $pushKey): bool
     {
         return NotificationPreference::where([
-            'identity_address'  => $identity_address,
-            'subscribed'        => false,
-            'type'              => 'push',
-            'key'               => $pushKey,
+            'identity_address' => $identity_address,
+            'subscribed' => false,
+            'type' => 'push',
+            'key' => $pushKey,
         ])->exists();
     }
 
     /**
-     * Is email $emailClass unsubscribed
+     * Is email $emailClass unsubscribed.
      * @param string $identity_address
      * @param string $emailClass
+     * @throws Exception
      * @return bool
-     * @throws \Exception
      */
     public function isEmailTypeUnsubscribed($identity_address, $emailClass): bool
     {
@@ -350,7 +351,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Create new unsubscription from all emails link
+     * Create new unsubscription from all emails link.
      * @param string $email
      * @param string|null $token
      * @return string
@@ -361,7 +362,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Create new unsubscription from all emails link
+     * Create new unsubscription from all emails link.
      * @param string $email
      * @param string|null $token
      * @return string
@@ -372,20 +373,7 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Try to reuse existing token or create new one
-     * @param string $email
-     * @param string|null $token
-     * @return string
-     */
-    private function makeToken(string $email, string $token = null): string
-    {
-        $model = $token ? NotificationUnsubscriptionToken::findByToken($token) : null;
-
-        return ($model ?: NotificationUnsubscriptionToken::makeToken($email))->token;
-    }
-
-    /**
-     * Unsubscribe email from all notifications
+     * Unsubscribe email from all notifications.
      * @param string $email
      */
     public function unsubscribeEmail(string $email): void
@@ -394,9 +382,9 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * Remove email unsubscription from all notifications
+     * Remove email unsubscription from all notifications.
      * @param string $email
-     * @throws \Exception
+     * @throws Exception
      */
     public function reSubscribeEmail(string $email): void
     {
@@ -424,19 +412,19 @@ class NotificationRepo implements INotificationRepo
             'subscribed' => false,
         ])->get();
 
-        $unsubscribedMailKeys = $unsubscribedKeys->where('type',  'email')->keyBy('key');
-        $unsubscribedPushKeys = $unsubscribedKeys->where('type',  'push')->keyBy('key');
+        $unsubscribedMailKeys = $unsubscribedKeys->where('type', 'email')->keyBy('key');
+        $unsubscribedPushKeys = $unsubscribedKeys->where('type', 'push')->keyBy('key');
 
         $mailKeys = array_map(fn ($mailKey) => [
             'key' => $mailKey,
-            'type'  => 'email',
-            'subscribed' => !($unsubscribedMailKeys[$mailKey] ?? false)
+            'type' => 'email',
+            'subscribed' => !($unsubscribedMailKeys[$mailKey] ?? false),
         ], $this->mailTypeKeys());
 
         $pushKeys = array_map(fn ($pushKey) => [
             'key' => $pushKey,
-            'type'  => 'push',
-            'subscribed' => !($unsubscribedPushKeys[$pushKey] ?? false)
+            'type' => 'push',
+            'subscribed' => !($unsubscribedPushKeys[$pushKey] ?? false),
         ], self::getPushNotificationKeys());
 
         return [...$mailKeys, ...$pushKeys];
@@ -455,11 +443,11 @@ class NotificationRepo implements INotificationRepo
         foreach ($data as $setting) {
             if (array_intersect($preference_keys, $data_keys)) {
                 NotificationPreference::firstOrCreate([
-                    'identity_address'  => $identityAddress,
-                    'key'               => $setting['key'],
-                    'type'              => $setting['type'],
+                    'identity_address' => $identityAddress,
+                    'key' => $setting['key'],
+                    'type' => $setting['type'],
                 ])->update([
-                    'subscribed'        => $setting['subscribed']
+                    'subscribed' => $setting['subscribed'],
                 ]);
             }
         }
@@ -478,7 +466,7 @@ class NotificationRepo implements INotificationRepo
     /**
      * @return array
      */
-    public function pushNotificationTypeKeys() : array
+    public function pushNotificationTypeKeys(): array
     {
         return self::getPushNotificationKeys();
     }
@@ -489,5 +477,18 @@ class NotificationRepo implements INotificationRepo
     public function allPreferenceKeys(): array
     {
         return array_merge($this->mailTypeKeys(), $this->pushNotificationTypeKeys());
+    }
+
+    /**
+     * Try to reuse existing token or create new one.
+     * @param string $email
+     * @param string|null $token
+     * @return string
+     */
+    private function makeToken(string $email, string $token = null): string
+    {
+        $model = $token ? NotificationUnsubscriptionToken::findByToken($token) : null;
+
+        return ($model ?: NotificationUnsubscriptionToken::makeToken($email))->token;
     }
 }

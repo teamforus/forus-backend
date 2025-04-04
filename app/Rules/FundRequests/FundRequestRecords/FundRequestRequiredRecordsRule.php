@@ -42,7 +42,7 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
 
             if (!$criterion->isExcludedByRules($allValues) && !array_key_exists($criterion->id, $requestCriteria)) {
                 return $this->reject(trans('validation.required', [
-                    'attribute' => $criterion->record_type_key
+                    'attribute' => $criterion->record_type_key,
                 ]));
             }
         }

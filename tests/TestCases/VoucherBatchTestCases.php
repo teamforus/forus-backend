@@ -14,7 +14,7 @@ class VoucherBatchTestCases
             'allow_direct_payments' => false,
             'allow_generator_direct_payments' => false,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'activate' => false,
             // assign type (email, bsn, client_uid)
@@ -68,7 +68,7 @@ class VoucherBatchTestCases
             'activation_code' => 3,
             'same_assign_by' => 4,
             'assert_active' => true,
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseProductVouchers = [
@@ -80,7 +80,7 @@ class VoucherBatchTestCases
             'allow_direct_payments' => false,
             'allow_generator_direct_payments' => false,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'product',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -96,7 +96,7 @@ class VoucherBatchTestCases
             'assign_by' => 'email',
             'assert_created' => true,
             'assert_active' => true,
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseBudgetVouchersAllowedDirectPayments = [
@@ -108,7 +108,7 @@ class VoucherBatchTestCases
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -120,7 +120,7 @@ class VoucherBatchTestCases
             'activate' => true,
             'assert_active' => true,
             'direct_payment' => true,
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseBudgetVouchersNoBSNExceedAmount = [
@@ -132,12 +132,12 @@ class VoucherBatchTestCases
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'direct_payment' => true,
             'assert_created' => true,
-            
+
         ], [
             'type' => 'budget',
             'assign_by' => 'email',
@@ -155,7 +155,7 @@ class VoucherBatchTestCases
                 'vouchers.0.bsn',
                 'vouchers.1.bsn',
             ],
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseBudgetAndProductVouchersEdgeCases = [
@@ -164,7 +164,7 @@ class VoucherBatchTestCases
         'organization' => [
             'bsn_enabled' => true,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'product' => 'approved',
@@ -208,7 +208,7 @@ class VoucherBatchTestCases
                 'vouchers.1.product_id',
                 'vouchers.2.product_id',
             ],
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseBudgetVouchersSameAssign = [
@@ -216,7 +216,7 @@ class VoucherBatchTestCases
         'organization' => [
             'bsn_enabled' => true,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'same_assign_by' => 5,
@@ -246,7 +246,7 @@ class VoucherBatchTestCases
             'assert_created' => true,
             'same_assign_by' => 4,
             'activation_code' => 3,
-        ]]
+        ]],
     ];
 
     public static array $featureTestCaseBudgetVouchersAllowedDirectPaymentsErrors = [
@@ -258,7 +258,7 @@ class VoucherBatchTestCases
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
         ],
-        "asserts" => [[
+        'asserts' => [[
             'type' => 'budget',
             'assign_by' => 'email',
             'assert_created' => true,
@@ -291,7 +291,7 @@ class VoucherBatchTestCases
                 'vouchers.2.amount',
                 'vouchers.2.direct_payment_name',
             ],
-        ]]
+        ]],
     ];
 
     /** @var array|array[] */

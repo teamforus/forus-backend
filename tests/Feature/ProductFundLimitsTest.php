@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\TestsReservations;
+use Throwable;
 
 class ProductFundLimitsTest extends TestCase
 {
@@ -55,279 +56,279 @@ class ProductFundLimitsTest extends TestCase
      * @var array|array[]
      */
     protected array $testCase1 = [
-        "data" => [
-            "products" => [[
-                "total_amount" => 20,
-                "unlimited_stock" => false,
-                "funds" => [
-                    ["fund_id" => 1, 'allow_budget' => true, 'allow_products' => false],
-                    ["fund_id" => 2, 'allow_budget' => true, 'allow_products' => false],
-                    ["fund_id" => 3, 'allow_budget' => true, 'allow_products' => true],
+        'data' => [
+            'products' => [[
+                'total_amount' => 20,
+                'unlimited_stock' => false,
+                'funds' => [
+                    ['fund_id' => 1, 'allow_budget' => true, 'allow_products' => false],
+                    ['fund_id' => 2, 'allow_budget' => true, 'allow_products' => false],
+                    ['fund_id' => 3, 'allow_budget' => true, 'allow_products' => true],
                 ],
-                "limits" => [
-                    ["fund_id" => 1, "limit_total" => 5, "limit_per_identity" => 2],
-                    ["fund_id" => 2, "limit_total" => 8, "limit_per_identity" => 3],
+                'limits' => [
+                    ['fund_id' => 1, 'limit_total' => 5, 'limit_per_identity' => 2],
+                    ['fund_id' => 2, 'limit_total' => 8, 'limit_per_identity' => 3],
                 ],
             ], [
-                "total_amount" => 30,
-                "unlimited_stock" => false,
-                "funds" => [
-                    ["fund_id" => 1, 'allow_budget' => true, 'allow_products' => false],
-                    ["fund_id" => 3, 'allow_budget' => true, 'allow_products' => false],
+                'total_amount' => 30,
+                'unlimited_stock' => false,
+                'funds' => [
+                    ['fund_id' => 1, 'allow_budget' => true, 'allow_products' => false],
+                    ['fund_id' => 3, 'allow_budget' => true, 'allow_products' => false],
                 ],
-                "limits" => [
-                    ["fund_id" => 1, "limit_total" => 5, "limit_per_identity" => 2],
-                    ["fund_id" => 3, "limit_total" => 15, "limit_per_identity" => 2],
+                'limits' => [
+                    ['fund_id' => 1, 'limit_total' => 5, 'limit_per_identity' => 2],
+                    ['fund_id' => 3, 'limit_total' => 15, 'limit_per_identity' => 2],
                 ],
             ]],
-            "identities" => [[
-                "vouchers" => [
-                    ["amount" => 100, "fund_id" => 1, "limit_multiplier" => 1],
-                    ["amount" => 200, "fund_id" => 1, "limit_multiplier" => 2],
-                    ["amount" => 200, "fund_id" => 2, "limit_multiplier" => 2],
-                    ["amount" => 500, "fund_id" => 3, "limit_multiplier" => 3],
+            'identities' => [[
+                'vouchers' => [
+                    ['amount' => 100, 'fund_id' => 1, 'limit_multiplier' => 1],
+                    ['amount' => 200, 'fund_id' => 1, 'limit_multiplier' => 2],
+                    ['amount' => 200, 'fund_id' => 2, 'limit_multiplier' => 2],
+                    ['amount' => 500, 'fund_id' => 3, 'limit_multiplier' => 3],
                 ],
             ]],
         ],
-        "tests" => [[
+        'tests' => [[
             'type' => 'assertion',
             'actions' => [[
-                'data' => ["identity" => 0, "product" => 0],
-                "assert_limits" => [
-                    ["fund_id" => 1, "limit_available" => 5, "products" => true, "organizations" => true],
-                    ["fund_id" => 2, "limit_available" => 6, "products" => true, "organizations" => true],
-                    ["fund_id" => 3, "limit_available" => null, "products" => true, "organizations" => true],
+                'data' => ['identity' => 0, 'product' => 0],
+                'assert_limits' => [
+                    ['fund_id' => 1, 'limit_available' => 5, 'products' => true, 'organizations' => true],
+                    ['fund_id' => 2, 'limit_available' => 6, 'products' => true, 'organizations' => true],
+                    ['fund_id' => 3, 'limit_available' => null, 'products' => true, 'organizations' => true],
                 ],
             ], [
-                'data' => ["identity" => 0, "product" => 1],
-                "assert_limits" => [
-                    ["fund_id" => 1, "limit_available" => 5, "products" => true, "organizations" => true],
-                    ["fund_id" => 3, "limit_available" => 6, "products" => true, "organizations" => true],
+                'data' => ['identity' => 0, 'product' => 1],
+                'assert_limits' => [
+                    ['fund_id' => 1, 'limit_available' => 5, 'products' => true, 'organizations' => true],
+                    ['fund_id' => 3, 'limit_available' => 6, 'products' => true, 'organizations' => true],
                 ],
-            ]]
+            ]],
         ], [
-            "type" => "reservations",
-            "actions" => [[
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 4, "products" => true, "organizations" => true]],
+            'type' => 'reservations',
+            'actions' => [[
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0, "state" => "canceled_by_client"],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 3, "products" => true, "organizations" => true]],
-                "assert_limits_after" => [["fund_id" => 1, "limit_available" => 4, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0, 'state' => 'canceled_by_client'],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 3, 'products' => true, 'organizations' => true]],
+                'assert_limits_after' => [['fund_id' => 1, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0,"voucher" => 1, "product" => 0, "state" => "rejected"],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 3, "products" => true, "organizations" => true]],
-                "assert_limits_after" => [["fund_id" => 1, "limit_available" => 4, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0, 'state' => 'rejected'],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 3, 'products' => true, 'organizations' => true]],
+                'assert_limits_after' => [['fund_id' => 1, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0, "state" => "accepted"],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 3, "products" => true, "organizations" => true]],
-                "assert_limits_after" => [["fund_id" => 1, "limit_available" => 3, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0, 'state' => 'accepted'],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 3, 'products' => true, 'organizations' => true]],
+                'assert_limits_after' => [['fund_id' => 1, 'limit_available' => 3, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 2, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 2, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 1, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 1, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 0, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 0, "products" => false, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 0, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 0, 'products' => false, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 1, "product" => 0,],
-                "assert_success" => false,
+                'data' => ['identity' => 0, 'voucher' => 1, 'product' => 0, ],
+                'assert_success' => false,
             ], [
-                'data' => ["identity" => 0, "voucher" => 3, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 3, "limit_available" => null, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 3, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => null, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 3, "product" => 1],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 5, "products" => true, "organizations" => true]],
+                'data' => ['identity' => 0, 'voucher' => 3, 'product' => 1],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 5, 'products' => true, 'organizations' => true]],
             ], [
-                'data' => ["identity" => 0, "voucher" => 3, "product" => 1],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 4, "products" => true, "organizations" => true]],
-            ]]
+                'data' => ['identity' => 0, 'voucher' => 3, 'product' => 1],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
+            ]],
         ], [
-            "type" => "update_limits",
-            "actions" => [[
-                "product" => 0,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 1, "limit_total" => 10, "limit_per_identity" => 3],
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 4, "products" => true, "organizations" => true]],
+            'type' => 'update_limits',
+            'actions' => [[
+                'product' => 0,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 1, 'limit_total' => 10, 'limit_per_identity' => 3],
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                "product" => 1,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 1, "limit_total" => 8, "limit_per_identity" => 3],
-                "assert_limits" => [["fund_id" => 1, "limit_available" => 8, "products" => true, "organizations" => true]],
+                'product' => 1,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 1, 'limit_total' => 8, 'limit_per_identity' => 3],
+                'assert_limits' => [['fund_id' => 1, 'limit_available' => 8, 'products' => true, 'organizations' => true]],
             ], [
-                "product" => 1,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 3, "limit_total" => 13, "limit_per_identity" => 3],
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 7, "products" => true, "organizations" => true]],
+                'product' => 1,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 3, 'limit_total' => 13, 'limit_per_identity' => 3],
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 7, 'products' => true, 'organizations' => true]],
             ], [
-                "product" => 1,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 3, "limit_total" => 13, "limit_per_identity" => 1],
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 1, "products" => true, "organizations" => true]],
-            ]]
+                'product' => 1,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 3, 'limit_total' => 13, 'limit_per_identity' => 1],
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 1, 'products' => true, 'organizations' => true]],
+            ]],
         ], [
-            "type" => "voucher_transactions",
-            "actions" => [
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => false],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => false],
-                ["identity" => 0, "voucher" => 3, "product" => 1, "assert_success" => true],
-                ["identity" => 0, "voucher" => 3, "product" => 1, "assert_success" => false],
+            'type' => 'voucher_transactions',
+            'actions' => [
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => false],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => false],
+                ['identity' => 0, 'voucher' => 3, 'product' => 1, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 3, 'product' => 1, 'assert_success' => false],
             ],
         ], [
-            "type" => "update_limits",
-            "actions" => [[
-                "product" => 0,
-                "assert_success" => false,
-                "assert_errors" => ["enable_products.0"],
-                "limits" => ["fund_id" => 1, "limit_total" => 15, "limit_per_identity" => 4],
+            'type' => 'update_limits',
+            'actions' => [[
+                'product' => 0,
+                'assert_success' => false,
+                'assert_errors' => ['enable_products.0'],
+                'limits' => ['fund_id' => 1, 'limit_total' => 15, 'limit_per_identity' => 4],
             ], [
-                "product" => 1,
-                "assert_success" => false,
-                "assert_errors" => ["enable_products.0"],
-                "limits" => ["fund_id" => 1, "limit_total" => 33, "limit_per_identity" => 5],
+                'product' => 1,
+                'assert_success' => false,
+                'assert_errors' => ['enable_products.0'],
+                'limits' => ['fund_id' => 1, 'limit_total' => 33, 'limit_per_identity' => 5],
             ], [
-                "product" => 1,
-                "assert_success" => false,
-                "assert_errors" => ["enable_products.0"],
-                "limits" => ["fund_id" => 3, "limit_total" => 30, "limit_per_identity" => 4],
+                'product' => 1,
+                'assert_success' => false,
+                'assert_errors' => ['enable_products.0'],
+                'limits' => ['fund_id' => 3, 'limit_total' => 30, 'limit_per_identity' => 4],
             ]],
         ]],
     ];
 
     protected array $testCase2 = [
-        "data" => [
-            "products" => [[
-                "total_amount" => 15,
-                "unlimited_stock" => false,
-                "funds" => [
-                    ["fund_id" => 2, 'allow_budget' => true, 'allow_products' => false],
-                    ["fund_id" => 3, 'allow_budget' => true, 'allow_products' => false],
+        'data' => [
+            'products' => [[
+                'total_amount' => 15,
+                'unlimited_stock' => false,
+                'funds' => [
+                    ['fund_id' => 2, 'allow_budget' => true, 'allow_products' => false],
+                    ['fund_id' => 3, 'allow_budget' => true, 'allow_products' => false],
                 ],
-                "limits" => [
-                    ["fund_id" => 2, "limit_total" => 8, "limit_per_identity" => 1],
-                    ["fund_id" => 3, "limit_total" => 10, "limit_per_identity" => 2],
+                'limits' => [
+                    ['fund_id' => 2, 'limit_total' => 8, 'limit_per_identity' => 1],
+                    ['fund_id' => 3, 'limit_total' => 10, 'limit_per_identity' => 2],
                 ],
             ], [
-                "total_amount" => 30,
-                "unlimited_stock" => false,
-                "funds" => [
-                    ["fund_id" => 3, 'allow_budget' => true, 'allow_products' => false],
+                'total_amount' => 30,
+                'unlimited_stock' => false,
+                'funds' => [
+                    ['fund_id' => 3, 'allow_budget' => true, 'allow_products' => false],
                 ],
-                "limits" => [
-                    ["fund_id" => 3, "limit_total" => 15, "limit_per_identity" => 2],
+                'limits' => [
+                    ['fund_id' => 3, 'limit_total' => 15, 'limit_per_identity' => 2],
                 ],
             ]],
-            "identities" => [[
-                "vouchers" => [
-                    ["amount" => 200, "fund_id" => 2, "limit_multiplier" => 2],
-                    ["amount" => 200, "fund_id" => 2, "limit_multiplier" => 3],
-                    ["amount" => 500, "fund_id" => 3, "limit_multiplier" => 1],
+            'identities' => [[
+                'vouchers' => [
+                    ['amount' => 200, 'fund_id' => 2, 'limit_multiplier' => 2],
+                    ['amount' => 200, 'fund_id' => 2, 'limit_multiplier' => 3],
+                    ['amount' => 500, 'fund_id' => 3, 'limit_multiplier' => 1],
                 ],
             ], [
-                "vouchers" => [
-                    ["amount" => 200, "fund_id" => 2, "limit_multiplier" => 2],
-                    ["amount" => 500, "fund_id" => 3, "limit_multiplier" => 3],
+                'vouchers' => [
+                    ['amount' => 200, 'fund_id' => 2, 'limit_multiplier' => 2],
+                    ['amount' => 500, 'fund_id' => 3, 'limit_multiplier' => 3],
                 ],
             ]],
         ],
-        "tests" => [[
-            "type" => "assertion",
-            "actions" => [[
-                "data" => ["product" => 0, "identity" => 0],
-                "assert_limits" => [
-                    ["fund_id" => 2, "limit_available" => 5, "products" => true, "organizations" => true],
-                    ["fund_id" => 3, "limit_available" => 2, "products" => true, "organizations" => true],
+        'tests' => [[
+            'type' => 'assertion',
+            'actions' => [[
+                'data' => ['product' => 0, 'identity' => 0],
+                'assert_limits' => [
+                    ['fund_id' => 2, 'limit_available' => 5, 'products' => true, 'organizations' => true],
+                    ['fund_id' => 3, 'limit_available' => 2, 'products' => true, 'organizations' => true],
                 ],
             ], [
-                "data" => ["product" => 1, "identity" => 1],
-                "assert_limits" => [
-                    ["fund_id" => 3, "limit_available" => 6, "products" => true, "organizations" => true],
+                'data' => ['product' => 1, 'identity' => 1],
+                'assert_limits' => [
+                    ['fund_id' => 3, 'limit_available' => 6, 'products' => true, 'organizations' => true],
                 ],
             ], [
-                "data" => ["product" => 1, "identity" => 0],
-                "assert_limits" => [
-                    ["fund_id" => 3, "limit_available" => 2, "products" => true, "organizations" => true],
+                'data' => ['product' => 1, 'identity' => 0],
+                'assert_limits' => [
+                    ['fund_id' => 3, 'limit_available' => 2, 'products' => true, 'organizations' => true],
                 ],
             ]],
         ], [
-            "type" => "reservations",
-            "actions" => [[
-                "data" => ["identity" => 0, "voucher" => 0, "product" => 0],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 2, "limit_available" => 4, "products" => true, "organizations" => true]],
+            'type' => 'reservations',
+            'actions' => [[
+                'data' => ['identity' => 0, 'voucher' => 0, 'product' => 0],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 2, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                "data" => ["identity" => 1, "voucher" => 4, "product" => 1, "state" => "canceled_by_client"],
-                "assert_success" => true,
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 5, "products" => true, "organizations" => true]],
-                "assert_limits_after" => [["fund_id" => 3, "limit_available" => 6, "products" => true, "organizations" => true]],
-            ]]
+                'data' => ['identity' => 1, 'voucher' => 4, 'product' => 1, 'state' => 'canceled_by_client'],
+                'assert_success' => true,
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 5, 'products' => true, 'organizations' => true]],
+                'assert_limits_after' => [['fund_id' => 3, 'limit_available' => 6, 'products' => true, 'organizations' => true]],
+            ]],
         ], [
-            "type" => "update_limits",
-            "actions" => [[
-                "product" => 0,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 2, "limit_total" => 12, "limit_per_identity" => 2],
-                "assert_limits" => [["fund_id" => 2, "limit_available" => 9, "products" => true, "organizations" => true]],
+            'type' => 'update_limits',
+            'actions' => [[
+                'product' => 0,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 2, 'limit_total' => 12, 'limit_per_identity' => 2],
+                'assert_limits' => [['fund_id' => 2, 'limit_available' => 9, 'products' => true, 'organizations' => true]],
             ], [
-                "product" => 0,
-                "identity" => 0,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 2, "limit_total" => 12, "limit_per_identity" => 1],
-                "assert_limits" => [["fund_id" => 2, "limit_available" => 4, "products" => true, "organizations" => true]],
+                'product' => 0,
+                'identity' => 0,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 2, 'limit_total' => 12, 'limit_per_identity' => 1],
+                'assert_limits' => [['fund_id' => 2, 'limit_available' => 4, 'products' => true, 'organizations' => true]],
             ], [
-                "product" => 1,
-                "identity" => 1,
-                "assert_success" => true,
-                "limits" => ["fund_id" => 3, "limit_total" => 8, "limit_per_identity" => 2],
-                "assert_limits" => [["fund_id" => 3, "limit_available" => 6, "products" => true, "organizations" => true]],
-            ]]
+                'product' => 1,
+                'identity' => 1,
+                'assert_success' => true,
+                'limits' => ['fund_id' => 3, 'limit_total' => 8, 'limit_per_identity' => 2],
+                'assert_limits' => [['fund_id' => 3, 'limit_available' => 6, 'products' => true, 'organizations' => true]],
+            ]],
         ], [
-            "type" => "voucher_transactions",
-            "actions" => [
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => false],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 1, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 0, "product" => 0, "assert_success" => false],
-                ["identity" => 0, "voucher" => 2, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 2, "product" => 0, "assert_success" => true],
-                ["identity" => 0, "voucher" => 2, "product" => 0, "assert_success" => false],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => true],
-                ["identity" => 1, "voucher" => 4, "product" => 1, "assert_success" => false],
+            'type' => 'voucher_transactions',
+            'actions' => [
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => false],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 1, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 0, 'product' => 0, 'assert_success' => false],
+                ['identity' => 0, 'voucher' => 2, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 2, 'product' => 0, 'assert_success' => true],
+                ['identity' => 0, 'voucher' => 2, 'product' => 0, 'assert_success' => false],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => true],
+                ['identity' => 1, 'voucher' => 4, 'product' => 1, 'assert_success' => false],
             ],
         ]],
     ];
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testProductFundLimitsCase1(): void
     {
@@ -335,8 +336,8 @@ class ProductFundLimitsTest extends TestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testProductFundLimitsCase2(): void
     {
@@ -344,7 +345,7 @@ class ProductFundLimitsTest extends TestCase
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     protected function processTestCase(array $testCase): void
     {
@@ -357,8 +358,8 @@ class ProductFundLimitsTest extends TestCase
 
     /**
      * @param array $testData
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function makeTestData(array $testData): void
     {
@@ -418,15 +419,15 @@ class ProductFundLimitsTest extends TestCase
 
     /**
      * @param array $productsData
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function makeProducts(array $productsData): void
     {
         $testData = new TestData();
 
         foreach ($productsData as $productData) {
-            $organization = $testData->makeOrganization("Provider I", $this->makeIdentity());
+            $organization = $testData->makeOrganization('Provider I', $this->makeIdentity());
 
             $product = $testData->makeProduct($organization, Arr::only($productData, [
                 'total_amount', 'unlimited_stock',
@@ -460,8 +461,8 @@ class ProductFundLimitsTest extends TestCase
 
     /**
      * @param array $tests
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processCaseTests(array $tests): void
     {
@@ -554,8 +555,8 @@ class ProductFundLimitsTest extends TestCase
 
     /**
      * @param array $actions
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processActionAssertion(array $actions): void
     {
@@ -572,8 +573,8 @@ class ProductFundLimitsTest extends TestCase
 
     /**
      * @param array $actions
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     protected function processActionReservations(array $actions): void
     {
@@ -655,10 +656,12 @@ class ProductFundLimitsTest extends TestCase
         match($state) {
             ProductReservation::STATE_REJECTED,
             ProductReservation::STATE_CANCELED_BY_PROVIDER => $this->cancelReservationByProvider(
-                $provider, $reservation
+                $provider,
+                $reservation
             ),
             ProductReservation::STATE_ACCEPTED => $this->approveReservationByProvider(
-                $provider, $reservation
+                $provider,
+                $reservation
             ),
             ProductReservation::STATE_CANCELED_BY_CLIENT => (
                 $this->makeReservationCancelRequest($reservation)->assertSuccessful()
@@ -668,7 +671,9 @@ class ProductFundLimitsTest extends TestCase
 
         $reservation = ProductReservation::find($reservation->id);
         $this->assertSame(
-            $reservation->state, $state, "Reservation state $reservation->state not equals $state",
+            $reservation->state,
+            $state,
+            "Reservation state $reservation->state not equals $state",
         );
     }
 
@@ -729,12 +734,12 @@ class ProductFundLimitsTest extends TestCase
         $productFunds = $this->getProductOnWebshop($product, $identity)['funds'];
 
         foreach ($asserts as $assert) {
-            $fund = array_first($productFunds, fn($item) => $assert['fund_id'] === $item['id']);
+            $fund = array_first($productFunds, fn ($item) => $assert['fund_id'] === $item['id']);
 
             $this->assertNotNull($fund, 'Fund not found');
             $this->assertEquals($assert['limit_available'], $fund['limit_available'], 'Limits not equals');
 
-            $vouchers = array_filter($this->vouchers, fn(Voucher $item) => $assert['fund_id'] === $item->fund_id);
+            $vouchers = array_filter($this->vouchers, fn (Voucher $item) => $assert['fund_id'] === $item->fund_id);
             $this->assertNotEmpty($vouchers, 'Vouchers not found');
 
             $exists = false;
@@ -747,7 +752,7 @@ class ProductFundLimitsTest extends TestCase
                 $this->checkAllowedOrganizationsForProvider($provider, $voucher, $assert['organizations']);
                 $products = $this->getProductsForProvider($provider, $voucher);
 
-                $exists = array_first($products['data'], fn($item) => $product->id === $item['id']);
+                $exists = array_first($products['data'], fn ($item) => $product->id === $item['id']);
             }
 
             $assert['products']
@@ -799,7 +804,7 @@ class ProductFundLimitsTest extends TestCase
         $response = $this->getJson($url, $headers);
         $response->assertSuccessful();
 
-        $productArr = array_first($response['data'], fn($item) => $product->id === $item['id']);
+        $productArr = array_first($response['data'], fn ($item) => $product->id === $item['id']);
         $this->assertNotNull($productArr, 'Product not found');
 
         return $productArr;
@@ -853,7 +858,7 @@ class ProductFundLimitsTest extends TestCase
 
         $organizationExists = array_first(
             $response['data']['allowed_organizations'],
-            fn($item) => $provider->id === $item['id']
+            fn ($item) => $provider->id === $item['id']
         );
 
         $exist
@@ -889,7 +894,7 @@ class ProductFundLimitsTest extends TestCase
 
         if (is_null($assertErrors)) {
             $response->assertSuccessful();
-        } else  {
+        } else {
             $response->assertJsonValidationErrors($assertErrors);
         }
     }

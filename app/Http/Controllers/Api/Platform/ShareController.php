@@ -33,11 +33,11 @@ class ShareController extends Controller
     }
 
     /**
-     * Send sms
+     * Send sms.
      *
      * @param ShareSmsRequest $request
-     * @return JsonResponse
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return JsonResponse
      */
     public function sendSms(
         ShareSmsRequest $request
@@ -49,19 +49,19 @@ class ShareController extends Controller
             $request->input('phone')
         );
 
-        return $result ? response()->json(): response()->json([
+        return $result ? response()->json() : response()->json([
             'errors' => [
-                'phone' => (array) trans('share.sms.me_app_download_link.failed')
-            ]
+                'phone' => (array) trans('share.sms.me_app_download_link.failed'),
+            ],
         ], 422);
     }
 
     /**
-     * Send sms
+     * Send sms.
      *
      * @param ShareEmailRequest $request
-     * @return JsonResponse
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return JsonResponse
      */
     public function sendEmail(ShareEmailRequest $request): JsonResponse
     {

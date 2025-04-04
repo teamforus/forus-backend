@@ -12,10 +12,10 @@ class Auth2FAService
     /**
      * @param string $company
      * @param string $holder
-     * @return Auth2FASecret
      * @throws IncompatibleWithGoogleAuthenticatorException
      * @throws InvalidCharactersException
      * @throws SecretKeyTooShortException
+     * @return Auth2FASecret
      */
     public function make2FASecret(string $company, string $holder): Auth2FASecret
     {

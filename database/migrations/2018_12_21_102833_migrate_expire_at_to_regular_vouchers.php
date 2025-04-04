@@ -2,8 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -15,7 +14,7 @@ return new class extends Migration
 
         foreach ($vouchers as $voucher) {
             $voucher->update([
-                'expire_at' => $voucher->fund->end_date
+                'expire_at' => $voucher->fund->end_date,
             ]);
         }
     }

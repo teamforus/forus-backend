@@ -31,7 +31,8 @@ abstract class BaseFundRequestRule extends BaseRule
     public function __construct(
         protected ?Fund $fund,
         protected ?BaseFormRequest $request = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param FundCriterion $criterion
@@ -83,8 +84,9 @@ abstract class BaseFundRequestRule extends BaseRule
     {
         $fundCriteriaById = $this->fund->criteria->pluck('record_type_key', 'id');
 
-        return array_reduce(array_keys($records), function($list, $fund_criterion_id) use (
-            $fundCriteriaById, $records
+        return array_reduce(array_keys($records), function ($list, $fund_criterion_id) use (
+            $fundCriteriaById,
+            $records,
         ) {
             $value = $records[$fund_criterion_id] ?? null;
 

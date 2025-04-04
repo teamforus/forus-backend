@@ -9,6 +9,7 @@ use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Session\Resources\SessionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class SessionController extends Controller
 {
@@ -16,8 +17,8 @@ class SessionController extends Controller
      * Display a listing of the resource.
      *
      * @param IndexSessionsRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(IndexSessionsRequest $request): AnonymousResourceCollection
     {
@@ -50,8 +51,8 @@ class SessionController extends Controller
      *
      * @param BaseFormRequest $request
      * @param Session $session
+     * @throws Throwable
      * @return JsonResponse
-     * @throws \Throwable
      */
     public function terminate(BaseFormRequest $request, Session $session): JsonResponse
     {
@@ -66,9 +67,9 @@ class SessionController extends Controller
      * Display the specified resource.
      *
      * @param BaseFormRequest $request
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function terminateAll(BaseFormRequest $request): JsonResponse

@@ -39,11 +39,33 @@ class UpdateImplementationCmsRequest extends FormRequest
             'overlay_enabled' => 'nullable|boolean',
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
-            'header_text_color' => 'nullable|in:bright,dark,auto',
+            'banner_button' => 'sometimes|boolean',
+            'banner_button_text' => 'sometimes|nullable|required_if_accepted:banner_button|string|min:0|max:100',
+            'banner_button_url' => 'sometimes|nullable|required_if_accepted:banner_button|url|min:0|max:1500',
+            'banner_button_target' => 'sometimes|required_if_accepted:banner_button|in:self,_blank',
+            'banner_button_type' => 'sometimes|in:color,white',
+            'banner_wide' => 'sometimes|boolean',
+            'banner_collapse' => 'sometimes|boolean',
+            'banner_position' => 'sometimes|in:left,center,right',
+            'banner_color' => 'sometimes|hex_color',
+            'banner_background' => 'sometimes|hex_color',
+            'banner_background_mobile' => 'sometimes|boolean',
             'page_title_suffix' => 'nullable|string|max:60',
             'languages' => 'array',
             'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
         ], $this->announcementsRules(), $this->showBlockFlags());
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return [
+            'announcement.title' => 'titel',
+            'announcement.description' => 'description',
+            'page_title_suffix' => 'browser tab postfix',
+        ];
     }
 
     /**
@@ -57,10 +79,10 @@ class UpdateImplementationCmsRequest extends FormRequest
             'show_home_products' => 'nullable|boolean',
             'show_providers_map' => 'nullable|boolean',
             'show_provider_map' => 'nullable|boolean',
-            'show_voucher_map'  => 'nullable|boolean',
-            'show_product_map'  => 'nullable|boolean',
-            'show_terms_checkbox'  => 'nullable|boolean',
-            'show_privacy_checkbox'  => 'nullable|boolean',
+            'show_voucher_map' => 'nullable|boolean',
+            'show_product_map' => 'nullable|boolean',
+            'show_terms_checkbox' => 'nullable|boolean',
+            'show_privacy_checkbox' => 'nullable|boolean',
         ];
     }
 
@@ -70,25 +92,13 @@ class UpdateImplementationCmsRequest extends FormRequest
     private function announcementsRules(): array
     {
         return [
-            'announcement'              => 'nullable|array',
-            'announcement.type'         => 'nullable|in:warning,danger,success,primary,default',
-            'announcement.title'        => 'nullable|string|max:2000',
-            'announcement.description'  => 'nullable|string|max:8000',
-            'announcement.expire_at'    => 'nullable|date_format:Y-m-d',
-            'announcement.active'       => 'nullable|boolean',
-            'announcement.replace'      => 'nullable|boolean',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function attributes(): array
-    {
-        return [
-            'announcement.title' => 'titel',
-            'announcement.description' => 'description',
-            'page_title_suffix' => 'browser tab postfix',
+            'announcement' => 'nullable|array',
+            'announcement.type' => 'nullable|in:warning,danger,success,primary,default',
+            'announcement.title' => 'nullable|string|max:2000',
+            'announcement.description' => 'nullable|string|max:8000',
+            'announcement.expire_at' => 'nullable|date_format:Y-m-d',
+            'announcement.active' => 'nullable|boolean',
+            'announcement.replace' => 'nullable|boolean',
         ];
     }
 }

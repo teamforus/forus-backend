@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * App\Models\Source
+ * App\Models\Source.
  *
  * @property int $id
  * @property string $key
@@ -23,6 +23,6 @@ namespace App\Models;
 class Source extends BaseModel
 {
     protected $fillable = [
-        "key", "url"
+        'key', 'url',
     ];
 }

@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -13,15 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('prevalidations', function(Blueprint $table) {
+        Schema::table('prevalidations', function (Blueprint $table) {
             $table->integer('fund_id')->unsigned()->nullable()->after('identity_address');
         });
 
         // roles with record validation permission
         $roles = Db::table('role_permissions')->where([
             'permission_id' => Db::table('permissions')->where([
-                'key' => 'validate_records'
-            ])->first()->id
+                'key' => 'validate_records',
+            ])->first()->id,
         ])->pluck('role_id');
 
         // all system employees that have `validate_records` permission
@@ -29,12 +28,12 @@ return new class extends Migration
             'employee_roles'
         )->whereIn('role_id', $roles)->pluck('employee_id');
 
-        DB::table('organizations')->get()->each(function(
+        DB::table('organizations')->get()->each(function (
             $organization
         ) use ($employees) {
             // add all employees prevalidations to first organization fund
             $fund = DB::table('funds')->where([
-                'organization_id' => $organization->id
+                'organization_id' => $organization->id,
             ])->orderBy('created_at', 'ASC')->first();
 
             // organization dont have any funds
@@ -44,7 +43,7 @@ return new class extends Migration
 
             // identity_addresses that can validate records for the organization
             $validators = DB::table('employees')->where([
-                'organization_id' => $organization->id
+                'organization_id' => $organization->id,
             ])->whereIn('id', $employees)->pluck('identity_address');
 
             // add organization owner
@@ -54,7 +53,7 @@ return new class extends Migration
             DB::table('prevalidations')
                 ->whereIn('identity_address', $validators)
                 ->update([
-                    'fund_id' => $fund->id
+                    'fund_id' => $fund->id,
                 ]);
         });
     }
@@ -66,7 +65,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('prevalidations', function(Blueprint $table) {
+        Schema::table('prevalidations', function (Blueprint $table) {
             $table->dropColumn('fund_id');
         });
     }

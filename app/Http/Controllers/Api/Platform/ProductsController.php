@@ -14,11 +14,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class ProductsController extends Controller
 {
     /**
-     * Display a listing of the resource
+     * Display a listing of the resource.
      *
      * @param SearchProductsRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(SearchProductsRequest $request): AnonymousResourceCollection
     {
@@ -46,8 +46,8 @@ class ProductsController extends Controller
 
     /**
      * @param SearchProductsRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function sample(SearchProductsRequest $request): AnonymousResourceCollection
     {
@@ -75,8 +75,8 @@ class ProductsController extends Controller
 
     /**
      * @param Product $product
-     * @return ProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProductResource
      */
     public function show(Product $product): ProductResource
     {
@@ -88,14 +88,14 @@ class ProductsController extends Controller
     /**
      * @param BaseFormRequest $request
      * @param Product $product
-     * @return ProductResource
      * @throws AuthorizationException
+     * @return ProductResource
      */
     public function bookmark(BaseFormRequest $request, Product $product): ProductResource
     {
         $this->authorize('bookmark', $product);
 
-        return ProductResource::create($product->closure(function(Product $product) use ($request) {
+        return ProductResource::create($product->closure(function (Product $product) use ($request) {
             $product->addBookmark($request->identity());
         }));
     }
@@ -103,14 +103,14 @@ class ProductsController extends Controller
     /**
      * @param BaseFormRequest $request
      * @param Product $product
-     * @return ProductResource
      * @throws AuthorizationException
+     * @return ProductResource
      */
     public function removeBookmark(BaseFormRequest $request, Product $product): ProductResource
     {
         $this->authorize('removeBookmark', $product);
 
-        return ProductResource::create($product->closure(function(Product $product) use ($request) {
+        return ProductResource::create($product->closure(function (Product $product) use ($request) {
             $product->removeBookmark($request->identity());
         }));
     }

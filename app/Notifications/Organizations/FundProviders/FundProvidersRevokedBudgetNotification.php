@@ -7,7 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 
 /**
- * Notify the fund provider that they can no longer scan budget vouchers
+ * Notify the fund provider that they can no longer scan budget vouchers.
  */
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {
@@ -24,10 +24,10 @@ class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotificati
             return;
         }
 
-        $mailable = new ProviderRejectedMail(
-            $this->eventLog->data,
-            $fund->fund_config->implementation->getEmailFrom()
-        );
+        $mailable = new ProviderRejectedMail([
+            ...$this->eventLog->data,
+            'provider_dashboard_link' => $fund->urlProviderDashboard(),
+        ], $fund->fund_config->implementation->getEmailFrom());
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }

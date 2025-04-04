@@ -18,8 +18,8 @@ class FundProviderController extends Controller
      *
      * @param IndexFundProviderRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
         IndexFundProviderRequest $request,
@@ -34,10 +34,10 @@ class FundProviderController extends Controller
     /**
      * @param IndexFundProviderRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(
         IndexFundProviderRequest $request,
@@ -46,7 +46,7 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('export_type', 'xls');
 
         return resolve('excel')->download(
             new FundProvidersExport($request, $organization),

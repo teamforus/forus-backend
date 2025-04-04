@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundForm;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -33,6 +34,7 @@ use App\Policies\BankConnectionPolicy;
 use App\Policies\BIConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
+use App\Policies\FundFormPolicy;
 use App\Policies\FundPolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
@@ -81,37 +83,38 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        File::class                     => FilePolicy::class,
-        Fund::class                     => FundPolicy::class,
-        Media::class                    => MediaPolicy::class,
-        Office::class                   => OfficePolicy::class,
-        Product::class                  => ProductPolicy::class,
-        Voucher::class                  => VoucherPolicy::class,
-        Employee::class                 => EmployeePolicy::class,
-        FundRequest::class              => FundRequestPolicy::class,
-        Organization::class             => OrganizationPolicy::class,
-        FundProvider::class             => FundProviderPolicy::class,
-        PhysicalCard::class             => PhysicalCardPolicy::class,
-        BIConnection::class             => BIConnectionPolicy::class,
-        Reimbursement::class            => ReimbursementPolicy::class,
-        Prevalidation::class            => PrevalidationPolicy::class,
-        IdentityEmail::class            => IdentityEmailPolicy::class,
-        Implementation::class           => ImplementationPolicy::class,
-        BankConnection::class           => BankConnectionPolicy::class,
-        FundProviderChat::class         => FundProviderChatPolicy::class,
-        MollieConnection::class         => MollieConnectionPolicy::class,
-        FundRequestRecord::class        => FundRequestRecordPolicy::class,
-        ImplementationPage::class       => ImplementationPagePolicy::class,
-        VoucherTransaction::class       => VoucherTransactionPolicy::class,
-        ProductReservation::class       => ProductReservationPolicy::class,
-        PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
-        ReimbursementCategory::class    => ReimbursementCategoryPolicy::class,
-        VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
-        FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
-        FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
-        FundProviderUnsubscribe::class  => FundProviderUnsubscribePolicy::class,
-        MollieConnectionProfile::class  => MollieConnectionProfilePolicy::class,
-        ReservationExtraPayment::class  => ReservationExtraPaymentPolicy::class,
+        File::class => FilePolicy::class,
+        Fund::class => FundPolicy::class,
+        Media::class => MediaPolicy::class,
+        Office::class => OfficePolicy::class,
+        Product::class => ProductPolicy::class,
+        Voucher::class => VoucherPolicy::class,
+        Employee::class => EmployeePolicy::class,
+        FundForm::class => FundFormPolicy::class,
+        FundRequest::class => FundRequestPolicy::class,
+        Organization::class => OrganizationPolicy::class,
+        FundProvider::class => FundProviderPolicy::class,
+        PhysicalCard::class => PhysicalCardPolicy::class,
+        BIConnection::class => BIConnectionPolicy::class,
+        Reimbursement::class => ReimbursementPolicy::class,
+        Prevalidation::class => PrevalidationPolicy::class,
+        IdentityEmail::class => IdentityEmailPolicy::class,
+        Implementation::class => ImplementationPolicy::class,
+        BankConnection::class => BankConnectionPolicy::class,
+        FundProviderChat::class => FundProviderChatPolicy::class,
+        MollieConnection::class => MollieConnectionPolicy::class,
+        FundRequestRecord::class => FundRequestRecordPolicy::class,
+        ImplementationPage::class => ImplementationPagePolicy::class,
+        VoucherTransaction::class => VoucherTransactionPolicy::class,
+        ProductReservation::class => ProductReservationPolicy::class,
+        PhysicalCardRequest::class => PhysicalCardRequestPolicy::class,
+        ReimbursementCategory::class => ReimbursementCategoryPolicy::class,
+        VoucherTransactionBulk::class => VoucherTransactionBulkPolicy::class,
+        FundProviderInvitation::class => FundProviderInvitationPolicy::class,
+        FundProviderChatMessage::class => FundProviderChatMessagePolicy::class,
+        FundProviderUnsubscribe::class => FundProviderUnsubscribePolicy::class,
+        MollieConnectionProfile::class => MollieConnectionProfilePolicy::class,
+        ReservationExtraPayment::class => ReservationExtraPaymentPolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 

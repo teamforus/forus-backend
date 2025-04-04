@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class ProductReservationsController extends Controller
 {
@@ -33,8 +34,8 @@ class ProductReservationsController extends Controller
      *
      * @param IndexProductReservationsRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexProductReservationsRequest $request,
@@ -43,11 +44,11 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
-        $query = ProductReservation::where(function(Builder $builder) {
+        $query = ProductReservation::where(function (Builder $builder) {
             $builder->where('state', '!=', ProductReservation::STATE_PENDING);
-            $builder->orWhere(function(Builder $builder) {
+            $builder->orWhere(function (Builder $builder) {
                 $builder->where('state', ProductReservation::STATE_PENDING);
-                $builder->whereHas('voucher', function(Builder $builder) {
+                $builder->whereHas('voucher', function (Builder $builder) {
                     VoucherQuery::whereActive($builder);
                 });
             });
@@ -69,9 +70,9 @@ class ProductReservationsController extends Controller
      *
      * @param StoreProductReservationRequest $request
      * @param Organization $organization
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ProductReservationResource
      */
     public function store(
         StoreProductReservationRequest $request,
@@ -96,9 +97,9 @@ class ProductReservationsController extends Controller
      *
      * @param StoreProductReservationBatchRequest $request
      * @param Organization $organization
-     * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return array
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
@@ -134,7 +135,7 @@ class ProductReservationsController extends Controller
 
         return [
             'reserved' => $reserved,
-            'errors' => array_reduce($errorsItems, function($array, $item) {
+            'errors' => array_reduce($errorsItems, function ($array, $item) {
                 return array_merge($array, $item);
             }, []),
         ];
@@ -145,8 +146,8 @@ class ProductReservationsController extends Controller
      *
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProductReservationResource
      */
     public function show(
         Organization $organization,
@@ -164,8 +165,8 @@ class ProductReservationsController extends Controller
      * @param AcceptProductReservationRequest $request
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return ProductReservationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function accept(
         AcceptProductReservationRequest $request,
@@ -186,9 +187,9 @@ class ProductReservationsController extends Controller
      * @param RejectProductReservationRequest $request
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Throwable
+     * @throws Throwable
+     * @return ProductReservationResource
      */
     public function reject(
         RejectProductReservationRequest $request,
@@ -207,8 +208,8 @@ class ProductReservationsController extends Controller
 
     /**
      * @param Organization $organization
-     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function getExportFields(
@@ -223,10 +224,10 @@ class ProductReservationsController extends Controller
     /**
      * @param IndexProductReservationsRequest $request
      * @param Organization $organization
-     * @return BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return BinaryFileResponse
      */
     public function export(
         IndexProductReservationsRequest $request,
@@ -240,7 +241,7 @@ class ProductReservationsController extends Controller
         ]), ProductReservationQuery::whereProviderFilter(ProductReservation::query(), $organization->id));
 
         $exportType = $request->input('data_format', 'xls');
-        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+        $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
         $fields = $request->input('fields', ProductReservationsExport::getExportFields());
         $exportData = new ProductReservationsExport($search->get(), $fields);
 
@@ -251,8 +252,8 @@ class ProductReservationsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProductReservationResource
      */
     public function archive(
         BaseFormRequest $request,
@@ -271,8 +272,8 @@ class ProductReservationsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
-     * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProductReservationResource
      * @noinspection PhpUnused
      */
     public function unArchive(
@@ -292,8 +293,8 @@ class ProductReservationsController extends Controller
      * @param FetchExtraPaymentProductReservationsRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
+     * @throws Throwable
      * @return ProductReservationResource
-     * @throws \Throwable
      */
     public function fetchExtraPayment(
         FetchExtraPaymentProductReservationsRequest $request,
@@ -316,8 +317,8 @@ class ProductReservationsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
+     * @throws Throwable
      * @return ProductReservationResource|JsonResponse
-     * @throws \Throwable
      */
     public function refundExtraPayment(
         BaseFormRequest $request,

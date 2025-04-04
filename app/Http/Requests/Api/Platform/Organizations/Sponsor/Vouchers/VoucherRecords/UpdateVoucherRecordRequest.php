@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\VoucherRecords;
 
-
 use App\Models\VoucherRecord;
 
 /**

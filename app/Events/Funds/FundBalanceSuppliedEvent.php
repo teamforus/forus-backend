@@ -23,7 +23,7 @@ class FundBalanceSuppliedEvent extends BaseFundEvent
     }
 
     /**
-     * Get the top-up transaction
+     * Get the top-up transaction.
      *
      * @return FundTopUpTransaction
      */

@@ -22,7 +22,7 @@ class PreCheckController extends Controller
     }
 
     /**
-     * Calculate pre-check totals based on record inputs
+     * Calculate pre-check totals based on record inputs.
      *
      * @param CalculatePreCheckRequest $request
      * @return JsonResponse

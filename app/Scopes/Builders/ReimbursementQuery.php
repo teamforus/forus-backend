@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\Reimbursement;
@@ -48,45 +47,45 @@ class ReimbursementQuery
     }
 
     /**
-     * Deactivated are considered reimbursement that are related to deactivated vouchers
+     * Deactivated are considered reimbursement that are related to deactivated vouchers.
      * @param Builder|Relation|Reimbursement $builder,
      * @return Builder|Relation|Reimbursement
      */
     public static function whereDeactivated(
         Builder|Relation|Reimbursement $builder,
     ): Builder|Relation|Reimbursement {
-        return $builder->whereHas('voucher', fn(Builder $b) => VoucherQuery::whereDeactivated($b));
+        return $builder->whereHas('voucher', fn (Builder $b) => VoucherQuery::whereDeactivated($b));
     }
 
     /**
-     * Deactivated are considered reimbursement that are related to deactivated vouchers
+     * Deactivated are considered reimbursement that are related to deactivated vouchers.
      * @param Builder|Relation|Reimbursement $builder
      * @return Builder|Relation|Reimbursement
      */
     public static function whereNotDeactivated(
         Builder|Relation|Reimbursement $builder,
     ): Builder|Relation|Reimbursement {
-        return $builder->where(function(Builder $builder) {
+        return $builder->where(function (Builder $builder) {
             $builder->whereNotIn('id', self::whereDeactivated(Reimbursement::query())->select('id'));
         });
     }
 
     /**
-     * Archived are considered reimbursement that are related to expired or deactivated vouchers
+     * Archived are considered reimbursement that are related to expired or deactivated vouchers.
      * @param Builder|Relation|Reimbursement $builder
      * @return Builder|Relation|Reimbursement
      */
     public static function whereArchived(
         Builder|Relation|Reimbursement $builder,
     ): Builder|Relation|Reimbursement {
-        return $builder->where(function(Builder $builder) {
-            $builder->where(fn(Builder $b) => self::whereDeactivated($b));
-            $builder->orWhere(fn(Builder $b) => self::whereExpired($b));
+        return $builder->where(function (Builder $builder) {
+            $builder->where(fn (Builder $b) => self::whereDeactivated($b));
+            $builder->orWhere(fn (Builder $b) => self::whereExpired($b));
         });
     }
 
     /**
-     * Not archived are considered reimbursement that are not related to expired or deactivated vouchers
+     * Not archived are considered reimbursement that are not related to expired or deactivated vouchers.
      * @param Builder|Relation|Reimbursement $builder
      * @return Builder|Relation|Reimbursement
      */

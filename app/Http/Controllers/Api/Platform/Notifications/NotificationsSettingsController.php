@@ -21,11 +21,12 @@ class NotificationsSettingsController extends Controller
     }
 
     /**
-     * Get identity notification preferences
+     * Get identity notification preferences.
      * @param BaseFormRequest $request
      * @return JsonResponse
      */
-    public function index(BaseFormRequest $request): JsonResponse {
+    public function index(BaseFormRequest $request): JsonResponse
+    {
 
         $identity = $request->identity();
         $email = $identity->email;
@@ -33,7 +34,7 @@ class NotificationsSettingsController extends Controller
         $preferences = $this->notificationRepo->getNotificationPreferences($identity->address);
 
         return new JsonResponse([
-            'data' => compact('email_unsubscribed', 'preferences', 'email')
+            'data' => compact('email_unsubscribed', 'preferences', 'email'),
         ]);
     }
 
@@ -57,7 +58,7 @@ class NotificationsSettingsController extends Controller
         $preferences = $this->notificationRepo->updateIdentityPreferences($identity->address, $preferences);
 
         return new JsonResponse([
-            'data' => compact('email_unsubscribed', 'preferences', 'email')
+            'data' => compact('email_unsubscribed', 'preferences', 'email'),
         ]);
     }
 }

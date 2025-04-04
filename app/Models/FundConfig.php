@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
- * App\Models\FundConfig
+ * App\Models\FundConfig.
  *
  * @property int $id
  * @property int $fund_id
@@ -391,9 +391,9 @@ class FundConfig extends BaseModel
     }
 
     /**
+     * @throws CommonMarkException
      * @return string
      * @noinspection PhpUnused
-     * @throws CommonMarkException
      */
     public function getHelpDescriptionHtmlAttribute(): string
     {

@@ -12,7 +12,7 @@ use Illuminate\Support\ServiceProvider;
 class AwsSecretServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap AWS secret manager service
+     * Bootstrap AWS secret manager service.
      */
     public function boot(): void
     {
@@ -22,9 +22,9 @@ class AwsSecretServiceProvider extends ServiceProvider
 
         try {
             $this->updateConfigsBySecretClient(new SecretsManagerClient([
-                'version'       => config('forus.aws_secrets_manager.version'),
-                'region'        => config('forus.aws_secrets_manager.region'),
-                'credentials'   => CredentialProvider::defaultProvider()
+                'version' => config('forus.aws_secrets_manager.version'),
+                'region' => config('forus.aws_secrets_manager.region'),
+                'credentials' => CredentialProvider::defaultProvider(),
             ]));
         } catch (AwsException $e) {
             logger()->error(sprintf(
@@ -35,7 +35,7 @@ class AwsSecretServiceProvider extends ServiceProvider
     }
 
     /**
-     * Sets the passwords in the config file
+     * Sets the passwords in the config file.
      *
      * @param SecretsManagerClient $client
      */
@@ -45,7 +45,7 @@ class AwsSecretServiceProvider extends ServiceProvider
 
         foreach ($collections as $collectionId => $collection) {
             $secretCollection = $client->getSecretValue([
-                'SecretId' => $collectionId
+                'SecretId' => $collectionId,
             ]);
 
             if (isset($secretCollection['SecretString'])) {

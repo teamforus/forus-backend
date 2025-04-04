@@ -42,7 +42,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * App\Models\Fund
+ * App\Models\Fund.
  *
  * @property int $id
  * @property int $organization_id
@@ -99,6 +99,7 @@ use Illuminate\Support\Facades\Log;
  * @property-read \App\Models\FundConfig|null $fund_config
  * @property-read Collection|\App\Models\FundConfigRecord[] $fund_config_records
  * @property-read int|null $fund_config_records_count
+ * @property-read \App\Models\FundForm|null $fund_form
  * @property-read Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read Collection|\App\Models\FundFormula[] $fund_formulas
@@ -252,11 +253,11 @@ class Fund extends BaseModel
         self::TYPE_EXTERNAL,
     ];
 
-    const string DESCRIPTION_POSITION_AFTER = 'after';
-    const string DESCRIPTION_POSITION_BEFORE = 'before';
-    const string DESCRIPTION_POSITION_REPLACE = 'replace';
+    public const string DESCRIPTION_POSITION_AFTER = 'after';
+    public const string DESCRIPTION_POSITION_BEFORE = 'before';
+    public const string DESCRIPTION_POSITION_REPLACE = 'replace';
 
-    const array DESCRIPTION_POSITIONS = [
+    public const array DESCRIPTION_POSITIONS = [
         self::DESCRIPTION_POSITION_AFTER,
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
@@ -277,7 +278,7 @@ class Fund extends BaseModel
     ];
 
     protected $hidden = [
-        'fund_config', 'fund_formulas'
+        'fund_config', 'fund_formulas',
     ];
 
     protected $casts = [
@@ -335,6 +336,15 @@ class Fund extends BaseModel
     }
 
     /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function fund_form(): HasOne
+    {
+        return $this->hasOne(FundForm::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
@@ -352,13 +362,13 @@ class Fund extends BaseModel
     }
 
     /**
-     * Get fund logo
+     * Get fund logo.
      * @return MorphOne
      */
     public function logo(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'fund_logo'
+            'type' => 'fund_logo',
         ]);
     }
 
@@ -418,7 +428,7 @@ class Fund extends BaseModel
     public function providers_allowed_products(): HasMany
     {
         return $this->hasMany(FundProvider::class)->where([
-            'allow_products' => true
+            'allow_products' => true,
         ]);
     }
 
@@ -553,13 +563,13 @@ class Fund extends BaseModel
         $query = Tag::query();
 
         // Target tags of scope
-        $query->where(function(Builder $builder) use ($tagIds, $scope) {
+        $query->where(function (Builder $builder) use ($tagIds, $scope) {
             $builder->whereIn('id', $tagIds);
             $builder->whereIn('scope', (array) $scope);
         });
 
         // Tags to keep from other scopes
-        $query->orWhere(function(Builder $builder) use ($scope) {
+        $query->orWhere(function (Builder $builder) use ($scope) {
             $otherScopeTags = $this->tags()->whereNotIn('scope', (array) $scope);
             $builder->whereIn('id', $otherScopeTags->select('tags.id')->getQuery());
         });
@@ -588,7 +598,7 @@ class Fund extends BaseModel
         bool $withBalance = false,
         ?bool $withEmail = null
     ): Builder|Identity {
-        $builder = Identity::whereHas('vouchers', function(Builder $builder) use ($withBalance) {
+        $builder = Identity::whereHas('vouchers', function (Builder $builder) use ($withBalance) {
             VoucherQuery::whereNotExpiredAndActive($builder->where([
                 'fund_id' => $this->id,
             ]));
@@ -607,17 +617,6 @@ class Fund extends BaseModel
         }
 
         return $builder;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnusedPrivateMethodInspection
-     */
-    private function providers_declined_products(): HasMany
-    {
-        return $this->hasMany(FundProvider::class)->where([
-            'allow_products' => false
-        ]);
     }
 
     /**
@@ -799,11 +798,11 @@ class Fund extends BaseModel
 
         $costs += $this->voucher_transactions()
             ->where('voucher_transactions.amount', '>', 0)
-                ->where('voucher_transactions.state', $state)
-                ->whereIn('voucher_transactions.target', $targets)
-                ->whereDoesntHave('voucher_transaction_bulk')
-                ->whereYear('voucher_transactions.created_at', $year ?: now()->year)
-                ->count() * $targetCostOld;
+            ->where('voucher_transactions.state', $state)
+            ->whereIn('voucher_transactions.target', $targets)
+            ->whereDoesntHave('voucher_transaction_bulk')
+            ->whereYear('voucher_transactions.created_at', $year ?: now()->year)
+            ->count() * $targetCostOld;
 
         return $costs;
     }
@@ -816,7 +815,7 @@ class Fund extends BaseModel
     {
         return $this->belongsToMany(Organization::class, 'fund_providers')->where([
             'state' => FundProvider::STATE_ACCEPTED,
-        ])->where(static function(Builder $builder) {
+        ])->where(static function (Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
             $builder->orWhere('allow_some_products', true);
@@ -861,7 +860,7 @@ class Fund extends BaseModel
             'organization_id',
             'organization_id',
             'id'
-        )->whereHas('roles.permissions', static function(Builder $builder) {
+        )->whereHas('roles.permissions', static function (Builder $builder) {
             $builder->where('key', Permission::VALIDATE_RECORDS);
         });
     }
@@ -879,7 +878,7 @@ class Fund extends BaseModel
             'organization_id',
             'organization_id',
             'id'
-        )->whereHas('roles.permissions', static function(Builder $builder) {
+        )->whereHas('roles.permissions', static function (Builder $builder) {
             $builder->where('key', Permission::MANAGE_VALIDATORS);
         });
     }
@@ -972,12 +971,12 @@ class Fund extends BaseModel
 
         $builder = Record::search($identity->records(), [
             'type' => $record_type,
-        ])->whereHas('validations', function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+        ])->whereHas('validations', function (Builder $query) use ($daysTrusted, $fund, $startDate) {
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });
 
-        $validationSubQuery = RecordValidation::where(function(Builder $query) use ($daysTrusted, $fund, $startDate) {
+        $validationSubQuery = RecordValidation::where(function (Builder $query) use ($daysTrusted, $fund, $startDate) {
             $query->whereColumn('records.id', '=', 'record_validations.record_id');
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
@@ -988,8 +987,8 @@ class Fund extends BaseModel
             'validated_at_prevalidation' => (clone $validationSubQuery)->select([
                 'validated_at_prevalidation' => Prevalidation::whereColumn([
                     'prevalidations.id' => 'record_validations.prevalidation_id',
-                ])->select('prevalidations.validated_at')
-            ])
+                ])->select('prevalidations.validated_at'),
+            ]),
         ]);
 
         $builder = Record::fromSub($builder->getQuery(), 'records')->select([
@@ -1038,7 +1037,7 @@ class Fund extends BaseModel
             return 0;
         }
 
-        return $this->fund_formulas->map(function(FundFormula $formula) use ($identity, $records) {
+        return $this->fund_formulas->map(function (FundFormula $formula) use ($identity, $records) {
             switch ($formula->type) {
                 case FundFormula::TYPE_FIXED: return $formula->amount;
                 case FundFormula::TYPE_MULTIPLY: {
@@ -1061,7 +1060,8 @@ class Fund extends BaseModel
      * @param array|null $records
      * @return int
      */
-    public function multiplierForIdentity(?Identity $identity, array $records = null): int {
+    public function multiplierForIdentity(?Identity $identity, array $records = null): int
+    {
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
@@ -1069,12 +1069,12 @@ class Fund extends BaseModel
             return 1;
         }
 
-        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identity, $records) {
+        return $multipliers->map(function (FundLimitMultiplier $multiplier) use ($identity, $records) {
             if ($records) {
                 $value = (int) ($records[$multiplier->record_type_key] ?: 1);
             } else {
                 $record = $this->getTrustedRecordOfType($identity, $multiplier->record_type_key);
-                $value = (int) ($record ? $record->value: 1);
+                $value = (int) ($record ? $record->value : 1);
             }
 
             return $value * $multiplier->multiplier;
@@ -1090,7 +1090,7 @@ class Fund extends BaseModel
             return null;
         }
 
-        if ($fundFormula->filter(static function (FundFormula $formula){
+        if ($fundFormula->filter(static function (FundFormula $formula) {
             return $formula->type !== FundFormula::TYPE_FIXED;
         })->count()) {
             return null;
@@ -1132,7 +1132,7 @@ class Fund extends BaseModel
     }
 
     /**
-     * Change fund state
+     * Change fund state.
      *
      * @param string $state
      * @return $this
@@ -1147,7 +1147,7 @@ class Fund extends BaseModel
     }
 
     /**
-     * Send funds user count statistic to email
+     * Send funds user count statistic to email.
      * @param string $email
      * @return void
      */
@@ -1156,7 +1156,7 @@ class Fund extends BaseModel
         $funds = Fund::whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
-            self::STATE_ACTIVE, self::STATE_PAUSED
+            self::STATE_ACTIVE, self::STATE_PAUSED,
         ])->where('type', '!=', self::TYPE_EXTERNAL)->get();
 
         foreach ($funds as $fund) {
@@ -1166,7 +1166,7 @@ class Fund extends BaseModel
             $providersQuery = FundProvider::query();
             $providersQuery = FundProviderQuery::whereApprovedForFundsFilter($providersQuery, $fund->id);
 
-            $providerCount = $providersQuery->get()->map(function (FundProvider $fundProvider){
+            $providerCount = $providersQuery->get()->map(function (FundProvider $fundProvider) {
                 return $fundProvider->organization->employees->count();
             })->sum();
 
@@ -1420,7 +1420,7 @@ class Fund extends BaseModel
     }
 
     /**
-     * Update criteria for existing fund
+     * Update criteria for existing fund.
      * @param array $criteria
      * @param bool $textsOnly
      * @return $this
@@ -1430,7 +1430,8 @@ class Fund extends BaseModel
         // remove criteria not listed in the array
         if ($this->criteriaIsEditable() && !$textsOnly) {
             $this->criteria()->whereNotIn('id', array_filter(
-                array_pluck($criteria, 'id'), fn ($id) => !empty($id)
+                array_pluck($criteria, 'id'),
+                fn ($id) => !empty($id)
             ))->delete();
         }
 
@@ -1439,40 +1440,6 @@ class Fund extends BaseModel
         }
 
         return $this;
-    }
-
-    /**
-     * Update existing or create new fund criterion
-     * @param array $criterion
-     * @param bool $textsOnly
-     */
-    protected function syncCriterion(array $criterion, bool $textsOnly = false): void
-    {
-        $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
-
-        if (!$fundCriterion && !$this->criteriaIsEditable()) {
-            return;
-        }
-
-        /** @var FundCriterion|null $db_criteria */
-        $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
-            'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title', 'optional', 'min', 'max', 'label',
-            'extra_description',
-        ] : ['show_attachment', 'description', 'title', 'extra_description']);
-
-        if ($this->criteriaIsEditable()) {
-            $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
-            $data_criterion['operator'] = Arr::get($data_criterion, 'operator', '') ?: '';
-        }
-
-        if ($fundCriterion) {
-            $fundCriterion->update($textsOnly ? array_only($data_criterion, [
-                'title', 'description', 'extra_description',
-            ]): $data_criterion);
-        } elseif (!$textsOnly) {
-            $this->criteria()->create($data_criterion);
-        }
     }
 
     /**
@@ -1513,7 +1480,7 @@ class Fund extends BaseModel
      * @param string $uri
      * @return string|null
      */
-    public function urlWebshop(string $uri = "/"): string|null
+    public function urlWebshop(string $uri = '/'): string|null
     {
         return $this->fund_config?->implementation?->urlWebshop($uri);
     }
@@ -1522,7 +1489,7 @@ class Fund extends BaseModel
      * @param string $uri
      * @return string|null
      */
-    public function urlSponsorDashboard(string $uri = "/"): string|null
+    public function urlSponsorDashboard(string $uri = '/'): string|null
     {
         return $this->fund_config?->implementation?->urlSponsorDashboard($uri);
     }
@@ -1531,7 +1498,7 @@ class Fund extends BaseModel
      * @param string $uri
      * @return string|null
      */
-    public function urlProviderDashboard(string $uri = "/"): string|null
+    public function urlProviderDashboard(string $uri = '/'): string|null
     {
         return $this->fund_config?->implementation?->urlProviderDashboard($uri);
     }
@@ -1540,7 +1507,7 @@ class Fund extends BaseModel
      * @param string $uri
      * @return string|null
      */
-    public function urlValidatorDashboard(string $uri = "/"): string|null
+    public function urlValidatorDashboard(string $uri = '/'): string|null
     {
         return $this->fund_config?->implementation?->urlValidatorDashboard($uri);
     }
@@ -1564,7 +1531,7 @@ class Fund extends BaseModel
             $topUp = $this->top_ups()->first();
         } else {
             $topUp = $this->top_ups()->create([
-                'code' => FundTopUp::generateCode()
+                'code' => FundTopUp::generateCode(),
             ]);
         }
 
@@ -1574,15 +1541,18 @@ class Fund extends BaseModel
     /**
      * @return bool
      */
-    public function criteriaIsEditable(): bool {
+    public function criteriaIsEditable(): bool
+    {
         return ($this->state === self::STATE_WAITING) || (
-            ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
+            ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start
+        );
     }
 
     /**
      * @return EmailFrom
      */
-    public function getEmailFrom(): EmailFrom {
+    public function getEmailFrom(): EmailFrom
+    {
         return $this->fund_config?->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
     }
@@ -1590,21 +1560,24 @@ class Fund extends BaseModel
     /**
      * @return bool
      */
-    public function isTypeSubsidy(): bool {
+    public function isTypeSubsidy(): bool
+    {
         return $this->type === $this::TYPE_SUBSIDIES;
     }
 
     /**
      * @return bool
      */
-    public function isTypeBudget(): bool {
+    public function isTypeBudget(): bool
+    {
         return $this->type === $this::TYPE_BUDGET;
     }
 
     /**
      * @return bool
      */
-    public function isHashingBsn(): bool {
+    public function isHashingBsn(): bool
+    {
         return $this->fund_config->hash_bsn;
     }
 
@@ -1612,7 +1585,8 @@ class Fund extends BaseModel
      * @param $value
      * @return string|null
      */
-    public function getHashedValue($value): ?string {
+    public function getHashedValue($value): ?string
+    {
         if (!$this->isHashingBsn()) {
             return null;
         }
@@ -1626,36 +1600,36 @@ class Fund extends BaseModel
      */
     public function isTakenByPartner(Identity $identity): bool
     {
-        return Identity::whereHas('vouchers', function(Builder $builder) {
+        return Identity::whereHas('vouchers', function (Builder $builder) {
             return VoucherQuery::whereNotExpired($builder->where('fund_id', $this->id));
-        })->whereHas('records', function(Builder $builder) use ($identity) {
-            $builder->where(function(Builder $builder) use ($identity) {
+        })->whereHas('records', function (Builder $builder) use ($identity) {
+            $builder->where(function (Builder $builder) use ($identity) {
                 $identityBsn = $identity->bsn;
 
-                $builder->where(function(Builder $builder) use ($identity, $identityBsn) {
+                $builder->where(function (Builder $builder) use ($identity, $identityBsn) {
                     $builder->whereRelation('record_type', [
-                        'record_types.key' => $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn',
+                        'record_types.key' => $this->isHashingBsn() ? 'partner_bsn_hash' : 'partner_bsn',
                     ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
                         $this->getTrustedRecordOfType($identity, 'bsn_hash')?->value ?: null,
-                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null,
                     ]) : [$identityBsn ?: null]);
                 });
 
-                $builder->orWhere(function(Builder $builder) use ($identity, $identityBsn) {
+                $builder->orWhere(function (Builder $builder) use ($identity, $identityBsn) {
                     $builder->whereRelation('record_type', [
-                        'record_types.key' => $this->isHashingBsn() ? 'bsn_hash': 'bsn',
+                        'record_types.key' => $this->isHashingBsn() ? 'bsn_hash' : 'bsn',
                     ]);
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
                         $this->getTrustedRecordOfType($identity, 'partner_bsn_hash')?->value ?: null,
-                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null,
                     ]) : [$identityBsn ?: null]);
                 });
             });
 
-            $builder->whereHas('validations', function(Builder $builder) {
+            $builder->whereHas('validations', function (Builder $builder) {
                 $builder->whereIn('identity_address', $this->validatorEmployees());
             });
         })->exists();
@@ -1793,20 +1767,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @param string $error_key
-     * @param bool $fallback
-     * @return array
-     */
-    protected function backofficeError(string $error_key, bool $fallback = false): array
-    {
-        return [
-            'backoffice_error' => 1,
-            'backoffice_error_key' => $error_key,
-            'backoffice_fallback' => $fallback ? 1 : 0,
-        ];
-    }
-
-    /**
      * @param bool $skipEnabledCheck
      * @return ?BackofficeApi
      */
@@ -1861,19 +1821,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    private function isIconnectApiConfigured(): bool
-    {
-        return
-            $this->fund_config &&
-            !empty($this->fund_config->iconnect_env) &&
-            !empty($this->fund_config->iconnect_key) &&
-            !empty($this->fund_config->iconnect_cert) &&
-            !empty($this->fund_config->iconnect_cert_trust);
-    }
-
-    /**
      * @return IConnect|null
      */
     public function getIConnect(): ?IConnect
@@ -1915,12 +1862,12 @@ class Fund extends BaseModel
     {
         if ($this->fund_config->isPayoutOutcome()) {
             if (!$this->fund_config->iban_record_key || !$this->fund_config->iban_name_record_key) {
-                return "invalid_iban_record_keys";
+                return 'invalid_iban_record_keys';
             }
 
             if ($this->organization->fund_request_resolve_policy ===
                 Organization::FUND_REQUEST_POLICY_MANUAL) {
-                return "invalid_fund_request_manual_policy";
+                return 'invalid_fund_request_manual_policy';
             }
         }
 
@@ -1963,5 +1910,77 @@ class Fund extends BaseModel
             'fund_id' => $this->id,
             ...$data,
         ]));
+    }
+
+    /**
+     * Update existing or create new fund criterion.
+     * @param array $criterion
+     * @param bool $textsOnly
+     */
+    protected function syncCriterion(array $criterion, bool $textsOnly = false): void
+    {
+        $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
+
+        if (!$fundCriterion && !$this->criteriaIsEditable()) {
+            return;
+        }
+
+        /** @var FundCriterion|null $db_criteria */
+        $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
+            'record_type_key', 'operator', 'value', 'show_attachment',
+            'description', 'title', 'optional', 'min', 'max', 'label',
+            'extra_description',
+        ] : ['show_attachment', 'description', 'title', 'extra_description']);
+
+        if ($this->criteriaIsEditable()) {
+            $data_criterion['value'] = Arr::get($data_criterion, 'value', '') ?: '';
+            $data_criterion['operator'] = Arr::get($data_criterion, 'operator', '') ?: '';
+        }
+
+        if ($fundCriterion) {
+            $fundCriterion->update($textsOnly ? array_only($data_criterion, [
+                'title', 'description', 'extra_description',
+            ]) : $data_criterion);
+        } elseif (!$textsOnly) {
+            $this->criteria()->create($data_criterion);
+        }
+    }
+
+    /**
+     * @param string $error_key
+     * @param bool $fallback
+     * @return array
+     */
+    protected function backofficeError(string $error_key, bool $fallback = false): array
+    {
+        return [
+            'backoffice_error' => 1,
+            'backoffice_error_key' => $error_key,
+            'backoffice_fallback' => $fallback ? 1 : 0,
+        ];
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnusedPrivateMethodInspection
+     */
+    private function providers_declined_products(): HasMany
+    {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => false,
+        ]);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return
+            $this->fund_config &&
+            !empty($this->fund_config->iconnect_env) &&
+            !empty($this->fund_config->iconnect_key) &&
+            !empty($this->fund_config->iconnect_cert) &&
+            !empty($this->fund_config->iconnect_cert_trust);
     }
 }

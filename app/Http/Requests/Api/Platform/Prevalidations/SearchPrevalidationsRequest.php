@@ -32,21 +32,22 @@ class SearchPrevalidationsRequest extends BaseFormRequest
             'q' => 'nullable|string|max:200',
             'fund_id' => [
                 'nullable',
-                Rule::exists('funds', 'id')->where(function(QBuilder $builder) {
+                Rule::exists('funds', 'id')->where(function (QBuilder $builder) {
                     $builder->addWhereExistsQuery(Organization::queryByIdentityPermissions(
-                        $this->auth_address(), Permission::VALIDATE_RECORDS,
+                        $this->auth_address(),
+                        Permission::VALIDATE_RECORDS,
                     )->getQuery());
-                })
+                }),
             ],
             'from' => 'nullable|date|date_format:Y-m-d',
             'to' => 'nullable|date|date_format:Y-m-d',
             'state' => [
                 'nullable',
-                Rule::in(Prevalidation::STATES)
+                Rule::in(Prevalidation::STATES),
             ],
             'per_page' => 'nullable|numeric|between:1,2500',
             'exported' => 'boolean',
-            'export_format' => 'nullable|string|in:csv,xls'
+            'export_type' => 'nullable|string|in:csv,xls',
         ];
     }
 }

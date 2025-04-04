@@ -39,7 +39,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             ...$implementation->only([
                 'id', 'key', 'name', 'url_webshop', 'title', 'organization_id',
                 'description', 'description_alignment', 'description_html', 'informal_communication',
-                'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+                'overlay_enabled', 'overlay_type', 'overlay_opacity',
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map',
                 'allow_per_fund_notification_templates',
@@ -47,7 +47,11 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'pre_check_banner_state', 'pre_check_banner_title',
                 'pre_check_banner_description', 'pre_check_banner_label', 'page_title_suffix',
                 'show_privacy_checkbox', 'show_terms_checkbox',
+                'banner_button', 'banner_button_text', 'banner_button_url', 'banner_button_target', 'banner_button_type',
+                'banner_position', 'banner_collapse', 'banner_wide', 'banner_color',
+                'banner_background', 'banner_background_mobile',
             ]),
+            'banner_media_uid' => $implementation->banner?->uid,
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
@@ -59,7 +63,7 @@ class ImplementationPrivateResource extends BaseJsonResource
 
         $data = array_merge($data, [
             'pages' => ImplementationPageResource::collection($implementation->pages),
-            'page_types' => array_map(fn(array $pageType) => array_merge($pageType, [
+            'page_types' => array_map(fn (array $pageType) => array_merge($pageType, [
                 'webshop_url' => $implementation->urlWebshop(ImplementationPage::webshopUriByPageType($pageType['key'])),
             ]), ImplementationPage::PAGE_TYPES),
         ]);
@@ -95,8 +99,8 @@ class ImplementationPrivateResource extends BaseJsonResource
     /**
      * @param BaseFormRequest $request
      * @param Implementation $implementation
-     * @return array
      * @throws CommonMarkException
+     * @return array
      */
     protected function managerCMSDetails(
         BaseFormRequest $request,

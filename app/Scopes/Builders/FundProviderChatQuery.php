@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Scopes\Builders;
 
 use App\Models\FundProviderChat;
@@ -30,7 +29,7 @@ class FundProviderChatQuery
         Builder|Relation|FundProviderChat $builder,
         int|array $organizations,
     ): Builder|Relation|FundProviderChat {
-        return $builder->whereHas('fund_provider', function(Builder $builder) use ($organizations) {
+        return $builder->whereHas('fund_provider', function (Builder $builder) use ($organizations) {
             $builder->whereIn('organization_id', (array) $organizations);
         });
     }

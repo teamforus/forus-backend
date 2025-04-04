@@ -35,7 +35,7 @@ class ClientTypeMiddleware
 
         if (!$excludedUrl && !$validType) {
             return new JsonResponse([
-                "message" => 'unknown_client_type',
+                'message' => 'unknown_client_type',
             ], 403);
         }
 

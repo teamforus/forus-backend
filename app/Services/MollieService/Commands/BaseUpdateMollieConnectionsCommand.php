@@ -23,7 +23,7 @@ abstract class BaseUpdateMollieConnectionsCommand extends Command
         foreach ($connections as $connection) {
             try {
                 $connection->fetchAndUpdateConnection();
-            }  catch (Throwable $e) {
+            } catch (Throwable $e) {
                 MollieServiceLogger::logError("Failed to update [$state] mollie connection [$connection->id].", $e);
             }
         }

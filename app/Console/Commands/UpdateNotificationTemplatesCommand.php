@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Database\Seeders\NotificationTemplatesTableSeeder;
 use Illuminate\Console\Command;
+use Throwable;
 
 class UpdateNotificationTemplatesCommand extends Command
 {
@@ -12,7 +13,8 @@ class UpdateNotificationTemplatesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'notifications:update-templates';
+    protected $signature = 'notifications:update-templates
+                            {--force : Do not ask for confirmation before updating.}';
 
     /**
      * The console command description.
@@ -21,16 +23,14 @@ class UpdateNotificationTemplatesCommand extends Command
      */
     protected $description = 'Update notification templates.';
 
-
     /**
      * Execute the console command.
      *
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function handle(): void
     {
-        (new NotificationTemplatesTableSeeder())->run();
-        echo "Templates updated!\n";
+        (new NotificationTemplatesTableSeeder())->execute($this, (bool) $this->option('force'));
     }
 }

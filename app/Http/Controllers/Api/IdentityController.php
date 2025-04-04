@@ -17,6 +17,7 @@ use App\Models\Identity;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Traits\ThrottleWithMeta;
+use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,7 @@ class IdentityController extends Controller
     private mixed $decayMinutes;
 
     /**
-     * Get identity details
+     * Get identity details.
      *
      * @param BaseFormRequest $request
      * @return IdentityResource|array
@@ -51,7 +52,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Create new identity (registration)
+     * Create new identity (registration).
      *
      * @param IdentityStoreRequest $request
      * @return IdentityResource
@@ -64,7 +65,7 @@ class IdentityController extends Controller
         $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
         $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 
-        $queryParams = sprintf("?%s", http_build_query(array_merge($request->only('target'), [
+        $queryParams = sprintf('?%s', http_build_query(array_merge($request->only('target'), [
             'client_type' => $request->client_type(),
             'implementation_key' => $request->implementation_key(),
             'is_mobile' => $isMobile ? 1 : 0,
@@ -82,7 +83,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Validate email for registration, format and if it's already in the system
+     * Validate email for registration, format and if it's already in the system.
      *
      * @param IdentityStoreValidateEmailRequest $request
      * @return JsonResponse
@@ -103,18 +104,18 @@ class IdentityController extends Controller
                         ...$request->emailRules(),
                     ],
                 ])->passes(),
-            ]
+            ],
         ]);
     }
 
     /**
      * Redirect from email confirmation link to one of the front-ends or
-     * show a button with deep link to mobile app
+     * show a button with deep link to mobile app.
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
+     * @throws Exception
      * @return View|RedirectResponse|Redirector
-     * @throws \Exception
      * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
@@ -130,12 +131,12 @@ class IdentityController extends Controller
 
         if ((!$isMobile || $clientType) &&
             !in_array($clientType, array_flatten(config('forus.clients')), true)) {
-            abort(404, "Invalid client type.");
+            abort(404, 'Invalid client type.');
         }
 
         if ((!$isMobile || $clientType) &&
             !Implementation::isValidKey($implementationKey)) {
-            abort(404, "Invalid implementation key.");
+            abort(404, 'Invalid implementation key.');
         }
 
         $isWebFrontend = in_array($clientType, array_merge(
@@ -148,7 +149,7 @@ class IdentityController extends Controller
             $webShopUrl = $webShopUrl['url_' . $clientType];
 
             return redirect(sprintf(
-                $webShopUrl . "confirmation/email/%s?%s",
+                $webShopUrl . 'confirmation/email/%s?%s',
                 $exchangeToken,
                 http_build_query(compact('target'))
             ));
@@ -157,7 +158,7 @@ class IdentityController extends Controller
         if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
             $redirectUrl = sprintf(
-                $sourceUrl . "identity-confirmation?%s",
+                $sourceUrl . 'identity-confirmation?%s',
                 http_build_query(compact('token'))
             );
 
@@ -170,7 +171,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Exchange email confirmation token for access_token
+     * Exchange email confirmation token for access_token.
      *
      * @param BaseFormRequest $request
      * @param string $exchangeToken
@@ -182,12 +183,12 @@ class IdentityController extends Controller
         string $exchangeToken
     ): JsonResponse {
         return new JsonResponse([
-            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken, $request->ip())
+            'access_token' => Identity::exchangeEmailConfirmationToken($exchangeToken, $request->ip()),
         ]);
     }
 
     /**
-     * Make new email authorization request
+     * Make new email authorization request.
      *
      * @param IdentityAuthorizationEmailTokenRequest $request
      * @return JsonResponse
@@ -206,7 +207,7 @@ class IdentityController extends Controller
             $proxy->exchange_token,
             http_build_query(array_merge([
                 'target' => $request->input('target', ''),
-                'is_mobile' => $isMobile ? 1 : 0
+                'is_mobile' => $isMobile ? 1 : 0,
             ], $isMobile ? [] : [
                 'client_type' => $request->client_type(),
                 'implementation_key' => $request->implementation_key(),
@@ -225,7 +226,7 @@ class IdentityController extends Controller
 
     /**
      * Redirect from email sign in link to one of the front-ends or
-     * show a button with deep link to mobile app
+     * show a button with deep link to mobile app.
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
@@ -243,12 +244,12 @@ class IdentityController extends Controller
 
         if ((!$isMobile || $clientType) &&
             !in_array($clientType, array_flatten(config('forus.clients')), true)) {
-            abort(404, "Invalid client type.");
+            abort(404, 'Invalid client type.');
         }
 
         if ((!$isMobile || $clientType) &&
             !Implementation::isValidKey($implementationKey)) {
-            abort(404, "Invalid implementation key.");
+            abort(404, 'Invalid implementation key.');
         }
 
         if ($isMobile) {
@@ -262,18 +263,18 @@ class IdentityController extends Controller
         }
 
         $redirectUrl = sprintf(
-            $sourceUrl . "identity-restore?%s",
+            $sourceUrl . 'identity-restore?%s',
             http_build_query(array_filter([
                 'token' => $emailToken,
-                'target' => $request->input('target')
-            ], static function($var) {
+                'target' => $request->input('target'),
+            ], static function ($var) {
                 return !empty($var);
             }))
         );
 
         if ($isMobile) {
             return view('pages.auth.deep_link', array_merge([
-                'type' => 'email_sign_in'
+                'type' => 'email_sign_in',
             ], compact('redirectUrl', 'exchangeToken')));
         }
 
@@ -281,7 +282,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Exchange email sign in token for access_token
+     * Exchange email sign in token for access_token.
      *
      * @param BaseFormRequest $request
      * @param string $emailToken
@@ -291,7 +292,7 @@ class IdentityController extends Controller
     public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
     {
         return new JsonResponse([
-            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken, $request->ip())
+            'access_token' => Identity::activateAuthorizationEmailProxy($emailToken, $request->ip()),
         ]);
     }
 
@@ -304,7 +305,7 @@ class IdentityController extends Controller
         $proxy = $request->identity()->makeAuthorizationEmailProxy();
         $proxy->inherit2FAStateFrom($request->identityProxy());
 
-        $uri = config('forus.front_ends.app-me_app') . "identity-restore?%s";
+        $uri = config('forus.front_ends.app-me_app') . 'identity-restore?%s';
         $request->identityProxy()->deactivateByLogout();
 
         return new JsonResponse([
@@ -315,7 +316,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Make new pin code authorization request
+     * Make new pin code authorization request.
      *
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
@@ -331,7 +332,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Authorize pin code authorization request
+     * Authorize pin code authorization request.
      *
      * @param IdentityAuthorizeCodeRequest $request
      * @return \Illuminate\Http\JsonResponse
@@ -349,7 +350,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Make new auth token (qr-code) authorization request
+     * Make new auth token (qr-code) authorization request.
      *
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
@@ -365,7 +366,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Authorize auth code (qr-code) authorization request
+     * Authorize auth code (qr-code) authorization request.
      *
      * @param IdentityAuthorizeTokenRequest $request
      * @return \Illuminate\Http\JsonResponse
@@ -385,11 +386,11 @@ class IdentityController extends Controller
     }
 
     /**
-     * Create and activate a short living token for current user
+     * Create and activate a short living token for current user.
      *
      * @param BaseFormRequest $request
+     * @throws Exception
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Exception
      * @noinspection PhpUnused
      */
     public function proxyAuthorizationShortToken(BaseFormRequest $request): JsonResponse
@@ -405,7 +406,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Exchange `short_token` for `access_token`
+     * Exchange `short_token` for `access_token`.
      *
      * @param string $shortToken
      * @return \Illuminate\Http\JsonResponse
@@ -416,12 +417,12 @@ class IdentityController extends Controller
         $proxy = Identity::exchangeAuthorizationShortTokenProxy($shortToken);
 
         return new JsonResponse([
-            'access_token' => $proxy->access_token
+            'access_token' => $proxy->access_token,
         ]);
     }
 
     /**
-     * Check access_token state
+     * Check access_token state.
      *
      * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
@@ -444,7 +445,7 @@ class IdentityController extends Controller
     }
 
     /**
-     * Destroy access token
+     * Destroy access token.
      *
      * @param BaseFormRequest $request
      * @return JsonResponse
@@ -459,8 +460,8 @@ class IdentityController extends Controller
 
     /**
      * @param IdentityDestroyRequest $request
-     * @return JsonResponse
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @return JsonResponse
      */
     public function destroy(IdentityDestroyRequest $request): JsonResponse
     {
@@ -470,10 +471,11 @@ class IdentityController extends Controller
 
         if ($email = Config::get('forus.notification_mails.identity_destroy', false)) {
             $request->notification_repo()->sendSystemMail(
-                $email, new IdentityDestroyRequestMail([
+                $email,
+                new IdentityDestroyRequestMail([
                     'email' => $request->identity()?->email ?: 'Identity has no email!',
                     'address' => $request->identity()?->address,
-                    'comment' => $request->get('comment')
+                    'comment' => $request->get('comment'),
                 ])
             );
         }

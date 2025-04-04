@@ -13,6 +13,7 @@ use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
@@ -1104,27 +1105,20 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param string $title
-     * @throws TimeoutException
      * @return RemoteWebElement|null
      */
     protected function findOptionElement(Browser $browser, string $title): ?RemoteWebElement
     {
-        $selector = '@selectControl';
+        $option = null;
 
-        $browser->waitFor($selector);
-        $browser->waitFor("$selector .select-control-options");
+        $browser->elsewhereWhenAvailable('@selectControlOptions', function (Browser $browser) use (&$option, $title) {
+            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
+            $options = $browser->driver->findElements($xpath);
+            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
+        });
 
-        $list = $browser
-            ->element($selector)
-            ->findElement(WebDriverBy::xpath(".//*[@class='select-control-options']"));
+        $this->assertNotNull($option);
 
-        $element = \Illuminate\Support\Arr::first(
-            $list->findElements(WebDriverBy::xpath(".//*[@class='select-control-option']")),
-            fn (RemoteWebElement $element) => trim($element->getText()) === $title
-        );
-
-        $this->assertNotNull($element);
-
-        return $element;
+        return $option;
     }
 }

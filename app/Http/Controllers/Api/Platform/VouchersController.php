@@ -11,15 +11,17 @@ use App\Http\Resources\VoucherResource;
 use App\Models\FundConfig;
 use App\Models\Voucher;
 use App\Searches\VouchersSearch;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class VouchersController extends Controller
 {
     /**
      * @param IndexVouchersRequest $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(IndexVouchersRequest $request): AnonymousResourceCollection
     {
@@ -52,8 +54,8 @@ class VouchersController extends Controller
      * Display the specified resource.
      *
      * @param Voucher $voucher
-     * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return VoucherResource
      */
     public function show(Voucher $voucher): VoucherResource
     {
@@ -66,8 +68,8 @@ class VouchersController extends Controller
      * Send target voucher to user email.
      *
      * @param Voucher $voucher
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function sendEmail(Voucher $voucher): JsonResponse
@@ -84,8 +86,8 @@ class VouchersController extends Controller
      *
      * @param ShareProductVoucherRequest $request
      * @param Voucher $voucher
-     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function shareVoucher(
@@ -103,12 +105,12 @@ class VouchersController extends Controller
     }
 
     /**
-     * Deactivate voucher
+     * Deactivate voucher.
      *
      * @param DeactivateVoucherRequest $request
      * @param Voucher $voucher
+     * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
      * @return VoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Throwable
      */
     public function deactivate(
         DeactivateVoucherRequest $request,
@@ -122,16 +124,16 @@ class VouchersController extends Controller
 
     /**
      * @param Voucher $voucher
-     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
+     * @throws Exception
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Voucher $voucher): JsonResponse
     {
         $this->authorize('destroy', $voucher);
 
         return new JsonResponse([
-            'success' => $voucher->delete() === true
+            'success' => $voucher->delete() === true,
         ]);
     }
 }
