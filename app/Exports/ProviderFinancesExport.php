@@ -5,60 +5,63 @@ namespace App\Exports;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class ProviderFinancesExport implements FromCollection, WithHeadings
+class ProviderFinancesExport extends BaseFieldedExport
 {
-    protected Collection $data;
+    protected static string $transKey = 'finances';
 
-    public function __construct(Organization $sponsor, EloquentCollection $providers)
+    /**
+     * @var array|string[]
+     */
+    protected static array $exportFields = [
+        'provider',
+        'business_type',
+        'total_amount',
+        'highest_transaction',
+        'nr_transactions',
+    ];
+
+    /**
+     * @param EloquentCollection $providers
+     * @param array $fields
+     */
+    public function __construct(EloquentCollection $providers, protected array $fields = [])
     {
-        $this->data = $this->exportTransform($sponsor, $providers);
+        $this->data = $this->export($providers);
     }
 
     /**
+     * @param EloquentCollection $data
      * @return Collection
      */
-    public function collection(): Collection
+    protected function export(EloquentCollection $data): Collection
     {
-        return $this->data;
+        return $this->exportTransform($data);
     }
 
     /**
+     * @param \Illuminate\Database\Eloquent\Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys($data->map(fn (Organization $provider) => array_only(
+            $this->getRow($provider), $this->fields
+        ))->values());
+    }
+
+    /**
+     * @param Organization $provider
      * @return array
      */
-    public function headings(): array
+    protected function getRow(Organization $provider): array
     {
-        return $this->data->map(function ($row) {
-            return array_keys($row);
-        })->flatten()->unique()->toArray();
-    }
-
-    /**
-     * @param Organization $sponsor
-     * @param \Illuminate\Database\Eloquent\Collection $providers
-     * @return Collection
-     */
-    protected function exportTransform(Organization $sponsor, Collection $providers): Collection
-    {
-        return $providers->map(function (Organization $provider) use ($sponsor) {
-            return [
-                $this->trans('provider') => $provider->name,
-                $this->trans('business_type') => $provider->business_type?->name ?: '-',
-                $this->trans('total_amount') => (string) ($provider->total_spent ?? '0'),
-                $this->trans('highest_transaction') => (string) ($provider->highest_transaction ?? '0'),
-                $this->trans('nr_transactions') => (string) ($provider->nr_transactions ?? '0'),
-            ];
-        })->values();
-    }
-
-    /**
-     * @param string $key
-     * @return string|null
-     */
-    protected function trans(string $key): ?string
-    {
-        return trans("export.finances.$key");
+        return [
+            'provider' => $provider->name,
+            'business_type' => $provider->business_type?->name ?: '-',
+            'total_amount' => (string) ($provider->total_spent ?? '0'),
+            'highest_transaction' => (string) ($provider->highest_transaction ?? '0'),
+            'nr_transactions' => (string) ($provider->nr_transactions ?? '0'),
+        ];
     }
 }

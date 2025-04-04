@@ -232,7 +232,7 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
-        $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFields());
+        $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFieldsRaw());
         $fileData = new VoucherTransactionsSponsorExport($request, $organization, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 

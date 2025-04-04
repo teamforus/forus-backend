@@ -6,10 +6,8 @@ use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
-use App\Searches\FundRequestSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -339,21 +337,6 @@ class FundRequest extends BaseModel
     }
 
     /**
-     * Export fund requests.
-     * @param IndexFundRequestsRequest $request
-     * @param Employee $employee
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    public static function exportSponsor(IndexFundRequestsRequest $request, Employee $employee): mixed
-    {
-        $search = (new FundRequestSearch($request->only([
-            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
-        ])))->setEmployee($employee);
-
-        return self::exportTransform($search->query());
-    }
-
-    /**
      * @return bool
      * @noinspection PhpUnused
      */
@@ -483,42 +466,6 @@ class FundRequest extends BaseModel
         }
 
         return null;
-    }
-
-    /**
-     * Prepare fund requests for exporting.
-     *
-     * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(Builder $builder): mixed
-    {
-        $fundRequests = (clone $builder)->with([
-            'identity.record_bsn',
-            'records',
-            'fund',
-        ])->get();
-
-        $recordKeyList = FundRequestRecord::query()
-            ->whereIn('fund_request_id', (clone $builder)->select('id'))
-            ->pluck('record_type_key');
-
-        return $fundRequests->map(static function (FundRequest $request) use ($recordKeyList) {
-            $records = $recordKeyList->reduce(fn ($records, $key) => [
-                ...$records, $key => $request->records->firstWhere('record_type_key', $key),
-            ], []);
-
-            return array_merge([
-                trans('export.fund_requests.bsn') => $request->identity?->record_bsn?->value ?: '-',
-                trans('export.fund_requests.fund_name') => $request->fund->name,
-                trans('export.fund_requests.status') => trans("export.fund_requests.state-values.$request->state"),
-                trans('export.fund_requests.validator') => $request->employee?->identity?->email ?: '-',
-                trans('export.fund_requests.created_at') => $request->created_at,
-                trans('export.fund_requests.resolved_at') => $request->resolved_at,
-                trans('export.fund_requests.lead_time_days') => (string) $request->lead_time_days,
-                trans('export.fund_requests.lead_time_locale') => $request->lead_time_locale,
-            ], array_map(fn (?FundRequestRecord $record = null) => $record?->value ?: '-', $records));
-        })->values();
     }
 
     /**

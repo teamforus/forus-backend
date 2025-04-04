@@ -21,7 +21,8 @@ class BIFundProviderFinancesExporter extends BaseBIExporter
             ->with(ProviderFinancialResource::$load)
             ->get();
 
-        $data = new ProviderFinancesExport($this->organization, $providers);
+        $fields = ProviderFinancesExport::getExportFieldsRaw();
+        $data = new ProviderFinancesExport($providers, $fields);
 
         return $data->collection()->toArray();
     }

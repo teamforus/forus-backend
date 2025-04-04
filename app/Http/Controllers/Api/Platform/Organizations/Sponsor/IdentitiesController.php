@@ -173,7 +173,11 @@ class IdentitiesController extends Controller
     ): BinaryFileResponse {
         $this->authorize('indexSponsorIdentities', [$organization]);
 
-        $fields = $request->input('fields', IdentityProfilesExport::getExportFields($organization));
+        $fields = $request->input(
+            'fields',
+            array_pluck(IdentityProfilesExport::getExportFields($organization), 'key')
+        );
+
         $fileData = new IdentityProfilesExport($request, $organization, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 

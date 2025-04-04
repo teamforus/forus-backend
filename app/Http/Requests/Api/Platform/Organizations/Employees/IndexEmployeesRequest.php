@@ -31,7 +31,7 @@ class IndexEmployeesRequest extends BaseFormRequest
             'permission' => 'nullable|string|exists:permissions,key',
             'permissions' => 'nullable|array',
             'permissions.*' => 'nullable|exists:permissions,key',
-            'export_type' => 'nullable|in:xls,csv',
+            'data_format' => 'nullable|in:xls,csv',
             'per_page' => $this->perPageRule(1000),
         ];
     }

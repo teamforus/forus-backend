@@ -114,11 +114,11 @@ class IdentitiesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('showIdentities', [$fund, $organization]);
 
-        $fields = $request->input('fields', FundIdentitiesExport::getExportFields());
+        $fields = $request->input('fields', FundIdentitiesExport::getExportFieldsRaw());
         $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', 'q'];
         $search = new FundIdentitiesSearch($request->only($filters), $fund);
 
-        $exportType = $request->input('export_type', 'csv');
+        $exportType = $request->input('data_format', 'csv');
         $exportData = new FundIdentitiesExport($search->get(), $fields);
         $exportFileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
