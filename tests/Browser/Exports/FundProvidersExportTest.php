@@ -6,9 +6,9 @@ use App\Exports\FundProvidersExport;
 use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Organization;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -47,9 +47,7 @@ class FundProvidersExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchProvider($browser, $fundProvider->organization);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -58,8 +56,7 @@ class FundProvidersExportTest extends DuskTestCase
                 $this->assertFields($fundProvider, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['fund', 'implementation', 'fund_type', 'provider']);
                 $csvData = $this->parseCsvFile();
@@ -80,38 +77,6 @@ class FundProvidersExportTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeoutException
-     */
-    private function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupProviders');
-        $browser->element('@asideMenuGroupProviders')->click();
-        $browser->waitFor('@providersPage');
-        $browser->element('@providersPage')->click();
-        $browser->waitFor('@provider_tab_active');
-        $browser->element('@provider_tab_active')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Organization $provider
-     * @return void
-     * @throws TimeoutException
-     */
-    private function searchProvider(Browser $browser, Organization $provider): void
-    {
-        $browser->waitFor('@searchProviders');
-        $browser->type('@searchProviders', $provider->name);
-
-        $browser->waitFor("@providerRow$provider->id", 20);
-        $browser->assertVisible("@providerRow$provider->id");
-
-        $browser->waitUntil("document.querySelectorAll('#providersTable tbody tr').length === 1");
-    }
-
-    /**
      * @param FundProvider $fundProvider
      * @param array $rows
      * @param array $fields
@@ -126,5 +91,37 @@ class FundProvidersExportTest extends DuskTestCase
         $this->assertEquals($fields, $rows[0]);
         $this->assertEquals($fundProvider->fund->name, $rows[1][0]);
         $this->assertEquals($fundProvider->organization->name, $rows[1][3]);
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToListPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupProviders');
+        $browser->element('@asideMenuGroupProviders')->click();
+        $browser->waitFor('@providersPage');
+        $browser->element('@providersPage')->click();
+        $browser->waitFor('@provider_tab_active');
+        $browser->element('@provider_tab_active')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Organization $provider
+     * @throws TimeoutException
+     * @return void
+     */
+    private function searchProvider(Browser $browser, Organization $provider): void
+    {
+        $browser->waitFor('@searchProviders');
+        $browser->typeSlowly('@searchProviders', $provider->name);
+
+        $browser->waitFor("@providerRow$provider->id", 20);
+        $browser->assertVisible("@providerRow$provider->id");
+
+        $browser->waitUntil("document.querySelectorAll('#providersTable tbody tr').length === 1");
     }
 }

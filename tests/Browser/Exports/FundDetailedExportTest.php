@@ -6,8 +6,8 @@ use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
 use App\Models\Implementation;
 use Facebook\WebDriver\Exception\TimeoutException;
-use Tests\Browser\Traits\ExportTrait;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -72,19 +72,6 @@ class FundDetailedExportTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeoutException
-     */
-    private function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupReports');
-        $browser->element('@asideMenuGroupReports')->click();
-        $browser->waitFor('@financialDashboardOverviewPage');
-        $browser->element('@financialDashboardOverviewPage')->click();
-    }
-
-    /**
      * @param Fund $fund
      * @param array $rows
      * @param array $fields
@@ -98,7 +85,20 @@ class FundDetailedExportTest extends DuskTestCase
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
 
-        $item = array_first($rows, fn($row) => $row[0] === $fund->name);
+        $item = array_first($rows, fn ($row) => $row[0] === $fund->name);
         $this->assertEquals($fund->name, $item[0] ?? null);
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToListPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupReports');
+        $browser->element('@asideMenuGroupReports')->click();
+        $browser->waitFor('@financialDashboardOverviewPage');
+        $browser->element('@financialDashboardOverviewPage')->click();
     }
 }

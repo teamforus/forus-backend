@@ -5,9 +5,9 @@ namespace Tests\Browser\Exports;
 use App\Exports\FundIdentitiesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -47,9 +47,7 @@ class IdentitiesExportTest extends DuskTestCase
 
                 $this->goToIdentitiesTab($browser);
                 $this->searchIdentity($browser, $identity);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -58,8 +56,7 @@ class IdentitiesExportTest extends DuskTestCase
                 $this->assertFields($identity, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['id', 'email']);
                 $csvData = $this->parseCsvFile();
@@ -79,8 +76,8 @@ class IdentitiesExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToIdentitiesTab(Browser $browser): void
     {
@@ -92,8 +89,8 @@ class IdentitiesExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchIdentity(Browser $browser, Identity $identity): void
     {

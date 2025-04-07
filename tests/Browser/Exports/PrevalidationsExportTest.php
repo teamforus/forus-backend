@@ -48,9 +48,7 @@ class PrevalidationsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser, $fund);
                 $this->searchPrevalidation($browser, $prevalidation);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -59,8 +57,7 @@ class PrevalidationsExportTest extends DuskTestCase
                 $this->assertFields($prevalidation, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['code']);
                 $csvData = $this->parseCsvFile();

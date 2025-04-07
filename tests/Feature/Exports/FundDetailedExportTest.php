@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Exports;
 
-use App\Exports\FundsDetailedExport;
+use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
@@ -52,7 +52,7 @@ class FundDetailedExportTest extends TestCase
                 'year' => now()->year,
                 'detailed' => true,
                 'data_format' => 'csv',
-                'fields' => FundsDetailedExport::getExportFieldsRaw(),
+                'fields' => FundsExportDetailed::getExportFieldsRaw(),
             ]);
 
         $response = $this->get($url, $apiHeaders);
@@ -69,7 +69,7 @@ class FundDetailedExportTest extends TestCase
         $response = $this->get($url, $apiHeaders);
 
         $this->assertFields($response, $fund, [
-            FundsDetailedExport::trans('name'),
+            FundsExportDetailed::trans('name'),
         ]);
     }
 
@@ -79,8 +79,8 @@ class FundDetailedExportTest extends TestCase
     protected function getExportFields(): array
     {
         return array_values(array_filter(
-            array_pluck(FundsDetailedExport::getExportFields(), 'name'),
-            fn (string $field) => $field !== FundsDetailedExport::trans('budget_children_count')
+            array_pluck(FundsExportDetailed::getExportFields(), 'name'),
+            fn (string $field) => $field !== FundsExportDetailed::trans('budget_children_count')
         ));
     }
 

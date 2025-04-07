@@ -30,7 +30,7 @@ trait ExportTrait
         // Read CSV file
         $csvData = [];
         if (($handle = fopen($csvFile, 'r')) !== false) {
-            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+            while (($row = fgetcsv($handle, 1000)) !== false) {
                 $csvData[] = $row;
             }
             fclose($handle);
@@ -100,5 +100,23 @@ trait ExportTrait
         }
 
         return $vouchers;
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $waitSelector
+     * @return void
+     * @throws TimeoutException
+     */
+    protected function openFilterDropdown(Browser $browser, string $waitSelector = '@export'): void
+    {
+        $browser->waitFor('@showFilters');
+        $browser->element('@showFilters')->click();
+
+        try {
+            $browser->waitFor($waitSelector, 1);
+        } catch (TimeoutException) {
+            $browser->element('@showFilters')->click();
+        }
     }
 }

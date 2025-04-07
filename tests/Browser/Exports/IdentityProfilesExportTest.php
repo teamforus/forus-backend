@@ -45,9 +45,7 @@ class IdentityProfilesExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchIdentity($browser, $identity);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -56,8 +54,7 @@ class IdentityProfilesExportTest extends DuskTestCase
                 $this->assertFields($identity, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['id', 'given_name', 'family_name', 'email']);
                 $csvData = $this->parseCsvFile();

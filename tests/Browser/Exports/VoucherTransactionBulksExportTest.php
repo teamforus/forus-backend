@@ -49,9 +49,7 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
 
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -60,8 +58,7 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
                 $this->assertFields($bulk, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['id', 'quantity']);
                 $csvData = $this->parseCsvFile();

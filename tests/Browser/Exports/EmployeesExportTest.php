@@ -6,9 +6,9 @@ use App\Exports\EmployeesExport;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Role;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Throwable;
@@ -77,8 +77,8 @@ class EmployeesExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Employee $employee
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchEmployee(Browser $browser, Employee $employee): void
     {

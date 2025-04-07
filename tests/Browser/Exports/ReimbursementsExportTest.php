@@ -55,9 +55,7 @@ class ReimbursementsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchReimbursement($browser, $reimbursement);
-
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser);
                 $csvData = $this->parseCsvFile();
@@ -66,8 +64,7 @@ class ReimbursementsExportTest extends DuskTestCase
                 $this->assertFields($reimbursement, $csvData, $fields);
 
                 // Open export modal, select specific fields and assert it
-                $browser->waitFor('@showFilters');
-                $browser->element('@showFilters')->click();
+                $this->openFilterDropdown($browser);
 
                 $this->fillExportModal($browser, ['id', 'code']);
                 $csvData = $this->parseCsvFile();
