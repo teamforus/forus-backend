@@ -26,7 +26,7 @@
         "eduardokum/laravel-mail-auto-embed": "^2.0",
         "fakerphp/faker": "^1.20",
         "geoip2/geoip2": "^3.1.0",
-        "graham-campbell/markdown": "^15.2",
+        "graham-campbell/markdown": "^16.0",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^3.9",
         "itsgoingd/clockwork": "^5.0",
