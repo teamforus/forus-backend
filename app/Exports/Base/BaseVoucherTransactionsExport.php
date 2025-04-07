@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exports;
+namespace App\Exports\Base;
 
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
@@ -35,7 +35,8 @@ abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (VoucherTransaction $transaction) => array_only(
-            $this->getRow($transaction), $this->fields
+            $this->getRow($transaction),
+            $this->fields
         )));
     }
 

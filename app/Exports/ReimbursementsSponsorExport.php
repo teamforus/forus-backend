@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Searches\ReimbursementsSearch;
@@ -72,7 +73,6 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
             'voucher.fund.fund_config.implementation',
         ])->get();
 
-
         return $this->exportTransform($data);
     }
 
@@ -83,7 +83,8 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (Reimbursement $reimbursement) => array_only(
-            $this->getRow($reimbursement), $this->fields
+            $this->getRow($reimbursement),
+            $this->fields
         )));
     }
 

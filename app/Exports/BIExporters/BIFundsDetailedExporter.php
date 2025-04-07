@@ -2,7 +2,7 @@
 
 namespace App\Exports\BIExporters;
 
-use App\Exports\FundsDetailedExport;
+use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
@@ -22,11 +22,11 @@ class BIFundsDetailedExporter extends BaseBIExporter
             ->where('type', Fund::TYPE_BUDGET)
             ->get();
 
-        $data = new FundsDetailedExport(
+        $data = new FundsExportDetailed(
             $activeFunds,
             Carbon::createFromFormat('Y', 2000),
             now()->endOfYear(),
-            FundsDetailedExport::getExportFieldsRaw(),
+            FundsExportDetailed::getExportFieldsRaw(),
         );
 
         return $data->collection()->toArray();

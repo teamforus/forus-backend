@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\PhysicalCardRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -64,7 +65,8 @@ class PhysicalCardRequestsExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (PhysicalCardRequest $physicalCard) => array_only(
-            $this->getRow($physicalCard), $this->fields
+            $this->getRow($physicalCard),
+            $this->fields,
         ))->values());
     }
 

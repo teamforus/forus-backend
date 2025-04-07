@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use Illuminate\Support\Collection;
 
 class VoucherExport extends BaseFieldedExport
@@ -53,15 +54,6 @@ class VoucherExport extends BaseFieldedExport
     }
 
     /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data);
-    }
-
-    /**
      * @param string $type
      * @return array
      */
@@ -76,6 +68,15 @@ class VoucherExport extends BaseFieldedExport
         return array_values(array_filter($fields, static function (array $item) {
             return !in_array($item['key'], static::$productVoucherOnlyKeys);
         }));
+    }
+
+    /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys($data);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\ProductReservation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -57,7 +58,8 @@ class ProductReservationsExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (ProductReservation $reservation) => array_only(
-            $this->getRow($reservation), $this->fields
+            $this->getRow($reservation),
+            $this->fields,
         )));
     }
 

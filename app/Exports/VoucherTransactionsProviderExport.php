@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseVoucherTransactionsExport;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;

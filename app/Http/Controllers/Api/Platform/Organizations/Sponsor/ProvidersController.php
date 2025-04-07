@@ -171,7 +171,7 @@ class ProvidersController extends Controller
      */
     public function exportFinances(
         IndexProvidersRequest $request,
-        Organization $organization
+        Organization $organization,
     ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);

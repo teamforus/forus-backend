@@ -2,13 +2,13 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -88,18 +88,6 @@ class IdentityProfilesExport extends BaseFieldedExport
     }
 
     /**
-     * @param Collection $data
-     * @param Organization $organization
-     * @return Collection
-     */
-    private function exportTransform(Collection $data, Organization $organization): Collection
-    {
-        return $this->transformKeys($data->map(fn (Identity $identity) => array_only(
-            $this->getRow($identity, $organization), $this->fields
-        )));
-    }
-
-    /**
      * @param Identity $identity
      * @param Organization $organization
      * @return array
@@ -127,5 +115,18 @@ class IdentityProfilesExport extends BaseFieldedExport
             'municipality_name' => Arr::get($records, 'municipality_name.0.value_locale', '-'),
             'neighborhood_name' => Arr::get($records, 'neighborhood_name.0.value_locale', '-'),
         ];
+    }
+
+    /**
+     * @param Collection $data
+     * @param Organization $organization
+     * @return Collection
+     */
+    private function exportTransform(Collection $data, Organization $organization): Collection
+    {
+        return $this->transformKeys($data->map(fn (Identity $identity) => array_only(
+            $this->getRow($identity, $organization),
+            $this->fields
+        )));
     }
 }

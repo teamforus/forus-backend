@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -46,7 +47,8 @@ class ProviderFinancesExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (Organization $provider) => array_only(
-            $this->getRow($provider), $this->fields
+            $this->getRow($provider),
+            $this->fields,
         ))->values());
     }
 

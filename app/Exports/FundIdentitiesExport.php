@@ -2,17 +2,13 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Identity;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
 class FundIdentitiesExport extends BaseFieldedExport
 {
-    use Exportable;
-    use RegistersEventListeners;
-
     protected static string $transKey = 'fund_identities';
 
     /**
