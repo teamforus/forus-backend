@@ -11,9 +11,7 @@ use App\Models\RecordType;
 use App\Models\Voucher;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
@@ -940,7 +938,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             case 'select':
                 $browser->waitFor($selector);
                 $browser->click("$selector .select-control-search");
-                $this->findOptionElement($browser, $value)->click();
+                $this->findOptionElement($browser, '@selectControl', $value)->click();
                 break;
             case 'number':
             case 'currency':
@@ -1050,25 +1048,5 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             ->exists();
 
         $this->assertTrue($voucher);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $title
-     * @return RemoteWebElement|null
-     */
-    protected function findOptionElement(Browser $browser, string $title): ?RemoteWebElement
-    {
-        $option = null;
-
-        $browser->elsewhereWhenAvailable('@selectControlOptions', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
-            $options = $browser->driver->findElements($xpath);
-            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
-        });
-
-        $this->assertNotNull($option);
-
-        return $option;
     }
 }

@@ -41,8 +41,6 @@ class ProductReservationTest extends DuskTestCase
     use MakesTestFundProviders;
     use MakesProductReservations;
 
-    protected ?Identity $identity;
-
     /**
      * @throws Throwable
      * @return void
@@ -129,6 +127,7 @@ class ProductReservationTest extends DuskTestCase
             ]];
 
             $fields = [];
+
             foreach ($customFields as $order => $item) {
                 $field = $provider->reservation_fields()->create([
                     ...Arr::only($item, ['label', 'type', 'description', 'required']),
@@ -175,7 +174,7 @@ class ProductReservationTest extends DuskTestCase
             $fieldsOptional = [[
                 'id' => 'phone',
                 'type' => 'text',
-                'dusk' => "@productReserveFormPhone",
+                'dusk' => '@productReserveFormPhone',
                 'value' => null,
                 'required' => false,
                 'field_type' => 'phone',
@@ -184,7 +183,7 @@ class ProductReservationTest extends DuskTestCase
             $fieldsRequired = [[
                 'id' => 'phone',
                 'type' => 'text',
-                'dusk' => "@productReserveFormPhone",
+                'dusk' => '@productReserveFormPhone',
                 'value' => '1234545678',
                 'required' => true,
                 'field_type' => 'phone',
@@ -273,7 +272,7 @@ class ProductReservationTest extends DuskTestCase
             $fieldsOptional = [[
                 'id' => 'birth_date',
                 'type' => 'date',
-                'dusk' => "@birthDate",
+                'dusk' => '@birthDate',
                 'value' => null,
                 'required' => false,
                 'field_type' => 'birth_date',
@@ -282,7 +281,7 @@ class ProductReservationTest extends DuskTestCase
             $fieldsRequired = [[
                 'id' => 'birth_date',
                 'type' => 'date',
-                'dusk' => "@birthDate",
+                'dusk' => '@birthDate',
                 'value' => '10-01-1980',
                 'required' => true,
                 'field_type' => 'birth_date',
@@ -559,8 +558,8 @@ class ProductReservationTest extends DuskTestCase
      * @param array|null $userData
      * @param array|null $addressData
      * @param array|null $otherFields
-     * @return void
      * @throws Throwable
+     * @return void
      */
     private function assertProductCanBeReservedByIdentity(
         Fund $fund,
@@ -695,8 +694,8 @@ class ProductReservationTest extends DuskTestCase
      * @param string $firstName
      * @param string $lastName
      * @param bool $skipSubmit
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function fillReservationModalNameAndLastName(
         Browser $browser,
@@ -723,8 +722,8 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param array $fields
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function fillReservationModalCustomFields(Browser $browser, array $fields): void
     {
@@ -771,32 +770,6 @@ class ProductReservationTest extends DuskTestCase
 
             $browser->press('@btnSubmit');
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $selector
-     * @param string $title
-     * @return RemoteWebElement|null
-     * @throws TimeoutException
-     */
-    private function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
-    {
-        $browser->waitFor($selector);
-        $browser->waitFor("$selector .select-control-options");
-
-        $list = $browser
-            ->element($selector)
-            ->findElement(WebDriverBy::xpath(".//*[@class='select-control-options']"));
-
-        $element = \Illuminate\Support\Arr::first(
-            $list->findElements(WebDriverBy::xpath(".//*[@class='select-control-option']")),
-            fn (RemoteWebElement $element) => trim($element->getText()) === $title
-        );
-
-        $this->assertNotNull($element);
-
-        return $element;
     }
 
     /**
@@ -944,8 +917,8 @@ class ProductReservationTest extends DuskTestCase
      * @param string $firstName
      * @param array|null $address
      * @param array|null $otherFields
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function assertReservationModalConfirmationDetails(
         Browser $browser,
