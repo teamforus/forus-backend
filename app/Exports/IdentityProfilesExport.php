@@ -88,6 +88,37 @@ class IdentityProfilesExport extends BaseFieldedExport
     }
 
     /**
+     * @param Collection $data
+     * @param Organization $organization
+     * @return Collection
+     */
+    private function exportTransform(Collection $data, Organization $organization): Collection
+    {
+        $data = $data->map(fn (Identity $identity) => array_only(
+            $this->getRow($identity, $organization),
+            $this->fields
+        ));
+
+        return $this->transformKeysByOrganization($data, $organization);
+    }
+
+    /**
+     * @param Collection $data
+     * @param Organization $organization
+     * @return Collection
+     */
+    protected function transformKeysByOrganization(Collection $data, Organization $organization): Collection
+    {
+        $fieldLabels = array_pluck(static::getExportFields($organization), 'name', 'key');
+
+        return $data->map(function ($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
+                $fieldLabels[$key] => $item[$key],
+            ]), []);
+        });
+    }
+
+    /**
      * @param Identity $identity
      * @param Organization $organization
      * @return array
@@ -115,18 +146,5 @@ class IdentityProfilesExport extends BaseFieldedExport
             'municipality_name' => Arr::get($records, 'municipality_name.0.value_locale', '-'),
             'neighborhood_name' => Arr::get($records, 'neighborhood_name.0.value_locale', '-'),
         ];
-    }
-
-    /**
-     * @param Collection $data
-     * @param Organization $organization
-     * @return Collection
-     */
-    private function exportTransform(Collection $data, Organization $organization): Collection
-    {
-        return $this->transformKeys($data->map(fn (Identity $identity) => array_only(
-            $this->getRow($identity, $organization),
-            $this->fields
-        )));
     }
 }
