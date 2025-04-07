@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
-use App\Exports\FundsDetailedExport;
+use App\Exports\FundsExportDetailed;
 use App\Exports\FundsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
@@ -397,7 +397,7 @@ class FundsController extends Controller
         $detailed = $request->input('detailed', false);
 
         return ExportFieldArrResource::collection(
-            $detailed ? FundsDetailedExport::getExportFields() : FundsExport::getExportFields()
+            $detailed ? FundsExportDetailed::getExportFields() : FundsExport::getExportFields()
         );
     }
 
@@ -427,9 +427,9 @@ class FundsController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         if ($detailed) {
-            $fields = $request->input('fields', FundsDetailedExport::getExportFieldsRaw());
+            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw());
             $budgetFunds = $organization->funds()->where('type', Fund::TYPE_BUDGET)->get();
-            $exportData = new FundsDetailedExport($budgetFunds, $from, $to, $fields);
+            $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);
         } else {
             $fields = $request->input('fields', FundsExport::getExportFieldsRaw());
             $funds = $organization->funds()->where('state', '!=', Fund::STATE_WAITING)->get();

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
@@ -10,8 +11,6 @@ use Illuminate\Support\Collection;
 
 class VoucherTransactionBulksExport extends BaseFieldedExport
 {
-    protected static string $transKey = 'voucher_transaction_bulks';
-
     /**
      * @var array|string[]
      */
@@ -23,6 +22,7 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
         'date_transaction',
         'state',
     ];
+    protected static string $transKey = 'voucher_transaction_bulks';
 
     /**
      * @param Request $request
@@ -46,7 +46,7 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
             $request->get('order_by'),
             $request->get('order_dir')
         );
-        
+
         $data = $query->with([
             'voucher_transactions',
             'bank_connection.bank',
@@ -64,7 +64,8 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (VoucherTransactionBulk $transactionBulk) => array_only(
-            $this->getRow($transactionBulk), $this->fields
+            $this->getRow($transactionBulk),
+            $this->fields,
         )));
     }
 

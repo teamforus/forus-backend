@@ -2,13 +2,13 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -95,7 +95,8 @@ class IdentityProfilesExport extends BaseFieldedExport
     private function exportTransform(Collection $data, Organization $organization): Collection
     {
         $data = $data->map(fn (Identity $identity) => array_only(
-            $this->getRow($identity, $organization), $this->fields
+            $this->getRow($identity, $organization),
+            $this->fields
         ));
 
         return $this->transformKeysByOrganization($data, $organization);

@@ -2,24 +2,16 @@
 
 namespace App\Exports;
 
-use App\Exports\Traits\FormatsExportedData;
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Fund;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class FundsExport extends BaseFieldedExport implements WithColumnFormatting, WithEvents
+class FundsExport extends BaseFieldedExport
 {
-    use Exportable;
-    use RegistersEventListeners;
-    use FormatsExportedData;
-
     protected static string $transKey = 'funds';
 
     /**

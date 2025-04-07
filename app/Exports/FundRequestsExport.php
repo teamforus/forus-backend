@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Models\Employee;
 use App\Models\FundRequest;
@@ -12,7 +13,6 @@ use Illuminate\Support\Collection;
 
 class FundRequestsExport extends BaseFieldedExport
 {
-
     protected static string $transKey = 'fund_requests';
 
     /**

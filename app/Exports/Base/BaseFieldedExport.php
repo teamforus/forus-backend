@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Exports;
+namespace App\Exports\Base;
 
+use App\Exports\Traits\FormatsExportedData;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-abstract class BaseFieldedExport implements FromCollection, WithHeadings
+abstract class BaseFieldedExport implements FromCollection, WithHeadings, WithColumnFormatting
 {
+    use FormatsExportedData;
+
     protected Collection $data;
     protected array $fields = [];
     protected static string $transKey = '';

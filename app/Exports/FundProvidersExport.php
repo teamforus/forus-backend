@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\ProductQuery;
@@ -11,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class FundProvidersExport extends BaseFieldedExport
 {
-
     protected static string $transKey = 'providers';
 
     /**
@@ -72,7 +72,8 @@ class FundProvidersExport extends BaseFieldedExport
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data->map(fn (FundProvider $fundProvider) => array_only(
-            $this->getRow($fundProvider), $this->fields
+            $this->getRow($fundProvider),
+            $this->fields
         )));
     }
 

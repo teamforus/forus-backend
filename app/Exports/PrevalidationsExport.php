@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
@@ -75,7 +76,7 @@ class PrevalidationsExport extends BaseFieldedExport
     {
         return [
             'code' => $prevalidation->uid,
-            'used' => trans("export.prevalidations.used_" . ($prevalidation->state === Prevalidation::STATE_USED ? 'yes' : 'no')),
+            'used' => trans('export.prevalidations.used_' . ($prevalidation->state === Prevalidation::STATE_USED ? 'yes' : 'no')),
         ];
     }
 

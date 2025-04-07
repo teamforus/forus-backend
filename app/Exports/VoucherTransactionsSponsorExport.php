@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseVoucherTransactionsExport;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -40,7 +41,7 @@ class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
             $request->get('order_by'),
             $request->get('order_dir')
         );
-        
+
         return $this->exportTransform($builder->with('voucher.fund', 'provider', 'product')->get());
     }
 }
