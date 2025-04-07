@@ -59,8 +59,7 @@ services:
       - forus-network
 
   selenium:
-    build:
-      dockerfile: ./docker/docker-compose/selenium/Dockerfile
+    image: selenium/standalone-chrome
     shm_size: '1gb'
     profiles:
       - testing
