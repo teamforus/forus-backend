@@ -64,10 +64,13 @@ abstract class DuskTestCase extends BaseTestCase
                     '--disable-images',
                     '--disable-dev-shm-usage',
                 ]);
-            })->all())
-            ->setExperimentalOption('prefs', [
-                'download.default_directory' => storage_path('dusk-downloads'),
+            })->all());
+
+        if ($_ENV['DUSK_CUSTOM_DOWNLOAD_FOLDER'] ?? null) {
+            $options->setExperimentalOption('prefs', [
+                'download.default_directory' => $_ENV['DUSK_CUSTOM_DOWNLOAD_FOLDER'],
             ]);
+        }
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',

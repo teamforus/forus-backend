@@ -3,6 +3,7 @@
 namespace Tests\Browser\Traits;
 
 use App\Models\Fund;
+use Exception;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Support\Collection;
 use Laravel\Dusk\Browser;
@@ -20,7 +21,7 @@ trait ExportTrait
         // Locate the latest CSV file
         $downloadPath = storage_path('dusk-downloads');
         $files = glob("$downloadPath/*.csv");
-        $csvFile = $files ? array_reduce($files, fn($a, $b) => filectime($a) > filectime($b) ? $a : $b) : null;
+        $csvFile = $files ? array_reduce($files, fn ($a, $b) => filectime($a) > filectime($b) ? $a : $b) : null;
 
         if (!$csvFile) {
             $this->fail('CSV file was not downloaded.');
@@ -28,14 +29,17 @@ trait ExportTrait
 
         // Read CSV file
         $csvData = [];
-        if (($handle = fopen($csvFile, "r")) !== false) {
-            while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+        if (($handle = fopen($csvFile, 'r')) !== false) {
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 $csvData[] = $row;
             }
             fclose($handle);
         }
 
-        unlink($csvFile);
+        try {
+            unlink($csvFile);
+        } catch (Exception $e) {
+        }
 
         $this->assertNotEmpty($csvData, 'CSV file is empty.');
 
@@ -46,8 +50,8 @@ trait ExportTrait
      * @param Browser $browser
      * @param array $fields
      * @param string $selector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     public function fillExportModal(
         Browser $browser,

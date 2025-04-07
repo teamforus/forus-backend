@@ -13,6 +13,7 @@ services:
     volumes:
       - ./:/var/www
       - ./docker/docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - chrome-downloads:/var/www/storage/dusk-downloads
     ports:
       - "8000:80"
     depends_on:
@@ -58,17 +59,20 @@ services:
       - forus-network
 
   selenium:
+    build:
+      dockerfile: ./docker/docker-compose/selenium/Dockerfile
     shm_size: '1gb'
     profiles:
       - testing
     depends_on:
       - app
-    image: selenium/standalone-chrome
     container_name: forus-backend-selenium
     ports:
       - "4444:4444"
     networks:
       - forus-network
+    volumes:
+      - chrome-downloads:/home/seluser/Downloads
 
 networks:
   forus-network:
@@ -76,5 +80,6 @@ networks:
     driver: bridge
 
 volumes:
+  chrome-downloads:
   mysql_data:
     driver: local
