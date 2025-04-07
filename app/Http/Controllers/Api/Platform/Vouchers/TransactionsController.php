@@ -13,7 +13,6 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Config;
 use Throwable;
 
 class TransactionsController extends Controller
@@ -34,10 +33,9 @@ class TransactionsController extends Controller
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
         $query = VoucherTransaction::searchVoucher($voucherToken->voucher, $request);
-        $hideOnMeApp = Config::get('forus.features.me_app.hide_non_provider_transactions');
 
-        if ($hideOnMeApp && $request->isMeApp()) {
-            $query->where('target', 'provider');
+        if ($request->isMeApp()) {
+            $query->where('target', VoucherTransaction::TARGET_PROVIDER);
         }
 
         return VoucherTransactionResource::queryCollection($query, $request);

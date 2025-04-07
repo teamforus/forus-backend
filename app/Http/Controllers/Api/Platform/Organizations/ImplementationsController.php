@@ -85,12 +85,15 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $implementation->updateModel($request->only([
+        $implementation->update($request->only([
             'title', 'description', 'description_alignment', 'informal_communication',
-            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+            'overlay_enabled', 'overlay_type', 'overlay_opacity',
             'show_home_map', 'show_home_products', 'show_providers_map',
             'show_provider_map', 'show_office_map', 'show_voucher_map', 'show_product_map',
             'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
+            'banner_button', 'banner_button_text', 'banner_button_url', 'banner_button_target',
+            'banner_wide', 'banner_collapse', 'banner_position', 'banner_button_type',
+            'banner_color', 'banner_background', 'banner_background_mobile',
         ]));
 
         $implementation->addWebshopAnnouncement(

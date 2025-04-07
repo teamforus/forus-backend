@@ -139,6 +139,16 @@ $router->group([], static function () use ($router) {
     );
 
     $router->resource(
+        'organizations.fund-forms',
+        "Api\Platform\Organizations\FundFormsController",
+        [
+            'only' => [
+                'index', 'show',
+            ],
+        ],
+    );
+
+    $router->resource(
         'organizations.reimbursement-categories',
         "Api\Platform\Organizations\ReimbursementCategoriesController",
         [
