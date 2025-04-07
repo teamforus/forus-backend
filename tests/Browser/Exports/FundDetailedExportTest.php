@@ -2,7 +2,7 @@
 
 namespace Tests\Browser\Exports;
 
-use App\Exports\FundsDetailedExport;
+use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
 use App\Models\Implementation;
 use Facebook\WebDriver\Exception\TimeoutException;
@@ -47,10 +47,10 @@ class FundDetailedExportTest extends DuskTestCase
                 $this->fillExportModal($browser, [], '@exportFundsDetailed');
                 $csvData = $this->parseCsvFile();
 
-                $fields = array_pluck(FundsDetailedExport::getExportFields(), 'name');
+                $fields = array_pluck(FundsExportDetailed::getExportFields(), 'name');
                 $fields = array_values(array_filter(
                     $fields,
-                    fn (string $field) => $field !== FundsDetailedExport::trans('budget_children_count')
+                    fn (string $field) => $field !== FundsExportDetailed::trans('budget_children_count')
                 ));
 
                 $this->assertFields($fund, $csvData, $fields);
@@ -60,7 +60,7 @@ class FundDetailedExportTest extends DuskTestCase
                 $csvData = $this->parseCsvFile();
 
                 $this->assertFields($fund, $csvData, [
-                    FundsDetailedExport::trans('name'),
+                    FundsExportDetailed::trans('name'),
                 ]);
 
                 // Logout
