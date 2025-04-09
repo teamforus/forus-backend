@@ -32,8 +32,9 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
     /**
      * @throws Throwable
+     * @return void
      */
-    public function testWebshopFundRequestControlTypes(): void
+    public function testWebshopFundRequestRecordStringControlTypes(): void
     {
         $this->checkControlTypes('string', [
             'text' => [
@@ -43,7 +44,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordBoolControlTypes(): void
+    {
         $this->checkControlTypes('bool', [
             'checkbox' => [
                 '*' => [
@@ -58,7 +66,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordEmailControlTypes(): void
+    {
         $this->checkControlTypes('email', [
             'text' => [
                 '*' => [
@@ -68,7 +83,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordIbanControlTypes(): void
+    {
         $this->checkControlTypes('iban', [
             'text' => [
                 '*' => [
@@ -78,7 +100,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordNumberControlTypes(): void
+    {
         $this->checkControlTypes('number', [
             'text' => [
                 '<' => [
@@ -205,7 +234,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordSelectControlTypes(): void
+    {
         $this->checkControlTypes('select', [
             'select' => [
                 '=' => [
@@ -233,7 +269,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordSelectNumberControlTypes(): void
+    {
         $this->checkControlTypes('select_number', [
             'select' => [
                 '=' => [
@@ -288,7 +331,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordDateControlTypes(): void
+    {
         $this->checkControlTypes('date', [
             'text' => [
                 '>' => [
