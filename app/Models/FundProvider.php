@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 /**
@@ -474,20 +473,6 @@ class FundProvider extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param Builder|null $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    public static function export(
-        Request $request,
-        Organization $organization,
-        ?Builder $builder = null
-    ): mixed {
-        return self::exportTransform(self::search($request, $organization, $builder));
-    }
-
-    /**
      * @param array $products
      * @return $this
      */
@@ -730,63 +715,5 @@ class FundProvider extends BaseModel
         }
 
         return null;
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(Builder $builder): mixed
-    {
-        return $builder->with([
-            'fund.fund_config.implementation',
-            'organization.last_employee_session',
-        ])->get()->map(function (FundProvider $fundProvider) {
-            $transKey = 'export.providers';
-            $provider = $fundProvider->organization;
-            $lastActivity = $fundProvider->getLastActivity();
-
-            $providerProductsQuery = ProductQuery::whereNotExpired($provider->products_provider());
-            $individualProductsQuery = $fundProvider->fund_provider_products()->whereHas('product');
-
-            $sponsorProductsQuery = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
-                'sponsor_organization_id' => $fundProvider->fund->organization_id,
-            ]));
-
-            $activeProductsQuery = ProductQuery::approvedForFundsAndActiveFilter(
-                $fundProvider->products()->getQuery(),
-                $fundProvider->fund_id,
-            );
-
-            $result = DB::query()->select([
-                'individual_products_count' => $individualProductsQuery->selectRaw('count(*)'),
-                'provider_products_count' => $providerProductsQuery->selectRaw('count(*)'),
-                'sponsor_products_count' => $sponsorProductsQuery->selectRaw('count(*)'),
-                'active_products_count' => $activeProductsQuery->selectRaw('count(*)'),
-            ])->first();
-
-            $hasIndividualProducts = ($result->individual_products_count > 0 || $fundProvider->allow_products);
-
-            return [
-                trans("$transKey.fund") => $fundProvider->fund->name,
-                trans("$transKey.implementation") => $fundProvider->fund->fund_config?->implementation?->name,
-                trans("$transKey.fund_type") => $fundProvider->fund->type,
-                trans("$transKey.provider") => $provider->name,
-                trans("$transKey.iban") => $provider->iban,
-                trans("$transKey.provider_last_activity") => $lastActivity?->diffForHumans(now()),
-                trans("$transKey.products_provider_count") => $result->provider_products_count,
-                trans("$transKey.products_sponsor_count") => $result->sponsor_products_count,
-                trans("$transKey.products_active_count") => $result->active_products_count,
-                trans("$transKey.products_count") => $result->provider_products_count + $result->sponsor_products_count,
-                trans("$transKey.phone") => $provider->phone,
-                trans("$transKey.email") => $provider->email,
-                trans("$transKey.phone") => $provider->phone,
-                trans("$transKey.kvk") => $fundProvider->organization->kvk,
-                trans("$transKey.state") => $fundProvider->state_locale,
-                trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
-                trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
-                trans("$transKey.allow_some_products") => $hasIndividualProducts ? 'Ja' : 'Nee',
-            ];
-        })->values();
     }
 }

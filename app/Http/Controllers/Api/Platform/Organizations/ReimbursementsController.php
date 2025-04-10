@@ -270,7 +270,7 @@ class ReimbursementsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyAsSponsor', [Reimbursement::class, $organization]);
 
-        $fields = $request->input('fields', ReimbursementsSponsorExport::getExportFields());
+        $fields = $request->input('fields', ReimbursementsSponsorExport::getExportFieldsRaw());
         $fileData = new ReimbursementsSponsorExport($request, $organization, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
