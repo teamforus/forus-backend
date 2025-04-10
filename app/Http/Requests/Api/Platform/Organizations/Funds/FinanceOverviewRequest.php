@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Exports\FundsExport;
+use App\Exports\FundsExportDetailed;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 
@@ -27,10 +29,14 @@ class FinanceOverviewRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $fields = $this->get('detailed', false)
+            ? FundsExportDetailed::getExportFieldsRaw()
+            : FundsExport::getExportFieldsRaw();
+
         return [
-            'data_format' => 'nullable|in:xls,csv',
             'detailed' => 'nullable|boolean',
             'year' => 'nullable|integer',
+            ...$this->exportableResourceRules($fields),
         ];
     }
 }

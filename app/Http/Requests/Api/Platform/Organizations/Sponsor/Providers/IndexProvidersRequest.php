@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers;
 
+use App\Exports\FundProvidersExport;
 use App\Http\Requests\Api\Platform\Organizations\Provider\IndexFundProviderRequest;
 use App\Models\Organization;
 
@@ -39,6 +40,7 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'business_type_ids.*' => 'nullable|exists:business_types,id',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
             'state_group' => 'nullable|in:pending,active,rejected',
+            ...$this->exportableResourceRules(FundProvidersExport::getExportFieldsRaw()),
         ]);
     }
 }

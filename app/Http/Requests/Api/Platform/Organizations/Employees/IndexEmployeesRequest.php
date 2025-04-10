@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
+use App\Exports\EmployeesExport;
 use App\Http\Requests\BaseFormRequest;
 
 class IndexEmployeesRequest extends BaseFormRequest
@@ -31,8 +32,8 @@ class IndexEmployeesRequest extends BaseFormRequest
             'permission' => 'nullable|string|exists:permissions,key',
             'permissions' => 'nullable|array',
             'permissions.*' => 'nullable|exists:permissions,key',
-            'data_format' => 'nullable|in:xls,csv',
             'per_page' => $this->perPageRule(1000),
+            ...$this->exportableResourceRules(EmployeesExport::getExportFieldsRaw()),
         ];
     }
 }

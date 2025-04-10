@@ -14,11 +14,8 @@ class IndexTransactionsRequest extends BaseIndexTransactionsRequest
      */
     public function rules(): array
     {
-        $fields = VoucherTransactionsProviderExport::getExportFieldsRaw();
-
         return array_merge(parent::rules(), [
-            'fields' => 'nullable|array',
-            'fields.*' => ['nullable', Rule::in($fields)],
+            ...$this->exportableResourceRules(VoucherTransactionsProviderExport::getExportFieldsRaw()),
         ]);
     }
 }

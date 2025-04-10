@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 use App\Exports\FundProvidersExport;
 use App\Exports\ProviderFinancesExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\ExportProviderFinancesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProviderFinancialResource;
@@ -162,7 +163,7 @@ class ProvidersController extends Controller
     }
 
     /**
-     * @param IndexProvidersRequest $request
+     * @param ExportProviderFinancesRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
@@ -170,7 +171,7 @@ class ProvidersController extends Controller
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportFinances(
-        IndexProvidersRequest $request,
+        ExportProviderFinancesRequest $request,
         Organization $organization,
     ): BinaryFileResponse {
         $this->authorize('show', $organization);

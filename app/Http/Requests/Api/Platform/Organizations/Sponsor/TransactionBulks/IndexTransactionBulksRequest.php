@@ -6,7 +6,6 @@ use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**
@@ -34,8 +33,6 @@ class IndexTransactionBulksRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $fields = VoucherTransactionBulksExport::getExportFieldsRaw();
-
         return [
             'per_page' => $this->perPageRule(),
             'state' => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
@@ -45,11 +42,9 @@ class IndexTransactionBulksRequest extends BaseFormRequest
             'amount_max' => 'nullable|numeric|min:0',
             'quantity_min' => 'nullable|numeric|min:0',
             'quantity_max' => 'nullable|numeric|min:0',
-            'data_format' => 'nullable|in:csv,xls',
             'order_by' => 'nullable|in:' . implode(',', VoucherTransactionBulk::SORT_BY_FIELDS),
             'order_dir' => 'nullable|in:asc,desc',
-            'fields' => 'nullable|array',
-            'fields.*' => ['nullable', Rule::in($fields)],
+            ...$this->exportableResourceRules(VoucherTransactionBulksExport::getExportFieldsRaw()),
         ];
     }
 }
