@@ -11,7 +11,9 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
+use App\Models\ProductReservation;
 use App\Models\RecordType;
+use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Testing\TestResponse;
 use Throwable;
@@ -272,6 +274,16 @@ trait MakesTestFunds
         string $type,
         string $key,
     ): RecordType {
+        $existing = RecordType::where([
+            'organization_id' => $organization->id,
+            'criteria' => true,
+            'type' => $type,
+            'key' => $key,
+        ])->first();
+
+        $existing?->record_type_options()->forceDelete();
+        $existing?->forceDelete();
+
         $recordType = RecordType::create([
             'organization_id' => $organization->id,
             'criteria' => true,
@@ -384,10 +396,17 @@ trait MakesTestFunds
     {
         $fund->criteria()
             ->get()
-            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->delete());
+            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->forceDelete());
 
-        $fund->criteria()->delete();
-        $fund->criteria_steps()->delete();
-        $fund->delete();
+        $fund->criteria()->forceDelete();
+        $fund->criteria_steps()->forceDelete();
+
+        VoucherTransaction::whereIn('voucher_id', $fund->vouchers()->select('id'))->forceDelete();
+        $fund->vouchers()->whereNotNull('product_reservation_id')->forceDelete();
+        ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
+
+        $fund->vouchers()->forceDelete();
+        $fund->fund_requests()->forceDelete();
+        $fund->forceDelete();
     }
 }
