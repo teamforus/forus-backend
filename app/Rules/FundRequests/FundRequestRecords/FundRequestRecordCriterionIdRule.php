@@ -15,7 +15,11 @@ class FundRequestRecordCriterionIdRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        if (!$this->findCriterion($attribute)) {
+        if (!is_numeric($value)) {
+            return $this->reject(trans('validation.numeric', compact('attribute')));
+        }
+
+        if (!$this->fund->criteria->firstWhere('id', $value)) {
             return $this->reject(trans('validation.in', compact('attribute')));
         }
 
