@@ -46,11 +46,15 @@ class VoucherTransactionsSubscriber
             'implementation' => $fund->getImplementation(),
         ];
 
+        log_debug('sss', [$type, $transaction->isOutgoing()]);
+
         if ($type == 'product') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta, $logData);
             IdentityProductVoucherTransactionNotification::send($event);
         } elseif ($type == 'budget') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta, $logData);
+
+            log_debug('sss', [$type, $transaction->isOutgoing()]);
 
             if ($transaction->isOutgoing()) {
                 IdentityVoucherBudgetTransactionNotification::send($event);

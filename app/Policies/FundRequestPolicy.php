@@ -490,47 +490,6 @@ class FundRequestPolicy
     }
 
     /**
-     * Determine whether the user can view reimbursement notes.
-     *
-     * @param Identity $identity
-     * @param FundRequest $fundRequest
-     * @param Organization $organization
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function viewAnyEmailLogs(
-        Identity $identity,
-        FundRequest $fundRequest,
-        Organization $organization
-    ): Response|bool {
-        return $this->viewAsValidator($identity, $fundRequest, $organization);
-    }
-
-    /**
-     * Determine whether the user can export email logs.
-     *
-     * @param Identity $identity
-     * @param EmailLog $emailLog
-     * @param FundRequest $fundRequest
-     * @param Organization $organization
-     * @return Response|bool
-     */
-    public function exportEmailLog(
-        Identity $identity,
-        FundRequest $fundRequest,
-        Organization $organization,
-        EmailLog $emailLog,
-    ): Response|bool {
-        if (!EmailLogQuery::whereFundRequest(EmailLog::query(), $fundRequest)
-            ->where('id', $emailLog->id)
-            ->exists()) {
-            return false;
-        }
-
-        return $this->viewAsValidator($identity, $fundRequest, $organization);
-    }
-
-    /**
      * @param Identity $identity
      * @param FundRequest $fundRequest
      * @param Organization $organization

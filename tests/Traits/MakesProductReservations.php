@@ -23,6 +23,7 @@ trait MakesProductReservations
     use WithFaker;
     use HasDbTokens;
     use MakesTestProducts;
+    use TestsReservations;
 
     /**
      * @var array
