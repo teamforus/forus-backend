@@ -456,10 +456,13 @@ class VoucherTransaction extends BaseModel
      */
     public static function searchProvider(Request $request, Organization $organization): Builder
     {
-        $builder = new VoucherTransactionsSearch($request->only([
-            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
-            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
-        ]), self::query());
+        $builder = new VoucherTransactionsSearch([
+            ...$request->only([
+                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            ]),
+            'q_type' => 'provider',
+        ], self::query());
 
         return $builder->searchProvider()->where([
             'organization_id' => $organization->id,
