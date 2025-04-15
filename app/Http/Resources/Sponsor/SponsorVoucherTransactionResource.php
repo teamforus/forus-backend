@@ -63,6 +63,7 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
                 'id', 'voucher_id',
             ]),
             'non_cancelable_at_locale' => format_date_locale($transaction->non_cancelable_at),
+            'execution_date_locale' => format_date_locale($transaction->voucher_transaction_bulk?->execution_date),
             'bulk_state' => $transaction->voucher_transaction_bulk?->state,
             'bulk_state_locale' => $transaction->voucher_transaction_bulk?->state_locale,
             'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
