@@ -57,6 +57,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Type the email and submit the form
             $browser->within('@authEmailForm', function (Browser $browser) use ($identity) {
+                $browser->click('@privacyCheckbox');
                 $browser->type('@authEmailFormEmail', $identity->email);
                 $browser->press('@authEmailFormSubmit');
             });
@@ -116,6 +117,7 @@ class AuthenticationTest extends DuskTestCase
 
             // Type the email and submit the form
             $browser->within('@authEmailForm', function (Browser $browser) use ($email) {
+                $browser->click('@privacyCheckbox');
                 $browser->type('@authEmailFormEmail', $email);
                 $browser->press('@authEmailFormSubmit');
             });
