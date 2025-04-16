@@ -105,7 +105,7 @@ class FundRequestEmailLogsTest extends TestCase
     ): void {
         // assert email log exists
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
+            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
             $this->makeApiHeaders($organization->identity),
         );
 
@@ -149,7 +149,7 @@ class FundRequestEmailLogsTest extends TestCase
     ): void {
         // assert email log exists
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
+            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
             $this->makeApiHeaders($organization->identity),
         );
 
