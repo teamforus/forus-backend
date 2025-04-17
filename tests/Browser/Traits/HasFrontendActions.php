@@ -5,6 +5,9 @@ namespace Tests\Browser\Traits;
 use App\Models\Identity;
 use App\Models\Organization;
 use Facebook\WebDriver\Exception\TimeoutException;
+use Facebook\WebDriver\Remote\RemoteWebElement;
+use Facebook\WebDriver\WebDriverBy;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Traits\MakesTestIdentities;
 
@@ -132,5 +135,26 @@ trait HasFrontendActions
 
         $browser->waitFor("@selectControlFundItem$fundId");
         $browser->element("@selectControlFundItem$fundId")->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string $title
+     * @return RemoteWebElement|null
+     */
+    protected function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
+    {
+        $option = null;
+
+        $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
+            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
+            $options = $browser->driver->findElements($xpath);
+            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
+        });
+
+        $this->assertNotNull($option);
+
+        return $option;
     }
 }
