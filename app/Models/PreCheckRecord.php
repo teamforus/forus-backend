@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class PreCheckRecord extends BaseModel
 {
+    use HasOnDemandTranslations;
+
     /**
      * @var array
      */

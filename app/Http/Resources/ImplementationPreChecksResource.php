@@ -57,9 +57,14 @@ class ImplementationPreChecksResource extends BaseJsonResource
         $preChecks = $implementation->pre_checks->sortBy('order');
 
         return [
-            ...$preChecks->map(fn (PreCheck $preCheck) => $preCheck->only([
-                'id', 'title', 'title_short', 'description', 'default',
-            ]))->toArray(),
+            ...$preChecks->map(fn (PreCheck $preCheck) => [
+                ...$preCheck->only([
+                    'id', 'title', 'title_short', 'description', 'default',
+                ]),
+                ...$preCheck->translateColumns($preCheck->only([
+                    'title', 'title_short', 'description',
+                ])),
+            ])->toArray(),
             ...$preChecks->where('default', true)->isEmpty() ? [[
                 'id' => null,
                 'title' => trans('fund.pre_check.default_title'),
@@ -125,6 +130,9 @@ class ImplementationPreChecksResource extends BaseJsonResource
                     ...$preChecksRecord->only([
                         'record_type_key', 'title', 'title_short', 'description', 'order', 'pre_check_id',
                     ]),
+                    ...$preChecksRecord->translateColumns($preChecksRecord->only([
+                        'title', 'title_short', 'description',
+                    ])),
                     'record_settings' => PreCheckRecordSettingResource::collection(
                         $preChecksRecord->settings,
                     ),
