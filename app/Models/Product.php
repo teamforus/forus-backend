@@ -16,6 +16,7 @@ use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
@@ -562,13 +563,12 @@ class Product extends BaseModel
     }
 
     /**
-     * @param array $fundFilters
-     * @return Builder
+     * @param array $activeFunds
+     * @return Builder|Product
      */
-    public static function searchQuery(array $fundFilters = []): Builder
+    public static function searchQuery(array $activeFunds = []): Builder|Product
     {
         $query = self::query();
-        $activeFunds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
 
         // only in stock and not expired
         $query = ProductQuery::inStockAndActiveFilter($query);
@@ -583,7 +583,7 @@ class Product extends BaseModel
      */
     public static function searchSample(Request $request): Builder
     {
-        $query = self::searchQuery();
+        $query = self::searchQuery(Implementation::activeFundsQuery()->pluck('id')->toArray());
 
         if ($request->input('fund_type')) {
             $query = self::filterFundType($query, $request->input('fund_type'));
@@ -599,8 +599,8 @@ class Product extends BaseModel
      */
     public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
-        /** @var Builder|Product $query */
-        $query = $builder ?: self::searchQuery();
+        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+        $query = $builder ?: self::searchQuery($activeFunds);
 
         if ($fund_type = Arr::get($options, 'fund_type')) {
             $query = self::filterFundType($query, $fund_type);
@@ -610,8 +610,8 @@ class Product extends BaseModel
             $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
         }
 
-        if ($fund_id = Arr::get($options, 'fund_id')) {
-            $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
+        if (Arr::get($options, 'fund_id')) {
+            $query = ProductQuery::approvedForFundsFilter($query, Arr::get($options, 'fund_id'));
         }
 
         if ($price_type = Arr::get($options, 'price_type')) {
@@ -641,6 +641,54 @@ class Product extends BaseModel
                     'lat' => $location ? $location['lat'] : 0,
                     'lng' => $location ? $location['lng'] : 0,
                 ]);
+            });
+        }
+
+        if (Arr::get($options, 'qr')) {
+            $query->whereHas('fund_providers', function (Builder $builder) use ($activeFunds) {
+                $builder->whereIn('fund_id', $activeFunds);
+                $builder->where('allow_budget', true);
+            });
+        }
+
+        if (Arr::get($options, 'reservation')) {
+            $query->where(function (Builder $builder) {
+                $builder->where('reservation_enabled', true);
+
+                $builder->whereHas('organization', function (Builder $builder) {
+                    $builder->where('reservations_subsidy_enabled', true);
+                    $builder->orWhere('reservations_subsidy_enabled', true);
+                });
+            });
+        }
+
+        if (Arr::get($options, 'extra_payment')) {
+            $query->where(function (Builder $builder) use ($activeFunds) {
+                $builder->where('reservation_enabled', true);
+
+                $builder->whereHas('organization', function (Builder $builder) {
+                    $builder->where('reservations_subsidy_enabled', true);
+                    $builder->orWhere('reservations_budget_enabled', true);
+                });
+
+                $builder->where(function (Builder $builder) {
+                    $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_YES);
+
+                    $builder->orWhere(function (Builder $builder) {
+                        $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_GLOBAL);
+                        $builder->whereHas('organization', function (Builder $builder) {
+                            $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_YES);
+                        });
+                    });
+                });
+
+                $builder->whereHas('organization.fund_providers_allowed_extra_payments', function (Builder $builder) use ($activeFunds) {
+                    $builder->whereIn('fund_id', $activeFunds);
+                });
+
+                $builder->whereHas('organization.mollie_connection', function (Builder $builder) use ($activeFunds) {
+                    $builder->where('onboarding_state', MollieConnection::ONBOARDING_STATE_COMPLETED);
+                });
             });
         }
 
