@@ -7,9 +7,11 @@ use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ProductBasicResource;
 use App\Http\Resources\Requester\ProductResource;
+use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
 {
@@ -27,6 +29,7 @@ class ProductsController extends Controller
         $query = Product::search($request->only([
             'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
             'organization_id', 'q', 'order_by', 'order_dir', 'postcode', 'distance',
+            'qr', 'reservation', 'extra_payment',
         ]));
 
         if ($request->input('bookmarked', false)) {
@@ -41,7 +44,24 @@ class ProductsController extends Controller
             return ProductBasicResource::queryCollection($query, $request);
         }
 
-        return ProductResource::queryCollection($query, $request);
+        $priceField = $request->input('fund_type') === Fund::TYPE_SUBSIDIES ? 'price_min' : 'price';
+        $priceQuery = (clone $query);
+
+        $priceMax = DB::table(DB::raw("({$priceQuery->toSql()}) as sub"))
+            ->mergeBindings($priceQuery->getQuery())
+            ->max($priceField);
+
+        if ($from = $request->input('from')) {
+            $query = $query->having($priceField, '>=', intval($from));
+        }
+
+        if ($to = $request->input('to')) {
+            $query = $query->having($priceField, '<=', intval($to));
+        }
+
+        return ProductResource::queryCollection($query, $request)->additional([
+            'meta' => [ 'price_max' => intval($priceMax ?: 0) ],
+        ]);
     }
 
     /**

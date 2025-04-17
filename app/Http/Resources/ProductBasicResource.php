@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Product;
+use Illuminate\Http\Request;
 
 /**
  * @property Product $resource
@@ -19,7 +20,7 @@ class ProductBasicResource extends ProductResource
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->baseFields($this->resource);
     }

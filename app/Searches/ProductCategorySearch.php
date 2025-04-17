@@ -2,6 +2,7 @@
 
 namespace App\Searches;
 
+use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,9 +37,12 @@ class ProductCategorySearch extends BaseSearch
 
         if ($this->hasFilter('used') && $this->getFilter('used', false)) {
             $builder->where(function (ProductCategory|Builder $builder) {
-                $ids = Product::searchQuery($this->hasFilter('used_type') ? [
+                $fundFilters = $this->hasFilter('used_type') ? [
                     'type' => $this->getfilter('used_type'),
-                ] : [])->distinct()->pluck('product_category_id')->toArray();
+                ] : [];
+
+                $fundIds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
+                $ids = Product::searchQuery($fundIds)->distinct()->pluck('product_category_id')->toArray();
 
                 $builder->whereIn('id', $ids);
                 $builder->orWhereHas('descendants', fn (Builder $b) => $b->whereIn('id', $ids));

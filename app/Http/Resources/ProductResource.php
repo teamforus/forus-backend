@@ -27,6 +27,7 @@ class ProductResource extends BaseJsonResource
         'organization.offices.organization.logo.presets',
         'organization.logo.presets',
         'organization.business_type.translations',
+        'organization.fund_providers',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
@@ -147,6 +148,10 @@ class ProductResource extends BaseJsonResource
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
                 'reservations_enabled' => $product->reservationsEnabled($fund),
                 'reservation_extra_payments_enabled' => $product->reservationExtraPaymentsEnabled($fund),
+                'scanning_enabled' => $product->organization->fund_providers
+                    ->where('allow_budget', true)
+                    ->where('fund_id', $fund->id)
+                    ->isNotEmpty(),
             ];
 
             $productData = ProductSubQuery::appendReservationStats([
