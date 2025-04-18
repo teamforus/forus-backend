@@ -2,58 +2,46 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\PhysicalCardRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class PhysicalCardRequestsExport implements FromCollection, WithHeadings
+class PhysicalCardRequestsExport extends BaseFieldedExport
 {
-    protected Collection|\Illuminate\Database\Eloquent\Collection $data;
+    protected static string $transKey = 'physical_card_requests';
 
+    /**
+     * @var array|string[]
+     */
+    protected static array $exportFields = [
+        'address',
+        'house',
+        'house_addition',
+        'postcode',
+        'city',
+    ];
+
+    /**
+     * @param int|null $fund_id
+     * @param string|null $date
+     * @param array $fields
+     */
     public function __construct(
-        $fund_id = null,
-        $date = null
+        ?int $fund_id = null,
+        ?string $date = null,
+        protected array $fields = []
     ) {
-        $this->data = $this->getRequests($fund_id, $date)->map(static function (
-            PhysicalCardRequest $physicalCard
-        ) {
-            return array_combine([
-                'ADRES', 'HUISNUMMER', 'HUISNR_TOEVOEGING', 'POSTCODE', 'PLAATS',
-            ], $physicalCard->only([
-                'address', 'house', 'house_addition', 'postcode', 'city',
-            ]));
-        });
+        $this->data = $this->export($fund_id, $date);
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @param int|null $fund_id
+     * @param string|null $date
+     * @return Collection
      */
-    public function collection(): Collection
+    protected function export(?int $fund_id = null, ?string $date = null): Collection
     {
-        return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        return $this->data->map(static function ($row) {
-            return array_keys($row);
-        })->flatten()->unique()->toArray();
-    }
-
-    /**
-     * @param null $fund_id
-     * @param null $date
-     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
-     */
-    private function getRequests(
-        $fund_id = null,
-        $date = null
-    ) {
         /** @var Builder $query */
         $query = PhysicalCardRequest::query();
 
@@ -67,6 +55,29 @@ class PhysicalCardRequestsExport implements FromCollection, WithHeadings
             $query->whereDate('created_at', $date);
         }
 
-        return $query->get();
+        return $this->exportTransform($query->get());
+    }
+
+    /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys($data->map(fn (PhysicalCardRequest $physicalCard) => array_only(
+            $this->getRow($physicalCard),
+            $this->fields,
+        ))->values());
+    }
+
+    /**
+     * @param PhysicalCardRequest $physicalCard
+     * @return array
+     */
+    protected function getRow(PhysicalCardRequest $physicalCard): array
+    {
+        return $physicalCard->only([
+            'address', 'house', 'house_addition', 'postcode', 'city',
+        ]);
     }
 }

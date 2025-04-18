@@ -242,7 +242,7 @@ class ProductReservationsController extends Controller
 
         $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
-        $fields = $request->input('fields', ProductReservationsExport::getExportFields());
+        $fields = $request->input('fields', ProductReservationsExport::getExportFieldsRaw());
         $exportData = new ProductReservationsExport($search->get(), $fields);
 
         return resolve('excel')->download($exportData, $fileName);

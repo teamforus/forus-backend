@@ -16,7 +16,7 @@ class BIEmployeesExporter extends BaseBIExporter
     public function toArray(): array
     {
         $query = $this->organization->employees();
-        $export = new EmployeesExport($query);
+        $export = new EmployeesExport($query, EmployeesExport::getExportFieldsRaw());
 
         return $export->collection()->toArray();
     }

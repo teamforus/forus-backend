@@ -43,7 +43,6 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
             'to' => 'nullable|date_format:Y-m-d',
             'amount_min' => 'nullable|numeric|min:0',
             'amount_max' => 'nullable|numeric|min:0',
-            'data_format' => 'nullable|in:csv,xls',
 
             'transfer_in_min' => 'nullable|numeric|min:0',
             'transfer_in_max' => 'nullable|numeric|max:' . ProductReservation::TRANSACTION_DELAY,

@@ -2,34 +2,34 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\ProductReservation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class ProductReservationsExport extends BaseFieldedExport
 {
-    protected Collection $data;
-    protected array $fields;
+    protected static string $transKey = 'reservations';
 
     /**
      * @var array|string[][]
      */
     protected static array $exportFields = [
-        'code' => 'Code',
-        'product_name' => 'Aanbod',
-        'amount' => 'Bedrag',
-        'email' => 'E-mailadres',
-        'first_name' => 'Naam',
-        'last_name' => 'Voornamen',
-        'user_note' => 'Opmerking',
-        'phone' => 'Telefoonnummer',
-        'address' => 'Adres',
-        'birth_date' => 'Geboortedatum',
-        'state' => 'Status',
-        'created_at' => 'Aangemaakt op',
-        'expire_at' => 'Verlopen op',
-        'ean' => 'EAN',
-        'sku' => 'SKU',
+        'code',
+        'product_name',
+        'amount',
+        'email',
+        'first_name',
+        'last_name',
+        'user_note',
+        'phone',
+        'address',
+        'birth_date',
+        'state',
+        'created_at',
+        'expire_at',
+        'ean',
+        'sku',
     ];
 
     /**
@@ -38,62 +38,53 @@ class ProductReservationsExport extends BaseFieldedExport
      */
     public function __construct(EloquentCollection|array $reservations, array $fields = [])
     {
-        $this->data = $reservations;
         $this->fields = $fields;
+        $this->data = $this->export($reservations);
     }
 
     /**
-     * @return array
-     */
-    public static function getExportFields(): array
-    {
-        return array_reduce(array_keys(static::$exportFields), fn ($list, $key) => array_merge($list, [[
-            'key' => $key,
-            'name' => static::$exportFields[$key],
-        ]]), []);
-    }
-
-    /**
+     * @param Collection $data
      * @return Collection
      */
-    public function collection(): Collection
+    public function export(Collection $data): Collection
     {
-        $data = $this->data->map(function (ProductReservation $reservation) {
-            return array_only([
-                'code' => $reservation->code,
-                'product_name' => $reservation->product->name,
-                'amount' => currency_format($reservation->amount),
-                'email' => $reservation->voucher->identity?->email,
-                'first_name' => $reservation->first_name,
-                'last_name' => $reservation->last_name,
-                'user_note' => $reservation->user_note ?: '-',
-                'phone' => $reservation->phone ?: '-',
-                'address' => $reservation->address ?: '-',
-                'birth_date' => format_date_locale($reservation->birth_date) ?: '-',
-                'state' => $reservation->state_locale,
-                'created_at' => format_date_locale($reservation->created_at),
-                'expire_at' => format_date_locale($reservation->expire_at),
-                'ean' => $reservation->product->ean,
-                'sku' => $reservation->product->sku,
-            ], $this->fields);
-        });
-
-        return $data->map(function ($item) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                static::$exportFields[$key] => (string) $item[$key],
-            ]), []);
-        });
+        return $this->exportTransform($data);
     }
 
     /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys($data->map(fn (ProductReservation $reservation) => array_only(
+            $this->getRow($reservation),
+            $this->fields,
+        )));
+    }
+
+    /**
+     * @param ProductReservation $reservation
      * @return array
      */
-    public function headings(): array
+    protected function getRow(ProductReservation $reservation): array
     {
-        $collection = $this->collection();
-
-        return $collection->isNotEmpty()
-            ? array_keys($collection->first())
-            : array_map(fn ($key) => static::$exportFields[$key] ?? $key, $this->fields);
+        return [
+            'code' => $reservation->code,
+            'product_name' => $reservation->product->name,
+            'amount' => currency_format($reservation->amount),
+            'email' => $reservation->voucher->identity?->email,
+            'first_name' => $reservation->first_name,
+            'last_name' => $reservation->last_name,
+            'user_note' => $reservation->user_note ?: '-',
+            'phone' => $reservation->phone ?: '-',
+            'address' => $reservation->address ?: '-',
+            'birth_date' => format_date_locale($reservation->birth_date) ?: '-',
+            'state' => $reservation->state_locale,
+            'created_at' => format_date_locale($reservation->created_at),
+            'expire_at' => format_date_locale($reservation->expire_at),
+            'ean' => $reservation->product->ean,
+            'sku' => $reservation->product->sku,
+        ];
     }
 }
