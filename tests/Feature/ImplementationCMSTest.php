@@ -7,6 +7,7 @@ use App\Models\Faq;
 use App\Models\Implementation;
 use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
+use App\Models\Organization;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Services\MediaService\Models\Media;
 use Exception;
@@ -14,13 +15,16 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Symfony\Component\Uid\UuidV4;
 use Tests\TestCase;
+use Tests\Traits\MakesTestOrganizations;
 use Throwable;
 
 class ImplementationCMSTest extends TestCase
 {
     use WithFaker;
     use AssertsSentEmails;
+    use MakesTestOrganizations;
     use DatabaseTransactions;
 
     /**
@@ -32,11 +36,6 @@ class ImplementationCMSTest extends TestCase
      * @var string
      */
     protected string $apiMediaUrl = '/api/v1/medias';
-
-    /**
-     * @var string
-     */
-    protected string $implementationKey = 'nijmegen';
 
     /**
      * @var array
@@ -95,7 +94,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testStoreImplementationPage(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $pageBody = $this->makePageData();
         $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $this->makeApiHeaders($proxy));
@@ -110,7 +110,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testStoreInvalidImplementationPage(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $pageData = $this->makePageData();
 
@@ -132,7 +133,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateImplementationPage(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $pageBody = $this->makePageData();
 
@@ -175,7 +177,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testSyncImplementationPageBlocks(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
         $response = $this->postJson(
@@ -205,10 +208,14 @@ class ImplementationCMSTest extends TestCase
      */
     public function testSyncImplementationPageFaq(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
 
         $pageType = Arr::where(ImplementationPage::PAGE_TYPES, fn ($type) => $type['faq']);
+
+        $implementation->pages()->where(['page_type' => array_values($pageType)[0]['key']])->delete();
+
         $pageBody = $this->makePageData(['page_type' => array_values($pageType)[0]['key']]);
         $response = $this->postJson($this->getUrlPages($implementation), $pageBody, $this->makeApiHeaders($proxy));
 
@@ -245,7 +252,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateInvalidImplementationPage(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $pageBody = $this->makePageData();
         $bodyEmpty = array_fill_keys(array_keys($pageBody), null);
@@ -271,7 +279,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testDeleteImplementationPage(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $proxyHeaders = $this->makeApiHeaders($proxy);
 
@@ -295,7 +304,8 @@ class ImplementationCMSTest extends TestCase
      */
     public function testUpdateImplementationCMS(): void
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $proxy = $this->makeIdentityProxy($implementation->organization->identity);
         $pageBody = $this->makeCMSData();
 
@@ -410,7 +420,8 @@ class ImplementationCMSTest extends TestCase
      */
     protected function makePageData(array $replace = []): array
     {
-        $implementation = $this->getImplementation();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
         $pageTypes = Arr::pluck(ImplementationPage::PAGE_TYPES, 'key');
         $pageTypes = array_diff($pageTypes, $implementation->pages()->pluck('page_type')->toArray());
         $external = (bool) rand(0, 1);
@@ -428,14 +439,15 @@ class ImplementationCMSTest extends TestCase
     }
 
     /**
+     * @param Organization $organization
      * @return Implementation
      */
-    protected function getImplementation(): Implementation
+    protected function makeTestImplementation(Organization $organization): Implementation
     {
-        $implementation = $this->findImplementation($this->implementationKey);
-        $this->assertNotNull($implementation);
-
-        return $implementation;
+        return $organization->implementations()->create([
+            'key' => UuidV4::v4(),
+            'name' => $this->faker()->text(10),
+        ]);
     }
 
     /**
