@@ -29,6 +29,7 @@ class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
         'product_name',
         'provider',
         'state',
+        'notes_provider',
     ];
 
     /**

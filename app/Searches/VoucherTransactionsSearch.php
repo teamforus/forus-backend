@@ -35,7 +35,11 @@ class VoucherTransactionsSearch extends BaseSearch
         $identity_address = $this->getFilter('identity_address');
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
-            $builder = VoucherTransactionQuery::whereQueryFilter($builder, $this->getFilter('q'));
+            $builder = VoucherTransactionQuery::whereQueryFilter(
+                $builder,
+                $this->getFilter('q'),
+                $this->getFilter('q_type')
+            );
         }
 
         if ($identity_address) {

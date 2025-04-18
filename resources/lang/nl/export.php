@@ -248,6 +248,7 @@ return [
         'date_non_cancelable' => 'Definitieve transactie',
         'bulk_status_locale' => 'In de wachtrij (dagen)',
         'product_id' => 'Aanbod ID',
+        'notes_provider' => 'Notities',
         'state-values' => [
             'success' => 'voltooid',
             'pending' => 'in afwachting',
