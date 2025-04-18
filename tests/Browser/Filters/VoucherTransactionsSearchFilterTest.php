@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser;
+namespace Tests\Browser\Filters;
 
 use App\Models\Employee;
 use App\Models\Fund;
@@ -20,7 +20,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizationOffices;
 use Throwable;
 
-class VoucherTransactionsProviderSearchTest extends DuskTestCase
+class VoucherTransactionsSearchFilterTest extends DuskTestCase
 {
     use MakesTestFunds;
     use HasFrontendActions;
