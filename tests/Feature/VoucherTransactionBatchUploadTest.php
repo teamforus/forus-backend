@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\MakesVoucherTransaction;
 
-class VoucherTransactionBatchTest extends TestCase
+class VoucherTransactionBatchUploadTest extends TestCase
 {
     use MakesVoucherTransaction;
     use WithFaker;

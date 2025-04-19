@@ -19,7 +19,7 @@ use Tests\DuskTestCase;
 use Tests\Traits\MakesVoucherTransaction;
 use Throwable;
 
-class VoucherTransactionBatchTest extends DuskTestCase
+class VoucherTransactionBatchUploadTest extends DuskTestCase
 {
     use MakesVoucherTransaction;
     use WithFaker;
