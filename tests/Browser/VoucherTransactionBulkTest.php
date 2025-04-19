@@ -42,14 +42,15 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
         $fund = $this->makeTestFund($organization);
-        $this->makeTransactions($fund);
+        $transactionCount = 5;
+        $this->makeTransactions($fund, $transactionCount);
 
         $organization->bank_connection_active()->update([
             'state' => BankConnection::STATE_DISABLED,
         ]);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $fund, $transactionCount) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund, $transactionCount) {
                 $browser->visit($implementation->urlSponsorDashboard());
 
                 // Authorize identity
@@ -57,7 +58,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund);
+                $this->goToListTransactionsPage($browser, $fund, $transactionCount);
 
                 // assert missing "make bulk" button because organization doesn't have bank connections
                 $browser->assertMissing('@bulkPendingNow');
@@ -153,7 +154,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund);
+                $this->goToListTransactionsPage($browser, $fund, $transactions->count());
 
                 $browser->waitFor('@pendingBulkingMetaText');
                 $browser->assertSeeIn('@pendingBulkingMetaText', $transactions->count());
@@ -177,7 +178,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
         $fund = $this->makeTestFund($organization);
-        $this->makeTransactions($fund);
+        $transactionCount = 5;
+        $this->makeTransactions($fund, $transactionCount);
 
         $organization->bank_connection_active()->update([
             'state' => BankConnection::STATE_DISABLED,
@@ -187,8 +189,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
         $this->rollbackModels([
             [$organization, $organization->only(['allow_manual_bulk_processing'])],
-        ], function () use ($implementation, $organization, $connection, $fund) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $connection, $fund) {
+        ], function () use ($implementation, $organization, $connection, $fund, $transactionCount) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $connection, $fund, $transactionCount) {
                 $organization->forceFill([
                     'allow_manual_bulk_processing' => true,
                 ])->save();
@@ -200,7 +202,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund);
+                $this->goToListTransactionsPage($browser, $fund, $transactionCount);
                 $this->makeBulk($browser);
 
                 $bulk = VoucherTransactionBulk::where('bank_connection_id', $connection->id)->first();
@@ -236,12 +238,13 @@ class VoucherTransactionBulkTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @throws TimeoutException
+     * @param int $expectedCount
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
-    protected function goToListTransactionsPage(Browser $browser, Fund $fund): void
+    protected function goToListTransactionsPage(Browser $browser, Fund $fund, int $expectedCount): void
     {
         $browser->waitFor('@asideMenuGroupFinancial');
         $browser->element('@asideMenuGroupFinancial')->click();
@@ -258,6 +261,11 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
         $browser->click('@fundSelect .select-control-search');
         $this->findOptionElement($browser, $fund->name, '@fundSelectOptions')->click();
+        $browser->click('@showFilters');
+
+        $browser->waitUsing(10, 100, function () use ($browser, $expectedCount) {
+            return count($browser->elements('[data-dusk^="transactionItem"]')) === $expectedCount;
+        });
     }
 
     /**
