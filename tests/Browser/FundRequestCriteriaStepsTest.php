@@ -1101,24 +1101,4 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
         $this->assertTrue($voucher);
     }
-
-    /**
-     * @param Browser $browser
-     * @param string $title
-     * @return RemoteWebElement|null
-     */
-    protected function findOptionElement(Browser $browser, string $title): ?RemoteWebElement
-    {
-        $option = null;
-
-        $browser->elsewhereWhenAvailable('@selectControlOptions', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
-            $options = $browser->driver->findElements($xpath);
-            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
-        });
-
-        $this->assertNotNull($option);
-
-        return $option;
-    }
 }

@@ -3,10 +3,13 @@
 namespace Tests\Browser;
 
 use App\Models\BankConnection;
+use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Artisan;
@@ -45,8 +48,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
             'state' => BankConnection::STATE_DISABLED,
         ]);
 
-        $this->rollbackModels([], function () use ($implementation, $organization) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund) {
                 $browser->visit($implementation->urlSponsorDashboard());
 
                 // Authorize identity
@@ -54,7 +57,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser);
+                $this->goToListTransactionsPage($browser, $fund);
 
                 // assert missing "make bulk" button because organization doesn't have bank connections
                 $browser->assertMissing('@bulkPendingNow');
@@ -141,8 +144,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
         $this->makeBankConnection($organization);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $transactions) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $transactions) {
+        $this->rollbackModels([], function () use ($implementation, $organization, $transactions, $fund) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $transactions, $fund) {
                 $browser->visit($implementation->urlSponsorDashboard());
 
                 // Authorize identity
@@ -150,8 +153,9 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser);
+                $this->goToListTransactionsPage($browser, $fund);
 
+                $browser->waitFor('@pendingBulkingMetaText');
                 $browser->assertSeeIn('@pendingBulkingMetaText', $transactions->count());
                 $browser->assertSeeIn('@pendingBulkingMetaText', currency_format_locale($transactions->sum('amount')));
 
@@ -183,8 +187,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
         $this->rollbackModels([
             [$organization, $organization->only(['allow_manual_bulk_processing'])],
-        ], function () use ($implementation, $organization, $connection) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $connection) {
+        ], function () use ($implementation, $organization, $connection, $fund) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $connection, $fund) {
                 $organization->forceFill([
                     'allow_manual_bulk_processing' => true,
                 ])->save();
@@ -196,7 +200,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser);
+                $this->goToListTransactionsPage($browser, $fund);
                 $this->makeBulk($browser);
 
                 $bulk = VoucherTransactionBulk::where('bank_connection_id', $connection->id)->first();
@@ -231,16 +235,29 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param Fund $fund
      * @throws TimeoutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @return void
      */
-    protected function goToListTransactionsPage(Browser $browser): void
+    protected function goToListTransactionsPage(Browser $browser, Fund $fund): void
     {
         $browser->waitFor('@asideMenuGroupFinancial');
         $browser->element('@asideMenuGroupFinancial')->click();
         $browser->waitFor('@transactionsPage');
         $browser->element('@transactionsPage')->click();
         $browser->waitFor('[data-dusk^="transactionItem"]');
+
+        // filter by fund
+        $browser->waitFor('@showFilters');
+        $browser->click('@showFilters');
+        $browser->waitFor('@fundSelectToggle');
+        $browser->click('@fundSelectToggle');
+        $browser->waitFor('@fundSelect');
+
+        $browser->click('@fundSelect .select-control-search');
+        $this->findOptionElement($browser, $fund->name, '@fundSelectOptions')->click();
     }
 
     /**
