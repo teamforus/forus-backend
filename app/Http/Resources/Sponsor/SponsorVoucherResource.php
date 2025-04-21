@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
@@ -32,6 +33,20 @@ class SponsorVoucherResource extends BaseJsonResource
         'top_up_transactions',
         'paid_out_transactions',
     ];
+
+    /**
+     * @param string|null $append
+     * @return array
+     */
+    public static function load(?string $append = null): array
+    {
+        $prepend = $append ? "$append." : '';
+
+        return [
+            ...parent::load($append),
+            ...EmployeeResource::load("{$prepend}employee"),
+        ];
+    }
 
     /**
      * Transform the resource into an array.
@@ -70,6 +85,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'amount_available' => currency_format($amount_available),
             'amount_available_locale' => currency_format_locale($amount_available),
             'source_locale' => trans('vouchers.source.' . ($voucher->employee_id ? 'employee' : 'user')),
+            'employee' => new EmployeeResource($voucher->employee),
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $bsn_enabled ? $voucher->voucher_relation->bsn ?? null : null,
