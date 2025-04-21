@@ -68,6 +68,7 @@ abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
             'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
             'bulk_status_locale' => $transaction->bulk_status_locale,
+            'notes_provider' => $transaction->notes_provider->pluck('message')->implode("\n"),
         ];
     }
 }
