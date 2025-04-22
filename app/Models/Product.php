@@ -645,7 +645,7 @@ class Product extends BaseModel
         }
 
         if (Arr::get($options, 'qr')) {
-            $query->whereHas('fund_providers', function (Builder $builder) use ($activeFunds) {
+            $query->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
                 $builder->whereIn('fund_id', $activeFunds);
                 $builder->where('allow_budget', true);
             });
