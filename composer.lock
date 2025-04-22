@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9bdd73b20793b0c6d1adc1251fc334e8",
+    "content-hash": "c29474e1d06901f97e99fed58b082425",
     "packages": [
         {
             "name": "astrotomic/laravel-translatable",
@@ -785,16 +785,16 @@
         },
         {
             "name": "bunq/sdk_php",
-            "version": "1.26.5.27",
+            "version": "1.27.17.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bunq/sdk_php.git",
-                "reference": "04b31e2dcacf6372fa81d7b541c3f2035cce4327"
+                "reference": "83f721327e404a749248699ac2d0aa4d4a4dd47a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bunq/sdk_php/zipball/04b31e2dcacf6372fa81d7b541c3f2035cce4327",
-                "reference": "04b31e2dcacf6372fa81d7b541c3f2035cce4327",
+                "url": "https://api.github.com/repos/bunq/sdk_php/zipball/83f721327e404a749248699ac2d0aa4d4a4dd47a",
+                "reference": "83f721327e404a749248699ac2d0aa4d4a4dd47a",
                 "shasum": ""
             },
             "require": {
@@ -846,9 +846,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bunq/sdk_php/issues",
-                "source": "https://github.com/bunq/sdk_php/tree/1.26.5.27"
+                "source": "https://github.com/bunq/sdk_php/tree/1.27.17.30"
             },
-            "time": "2024-10-31T08:37:08+00:00"
+            "time": "2025-04-16T07:55:34+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",
