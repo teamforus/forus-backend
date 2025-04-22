@@ -656,7 +656,7 @@ class Product extends BaseModel
                 $builder->where('reservation_enabled', true);
 
                 $builder->whereHas('organization', function (Builder $builder) {
-                    $builder->where('reservations_subsidy_enabled', true);
+                    $builder->where('reservations_budget_enabled', true);
                     $builder->orWhere('reservations_subsidy_enabled', true);
                 });
             });
@@ -667,8 +667,8 @@ class Product extends BaseModel
                 $builder->where('reservation_enabled', true);
 
                 $builder->whereHas('organization', function (Builder $builder) {
-                    $builder->where('reservations_subsidy_enabled', true);
-                    $builder->orWhere('reservations_budget_enabled', true);
+                    $builder->where('reservations_budget_enabled', true);
+                    $builder->orWhere('reservations_subsidy_enabled', true);
                 });
 
                 $builder->where(function (Builder $builder) {
@@ -676,9 +676,7 @@ class Product extends BaseModel
 
                     $builder->orWhere(function (Builder $builder) {
                         $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_GLOBAL);
-                        $builder->whereHas('organization', function (Builder $builder) {
-                            $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_YES);
-                        });
+                        $builder->whereRelation('organization', 'reservation_allow_extra_payments', true);
                     });
                 });
 
