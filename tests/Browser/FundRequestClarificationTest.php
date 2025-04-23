@@ -86,6 +86,7 @@ class FundRequestClarificationTest extends DuskTestCase
 
             // Type the email and submit the form
             $browser->within('@authEmailForm', function (Browser $browser) use ($identity) {
+                $browser->click('@privacyCheckbox');
                 $browser->type('@authEmailFormEmail', $identity->email);
                 $browser->press('@authEmailFormSubmit');
             });
