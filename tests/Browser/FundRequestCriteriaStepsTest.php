@@ -11,9 +11,7 @@ use App\Models\RecordType;
 use App\Models\Voucher;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
@@ -990,7 +988,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             case 'select':
                 $browser->waitFor($selector);
                 $browser->click("$selector .select-control-search");
-                $this->findOptionElement($browser, $value)->click();
+                $this->findOptionElement($browser, '@selectControl', $value)->click();
                 break;
             case 'number':
             case 'currency':

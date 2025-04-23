@@ -39,7 +39,7 @@ class VoucherTransactionBulkTest extends TestCase
 
         $response = $this->postJson(
             uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks",
-            headers: $apiHeaders
+            headers: $apiHeaders,
         );
 
         $response->assertSuccessful();
@@ -75,8 +75,7 @@ class VoucherTransactionBulkTest extends TestCase
      */
     public function testVoucherTransactionMeta(): void
     {
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = $this->makeTestOrganization($identity);
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $this->makeTestImplementation($organization);
         $fund = $this->makeTestFund($organization);
 
@@ -92,26 +91,26 @@ class VoucherTransactionBulkTest extends TestCase
 
         // assert meta totals
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transactions",
-            $apiHeaders
+            uri: "/api/v1/platform/organizations/$organization->id/sponsor/transactions",
+            headers: $apiHeaders,
         );
 
         $response->assertSuccessful();
 
         $this->assertSame(
             currency_format($transactions->sum('amount') + $paidTransactions->sum('amount')),
-            $response->json('meta.total_amount')
+            $response->json('meta.total_amount'),
         );
 
         $this->assertSame(
             currency_format_locale($transactions->sum('amount') + $paidTransactions->sum('amount')),
-            $response->json('meta.total_amount_locale')
+            $response->json('meta.total_amount_locale'),
         );
 
         // assert meta totals for pending bulking
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transactions?pending_bulking=1",
-            $apiHeaders
+            uri: "/api/v1/platform/organizations/$organization->id/sponsor/transactions?pending_bulking=1",
+            headers: $apiHeaders,
         );
 
         $response->assertSuccessful();
@@ -141,7 +140,7 @@ class VoucherTransactionBulkTest extends TestCase
 
         $response = $this->postJson(
             uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks",
-            headers: $apiHeaders
+            headers: $apiHeaders,
         );
 
         $response->assertSuccessful();
@@ -150,19 +149,19 @@ class VoucherTransactionBulkTest extends TestCase
         $this->assertNotNull($bulk);
 
         // assert forbidden when try to export sepa without organization flag "allow_manual_bulk_processing"
-        $this->get(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
-            $apiHeaders
+        $this->getJson(
+            uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
+            headers: $apiHeaders,
         )->assertForbidden();
 
-        // assert success when all flags are right
+        // assert success when manual bulk is allowed
         $organization->forceFill([
             'allow_manual_bulk_processing' => true,
         ])->save();
 
-        $this->get(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
-            $apiHeaders
+        $this->getJson(
+            uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
+            headers: $apiHeaders,
         )->assertSuccessful();
 
         $this->assertTrue($bulk->refresh()->is_exported);
@@ -197,31 +196,26 @@ class VoucherTransactionBulkTest extends TestCase
         $this->assertNotNull($bulk);
 
         // export sepa and set accepted
-        $this->patch(
+        $this->patchJson(
             uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/set-accepted",
-            headers: $apiHeaders
+            headers: $apiHeaders,
         )->assertForbidden();
 
-        $this->get(
-            "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
-            $apiHeaders
+        $this->getJson(
+            uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/export-sepa",
+            headers: $apiHeaders,
         )->assertSuccessful();
 
-        $this->patch(
+        $this->patchJson(
             uri: "/api/v1/platform/organizations/$organization->id/sponsor/transaction-bulks/$bulk->id/set-accepted",
-            headers: $apiHeaders
+            headers: $apiHeaders,
         )->assertSuccessful();
 
         // assert accepted_manually and logs
         $this->assertTrue($bulk->fresh()->accepted_manually);
         $logs = $bulk->logs()->where('event', VoucherTransactionBulk::EVENT_ACCEPTED_MANUALLY)->get();
 
-        $this->assertEquals(
-            1,
-            $logs->count(),
-            'Event accepted manually must be created',
-        );
-
+        $this->assertEquals(1, $logs->count(), 'Event accepted manually must be created');
         $this->assertEquals($organization->employees[0]->id, $logs[0]->data['employee_id']);
     }
 }

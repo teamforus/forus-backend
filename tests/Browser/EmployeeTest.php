@@ -8,6 +8,8 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -137,7 +139,9 @@ class EmployeeTest extends DuskTestCase
      * @param Browser $browser
      * @param Employee $employee
      * @param Role|Role[] $role
-     * @throws TimeOutException
+     * @throws TimeoutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @return void
      */
     private function changeEmployeeRoles(Browser $browser, Employee $employee, Role|array $role): void
@@ -155,7 +159,7 @@ class EmployeeTest extends DuskTestCase
         $this->selectEmployeeRoles($browser, $roles, $employee->roles);
 
         // Wait for the form to be submitted
-        $browser->waitFor('@successNotification');
+        $this->assertAndCloseSuccessNotification($browser);
 
         // Check that the new roles have been applied
         $employee->unsetRelation('roles');

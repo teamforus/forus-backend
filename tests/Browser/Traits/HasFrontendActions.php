@@ -143,11 +143,11 @@ trait HasFrontendActions
      * @param string $selector
      * @return RemoteWebElement|null
      */
-    protected function findOptionElement(Browser $browser, string $title, string $selector = '@selectControlOptions'): ?RemoteWebElement
+    protected function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
     {
         $option = null;
 
-        $browser->elsewhereWhenAvailable($selector, function (Browser $browser) use (&$option, $title) {
+        $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
             $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
             $options = $browser->driver->findElements($xpath);
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
@@ -156,5 +156,19 @@ trait HasFrontendActions
         $this->assertNotNull($option);
 
         return $option;
+    }
+
+    /**
+     * @param Browser $browser
+     * @return void
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     */
+    protected function assertAndCloseSuccessNotification(Browser $browser): void
+    {
+        $browser->waitFor('@successNotification');
+        $browser->click('@successNotification @notificationCloseBtn');
+        $browser->waitUntilMissing('@successNotification');
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -19,9 +20,8 @@ trait MakesVoucherTransaction
      * @param Organization $organization
      * @return Voucher|Builder
      */
-    public function getVouchersForBatchTransactionsQuery(
-        Organization $organization,
-    ): Voucher|Builder {
+    public function getVouchersForBatchTransactionsQuery(Organization $organization): Voucher|Builder
+    {
         $builder = Voucher::query()
             ->where(fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder))
             ->whereNull('product_id');
@@ -44,9 +44,9 @@ trait MakesVoucherTransaction
     /**
      * @param Fund $fund
      * @param int $count
-     * @return Collection
+     * @return Collection|Voucher[]
      */
-    protected function makeProductVouchers(Fund $fund, int $count): Collection
+    protected function makeProductVouchers(Fund $fund, int $count): Collection|Arrayable
     {
         $vouchers = collect();
         $products = $this->makeProductsFundFund($count, 5);
@@ -65,14 +65,15 @@ trait MakesVoucherTransaction
     /**
      * @param Fund $fund
      * @param int $count
-     * @return Collection|array|VoucherTransaction[]
+     * @return Collection|VoucherTransaction[]
      */
-    protected function makeTransactions(Fund $fund, int $count = 5): Collection|array
+    protected function makeTransactions(Fund $fund, int $count = 5): Collection|Arrayable
     {
         return $this
             ->makeProductVouchers($fund, $count)
             ->map(function (Voucher $voucher) use ($fund) {
                 $employee = $fund->organization->employees[0];
+
                 $params = [
                     'amount' => $voucher->amount,
                     'product_id' => $voucher->product_id,

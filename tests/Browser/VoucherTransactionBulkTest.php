@@ -43,6 +43,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $organization = $implementation->organization;
         $fund = $this->makeTestFund($organization);
         $transactionCount = 5;
+
         $this->makeTransactions($fund, $transactionCount);
 
         $organization->bank_connection_active()->update([
@@ -58,7 +59,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund, $transactionCount);
+                $this->goToTransactionsPage($browser, $fund, $transactionCount);
 
                 // assert missing "make bulk" button because organization doesn't have bank connections
                 $browser->assertMissing('@bulkPendingNow');
@@ -70,7 +71,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
                 $bulk = VoucherTransactionBulk::where('bank_connection_id', $connection->id)->first();
                 $this->assertNotNull($bulk);
-                $this->goToListTransactionBulksPage($browser);
+
+                $this->goToTransactionBulksPage($browser);
                 $browser->waitFor("@transactionBulkRow$bulk->id");
 
                 // Logout
@@ -116,7 +118,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $bulk = VoucherTransactionBulk::where('bank_connection_id', $connection->id)->first();
                 $this->assertNotNull($bulk);
 
-                $this->goToListTransactionBulksPage($browser);
+                $this->goToTransactionBulksPage($browser);
                 $browser->waitFor("@transactionBulkRow$bulk->id");
 
                 // Logout
@@ -154,7 +156,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund, $transactions->count());
+                $this->goToTransactionsPage($browser, $fund, $transactions->count());
 
                 $browser->waitFor('@pendingBulkingMetaText');
                 $browser->assertSeeIn('@pendingBulkingMetaText', $transactions->count());
@@ -202,12 +204,12 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToListTransactionsPage($browser, $fund, $transactionCount);
+                $this->goToTransactionsPage($browser, $fund, $transactionCount);
                 $this->makeBulk($browser);
 
                 $bulk = VoucherTransactionBulk::where('bank_connection_id', $connection->id)->first();
                 $this->assertNotNull($bulk);
-                $this->goToListTransactionBulksPage($browser);
+                $this->goToTransactionBulksPage($browser);
                 $browser->waitFor("@transactionBulkRow$bulk->id");
                 $browser->click("@transactionBulkRow$bulk->id");
 
@@ -218,12 +220,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
                 $this->assertTrue($bulk->fresh()->accepted_manually);
                 $logs = $bulk->logs()->where('event', VoucherTransactionBulk::EVENT_ACCEPTED_MANUALLY)->get();
 
-                $this->assertEquals(
-                    1,
-                    $logs->count(),
-                    'Event accepted manually must be created',
-                );
-
+                $this->assertEquals(1, $logs->count(), 'Event accepted manually must be created');
                 $this->assertEquals($organization->employees[0]->id, $logs[0]->data['employee_id']);
 
                 // Logout
@@ -244,7 +241,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    protected function goToListTransactionsPage(Browser $browser, Fund $fund, int $expectedCount): void
+    protected function goToTransactionsPage(Browser $browser, Fund $fund, int $expectedCount): void
     {
         $browser->waitFor('@asideMenuGroupFinancial');
         $browser->element('@asideMenuGroupFinancial')->click();
@@ -260,7 +257,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $browser->waitFor('@fundSelect');
 
         $browser->click('@fundSelect .select-control-search');
-        $this->findOptionElement($browser, $fund->name, '@fundSelectOptions')->click();
+        $this->findOptionElement($browser, '@fundSelect', $fund->name)->click();
         $browser->click('@showFilters');
 
         $browser->waitUsing(10, 100, function () use ($browser, $expectedCount) {
@@ -273,7 +270,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    protected function goToListTransactionBulksPage(Browser $browser): void
+    protected function goToTransactionBulksPage(Browser $browser): void
     {
         $browser->waitFor('@asideMenuGroupFinancial');
         $browser->element('@asideMenuGroupFinancial')->click();
@@ -298,7 +295,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $browser->waitFor('@btnDangerZoneSubmit');
         $browser->click('@btnDangerZoneSubmit');
         $browser->waitUntilMissing('@bulkPendingNow');
-        $browser->waitUntilMissing('@successNotification');
+
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
@@ -314,8 +312,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $browser->click('@exportSepaBtn');
         $browser->waitFor('@btnDangerZoneSubmit');
         $browser->click('@btnDangerZoneSubmit');
-        $browser->waitFor('@successNotification');
-        $browser->waitUntilMissing('@successNotification');
+
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
@@ -331,7 +329,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
         $browser->click('@acceptManuallyBtn');
         $browser->waitFor('@btnDangerZoneSubmit');
         $browser->click('@btnDangerZoneSubmit');
-        $browser->waitFor('@successNotification');
+
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
@@ -341,7 +340,8 @@ class VoucherTransactionBulkTest extends DuskTestCase
     protected function clearBankConnectionAndBulks(Organization $organization): void
     {
         $organization->bank_connection_active?->voucher_transaction_bulks->each(function (VoucherTransactionBulk $bulk) {
-            VoucherTransaction::where('voucher_transaction_bulk_id', $bulk->id)
+            VoucherTransaction::query()
+                ->where('voucher_transaction_bulk_id', $bulk->id)
                 ->update(['voucher_transaction_bulk_id' => null]);
 
             $bulk->delete();
