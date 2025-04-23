@@ -27,6 +27,7 @@ class ProductResource extends BaseJsonResource
         'organization.offices.organization.logo.presets',
         'organization.logo.presets',
         'organization.business_type.translations',
+        'organization.fund_providers',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
@@ -135,6 +136,9 @@ class ProductResource extends BaseJsonResource
         ]);
 
         return $fundsQuery->get()->map(function (Fund $fund) use ($product, $request) {
+            $reservationsEnabled = $product->reservationsEnabled($fund);
+            $reservationsExtraPaymentEnabled = $reservationsEnabled && $product->reservationExtraPaymentsEnabled($fund);
+
             $data = [
                 'id' => $fund->id,
                 ...$fund->translateColumns($fund->only(['name'])),
@@ -145,8 +149,12 @@ class ProductResource extends BaseJsonResource
                 ]),
                 'end_at' => $fund->end_date?->format('Y-m-d'),
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
-                'reservations_enabled' => $product->reservationsEnabled($fund),
-                'reservation_extra_payments_enabled' => $product->reservationExtraPaymentsEnabled($fund),
+                'reservations_enabled' => $reservationsEnabled,
+                'reservation_extra_payments_enabled' => $reservationsExtraPaymentEnabled,
+                'scanning_enabled' => $product->organization->fund_providers
+                    ->where('allow_budget', true)
+                    ->where('fund_id', $fund->id)
+                    ->isNotEmpty(),
             ];
 
             $productData = ProductSubQuery::appendReservationStats([
