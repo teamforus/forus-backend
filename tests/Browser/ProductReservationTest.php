@@ -7,6 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\OrganizationReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\FundProviderQuery;
@@ -42,8 +43,6 @@ class ProductReservationTest extends DuskTestCase
     use MakesTestFundProviders;
     use MakesProductReservations;
 
-    protected ?Identity $identity;
-
     /**
      * @throws Throwable
      * @return void
@@ -60,6 +59,297 @@ class ProductReservationTest extends DuskTestCase
             $fund->makeVoucher($identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationCustomFields(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $product->forceFill([
+                'reservation_fields' => true,
+            ])->save();
+
+            $customFields = [[
+                'label' => 'custom field text 1',
+                'type' => OrganizationReservationField::TYPE_TEXT,
+                'description' => 'custom field text description 1',
+                'required' => true,
+                'value' => 'some text',
+            ], [
+                'label' => 'custom field text 2',
+                'type' => OrganizationReservationField::TYPE_TEXT,
+                'description' => null,
+                'required' => false,
+                'value' => null,
+            ], [
+                'label' => 'custom field number 1',
+                'type' => OrganizationReservationField::TYPE_NUMBER,
+                'description' => 'custom field number description 1',
+                'required' => true,
+                'value' => 100,
+            ], [
+                'label' => 'custom field number 2',
+                'type' => OrganizationReservationField::TYPE_NUMBER,
+                'description' => null,
+                'required' => false,
+                'value' => null,
+            ], [
+                'label' => 'custom field bool 1',
+                'type' => OrganizationReservationField::TYPE_BOOLEAN,
+                'description' => 'custom field bool description 1',
+                'required' => true,
+                'value' => 'Ja',
+            ], [
+                'label' => 'custom field bool 2',
+                'type' => OrganizationReservationField::TYPE_BOOLEAN,
+                'description' => null,
+                'required' => false,
+                'value' => null,
+            ]];
+
+            $fields = [];
+
+            foreach ($customFields as $order => $item) {
+                $field = $provider->reservation_fields()->create([
+                    ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                    'order' => $order,
+                ]);
+
+                $fields[] = [
+                    ...$item,
+                    'id' => $field->id,
+                    'field_type' => 'custom',
+                    'dusk' => "@customField$field->id",
+                    'dusk_description_btn' => "@customField{$field->id}InfoBtn",
+                ];
+            }
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fields);
+
+            // Assert if reservation_fields is false - no custom fields used
+            $product->forceFill([
+                'reservation_fields' => false,
+            ])->save();
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationPhoneField(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $fieldsOptional = [[
+                'id' => 'phone',
+                'type' => 'text',
+                'dusk' => '@productReserveFormPhone',
+                'value' => null,
+                'required' => false,
+                'field_type' => 'phone',
+            ]];
+
+            $fieldsRequired = [[
+                'id' => 'phone',
+                'type' => 'text',
+                'dusk' => '@productReserveFormPhone',
+                'value' => '1234545678',
+                'required' => true,
+                'field_type' => 'phone',
+            ]];
+
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $product->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_OPTIONAL,
+                'reservation_fields' => true,
+            ])->save();
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            // Test reservation with optional phone field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsOptional);
+
+            $product->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_REQUIRED,
+                'reservation_fields' => true,
+            ])->save();
+
+            // Test required reservation phone
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsRequired);
+
+            // Set global configs for phone
+            $product->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_GLOBAL,
+                'reservation_fields' => true,
+            ])->save();
+
+            $provider->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_OPTIONAL,
+            ])->save();
+
+            // Test reservation with global optional phone field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsOptional);
+
+            $provider->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            // Test global required reservation phone
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsRequired);
+
+            // Assert if reservation_fields is false - no phone field used
+            $product->forceFill([
+                'reservation_phone' => Product::RESERVATION_FIELD_REQUIRED,
+                'reservation_fields' => false,
+            ])->save();
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationBirthDateField(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $fieldsOptional = [[
+                'id' => 'birth_date',
+                'type' => 'date',
+                'dusk' => '@birthDate',
+                'value' => null,
+                'required' => false,
+                'field_type' => 'birth_date',
+            ]];
+
+            $fieldsRequired = [[
+                'id' => 'birth_date',
+                'type' => 'date',
+                'dusk' => '@birthDate',
+                'value' => '10-01-1980',
+                'required' => true,
+                'field_type' => 'birth_date',
+            ]];
+
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $product->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_OPTIONAL,
+                'reservation_fields' => true,
+            ])->save();
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            // Test reservation with optional birth_date field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsOptional);
+
+            $product->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_REQUIRED,
+                'reservation_fields' => true,
+            ])->save();
+
+            // Test required reservation birth_date
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsRequired);
+
+            // Set global configs for birth_date
+            $product->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_GLOBAL,
+                'reservation_fields' => true,
+            ])->save();
+
+            $provider->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_OPTIONAL,
+            ])->save();
+
+            // Test reservation with global optional birth_date field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsOptional);
+
+            $provider->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            // Test global required reservation birth_date
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $fieldsRequired);
+
+            // Assert if reservation_fields is false - no birth_date field used
+            $product->forceFill([
+                'reservation_birth_date' => Product::RESERVATION_FIELD_REQUIRED,
+                'reservation_fields' => false,
+            ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
                 'first_name' => $this->faker->firstName,
@@ -269,6 +559,7 @@ class ProductReservationTest extends DuskTestCase
      * @param Identity $identity
      * @param array|null $userData
      * @param array|null $addressData
+     * @param array|null $otherFields
      * @throws Throwable
      * @return void
      */
@@ -278,11 +569,20 @@ class ProductReservationTest extends DuskTestCase
         Identity $identity,
         array $userData = null,
         array $addressData = null,
+        array $otherFields = null,
     ): void {
         Cache::clear();
         $implementation = $fund->getImplementation();
 
-        $this->browse(function (Browser $browser) use ($implementation, $identity, $fund, $userData, $addressData, $product) {
+        $this->browse(function (Browser $browser) use (
+            $implementation,
+            $identity,
+            $fund,
+            $userData,
+            $addressData,
+            $product,
+            $otherFields
+        ) {
             $browser->visit($implementation->urlWebshop());
 
             $this->loginAndGoToFundVoucher($browser, $identity, $fund);
@@ -294,7 +594,16 @@ class ProductReservationTest extends DuskTestCase
             $this->openReservationModal($browser, $fund);
             $this->skipReservationModalEmailAndSelectVoucher($browser, $identity);
 
-            $this->fillReservationModalNameAndLastName($browser, $userData['first_name'], $userData['last_name']);
+            $this->fillReservationModalNameAndLastName(
+                $browser,
+                $userData['first_name'],
+                $userData['last_name'],
+                !!count($otherFields ?? [])
+            );
+
+            if ($otherFields) {
+                $this->fillReservationModalCustomFields($browser, $otherFields);
+            }
 
             if ($addressData) {
                 $this->fillReservationModalAddress($browser, $addressData);
@@ -302,7 +611,7 @@ class ProductReservationTest extends DuskTestCase
 
             $this->fillReservationModalNote($browser);
 
-            $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], $addressData);
+            $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], $addressData, $otherFields);
             $this->submitReservationModal($browser);
 
             $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
@@ -388,6 +697,7 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param string $firstName
      * @param string $lastName
+     * @param bool $skipSubmit
      * @throws TimeoutException
      * @return void
      */
@@ -395,16 +705,73 @@ class ProductReservationTest extends DuskTestCase
         Browser $browser,
         string $firstName,
         string $lastName,
+        bool $skipSubmit = false
     ): void {
         $browser->waitFor('@productReserveForm');
 
-        $browser->within('@productReserveForm', function (Browser $browser) use ($firstName, $lastName) {
+        $browser->within('@productReserveForm', function (Browser $browser) use ($firstName, $lastName, $skipSubmit) {
             $browser->press('@btnSubmit');
             $browser->waitFor('.form-error');
 
             // Fill form with data and submit again
             $browser->type('@productReserveFormFirstName', $firstName);
             $browser->type('@productReserveFormLastName', $lastName);
+
+            if (!$skipSubmit) {
+                $browser->press('@btnSubmit');
+            }
+        });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param array $fields
+     * @throws TimeoutException
+     * @return void
+     */
+    private function fillReservationModalCustomFields(Browser $browser, array $fields): void
+    {
+        $browser->waitFor('@productReserveForm');
+
+        $browser->within('@productReserveForm', function (Browser $browser) use ($fields) {
+            foreach ($fields as $field) {
+                // if field required - try to submit form and assert form error visible
+                if ($field['required']) {
+                    $browser->press('@btnSubmit');
+                    $browser->waitFor('.form-error');
+                }
+
+                // if custom - assert label and description
+                if ($field['field_type'] === 'custom') {
+                    $browser->assertSee($field['label']);
+
+                    if (!empty($field['description'])) {
+                        $browser->click($field['dusk_description_btn']);
+                        $browser->waitForText($field['description']);
+                    } else {
+                        $browser->assertMissing($field['dusk_description_btn']);
+                    }
+                }
+
+                $browser->waitFor($field['dusk']);
+
+                if (!empty($field['value'])) {
+                    switch ($field['type']) {
+                        case 'boolean':
+                            $browser->click("{$field['dusk']} .select-control-search");
+                            $this->findOptionElement($browser, $field['dusk'], $field['value'])->click();
+                            break;
+                        case 'number':
+                        case 'text':
+                            $browser->type($field['dusk'], $field['value']);
+                            break;
+                        case 'date':
+                            $browser->type("{$field['dusk']} input[type='text']", $field['value']);
+                            break;
+                    }
+                }
+            }
+
             $browser->press('@btnSubmit');
         });
     }
@@ -553,33 +920,40 @@ class ProductReservationTest extends DuskTestCase
      * @param Browser $browser
      * @param string $firstName
      * @param array|null $address
+     * @param array|null $otherFields
      * @throws TimeoutException
      * @return void
      */
     private function assertReservationModalConfirmationDetails(
         Browser $browser,
         string $firstName,
-        ?array $address
+        ?array $address,
+        ?array $otherFields
     ): void {
         // Assert success
         $browser->waitForTextIn('@productReserveConfirmDetails', $firstName);
 
-        if ($address === null) {
-            return;
+        if (!is_null($address)) {
+            if (!Arr::get($address, 'optional', false)) {
+                $browser->waitForTextIn('@overviewValueStreet', Arr::get($address, 'street', 'Leeg'));
+                $browser->waitForTextIn('@overviewValueHouseNr', Arr::get($address, 'house_nr', 'Leeg'));
+                $browser->waitForTextIn('@overviewValueHouseNrAddition', Arr::get($address, 'house_nr_addition', 'Leeg'));
+                $browser->waitForTextIn('@overviewValuePostalCode', Arr::get($address, 'postal_code', 'Leeg'));
+                $browser->waitForTextIn('@overviewValueCity', Arr::get($address, 'city', 'Leeg'));
+            } else {
+                $browser->waitForTextIn('@overviewValueStreet', 'Leeg');
+                $browser->waitForTextIn('@overviewValueHouseNr', 'Leeg');
+                $browser->waitForTextIn('@overviewValueHouseNrAddition', 'Leeg');
+                $browser->waitForTextIn('@overviewValuePostalCode', 'Leeg');
+                $browser->waitForTextIn('@overviewValueCity', 'Leeg');
+            }
         }
 
-        if (!Arr::get($address, 'optional', false)) {
-            $browser->waitForTextIn('@overviewValueStreet', Arr::get($address, 'street', 'Leeg'));
-            $browser->waitForTextIn('@overviewValueHouseNr', Arr::get($address, 'house_nr', 'Leeg'));
-            $browser->waitForTextIn('@overviewValueHouseNrAddition', Arr::get($address, 'house_nr_addition', 'Leeg'));
-            $browser->waitForTextIn('@overviewValuePostalCode', Arr::get($address, 'postal_code', 'Leeg'));
-            $browser->waitForTextIn('@overviewValueCity', Arr::get($address, 'city', 'Leeg'));
-        } else {
-            $browser->waitForTextIn('@overviewValueStreet', 'Leeg');
-            $browser->waitForTextIn('@overviewValueHouseNr', 'Leeg');
-            $browser->waitForTextIn('@overviewValueHouseNrAddition', 'Leeg');
-            $browser->waitForTextIn('@overviewValuePostalCode', 'Leeg');
-            $browser->waitForTextIn('@overviewValueCity', 'Leeg');
+        foreach ($otherFields ?? [] as $field) {
+            $browser->waitForTextIn(
+                "@overviewValueCustomField{$field['id']}",
+                empty($field['value']) ? 'Leeg' : $field['value']
+            );
         }
     }
 
