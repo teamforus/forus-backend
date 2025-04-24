@@ -24,6 +24,7 @@ use App\Models\FundFormula;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use App\Models\Language;
 use App\Models\Office;
 use App\Models\Organization;
@@ -35,6 +36,8 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\FileService\Models\File;
+use App\Services\Forus\TestData\FakeGenerators\MarkdownBlockGenerator;
+use App\Services\Forus\TestData\FakeGenerators\MarkdownPageGenerator;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 use Exception;
@@ -485,6 +488,15 @@ class TestData
             'amount' => 100000,
         ]);
 
+        $faker = fake('nl_NL');
+
+        for ($i = rand(5, 10); $i > 0; $i--) {
+            $fund->faq()->create([
+                'title' => ucfirst($faker->words(rand(6, 8), true) . '?'),
+                'description' => $faker->text(rand(500, 1000)),
+            ]);
+        }
+
         FundCreatedEvent::dispatch($fund);
         FundBalanceLowEvent::dispatch($fund);
         FundBalanceSuppliedEvent::dispatch($fund, $transaction);
@@ -508,6 +520,9 @@ class TestData
         ?Organization $organization = null,
     ): Implementation|Model {
         $key = str_slug($name);
+        $faker = fake('nl_NL');
+        $generator = new MarkdownPageGenerator($faker);
+        $blockGenerator = new MarkdownBlockGenerator($faker);
 
         $urlData = $this->makeImplementationUrlData($key);
         $samlData = $this->makeImplementationSamlData();
@@ -527,12 +542,87 @@ class TestData
             'allow_per_fund_notification_templates' => false,
             'overlay_enabled' => true,
             'overlay_opacity' => 10,
+            'show_privacy_checkbox' => true,
+            'pre_check_enabled' => true,
+            'pre_check_title' => ucfirst($faker->text(rand(40, 80))),
+            'pre_check_description' => $faker->text(rand(400, 600)),
+            'pre_check_banner_title' => ucfirst($faker->text(rand(40, 80))),
+            'pre_check_banner_label' => trim($faker->text(rand(10, 15)), '.'),
+            'pre_check_banner_state' => 'public',
+            'pre_check_banner_description' => $faker->text(rand(400, 600)),
             ...$this->config('default.implementations', []),
             ...$urlData,
             ...$samlData,
             ...$cgiCertData,
             ...$configData,
         ]);
+
+        $implementation->pages()->create([
+            'state' => ImplementationPage::STATE_PUBLIC,
+            'page_type' => ImplementationPage::TYPE_FOOTER_CONTACT_DETAILS,
+            'description' => $blockGenerator->generateContactDetails(),
+        ]);
+
+        $implementation->pages()->create([
+            'state' => ImplementationPage::STATE_PUBLIC,
+            'page_type' => ImplementationPage::TYPE_FOOTER_OPENING_TIMES,
+            'description' => $blockGenerator->generateOpeningTimes(),
+        ]);
+
+        $pages = [
+            ImplementationPage::TYPE_HOME => 500,
+            // ImplementationPage::TYPE_PRODUCTS => 200,
+            // ImplementationPage::TYPE_PROVIDERS => 200,
+            ImplementationPage::TYPE_FUNDS => 200,
+            ImplementationPage::TYPE_EXPLANATION => 4000,
+            ImplementationPage::TYPE_PROVIDER => 4000,
+            ImplementationPage::TYPE_PRIVACY => 4000,
+            ImplementationPage::TYPE_ACCESSIBILITY => 4000,
+            ImplementationPage::TYPE_TERMS_AND_CONDITIONS => 4000,
+        ];
+
+        $pageModels = [];
+
+        foreach ($pages as $type => $length) {
+            $pageModels[] = $implementation->pages()->create([
+                'state' => ImplementationPage::STATE_PUBLIC,
+                'page_type' => $type,
+                'description' => $length > 1000 ? $generator->generate($length) : $faker->text(rand($length / 2, $length)),
+                'description_alignment' => $type == ImplementationPage::TYPE_HOME ? 'center' : 'left',
+            ]);
+        }
+
+        foreach ($pageModels as $pageModel) {
+            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+
+            if (Arr::get($type, 'faq', false)) {
+                for ($i = rand(5, 10); $i > 0; $i--) {
+                    $pageModel->faq()->create([
+                        'title' => ucfirst($faker->words(rand(6, 8), true) . '?'),
+                        'description' => $faker->text(rand(500, 1000)),
+                    ]);
+                }
+            }
+        }
+
+        foreach ($pageModels as $pageModel) {
+            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+
+            if (Arr::get($type, 'blocks', false)) {
+                for ($i = 3; $i > 0; $i--) {
+                    $pageModel->blocks()->create([
+                        'title' => ucfirst($faker->text(rand(40, 80))),
+                        'description' => $faker->text(rand(400, 600)),
+                        'label' => $faker->text(rand(10, 20)),
+                        'button_link' => $faker->safeEmailDomain(),
+                        'button_text' => $faker->text(rand(10, 20)),
+                        'button_enabled' => true,
+                        'button_link_label' => trim($faker->text(rand(8, 16)), '.'),
+                        'button_target_blank' => true,
+                    ]);
+                }
+            }
+        }
 
         $implementation->languages()->sync($languages);
 

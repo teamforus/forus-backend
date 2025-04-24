@@ -39,6 +39,11 @@ class SearchProductsRequest extends BaseFormRequest
             'simplified' => 'nullable|bool',
             'postcode' => 'nullable|string|max:100',
             'distance' => 'nullable|integer|max:1000',
+            'from' => 'nullable|integer|max:10000',
+            'to' => 'nullable|integer|max:10000',
+            'qr' => 'nullable|bool',
+            'reservation' => 'nullable|bool',
+            'extra_payment' => 'nullable|bool',
             'bookmarked' => 'nullable|bool',
         ];
     }

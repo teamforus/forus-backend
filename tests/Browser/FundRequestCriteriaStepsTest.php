@@ -11,9 +11,7 @@ use App\Models\RecordType;
 use App\Models\Voucher;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
@@ -34,8 +32,9 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
     /**
      * @throws Throwable
+     * @return void
      */
-    public function testWebshopFundRequestControlTypes(): void
+    public function testWebshopFundRequestRecordStringControlTypes(): void
     {
         $this->checkControlTypes('string', [
             'text' => [
@@ -45,7 +44,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordBoolControlTypes(): void
+    {
         $this->checkControlTypes('bool', [
             'checkbox' => [
                 '*' => [
@@ -60,7 +66,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordEmailControlTypes(): void
+    {
         $this->checkControlTypes('email', [
             'text' => [
                 '*' => [
@@ -70,7 +83,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordIbanControlTypes(): void
+    {
         $this->checkControlTypes('iban', [
             'text' => [
                 '*' => [
@@ -80,7 +100,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordNumberControlTypes(): void
+    {
         $this->checkControlTypes('number', [
             'text' => [
                 '<' => [
@@ -207,7 +234,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordSelectControlTypes(): void
+    {
         $this->checkControlTypes('select', [
             'select' => [
                 '=' => [
@@ -235,7 +269,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordSelectNumberControlTypes(): void
+    {
         $this->checkControlTypes('select_number', [
             'select' => [
                 '=' => [
@@ -290,7 +331,14 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
                 ],
             ],
         ]);
+    }
 
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testWebshopFundRequestRecordDateControlTypes(): void
+    {
         $this->checkControlTypes('date', [
             'text' => [
                 '>' => [
@@ -940,7 +988,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             case 'select':
                 $browser->waitFor($selector);
                 $browser->click("$selector .select-control-search");
-                $this->findOptionElement($browser, $value)->click();
+                $this->findOptionElement($browser, '@selectControl', $value)->click();
                 break;
             case 'number':
             case 'currency':
@@ -1050,25 +1098,5 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             ->exists();
 
         $this->assertTrue($voucher);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $title
-     * @return RemoteWebElement|null
-     */
-    protected function findOptionElement(Browser $browser, string $title): ?RemoteWebElement
-    {
-        $option = null;
-
-        $browser->elsewhereWhenAvailable('@selectControlOptions', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
-            $options = $browser->driver->findElements($xpath);
-            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
-        });
-
-        $this->assertNotNull($option);
-
-        return $option;
     }
 }
