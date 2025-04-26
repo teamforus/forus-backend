@@ -58,6 +58,8 @@ abstract class BaseIndexTransactionsRequest extends BaseFormRequest
 
             'non_cancelable_from' => 'nullable|date_format:Y-m-d',
             'non_cancelable_to' => 'nullable|date_format:Y-m-d',
+            'execution_date_from' => 'nullable|date_format:Y-m-d',
+            'execution_date_to' => 'nullable|date_format:Y-m-d',
             'bulk_state' => ['nullable', Rule::in(VoucherTransactionBulk::STATES)],
 
             'identity_address' => 'nullable|exists:identities,address',
