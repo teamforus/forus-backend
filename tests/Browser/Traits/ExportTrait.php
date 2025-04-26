@@ -53,7 +53,7 @@ trait ExportTrait
         $csvFile = $this->findFile($format);
 
         if (!$csvFile) {
-            $this->fail('CSV file was not downloaded.');
+            $this->fail("CSV file with format $format was not downloaded.");
         }
 
         $csvData = Excel::toArray(new BrowserTestEntitiesImport(), $csvFile, null, $excelFormat)[0];
