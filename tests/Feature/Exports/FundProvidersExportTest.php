@@ -49,18 +49,18 @@ class FundProvidersExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => FundProvidersExport::getExportFieldsRaw(),
-            ]);
+            'data_format' => 'csv',
+            'fields' => FundProvidersExport::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $fundProvider, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['fund', 'implementation', 'fund_type', 'provider'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['fund', 'implementation', 'fund_type', 'provider'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

@@ -7,9 +7,9 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -48,24 +48,24 @@ class FundRequestsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchFundRequest($browser, $fundRequest);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = $this->getExportFields($fundRequest);
-                $this->assertFields($fundRequest, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($fundRequest, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['bsn', 'fund_name']);
-                $csvData = $this->parseCsvFile();
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['bsn', 'fund_name']);
 
-                $this->assertFields($fundRequest, $csvData, [
-                    FundRequestsExport::trans('bsn'),
-                    FundRequestsExport::trans('fund_name'),
-                ]);
+                    $this->assertFields($fundRequest, $csvData, [
+                        FundRequestsExport::trans('bsn'),
+                        FundRequestsExport::trans('fund_name'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -91,7 +91,7 @@ class FundRequestsExportTest extends DuskTestCase
         $this->makeFundRequest($identity, $fund, $records, false)->assertSuccessful();
         $fundRequest = $fund->fund_requests()->first();
         $this->assertNotNull($fundRequest);
-        
+
         return $fundRequest;
     }
 
@@ -114,8 +114,8 @@ class FundRequestsExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
@@ -128,8 +128,8 @@ class FundRequestsExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param FundRequest $fundRequest
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchFundRequest(Browser $browser, FundRequest $fundRequest): void
     {
@@ -139,7 +139,7 @@ class FundRequestsExportTest extends DuskTestCase
         $browser->waitFor("@fundRequestRow$fundRequest->id", 20);
         $browser->assertVisible("@fundRequestRow$fundRequest->id");
 
-        $browser->waitUntil("document.querySelectorAll('#fundRequestsTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@fundRequestsPageContent');
     }
 
     /**

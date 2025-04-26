@@ -38,10 +38,10 @@ class FundDetailedExportTest extends TestCase
 
         // Assert export without fields - must be all fields by default
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'year' => now()->year,
-                'detailed' => true,
-                'data_format' => 'csv',
-            ]);
+            'year' => now()->year,
+            'detailed' => true,
+            'data_format' => 'csv',
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $fields = $this->getExportFields();
@@ -49,22 +49,22 @@ class FundDetailedExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'year' => now()->year,
-                'detailed' => true,
-                'data_format' => 'csv',
-                'fields' => FundsExportDetailed::getExportFieldsRaw(),
-            ]);
+            'year' => now()->year,
+            'detailed' => true,
+            'data_format' => 'csv',
+            'fields' => FundsExportDetailed::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $fund, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'year' => now()->year,
-                'detailed' => true,
-                'data_format' => 'csv',
-                'fields' => ['name'],
-            ]);
+            'year' => now()->year,
+            'detailed' => true,
+            'data_format' => 'csv',
+            'fields' => ['name'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

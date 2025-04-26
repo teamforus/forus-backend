@@ -6,9 +6,9 @@ use App\Exports\ReimbursementsSponsorExport;
 use App\Models\Implementation;
 use App\Models\Reimbursement;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -55,24 +55,23 @@ class ReimbursementsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchReimbursement($browser, $reimbursement);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
-                $this->assertFields($reimbursement, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($reimbursement, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['id', 'code']);
-                $csvData = $this->parseCsvFile();
-
-                $this->assertFields($reimbursement, $csvData, [
-                    ReimbursementsSponsorExport::trans('id'),
-                    ReimbursementsSponsorExport::trans('code'),
-                ]);
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'code']);
+                    $this->assertFields($reimbursement, $csvData, [
+                        ReimbursementsSponsorExport::trans('id'),
+                        ReimbursementsSponsorExport::trans('code'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -84,8 +83,8 @@ class ReimbursementsExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
@@ -98,8 +97,8 @@ class ReimbursementsExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Reimbursement $reimbursement
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchReimbursement(Browser $browser, Reimbursement $reimbursement): void
     {
@@ -109,7 +108,7 @@ class ReimbursementsExportTest extends DuskTestCase
         $browser->waitFor("@reimbursement$reimbursement->id", 20);
         $browser->assertVisible("@reimbursement$reimbursement->id");
 
-        $browser->waitUntil("document.querySelectorAll('#reimbursementsTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@reimbursementsPageContent');
     }
 
     /**

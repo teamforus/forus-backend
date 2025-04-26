@@ -7,7 +7,6 @@ use App\Events\Reimbursements\ReimbursementResigned;
 use App\Events\Reimbursements\ReimbursementResolved;
 use App\Models\Traits\HasNotes;
 use App\Models\Traits\HasTags;
-use App\Searches\ReimbursementsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Carbon\Carbon;
@@ -17,8 +16,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 

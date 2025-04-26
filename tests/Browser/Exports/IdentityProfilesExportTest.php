@@ -5,9 +5,9 @@ namespace Tests\Browser\Exports;
 use App\Exports\IdentityProfilesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -45,26 +45,28 @@ class IdentityProfilesExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchIdentity($browser, $identity);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(IdentityProfilesExport::getExportFields($implementation->organization), 'name');
-                $this->assertFields($identity, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($identity, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['id', 'given_name', 'family_name', 'email']);
-                $csvData = $this->parseCsvFile();
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, [
+                        'id', 'given_name', 'family_name', 'email',
+                    ]);
 
-                $this->assertFields($identity, $csvData, [
-                    IdentityProfilesExport::trans('id'),
-                    IdentityProfilesExport::trans('given_name'),
-                    IdentityProfilesExport::trans('family_name'),
-                    IdentityProfilesExport::trans('email'),
-                ]);
+                    $this->assertFields($identity, $csvData, [
+                        IdentityProfilesExport::trans('id'),
+                        IdentityProfilesExport::trans('given_name'),
+                        IdentityProfilesExport::trans('family_name'),
+                        IdentityProfilesExport::trans('email'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -76,8 +78,8 @@ class IdentityProfilesExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
@@ -90,8 +92,8 @@ class IdentityProfilesExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchIdentity(Browser $browser, Identity $identity): void
     {
@@ -101,7 +103,7 @@ class IdentityProfilesExportTest extends DuskTestCase
         $browser->waitFor("@identityRow$identity->id", 20);
         $browser->assertVisible("@identityRow$identity->id");
 
-        $browser->waitUntil("document.querySelectorAll('#identitiesTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@identitiesPageContent');
     }
 
     /**

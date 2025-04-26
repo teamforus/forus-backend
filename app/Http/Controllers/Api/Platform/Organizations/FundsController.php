@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
-use App\Exports\FundsExportDetailed;
 use App\Exports\FundsExport;
+use App\Exports\FundsExportDetailed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;

@@ -47,24 +47,24 @@ class IdentitiesExportTest extends DuskTestCase
 
                 $this->goToIdentitiesTab($browser);
                 $this->searchIdentity($browser, $identity);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(FundIdentitiesExport::getExportFields(), 'name');
-                $this->assertFields($identity, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($identity, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['id', 'email']);
-                $csvData = $this->parseCsvFile();
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'email']);
 
-                $this->assertFields($identity, $csvData, [
-                    FundIdentitiesExport::trans('id'),
-                    FundIdentitiesExport::trans('email'),
-                ]);
+                    $this->assertFields($identity, $csvData, [
+                        FundIdentitiesExport::trans('id'),
+                        FundIdentitiesExport::trans('email'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -83,7 +83,7 @@ class IdentitiesExportTest extends DuskTestCase
     {
         $browser->waitFor('@identities_tab');
         $browser->element('@identities_tab')->click();
-        $browser->waitFor('@identitiesTable');
+        $browser->waitFor('@identitiesPageContent');
     }
 
     /**
@@ -100,7 +100,7 @@ class IdentitiesExportTest extends DuskTestCase
         $browser->waitFor("@identityRow$identity->id", 20);
         $browser->assertVisible("@identityRow$identity->id");
 
-        $browser->waitUntil("document.querySelectorAll('#identitiesTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@identitiesPageContent');
     }
 
     /**

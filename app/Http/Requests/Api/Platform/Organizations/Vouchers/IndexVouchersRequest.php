@@ -7,7 +7,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 
 /**
  * @property-read Organization $organization

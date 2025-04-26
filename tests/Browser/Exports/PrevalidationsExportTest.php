@@ -7,9 +7,9 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -48,23 +48,20 @@ class PrevalidationsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser, $fund);
                 $this->searchPrevalidation($browser, $prevalidation);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = $this->getExportFields($prevalidation);
-                $this->assertFields($prevalidation, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($prevalidation, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['code']);
-                $csvData = $this->parseCsvFile();
-
-                $this->assertFields($prevalidation, $csvData, [
-                    PrevalidationsExport::trans('code'),
-                ]);
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
+                    $this->assertFields($prevalidation, $csvData, [PrevalidationsExport::trans('code')]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -93,8 +90,8 @@ class PrevalidationsExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser, Fund $fund): void
     {
@@ -115,8 +112,8 @@ class PrevalidationsExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Prevalidation $prevalidation
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchPrevalidation(Browser $browser, Prevalidation $prevalidation): void
     {
@@ -126,7 +123,7 @@ class PrevalidationsExportTest extends DuskTestCase
         $browser->waitFor("@prevalidationRow$prevalidation->id", 20);
         $browser->assertVisible("@prevalidationRow$prevalidation->id");
 
-        $browser->waitUntil("document.querySelectorAll('#prevalidationsTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@prevalidationsPageContent');
     }
 
     /**

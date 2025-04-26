@@ -41,20 +41,18 @@ class EmployeesExportTest extends DuskTestCase
             // Go to employees list, open export modal and assert all export fields in file
             $this->goToEmployeesPage($browser);
             $this->searchEmployee($browser, $employee);
-            $this->fillExportModal($browser);
-
-            $csvData = $this->parseCsvFile();
 
             $fields = $this->getExportFields();
-            $this->assertFields($employee, $csvData, $fields);
 
-            // Open export modal, select specific fields and assert it
-            $this->fillExportModal($browser, ['email']);
-            $csvData = $this->parseCsvFile();
+            foreach (static::FORMATS as $format) {
+                // assert all fields exported
+                $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                $this->assertFields($employee, $csvData, $fields);
 
-            $this->assertFields($employee, $csvData, [
-                EmployeesExport::trans('email'),
-            ]);
+                // assert specific fields exported
+                $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['email']);
+                $this->assertFields($employee, $csvData, [EmployeesExport::trans('email')]);
+            }
 
             // Logout
             $this->logout($browser);
@@ -88,7 +86,7 @@ class EmployeesExportTest extends DuskTestCase
         $browser->waitFor("@employeeRow$employee->id", 20);
         $browser->assertVisible("@employeeRow$employee->id");
 
-        $browser->waitUntil("document.querySelectorAll('#employeesTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@employeesPageContent');
     }
 
     /**

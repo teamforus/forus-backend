@@ -44,7 +44,7 @@ class VoucherTransactionBulksExportTest extends TestCase
 
         // Assert export without fields - must be all fields by default
         $response = $this->get(
-            sprintf($this->apiExportUrl, $organization->id) . "?data_format=csv",
+            sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
 
@@ -53,18 +53,18 @@ class VoucherTransactionBulksExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => VoucherTransactionBulksExport::getExportFieldsRaw(),
-            ]);
+            'data_format' => 'csv',
+            'fields' => VoucherTransactionBulksExport::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $bulk, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['id', 'quantity'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['id', 'quantity'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

@@ -40,7 +40,7 @@ class ProviderFinancesExportTest extends TestCase
 
         // Assert export without fields - must be all fields by default
         $response = $this->get(
-            sprintf($this->apiExportUrl, $organization->id) . "?data_format=csv",
+            sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
 
@@ -49,18 +49,18 @@ class ProviderFinancesExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ProviderFinancesExport::getExportFieldsRaw(),
-            ]);
+            'data_format' => 'csv',
+            'fields' => ProviderFinancesExport::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $providerOrganization, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['provider'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['provider'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

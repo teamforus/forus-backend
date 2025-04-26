@@ -262,5 +262,5 @@ return [
         'house_addition' => 'HUISNR_TOEVOEGING',
         'postcode' => 'POSTCODE',
         'city' => 'PLAATS',
-    ]
+    ],
 ];

@@ -8,9 +8,9 @@ use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -49,24 +49,23 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
 
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name');
-                $this->assertFields($bulk, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($bulk, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['id', 'quantity']);
-                $csvData = $this->parseCsvFile();
-
-                $this->assertFields($bulk, $csvData, [
-                    VoucherTransactionBulksExport::trans('id'),
-                    VoucherTransactionBulksExport::trans('quantity'),
-                ]);
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'quantity']);
+                    $this->assertFields($bulk, $csvData, [
+                        VoucherTransactionBulksExport::trans('id'),
+                        VoucherTransactionBulksExport::trans('quantity'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -117,8 +116,8 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {

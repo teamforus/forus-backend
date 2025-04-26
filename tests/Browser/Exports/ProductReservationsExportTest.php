@@ -6,9 +6,10 @@ use App\Exports\ProductReservationsExport;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ProductReservation;
-use Tests\Browser\Traits\ExportTrait;
+use Exception;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -50,23 +51,20 @@ class ProductReservationsExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchProductReservation($browser, $reservation);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(ProductReservationsExport::getExportFields(), 'name');
-                $this->assertFields($reservation, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($reservation, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['code']);
-                $csvData = $this->parseCsvFile();
-
-                $this->assertFields($reservation, $csvData, [
-                    ProductReservationsExport::trans('code'),
-                ]);
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
+                    $this->assertFields($reservation, $csvData, [ProductReservationsExport::trans('code')]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -79,8 +77,8 @@ class ProductReservationsExportTest extends DuskTestCase
 
     /**
      * @param Fund $fund
+     * @throws Exception
      * @return ProductReservation
-     * @throws \Exception
      */
     protected function prepareData(Fund $fund): ProductReservation
     {
@@ -101,8 +99,8 @@ class ProductReservationsExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
@@ -115,8 +113,8 @@ class ProductReservationsExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param ProductReservation $reservation
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchProductReservation(Browser $browser, ProductReservation $reservation): void
     {
@@ -126,7 +124,7 @@ class ProductReservationsExportTest extends DuskTestCase
         $browser->waitFor("@reservationRow$reservation->id", 20);
         $browser->assertVisible("@reservationRow$reservation->id");
 
-        $browser->waitUntil("document.querySelectorAll('#reservationsTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@reservationsPageContent');
     }
 
     /**

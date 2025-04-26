@@ -8,9 +8,9 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -48,19 +48,17 @@ class ProviderFinancesExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
 
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
-
                 $fields = array_pluck(ProviderFinancesExport::getExportFields(), 'name');
-                $this->assertFields($providerOrganization, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->fillExportModal($browser, ['provider']);
-                $csvData = $this->parseCsvFile();
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($providerOrganization, $csvData, $fields);
 
-                $this->assertFields($providerOrganization, $csvData, [
-                    ProviderFinancesExport::trans('provider'),
-                ]);
+                    // assert specific fields exported
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['provider']);
+                    $this->assertFields($providerOrganization, $csvData, [ProviderFinancesExport::trans('provider')]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -102,8 +100,8 @@ class ProviderFinancesExportTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
@@ -127,7 +125,7 @@ class ProviderFinancesExportTest extends DuskTestCase
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
 
-        $item = array_first($rows, fn($row) => $row[0] === $organization->name);
+        $item = array_first($rows, fn ($row) => $row[0] === $organization->name);
         $this->assertEquals($organization->name, $item[0] ?? null);
     }
 }

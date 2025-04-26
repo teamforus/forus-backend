@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Role;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Searches\VoucherTransactionsSearch;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Dusk\Browser;
@@ -39,6 +40,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $transactionCount = 2;
         $fund = $this->makeTestFund($organization);
         $transaction = $this->prepareTestingData($fund, $transactionCount);
+        $this->removePossibleDuplicateByIds($transaction, 'provider');
 
         $providerOrganization = $transaction->product->organization;
         $this->assertNotNull($providerOrganization);
@@ -91,6 +93,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $transactionCount = 2;
         $fund = $this->makeTestFund($organization);
         $transaction = $this->prepareTestingData($fund, $transactionCount);
+        $this->removePossibleDuplicateByIds($transaction);
 
         $this->rollbackModels([], function () use (
             $implementation,
@@ -305,10 +308,10 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         int $expectedCount = 1
     ): void {
         $this->clearField($browser, '@searchTransaction');
-        $browser->waitUntil("document.querySelectorAll('#transactionsTable tbody tr').length > $expectedCount");
+        $this->assertRowsCount($browser, $expectedCount, '@transactionsPageContent', '>');
 
         $browser->type('@searchTransaction', $query);
-        $browser->waitUntil("document.querySelectorAll('#transactionsTable tbody tr').length === $expectedCount");
+        $this->assertRowsCount($browser, $expectedCount, '@transactionsPageContent');
         $browser->waitFor("@transactionItem$transaction->id", 20);
         $browser->assertVisible("@transactionItem$transaction->id");
     }
@@ -323,5 +326,22 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         /** @var string $value */
         $value = $browser->value($selector);
         $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @param string $as
+     * @return void
+     */
+    protected function removePossibleDuplicateByIds(VoucherTransaction $transaction, string $as = 'sponsor'): void
+    {
+        $builder = new VoucherTransactionsSearch([], VoucherTransaction::query());
+
+        $builder = match ($as) {
+            'sponsor' => $builder->searchSponsor($transaction->voucher->fund->organization),
+            'provider' => $builder->searchProvider(),
+        };
+
+        $builder->where('id', $transaction->product->id)->first()?->delete();
     }
 }

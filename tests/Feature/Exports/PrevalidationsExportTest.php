@@ -47,18 +47,18 @@ class PrevalidationsExportTest extends TestCase
 
         // Assert with passed all fields
         $url = $this->apiExportUrl . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => PrevalidationsExport::getExportFieldsRaw(),
-            ]);
+            'data_format' => 'csv',
+            'fields' => PrevalidationsExport::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $prevalidation, $fields);
 
         // Assert specific fields
         $url = $this->apiExportUrl . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['code'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['code'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

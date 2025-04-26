@@ -44,24 +44,26 @@ class FundDetailedExportTest extends DuskTestCase
 
                 $this->goToListPage($browser);
 
-                $this->fillExportModal($browser, [], '@exportFundsDetailed');
-                $csvData = $this->parseCsvFile();
-
                 $fields = array_pluck(FundsExportDetailed::getExportFields(), 'name');
                 $fields = array_values(array_filter(
                     $fields,
                     fn (string $field) => $field !== FundsExportDetailed::trans('budget_children_count')
                 ));
 
-                $this->assertFields($fund, $csvData, $fields);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $csvData = $this->fillExportModalAndDownloadFile(
+                        browser: $browser,
+                        format: $format,
+                        selector: '@exportFundsDetailed'
+                    );
 
-                // Open export modal, select specific fields and assert it
-                $this->fillExportModal($browser, ['name'], '@exportFundsDetailed');
-                $csvData = $this->parseCsvFile();
+                    $this->assertFields($fund, $csvData, $fields);
 
-                $this->assertFields($fund, $csvData, [
-                    FundsExportDetailed::trans('name'),
-                ]);
+                    // assert specific fields exported
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['name'], '@exportFundsDetailed');
+                    $this->assertFields($fund, $csvData, [FundsExportDetailed::trans('name')]);
+                }
 
                 // Logout
                 $this->logout($browser);

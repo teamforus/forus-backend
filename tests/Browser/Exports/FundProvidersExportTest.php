@@ -47,26 +47,29 @@ class FundProvidersExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchProvider($browser, $fundProvider->organization);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(FundProvidersExport::getExportFields(), 'name');
-                $this->assertFields($fundProvider, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($fundProvider, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['fund', 'implementation', 'fund_type', 'provider']);
-                $csvData = $this->parseCsvFile();
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
 
-                $this->assertFields($fundProvider, $csvData, [
-                    FundProvidersExport::trans('fund'),
-                    FundProvidersExport::trans('implementation'),
-                    FundProvidersExport::trans('fund_type'),
-                    FundProvidersExport::trans('provider'),
-                ]);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, [
+                        'fund', 'implementation', 'fund_type', 'provider',
+                    ]);
+
+                    $this->assertFields($fundProvider, $csvData, [
+                        FundProvidersExport::trans('fund'),
+                        FundProvidersExport::trans('implementation'),
+                        FundProvidersExport::trans('fund_type'),
+                        FundProvidersExport::trans('provider'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -122,6 +125,6 @@ class FundProvidersExportTest extends DuskTestCase
         $browser->waitFor("@providerRow$provider->id", 20);
         $browser->assertVisible("@providerRow$provider->id");
 
-        $browser->waitUntil("document.querySelectorAll('#providersTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@sponsorProvidersPageContent');
     }
 }

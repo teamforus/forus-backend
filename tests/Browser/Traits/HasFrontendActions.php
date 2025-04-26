@@ -17,6 +17,31 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string $selector
+     * @param int $count
+     * @param string $operator
+     * @throws TimeoutException
+     * @return Browser
+     */
+    public function waitForNumber(
+        Browser $browser,
+        string $selector,
+        int $count,
+        string $operator
+    ): Browser {
+        return $browser->waitUsing(null, 100, function () use ($browser, $selector, $count, $operator) {
+            return match ($operator) {
+                '=' => (int) $browser->text($selector) === $count,
+                '>=' => (int) $browser->text($selector) >= $count,
+                '<=' => (int) $browser->text($selector) <= $count,
+                '>' => (int) $browser->text($selector) > $count,
+                '<' => (int) $browser->text($selector) < $count,
+            };
+        });
+    }
+
+    /**
+     * @param Browser $browser
      * @param Identity $identity
      * @return void
      */
@@ -90,6 +115,63 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string $selector
+     * @param string $title
+     * @return RemoteWebElement|null
+     */
+    protected function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
+    {
+        $option = null;
+
+        $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
+            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
+            $options = $browser->driver->findElements($xpath);
+            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
+        });
+
+        $this->assertNotNull($option);
+
+        return $option;
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $count
+     * @param string $selector
+     * @param string $operator
+     * @return void
+     */
+    protected function assertRowsCount(Browser $browser, int $count, string $selector, string $operator = '='): void
+    {
+        $browser->within($selector, function (Browser $browser) use ($count, $operator) {
+            $this->waitForNumber($browser, '@paginatorTotal', $count, $operator);
+
+            match ($operator) {
+                '=' => $this->assertCount($count, $browser->elements('tbody>tr')),
+                '>=' => $this->assertGreaterThanOrEqual($count, $browser->elements('tbody>tr')),
+                '<=' => $this->assertLessThanOrEqual($count, $browser->elements('tbody>tr')),
+                '>' => $this->assertGreaterThan($count, $browser->elements('tbody>tr')),
+                '<' => $this->assertLessThan($count, $browser->elements('tbody>tr')),
+            };
+        });
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @return void
+     */
+    protected function assertAndCloseSuccessNotification(Browser $browser): void
+    {
+        $browser->waitFor('@successNotification');
+        $browser->click('@successNotification @notificationCloseBtn');
+        $browser->waitUntilMissing('@successNotification');
+    }
+
+    /**
+     * @param Browser $browser
      * @throws TimeOutException
      * @return void
      */
@@ -135,40 +217,5 @@ trait HasFrontendActions
 
         $browser->waitFor("@selectControlFundItem$fundId");
         $browser->element("@selectControlFundItem$fundId")->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $title
-     * @param string $selector
-     * @return RemoteWebElement|null
-     */
-    protected function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
-    {
-        $option = null;
-
-        $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
-            $options = $browser->driver->findElements($xpath);
-            $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
-        });
-
-        $this->assertNotNull($option);
-
-        return $option;
-    }
-
-    /**
-     * @param Browser $browser
-     * @return void
-     * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     */
-    protected function assertAndCloseSuccessNotification(Browser $browser): void
-    {
-        $browser->waitFor('@successNotification');
-        $browser->click('@successNotification @notificationCloseBtn');
-        $browser->waitUntilMissing('@successNotification');
     }
 }

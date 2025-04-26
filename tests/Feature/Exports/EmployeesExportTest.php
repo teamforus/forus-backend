@@ -48,18 +48,18 @@ class EmployeesExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => EmployeesExport::getExportFieldsRaw(),
-            ]);
+            'data_format' => 'csv',
+            'fields' => EmployeesExport::getExportFieldsRaw(),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $employee, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['email'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['email'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $employee, [EmployeesExport::trans('email')]);

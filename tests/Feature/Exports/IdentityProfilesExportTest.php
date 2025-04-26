@@ -48,18 +48,18 @@ class IdentityProfilesExportTest extends TestCase
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => array_pluck(IdentityProfilesExport::getExportFields($organization), 'key'),
-            ]);
+            'data_format' => 'csv',
+            'fields' => array_pluck(IdentityProfilesExport::getExportFields($organization), 'key'),
+        ]);
 
         $response = $this->get($url, $apiHeaders);
         $this->assertFields($response, $identity, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
-                'data_format' => 'csv',
-                'fields' => ['id', 'given_name', 'family_name', 'email'],
-            ]);
+            'data_format' => 'csv',
+            'fields' => ['id', 'given_name', 'family_name', 'email'],
+        ]);
 
         $response = $this->get($url, $apiHeaders);
 

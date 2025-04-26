@@ -7,9 +7,9 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use Tests\Browser\Traits\ExportTrait;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
@@ -47,23 +47,22 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToListPage($browser);
                 $this->searchTransaction($browser, $transaction);
-                $this->openFilterDropdown($browser);
-
-                $this->fillExportModal($browser);
-                $csvData = $this->parseCsvFile();
 
                 $fields = array_pluck(VoucherTransactionsSponsorExport::getExportFields(), 'name');
-                $this->assertFields($transaction, $csvData, $fields);
 
-                // Open export modal, select specific fields and assert it
-                $this->openFilterDropdown($browser);
+                foreach (static::FORMATS as $format) {
+                    // assert all fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $this->assertFields($transaction, $csvData, $fields);
 
-                $this->fillExportModal($browser, ['id']);
-                $csvData = $this->parseCsvFile();
-
-                $this->assertFields($transaction, $csvData, [
-                    VoucherTransactionsSponsorExport::trans('id'),
-                ]);
+                    // assert specific fields exported
+                    $this->openFilterDropdown($browser);
+                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id']);
+                    $this->assertFields($transaction, $csvData, [
+                        VoucherTransactionsSponsorExport::trans('id'),
+                    ]);
+                }
 
                 // Logout
                 $this->logout($browser);
@@ -107,8 +106,8 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param VoucherTransaction $transaction
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
     {
@@ -118,13 +117,13 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
         $browser->waitFor("@transactionItem$transaction->id", 20);
         $browser->assertVisible("@transactionItem$transaction->id");
 
-        $browser->waitUntil("document.querySelectorAll('#transactionsTable tbody tr').length === 1");
+        $this->assertRowsCount($browser, 1, '@transactionsPageContent');
     }
 
     /**
      * @param Browser $browser
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function goToListPage(Browser $browser): void
     {
