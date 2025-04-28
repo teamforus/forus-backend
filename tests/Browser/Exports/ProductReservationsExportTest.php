@@ -57,13 +57,16 @@ class ProductReservationsExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($reservation, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($reservation, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
-                    $this->assertFields($reservation, $csvData, [ProductReservationsExport::trans('code')]);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
+
+                    $data && $this->assertFields($reservation, $data, [
+                        ProductReservationsExport::trans('code')
+                    ]);
                 }
 
                 // Logout

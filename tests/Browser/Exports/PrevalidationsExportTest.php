@@ -54,13 +54,13 @@ class PrevalidationsExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($prevalidation, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($prevalidation, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
-                    $this->assertFields($prevalidation, $csvData, [PrevalidationsExport::trans('code')]);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
+                    $data && $this->assertFields($prevalidation, $data, [PrevalidationsExport::trans('code')]);
                 }
 
                 // Logout

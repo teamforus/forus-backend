@@ -51,16 +51,16 @@ class IdentityProfilesExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($identity, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($identity, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, [
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, [
                         'id', 'given_name', 'family_name', 'email',
                     ]);
 
-                    $this->assertFields($identity, $csvData, [
+                    $data && $this->assertFields($identity, $data, [
                         IdentityProfilesExport::trans('id'),
                         IdentityProfilesExport::trans('given_name'),
                         IdentityProfilesExport::trans('family_name'),

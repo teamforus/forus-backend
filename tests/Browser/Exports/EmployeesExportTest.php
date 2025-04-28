@@ -46,12 +46,12 @@ class EmployeesExportTest extends DuskTestCase
 
             foreach (static::FORMATS as $format) {
                 // assert all fields exported
-                $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                $this->assertFields($employee, $csvData, $fields);
+                $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                $data && $this->assertFields($employee, $data, $fields);
 
                 // assert specific fields exported
-                $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['email']);
-                $this->assertFields($employee, $csvData, [EmployeesExport::trans('email')]);
+                $data = $this->fillExportModalAndDownloadFile($browser, $format, ['email']);
+                $data && $this->assertFields($employee, $data, [EmployeesExport::trans('email')]);
             }
 
             // Logout

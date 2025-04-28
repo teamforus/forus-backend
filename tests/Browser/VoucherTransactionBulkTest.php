@@ -258,7 +258,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
 
         $browser->click('@fundSelect .select-control-search');
         $this->findOptionElement($browser, '@fundSelect', $fund->name)->click();
-        $browser->click('@showFilters');
+        $browser->click('@hideFilters');
 
         $browser->waitUsing(10, 100, function () use ($browser, $expectedCount) {
             return count($browser->elements('[data-dusk^="transactionItem"]')) === $expectedCount;

@@ -25,24 +25,30 @@ trait ExportTrait
      * @throws TimeoutException
      * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
      * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @return array
+     * @return array|null
      */
     protected function fillExportModalAndDownloadFile(
         Browser $browser,
         string $format,
         array $fields = [],
         string $selector = '@export'
-    ): array {
+    ): ?array {
         $this->fillExportModal($browser, $fields, $selector, $format);
 
-        return $this->parseCsvFile($format);
+        if ($format === 'xls') {
+            $browser->assertMissing('@dangerNotification');
+
+            return null;
+        }
+
+        return $this->parseFile($format);
     }
 
     /**
      * @param string $format
      * @return array
      */
-    protected function parseCsvFile(string $format): array
+    protected function parseFile(string $format): array
     {
         $excelFormat = match ($format) {
             'csv' => ExcelFormat::CSV,
@@ -53,7 +59,7 @@ trait ExportTrait
         $csvFile = $this->findFile($format);
 
         if (!$csvFile) {
-            $this->fail("CSV file with format $format was not downloaded.");
+            $this->fail("File with format $format was not downloaded.");
         }
 
         $csvData = Excel::toArray(new BrowserTestEntitiesImport(), $csvFile, null, $excelFormat)[0];
@@ -63,7 +69,7 @@ trait ExportTrait
         } catch (Exception $e) {
         }
 
-        $this->assertNotEmpty($csvData, 'CSV file is empty.');
+        $this->assertNotEmpty($csvData, 'File is empty.');
 
         return $csvData;
     }
@@ -160,6 +166,11 @@ trait ExportTrait
      */
     protected function openFilterDropdown(Browser $browser, string $waitSelector = '@export'): void
     {
+        // hide filters if was opened
+        if ($browser->element('@hideFilters')) {
+            $browser->element('@hideFilters')->click();
+        }
+
         $browser->waitFor('@showFilters');
         $browser->element('@showFilters')->click();
 

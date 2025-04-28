@@ -178,6 +178,13 @@ trait HasFrontendActions
     private function logout(Browser $browser): void
     {
         $browser->pause(100);
+
+        // close all filters if not closed before logout - filters can be over logout btn
+        if ($browser->element('@hideFilters')) {
+            $browser->element('@hideFilters')->click();
+            $browser->waitFor('@showFilters');
+        }
+
         $browser->waitFor('@userProfile');
         $browser->scrollIntoView('@userProfile');
         $browser->element('@userProfile')->click();

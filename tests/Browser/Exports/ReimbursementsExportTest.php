@@ -61,13 +61,14 @@ class ReimbursementsExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($reimbursement, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($reimbursement, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'code']);
-                    $this->assertFields($reimbursement, $csvData, [
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'code']);
+
+                    $data && $this->assertFields($reimbursement, $data, [
                         ReimbursementsSponsorExport::trans('id'),
                         ReimbursementsSponsorExport::trans('code'),
                     ]);

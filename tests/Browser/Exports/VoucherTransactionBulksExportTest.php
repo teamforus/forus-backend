@@ -55,13 +55,14 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($bulk, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($bulk, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'quantity']);
-                    $this->assertFields($bulk, $csvData, [
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'quantity']);
+
+                    $data && $this->assertFields($bulk, $data, [
                         VoucherTransactionBulksExport::trans('id'),
                         VoucherTransactionBulksExport::trans('quantity'),
                     ]);

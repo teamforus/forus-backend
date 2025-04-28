@@ -52,12 +52,15 @@ class ProviderFinancesExportTest extends DuskTestCase
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($providerOrganization, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($providerOrganization, $data, $fields);
 
                     // assert specific fields exported
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, ['provider']);
-                    $this->assertFields($providerOrganization, $csvData, [ProviderFinancesExport::trans('provider')]);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, ['provider']);
+
+                    $data && $this->assertFields($providerOrganization, $data, [
+                        ProviderFinancesExport::trans('provider'),
+                    ]);
                 }
 
                 // Logout

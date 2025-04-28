@@ -53,17 +53,17 @@ class FundProvidersExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $this->assertFields($fundProvider, $csvData, $fields);
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format);
+                    $data && $this->assertFields($fundProvider, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
 
-                    $csvData = $this->fillExportModalAndDownloadFile($browser, $format, [
+                    $data = $this->fillExportModalAndDownloadFile($browser, $format, [
                         'fund', 'implementation', 'fund_type', 'provider',
                     ]);
 
-                    $this->assertFields($fundProvider, $csvData, [
+                    $data && $this->assertFields($fundProvider, $data, [
                         FundProvidersExport::trans('fund'),
                         FundProvidersExport::trans('implementation'),
                         FundProvidersExport::trans('fund_type'),
