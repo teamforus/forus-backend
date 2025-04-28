@@ -162,7 +162,8 @@ class IdentitiesSearch extends BaseSearch
                     })
                     ->whereRelation('record_type', 'key', $orderBy)
                     ->latest('created_at')
-                    ->select('value'),
+                    ->select('value')
+                    ->take(1),
             ]);
 
             return Identity::query()->fromSub($builder, 'list')->orderBy('__sort', $orderDir);
@@ -173,7 +174,8 @@ class IdentitiesSearch extends BaseSearch
                 '__sort' => Session::query()
                     ->whereColumn('identity_address', 'address')
                     ->latest('last_activity_at')
-                    ->select('last_activity_at'),
+                    ->select('last_activity_at')
+                    ->take(1),
             ]);
 
             return Identity::query()->fromSub($builder, 'list')->orderBy('__sort', $orderDir);
@@ -184,7 +186,8 @@ class IdentitiesSearch extends BaseSearch
                 '__sort' => Session::query()
                     ->whereColumn('identity_address', 'address')
                     ->latest('created_at')
-                    ->select('created_at'),
+                    ->select('created_at')
+                    ->take(1),
             ]);
 
             return Identity::query()->fromSub($builder, 'list')->orderBy('__sort', $orderDir);
@@ -195,7 +198,8 @@ class IdentitiesSearch extends BaseSearch
                 '__sort' => IdentityEmail::query()
                     ->whereColumn('identity_address', 'address')
                     ->where('primary', true)
-                    ->latest()->select('email'),
+                    ->latest()->select('email')
+                    ->take(1),
             ]);
 
             return Identity::query()->fromSub($builder, 'list')->orderBy('__sort', $orderDir);
@@ -203,10 +207,14 @@ class IdentitiesSearch extends BaseSearch
 
         if ($orderBy == 'bsn') {
             $builder->addSelect([
-                '__sort' => Record::where(function (Builder $builder) use ($orderBy) {
-                    $builder->whereColumn('identity_address', 'address');
-                    $builder->whereRelation('record_type', 'key', 'bsn');
-                })->latest('created_at')->select('value'),
+                '__sort' => Record::query()
+                    ->where(function (Builder $builder) use ($orderBy) {
+                        $builder->whereColumn('identity_address', 'address');
+                        $builder->whereRelation('record_type', 'key', 'bsn');
+                    })
+                    ->latest('created_at')
+                    ->select('value')
+                    ->take(1),
             ]);
 
             return Identity::query()->fromSub($builder, 'list')->orderBy('__sort', $orderDir);
