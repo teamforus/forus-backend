@@ -139,8 +139,8 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
-     * @param string $selector
      * @param string $title
+     * @param string $selector
      * @return RemoteWebElement|null
      */
     protected function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
@@ -156,5 +156,19 @@ trait HasFrontendActions
         $this->assertNotNull($option);
 
         return $option;
+    }
+
+    /**
+     * @param Browser $browser
+     * @return void
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     */
+    protected function assertAndCloseSuccessNotification(Browser $browser): void
+    {
+        $browser->waitFor('@successNotification');
+        $browser->click('@successNotification @notificationCloseBtn');
+        $browser->waitUntilMissing('@successNotification');
     }
 }

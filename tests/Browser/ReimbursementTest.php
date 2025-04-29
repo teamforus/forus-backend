@@ -611,15 +611,15 @@ class ReimbursementTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @throws TimeOutException
+     * @throws Throwable
      * @return void
      */
     private function assignReimbursement(Browser $browser): void
     {
         $browser->waitFor('@reimbursementAssign');
         $browser->element('@reimbursementAssign')->click();
-        $browser->waitFor('@successNotification');
-        $browser->waitUntilMissing('@successNotification');
+
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**

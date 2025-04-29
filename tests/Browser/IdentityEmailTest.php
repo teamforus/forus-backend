@@ -11,6 +11,8 @@ use App\Models\Organization;
 use App\Models\Role;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
@@ -219,7 +221,9 @@ class IdentityEmailTest extends DuskTestCase
      * @param Browser $browser
      * @param IdentityEmail $identityEmail
      * @param Carbon $startTime
-     * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @throws TimeoutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @return void
      */
     private function resendEmailVerification(
@@ -233,7 +237,7 @@ class IdentityEmailTest extends DuskTestCase
             $browser->press('@btnResendVerificationEmail');
         });
 
-        $browser->waitFor('@successNotification');
+        $this->assertAndCloseSuccessNotification($browser);
 
         // Check if email resent
         $this->assertMailableSent($identityEmail->email, IdentityEmailVerificationMail::class, $startTime);
