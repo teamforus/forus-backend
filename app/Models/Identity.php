@@ -709,27 +709,31 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param RecordType $recordType
+     * @param RecordType $type
      * @param string $value
      * @param int|null $recordCategoryId
      * @param int|null $order
+     * @param FundRequest|null $fundRequest
+     * @param Prevalidation|null $prevalidation
      * @return array|null
      */
     public function makeRecord(
-        RecordType $recordType,
+        RecordType $type,
         string $value,
         ?int $recordCategoryId = null,
-        ?int $order = null
+        ?int $order = null,
+        ?FundRequest $fundRequest = null,
+        ?Prevalidation $prevalidation = null,
     ): ?Record {
         $hasRecordOfSameType = $this->records()->where([
-            'record_type_id' => $recordType->id,
+            'record_type_id' => $type->id,
         ])->exists();
 
-        if ($recordType->key === 'primary_email' && $hasRecordOfSameType) {
+        if ($type->key === 'primary_email' && $hasRecordOfSameType) {
             abort(403, 'record.exceptions.primary_email_already_exists');
         }
 
-        if ($recordType->key === 'bsn') {
+        if ($type->key === 'bsn') {
             abort(403, 'record.exceptions.bsn_record_cant_be_created');
         }
 
@@ -737,8 +741,10 @@ class Identity extends Model implements Authenticatable
             'identity_address' => $this->address,
             'order' => $order ?: 0,
             'value' => $value,
-            'record_type_id' => $recordType->id,
+            'record_type_id' => $type->id,
             'record_category_id' => $recordCategoryId,
+            'fund_request_id' => $fundRequest?->id,
+            'prevalidation_id' => $prevalidation?->id,
         ]);
     }
 

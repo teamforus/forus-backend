@@ -51,10 +51,17 @@ class FundsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
 
-        $query = (new FundSearch($request->only([
-            'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-            'order_dir', 'with_archived', 'with_external', 'configured', 'state',
-        ]), $organization->funds()->getQuery()))->query();
+        $query = (new FundSearch([
+            ...$request->only([
+                'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
+                'order_dir', 'with_archived', 'with_external', 'configured',
+            ]),
+            'state' => $request->input('state') === 'active_paused_and_closed' ? [
+                Fund::STATE_CLOSED,
+                Fund::STATE_PAUSED,
+                Fund::STATE_ACTIVE,
+            ] : $request->input('state'),
+        ], $organization->funds()->getQuery()))->query();
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);

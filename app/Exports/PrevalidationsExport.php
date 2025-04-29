@@ -4,19 +4,20 @@ namespace App\Exports;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Prevalidation;
+use App\Searches\PrevalidationSearch;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class PrevalidationsExport implements FromCollection, WithHeadings
 {
-    protected BaseFormRequest $request;
     protected Collection $data;
 
-    public function __construct(BaseFormRequest $request)
+    public function __construct(Builder|Relation|Prevalidation $builder)
     {
-        $this->request = $request;
-        $this->data = Prevalidation::export($this->request);
+        $this->data = Prevalidation::export($builder);
     }
 
     /**

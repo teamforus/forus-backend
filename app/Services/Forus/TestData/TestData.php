@@ -786,7 +786,7 @@ class TestData
             'backoffice_key' => $key,
             'backoffice_certificate' => $cert,
         ], $this->configOnly([
-            'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
+            'backoffice_enabled', 'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
         ])) : [];
     }
 
@@ -890,6 +890,7 @@ class TestData
                 'iban' => $this->faker->iban('NL'),
                 'civil_status' => 'Ja',
                 'single_parent' => 'Ja',
+                $fund->fund_config->key . '_eligible' => 'Ja',
             ], $fund->fund_config->hash_bsn ? [
                 'bsn_hash' => $fund->getHashedValue($bsnValue),
                 'partner_bsn_hash' => $fund->getHashedValue($bsnValuePartner),

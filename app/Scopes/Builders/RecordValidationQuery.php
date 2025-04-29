@@ -54,10 +54,19 @@ class RecordValidationQuery
         Fund $fund,
     ): Builder|Relation|RecordValidation {
         return $builder->where(function (Builder $builder) use ($fund) {
-            $builder->whereIn('identity_address', $fund->validatorEmployees());
             $builder->where(function (Builder $builder) use ($fund) {
-                $builder->whereNull('organization_id');
-                $builder->orWhere('organization_id', $fund->organization_id);
+                $builder->whereNull('prevalidation_id');
+                $builder->whereIn('identity_address', $fund->validatorEmployees());
+
+                $builder->where(function (Builder $builder) use ($fund) {
+                    $builder->whereNull('organization_id');
+                    $builder->orWhere('organization_id', $fund->organization_id);
+                });
+            });
+
+            $builder->orWhereHas('prevalidation', function (Builder $builder) use ($fund) {
+                $builder->where('fund_id', $fund->id);
+                $builder->where('organization_id', $fund->organization_id);
             });
         });
     }
