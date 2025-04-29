@@ -65,7 +65,6 @@ class RecordValidationQuery
             });
 
             $builder->orWhereHas('prevalidation', function (Builder $builder) use ($fund) {
-                $builder->where('fund_id', $fund->id);
                 $builder->where('organization_id', $fund->organization_id);
             });
         });
