@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
+use App\Searches\Sponsor\IdentitiesSearch;
 use Illuminate\Validation\Rule;
 
 /**
@@ -39,7 +40,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
             'last_login_from' => 'nullable|date_format:Y-m-d',
             'last_activity_to' => 'nullable|date_format:Y-m-d',
             'last_activity_from' => 'nullable|date_format:Y-m-d',
-            ...$this->sortableResourceRules(),
+            ...$this->sortableResourceRules(100, IdentitiesSearch::SORT_BY),
         ];
     }
 }
