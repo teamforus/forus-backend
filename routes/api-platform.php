@@ -1055,11 +1055,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\AnnouncementController@index',
     );
 
-    $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');
-    $router->post('prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
-    $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
+    $router->get('organizations/{organization}/prevalidations/export', 'Api\Platform\PrevalidationController@export');
+    $router->post('organizations/{organization}/prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
+    $router->post('organizations/{organization}/prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
 
-    $router->resource('prevalidations', 'Api\Platform\PrevalidationController')
+    $router->resource('organizations/{organization}/prevalidations', 'Api\Platform\PrevalidationController')
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 

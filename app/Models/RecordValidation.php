@@ -143,13 +143,13 @@ class RecordValidation extends Model
     }
 
     /**
-     * @param Identity $identity
+     * @param Identity|null $identity
      * @param Organization|null $organization
      * @param Prevalidation|null $prevalidation
      * @return bool
      */
     public function approve(
-        Identity $identity,
+        ?Identity $identity,
         ?Organization $organization = null,
         ?Prevalidation $prevalidation = null
     ): bool {
@@ -161,7 +161,7 @@ class RecordValidation extends Model
             'state' => self::STATE_APPROVED,
             'organization_id' => $organization?->id,
             'prevalidation_id' => $prevalidation?->id,
-            'identity_address' => $identity->address,
+            'identity_address' => $identity?->address,
         ]);
     }
 

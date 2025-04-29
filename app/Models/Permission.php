@@ -36,6 +36,8 @@ class Permission extends BaseModel
     public const string MANAGE_IDENTITIES = 'manage_identities';
     public const string VIEW_IDENTITIES = 'view_identities';
 
+    public const string MANAGE_ORGANIZATION = 'manage_organization';
+
     public $timestamps = false;
     protected static Collection|null $memCache = null;
 

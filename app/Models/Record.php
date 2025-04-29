@@ -18,12 +18,16 @@ use Illuminate\Support\Arr;
  * @property int $record_type_id
  * @property int|null $record_category_id
  * @property int|null $prevalidation_id
+ * @property int|null $fund_request_id
+ * @property int|null $organization_id
  * @property string $value
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Identity $identity
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read \App\Models\Prevalidation|null $prevalidation
  * @property-read \App\Models\RecordCategory|null $record_category
  * @property-read \App\Models\RecordType $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecordValidation[] $validations
@@ -36,9 +40,11 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Record query()
  * @method static Builder<static>|Record whereCreatedAt($value)
  * @method static Builder<static>|Record whereDeletedAt($value)
+ * @method static Builder<static>|Record whereFundRequestId($value)
  * @method static Builder<static>|Record whereId($value)
  * @method static Builder<static>|Record whereIdentityAddress($value)
  * @method static Builder<static>|Record whereOrder($value)
+ * @method static Builder<static>|Record whereOrganizationId($value)
  * @method static Builder<static>|Record wherePrevalidationId($value)
  * @method static Builder<static>|Record whereRecordCategoryId($value)
  * @method static Builder<static>|Record whereRecordTypeId($value)
@@ -59,7 +65,7 @@ class Record extends BaseModel
      */
     protected $fillable = [
         'identity_address', 'record_type_id', 'record_category_id',
-        'value', 'order', 'prevalidation_id',
+        'value', 'order', 'prevalidation_id', 'fund_request_id', 'organization_id',
     ];
 
     protected $perPage = 1000;
@@ -79,6 +85,24 @@ class Record extends BaseModel
     public function record_type(): BelongsTo
     {
         return $this->belongsTo(RecordType::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function prevalidation(): BelongsTo
+    {
+        return $this->belongsTo(Prevalidation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     /**
@@ -117,8 +141,8 @@ class Record extends BaseModel
     {
         return $this->validations()->create([
             'uuid' => token_generator()->generate(64),
-            'identity_address' => null,
             'state' => 'pending',
+            'identity_address' => null,
         ]);
     }
 

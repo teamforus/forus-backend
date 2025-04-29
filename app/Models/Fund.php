@@ -994,7 +994,7 @@ class Fund extends BaseModel
         $builder = Record::fromSub($builder->getQuery(), 'records')->select([
             '*',
             DB::raw('IF(`validated_at_prevalidation`, `validated_at_prevalidation`, `validated_at_validation`) as `validated_at`'),
-        ])->orderByDesc('validated_at');
+        ])->orderByDesc('validated_at')->orderByDesc('id');
 
         return $builder->first();
     }

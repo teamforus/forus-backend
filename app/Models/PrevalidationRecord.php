@@ -57,8 +57,10 @@ class PrevalidationRecord extends BaseModel
      */
     public function makeRecord(Identity $identity): Record
     {
-        return $identity->makeRecord($this->record_type, $this->value)->updateModel([
-            'prevalidation_id' => $this->prevalidation_id,
-        ]);
+        return $identity->makeRecord(
+            type: $this->record_type,
+            value: $this->value,
+            prevalidation: $this->prevalidation,
+        );
     }
 }

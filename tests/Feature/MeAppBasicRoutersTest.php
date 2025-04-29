@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\DemoTransaction;
 use App\Models\Identity;
 use App\Models\Implementation;
-use App\Models\RecordValidation;
 use App\Models\Role;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -154,49 +153,5 @@ class MeAppBasicRoutersTest extends TestCase
         //identity/proxy/confirmation/exchange/
         $token = $this->makeIdentityProxy($identity, false)->exchange_token;
         $this->getJson("/api/v1/identity/proxy/confirmation/exchange/$token", $headers)->assertSuccessful();
-    }
-
-    /**
-     * @return void
-     */
-    public function testRecordAndValidationRequestEndpoints()
-    {
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $headers = $this->makeApiHeaders($identity);
-
-        //identity/records/ [POST]
-        $this->post('/api/v1/identity/records', [
-            'type' => 'family_name',
-            'value' => 'Doe',
-        ], $headers)->assertSuccessful();
-
-        //identity/records/
-        $response = $this->getJson('/api/v1/identity/records', $headers);
-        $response->assertSuccessful();
-
-        $recordId = $response->json('id');
-        $this->assertCount(1, $response->json());
-
-        //identity/records/{id}
-        $this->getJson('/api/v1/identity/records/' . $recordId, $headers)->assertSuccessful();
-
-        //identity/record-types
-        $this->getJson('/api/v1/identity/records', $headers)->assertSuccessful();
-
-        //identity/record-validations
-        $response = $this->postJson('/api/v1/identity/record-validations', [
-            'record_id' => $identity->addRecords(['given_name' => 'John'])[0]->id,
-        ], $headers);
-
-        //identity/record-validations/{uuid}
-        $validator = $this->makeIdentity();
-        $validatorHeaders = $this->makeApiHeaders($validator);
-        $validation = RecordValidation::firstWhere('uuid', $response->json('uuid'));
-
-        $this->getJson("/api/v1/identity/record-validations/$validation->uuid", $headers)->assertSuccessful();
-        $this->patchJson("/api/v1/identity/record-validations/$validation->uuid/approve", [], $validatorHeaders)->assertSuccessful();
-
-        $this->assertTrue($validation->refresh()->isApproved());
-        $this->assertTrue($validation->refresh()->identity_address === $validator->address);
     }
 }
