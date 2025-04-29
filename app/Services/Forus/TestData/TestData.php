@@ -265,20 +265,7 @@ class TestData
         });
 
         foreach ($prevalidations as $prevalidation) {
-            foreach ($prevalidation->prevalidation_records as $record) {
-                if ($record->record_type->key === 'bsn') {
-                    continue;
-                }
-
-                $identity
-                    ->makeRecord($record->record_type, $record->value)
-                    ->makeValidationRequest()
-                    ->approve($prevalidation->identity);
-            }
-
-            $prevalidation->update([
-                'state' => 'used',
-            ]);
+            $prevalidation->assignToIdentity($identity);
 
             $voucher = $prevalidation->fund->makeVoucher($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
@@ -832,12 +819,15 @@ class TestData
                 return compact('record_type_id', 'value');
             })->filter()->toArray();
         })->filter()->map(function ($records) use ($fund, $identity) {
+            $employee = $fund->organization->findEmployee($identity);
+
             $prevalidation = Prevalidation::forceCreate([
                 'uid' => Prevalidation::makeNewUid(),
                 'state' => 'pending',
                 'fund_id' => $fund->id,
-                'organization_id' => $fund->organization_id,
-                'identity_address' => $identity->address,
+                'employee_id' => $employee->id,
+                'organization_id' => $employee->organization_id,
+                'identity_address' => $employee->identity_address,
                 'validated_at' => now(),
             ]);
 
