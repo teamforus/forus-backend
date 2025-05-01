@@ -341,8 +341,10 @@ if (!function_exists('user_agent_data')) {
 
 if (!function_exists('query_to_sql')) {
     /**
-     * @param Builder|QBuilder|Relation $builder
-     * @return string
+     * Converts a query builder instance to its SQL representation with bindings.
+     *
+     * @param Builder|QBuilder|Relation $builder The query builder instance to convert.
+     * @return string The SQL representation of the query with bound values.
      */
     function query_to_sql(Builder|QBuilder|Relation $builder): string
     {
@@ -351,5 +353,24 @@ if (!function_exists('query_to_sql')) {
         }, $builder->getBindings());
 
         return str_replace_array('?', $bindings, $builder->toSql());
+    }
+}
+
+if (!function_exists('array_replace_values')) {
+    /**
+     * Replaces values in an array based on a replacements map.
+     *
+     * @param array $items The original array of items to be processed.
+     * @param array $replacements A key-value associative array where keys are the items to replace and values are their replacements.
+     * @return array An array with replaced values according to the replacements map.
+     */
+    function array_replace_values(array $items, array $replacements): array
+    {
+        return array_map(
+            fn (string $item): string => array_key_exists($item, $replacements)
+                ? $replacements[$item]
+                : $item,
+            $items
+        );
     }
 }
