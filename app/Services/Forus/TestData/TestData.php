@@ -1215,6 +1215,39 @@ class TestData
     }
 
     /**
+     * @param Identity $identity
+     * @throws Exception
+     * @return void
+     */
+    public function makeReservations(Identity $identity): void
+    {
+        $funds = FundQuery::whereActiveFilter(Fund::query())
+            ->where('type', '=', Fund::TYPE_BUDGET)
+            ->get();
+
+        foreach ($funds as $fund) {
+            $voucher = $fund->makeVoucher($identity, amount: 20);
+
+            while ($voucher->amount_available > ($voucher->amount / 2)) {
+                $product = ProductQuery::approvedForFundsFilter(Product::query(), $fund->id)
+                    ->where('price', '>', 0)
+                    ->inRandomOrder()
+                    ->first();
+
+                if (!$product) {
+                    continue;
+                }
+
+                $voucher->reserveProduct($product, null, [
+                    'first_name' => $this->faker->firstName,
+                    'last_name' => $this->faker->lastName,
+                    'user_note' => $this->faker->text(random_int(64, 256)),
+                ]);
+            }
+        }
+    }
+
+    /**
      * @param string $configKey
      * @noinspection PhpUnused
      */
