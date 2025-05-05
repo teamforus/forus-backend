@@ -179,12 +179,14 @@ class EmailLog extends Model
      */
     public function getRelatedFundRequest(): Model|FundRequest|null
     {
-        if ($this->event_log->loggable instanceof FundRequest) {
-            return $this->event_log->loggable;
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof FundRequest) {
+            return $loggable;
         }
 
-        if ($this->event_log->loggable instanceof FundRequestRecord) {
-            return $this->event_log->loggable->fund_request;
+        if ($loggable instanceof FundRequestRecord) {
+            return $loggable->fund_request;
         }
 
         return null;
@@ -195,15 +197,14 @@ class EmailLog extends Model
      */
     public function getRelatedIdentity(): ?Identity
     {
-        if ($this->event_log->loggable instanceof Voucher) {
-            return $this->event_log->loggable->identity;
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof Voucher) {
+            return $loggable->identity;
         }
 
-        if (
-            $this->event_log->loggable instanceof ProductReservation ||
-            $this->event_log->loggable instanceof Reimbursement
-        ) {
-            return $this->event_log->loggable->voucher->identity;
+        if ($loggable instanceof ProductReservation || $loggable instanceof Reimbursement) {
+            return $loggable->voucher->identity;
         }
 
         return $this->getRelatedFundRequest()?->identity;

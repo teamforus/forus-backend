@@ -25,7 +25,7 @@ trait MakesTestReimbursements
     /**
      * @var array
      */
-    protected array $resourceStructure = [
+    protected array $reimbursementResourceStructure = [
         'id',
         'title',
         'description',
@@ -104,7 +104,7 @@ trait MakesTestReimbursements
         $response = $this->postJson('/api/v1/platform/reimbursements', $body, $headers);
         $response->assertCreated();
         $response->assertJsonStructure([
-            'data' => $this->resourceStructure,
+            'data' => $this->reimbursementResourceStructure,
         ]);
 
         $reimbursementId = $response->json('data.id');

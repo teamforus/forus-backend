@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature;
+namespace Tests\Feature;
 
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
@@ -59,10 +59,11 @@ class EmailLogTest extends TestCase
     public function testVoucherAssignedBudgetMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization);
-        $fund->makeVoucher($identity);
+
+        $this->makeTestFund($organization)->makeVoucher($identity);
         $this->assertLogExists($identity, $organization, VoucherAssignedBudgetMail::class);
     }
 
@@ -72,15 +73,15 @@ class EmailLogTest extends TestCase
     public function testVoucherAssignedProductMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($identity);
-
         $product = $this->makeProductsFundFund(1)[0];
-        $this->addProductFundToFund($fund, $product, false);
-        $voucher->buyProductVoucher($product);
 
+        $this->addProductFundToFund($fund, $product, false);
+        $fund->makeVoucher($identity)->buyProductVoucher($product);
         $this->assertLogExists($identity, $organization, VoucherAssignedProductMail::class);
     }
 
@@ -90,10 +91,11 @@ class EmailLogTest extends TestCase
     public function testVoucherAssignedSubsidyMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestSubsidyFund($organization);
-        $fund->makeVoucher($identity);
+
+        $this->makeTestSubsidyFund($organization)->makeVoucher($identity);
         $this->assertLogExists($identity, $organization, VoucherAssignedSubsidyMail::class);
     }
 
@@ -104,11 +106,11 @@ class EmailLogTest extends TestCase
     public function testDeactivationVoucherMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($identity);
-        $voucher->deactivate(notifyByEmail: true);
+
+        $this->makeTestFund($organization)->makeVoucher($identity)->deactivate(notifyByEmail: true);
         $this->assertLogExists($identity, $organization, DeactivationVoucherMail::class);
     }
 
@@ -119,14 +121,13 @@ class EmailLogTest extends TestCase
     public function testVoucherExpireSoonBudgetMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestFund($this->makeTestOrganization($identity))->makeVoucher($identity);
 
         VoucherExpireSoon::dispatch($voucher);
 
-        $this->assertLogExists($identity, $organization, VoucherExpireSoonBudgetMail::class);
+        $this->assertLogExists($identity, $voucher->fund->organization, VoucherExpireSoonBudgetMail::class);
     }
 
     /**
@@ -136,10 +137,9 @@ class EmailLogTest extends TestCase
     public function testRequestPhysicalCardMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestFund($this->makeTestOrganization($identity))->makeVoucher($identity);
 
         $voucher->makePhysicalCardRequest([
             'address' => $this->faker->streetAddress,
@@ -149,7 +149,7 @@ class EmailLogTest extends TestCase
             'city' => $this->faker->city,
         ], true);
 
-        $this->assertLogExists($identity, $organization, RequestPhysicalCardMail::class);
+        $this->assertLogExists($identity, $voucher->fund->organization, RequestPhysicalCardMail::class);
     }
 
     /**
@@ -159,14 +159,14 @@ class EmailLogTest extends TestCase
     public function testPaymentSuccessBudgetMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($identity);
-
+        $voucher = $this->makeTestFund($organization)->makeVoucher($identity);
         $product = $this->makeProductsFundFund(1)[0];
-        $this->addProductFundToFund($fund, $product, false);
         $employee = $organization->employees[0];
+
+        $this->addProductFundToFund($voucher->fund, $product, false);
 
         $transaction = $voucher->makeTransaction([
             'amount' => $voucher->amount,
@@ -193,8 +193,10 @@ class EmailLogTest extends TestCase
     public function testProductReservationAcceptedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $this->makeTestFund($organization);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
@@ -213,17 +215,16 @@ class EmailLogTest extends TestCase
     public function testProductReservationCanceledMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $this->makeTestFund($organization);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
 
-        $reservation = $this->makeReservation($voucher, $product);
-        $reservation->acceptProvider();
-        $reservation->rejectOrCancelProvider();
-
+        $this->makeReservation($voucher, $product)->acceptProvider()->rejectOrCancelProvider();
         $this->assertLogExists($identity, $organization, ProductReservationCanceledMail::class);
     }
 
@@ -234,16 +235,16 @@ class EmailLogTest extends TestCase
     public function testProductReservationRejectedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $this->makeTestFund($organization);
 
         $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
         $product = $this->findProductForReservation($voucher);
 
-        $reservation = $this->makeReservation($voucher, $product);
-        $reservation->rejectOrCancelProvider();
-
+        $this->makeReservation($voucher, $product)->rejectOrCancelProvider();
         $this->assertLogExists($identity, $organization, ProductReservationRejectedMail::class);
     }
 
@@ -254,13 +255,14 @@ class EmailLogTest extends TestCase
     public function testReimbursementSubmittedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization, [], [
-            'allow_reimbursements' => true,
-        ]);
 
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestFund($organization, [], [
+            'allow_reimbursements' => true,
+        ])->makeVoucher($identity);
+
         $this->makeReimbursement($voucher, true);
         $this->assertLogExists($identity, $organization, ReimbursementSubmittedMail::class);
     }
@@ -272,16 +274,17 @@ class EmailLogTest extends TestCase
     public function testReimbursementApprovedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization, [], [
-            'allow_reimbursements' => true,
-        ]);
 
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestFund($organization, [], [
+            'allow_reimbursements' => true,
+        ])->makeVoucher($identity);
 
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
+
         $this->assignReimbursementInDashboard($reimbursement, $employee, true);
         $this->resolveReimbursementInDashboard($reimbursement, $employee, true, true);
 
@@ -295,16 +298,17 @@ class EmailLogTest extends TestCase
     public function testReimbursementDeclinedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
-        $fund = $this->makeTestFund($organization, [], [
-            'allow_reimbursements' => true,
-        ]);
 
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestFund($organization, [], [
+            'allow_reimbursements' => true,
+        ])->makeVoucher($identity);
 
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
+
         $this->assignReimbursementInDashboard($reimbursement, $employee, true);
         $this->resolveReimbursementInDashboard($reimbursement, $employee, false, true);
 
@@ -318,8 +322,10 @@ class EmailLogTest extends TestCase
     public function testFundRequestCreatedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $fund = $this->makeTestFund($organization, [], [
             'allow_fund_requests' => true,
         ]);
@@ -339,8 +345,10 @@ class EmailLogTest extends TestCase
     public function testFundRequestApprovedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $fund = $this->makeTestFund($organization, [], [
             'allow_fund_requests' => true,
         ]);
@@ -362,8 +370,10 @@ class EmailLogTest extends TestCase
     public function testFundRequestDisregardedMailLog(): void
     {
         $this->startTime = now();
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
+
         $fund = $this->makeTestFund($organization, [], [
             'allow_fund_requests' => true,
         ]);
@@ -487,7 +497,7 @@ class EmailLogTest extends TestCase
         Identity $identity,
         Organization $organization,
         string $mailable,
-        ?FundRequest $fundRequest = null
+        ?FundRequest $fundRequest = null,
     ): void {
         $headers = $this->makeApiHeaders($organization->identity);
         $this->assertMailableSent($identity->email, $mailable, $this->startTime);
@@ -496,12 +506,18 @@ class EmailLogTest extends TestCase
         $log = $this->getEmailOfTypeQuery($identity->email, $mailable, $this->startTime)->first();
         $this->assertNotNull($log);
 
+        // assert at least one filter fund_request_id or identity_id is required
+        $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query([]),
+            $headers,
+        )->assertForbidden();
+
         // assert successfully found log
         $response = $this->getJson(
-            sprintf('/api/v1/platform/organizations/%s/email-logs?%s', $organization->id, http_build_query(
+            "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query(
                 $fundRequest ? ['fund_request_id' => $fundRequest->id] : ['identity_id' => $identity->id]
-            )),
-            $headers
+            ),
+            $headers,
         );
 
         $response->assertSuccessful();
@@ -509,9 +525,9 @@ class EmailLogTest extends TestCase
         $this->assertNotEmpty($exists, "No $log->mailable log found");
 
         // assert export
-        $this->get(
-            sprintf('/api/v1/platform/organizations/%s/email-logs/%s/export', $organization->id, $log->id),
-            $headers
+        $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/email-logs/$log->id/export",
+            $headers,
         )->assertSuccessful();
 
         // assert access for other cases
@@ -520,15 +536,16 @@ class EmailLogTest extends TestCase
             $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
             $otherFund = $this->makeTestFund($otherOrganization);
             $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+
             $otherFundRequest = $this->setCriteriaAndMakeFundRequest($otherIdentity, $otherFund, [
                 'children_nth' => 3,
             ]);
 
             $this->getJson(
-                sprintf('/api/v1/platform/organizations/%s/email-logs?%s', $organization->id, http_build_query([
+                "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query([
                     'fund_request_id' => $otherFundRequest->id,
-                ])),
-                $headers
+                ]),
+                $headers,
             )->assertForbidden();
 
             // assert that employee doesn't see log for other fund_request (related to organization)
@@ -538,10 +555,10 @@ class EmailLogTest extends TestCase
             ]);
 
             $response = $this->getJson(
-                sprintf('/api/v1/platform/organizations/%s/email-logs?%s', $organization->id, http_build_query([
+                "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query([
                     'fund_request_id' => $otherFundRequest->id,
-                ])),
-                $headers
+                ]),
+                $headers,
             );
 
             $response->assertSuccessful();
@@ -552,20 +569,20 @@ class EmailLogTest extends TestCase
             $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
 
             $this->getJson(
-                sprintf('/api/v1/platform/organizations/%s/email-logs?%s', $organization->id, http_build_query([
+                "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query([
                     'identity_id' => $otherIdentity->id,
-                ])),
-                $headers
+                ]),
+                $headers,
             )->assertForbidden();
 
             // assert that employee doesn't see log for other identity (related to organization)
             $organization->funds[0]->makeVoucher($otherIdentity);
 
             $response = $this->getJson(
-                sprintf('/api/v1/platform/organizations/%s/email-logs?%s', $organization->id, http_build_query([
+                "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query([
                     'identity_id' => $otherIdentity->id,
-                ])),
-                $headers
+                ]),
+                $headers,
             );
 
             $response->assertSuccessful();

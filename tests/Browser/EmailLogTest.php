@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
@@ -11,6 +11,8 @@ use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
@@ -45,6 +47,7 @@ class EmailLogTest extends DuskTestCase
         $implementation = Implementation::byKey('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($implementation->organization);
+
         $fund->makeVoucher($identity);
 
         $this->rollbackModels([], function () use ($implementation, $fund, $identity) {
@@ -60,7 +63,10 @@ class EmailLogTest extends DuskTestCase
                 $this->goToIdentitiesListPage($browser);
                 $this->searchIdentity($browser, $identity);
 
-                $this->assertLogExists($browser, $identity, $fund, VoucherAssignedBudgetMail::class);
+                $log = $this->findEmailLog($identity, VoucherAssignedBudgetMail::class);
+
+                $this->assertEmailLogExistsAndVisible($browser, $log);
+                $this->assertEmailLogNotVisibleToOthers($browser, $log, $fund);
 
                 // Logout
                 $this->logout($browser);
@@ -102,7 +108,10 @@ class EmailLogTest extends DuskTestCase
                 $this->goToFundRequestsListPage($browser);
                 $this->searchFundRequest($browser, $fundRequest);
 
-                $this->assertLogExists($browser, $identity, $fund, FundRequestCreatedMail::class, $fundRequest);
+                $log = $this->findEmailLog($identity, FundRequestCreatedMail::class);
+
+                $this->assertEmailLogExistsAndVisible($browser, $log);
+                $this->assertEmailLogNotVisibleToOthers($browser, $log, $fund, $fundRequest);
 
                 // Logout
                 $this->logout($browser);
@@ -177,60 +186,78 @@ class EmailLogTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
      * @param Identity $identity
-     * @param Fund $fund
      * @param string $mailable
-     * @param FundRequest|null $fundRequest
-     * @throws TimeOutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @return void
+     * @return EmailLog
      */
-    protected function assertLogExists(
-        Browser $browser,
+    protected function findEmailLog(
         Identity $identity,
-        Fund $fund,
         string $mailable,
-        ?FundRequest $fundRequest = null
-    ): void {
+    ): EmailLog {
         $this->assertMailableSent($identity->email, $mailable, $this->startTime);
 
         /** @var EmailLog $log */
         $log = $this->getEmailOfTypeQuery($identity->email, $mailable, $this->startTime)->first();
         $this->assertNotNull($log);
 
+        return $log;
+    }
+
+    /**
+     * @param Browser $browser
+     * @param EmailLog $log
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function assertEmailLogExistsAndVisible(Browser $browser, EmailLog $log): void
+    {
         $browser->waitFor('@emailLogs');
         $browser->waitFor("@emailLogRow$log->id");
         $browser->assertVisible("@emailLogRow$log->id");
 
         $this->assertViewModal($browser, $log);
         $this->assertExportEmail($browser, $log);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param EmailLog $log
+     * @param FundRequest|null $fundRequest
+     * @param Fund $fund
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertEmailLogNotVisibleToOthers(
+        Browser $browser,
+        EmailLog $log,
+        Fund $fund,
+        FundRequest $fundRequest = null,
+    ): void {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // assert access for other cases
         if ($fundRequest) {
             // assert that employee doesn't see log for other fund_request (related to organization)
-            $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
-            $otherFundRequest = $this->setCriteriaAndMakeFundRequest($otherIdentity, $fund, [
+            $otherFundRequest = $this->setCriteriaAndMakeFundRequest($identity, $fund, [
                 'children_nth' => 3,
             ]);
 
             $this->goToFundRequestsListPage($browser);
             $this->searchFundRequest($browser, $otherFundRequest);
-
-            $browser->waitFor('@emailLogs');
-            $browser->assertMissing("@emailLogRow$log->id");
         } else {
             // assert that employee doesn't see log for other identity (related to organization)
-            $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
-            $fund->makeVoucher($otherIdentity);
+            $fund->makeVoucher($identity);
 
             $this->goToIdentitiesListPage($browser);
-            $this->searchIdentity($browser, $otherIdentity);
-
-            $browser->waitFor('@emailLogs');
-            $browser->assertMissing("@emailLogRow$log->id");
+            $this->searchIdentity($browser, $identity);
         }
+
+        $browser->waitFor('@emailLogs');
+        $browser->assertMissing("@emailLogRow$log->id");
     }
 
     /**

@@ -50,7 +50,7 @@ class EmailLogQuery
             FundRequestClarificationRequestedMail::class,
         ])->whereHas('event_log', fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
             $builder,
-            FundRequest::query()->where('id', $fundRequest->id)
+            FundRequest::where('id', $fundRequest->id),
         ));
     }
 
@@ -72,14 +72,17 @@ class EmailLogQuery
             VoucherExpireSoonBudgetMail::class,
             RequestPhysicalCardMail::class,
             PaymentSuccessBudgetMail::class,
+
             // ProductReservation
             ProductReservationAcceptedMail::class,
             ProductReservationCanceledMail::class,
             ProductReservationRejectedMail::class,
+
             // Reimbursement
             ReimbursementSubmittedMail::class,
             ReimbursementApprovedMail::class,
             ReimbursementDeclinedMail::class,
+
             // FundRequest
             FundRequestDeniedMail::class,
             FundRequestCreatedMail::class,
@@ -95,22 +98,20 @@ class EmailLogQuery
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 ProductReservation::class,
-                ProductReservation::query()->whereIn(
-                    'id',
-                    $identity->vouchers()->select('product_reservation_id')
-                ),
+                ProductReservation::whereIn('id', $identity->vouchers()->select('product_reservation_id')),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 Reimbursement::class,
-                Reimbursement::query()->whereIn('voucher_id', $identity->vouchers()->select('id')),
+                Reimbursement::whereIn('voucher_id', $identity->vouchers()->select('id')),
                 $builder,
             ));
 
-            $builder->orWhere(
-                fn (Builder $builder) => static::eventsOfTypeFundRequestQuery($builder, $identity->fund_requests())
-            );
+            $builder->orWhere(fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
+                $builder,
+                $identity->fund_requests(),
+            ));
         });
     }
 
@@ -152,7 +153,7 @@ class EmailLogQuery
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 FundRequestRecord::class,
                 $recordIds,
-                $builder
+                $builder,
             ));
         });
     }
