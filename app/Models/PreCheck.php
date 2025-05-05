@@ -7,6 +7,7 @@ use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\FundSearch;
+use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,6 +45,8 @@ use Illuminate\Support\Arr;
  */
 class PreCheck extends BaseModel
 {
+    use HasOnDemandTranslations;
+
     /**
      * @var array
      */
