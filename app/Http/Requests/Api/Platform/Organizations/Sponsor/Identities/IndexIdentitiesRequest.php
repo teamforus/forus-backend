@@ -6,6 +6,7 @@ use App\Exports\IdentityProfilesExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use Illuminate\Support\Arr;
+use App\Searches\Sponsor\IdentitiesSearch;
 use Illuminate\Validation\Rule;
 
 /**
@@ -45,6 +46,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
             ...$this->exportableResourceRules(
                 Arr::pluck(IdentityProfilesExport::getExportFields($this->organization), 'key')
             ),
+            ...$this->sortableResourceRules(100, IdentitiesSearch::SORT_BY),
         ];
     }
 }
