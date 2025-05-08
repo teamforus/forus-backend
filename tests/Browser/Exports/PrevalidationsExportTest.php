@@ -3,11 +3,9 @@
 namespace Tests\Browser\Exports;
 
 use App\Exports\PrevalidationsExport;
-use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -46,8 +44,8 @@ class PrevalidationsExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser, $fund);
-                $this->searchPrevalidation($browser, $prevalidation);
+                $this->goToPrevalidationsPage($browser, $fund);
+                $this->searchTable($browser, '@tablePrevalidation', $prevalidation->uid, $prevalidation->id);
 
                 $fields = $this->getExportFields($prevalidation);
 
@@ -85,45 +83,6 @@ class PrevalidationsExportTest extends DuskTestCase
         })->pluck('value', 'record_type.name')->toArray();
 
         return [...$fields, ...array_keys($records)];
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Fund $fund
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser, Fund $fund): void
-    {
-        $browser->waitFor('@asideMenuGroupFundRequests');
-        $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@csvValidationPage');
-        $browser->element('@csvValidationPage')->click();
-
-        $browser->waitFor('@prevalidationSelectFund');
-        $browser->within('@prevalidationSelectFund', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
-        });
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Prevalidation $prevalidation
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchPrevalidation(Browser $browser, Prevalidation $prevalidation): void
-    {
-        $browser->waitFor('@searchPrevalidations');
-        $browser->type('@searchPrevalidations', $prevalidation->uid);
-
-        $browser->waitFor("@prevalidationRow$prevalidation->id", 20);
-        $browser->assertVisible("@prevalidationRow$prevalidation->id");
-
-        $this->assertRowsCount($browser, 1, '@prevalidationsPageContent');
     }
 
     /**

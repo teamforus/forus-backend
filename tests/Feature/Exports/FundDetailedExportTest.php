@@ -43,7 +43,7 @@ class FundDetailedExportTest extends TestCase
             'data_format' => 'csv',
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $fields = $this->getExportFields();
         $this->assertFields($response, $fund, $fields);
 
@@ -55,7 +55,7 @@ class FundDetailedExportTest extends TestCase
             'fields' => FundsExportDetailed::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $fund, $fields);
 
         // Assert specific fields
@@ -66,7 +66,7 @@ class FundDetailedExportTest extends TestCase
             'fields' => ['name'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $fund, [
             FundsExportDetailed::trans('name'),

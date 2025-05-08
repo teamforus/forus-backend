@@ -45,7 +45,7 @@ class ReimbursementsExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -59,7 +59,7 @@ class ReimbursementsExportTest extends TestCase
             'fields' => ReimbursementsSponsorExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertReimbursementsFields($response, $reimbursement, $fields);
 
         // Assert specific fields
@@ -68,7 +68,7 @@ class ReimbursementsExportTest extends TestCase
             'fields' => ['id', 'code'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertReimbursementsFields($response, $reimbursement, [
             ReimbursementsSponsorExport::trans('id'),

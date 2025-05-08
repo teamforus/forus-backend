@@ -54,7 +54,7 @@ jobs:
         run: docker compose exec -T app bash -c "php artisan key:generate && php artisan db:seed"
 
       - name: Generate test data
-        run: docker compose exec -T app php artisan test-data:seed
+        run: docker compose exec -T app bash -c "php artisan test-data:seed"
 
       - name: Set chrome download folder permissions
         run: docker compose exec -u root -T selenium bash -c "chown -R seluser:seluser /home/seluser/Downloads"
@@ -104,14 +104,14 @@ jobs:
         run: |
           docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/webshop.general/#/" &&
           docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.sponsor/#/" &&
-          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.provider/#/"
+          docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.provider/#/" &&
           docker compose exec -T app bash -c "wget http://forus-frontend-apache:3000/dashboard.validator/#/"
 
       - name: Install chrome driver
         run: docker compose exec -T app bash -c "php artisan dusk:chrome"
 
       - name: --- RUN BROWSER TESTS ---
-        run: docker compose exec -T app bash -c "php artisan dusk --testdox --stop-on-failure"
+        run: docker compose exec -T app bash -c "php artisan dusk --testdox --stop-on-error --stop-on-failure"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -120,5 +120,6 @@ jobs:
           path: |
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
+            forus-backend/storage/app/dusk-downloads/*
             forus-backend/storage/logs/laravel.log
           retention-days: 5

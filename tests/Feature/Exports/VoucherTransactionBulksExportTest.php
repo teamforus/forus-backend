@@ -43,7 +43,7 @@ class VoucherTransactionBulksExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -57,7 +57,7 @@ class VoucherTransactionBulksExportTest extends TestCase
             'fields' => VoucherTransactionBulksExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $bulk, $fields);
 
         // Assert specific fields
@@ -66,7 +66,7 @@ class VoucherTransactionBulksExportTest extends TestCase
             'fields' => ['id', 'quantity'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $bulk, [
             VoucherTransactionBulksExport::trans('id'),

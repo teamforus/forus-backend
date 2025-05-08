@@ -6,7 +6,6 @@ use App\Exports\EmployeesExport;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Role;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -26,7 +25,6 @@ class EmployeesExportTest extends DuskTestCase
     {
         $implementation = Implementation::byKey('nijmegen');
 
-        /** @var Employee $employee */
         $employee = $implementation->organization->employees()->first();
         $this->assertNotNull($employee);
 
@@ -40,7 +38,7 @@ class EmployeesExportTest extends DuskTestCase
 
             // Go to employees list, open export modal and assert all export fields in file
             $this->goToEmployeesPage($browser);
-            $this->searchEmployee($browser, $employee);
+            $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
 
             $fields = $this->getExportFields();
 
@@ -57,36 +55,6 @@ class EmployeesExportTest extends DuskTestCase
             // Logout
             $this->logout($browser);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    protected function goToEmployeesPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupOrganization');
-        $browser->element('@asideMenuGroupOrganization')->click();
-        $browser->waitFor('@employeesPage');
-        $browser->element('@employeesPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Employee $employee
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchEmployee(Browser $browser, Employee $employee): void
-    {
-        $browser->waitFor('@searchEmployee');
-        $browser->type('@searchEmployee', $employee->identity->email);
-
-        $browser->waitFor("@employeeRow$employee->id", 20);
-        $browser->assertVisible("@employeeRow$employee->id");
-
-        $this->assertRowsCount($browser, 1, '@employeesPageContent');
     }
 
     /**

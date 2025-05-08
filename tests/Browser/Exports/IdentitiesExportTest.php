@@ -5,7 +5,6 @@ namespace Tests\Browser\Exports;
 use App\Exports\FundIdentitiesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -43,10 +42,10 @@ class IdentitiesExportTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $browser->visit($implementation->urlSponsorDashboard("/organisaties/$organization->id/fondsen/$fund->id"));
+                $browser->pause(500);
 
-                $this->goToIdentitiesTab($browser);
-                $this->searchIdentity($browser, $identity);
+                $this->goToSponsorFundDetailsPageTab($browser, $implementation, $organization, $fund, 'identities');
+                $this->searchTable($browser, '@tableIdentity', $identity->email, $identity->id);
 
                 $fields = array_pluck(FundIdentitiesExport::getExportFields(), 'name');
 
@@ -72,35 +71,6 @@ class IdentitiesExportTest extends DuskTestCase
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToIdentitiesTab(Browser $browser): void
-    {
-        $browser->waitFor('@identities_tab');
-        $browser->element('@identities_tab')->click();
-        $browser->waitFor('@identitiesPageContent');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Identity $identity
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchIdentity(Browser $browser, Identity $identity): void
-    {
-        $browser->waitFor('@searchIdentities');
-        $browser->type('@searchIdentities', $identity->email);
-
-        $browser->waitFor("@identityRow$identity->id", 20);
-        $browser->assertVisible("@identityRow$identity->id");
-
-        $this->assertRowsCount($browser, 1, '@identitiesPageContent');
     }
 
     /**

@@ -23,11 +23,6 @@ class FundRequestsExportTest extends TestCase
     use MakesTestOrganizations;
 
     /**
-     * @var string
-     */
-    protected string $apiExportUrl = '/api/v1/platform/organizations/%s/fund-requests/export';
-
-    /**
      * @throws Throwable
      * @return void
      */
@@ -47,34 +42,32 @@ class FundRequestsExportTest extends TestCase
         $fundRequest = $fund->fund_requests()->first();
         $this->assertNotNull($fundRequest);
 
+        $apiExportUrl = "/api/v1/platform/organizations/$organization->id/fund-requests/export";
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
-            sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
-            $apiHeaders
-        );
+        $response = $this->getJson("$apiExportUrl?data_format=csv", $apiHeaders);
 
         // Filter headers except records header and add all record keys
         $fields = $this->getExportFields($fundRequest);
         $this->assertFields($response, $fundRequest, $fields);
 
         // Assert with passed all fields
-        $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
+        $url = $apiExportUrl . '?' . http_build_query([
             'data_format' => 'csv',
             'fields' => FundRequestsExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $fundRequest, $fields);
 
         // Assert specific fields
-        $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
+        $url = $apiExportUrl . '?' . http_build_query([
             'data_format' => 'csv',
             'fields' => ['bsn', 'fund_name'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $fundRequest, [
             FundRequestsExport::trans('bsn'),

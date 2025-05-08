@@ -43,7 +43,7 @@ class VoucherTransactionsProviderExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($providerOrganization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $providerOrganization->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -57,7 +57,7 @@ class VoucherTransactionsProviderExportTest extends TestCase
             'fields' => VoucherTransactionsProviderExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $transaction, $fields);
 
         // Assert specific fields
@@ -66,7 +66,7 @@ class VoucherTransactionsProviderExportTest extends TestCase
             'fields' => ['id'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $transaction, [
             VoucherTransactionsProviderExport::trans('id'),

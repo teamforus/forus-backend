@@ -47,7 +47,7 @@ class ProductReservationsExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -61,7 +61,7 @@ class ProductReservationsExportTest extends TestCase
             'fields' => ProductReservationsExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $reservation, $fields);
 
         // Assert specific fields
@@ -70,7 +70,7 @@ class ProductReservationsExportTest extends TestCase
             'fields' => ['code'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $reservation, [
             ProductReservationsExport::trans('code'),

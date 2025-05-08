@@ -259,61 +259,44 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param VoucherTransaction $transaction
-     * @param int $transactionCount
+     * @param int $count
      * @param string $dashboard
-     * @throws TimeOutException
      * @return void
+     *@throws TimeOutException
      */
     protected function assertTransactionsSearchIsWorking(
         Browser $browser,
         VoucherTransaction $transaction,
-        int $transactionCount,
+        int $count,
         string $dashboard
     ): void {
-        $browser->waitFor('@searchTransaction');
-
         // searching by fund name should result in all transactions from the target fund being shown
-        $this->searchItem($browser, $transaction, $transaction->voucher->fund->name, $transactionCount);
+        $this->searchTable($browser, '@tableTransaction', $transaction->voucher->fund->name, $transaction->id, $count);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
 
         // unique transaction values should result in a single transaction being shown
-        $this->searchItem($browser, $transaction, $transaction->branch_id);
-        $this->searchItem($browser, $transaction, $transaction->branch_name);
-        $this->searchItem($browser, $transaction, $transaction->branch_number);
-        $this->searchItem($browser, $transaction, $transaction->product->id);
-        $this->searchItem($browser, $transaction, $transaction->product->name);
+        $this->searchTable($browser, '@tableTransaction', $transaction->branch_id, $transaction->id);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', $transaction->branch_name, $transaction->id);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', $transaction->branch_number, $transaction->id);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', $transaction->product->id, $transaction->id);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', $transaction->product->name, $transaction->id);
+        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
 
         // searching by provider name should show only the transactions from the target provider
         if ($dashboard === 'sponsor') {
-            $this->searchItem($browser, $transaction, $transaction->product->organization->name, $transactionCount);
+            $this->searchTable($browser, '@tableTransaction', $transaction->product->organization->name, $transaction->id, $count);
+            $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         }
 
         // searching by provider note should only show the target transaction (give the note is unique)
         if ($dashboard === 'provider') {
-            $this->searchItem($browser, $transaction, $transaction->notes_provider[0]->message);
+            $this->searchTable($browser, '@tableTransaction', $transaction->notes_provider[0]->message, $transaction->id);
+            $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         }
-    }
-
-    /**
-     * @param Browser $browser
-     * @param VoucherTransaction $transaction
-     * @param int|string $query
-     * @param int $expectedCount
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchItem(
-        Browser $browser,
-        VoucherTransaction $transaction,
-        int|string $query,
-        int $expectedCount = 1
-    ): void {
-        $this->clearField($browser, '@searchTransaction');
-        $this->assertRowsCount($browser, $expectedCount, '@transactionsPageContent', '>');
-
-        $browser->type('@searchTransaction', $query);
-        $this->assertRowsCount($browser, $expectedCount, '@transactionsPageContent');
-        $browser->waitFor("@transactionItem$transaction->id", 20);
-        $browser->assertVisible("@transactionItem$transaction->id");
     }
 
     /**
