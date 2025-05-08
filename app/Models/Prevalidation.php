@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QBuilder;
-use Illuminate\Support\Collection;
 
 /**
  * App\Models\Prevalidation.
@@ -262,34 +261,6 @@ class Prevalidation extends BaseModel
         }
 
         return $prevalidations;
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @return Collection
-     */
-    public static function export(BaseFormRequest $request): Collection
-    {
-        $transKey = 'export.prevalidations';
-
-        $query = self::search($request)->with([
-            'prevalidation_records.record_type.translations',
-        ]);
-
-        $data = $query->get()->map(static function (Prevalidation $prevalidation) use ($transKey) {
-            return collect([
-                trans("$transKey.code") => $prevalidation->uid,
-                trans("$transKey.used") => trans("$transKey.used_" . ($prevalidation->state === self::STATE_USED ? 'yes' : 'no')),
-            ])->merge($prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
-                return !str_contains($record->record_type->key, '_eligible');
-            })->pluck('value', 'record_type.name'))->toArray();
-        })->values();
-
-        (clone $query)->update([
-            'exported' => true,
-        ]);
-
-        return $data;
     }
 
     /**

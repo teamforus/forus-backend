@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 use App\Exports\FundProvidersExport;
 use App\Exports\ProviderFinancesExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\ExportProviderFinancesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProviderFinancialResource;
 use App\Http\Resources\Sponsor\SponsorProviderResource;
 use App\Models\FundProvider;
@@ -78,6 +80,20 @@ class ProvidersController extends Controller
     }
 
     /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
+        $this->authorize('listSponsorProviders', $organization);
+
+        return ExportFieldArrResource::collection(FundProvidersExport::getExportFields());
+    }
+
+    /**
      * @param IndexProvidersRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -93,9 +109,10 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $type = $request->input('export_type', 'xls');
+        $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
-        $exportData = new FundProvidersExport($request, $organization);
+        $fields = $request->input('fields', FundProvidersExport::getExportFieldsRaw());
+        $exportData = new FundProvidersExport($request, $organization, $fields);
 
         return resolve('excel')->download($exportData, $fileName);
     }
@@ -131,7 +148,22 @@ class ProvidersController extends Controller
     }
 
     /**
-     * @param IndexProvidersRequest $request
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getFinancesExportFields(Organization $organization): AnonymousResourceCollection
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+        $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
+        $this->authorize('listSponsorProviders', $organization);
+
+        return ExportFieldArrResource::collection(ProviderFinancesExport::getExportFields());
+    }
+
+    /**
+     * @param ExportProviderFinancesRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
@@ -139,8 +171,8 @@ class ProvidersController extends Controller
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportFinances(
-        IndexProvidersRequest $request,
-        Organization $organization
+        ExportProviderFinancesRequest $request,
+        Organization $organization,
     ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
@@ -157,9 +189,10 @@ class ProvidersController extends Controller
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
         ]))->with(ProviderFinancialResource::$load)->get();
 
-        $type = $request->input('export_format', 'xls');
+        $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
-        $fileData = new ProviderFinancesExport($organization, $providers);
+        $fields = $request->input('fields', ProviderFinancesExport::getExportFieldsRaw());
+        $fileData = new ProviderFinancesExport($providers, $fields);
 
         return resolve('excel')->download($fileData, $fileName);
     }

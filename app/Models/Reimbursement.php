@@ -7,7 +7,6 @@ use App\Events\Reimbursements\ReimbursementResigned;
 use App\Events\Reimbursements\ReimbursementResolved;
 use App\Models\Traits\HasNotes;
 use App\Models\Traits\HasTags;
-use App\Searches\ReimbursementsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Carbon\Carbon;
@@ -17,8 +16,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -402,25 +399,6 @@ class Reimbursement extends Model
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return SupportCollection
-     */
-    public static function export(Request $request, Organization $organization, array $fields): SupportCollection
-    {
-        $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
-        $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);
-
-        $search = new ReimbursementsSearch($request->only([
-            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
-            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
-        ]), $query);
-
-        return self::exportTransform($search->query()->latest(), $fields);
-    }
-
-    /**
      * @param bool $approved
      * @param string|null $note
      * @param string|null $reason
@@ -470,51 +448,5 @@ class Reimbursement extends Model
             'target_iban' => $this->iban,
             'target_name' => $this->iban_name,
         ]);
-    }
-
-    /**
-     * @param Builder $builder
-     * @param array $fields
-     * @return SupportCollection
-     */
-    private static function exportTransform(Builder $builder, array $fields): SupportCollection
-    {
-        $data = $builder->with([
-            'reimbursement_category',
-            'voucher.fund.organization',
-            'voucher.identity.record_bsn',
-            'voucher.identity.primary_email',
-            'employee.identity.primary_email',
-            'voucher.fund.fund_config.implementation',
-        ])->get();
-
-        return $data->map(fn (Reimbursement $reimbursement) => array_only([
-            'id' => $reimbursement->id,
-            'email' => $reimbursement->voucher->identity->email,
-            'amount' => currency_format($reimbursement->amount),
-            'submitted_at' => $reimbursement->submitted_at ?
-                format_datetime_locale($reimbursement->submitted_at) :
-                '-',
-            'lead_time' => $reimbursement->lead_time_locale,
-            'employee' => $reimbursement->employee?->identity?->email ?: '-',
-            'expired' => $reimbursement->expired ? 'Ja' : 'Nee',
-            'state' => $reimbursement->state_locale,
-            'code' => '#' . $reimbursement->code,
-            'fund_name' => $reimbursement->voucher->fund->name,
-            'implementation_name' => $reimbursement->voucher->fund->fund_config?->implementation?->name,
-            'bsn' => $reimbursement->voucher->fund->organization->bsn_enabled ?
-                ($reimbursement->voucher->identity->record_bsn?->value ?: '-') :
-                '-',
-            'iban' => $reimbursement->iban,
-            'iban_name' => $reimbursement->iban_name,
-            'provider_name' => $reimbursement->provider_name ?: '-',
-            'category' => $reimbursement->reimbursement_category?->name ?: '-',
-            'title' => $reimbursement->title,
-            'description' => $reimbursement->description,
-            'files_count' => $reimbursement->files_count,
-            'resolved_at' => $reimbursement->resolved_at ?
-                format_datetime_locale($reimbursement->resolved_at) :
-                '-',
-        ], $fields))->values();
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Exports\VoucherTransactionsProviderExport;
-use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Searches\VoucherTransactionsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -19,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -446,7 +443,7 @@ class VoucherTransaction extends BaseModel
             'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
             'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
             'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
-            'identity_address',
+            'identity_address', 'execution_date_from', 'execution_date_to',
         ]), self::query());
 
         return $builder->searchSponsor($organization);
@@ -459,10 +456,13 @@ class VoucherTransaction extends BaseModel
      */
     public static function searchProvider(Request $request, Organization $organization): Builder
     {
-        $builder = new VoucherTransactionsSearch($request->only([
-            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
-            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
-        ]), self::query());
+        $builder = new VoucherTransactionsSearch([
+            ...$request->only([
+                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            ]),
+            'q_type' => 'provider',
+        ], self::query());
 
         return $builder->searchProvider()->where([
             'organization_id' => $organization->id,
@@ -507,42 +507,6 @@ class VoucherTransaction extends BaseModel
         }
 
         return '-';
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return \Illuminate\Support\Collection
-     */
-    public static function exportProvider(
-        Request $request,
-        Organization $organization,
-        array $fields
-    ): SupportCollection {
-        return self::exportTransform(VoucherTransactionQuery::order(
-            self::searchProvider($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        ), $fields);
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return \Illuminate\Support\Collection
-     */
-    public static function exportSponsor(
-        Request $request,
-        Organization $organization,
-        array $fields
-    ): SupportCollection {
-        return static::exportTransform(VoucherTransactionQuery::order(
-            static::searchSponsor($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        ), $fields);
     }
 
     /**
@@ -894,52 +858,5 @@ class VoucherTransaction extends BaseModel
             'employee' => $employee,
             'voucher_transaction' => $this,
         ];
-    }
-
-    /**
-     * @param Builder $builder
-     * @param array $fields
-     * @return SupportCollection
-     */
-    private static function exportTransform(Builder $builder, array $fields): SupportCollection
-    {
-        $fieldLabels = array_pluck(array_merge(
-            VoucherTransactionsSponsorExport::getExportFields(),
-            VoucherTransactionsProviderExport::getExportFields()
-        ), 'name', 'key');
-
-        $data = $builder->with([
-            'voucher.fund', 'provider', 'product',
-        ])->get();
-
-        $data = $data->map(fn (VoucherTransaction $transaction) => array_only([
-            'id' => $transaction->id,
-            'amount' => currency_format($transaction->amount),
-            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
-            'method' => $transaction->product_reservation?->amount_extra > 0
-                ? 'iDeal + Tegoed'
-                : 'Tegoed',
-            'branch_name' => $transaction->branch_name,
-            'branch_id' => $transaction->branch_id,
-            'branch_number' => $transaction->branch_number,
-            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
-                currency_format($transaction->product_reservation?->amount_extra)
-                : '',
-            'date_transaction' => format_datetime_locale($transaction->created_at),
-            'date_payment' => format_datetime_locale($transaction->payment_time),
-            'fund_name' => $transaction->voucher->fund->name,
-            'product_id' => $transaction->product?->id,
-            'product_name' => $transaction->product?->name,
-            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
-            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
-            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
-            'bulk_status_locale' => $transaction->bulk_status_locale,
-        ], $fields))->values();
-
-        return $data->map(function ($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $item[$key],
-            ]), []);
-        });
     }
 }

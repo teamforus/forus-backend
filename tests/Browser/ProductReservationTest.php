@@ -462,12 +462,7 @@ class ProductReservationTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
             $this->selectDashboardOrganization($browser, $provider);
 
-            $browser->waitFor('@asideMenuGroupSales');
-            $browser->element('@asideMenuGroupSales')->click();
-            $browser->waitFor('@reservationsPage');
-            $browser->element('@reservationsPage')->click();
-            $browser->waitFor('@reservationsTitle');
-
+            $this->goToReservationsPage($browser);
             $this->checkReservationState($browser, $reservation);
 
             if ($reservation->isPending()) {
@@ -549,8 +544,8 @@ class ProductReservationTest extends DuskTestCase
     private function checkReservationState(Browser $browser, ProductReservation $reservation): void
     {
         $browser
-            ->waitFor("@reservationRow$reservation->id")
-            ->assertSeeIn("@reservationRow$reservation->id @reservationState", $reservation->state_locale);
+            ->waitFor("@tableReservationRow$reservation->id")
+            ->assertSeeIn("@tableReservationRow$reservation->id @reservationState", $reservation->state_locale);
     }
 
     /**

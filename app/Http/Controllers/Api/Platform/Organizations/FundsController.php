@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
+use App\Exports\FundsExportDetailed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
@@ -16,6 +17,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeReque
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
@@ -28,6 +30,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -379,6 +382,26 @@ class FundsController extends Controller
     }
 
     /**
+     * @param Organization $organization
+     * @param Request $request
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getFinancesOverviewExportFields(
+        Organization $organization,
+        Request $request
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+
+        $detailed = $request->input('detailed', false);
+
+        return ExportFieldArrResource::collection(
+            $detailed ? FundsExportDetailed::getExportFields() : FundsExport::getExportFields()
+        );
+    }
+
+    /**
      * Export funds data.
      *
      * @param FinanceOverviewRequest $request
@@ -400,16 +423,18 @@ class FundsController extends Controller
         $year = $request->input('year');
         $from = Carbon::createFromFormat('Y', $year)->startOfYear();
         $to = $year < now()->year ? Carbon::createFromFormat('Y', $year)->endOfYear() : today();
-        $exportType = $request->input('export_type', 'xls');
+        $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
-        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
-        $budgetFundsQuery = $organization->funds()->where([
-            'type' => Fund::TYPE_BUDGET,
-        ]);
-
-        $exportDataQuery = $detailed ? $budgetFundsQuery : $fundsQuery;
-        $exportData = new FundsExport($exportDataQuery->get(), $from, $to, $detailed);
+        if ($detailed) {
+            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw());
+            $budgetFunds = $organization->funds()->where('type', Fund::TYPE_BUDGET)->get();
+            $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);
+        } else {
+            $fields = $request->input('fields', FundsExport::getExportFieldsRaw());
+            $funds = $organization->funds()->where('state', '!=', Fund::STATE_WAITING)->get();
+            $exportData = new FundsExport($funds, $from, $to, $fields);
+        }
 
         return resolve('excel')->download($exportData, $fileName);
     }

@@ -42,7 +42,8 @@ class ExportPhysicalCardsRequestsCommand extends BaseCommand
 
         $date = $this->getOption('date') ?: now()->subDay()->format('Y-m-d');
         $path = $this->option('export_path') . $date . '.csv';
-        $exporter = new PhysicalCardRequestsExport($this->getOption('fund_id'), $date);
+        $fields = PhysicalCardRequestsExport::getExportFieldsRaw();
+        $exporter = new PhysicalCardRequestsExport($this->getOption('fund_id'), $date, $fields);
 
         try {
             resolve('excel')->store($exporter, $path, $disc);
