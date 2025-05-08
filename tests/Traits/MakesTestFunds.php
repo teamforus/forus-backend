@@ -402,6 +402,7 @@ trait MakesTestFunds
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();
+        $fund->amount_presets()->forceDelete();
         $fund->forceDelete();
     }
 }
