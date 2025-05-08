@@ -548,8 +548,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
             $router->get('notes', "Api\Platform\Organizations\FundRequestsController@notes");
             $router->post('notes', "Api\Platform\Organizations\FundRequestsController@storeNote");
             $router->delete('notes/{note}', "Api\Platform\Organizations\FundRequestsController@destroyNote");
-            $router->get('email-logs', "Api\Platform\Organizations\FundRequestsController@emailLogs");
-            $router->post('email-logs/{emailLog}/export', "Api\Platform\Organizations\FundRequestsController@exportEmailLog");
         });
 
         $router->resource(
@@ -1053,6 +1051,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->get(
         'organizations/{organization}/announcements',
         'Api\Platform\Organizations\AnnouncementController@index',
+    );
+
+    $router->get(
+        'organizations/{organization}/email-logs',
+        'Api\Platform\Organizations\EmailLogsController@index',
+    );
+
+    $router->get(
+        'organizations/{organization}/email-logs/{emailLog}/export',
+        'Api\Platform\Organizations\EmailLogsController@export',
     );
 
     $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');

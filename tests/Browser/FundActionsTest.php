@@ -302,27 +302,6 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @param Identity $requester
-     * @param Fund $fund
-     * @param array $records
-     * @return FundRequest
-     */
-    protected function setCriteriaAndMakeFundRequest(Identity $requester, Fund $fund, array $records): FundRequest
-    {
-        $recordsList = collect($records)->map(function (string|int $value, string $key) use ($fund) {
-            return $this->makeRequestCriterionValue($fund, $key, $value);
-        });
-
-        $response = $this->makeFundRequest($requester, $fund, $recordsList, false);
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-
-        return $fundRequest;
-    }
-
-    /**
      * @return array
      */
     protected function getPayoutFundSettings(): array

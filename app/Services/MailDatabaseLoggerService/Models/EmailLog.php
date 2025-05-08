@@ -7,6 +7,12 @@ use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
 use App\Mail\Funds\FundRequests\FundRequestDisregardedMail;
+use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
+use App\Models\Identity;
+use App\Models\ProductReservation;
+use App\Models\Reimbursement;
+use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Database\Eloquent\Model;
@@ -166,5 +172,41 @@ class EmailLog extends Model
         $pos = strrpos($html, '</html>');
 
         return $pos !== false ? substr_replace($html, $insert, $pos, 0) : $html;
+    }
+
+    /**
+     * @return Model|FundRequest|null
+     */
+    public function getRelatedFundRequest(): Model|FundRequest|null
+    {
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof FundRequest) {
+            return $loggable;
+        }
+
+        if ($loggable instanceof FundRequestRecord) {
+            return $loggable->fund_request;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return Identity|null
+     */
+    public function getRelatedIdentity(): ?Identity
+    {
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof Voucher) {
+            return $loggable->identity;
+        }
+
+        if ($loggable instanceof ProductReservation || $loggable instanceof Reimbursement) {
+            return $loggable->voucher->identity;
+        }
+
+        return $this->getRelatedFundRequest()?->identity;
     }
 }

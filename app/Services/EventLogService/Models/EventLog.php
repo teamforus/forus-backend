@@ -83,11 +83,15 @@ class EventLog extends Model
     /**
      * @param string $loggableType
      * @param Builder|Relation|int|array $loggable
+     * @param Builder|Relation|null $query
      * @return Builder|EventLog
      */
-    public static function eventsOfTypeQuery(string $loggableType, mixed $loggable): Builder|EventLog
-    {
-        $query = self::query();
+    public static function eventsOfTypeQuery(
+        string $loggableType,
+        mixed $loggable,
+        Builder|Relation|null $query = null,
+    ): Builder|EventLog {
+        $query = $query ?: self::query();
 
         $query->whereHasMorph('loggable', $loggableType, function (Builder $builder) use ($loggable) {
             if ($loggable instanceof Builder ||
