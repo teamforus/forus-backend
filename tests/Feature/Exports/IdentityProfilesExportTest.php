@@ -38,7 +38,7 @@ class IdentityProfilesExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -52,7 +52,7 @@ class IdentityProfilesExportTest extends TestCase
             'fields' => array_pluck(IdentityProfilesExport::getExportFields($organization), 'key'),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $identity, $fields);
 
         // Assert specific fields
@@ -61,7 +61,7 @@ class IdentityProfilesExportTest extends TestCase
             'fields' => ['id', 'given_name', 'family_name', 'email'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $identity, [
             IdentityProfilesExport::trans('id'),

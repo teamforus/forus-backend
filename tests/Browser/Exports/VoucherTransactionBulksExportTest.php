@@ -8,7 +8,6 @@ use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -48,7 +47,7 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
+                $this->goToTransactionsPage($browser, true);
 
                 $fields = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name');
 
@@ -113,21 +112,6 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
         $this->assertNotNull($bulk);
 
         return $bulk;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupFinancial');
-        $browser->element('@asideMenuGroupFinancial')->click();
-        $browser->waitFor('@transactionsPage');
-        $browser->element('@transactionsPage')->click();
-        $browser->waitFor('@transaction_view_bulks');
-        $browser->element('@transaction_view_bulks')->click();
     }
 
     /**

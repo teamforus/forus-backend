@@ -5,8 +5,6 @@ namespace Tests\Browser\Exports;
 use App\Exports\FundProvidersExport;
 use App\Models\FundProvider;
 use App\Models\Implementation;
-use App\Models\Organization;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -45,8 +43,8 @@ class FundProvidersExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchProvider($browser, $fundProvider->organization);
+                $this->goToSponsorProvidersPage($browser);
+                $this->searchTable($browser, '@tableProvider', $fundProvider->organization->name, $fundProvider->organization->id);
 
                 $fields = array_pluck(FundProvidersExport::getExportFields(), 'name');
 
@@ -94,37 +92,5 @@ class FundProvidersExportTest extends DuskTestCase
         $this->assertEquals($fields, $rows[0]);
         $this->assertEquals($fundProvider->fund->name, $rows[1][0]);
         $this->assertEquals($fundProvider->organization->name, $rows[1][3]);
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    private function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupProviders');
-        $browser->element('@asideMenuGroupProviders')->click();
-        $browser->waitFor('@providersPage');
-        $browser->element('@providersPage')->click();
-        $browser->waitFor('@provider_tab_active');
-        $browser->element('@provider_tab_active')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Organization $provider
-     * @throws TimeoutException
-     * @return void
-     */
-    private function searchProvider(Browser $browser, Organization $provider): void
-    {
-        $browser->waitFor('@searchProviders');
-        $browser->typeSlowly('@searchProviders', $provider->name);
-
-        $browser->waitFor("@providerRow$provider->id", 20);
-        $browser->assertVisible("@providerRow$provider->id");
-
-        $this->assertRowsCount($browser, 1, '@sponsorProvidersPageContent');
     }
 }

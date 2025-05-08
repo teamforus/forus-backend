@@ -8,7 +8,6 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -46,7 +45,7 @@ class ProviderFinancesExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
+                $this->goToSponsorFinancialDashboardPage($browser);
 
                 $fields = array_pluck(ProviderFinancesExport::getExportFields(), 'name');
 
@@ -99,19 +98,6 @@ class ProviderFinancesExportTest extends DuskTestCase
         $this->assertNotNull($providerOrganization);
 
         return $providerOrganization;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupReports');
-        $browser->element('@asideMenuGroupReports')->click();
-        $browser->waitFor('@financialDashboardPage');
-        $browser->element('@financialDashboardPage')->click();
     }
 
     /**

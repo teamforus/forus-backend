@@ -5,7 +5,6 @@ namespace Tests\Browser\Exports;
 use App\Exports\IdentityProfilesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -43,8 +42,8 @@ class IdentityProfilesExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchIdentity($browser, $identity);
+                $this->goSponsorProfilesPage($browser);
+                $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);
 
                 $fields = array_pluck(IdentityProfilesExport::getExportFields($implementation->organization), 'name');
 
@@ -74,36 +73,6 @@ class IdentityProfilesExportTest extends DuskTestCase
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupIdentities');
-        $browser->element('@asideMenuGroupIdentities')->click();
-        $browser->waitFor('@identitiesPage');
-        $browser->element('@identitiesPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Identity $identity
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchIdentity(Browser $browser, Identity $identity): void
-    {
-        $browser->waitFor('@searchIdentities');
-        $browser->type('@searchIdentities', $identity->email);
-
-        $browser->waitFor("@identityRow$identity->id", 20);
-        $browser->assertVisible("@identityRow$identity->id");
-
-        $this->assertRowsCount($browser, 1, '@identitiesPageContent');
     }
 
     /**

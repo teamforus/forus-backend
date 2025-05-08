@@ -6,7 +6,6 @@ use App\Exports\ReimbursementsSponsorExport;
 use App\Models\Implementation;
 use App\Models\Reimbursement;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -53,8 +52,8 @@ class ReimbursementsExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchReimbursement($browser, $reimbursement);
+                $this->goToReimbursementsPage($browser);
+                $this->searchTable($browser, '@tableReimbursement', $reimbursement->voucher->identity->email, $reimbursement->id);
 
                 $fields = array_pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
 
@@ -80,36 +79,6 @@ class ReimbursementsExportTest extends DuskTestCase
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupVouchers');
-        $browser->element('@asideMenuGroupVouchers')->click();
-        $browser->waitFor('@reimbursementsPage');
-        $browser->element('@reimbursementsPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Reimbursement $reimbursement
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchReimbursement(Browser $browser, Reimbursement $reimbursement): void
-    {
-        $browser->waitFor('@searchReimbursement');
-        $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
-
-        $browser->waitFor("@reimbursement$reimbursement->id", 20);
-        $browser->assertVisible("@reimbursement$reimbursement->id");
-
-        $this->assertRowsCount($browser, 1, '@reimbursementsPageContent');
     }
 
     /**

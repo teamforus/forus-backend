@@ -7,7 +7,6 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -45,8 +44,8 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchTransaction($browser, $transaction);
+                $this->goToTransactionsPage($browser);
+                $this->searchTable($browser, '@tableTransaction', $transaction->voucher->fund->name, $transaction->id);
 
                 $fields = array_pluck(VoucherTransactionsSponsorExport::getExportFields(), 'name');
 
@@ -105,36 +104,6 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @param VoucherTransaction $transaction
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
-    {
-        $browser->waitFor('@searchTransaction');
-        $browser->type('@searchTransaction', $transaction->voucher->fund->name);
-
-        $browser->waitFor("@transactionItem$transaction->id", 20);
-        $browser->assertVisible("@transactionItem$transaction->id");
-
-        $this->assertRowsCount($browser, 1, '@transactionsPageContent');
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupFinancial');
-        $browser->element('@asideMenuGroupFinancial')->click();
-        $browser->waitFor('@transactionsPage');
-        $browser->element('@transactionsPage')->click();
-    }
-
-    /**
      * @param VoucherTransaction $transaction
      * @param array $rows
      * @param array $fields
@@ -147,7 +116,6 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
     ): void {
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
-
         $this->assertEquals($transaction->id, $rows[1][0]);
     }
 }

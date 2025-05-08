@@ -7,7 +7,6 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ProductReservation;
 use Exception;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -49,8 +48,8 @@ class ProductReservationsExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchProductReservation($browser, $reservation);
+                $this->goToReservationsPage($browser);
+                $this->searchTable($browser, '@tableReservation', $reservation->first_name, $reservation->id);
 
                 $fields = array_pluck(ProductReservationsExport::getExportFields(), 'name');
 
@@ -65,7 +64,7 @@ class ProductReservationsExportTest extends DuskTestCase
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
 
                     $data && $this->assertFields($reservation, $data, [
-                        ProductReservationsExport::trans('code')
+                        ProductReservationsExport::trans('code'),
                     ]);
                 }
 
@@ -98,36 +97,6 @@ class ProductReservationsExportTest extends DuskTestCase
         $this->assertNotNull($reservation);
 
         return $reservation;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupSales');
-        $browser->element('@asideMenuGroupSales')->click();
-        $browser->waitFor('@reservationsPage');
-        $browser->element('@reservationsPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param ProductReservation $reservation
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchProductReservation(Browser $browser, ProductReservation $reservation): void
-    {
-        $browser->waitFor('@searchReservations');
-        $browser->type('@searchReservations', $reservation->first_name);
-
-        $browser->waitFor("@reservationRow$reservation->id", 20);
-        $browser->assertVisible("@reservationRow$reservation->id");
-
-        $this->assertRowsCount($browser, 1, '@reservationsPageContent');
     }
 
     /**

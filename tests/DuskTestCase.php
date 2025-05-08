@@ -6,7 +6,9 @@ use App\Traits\DoesTesting;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
@@ -28,19 +30,25 @@ abstract class DuskTestCase extends BaseTestCase
     {
         parent::setUp();
 
-        Dusk::selectorHtmlAttribute(Config::get('forus.tests.dusk_selector'));
-        Browser::$waitSeconds = Config::get('forus.tests.dusk_wait_for_time');
+        Dusk::selectorHtmlAttribute(Config::get('tests.dusk_selector'));
+        Browser::$waitSeconds = Config::get('tests.dusk_wait_for_time');
+
+        if (!Config::get('tests.dusk_github_action')) {
+            collect(Storage::files('dusk-downloads'))
+                ->reject(fn ($file) => basename($file) === '.gitignore')
+                ->each(fn ($file) => Storage::delete($file));
+        }
     }
 
     /**
      * Prepare for Dusk test execution.
      *
      * @beforeClass
-     * @return void
      */
     public static function prepare(): void
     {
-        if (! static::runningInSail()) {
+        // Only start the built-in ChromeDriver if we're NOT targeting a remote node
+        if (!static::runningInSail() && empty(Env::get('DUSK_DRIVER_URL'))) {
             static::startChromeDriver([
                 '--port=9515',
             ]);
@@ -54,6 +62,8 @@ abstract class DuskTestCase extends BaseTestCase
      */
     protected function driver(): RemoteWebDriver
     {
+        $seleniumUrl = Env::get('DUSK_DRIVER_URL', 'http://localhost:9515');
+
         $options = (new ChromeOptions())
             ->addArguments(collect([
                 $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
@@ -66,14 +76,14 @@ abstract class DuskTestCase extends BaseTestCase
                 ]);
             })->all());
 
-        if ($_ENV['DUSK_CUSTOM_DOWNLOAD_FOLDER'] ?? null) {
+        if (!Config::get('tests.dusk_github_action')) {
             $options->setExperimentalOption('prefs', [
-                'download.default_directory' => storage_path($_ENV['DUSK_CUSTOM_DOWNLOAD_FOLDER']),
+                'download.default_directory' => Storage::path('dusk-downloads'),
             ]);
         }
 
         return RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
+            $seleniumUrl,
             DesiredCapabilities::chrome()->setCapability(ChromeOptions::CAPABILITY, $options)
         );
     }

@@ -4,14 +4,17 @@ namespace Tests\Browser\Traits;
 
 use App\Imports\BrowserTestEntitiesImport;
 use App\Models\Fund;
-use Exception;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Laravel\Dusk\Browser;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
 
 trait ExportTrait
 {
@@ -35,65 +38,74 @@ trait ExportTrait
     ): ?array {
         $this->fillExportModal($browser, $fields, $selector, $format);
 
-        if ($format === 'xls') {
-            $browser->assertMissing('@dangerNotification');
+        $browser->assertMissing('@dangerNotification');
 
-            return null;
-        }
-
-        return $this->parseFile($format);
+        return $this->parseExportedFile($format);
     }
 
     /**
      * @param string $format
-     * @return array
+     * @return array|null
      */
-    protected function parseFile(string $format): array
+    protected function parseExportedFile(string $format): ?array
     {
-        $excelFormat = match ($format) {
+        $fileFormat = match ($format) {
             'csv' => ExcelFormat::CSV,
             'xls' => ExcelFormat::XLS,
+            default => throw new InvalidArgumentException("Unsupported format: $format"),
         };
 
-        // Locate the latest CSV file
-        $csvFile = $this->findFile($format);
+        $filePath = $this->findExportedFile($format, 5000);
+        $isGithubAction = Config::get('tests.dusk_github_action');
 
-        if (!$csvFile) {
-            $this->fail("File with format $format was not downloaded.");
+        $data = null;
+
+        if ($format !== 'xls' || !$isGithubAction) {
+            if (!$filePath || !Storage::exists($filePath)) {
+                $this->fail("File $filePath with format $format was not downloaded.");
+            }
+
+            $data = Excel::toArray(new BrowserTestEntitiesImport(), $filePath, null, $fileFormat)[0];
+            $this->assertNotEmpty($data, 'File is empty.');
+
+            try {
+                Storage::delete($filePath);
+            } catch (Throwable) {
+                if (!$isGithubAction) {
+                    $this->fail("Failed to delete file: [$filePath]");
+                }
+            }
         }
 
-        $csvData = Excel::toArray(new BrowserTestEntitiesImport(), $csvFile, null, $excelFormat)[0];
-
-        try {
-            unlink($csvFile);
-        } catch (Exception $e) {
-        }
-
-        $this->assertNotEmpty($csvData, 'File is empty.');
-
-        return $csvData;
+        return $data;
     }
 
     /**
      * @param string $format
-     * @param int $tries
+     * @param int $timeout
      * @return string|null
      */
-    protected function findFile(string $format, int $tries = 0): ?string
+    protected function findExportedFile(string $format, int $timeout = 2000): ?string
     {
-        $downloadPath = storage_path('dusk-downloads');
-        $files = glob("$downloadPath/*.$format");
-        $csvFile = $files ? array_reduce($files, fn ($a, $b) => filectime($a) > filectime($b) ? $a : $b) : null;
+        $timeout = (int) (round($timeout / 100) * 100);
+        $deadline = microtime(true) + ($timeout / 1000);
 
-        if (!$csvFile && $tries <= 1) {
-            $tries++;
-            // Wait for file download and try again
-            sleep(1);
+        do {
+            $files = Storage::files('dusk-downloads');
 
-            return $this->findFile($format, $tries);
-        }
+            $latestFile = collect($files)
+                ->filter(fn ($file) => str_ends_with($file, ".$format"))
+                ->sortByDesc(fn ($file) => Storage::lastModified($file))
+                ->first();
 
-        return $csvFile;
+            if ($latestFile !== null) {
+                return $latestFile;
+            }
+
+            usleep(100_000);
+        } while (microtime(true) < $deadline);
+
+        return null;
     }
 
     /**
@@ -132,6 +144,7 @@ trait ExportTrait
             $browser->click('@submitBtn');
         });
 
+        $browser->waitUntilMissing('@modalExport');
         $this->assertAndCloseSuccessNotification($browser);
     }
 

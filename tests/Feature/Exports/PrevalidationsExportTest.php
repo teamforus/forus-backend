@@ -41,7 +41,7 @@ class PrevalidationsExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get("$this->apiExportUrl?data_format=csv", $apiHeaders);
+        $response = $this->getJson("$this->apiExportUrl?data_format=csv", $apiHeaders);
         $fields = $this->getExportFields($prevalidation);
         $this->assertFields($response, $prevalidation, $fields);
 
@@ -51,7 +51,7 @@ class PrevalidationsExportTest extends TestCase
             'fields' => PrevalidationsExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $prevalidation, $fields);
 
         // Assert specific fields
@@ -60,7 +60,7 @@ class PrevalidationsExportTest extends TestCase
             'fields' => ['code'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
 
         $this->assertFields($response, $prevalidation, [
             PrevalidationsExport::trans('code'),

@@ -7,7 +7,6 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -46,8 +45,8 @@ class FundRequestsExportTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 // Go to list, open export modal and assert all export fields in file
-                $this->goToListPage($browser);
-                $this->searchFundRequest($browser, $fundRequest);
+                $this->goToFundRequestsPage($browser);
+                $this->searchTable($browser, '@tableFundRequest', $fundRequest->identity->email, $fundRequest->id);
 
                 $fields = $this->getExportFields($fundRequest);
 
@@ -110,36 +109,6 @@ class FundRequestsExportTest extends DuskTestCase
             ->toArray();
 
         return [...$fields, ...$recordKeyList];
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupFundRequests');
-        $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@fundRequestsPage');
-        $browser->element('@fundRequestsPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param FundRequest $fundRequest
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchFundRequest(Browser $browser, FundRequest $fundRequest): void
-    {
-        $browser->waitFor('@searchFundRequests');
-        $browser->type('@searchFundRequests', $fundRequest->identity->email);
-
-        $browser->waitFor("@fundRequestRow$fundRequest->id", 20);
-        $browser->assertVisible("@fundRequestRow$fundRequest->id");
-
-        $this->assertRowsCount($browser, 1, '@fundRequestsPageContent');
     }
 
     /**

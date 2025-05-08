@@ -37,7 +37,7 @@ class EmployeesExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->get(
+        $response = $this->getJson(
             sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
             $apiHeaders
         );
@@ -52,7 +52,7 @@ class EmployeesExportTest extends TestCase
             'fields' => EmployeesExport::getExportFieldsRaw(),
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $employee, $fields);
 
         // Assert specific fields
@@ -61,7 +61,7 @@ class EmployeesExportTest extends TestCase
             'fields' => ['email'],
         ]);
 
-        $response = $this->get($url, $apiHeaders);
+        $response = $this->getJson($url, $apiHeaders);
         $this->assertFields($response, $employee, [EmployeesExport::trans('email')]);
     }
 
