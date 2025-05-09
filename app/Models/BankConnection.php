@@ -379,6 +379,7 @@ class BankConnection extends BaseModel
 
             return true;
         } catch (Throwable $e) {
+            echo $e->getMessage();
             $hasAuthError = str_contains($e->getMessage(), 'Incorrect API key or IP address');
 
             if ($e instanceof ForbiddenException || $hasAuthError) {
