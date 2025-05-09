@@ -92,7 +92,7 @@ class Payment extends BaseObject
      */
     public function isCanceled(): bool
     {
-        return $this->status === PaymentStatus::STATUS_CANCELED;
+        return $this->status === PaymentStatus::CANCELED;
     }
 
     /**
@@ -100,7 +100,7 @@ class Payment extends BaseObject
      */
     public function isExpired(): bool
     {
-        return $this->status === PaymentStatus::STATUS_EXPIRED;
+        return $this->status === PaymentStatus::EXPIRED;
     }
 
     /**
@@ -108,7 +108,7 @@ class Payment extends BaseObject
      */
     public function isOpen(): bool
     {
-        return $this->status === PaymentStatus::STATUS_OPEN;
+        return $this->status === PaymentStatus::OPEN;
     }
 
     /**
@@ -116,7 +116,7 @@ class Payment extends BaseObject
      */
     public function isPending(): bool
     {
-        return $this->status === PaymentStatus::STATUS_PENDING;
+        return $this->status === PaymentStatus::PENDING;
     }
 
     /**
@@ -124,7 +124,7 @@ class Payment extends BaseObject
      */
     public function isAuthorized(): bool
     {
-        return $this->status === PaymentStatus::STATUS_AUTHORIZED;
+        return $this->status === PaymentStatus::AUTHORIZED;
     }
 
     /**
@@ -132,7 +132,7 @@ class Payment extends BaseObject
      */
     public function isFailed(): bool
     {
-        return $this->status === PaymentStatus::STATUS_FAILED;
+        return $this->status === PaymentStatus::FAILED;
     }
 
     /**
