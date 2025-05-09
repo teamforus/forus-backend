@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
@@ -75,7 +76,7 @@ class StoreTransactionRequest extends BaseFormRequest
             'target' => ['required', Rule::in(array_filter($targets))],
         ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
             'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
-            'target_name' => 'required_without:target_reimbursement_id|string|min:3|max:200',
+            'target_name' => ['required_without:target_reimbursement_id', new IbanNameRule()],
             'target_reimbursement_id' => [
                 'required_without:target_iban',
                 Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher)),
