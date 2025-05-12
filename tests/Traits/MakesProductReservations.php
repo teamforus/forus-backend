@@ -23,6 +23,7 @@ trait MakesProductReservations
     use WithFaker;
     use HasDbTokens;
     use MakesTestProducts;
+    use TestsReservations;
 
     /**
      * @var array
@@ -93,12 +94,12 @@ trait MakesProductReservations
                 'fund_id' => $voucher->fund_id,
             ]),
             $voucher->fund_id
-        )->where('limit_total_available', '>', 0);
+        )
+            ->where('limit_total_available', '>', 0)
+            ->where('limit_available', '>', 0);
 
         if ($voucher->fund->isTypeSubsidy()) {
-            $product
-                ->where('reservations_subsidy_enabled', true)
-                ->where('limit_available', '>', 0);
+            $product->where('reservations_subsidy_enabled', true);
         } else {
             $product
                 ->where('reservations_budget_enabled', true)
@@ -141,9 +142,10 @@ trait MakesProductReservations
     /**
      * @param Voucher $voucher
      * @param Product $product
+     * @param array $fields
      * @return ProductReservation
      */
-    public function makeReservation(Voucher $voucher, Product $product): ProductReservation
+    public function makeReservation(Voucher $voucher, Product $product, array $fields = []): ProductReservation
     {
         $response = $this->makeReservationStoreRequest($voucher, $product, [
             'first_name' => '',
@@ -157,7 +159,7 @@ trait MakesProductReservations
             'user_note',
         ]);
 
-        $response = $this->makeReservationStoreRequest($voucher, $product);
+        $response = $this->makeReservationStoreRequest($voucher, $product, $fields);
         $response->assertSuccessful();
         $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
+use App\Exports\PrevalidationsExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Permission;
@@ -47,7 +48,7 @@ class SearchPrevalidationsRequest extends BaseFormRequest
             ],
             'per_page' => 'nullable|numeric|between:1,2500',
             'exported' => 'boolean',
-            'export_type' => 'nullable|string|in:csv,xls',
+            ...$this->exportableResourceRules(PrevalidationsExport::getExportFieldsRaw()),
         ];
     }
 }
