@@ -158,16 +158,6 @@ $router->group([], static function () use ($router) {
         ],
     );
 
-    $router->get(
-        'funds/{configured_fund}/ideal/issuers',
-        "Api\Platform\FundsController@idealIssuers"
-    );
-
-    $router->post(
-        'funds/{fund}/ideal/requests',
-        "Api\Platform\FundsController@idealMakeRequest"
-    );
-
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
         $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
@@ -195,7 +185,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->group(['prefix' => 'organizations/{organization}'], function () use ($router) {
         $router->patch('roles', "Api\Platform\OrganizationsController@updateRoles");
         $router->patch('bank-fields', "Api\Platform\OrganizationsController@updateBankStatementFields");
-        $router->patch('update-bi-connection', "Api\Platform\OrganizationsController@updateBIConnection");
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
@@ -606,26 +595,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     )->parameters([
         'unsubscribe' => 'fund-unsubscribe',
     ])->only('index');
-
-    $router->get(
-        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
-        "Api\Platform\Organizations\Funds\FundProviderController@finances",
-    );
-
-    $router->get(
-        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions',
-        "Api\Platform\Organizations\Funds\FundProviderController@transactions",
-    );
-
-    $router->get(
-        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/export',
-        "Api\Platform\Organizations\Funds\FundProviderController@transactionsExport",
-    );
-
-    $router->get(
-        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
-        "Api\Platform\Organizations\Funds\FundProviderController@transaction",
-    );
 
     $router->resource('organizations.funds.providers', "Api\Platform\Organizations\Funds\FundProviderController")
         ->parameter('providers', 'fund_provider')
@@ -1075,12 +1044,12 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\AnnouncementController@index',
     );
 
-    $router->get('organizations/{organization}/prevalidations/export', 'Api\Platform\PrevalidationController@export');
-    $router->get('organizations/{organization}/prevalidations/export-fields', 'Api\Platform\PrevalidationController@getExportFields');
-    $router->post('organizations/{organization}/prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
-    $router->post('organizations/{organization}/prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
+    $router->get('organizations/{organization}/prevalidations/export', 'Api\Platform\Organizations\PrevalidationController@export');
+    $router->get('organizations/{organization}/prevalidations/export-fields', 'Api\Platform\Organizations\PrevalidationController@getExportFields');
+    $router->post('organizations/{organization}/prevalidations/collection', 'Api\Platform\Organizations\PrevalidationController@storeCollection');
+    $router->post('organizations/{organization}/prevalidations/collection/hash', 'Api\Platform\Organizations\PrevalidationController@collectionHash');
 
-    $router->resource('organizations/{organization}/prevalidations', 'Api\Platform\PrevalidationController')
+    $router->resource('organizations/{organization}/prevalidations', 'Api\Platform\Organizations\PrevalidationController')
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 

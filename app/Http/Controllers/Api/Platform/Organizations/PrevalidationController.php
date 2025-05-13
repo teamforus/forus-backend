@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Api\Platform;
+namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\PrevalidationsExport;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
-use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
-use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\SearchPrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\StorePrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;

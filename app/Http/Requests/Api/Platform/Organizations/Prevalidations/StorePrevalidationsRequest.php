@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Prevalidations;
+namespace App\Http\Requests\Api\Platform\Organizations\Prevalidations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
