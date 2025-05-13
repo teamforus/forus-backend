@@ -24,7 +24,7 @@ class IdentityQuery
         $vouchersQuery = $fund
             ->vouchers()
             ->selectRaw('count(*)')
-            ->whereColumn('vouchers.identity_address', 'identities.address');
+            ->whereColumn('vouchers.identity_id', 'identities.id');
 
         if (!$withReservations) {
             $vouchersQuery->whereNull('product_reservation_id');

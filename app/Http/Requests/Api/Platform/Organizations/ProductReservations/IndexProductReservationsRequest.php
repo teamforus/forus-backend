@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
+use App\Exports\ProductReservationsExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\ProductReservation;
@@ -43,6 +44,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
             'product_id' => 'nullable|exists:products,id|in:' . $products->join(','),
             'organization_id' => 'nullable|exists:organizations,id',
             'archived' => 'nullable|boolean',
+            ...$this->exportableResourceRules(ProductReservationsExport::getExportFieldsRaw()),
         ];
     }
 }
