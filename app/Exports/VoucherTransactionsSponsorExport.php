@@ -2,55 +2,46 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseVoucherTransactionsExport;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
-class VoucherTransactionsSponsorExport extends BaseFieldedExport
+class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
 {
-    protected Collection $data;
-    protected array $fields;
-
     /**
      * @var array|string[]
      */
     protected static array $exportFields = [
-        'id' => 'ID',
-        'amount' => 'Bedrag',
-        'date_transaction' => 'Datum transactie',
-        'date_payment' => 'Datum betaling',
-        'date_non_cancelable' => 'Definitieve transactie',
-        'bulk_status_locale' => 'In de wachtrij (dagen)',
-        'fund_name' => 'Fonds',
-        'product_id' => 'Aanbod ID',
-        'product_name' => 'Aanbod naam',
-        'provider' => 'Aanbieder',
-        'state' => 'Status',
-        'amount_extra_cash' => 'Gevraagde bijbetaling',
+        'id',
+        'amount',
+        'amount_extra_cash',
+        'date_transaction',
+        'date_payment',
+        'fund_name',
+        'product_id',
+        'product_name',
+        'provider',
+        'date_non_cancelable',
+        'state',
+        'bulk_status_locale',
     ];
 
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param array $fields
+     * @return \Illuminate\Support\Collection
      */
-    public function __construct(Request $request, Organization $organization, array $fields)
+    protected function export(Request $request, Organization $organization): Collection
     {
-        $this->data = VoucherTransaction::exportSponsor($request, $organization, $fields);
-        $this->fields = $fields;
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        $collection = $this->collection();
-
-        return array_map(
-            fn ($key) => static::$exportFields[$key] ?? $key,
-            $collection->isNotEmpty() ? array_keys($collection->first()) : $this->fields
+        $builder = VoucherTransactionQuery::order(
+            VoucherTransaction::searchSponsor($request, $organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
         );
+
+        return $this->exportTransform($builder->with('voucher.fund', 'provider', 'product')->get());
     }
 }
