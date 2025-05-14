@@ -717,15 +717,18 @@ class FundRequestValidatorTest extends DuskTestCase
 
         $browser->within('@modalFundRequestRecordEdit', function (Browser $browser) {
             // assert validation errors because value can be >= 2
+            $this->clearField($browser, '@numberInput');
             $browser->type('@numberInput', 1);
             $browser->click('@submitBtn');
             $browser->waitFor('.form-error');
             $browser->assertVisible('.form-error');
 
             // assert button is disabled because same value as before
+            $this->clearField($browser, '@numberInput');
             $browser->type('@numberInput', 5);
             $browser->assertDisabled('@submitBtn');
 
+            $this->clearField($browser, '@numberInput');
             $browser->type('@numberInput', 4);
             $browser->click('@submitBtn');
         });

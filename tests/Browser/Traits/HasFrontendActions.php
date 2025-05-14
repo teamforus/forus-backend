@@ -457,4 +457,16 @@ trait HasFrontendActions
             $browser->element('@transaction_view_bulks')->click();
         }
     }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    public function clearField(Browser $browser, string $selector): void
+    {
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
 }
