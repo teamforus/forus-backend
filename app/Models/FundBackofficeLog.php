@@ -76,9 +76,9 @@ class FundBackofficeLog extends BaseModel
     }
 
     /**
-     * @return FundBackofficeLog|bool
+     * @return FundBackofficeLog
      */
-    public function increaseAttempts()
+    public function increaseAttempts(): FundBackofficeLog
     {
         return $this->updateModel([
             'attempts' => ++$this->attempts,

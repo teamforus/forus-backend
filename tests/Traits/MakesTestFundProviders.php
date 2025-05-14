@@ -18,7 +18,11 @@ trait MakesTestFundProviders
     /**
      * @param Fund $fund
      * @param int $countProducts
-     * @return array
+     * @return array{
+     *    approved: Product[],
+     *    unapproved: Product[],
+     *    empty_stock: Product[]
+     *  }
      */
     protected function makeProviderAndProducts(Fund $fund, int $countProducts = 5): array
     {

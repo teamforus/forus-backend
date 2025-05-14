@@ -8,10 +8,9 @@ use App\Models\Identity;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -119,7 +118,7 @@ class BackofficeApi
             "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
             Arr::get($response, 'response_code', ''),
             Arr::get($response, 'response_error', ''),
-            Arr::get($response, 'response_body', ''),
+            json_encode(Arr::get($response, 'response_body', ''), JSON_PRETTY_PRINT),
         ));
 
         return $log->updateModel(array_merge(Arr::only($response, [
@@ -139,33 +138,45 @@ class BackofficeApi
      */
     public function request(string $method, string $url, array $data = []): array
     {
-        $guzzleClient = new Client();
         $certTmpFile = new TmpFile($this->fund->fund_config->backoffice_certificate);
         $clientCertTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert);
         $clientCertKeyTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert_key);
 
         try {
-            $response = $guzzleClient->request($method, $url, $this->makeOptions($method, $data, [
-                'verify' => $certTmpFile->path(),
-                'cert' => $clientCertTmpFile->path(),
-                'ssl_key' => $clientCertKeyTmpFile->path(),
-            ]));
+            $http = Http::withHeaders($this->makeRequestHeaders())
+                ->timeout(10)
+                ->withOptions([
+                    'verify' => $certTmpFile->path(),
+                    'cert' => $clientCertTmpFile->path(),
+                    'ssl_key' => $clientCertKeyTmpFile->path(),
+                ]);
+
+            if ($method === 'GET') {
+                $response = $http->get($url, $data);
+            } else {
+                $response = $http->{$method}($url, $data);
+            }
+
+            if ($response->failed()) {
+                return [
+                    'success' => false,
+                    'response_code' => $response->status(),
+                    'response_error' => null,
+                    'response_body' => $response->json(),
+                ];
+            }
 
             return [
                 'success' => true,
-                'response_code' => $response->getStatusCode(),
-                'response_body' => json_decode($response->getBody()->getContents(), true),
+                'response_code' => $response->status(),
+                'response_body' => $response->json(),
             ];
         } catch (Throwable $e) {
-            $responseBody = $e instanceof RequestException && $e->hasResponse()
-                ? $e->getResponse()->getBody()->getContents()
-                : null;
-
             return [
                 'success' => false,
                 'response_code' => $e->getCode(),
                 'response_error' => $e->getMessage(),
-                'response_body' => $responseBody,
+                'response_body' => null,
             ];
         } finally {
             $certTmpFile->close();
@@ -284,7 +295,7 @@ class BackofficeApi
                     "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
                     Arr::get($response, 'response_code', ''),
                     Arr::get($response, 'response_error', ''),
-                    Arr::get($response, 'response_body', ''),
+                    json_encode(Arr::get($response, 'response_body', ''), JSON_PRETTY_PRINT),
                 ));
 
                 $log->updateModel(array_merge(Arr::only($response, [
@@ -357,9 +368,10 @@ class BackofficeApi
         string $bsn,
         ?string $requestId
     ): FundBackofficeLog {
-        $log = $this->makeLog($action, $bsn);
+        $log = $this->makeLog($action, $bsn, $requestId);
         $endpoint = $this->getEndpoint($action);
         $body = $this->makeRequestBody($action);
+
         $response = $this->request('POST', $endpoint, array_merge($body, [
             'id' => $requestId,
             'bsn' => $bsn,
@@ -378,11 +390,11 @@ class BackofficeApi
             "\nID: $log->id\nAction: $log->action\nResponseCode: %s\nResponseError: %s\nResponseBody: %s",
             Arr::get($response, 'response_code', ''),
             Arr::get($response, 'response_error', ''),
-            Arr::get($response, 'response_body', ''),
+            json_encode(Arr::get($response, 'response_body', []), JSON_PRETTY_PRINT),
         ));
 
         return $log->updateModel(array_merge(Arr::only($response, [
-            'response_code', 'response_error',
+            'response_code', 'response_error', 'response_body',
         ]), [
             'state' => self::STATE_ERROR,
         ]));
@@ -448,25 +460,6 @@ class BackofficeApi
             'action' => $action,
             'fund_key' => $this->fund->fund_config->key,
         ];
-    }
-
-    /**
-     * Make Guzzle request options.
-     *
-     * @param string $method
-     * @param array $data
-     * @param array $options
-     * @return array
-     */
-    protected function makeOptions(string $method, array $data, array $options = []): array
-    {
-        $dataKey = $method === 'GET' ? 'query' : 'json';
-
-        return array_merge([
-            'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => 10,
-            $dataKey => $data,
-        ], $options);
     }
 
     /**
