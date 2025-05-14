@@ -69,9 +69,14 @@ class EmployeePolicy
         Employee $employee,
         Organization $organization
     ): Response|bool {
-        // organization owner employee can't be edited
+        // employee can't delete himself
         if ($employee->identity_address === $identity->address) {
             return $this->deny('employees.cant_delete_yourself');
+        }
+
+        // organization owner employee can't be deleted
+        if ($employee->identity_address === $organization->identity_address) {
+            return $this->deny('employees.cant_delete_owner');
         }
 
         return $this->update($identity, $employee, $organization);
