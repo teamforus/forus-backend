@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
@@ -84,9 +85,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
                 ],
                 'vouchers.*.direct_payment_name' => [
                     'required_with:vouchers.*.direct_payment_iban',
-                    'string',
-                    'min:3',
-                    'max:280',
+                    new IbanNameRule(),
                 ],
             ];
         }

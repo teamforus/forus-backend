@@ -107,7 +107,7 @@ class PayoutsTest extends TestCase
             'fund_id' => $fund->id,
             'description' => 'Test description',
             'target_iban' => $this->faker()->iban,
-            'target_name' => 'John Doe',
+            'target_name' => $this->makeIbanName(),
         ];
 
         $res = $this->storeRequest($fund, $data);
@@ -203,7 +203,7 @@ class PayoutsTest extends TestCase
             'description' => 'Test description',
             'amount' => '50',
             'target_iban' => $this->faker()->iban,
-            'target_name' => 'John Doe',
+            'target_name' => $this->makeIbanName(),
         ]);
 
         $res->assertSuccessful();

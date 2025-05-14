@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,9 +108,7 @@ class StorePayoutTransactionRequest extends BaseFormRequest
     {
         return [
             $nullable ? 'nullable' : 'required',
-            'string',
-            'min:3',
-            'max:200',
+            new IbanNameRule(),
         ];
     }
 

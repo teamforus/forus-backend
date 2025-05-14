@@ -113,4 +113,16 @@ trait DoesTesting
             self::fail($message);
         }
     }
+
+    /**
+     * @return string
+     */
+    protected function makeIbanName(): string
+    {
+        return preg_replace(
+            '/[^a-zA-Z .]+/',
+            '',
+            $this->faker()->firstName . ' ' . $this->faker()->lastName
+        );
+    }
 }

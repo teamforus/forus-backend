@@ -180,6 +180,7 @@ return [
     'email_already_used' => 'De e-mail is verstuurd naar het opgegeven e-mailadres. Let op: als het e-mailadres al in het systeem staat, kan het niet opnieuw worden toegevoegd en wordt er geen e-mail verstuurd.',
     'max_emails_reached' => 'Het maximale aantal van :max e-mailadressen is bereikt. Verwijder eerst een bestaand e-mailadres om een nieuw e-mailadres toe te voegen.',
     'iban' => 'Vul een geldig IBAN-nummer in, bijvoorbeeld NL02ABNA0123456789',
+    'iban_name' => 'De :attribute mag alleen letters, spaties en punten bevatten',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'business_type_id' => 'Organisatie type',
     'voucher' => [

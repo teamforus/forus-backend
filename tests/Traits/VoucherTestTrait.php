@@ -150,7 +150,7 @@ trait VoucherTestTrait
     {
         return [
             'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'direct_payment_name' => $this->makeIbanName(),
         ];
     }
 

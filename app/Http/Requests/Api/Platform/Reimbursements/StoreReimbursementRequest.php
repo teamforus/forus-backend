@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\FileUidRule;
 use App\Scopes\Builders\VoucherQuery;
@@ -44,7 +45,7 @@ class StoreReimbursementRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'iban' => ['required', 'string', new IbanRule()],
-            'iban_name' => 'required|string|regex:/^[a-zA-Z ]+$/|min:3|max:100',
+            'iban_name' => ['required', new IbanNameRule()],
             'voucher_id' => $this->voucherIdRule(),
             'state' => 'nullable|in:' . implode(',', [
                 Reimbursement::STATE_DRAFT,
@@ -80,18 +81,11 @@ class StoreReimbursementRequest extends BaseFormRequest
             'description.min' => trans('validation.min.numeric', [
                 'attribute' => ucfirst(trans('validation.attributes.description')),
             ]),
-            'iban_name.min' => trans('validation.min.numeric', [
-                'attribute' => ucfirst(trans('validation.attributes.iban_name')),
-            ]),
             'voucher_id.required' => trans('validation.required_not_filled'),
             'title.required' => trans('validation.required_not_filled'),
             'amount.required' => trans('validation.required_not_filled'),
             'iban.required' => trans('validation.required_not_filled'),
             'iban_name.required' => trans('validation.required_not_filled'),
-            'iban_name.regex' => sprintf(
-                'De %s mag alleen letters en spaties bevatten',
-                trans('validation.attributes.iban_name')
-            ),
             'files.required' => trans('validation.reimbursement.files.required'),
         ];
     }

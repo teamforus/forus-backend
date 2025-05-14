@@ -146,7 +146,7 @@ class VoucherBatchTest extends DuskTestCase
     {
         return $allowDirectPayments ? [
             'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'direct_payment_name' => $this->makeIbanName(),
         ] : [
             'direct_payment_iban' => '',
             'direct_payment_name' => '',

@@ -2,40 +2,39 @@
 
 namespace App\Rules\Base;
 
-use App\Helpers\Validation;
-use Illuminate\Contracts\Validation\Rule;
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class IbanNameRule implements Rule
+class IbanNameRule implements ValidationRule
 {
-    protected string $errorMessage;
-
     /**
-     * Determine if the validation rule passes.
-     *
      * @param string $attribute
      * @param mixed $value
-     * @return bool
+     * @param Closure $fail
+     * @return void
      */
-    public function passes($attribute, $value): bool
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $rules = Validation::check($value, ['string', 'min:3', 'max:280']);
+        $attribute = trans('validation.attributes.iban_name');
+        $min = 3;
+        $max = 200;
 
-        if ($rules->passes()) {
-            return true;
+        if (!is_string($value)) {
+            $fail(trans('validation.string', compact('attribute')));
         }
 
-        $this->errorMessage = $rules->errors()?->first();
+        if (!preg_match('/^[a-zA-Z .]+$/', $value)) {
+            $fail(trans('validation.iban_name', compact('attribute')));
+        }
 
-        return false;
-    }
+        $length = mb_strlen($value);
 
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message(): string
-    {
-        return $this->errorMessage;
+        if ($length < $min) {
+            $fail(ucfirst(trans('validation.min.string', compact('attribute', 'min'))));
+        }
+
+        if ($length > $max) {
+            $fail(ucfirst(trans('validation.max.string', compact('attribute', 'max'))));
+        }
     }
 }
