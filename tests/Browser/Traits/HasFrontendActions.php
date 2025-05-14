@@ -135,6 +135,17 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param Identity $identity
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertIdentityAuthenticatedOnValidatorDashboard(Browser $browser, Identity $identity): void
+    {
+        $this->assertIdentityAuthenticatedFrontend($browser, $identity, 'validator');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Identity $identity
      * @param string $frontend
      * @throws TimeOutException
      * @return void
@@ -291,8 +302,8 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function searchTable(
         Browser $browser,
@@ -445,5 +456,17 @@ trait HasFrontendActions
             $browser->waitFor('@transaction_view_bulks');
             $browser->element('@transaction_view_bulks')->click();
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    public function clearField(Browser $browser, string $selector): void
+    {
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
     }
 }
