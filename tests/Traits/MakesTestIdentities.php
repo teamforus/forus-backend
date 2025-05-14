@@ -17,7 +17,7 @@ trait MakesTestIdentities
      */
     protected function makeUniqueEmail(string $prefix = '', ?string $domain = null): string
     {
-        $domain = $domain ?: Config::get('forus.tests.identity_domain', 'example.com');
+        $domain = $domain ?: Config::get('tests.identity_domain', 'example.com');
 
         $token = self::makeUniqueTokenCallback(fn ($token) => IdentityEmail::where([
             'email' => "$prefix$token@$domain",

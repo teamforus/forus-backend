@@ -33,8 +33,9 @@ class BIVouchersExporter extends BaseBIExporter
             'voucher_records.record_type', 'paid_out_transactions', 'fund.organization',
         ])->get();
 
-        $array = Voucher::exportOnlyDataArray($vouchers, array_keys($fields));
+        $array = Voucher::exportOnlyDataArray($vouchers, $fields);
+        $fieldLabels = array_pluck(VoucherExport::getExportFields('product'), 'name', 'key');
 
-        return $this->transformKeys($array, $fields);
+        return $this->transformKeys($array, $fieldLabels);
     }
 }

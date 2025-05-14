@@ -91,13 +91,15 @@ class VoucherTransactionQuery
     /**
      * @param Builder|Relation|VoucherTransaction $query
      * @param string $q
+     * @param string|null $q_type
      * @return Builder|Relation|VoucherTransaction
      */
     public static function whereQueryFilter(
         Builder|Relation|VoucherTransaction $query,
         string $q = '',
+        ?string $q_type = null,
     ): Builder|Relation|VoucherTransaction {
-        return $query->where(static function (Builder $query) use ($q) {
+        return $query->where(static function (Builder $query) use ($q, $q_type) {
             $query->where('voucher_transactions.uid', '=', $q);
             $query->orWhereHas('voucher.fund', fn (Builder $b) => $b->where('name', 'LIKE', "%$q%"));
             $query->orWhereRelation('product', 'name', 'LIKE', "%$q%");
@@ -108,6 +110,10 @@ class VoucherTransactionQuery
                 $builder->orWhere('branch_number', 'LIKE', "%$q%");
                 $builder->orWhere('branch_id', 'LIKE', "%$q%");
             });
+
+            if ($q_type === 'provider') {
+                $query->orWhereRelation('notes_provider', 'message', 'LIKE', "%$q%");
+            }
 
             if (is_numeric($q)) {
                 $query->orWhere('voucher_transactions.id', '=', $q);

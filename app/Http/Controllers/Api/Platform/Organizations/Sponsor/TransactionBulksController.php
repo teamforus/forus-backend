@@ -188,7 +188,7 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $fields = $request->input('fields', VoucherTransactionBulksExport::getExportFields());
+        $fields = $request->input('fields', VoucherTransactionBulksExport::getExportFieldsRaw());
         $fileData = new VoucherTransactionBulksExport($request, $organization, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
