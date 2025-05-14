@@ -534,6 +534,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         ])->only('index', 'store', 'show');
 
         $router->get(
+            'organizations/{organization}/fund-requests/export-fields',
+            "Api\Platform\Organizations\FundRequestsController@getExportFields"
+        );
+
+        $router->get(
             'organizations/{organization}/fund-requests/export',
             "Api\Platform\Organizations\FundRequestsController@export"
         );
@@ -578,11 +583,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
         'index',
     ]);
-
-    $router->get(
-        'organizations/{organization}/providers/export',
-        "Api\Platform\Organizations\FundProviderController@export"
-    );
 
     $router->resource(
         'organizations.providers',
@@ -749,6 +749,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         ->only('index', 'show', 'store', 'update');
 
     $router->get(
+        'organizations/{organization}/employees/export-fields',
+        "Api\Platform\Organizations\EmployeesController@getExportFields"
+    );
+
+    $router->get(
         'organizations/{organization}/employees/export',
         'Api\Platform\Organizations\EmployeesController@export'
     );
@@ -838,6 +843,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->get(
         'organizations/{organization}/sponsor/finances-overview',
         "Api\Platform\Organizations\FundsController@financesOverview",
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview/export-fields',
+        "Api\Platform\Organizations\FundsController@getFinancesOverviewExportFields"
     );
 
     $router->get(
@@ -1009,6 +1019,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->get('organizations/{organization}/sponsor/providers/finances', "Api\Platform\Organizations\Sponsor\ProvidersController@finances");
     $router->get('organizations/{organization}/sponsor/providers/finances-export', "Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
+    $router->get(
+        'organizations/{organization}/sponsor/providers/finances-export-fields',
+        "Api\Platform\Organizations\Sponsor\ProvidersController@getFinancesExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/providers/export-fields',
+        "Api\Platform\Organizations\Sponsor\ProvidersController@getExportFields"
+    );
+
     $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
 
     $router->resource(
@@ -1035,6 +1055,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'organizations/{organization}/sponsor/products',
         'Api\Platform\Organizations\Sponsor\ProductsController',
     )->only('index', 'show');
+
+    $router->get(
+        'organizations/{organization}/sponsor/translation-stats',
+        "Api\Platform\Organizations\Sponsor\TranslationStatsController@stats",
+    );
 
     $router->resource(
         'organizations/{organization}/sponsor/reservation-extra-payments',
@@ -1063,6 +1088,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\EmailLogsController@export',
     );
 
+    $router->get('prevalidations/export-fields', 'Api\Platform\PrevalidationController@getExportFields');
     $router->get('prevalidations/export', 'Api\Platform\PrevalidationController@export');
     $router->post('prevalidations/collection', 'Api\Platform\PrevalidationController@storeCollection');
     $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');

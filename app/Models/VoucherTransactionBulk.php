@@ -3,11 +3,9 @@
 namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
-use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Searches\VoucherTransactionBulksSearch;
 use App\Services\BNGService\BNGService;
@@ -657,21 +655,6 @@ class VoucherTransactionBulk extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    public static function export(Request $request, Organization $organization, array $fields): mixed
-    {
-        return self::exportTransform(VoucherTransactionBulkQuery::order(
-            self::search($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        ), $fields);
-    }
-
-    /**
      * @param VoucherTransaction $transaction
      * @param DraftPayment $draftPayment
      * @throws \bunq\Exception\BunqException
@@ -749,35 +732,5 @@ class VoucherTransactionBulk extends BaseModel
             new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
             token_generator()->generate(32)
         );
-    }
-
-    /**
-     * @param Builder $builder
-     * @param array $fields
-     * @return Builder[]|Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(Builder $builder, array $fields): mixed
-    {
-        $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
-
-        $data = $builder->with([
-            'voucher_transactions',
-            'bank_connection.bank',
-        ])->withCount([
-            'voucher_transactions',
-        ])->get()->map(fn (VoucherTransactionBulk $transactionBulk) => array_only([
-            'id' => $transactionBulk->id,
-            'quantity' => $transactionBulk->voucher_transactions_count,
-            'amount' => currency_format($transactionBulk->voucher_transactions->sum('amount')),
-            'bank_name' => $transactionBulk->bank_connection->bank->name,
-            'date_transaction' => format_datetime_locale($transactionBulk->created_at),
-            'state' => trans("export.voucher_transactions_bulks.state-values.$transactionBulk->state"),
-        ], $fields))->values();
-
-        return $data->map(function ($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $item[$key],
-            ]), []);
-        });
     }
 }

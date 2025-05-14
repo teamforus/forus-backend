@@ -17,7 +17,11 @@ class BIFundProvidersExporter extends BaseBIExporter
     public function toArray(): array
     {
         $formRequest = new BaseFormRequest();
-        $data = new FundProvidersExport($formRequest, $this->organization);
+        $data = new FundProvidersExport(
+            $formRequest,
+            $this->organization,
+            FundProvidersExport::getExportFieldsRaw()
+        );
 
         return $data->collection()->toArray();
     }

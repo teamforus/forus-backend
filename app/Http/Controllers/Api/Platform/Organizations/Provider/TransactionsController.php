@@ -76,7 +76,7 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $fields = $request->input('fields', VoucherTransactionsProviderExport::getExportFields());
+        $fields = $request->input('fields', VoucherTransactionsProviderExport::getExportFieldsRaw());
         $type = $request->input('data_format', 'xls');
 
         return resolve('excel')->download(

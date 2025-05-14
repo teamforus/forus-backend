@@ -341,4 +341,18 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
             'file.chunkSize' => 'required_with:file|numeric',
         ];
     }
+
+    /**
+     * @param array $fields
+     * @param string[] $formats
+     * @return array
+     */
+    protected function exportableResourceRules(array $fields, array $formats = ['xls', 'csv']): array
+    {
+        return [
+            'fields' => 'nullable|array',
+            'fields.*' => ['nullable', Rule::in($fields)],
+            'data_format' => ['nullable', Rule::in($formats)],
+        ];
+    }
 }
