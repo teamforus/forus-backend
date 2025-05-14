@@ -19,7 +19,6 @@ trait MakesTestReimbursements
 {
     use WithFaker;
     use DoesTesting;
-    use HasDbTokens;
     use AssertsSentEmails;
 
     /**

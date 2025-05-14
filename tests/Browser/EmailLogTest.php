@@ -144,13 +144,13 @@ class EmailLogTest extends DuskTestCase
      */
     protected function searchIdentity(Browser $browser, Identity $identity): void
     {
-        $browser->waitFor('@searchIdentities');
-        $browser->type('@searchIdentities', $identity->email);
+        $browser->waitFor('@tableProfilesSearch');
+        $browser->type('@tableProfilesSearch', $identity->email);
 
-        $browser->waitFor("@identityRow$identity->id", 20);
-        $browser->assertVisible("@identityRow$identity->id");
+        $browser->waitFor("@tableProfilesRow$identity->id", 20);
+        $browser->assertVisible("@tableProfilesRow$identity->id");
 
-        $browser->click("@identityRow$identity->id");
+        $browser->click("@tableProfilesRow$identity->id");
     }
 
     /**
@@ -176,13 +176,13 @@ class EmailLogTest extends DuskTestCase
      */
     protected function searchFundRequest(Browser $browser, FundRequest $fundRequest): void
     {
-        $browser->waitFor('@searchFundRequests');
-        $browser->type('@searchFundRequests', $fundRequest->identity->email);
+        $browser->waitFor('@tableFundRequestSearch');
+        $browser->type('@tableFundRequestSearch', $fundRequest->identity->email);
 
-        $browser->waitFor("@fundRequestRow$fundRequest->id", 20);
-        $browser->assertVisible("@fundRequestRow$fundRequest->id");
+        $browser->waitFor("@tableFundRequestRow$fundRequest->id", 20);
+        $browser->assertVisible("@tableFundRequestRow$fundRequest->id");
 
-        $browser->click("@fundRequestRow$fundRequest->id");
+        $browser->click("@tableFundRequestRow$fundRequest->id");
     }
 
     /**

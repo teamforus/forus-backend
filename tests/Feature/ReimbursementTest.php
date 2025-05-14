@@ -52,7 +52,7 @@ class ReimbursementTest extends TestCase
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // create draft reimbursement
-        $reimbursement = $this->makeTestReimbursement($voucher, false);
+        $reimbursement = $this->makeReimbursement($voucher, false);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert not visible to the sponsor
@@ -76,7 +76,7 @@ class ReimbursementTest extends TestCase
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // make reimbursement and sponsor employee
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert the reimbursement is visible for the sponsor
@@ -97,7 +97,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the employee cannot resolve the request
@@ -124,7 +124,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
@@ -145,7 +145,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         $this->expireVoucherAndFund($reimbursement->voucher, now()->subDay())->refresh();
@@ -182,7 +182,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
@@ -203,7 +203,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
         $unassignedEmployee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
