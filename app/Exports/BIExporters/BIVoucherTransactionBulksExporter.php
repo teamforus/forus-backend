@@ -17,7 +17,7 @@ class BIVoucherTransactionBulksExporter extends BaseBIExporter
     public function toArray(): array
     {
         $formRequest = new BaseFormRequest();
-        $fields = array_keys(VoucherTransactionBulksExport::getExportFieldsRaw());
+        $fields = VoucherTransactionBulksExport::getExportFieldsRaw();
         $data = new VoucherTransactionBulksExport($formRequest, $this->organization, $fields);
 
         return $data->collection()->toArray();

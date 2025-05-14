@@ -53,14 +53,18 @@ class EmployeeTest extends DuskTestCase
             $this->goToEmployeesPage($browser);
             $employee = $this->createEmployee($browser, $implementation->organization, $initialRole);
 
+            $this->assertAndCloseSuccessNotification($browser);
+
             // Search the employee in the table by email
-            $this->searchEmployee($browser, $employee);
+            $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
             $this->checkEmployeePermissions($implementation->organization, $employee, $initialRole);
 
             // Change employee role, test permissions and delete the employee
             $this->changeEmployeeRoles($browser, $employee, $updatedRole);
             $this->checkEmployeePermissions($implementation->organization, $employee, $updatedRole);
+
             $this->employeeDelete($browser, $employee);
+            $this->assertAndCloseSuccessNotification($browser);
 
             // Logout
             $this->logout($browser);
@@ -149,8 +153,8 @@ class EmployeeTest extends DuskTestCase
         $roles = is_array($role) ? $role : [$role];
 
         // Find and press employee edit button
-        $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
+        $browser->waitFor("@tableEmployeeRow$employee->id");
+        $browser->within("@tableEmployeeRow$employee->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
 
         $browser->waitFor("@btnEmployeeEdit$employee->id");
         $browser->press("@btnEmployeeEdit$employee->id");
@@ -176,8 +180,8 @@ class EmployeeTest extends DuskTestCase
      */
     private function employeeDelete(Browser $browser, Employee $employee): void
     {
-        $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
+        $browser->waitFor("@tableEmployeeRow$employee->id");
+        $browser->within("@tableEmployeeRow$employee->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
 
         $browser->waitFor("@btnEmployeeDelete$employee->id");
         $browser->press("@btnEmployeeDelete$employee->id");
@@ -189,36 +193,6 @@ class EmployeeTest extends DuskTestCase
 
         $this->assertNotNull($employee->identity->fresh());
         $this->assertTrue($employee->fresh()->trashed());
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    private function goToEmployeesPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupOrganization');
-        $browser->element('@asideMenuGroupOrganization')->click();
-        $browser->waitFor('@employeesPage');
-        $browser->element('@employeesPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Employee $employee
-     * @throws TimeOutException
-     * @return void
-     */
-    private function searchEmployee(Browser $browser, Employee $employee): void
-    {
-        $browser->waitFor('@searchEmployee');
-        $browser->value('@searchEmployee', $employee->identity->email);
-
-        $browser->waitFor("@employeeRow$employee->id");
-        $browser->within("@employeeRow$employee->id", function (Browser $browser) use ($employee) {
-            $browser->assertSeeIn('@employeeEmail', $employee->identity->email);
-        });
     }
 
     /**

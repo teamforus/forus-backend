@@ -5,4 +5,5 @@ return [
 
     'dusk_selector' => env('DUSK_SELECTOR', 'data-dusk'),
     'dusk_wait_for_time' => env('DUSK_WAIT_FOR_TIME', 20),
+    'dusk_github_action' => env('DUSK_GITHUB_ACTION', false),
 ];

@@ -18,8 +18,8 @@ class BIReimbursementsExporter extends BaseBIExporter
     {
         $formRequest = new BaseFormRequest();
         $fields = ReimbursementsSponsorExport::getExportFieldsRaw();
-        $data = new ReimbursementsSponsorExport($formRequest, $this->organization, array_keys($fields));
+        $data = new ReimbursementsSponsorExport($formRequest, $this->organization, $fields);
 
-        return $this->transformKeys($data->collection()->toArray(), $fields);
+        return $data->collection()->toArray();
     }
 }
