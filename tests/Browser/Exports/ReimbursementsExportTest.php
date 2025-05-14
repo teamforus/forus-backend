@@ -11,8 +11,8 @@ use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
-use Tests\Traits\MakesReimbursements;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestReimbursements;
 use Throwable;
 
 class ReimbursementsExportTest extends DuskTestCase
@@ -21,7 +21,7 @@ class ReimbursementsExportTest extends DuskTestCase
     use MakesTestFunds;
     use AssertsSentEmails;
     use HasFrontendActions;
-    use MakesReimbursements;
+    use MakesTestReimbursements;
     use RollbackModelsTrait;
 
     /**
@@ -40,7 +40,7 @@ class ReimbursementsExportTest extends DuskTestCase
         ]);
 
         $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()));
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
 
         $this->rollbackModels([], function () use ($implementation, $reimbursement) {
             $this->browse(function (Browser $browser) use ($implementation, $reimbursement) {
