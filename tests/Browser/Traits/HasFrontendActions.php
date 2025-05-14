@@ -167,7 +167,7 @@ trait HasFrontendActions
         $option = null;
 
         $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
+            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option') and not(contains(@class, 'select-control-options'))]");
             $options = $browser->driver->findElements($xpath);
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
         });
