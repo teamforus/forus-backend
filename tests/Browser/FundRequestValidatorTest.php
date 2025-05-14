@@ -77,8 +77,8 @@ class FundRequestValidatorTest extends DuskTestCase
                 $this->assertNotNull($record);
                 $this->assertEquals($bsn, $record->value);
 
-                $browser->waitFor("@fundRequestRecordRow$record->id");
-                $browser->with("@fundRequestRecordRow$record->id", function (Browser $browser) use ($record) {
+                $browser->waitFor("@tableFundRequestRecordRow$record->id");
+                $browser->with("@tableFundRequestRecordRow$record->id", function (Browser $browser) use ($record) {
                     $browser->assertSee($record->record_type->name);
                     $browser->assertSee($record->value);
                 });
@@ -194,8 +194,8 @@ class FundRequestValidatorTest extends DuskTestCase
 
                 $this->goToFundRequestsPage($browser);
 
-                $browser->waitFor('@searchFundRequests');
-                $browser->type('@searchFundRequests', $fundRequest->identity->email);
+                $browser->waitFor('@tableFundRequestSearch');
+                $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
                 $this->assertRowsCount($browser, 0, '@fundRequestsPageContent');
             });
         }, function () use ($fund, $organization, $now) {
@@ -288,7 +288,7 @@ class FundRequestValidatorTest extends DuskTestCase
 
                 $this->goToFundRequestsPage($browser);
 
-                $browser->typeSlowly('@searchFundRequests', $fundRequest->identity->email, 1);
+                $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
                 $this->assertExistInList($browser, $fundRequest, 'all');
 
                 // pending
@@ -609,9 +609,9 @@ class FundRequestValidatorTest extends DuskTestCase
     protected function goToFundRequestPage(Browser $browser, FundRequest $fundRequest): void
     {
         $this->goToFundRequestsPage($browser);
-        $this->searchFundRequest($browser, $fundRequest);
+        $this->searchTable($browser, '@tableFundRequest', $fundRequest->identity->email, $fundRequest->id);
 
-        $browser->click("@fundRequestRow$fundRequest->id");
+        $browser->click("@tableFundRequestRow$fundRequest->id");
         $browser->waitFor('@fundRequestPageContent');
     }
 
@@ -756,23 +756,6 @@ class FundRequestValidatorTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param FundRequest $fundRequest
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function searchFundRequest(Browser $browser, FundRequest $fundRequest): void
-    {
-        $browser->waitFor('@searchFundRequests');
-        $browser->typeSlowly('@searchFundRequests', $fundRequest->identity->email, 1);
-
-        $browser->waitFor("@fundRequestRow$fundRequest->id", 20);
-        $browser->assertVisible("@fundRequestRow$fundRequest->id");
-
-        $this->assertRowsCount($browser, 1, '@fundRequestsPageContent');
-    }
-
-    /**
-     * @param Browser $browser
      * @param Employee|null $employee
      * @throws TimeoutException
      * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
@@ -835,10 +818,10 @@ class FundRequestValidatorTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param bool $assertVisible
-     * @return void
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
+     * @return void
      */
     protected function assertVisibleAmountTypesWhenApproveRequest(Browser $browser, bool $assertVisible): void
     {
@@ -1038,11 +1021,11 @@ class FundRequestValidatorTest extends DuskTestCase
         $browser->click("@fundRequestsStateTab_$state");
 
         if ($assertExists) {
-            $browser->waitFor("@fundRequestRow$fundRequest->id", 20);
-            $browser->assertVisible("@fundRequestRow$fundRequest->id");
+            $browser->waitFor("@tableFundRequestRow$fundRequest->id", 20);
+            $browser->assertVisible("@tableFundRequestRow$fundRequest->id");
         } else {
             $this->assertRowsCount($browser, 0, '@fundRequestsPageContent');
-            $browser->assertMissing("@fundRequestRow$fundRequest->id");
+            $browser->assertMissing("@tableFundRequestRow$fundRequest->id");
         }
     }
 
@@ -1068,18 +1051,5 @@ class FundRequestValidatorTest extends DuskTestCase
         $this->assertEquals('answer', $clarification->answer);
         $this->assertEquals(FundRequestClarification::STATE_ANSWERED, $clarification->state);
         $this->assertNotNull($clarification->answered_at);
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    protected function goToFundRequestsPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupFundRequests');
-        $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@fundRequestsPage');
-        $browser->element('@fundRequestsPage')->click();
     }
 }

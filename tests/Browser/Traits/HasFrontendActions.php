@@ -302,8 +302,8 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function searchTable(
         Browser $browser,
