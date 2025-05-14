@@ -3,9 +3,10 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
 class PrevalidationsExport extends BaseFieldedExport
@@ -22,21 +23,23 @@ class PrevalidationsExport extends BaseFieldedExport
     ];
 
     /**
-     * @param BaseFormRequest $request
      * @param array $fields
+     * @param Builder|Relation $query
      */
-    public function __construct(BaseFormRequest $request, protected array $fields)
-    {
-        $this->data = $this->export($request);
+    public function __construct(
+        protected array $fields,
+        protected Builder|Relation $query,
+    ) {
+        $this->data = $this->export($query);
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param Builder|Relation $query
      * @return Collection
      */
-    public function export(BaseFormRequest $request): Collection
+    public function export(Builder|Relation $query): Collection
     {
-        $query = Prevalidation::search($request)->with([
+        $query = $query->with([
             'prevalidation_records.record_type.translations',
         ]);
 

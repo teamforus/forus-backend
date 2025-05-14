@@ -61,7 +61,7 @@ class OrganizationPolicy
      */
     public function update(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_organization');
+        return $organization->identityCan($identity, Permission::MANAGE_ORGANIZATION);
     }
 
     /**

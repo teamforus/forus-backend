@@ -21,11 +21,6 @@ class PrevalidationsExportTest extends TestCase
     use MakesTestOrganizations;
 
     /**
-     * @var string
-     */
-    protected string $apiExportUrl = '/api/v1/platform/prevalidations/export';
-
-    /**
      * @throws Throwable
      * @return void
      */
@@ -41,12 +36,12 @@ class PrevalidationsExportTest extends TestCase
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         // Assert export without fields - must be all fields by default
-        $response = $this->getJson("$this->apiExportUrl?data_format=csv", $apiHeaders);
+        $response = $this->getJson("/api/v1/platform/organizations/$organization->id/prevalidations/export?data_format=csv", $apiHeaders);
         $fields = $this->getExportFields($prevalidation);
         $this->assertFields($response, $prevalidation, $fields);
 
         // Assert with passed all fields
-        $url = $this->apiExportUrl . '?' . http_build_query([
+        $url = "/api/v1/platform/organizations/$organization->id/prevalidations/export?" . http_build_query([
             'data_format' => 'csv',
             'fields' => PrevalidationsExport::getExportFieldsRaw(),
         ]);
@@ -55,7 +50,7 @@ class PrevalidationsExportTest extends TestCase
         $this->assertFields($response, $prevalidation, $fields);
 
         // Assert specific fields
-        $url = $this->apiExportUrl . '?' . http_build_query([
+        $url = "/api/v1/platform/organizations/$organization->id/prevalidations/export?" . http_build_query([
             'data_format' => 'csv',
             'fields' => ['code'],
         ]);

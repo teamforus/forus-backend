@@ -68,8 +68,8 @@ class FundSearch extends BaseSearch
             $builder->whereRelation('fund_config', 'implementation_id', $this->getFilter('implementation_id'));
         }
 
-        if ($this->hasFilter('state')) {
-            $builder->where('state', $this->getFilter('state'));
+        if ($this->getFilter('state')) {
+            $builder->whereIn('state', (array) $this->getFilter('state'));
         }
 
         if (!is_null($this->getFilter('has_products'))) {

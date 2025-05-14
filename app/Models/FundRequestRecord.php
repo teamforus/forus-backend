@@ -137,7 +137,11 @@ class FundRequestRecord extends BaseModel
     private function applyRecordAndValidation(string $recordTypeKey, string $value): FundRequestRecord
     {
         $this->fund_request->identity
-            ->makeRecord(RecordType::findByKey($recordTypeKey), $value)
+            ->makeRecord(
+                type: RecordType::findByKey($recordTypeKey),
+                value: $value,
+                fundRequest: $this->fund_request,
+            )
             ->makeValidationRequest()
             ->approve($this->fund_request->employee->identity, $this->fund_request->fund->organization);
 
