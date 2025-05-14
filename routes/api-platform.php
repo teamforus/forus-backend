@@ -1058,6 +1058,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\Sponsor\ProductsController',
     )->only('index', 'show');
 
+    $router->get(
+        'organizations/{organization}/sponsor/translation-stats',
+        "Api\Platform\Organizations\Sponsor\TranslationStatsController@stats",
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/reservation-extra-payments',
         'Api\Platform\Organizations\Sponsor\ReservationExtraPaymentsController'
