@@ -13,6 +13,7 @@ use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Http\Resources\NoteResource;
 use App\Http\Resources\Validator\ValidatorFundRequestEmailLogResource;
@@ -241,6 +242,18 @@ class FundRequestsController extends Controller
     }
 
     /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
+    {
+        $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
+
+        return ExportFieldArrResource::collection(FundRequestsExport::getExportFields());
+    }
+
+    /**
      * @param IndexFundRequestsRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -255,8 +268,9 @@ class FundRequestsController extends Controller
     ): BinaryFileResponse {
         $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
 
-        $fileData = new FundRequestsExport($request, $request->employee($organization));
-        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_type', 'xls');
+        $fields = $request->input('fields', FundRequestsExport::getExportFieldsRaw());
+        $fileData = new FundRequestsExport($request, $request->employee($organization), $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }

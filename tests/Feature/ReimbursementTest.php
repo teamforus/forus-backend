@@ -11,10 +11,9 @@ use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
-use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesReimbursements;
 use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
@@ -24,73 +23,12 @@ class ReimbursementTest extends TestCase
     use WithFaker;
     use AssertsSentEmails;
     use MakesTestVouchers;
+    use MakesReimbursements;
 
     /**
      * @var string
      */
     protected string $apiUrl = '/api/v1/platform/reimbursements';
-
-    /**
-     * @var array
-     */
-    protected array $resourceStructure = [
-        'id',
-        'title',
-        'description',
-        'amount',
-        'amount_locale',
-        'iban',
-        'iban_name',
-        'voucher_id',
-        'code',
-        'state',
-        'state_locale',
-        'lead_time_locale',
-        'employee_id',
-        'expired',
-        'resolved',
-        'fund' => [
-            'id',
-            'name',
-            'organization_id',
-            'logo',
-            'organization' => [
-                'id',
-                'name',
-                'logo',
-            ],
-        ],
-        'files' => [
-            '*' => [
-                'identity_address',
-                'original_name',
-                'type',
-                'ext',
-                'uid',
-                'order',
-                'size',
-                'url',
-                'preview' => [
-                    'original_name',
-                    'type',
-                    'ext',
-                    'uid',
-                    'dominant_color',
-                    'sizes' => [
-                        'thumbnail',
-                    ],
-                ],
-            ],
-        ],
-        'resolved_at',
-        'resolved_at_locale',
-        'submitted_at',
-        'submitted_at_locale',
-        'expire_at',
-        'expire_at_locale',
-        'created_at',
-        'created_at_locale',
-    ];
 
     /**
      * @throws Throwable
@@ -115,7 +53,7 @@ class ReimbursementTest extends TestCase
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // create draft reimbursement
-        $reimbursement = $this->makeReimbursement($voucher, false);
+        $reimbursement = $this->makeTestReimbursement($voucher, false);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert not visible to the sponsor
@@ -139,7 +77,7 @@ class ReimbursementTest extends TestCase
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
 
         // make reimbursement and sponsor employee
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert the reimbursement is visible for the sponsor
@@ -160,7 +98,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the employee cannot resolve the request
@@ -187,7 +125,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
@@ -208,7 +146,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         $this->expireVoucherAndFund($reimbursement->voucher, now()->subDay())->refresh();
@@ -245,7 +183,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
         // assert that the reimbursement can be assigned by the sponsor
@@ -266,7 +204,7 @@ class ReimbursementTest extends TestCase
 
         // make reimbursement and sponsor employee
         $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
-        $reimbursement = $this->makeReimbursement($voucher, true);
+        $reimbursement = $this->makeTestReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
         $unassignedEmployee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -303,8 +241,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-            'q' => $reimbursement->voucher->identity->email,
-        ]), $headers);
+                'q' => $reimbursement->voucher->identity->email,
+            ]), $headers);
 
         $response->assertSuccessful();
     }
@@ -322,8 +260,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-            'q' => $reimbursement->voucher->identity->email,
-        ]), $headers);
+                'q' => $reimbursement->voucher->identity->email,
+            ]), $headers);
 
         $response->assertJsonCount(0, 'data');
     }
@@ -510,76 +448,5 @@ class ReimbursementTest extends TestCase
         // assert has validation errors
         $response = $this->postJson($this->apiUrl, $bodyInvalid, $headers);
         $response->assertJsonValidationErrors(array_keys(array_except($body, 'description')));
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param bool $submit
-     * @throws Throwable
-     * @return Reimbursement
-     */
-    protected function makeReimbursement(Voucher $voucher, bool $submit): Reimbursement
-    {
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
-        $submitTime = now();
-        $requesterEmail = $voucher->identity->email;
-
-        $body = array_merge($this->makeReimbursementRequestBody($voucher, $headers), [
-            'state' => $submit ? 'pending' : 'draft',
-        ]);
-
-        // assert created
-        $response = $this->postJson($this->apiUrl, $body, $headers);
-        $response->assertCreated();
-        $response->assertJsonStructure([
-            'data' => $this->resourceStructure,
-        ]);
-
-        $reimbursementId = $response->json('data.id');
-        $reimbursement = $voucher->refresh()->reimbursements->where('id', $reimbursementId)[0] ?? null;
-
-        $this->assertNotNull($reimbursement);
-        $this->assertTrue($submit ? $reimbursement->isPending() : $reimbursement->isDraft());
-
-        if ($submit) {
-            $this->assertMailableSent($requesterEmail, ReimbursementSubmittedMail::class, $submitTime);
-        }
-
-        return $reimbursement;
-    }
-
-    /**
-     * @throws Throwable
-     * @return string[]
-     */
-    protected function makeReimbursementRequestBody(?Voucher $voucher = null, array $headers = []): array
-    {
-        return [
-            'title' => $this->faker->text(60),
-            'description' => $this->faker->text(600),
-            'amount' => random_int(1, 10),
-            'iban' => $this->faker()->iban('NL'),
-            'iban_name' => $this->makeIbanName(),
-            'voucher_id' => $voucher?->id,
-            'files' => [
-                $this->makeReimbursementProofFile($headers)->json('data.uid'),
-            ],
-        ];
-    }
-
-    /**
-     * @param array $headers
-     * @return \Illuminate\Testing\TestResponse
-     */
-    protected function makeReimbursementProofFile(array $headers): TestResponse
-    {
-        $type = 'reimbursement_proof';
-        $filePath = base_path('tests/assets/test.png');
-        $file = UploadedFile::fake()->createWithContent($this->faker()->uuid . '.png', $filePath);
-
-        $response = $this->postJson('/api/v1/files', compact('type', 'file'), $headers);
-        $response->assertCreated();
-
-        return $response;
     }
 }

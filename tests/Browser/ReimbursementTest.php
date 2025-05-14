@@ -602,7 +602,7 @@ class ReimbursementTest extends DuskTestCase
             'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
-            'iban_name' => 'John Doe',
+            'iban_name' => $this->makeIbanName(),
             'fund_name' => $voucher->fund->name,
             'sponsor_name' => $voucher->fund->organization->name,
             'voucher_id' => $voucher->id,
@@ -649,11 +649,7 @@ class ReimbursementTest extends DuskTestCase
         $this->selectReimbursementTabByState($browser, $reimbursement);
 
         if ($reimbursement->voucher?->identity?->email) {
-            $browser->waitFor('@searchReimbursement');
-            $browser->type('@searchReimbursement', $reimbursement->voucher->identity->email);
-
-            $browser->waitFor("@reimbursement$reimbursement->id", 20);
-            $browser->assertVisible("@reimbursement$reimbursement->id");
+            $this->searchTable($browser, '@tableReimbursement', $reimbursement->voucher->identity->email, $reimbursement->id);
         }
     }
 
@@ -688,7 +684,7 @@ class ReimbursementTest extends DuskTestCase
         Browser $browser,
         Reimbursement $reimbursement,
     ): void {
-        $browser->element('@reimbursement' . $reimbursement->id)->click();
+        $browser->element('@tableReimbursementRow' . $reimbursement->id)->click();
         $browser->waitFor('@reimbursementDetails');
     }
 

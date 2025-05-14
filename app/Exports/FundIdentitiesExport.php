@@ -2,72 +2,67 @@
 
 namespace App\Exports;
 
+use App\Exports\Base\BaseFieldedExport;
 use App\Models\Identity;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
 class FundIdentitiesExport extends BaseFieldedExport
 {
-    use Exportable;
-    use RegistersEventListeners;
-
-    protected Collection $data;
-    protected array $fields;
+    protected static string $transKey = 'fund_identities';
 
     /**
      * @var array|string[][]
      */
     protected static array $exportFields = [
-        'id' => 'ID',
-        'email' => 'E-mail',
-        'count_vouchers' => 'Totaal aantal vouchers',
-        'count_vouchers_active' => 'Actieve vouchers',
-        'count_vouchers_active_with_balance' => 'Actieve vouchers met saldo',
+        'id',
+        'email',
+        'count_vouchers',
+        'count_vouchers_active',
+        'count_vouchers_active_with_balance',
     ];
 
     /**
      * FundsExport constructor.
      * @param EloquentCollection|Identity[] $identities
      */
-    public function __construct(EloquentCollection|array $identities, array $fields = [])
+    public function __construct(EloquentCollection|array $identities, protected array $fields)
     {
-        $this->data = $identities->load('primary_email');
-        $this->fields = $fields;
+        $this->data = $this->export($identities);
     }
 
     /**
+     * @param EloquentCollection|array $identities
      * @return Collection
      */
-    public function collection(): Collection
+    protected function export(EloquentCollection|array $identities): Collection
     {
-        $data = $this->data->map(function (Identity $identity) {
-            return array_only([
-                'id' => $identity->id,
-                'email' => $identity->email,
-                'count_vouchers' => $identity->getAttribute('count_vouchers'),
-                'count_vouchers_active' => $identity->getAttribute('count_vouchers_active'),
-                'count_vouchers_active_with_balance' => $identity->getAttribute('count_vouchers_active_with_balance'),
-            ], $this->fields);
-        });
-
-        return $data->map(function ($item) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                static::$exportFields[$key] => (string) $item[$key],
-            ]), []);
-        });
+        return $this->exportTransform($identities->load('primary_email'));
     }
 
     /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        return $this->transformKeys(
+            $data->map(fn (Identity $identity) => array_only($this->getRow($identity), $this->fields))
+        );
+    }
+
+    /**
+     * @param Identity $identity
      * @return array
      */
-    public function headings(): array
+    protected function getRow(Identity $identity): array
     {
-        $collection = $this->collection();
-
-        return $collection->isNotEmpty()
-            ? array_keys($collection->first())
-            : array_map(fn ($key) => static::$exportFields[$key] ?? $key, $this->fields);
+        return [
+            'id' => $identity->id,
+            'email' => $identity->email,
+            'count_vouchers' => $identity->getAttribute('count_vouchers'),
+            'count_vouchers_active' => $identity->getAttribute('count_vouchers_active'),
+            'count_vouchers_active_with_balance' => $identity->getAttribute('count_vouchers_active_with_balance'),
+        ];
     }
 }

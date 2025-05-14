@@ -67,35 +67,23 @@ class VoucherTransactionBatchUploadTest extends DuskTestCase
 
             // create file with transactions for voucher and upload it
             $this->uploadTransactionsBatch($browser, $voucher);
+            $this->assertAndCloseSuccessNotification($browser);
 
             // check transaction exists
             $transactions = $this->getTransactions($implementation->organization, $voucher, $startDate);
             $this->assertEquals($this->transactionPerVoucher, $transactions->count());
 
             foreach ($transactions as $transaction) {
-                $this->searchTransaction($browser, $transaction);
+                $this->searchTable($browser, '@tableTransaction', $transaction->uid, $transaction->id);
+
+                $browser->within("@tableTransactionRow$transaction->id", function (Browser $browser) use ($transaction) {
+                    $browser->assertSee($transaction->uid);
+                    $browser->assertSeeIn('@transactionState', $transaction->state_locale);
+                });
             }
 
             // Logout
             $this->logout($browser);
-        });
-    }
-
-    /**
-     * @param Browser $browser
-     * @param VoucherTransaction $transaction
-     * @throws TimeOutException
-     * @return void
-     */
-    private function searchTransaction(Browser $browser, VoucherTransaction $transaction): void
-    {
-        $browser->waitFor('@searchTransaction');
-        $browser->value('@searchTransaction', $transaction->uid);
-
-        $browser->waitFor("@transactionItem$transaction->id");
-        $browser->within("@transactionItem$transaction->id", function (Browser $browser) use ($transaction) {
-            $browser->assertSee($transaction->uid);
-            $browser->assertSeeIn('@transactionState', $transaction->state_locale);
         });
     }
 
