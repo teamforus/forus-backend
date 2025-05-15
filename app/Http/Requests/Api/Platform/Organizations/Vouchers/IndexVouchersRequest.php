@@ -7,7 +7,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 
 /**
  * @property-read Organization $organization
@@ -33,7 +32,6 @@ class IndexVouchersRequest extends BaseFormRequest
     {
         $funds = $this->organization->funds()->pluck('funds.id');
         $implementations = $this->organization->implementations()->pluck('implementations.id');
-        $fields = Arr::pluck(VoucherExport::getExportFields('product'), 'key');
 
         return [
             'fund_id' => 'nullable|exists:funds,id|in:' . $funds->join(','),
@@ -46,7 +44,6 @@ class IndexVouchersRequest extends BaseFormRequest
             'unassigned' => 'nullable|boolean',
             'source' => 'required|in:all,user,employee',
             'qr_format' => 'nullable|in:pdf,png,data,all',
-            'data_format' => 'nullable|in:csv,xls,all',
             'state' => 'nullable|in:' . implode(',', $this->statesList()),
             'email' => ['nullable', ...$this->emailRules()],
             'bsn' => 'nullable|string|max:100',
@@ -54,13 +51,15 @@ class IndexVouchersRequest extends BaseFormRequest
             'expired' => 'nullable|boolean',
             'count_per_identity_min' => 'nullable|numeric',
             'count_per_identity_max' => 'nullable|numeric',
-            'fields' => 'nullable|array',
-            'fields.*' => ['nullable', Rule::in($fields)],
             'identity_id' => 'nullable|exists:identities,id',
             'amount_available_min' => 'nullable|numeric',
             'amount_available_max' => 'nullable|numeric',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
             ...$this->sortableResourceRules(100, ['created_at']),
+            ...$this->exportableResourceRules(
+                Arr::pluck(VoucherExport::getExportFields('product'), 'key'),
+                ['csv', 'xls', 'all']
+            ),
         ];
     }
 

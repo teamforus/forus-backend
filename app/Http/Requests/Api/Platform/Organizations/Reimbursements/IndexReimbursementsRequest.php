@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Reimbursements;
 
+use App\Exports\ReimbursementsSponsorExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Reimbursement;
@@ -45,6 +46,7 @@ class IndexReimbursementsRequest extends BaseFormRequest
             'identity_address' => 'nullable|exists:identities,address',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
             ...$this->sortableResourceRules(),
+            ...$this->exportableResourceRules(ReimbursementsSponsorExport::getExportFieldsRaw()),
         ];
     }
 

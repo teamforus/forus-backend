@@ -72,6 +72,11 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Vouchers created!');
         $testData->separator();
 
+        $testData->info('⇾ Making reservations!');
+        $testData->makeReservations($baseIdentity);
+        $testData->success('✓ Reservations created!');
+        $testData->separator();
+
         $testData->info('⇾ Making fund requests!');
         $testData->makeFundRequests();
         $testData->success('✓ Fund requests created!');
