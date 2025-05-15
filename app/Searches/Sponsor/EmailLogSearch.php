@@ -2,6 +2,8 @@
 
 namespace App\Searches\Sponsor;
 
+use App\Models\FundRequest;
+use App\Models\Identity;
 use App\Scopes\Builders\EmailLogQuery;
 use App\Searches\BaseSearch;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
@@ -30,6 +32,14 @@ class EmailLogSearch extends BaseSearch
             EmailLogQuery::whereQueryFilter($builder, $this->getFilter('q'));
         }
 
-        return $builder;
+        if ($fundRequestId = $this->getFilter('fund_request_id')) {
+            $builder = EmailLogQuery::whereFundRequest($builder, FundRequest::find($fundRequestId));
+        }
+
+        if ($identityId = $this->getFilter('identity_id')) {
+            $builder = EmailLogQuery::whereIdentity($builder, Identity::find($identityId));
+        }
+
+        return $builder->latest();
     }
 }
