@@ -19,20 +19,25 @@ class FundRequestResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        return array_merge($this->resource->only([
-            'id', 'state', 'employee_id', 'fund_id', 'contact_information',
-        ]), [
+        $hasActiveVoucher = $this->hasActiveVoucher($this->resource);
+
+        return [
+            ...$this->resource->only([
+                'id', 'state', 'employee_id', 'fund_id', 'contact_information',
+            ]),
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),
-            'current_period' => $this->activePeriod($this->resource),
-        ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
+            'current_period' => $hasActiveVoucher,
+            'has_active_voucher' => $hasActiveVoucher,
+            ...$this->timestamps($this->resource, 'created_at', 'updated_at'),
+        ];
     }
 
     /**
      * @param FundRequest $fundRequest
      * @return bool
      */
-    public function activePeriod(FundRequest $fundRequest): bool
+    public function hasActiveVoucher(FundRequest $fundRequest): bool
     {
         return (bool) $fundRequest->vouchers->first(fn (Voucher $voucher) => !$voucher->expired);
     }
