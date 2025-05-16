@@ -26,6 +26,7 @@ class EmployeesExport extends BaseFieldedExport
         'is_2fa_configured',
         'created_at',
         'updated_at',
+        'last_activity',
         'roles',
     ];
 
@@ -47,6 +48,7 @@ class EmployeesExport extends BaseFieldedExport
     {
         $search = $builder->with([
             'identity.emails',
+            'identity.sessions',
             'identity.primary_email',
             'identity.identity_2fa_active',
             'roles.translations',
@@ -99,6 +101,12 @@ class EmployeesExport extends BaseFieldedExport
             'is_2fa_configured' => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
             'created_at' => $employee->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $employeeLastUpdate?->format('Y-m-d H:i:s'),
+            'last_activity' => $employee
+                ->identity
+                ->sessions
+                ->sortByDesc('last_activity_at')
+                ->first()
+                ?->last_activity_at,
         ]);
     }
 
