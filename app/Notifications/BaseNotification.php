@@ -44,9 +44,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_fund_providers.approved_products' => [
             'fund_name',
         ],
-        'notifications_fund_providers.revoked_budget' => [
-            'fund_name', 'provider_name', 'sponsor_name', 'sponsor_phone',
-        ],
         'notifications_fund_providers.revoked_products' => [
             'fund_name',
         ],
