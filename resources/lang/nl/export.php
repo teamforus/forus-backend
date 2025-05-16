@@ -120,6 +120,7 @@ return [
         'updated_at' => 'Bijgewerkt op',
         'is_2fa_configured' => '2FA',
         'roles' => 'Rollen',
+        'last_activity' => 'Laatste handeling',
     ],
 
     'fund_identities' => [
