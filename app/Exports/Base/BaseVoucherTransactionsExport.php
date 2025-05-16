@@ -69,6 +69,7 @@ abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
             'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
             'bulk_status_locale' => $transaction->bulk_status_locale,
             'notes_provider' => $transaction->notes_provider->pluck('message')->implode("\n"),
+            'reservation_code' => $transaction->product_reservation?->code,
         ];
     }
 }

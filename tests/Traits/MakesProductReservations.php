@@ -65,7 +65,7 @@ trait MakesProductReservations
         $funds = $organization->funds()->where('type', $fundType)->get();
         $this->assertNotNull($funds->count() ?: null);
 
-        $voucher = VoucherQuery::whereNotExpiredAndActive(
+        $voucher = VoucherQuery::whereHasBalanceIsActiveAndNotExpired(
             $organization->identity->vouchers()->whereIn('fund_id', $funds->pluck('id'))
         )->whereNull('product_id')->first();
 
