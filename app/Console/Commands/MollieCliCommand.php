@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Exception;
 use Illuminate\Support\Facades\App;
-use Mollie\Api\Exceptions\ApiException;
+use Mollie\Api\Exceptions\RequestException;
 use Throwable;
 
 class MollieCliCommand extends BaseCommand
@@ -217,7 +217,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @throws Throwable
      * @return void
      */
@@ -272,7 +272,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readOrganization(): void
@@ -288,7 +288,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readOnboardingState(): void
@@ -296,7 +296,7 @@ class MollieCliCommand extends BaseCommand
         $mollie = new \Mollie\Api\MollieApiClient();
         $mollie->setAccessToken($this->askAccessToken());
 
-        $response = $mollie->onboarding->get();
+        $response = $mollie->onboarding->status();
 
         $this->printText('Response:');
         $this->info($this->jsonPretty($response));
@@ -304,7 +304,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @throws Exception
      * @return void
      */
@@ -328,7 +328,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readProfile(): void
@@ -345,7 +345,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readAllProfiles(): void
@@ -361,7 +361,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readAllPaymentMethods(): void
@@ -369,7 +369,7 @@ class MollieCliCommand extends BaseCommand
         $mollie = new \Mollie\Api\MollieApiClient();
         $mollie->setAccessToken($this->askAccessToken());
 
-        $response = $mollie->methods->allAvailable([
+        $response = $mollie->methods->all([
             'profileId' => $this->ask('Profile ID'),
             'testmode' => $this->confirm('Test mode', true),
         ]);
@@ -380,7 +380,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readActivePaymentMethods(): void
@@ -388,7 +388,7 @@ class MollieCliCommand extends BaseCommand
         $mollie = new \Mollie\Api\MollieApiClient();
         $mollie->setAccessToken($this->askAccessToken());
 
-        $response = $mollie->methods->allActive([
+        $response = $mollie->methods->allEnabled([
             'profileId' => $this->ask('Profile ID'),
             'testmode' => $this->confirm('Test mode', true),
         ]);
@@ -399,7 +399,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function enablePaymentMethod(): void
@@ -417,7 +417,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function disablePaymentMethod(): void
@@ -425,17 +425,17 @@ class MollieCliCommand extends BaseCommand
         $mollie = new \Mollie\Api\MollieApiClient();
         $mollie->setAccessToken($this->askAccessToken());
 
-        $response = $mollie->profiles
+        $mollie->profiles
             ->get($this->ask('Profile ID'))
             ->disableMethod($this->ask('Payment method'));
 
         $this->printText('Response:');
-        $this->info($this->jsonPretty($response));
+        $this->info('void');
         $this->printSeparator();
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function createPayment(): void
@@ -468,7 +468,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readPayment(): void
@@ -486,7 +486,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function refundPayment(): void
@@ -517,7 +517,7 @@ class MollieCliCommand extends BaseCommand
     }
 
     /**
-     * @throws ApiException
+     * @throws RequestException
      * @return void
      */
     protected function readPaymentRefund(): void
