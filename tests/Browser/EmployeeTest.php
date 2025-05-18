@@ -80,10 +80,8 @@ class EmployeeTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($implementation) {
             $organization = $implementation->organization;
 
-            $employee = $organization->addEmployee(
-                $this->makeIdentity($this->makeUniqueEmail()),
-                Role::pluck('id')->toArray()
-            );
+            $roles = Role::pluck('id')->toArray();
+            $employee = $organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $roles);
 
             $browser->visit($implementation->urlSponsorDashboard());
 
@@ -132,15 +130,17 @@ class EmployeeTest extends DuskTestCase
             $this->goToEmployeesPage($browser);
             $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
 
+            // Assert 2fa is not configured
             $browser->waitFor("@notConfigured2fa$employee->id");
             $browser->assertMissing("@configured2fa$employee->id");
 
+            // Activate 2fa
             $identityProxy = $this->makeIdentityProxy($employee->identity);
             $identity2FA = $this->setup2FAProvider($identityProxy, 'authenticator');
             $this->activate2FAProvider($identityProxy, $identity2FA);
 
+            // Assert 2fa is configured
             $browser->refresh();
-
             $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
             $browser->waitFor("@configured2fa$employee->id");
             $browser->assertMissing("@notConfigured2fa$employee->id");
@@ -351,23 +351,21 @@ class EmployeeTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Employee $owner
-     * @param Employee $employee
-     * @throws TimeoutException
+     * @param Employee $prevOwner
      * @return void
+     *@throws TimeoutException
      */
-    private function assertOwner(Browser $browser, Employee $owner, Employee $employee): void
+    private function assertOwner(Browser $browser, Employee $owner, Employee $prevOwner): void
     {
-        $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
-        $browser->waitFor("@tableEmployeeRow$employee->id");
-        $browser->within("@tableEmployeeRow$employee->id", function (Browser $browser) use ($employee) {
-            $browser->assertMissing("@owner$employee->id");
-        });
+        // Assert previous employee is no longer owner
+        $this->searchTable($browser, '@tableEmployee', $prevOwner->identity->email, $prevOwner->id);
+        $browser->waitFor("@tableEmployeeRow$prevOwner->id");
+        $browser->within("@tableEmployeeRow$prevOwner->id", fn (Browser $b) => $b->assertMissing("@owner$prevOwner->id"));
 
+        // Assert the new employee is the new owner
         $this->searchTable($browser, '@tableEmployee', $owner->identity->email, $owner->id);
         $browser->waitFor("@tableEmployeeRow$owner->id");
-        $browser->within("@tableEmployeeRow$owner->id", function (Browser $browser) use ($owner) {
-            $browser->assertVisible("@owner$owner->id");
-        });
+        $browser->within("@tableEmployeeRow$owner->id", fn (Browser $b) => $b->assertVisible("@owner$owner->id"));
     }
 
     /**
