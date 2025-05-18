@@ -12,7 +12,6 @@ use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -253,13 +252,6 @@ class OrganizationResource extends BaseJsonResource
             'translations_monthly_limit_max' => TranslationValue::maxMonthlyLimit(),
             'translations_price_per_mill' => TranslationValue::pricePerMillionSymbols(),
             'translations_languages' => LanguageResource::collection(Language::getAllLanguages()->where('base', false)),
-            'translations_usage' => Cache::driver('array')->remember('languages', 0, function () use ($organization) {
-                return [
-                    'month' => TranslationValue::getUsage($organization->id, now()->startOfMonth(), now()->endOfMonth()),
-                    'week' => TranslationValue::getUsage($organization->id, now()->startOfWeek(), now()->endOfWeek()),
-                    'day' => TranslationValue::getUsage($organization->id, now()->startOfDay(), now()->endOfDay()),
-                ];
-            }),
         ];
     }
 }

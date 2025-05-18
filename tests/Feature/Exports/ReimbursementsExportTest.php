@@ -8,18 +8,18 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
-use Tests\Traits\MakesReimbursements;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestReimbursements;
 use Throwable;
 
 class ReimbursementsExportTest extends TestCase
 {
     use BaseExport;
     use MakesTestFunds;
-    use MakesReimbursements;
     use DatabaseTransactions;
     use MakesTestOrganizations;
+    use MakesTestReimbursements;
 
     /**
      * @var string
@@ -40,7 +40,7 @@ class ReimbursementsExportTest extends TestCase
         ]);
 
         $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()));
-        $reimbursement = $this->makeTestReimbursement($voucher, true);
+        $reimbursement = $this->makeReimbursement($voucher, true);
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
