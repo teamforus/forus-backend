@@ -4,7 +4,6 @@ namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\WithFaker;

@@ -25,29 +25,32 @@ trait ExportTrait
      * @param string $format
      * @param array $fields
      * @param string $selector
+     * @param string|null $qrCodeFormat
+     * @throws NoSuchElementException
      * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @throws ElementClickInterceptedException
      * @return array|null
      */
     protected function fillExportModalAndDownloadFile(
         Browser $browser,
         string $format,
         array $fields = [],
-        string $selector = '@export'
+        string $selector = '@export',
+        ?string $qrCodeFormat = null,
     ): ?array {
-        $this->fillExportModal($browser, $fields, $selector, $format);
+        $this->fillExportModal($browser, $fields, $selector, $format, $qrCodeFormat);
 
         $browser->assertMissing('@dangerNotification');
 
-        return $this->parseExportedFile($format);
+        return $this->parseExportedFile($format, $qrCodeFormat);
     }
 
     /**
      * @param string $format
+     * @param string|null $qrCodeFormat
      * @return array|null
      */
-    protected function parseExportedFile(string $format): ?array
+    protected function parseExportedFile(string $format, ?string $qrCodeFormat = null): ?array
     {
         $fileFormat = match ($format) {
             'csv' => ExcelFormat::CSV,
@@ -113,9 +116,10 @@ trait ExportTrait
      * @param array $fields
      * @param string $selector
      * @param string $format
+     * @param string|null $qrCodeFormat
+     *@throws NoSuchElementException
      * @throws TimeoutException
      * @throws ElementClickInterceptedException
-     * @throws NoSuchElementException
      * @return void
      */
     protected function fillExportModal(
@@ -123,12 +127,13 @@ trait ExportTrait
         array $fields = [],
         string $selector = '@export',
         string $format = 'csv',
+        ?string $qrCodeFormat = null,
     ): void {
         $browser->waitFor($selector);
         $browser->element($selector)->click();
         $browser->waitFor('@modalExport');
 
-        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format) {
+        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format, $qrCodeFormat) {
             $browser->waitFor("@toggle_data_format_$format");
             $browser->element("@toggle_data_format_$format")->click();
 
@@ -139,6 +144,10 @@ trait ExportTrait
                 foreach ($fields as $field) {
                     $browser->click("@option_$field");
                 }
+            }
+
+            if ($qrCodeFormat) {
+                $browser->click("@toggle_qr_format_$qrCodeFormat");
             }
 
             $browser->click('@submitBtn');
