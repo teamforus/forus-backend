@@ -1,27 +1,22 @@
 <?php
 
-namespace App\Http\Resources\Validator;
+namespace App\Http\Resources;
 
-use App\Http\Resources\BaseJsonResource;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
+use Illuminate\Http\Request;
 
 /**
  * @property EmailLog $resource
  */
-class ValidatorFundRequestEmailLogResource extends BaseJsonResource
+class EmailLogResource extends BaseJsonResource
 {
-    /**
-     * @var string[]
-     */
-    public const array LOAD = [];
-
     /**
      * Transform the resource into an array.
      *
      * @param \Illuminate\Http\Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $log = $this->resource;
 
