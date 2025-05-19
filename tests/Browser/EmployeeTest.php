@@ -16,14 +16,16 @@ use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesTest2FA;
 use Tests\Traits\MakesTestIdentities;
 use Throwable;
 
 class EmployeeTest extends DuskTestCase
 {
+    use MakesTest2FA;
     use AssertsSentEmails;
-    use MakesTestIdentities;
     use HasFrontendActions;
+    use MakesTestIdentities;
 
     /**
      * @throws Throwable
@@ -34,9 +36,6 @@ class EmployeeTest extends DuskTestCase
         Cache::clear();
 
         $implementation = Implementation::byKey('nijmegen');
-
-        $this->assertNotNull($implementation);
-        $this->assertNotNull($implementation->organization);
 
         $this->browse(function (Browser $browser) use ($implementation) {
             $initialRole = Role::byKey('finance');
@@ -52,14 +51,13 @@ class EmployeeTest extends DuskTestCase
             // Go to employees list and add a new employee of initial role
             $this->goToEmployeesPage($browser);
             $employee = $this->createEmployee($browser, $implementation->organization, $initialRole);
-
             $this->assertAndCloseSuccessNotification($browser);
 
             // Search the employee in the table by email
             $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
             $this->checkEmployeePermissions($implementation->organization, $employee, $initialRole);
 
-            // Change employee role, test permissions and delete the employee
+            // Change an employee role, test permissions and delete the employee
             $this->changeEmployeeRoles($browser, $employee, $updatedRole);
             $this->checkEmployeePermissions($implementation->organization, $employee, $updatedRole);
 
@@ -72,11 +70,132 @@ class EmployeeTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testEmployeeDelete(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $this->browse(function (Browser $browser) use ($implementation) {
+            $organization = $implementation->organization;
+
+            $roles = Role::pluck('id')->toArray();
+            $employee = $organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $roles);
+
+            $browser->visit($implementation->urlSponsorDashboard());
+
+            // Authorize identity
+            $this->loginIdentity($browser, $employee->identity);
+            $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $employee->identity);
+            $this->selectDashboardOrganization($browser, $implementation->organization);
+
+            // Go to employees list and add a new employee of initial role
+            $this->goToEmployeesPage($browser);
+            $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
+
+            $browser->waitFor("@tableEmployeeRow$employee->id");
+            $browser->within("@tableEmployeeRow$employee->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
+            $browser->assertMissing("@btnEmployeeDelete$employee->id");
+
+            // Logout
+            $this->logout($browser);
+            $employee->delete();
+        });
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testEmployee2FAState(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $employee = $implementation->organization->addEmployee(
+            $this->makeIdentity($this->makeUniqueEmail()),
+            Role::pluck('id')->toArray()
+        );
+
+        $this->browse(function (Browser $browser) use ($implementation, $employee) {
+            $identity = $implementation->organization->identity;
+            $browser->visit($implementation->urlSponsorDashboard());
+
+            // Authorize identity
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
+            $this->selectDashboardOrganization($browser, $implementation->organization);
+
+            // Go to employees list and add a new employee of initial role
+            $this->goToEmployeesPage($browser);
+            $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
+
+            // Assert 2fa is not configured
+            $browser->waitFor("@notConfigured2fa$employee->id");
+            $browser->assertMissing("@configured2fa$employee->id");
+
+            // Activate 2fa
+            $identityProxy = $this->makeIdentityProxy($employee->identity);
+            $identity2FA = $this->setup2FAProvider($identityProxy, 'authenticator');
+            $this->activate2FAProvider($identityProxy, $identity2FA);
+
+            // Assert 2fa is configured
+            $browser->refresh();
+            $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
+            $browser->waitFor("@configured2fa$employee->id");
+            $browser->assertMissing("@notConfigured2fa$employee->id");
+
+            // Logout
+            $this->logout($browser);
+            $employee->delete();
+        });
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testEmployeeTransferOwnership(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $this->browse(function (Browser $browser) use ($implementation) {
+            $role = Role::byKey('admin');
+            $organization = $implementation->organization;
+            $identity = $organization->identity;
+
+            $browser->visit($implementation->urlSponsorDashboard());
+
+            // Authorize identity
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
+            $this->selectDashboardOrganization($browser, $organization);
+
+            // Go to employees list and add a new employee of initial role
+            $this->goToEmployeesPage($browser);
+            $employee = $this->createEmployee($browser, $organization, $role);
+            $this->assertAndCloseSuccessNotification($browser);
+
+            $this->transferOwnership($browser, $organization->findEmployee($identity), $employee);
+
+            $organization->refresh();
+            $this->assertFalse($organization->isOwner($identity));
+            $this->assertTrue($organization->isOwner($employee->identity));
+
+            // Logout
+            $this->logout($browser);
+
+            $organization->update(['identity_address' => $identity->address]);
+            $employee->delete();
+        });
+    }
+
+    /**
      * @param Browser $browser
      * @param Collection|Role[] $addRoles
      * @param Collection|Role[] $removeRoles
      * @param array $fields
-     * @throws TimeOutException
+     * @throws TimeoutException
      * @return void
      */
     protected function selectEmployeeRoles(
@@ -193,6 +312,60 @@ class EmployeeTest extends DuskTestCase
 
         $this->assertNotNull($employee->identity->fresh());
         $this->assertTrue($employee->fresh()->trashed());
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Employee $owner
+     * @param Employee $employee
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    private function transferOwnership(Browser $browser, Employee $owner, Employee $employee): void
+    {
+        $this->assertOwner($browser, $owner, $employee);
+
+        $this->searchTable($browser, '@tableEmployee', $owner->identity->email, $owner->id);
+        $browser->waitFor("@tableEmployeeRow$owner->id");
+        $browser->within("@tableEmployeeRow$owner->id", fn (Browser $b) => $b->press('@btnEmployeeMenu'));
+
+        $browser->waitFor("@btnEmployeeTransferOwnership$owner->id");
+        $browser->press("@btnEmployeeTransferOwnership$owner->id");
+
+        $browser->waitFor('@modalTransferOrganizationOwnership');
+
+        $browser->waitFor('@employeesSelect');
+        $browser->click('@employeesSelect .select-control-search');
+        $this->findOptionElement($browser, '@employeesSelect', $employee->identity->email)->click();
+
+        $browser->press('@submitBtn');
+        $browser->waitUntilMissing('@modalTransferOrganizationOwnership');
+
+        $browser->refresh();
+
+        $this->assertOwner($browser, $employee, $owner);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Employee $owner
+     * @param Employee $prevOwner
+     * @return void
+     *@throws TimeoutException
+     */
+    private function assertOwner(Browser $browser, Employee $owner, Employee $prevOwner): void
+    {
+        // Assert previous employee is no longer owner
+        $this->searchTable($browser, '@tableEmployee', $prevOwner->identity->email, $prevOwner->id);
+        $browser->waitFor("@tableEmployeeRow$prevOwner->id");
+        $browser->within("@tableEmployeeRow$prevOwner->id", fn (Browser $b) => $b->assertMissing("@owner$prevOwner->id"));
+
+        // Assert the new employee is the new owner
+        $this->searchTable($browser, '@tableEmployee', $owner->identity->email, $owner->id);
+        $browser->waitFor("@tableEmployeeRow$owner->id");
+        $browser->within("@tableEmployeeRow$owner->id", fn (Browser $b) => $b->assertVisible("@owner$owner->id"));
     }
 
     /**
