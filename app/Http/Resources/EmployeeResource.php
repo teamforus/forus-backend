@@ -14,9 +14,9 @@ class EmployeeResource extends BaseJsonResource
         'organization',
         'roles.translations',
         'roles.permissions',
-        'identity.sessions',
         'identity.primary_email',
         'identity.identity_2fa_active',
+        'identity.session_last_activity',
     ];
 
     /**
@@ -47,12 +47,7 @@ class EmployeeResource extends BaseJsonResource
             ],
             ...static::makeTimestampsStatic([
                 'created_at' => $employee->created_at,
-                'last_activity_at' => $employee
-                    ->identity
-                    ->sessions
-                    ->sortByDesc('last_activity_at')
-                    ->first()
-                    ?->last_activity_at,
+                'last_activity_at' => $employee->identity->session_last_activity?->last_activity_at,
             ]),
         ]);
     }
