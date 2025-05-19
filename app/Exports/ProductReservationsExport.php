@@ -30,6 +30,7 @@ class ProductReservationsExport extends BaseFieldedExport
         'expire_at',
         'ean',
         'sku',
+        'transaction_id',
     ];
 
     /**
@@ -85,6 +86,7 @@ class ProductReservationsExport extends BaseFieldedExport
             'expire_at' => format_date_locale($reservation->expire_at),
             'ean' => $reservation->product->ean,
             'sku' => $reservation->product->sku,
+            'transaction_id' => $reservation->voucher_transaction?->id,
         ];
     }
 }
