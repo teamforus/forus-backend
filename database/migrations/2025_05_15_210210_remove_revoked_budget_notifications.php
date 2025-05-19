@@ -9,6 +9,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::table('email_log_attachments')
+            ->whereIn(
+                'email_log_id',
+                DB::table('email_logs')
+                    ->select('id')
+                    ->where('system_notification_key', 'notifications_fund_providers.revoked_budget')
+            )
+            ->delete();
+
         DB::table('email_logs')
             ->where('system_notification_key', 'notifications_fund_providers.revoked_budget')
             ->delete();
