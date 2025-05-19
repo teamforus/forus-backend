@@ -23,6 +23,7 @@ use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Exceptions\RequestException;
+use Mollie\Api\Http\Data\Money;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Method;
 use Mollie\Api\Resources\Organization as MollieOrganization;
@@ -267,8 +268,7 @@ class MollieService implements MollieServiceInterface
         try {
             return collect($this->getMollie()->methods->allEnabled([
                 'profileId' => $profileId,
-                'testmode' => $this->testMode,
-            ]))->map(fn (Method $method) => $this->mapPaymentMethod($method));
+            ], testMode: $this->testMode))->map(fn (Method $method) => $this->mapPaymentMethod($method));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readActivePaymentMethods');
         }
@@ -293,14 +293,14 @@ class MollieService implements MollieServiceInterface
     /**
      * @param string $profileId
      * @param string $method
-     * @throws RequestException|MollieException
-     * @return bool
-     * @noinspection PhpUnused
+     * @throws MollieException
+     * @throws RequestException
+     * @return void
      */
-    public function disablePaymentMethod(string $profileId, string $method): bool
+    public function disablePaymentMethod(string $profileId, string $method): void
     {
         try {
-            return (bool) $this->getMollie()->profiles->get($profileId)->disableMethod($method);
+            $this->getMollie()->profiles->get($profileId)->disableMethod($method);
         } catch (ApiException $e) {
             $this->processApiException($e, 'disablePaymentMethod');
         }
@@ -315,22 +315,16 @@ class MollieService implements MollieServiceInterface
     public function createPayment(string $profileId, array $attributes): Payment
     {
         try {
-            $payment = $this->getMollie()->payments->create([
+            return $this->mapPayment($this->getMollie()->payments->create([
                 'profileId' => $profileId,
-                'amount' => [
-                    'currency' => $attributes['currency'],
-                    'value' => currency_format($attributes['amount']),
-                ],
+                'amount' => new Money($attributes['currency'], currency_format($attributes['amount'])),
                 'description' => $attributes['description'],
                 'redirectUrl' => $attributes['redirect_url'],
                 'cancelUrl' => $attributes['cancel_url'],
                 'webhookUrl' => $this->webhookUri,
                 'locale' => 'nl_NL',
-                'method' => [self::PAYMENT_METHOD_IDEAL],
-                'testmode' => $this->testMode,
-            ]);
-
-            return $this->mapPayment($payment);
+                'method' => self::PAYMENT_METHOD_IDEAL,
+            ], testmode: $this->testMode));
         } catch (ApiException $e) {
             $this->processApiException($e, 'createPayment');
         }
@@ -345,9 +339,7 @@ class MollieService implements MollieServiceInterface
     public function getMolliePayment(string $paymentId): MolliePayment
     {
         try {
-            return $this->getMollie()->payments->get($paymentId, [
-                'testmode' => $this->testMode,
-            ]);
+            return $this->getMollie()->payments->get($paymentId, testmode: $this->testMode);
         } catch (ApiException $e) {
             $this->processApiException($e, 'readPayment');
         }
@@ -362,9 +354,7 @@ class MollieService implements MollieServiceInterface
     public function getPayment(string $paymentId): Payment
     {
         try {
-            return $this->mapPayment($this->getMollie()->payments->get($paymentId, [
-                'testmode' => $this->testMode,
-            ]));
+            return $this->mapPayment($this->getMollie()->payments->get($paymentId, testmode: $this->testMode));
         } catch (ApiException $e) {
             $this->processApiException($e, 'readPayment');
         }
@@ -379,9 +369,7 @@ class MollieService implements MollieServiceInterface
     public function cancelPayment(string $paymentId): Payment
     {
         try {
-            return $this->mapPayment($this->getMollie()->payments->cancel($paymentId, [
-                'testmode' => $this->testMode,
-            ]));
+            return $this->mapPayment($this->getMollie()->payments->cancel($paymentId, testmode: $this->testMode));
         } catch (ApiException $e) {
             $this->processApiException($e, 'cancelPayment');
         }
