@@ -1,10 +1,9 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -272,20 +271,6 @@ class FundActionsTest extends DuskTestCase
     public function testFundActivatePageWithFundRequestsFromPreviousPeriodsOnPayoutFund()
     {
         $this->testFundActivatePageWithFundRequestsFromPreviousPeriods('payout');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param int $count
-     * @param string $selector
-     * @return void
-     */
-    protected function assertRowsCount(Browser $browser, int $count, string $selector): void
-    {
-        $browser->within($selector, function (Browser $browser) use ($count) {
-            $browser->assertSeeIn('@paginatorTotal', $count);
-            $this->assertCount(1, $browser->elements('tr>td'));
-        });
     }
 
     /**

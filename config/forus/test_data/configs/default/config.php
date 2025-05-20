@@ -62,6 +62,7 @@ return [
     'backoffice_client_cert' => '',
     'backoffice_client_cert_key' => '',
     'backoffice_fallback' => true,
+    'backoffice_enabled' => false,
 
     'digid_cgi_tls_key' => '',
     'digid_cgi_tls_cert' => '',

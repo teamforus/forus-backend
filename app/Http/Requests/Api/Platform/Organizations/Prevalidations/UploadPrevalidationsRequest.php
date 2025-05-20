@@ -1,19 +1,23 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Prevalidations;
+namespace App\Http\Requests\Api\Platform\Organizations\Prevalidations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Models\Permission;
+use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\RecordType;
 use App\Rules\PrevalidationDataItemRule;
 use App\Rules\PrevalidationDataRule;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
+/**
+ * @property-read Organization $organization
+ */
 class UploadPrevalidationsRequest extends BaseFormRequest
 {
     /**
@@ -23,7 +27,7 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('store', Prevalidation::class);
+        return Gate::allows('store', [Prevalidation::class, $this->organization]);
     }
 
     /**
@@ -33,13 +37,16 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $fundsAvailable = $this->getAvailableFunds()->pluck('id');
+        $fund = Fund::find($this->input('fund_id'));
         $recordTypes = RecordType::search()->keyBy('key');
-        $fund = Fund::query()->find($this->input('fund_id'));
-        $data = $this->get('data', []);
+        $data = $this->input('data', []);
+        $data = array_filter(is_array($data) ? $data : []);
 
         return [
-            'fund_id' => 'required|in:' . $fundsAvailable->implode(','),
+            'fund_id' => [
+                'required',
+                Rule::in($this->getAvailableFunds()->pluck('id')->toArray()),
+            ],
             'data' => [
                 'required',
                 'array',
@@ -60,15 +67,11 @@ class UploadPrevalidationsRequest extends BaseFormRequest
     }
 
     /**
-     * @return Builder
+     * @return Builder|Relation
      */
-    private function getAvailableFunds(): Builder
+    private function getAvailableFunds(): Builder|Relation
     {
-        return Fund::whereHas('organization', function (Builder $builder) {
-            OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), [
-                Permission::VALIDATE_RECORDS,
-            ]);
-        })->where(function (Builder $builder) {
+        return $this->organization->funds()->where(function (Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
         })->where('state', '!=', Fund::STATE_CLOSED);

@@ -155,6 +155,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
+ * @property-read Collection|\App\Models\Prevalidation[] $prevalidations
+ * @property-read int|null $prevalidations_count
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read Collection|\App\Models\Product[] $products_as_sponsor
@@ -448,6 +450,15 @@ class Organization extends BaseModel
         return $this->hasMany(Fund::class)->where(function (EloquentBuilder $builder) {
             FundQuery::whereActiveFilter($builder);
         });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function prevalidations(): HasMany
+    {
+        return $this->hasMany(Prevalidation::class);
     }
 
     /**
