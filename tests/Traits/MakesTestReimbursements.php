@@ -6,7 +6,6 @@ use App\Mail\Reimbursements\ReimbursementSubmittedMail;
 use App\Models\Employee;
 use App\Models\Reimbursement;
 use App\Models\Role;
-use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;

@@ -291,8 +291,8 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function searchTable(
         Browser $browser,
@@ -302,7 +302,7 @@ trait HasFrontendActions
         int $expected = 1,
     ): void {
         $browser->waitFor($selector . 'Search');
-        $browser->typeSlowly($selector . 'Search', $value, 1);
+        $browser->typeSlowly($selector . 'Search', $value, .1);
 
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");
@@ -362,6 +362,7 @@ trait HasFrontendActions
     {
         $browser->waitFor('@asideMenuGroupFundRequests');
         $browser->element('@asideMenuGroupFundRequests')->click();
+        $browser->waitFor('@tablePrevalidationContent');
         $browser->waitFor('@fundRequestsPage');
         $browser->element('@fundRequestsPage')->click();
     }
@@ -445,5 +446,19 @@ trait HasFrontendActions
             $browser->waitFor('@transaction_view_bulks');
             $browser->element('@transaction_view_bulks')->click();
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToVouchersPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
+        $browser->waitFor('@vouchersPage');
+        $browser->element('@vouchersPage')->click();
+        $browser->waitFor('@vouchersTitle');
     }
 }

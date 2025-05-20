@@ -415,11 +415,11 @@ class ReimbursementTest extends DuskTestCase
         // Go to reimbursements page and check if the previously added reimbursement is in the list
         $this->goToDashboardReimbursementsPage($browser, $reimbursement->voucher->fund->organization);
         $this->searchDashboardReimbursement($browser, $reimbursement);
-        $this->assertDashboardReimbursementPage($browser, $reimbursement, $data);
+        $this->assertDashboardReimbursementsPage($browser, $reimbursement, $data);
 
         // Go to reimbursements details page and check the data
         $this->goToDashboardReimbursementDetailsPage($browser, $reimbursement);
-        $this->assertDashboardReimbursementDetails($browser, $reimbursement, $data);
+        $this->assertDashboardReimbursementDetailsPage($browser, $reimbursement, $data);
     }
 
     /**
@@ -660,7 +660,7 @@ class ReimbursementTest extends DuskTestCase
      * @throws TimeOutException
      * @return void
      */
-    private function assertDashboardReimbursementPage(
+    private function assertDashboardReimbursementsPage(
         Browser $browser,
         Reimbursement $reimbursement,
         array $data
@@ -670,8 +670,11 @@ class ReimbursementTest extends DuskTestCase
             '@reimbursementIdentityEmail' . $reimbursement->id,
             $reimbursement->voucher->identity->email ?: 'Geen E-mail'
         );
+
+        $state = $reimbursement->expired ? 'Verlopen' : $reimbursement->state_locale;
+
         $browser->assertSeeIn('@reimbursementAmount' . $reimbursement->id, currency_format_locale($data['amount']));
-        $browser->assertSeeIn('@reimbursementState' . $reimbursement->id, $reimbursement->state_locale);
+        $browser->assertSeeIn('@reimbursementState' . $reimbursement->id, $state);
     }
 
     /**
@@ -694,15 +697,17 @@ class ReimbursementTest extends DuskTestCase
      * @param array $data
      * @return void
      */
-    private function assertDashboardReimbursementDetails(
+    private function assertDashboardReimbursementDetailsPage(
         Browser $browser,
         Reimbursement $reimbursement,
         array $data
     ): void {
+        $state = $reimbursement->expired ? 'Verlopen' : $reimbursement->state_locale;
+
         $browser->assertSeeIn('@reimbursementIBAN', $data['iban']);
         $browser->assertSeeIn('@reimbursementIBANName', $data['iban_name']);
         $browser->assertSeeIn('@reimbursementAmount', currency_format_locale($data['amount']));
-        $browser->assertSeeIn('@reimbursementState', $reimbursement->state_locale);
+        $browser->assertSeeIn('@reimbursementState', $state);
         $browser->assertSeeIn('@reimbursementTitle', $data['title']);
         $browser->assertSeeIn('@reimbursementDescription', $data['description']);
     }

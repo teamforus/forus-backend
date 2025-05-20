@@ -3,6 +3,7 @@
 namespace App\Searches;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\BaseModel;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,13 +14,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class BaseSearch
 {
     protected array $filters;
-    protected Builder|Relation|null $builder;
+    protected BaseModel|Builder|Relation|null $builder;
 
     /**
      * @param array $filters
-     * @param Builder|Relation|null $builder
+     * @param BaseModel|Builder|Relation|null $builder
      */
-    public function __construct(array $filters, Builder|Relation|null $builder = null)
+    public function __construct(array $filters, BaseModel|Builder|Relation|null $builder = null)
     {
         $this->filters = $filters;
         $this->builder = clone $builder;
@@ -44,19 +45,19 @@ class BaseSearch
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param BaseModel|Builder|Relation $builder
      * @noinspection PhpUnused
      */
-    public function setBuilder(Builder|Relation $builder): void
+    public function setBuilder(BaseModel|Builder|Relation $builder): void
     {
         $this->builder = $builder;
     }
 
     /**
-     * @return Builder|Relation
+     * @return BaseModel|Builder|Relation
      * @noinspection PhpUnused
      */
-    public function getBuilder(): Builder|Relation
+    public function getBuilder(): BaseModel|Builder|Relation
     {
         return $this->builder;
     }
@@ -95,9 +96,9 @@ class BaseSearch
     }
 
     /**
-     * @return Builder|Relation|null
+     * @return Builder|Relation|BaseModel|null
      */
-    public function query(): Builder|Relation|null
+    public function query(): Builder|Relation|BaseModel|null
     {
         return $this->getBuilder();
     }
