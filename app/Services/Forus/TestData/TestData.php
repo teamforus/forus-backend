@@ -265,20 +265,7 @@ class TestData
         });
 
         foreach ($prevalidations as $prevalidation) {
-            foreach ($prevalidation->prevalidation_records as $record) {
-                if ($record->record_type->key === 'bsn') {
-                    continue;
-                }
-
-                $identity
-                    ->makeRecord($record->record_type, $record->value)
-                    ->makeValidationRequest()
-                    ->approve($prevalidation->identity);
-            }
-
-            $prevalidation->update([
-                'state' => 'used',
-            ]);
+            $prevalidation->assignToIdentity($identity);
 
             $voucher = $prevalidation->fund->makeVoucher($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
@@ -786,7 +773,7 @@ class TestData
             'backoffice_key' => $key,
             'backoffice_certificate' => $cert,
         ], $this->configOnly([
-            'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
+            'backoffice_enabled', 'backoffice_fallback', 'backoffice_client_cert', 'backoffice_client_cert_key',
         ])) : [];
     }
 
@@ -832,12 +819,15 @@ class TestData
                 return compact('record_type_id', 'value');
             })->filter()->toArray();
         })->filter()->map(function ($records) use ($fund, $identity) {
+            $employee = $fund->organization->findEmployee($identity);
+
             $prevalidation = Prevalidation::forceCreate([
                 'uid' => Prevalidation::makeNewUid(),
                 'state' => 'pending',
                 'fund_id' => $fund->id,
-                'organization_id' => $fund->organization_id,
-                'identity_address' => $identity->address,
+                'employee_id' => $employee->id,
+                'organization_id' => $employee->organization_id,
+                'identity_address' => $employee->identity_address,
                 'validated_at' => now(),
             ]);
 
@@ -890,6 +880,7 @@ class TestData
                 'iban' => $this->faker->iban('NL'),
                 'civil_status' => 'Ja',
                 'single_parent' => 'Ja',
+                $fund->fund_config->key . '_eligible' => 'Ja',
             ], $fund->fund_config->hash_bsn ? [
                 'bsn_hash' => $fund->getHashedValue($bsnValue),
                 'partner_bsn_hash' => $fund->getHashedValue($bsnValuePartner),
