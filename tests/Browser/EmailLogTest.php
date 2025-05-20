@@ -60,13 +60,14 @@ class EmailLogTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToIdentitiesListPage($browser);
-                $this->searchIdentity($browser, $identity);
+                $this->goSponsorProfilesPage($browser);
+                $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);
+                $browser->click("@tableProfilesRow$identity->id");
 
                 $log = $this->findEmailLog($identity, VoucherAssignedBudgetMail::class);
 
-                $this->assertEmailLogExistsAndVisible($browser, $log);
-                $this->assertEmailLogNotVisibleToOthers($browser, $log, $fund);
+                $this->assertEmailLogsExistAreVisibleAndExportable($browser, $log);
+                $this->assertDontSeeUnrelatedEmailLogsFromTheSameOrganization($browser, $log, $fund);
 
                 // Logout
                 $this->logout($browser);
@@ -105,13 +106,14 @@ class EmailLogTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
                 $this->selectDashboardOrganization($browser, $organization);
 
-                $this->goToFundRequestsListPage($browser);
-                $this->searchFundRequest($browser, $fundRequest);
+                $this->goToFundRequestsPage($browser);
+                $this->searchTable($browser, '@tableFundRequest', $fundRequest->identity->email, $fundRequest->id);
+                $browser->click("@tableFundRequestRow$fundRequest->id");
 
                 $log = $this->findEmailLog($identity, FundRequestCreatedMail::class);
 
-                $this->assertEmailLogExistsAndVisible($browser, $log);
-                $this->assertEmailLogNotVisibleToOthers($browser, $log, $fund, $fundRequest);
+                $this->assertEmailLogsExistAreVisibleAndExportable($browser, $log);
+                $this->assertDontSeeUnrelatedEmailLogsFromTheSameOrganization($browser, $log, $fund, $fundRequest);
 
                 // Logout
                 $this->logout($browser);
@@ -119,70 +121,6 @@ class EmailLogTest extends DuskTestCase
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToIdentitiesListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupIdentities');
-        $browser->element('@asideMenuGroupIdentities')->click();
-        $browser->waitFor('@identitiesPage');
-        $browser->element('@identitiesPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Identity $identity
-     * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @return void
-     */
-    protected function searchIdentity(Browser $browser, Identity $identity): void
-    {
-        $browser->waitFor('@tableProfilesSearch');
-        $browser->type('@tableProfilesSearch', $identity->email);
-
-        $browser->waitFor("@tableProfilesRow$identity->id", 20);
-        $browser->assertVisible("@tableProfilesRow$identity->id");
-
-        $browser->click("@tableProfilesRow$identity->id");
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToFundRequestsListPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupFundRequests');
-        $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@fundRequestsPage');
-        $browser->element('@fundRequestsPage')->click();
-    }
-
-    /**
-     * @param Browser $browser
-     * @param FundRequest $fundRequest
-     * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @return void
-     */
-    protected function searchFundRequest(Browser $browser, FundRequest $fundRequest): void
-    {
-        $browser->waitFor('@tableFundRequestSearch');
-        $browser->type('@tableFundRequestSearch', $fundRequest->identity->email);
-
-        $browser->waitFor("@tableFundRequestRow$fundRequest->id", 20);
-        $browser->assertVisible("@tableFundRequestRow$fundRequest->id");
-
-        $browser->click("@tableFundRequestRow$fundRequest->id");
     }
 
     /**
@@ -211,7 +149,7 @@ class EmailLogTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    protected function assertEmailLogExistsAndVisible(Browser $browser, EmailLog $log): void
+    protected function assertEmailLogsExistAreVisibleAndExportable(Browser $browser, EmailLog $log): void
     {
         $browser->waitFor('@emailLogs');
         $browser->waitFor("@emailLogRow$log->id");
@@ -231,7 +169,7 @@ class EmailLogTest extends DuskTestCase
      * @throws TimeOutException
      * @return void
      */
-    protected function assertEmailLogNotVisibleToOthers(
+    protected function assertDontSeeUnrelatedEmailLogsFromTheSameOrganization(
         Browser $browser,
         EmailLog $log,
         Fund $fund,
@@ -246,14 +184,16 @@ class EmailLogTest extends DuskTestCase
                 'children_nth' => 3,
             ]);
 
-            $this->goToFundRequestsListPage($browser);
-            $this->searchFundRequest($browser, $otherFundRequest);
+            $this->goToFundRequestsPage($browser);
+            $this->searchTable($browser, '@tableFundRequest', $otherFundRequest->identity->email, $otherFundRequest->id);
+            $browser->click("@tableFundRequestRow$otherFundRequest->id");
         } else {
             // assert that employee doesn't see log for other identity (related to organization)
             $fund->makeVoucher($identity);
 
-            $this->goToIdentitiesListPage($browser);
-            $this->searchIdentity($browser, $identity);
+            $this->goSponsorProfilesPage($browser);
+            $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);
+            $browser->click("@tableProfilesRow$identity->id");
         }
 
         $browser->waitFor('@emailLogs');
