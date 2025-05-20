@@ -291,8 +291,8 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function searchTable(
         Browser $browser,
@@ -446,5 +446,19 @@ trait HasFrontendActions
             $browser->waitFor('@transaction_view_bulks');
             $browser->element('@transaction_view_bulks')->click();
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToVouchersPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
+        $browser->waitFor('@vouchersPage');
+        $browser->element('@vouchersPage')->click();
+        $browser->waitFor('@vouchersTitle');
     }
 }
