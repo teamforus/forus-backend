@@ -546,7 +546,7 @@ class VoucherTest extends TestCase
             'voucher_id' => $voucher->id,
             'target' => VoucherTransaction::TARGET_IBAN,
             'target_iban' => $this->faker()->iban('NL'),
-            'target_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'target_name' => $this->makeIbanName(),
             'amount' => $amount,
         ], $headers);
 
