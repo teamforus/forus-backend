@@ -167,7 +167,7 @@ trait HasFrontendActions
         $option = null;
 
         $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
-            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option')]");
+            $xpath = WebDriverBy::xpath(".//*[contains(@class, 'select-control-option') and not(contains(@class, 'select-control-options'))]");
             $options = $browser->driver->findElements($xpath);
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
         });
@@ -291,8 +291,8 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function searchTable(
         Browser $browser,
@@ -445,5 +445,19 @@ trait HasFrontendActions
             $browser->waitFor('@transaction_view_bulks');
             $browser->element('@transaction_view_bulks')->click();
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToVouchersPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
+        $browser->waitFor('@vouchersPage');
+        $browser->element('@vouchersPage')->click();
+        $browser->waitFor('@vouchersTitle');
     }
 }

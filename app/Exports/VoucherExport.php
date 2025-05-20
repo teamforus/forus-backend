@@ -14,27 +14,27 @@ class VoucherExport extends BaseFieldedExport
      */
     protected static array $exportFields = [
         'number',
-        'granted',
+        'reference_bsn',
+        'identity_bsn',
         'identity_email',
-        'in_use',
-        'has_payouts',
-        'has_transactions',
-        'has_reservations',
-        'state',
+        'activation_code',
+        'client_uid',
+        'source',
         'amount',
         'amount_available',
-        'in_use_date',
-        'activation_code',
+        'note',
         'fund_name',
         'implementation_name',
-        'reference_bsn',
-        'client_uid',
-        'created_at',
-        'identity_bsn',
-        'source',
         'product_name',
-        'note',
+        'granted',
+        'created_at',
         'expire_at',
+        'in_use',
+        'in_use_date',
+        'state',
+        'has_transactions',
+        'has_reservations',
+        'has_payouts',
     ];
 
     /**
@@ -67,6 +67,23 @@ class VoucherExport extends BaseFieldedExport
 
         return array_values(array_filter($fields, static function (array $item) {
             return !in_array($item['key'], static::$productVoucherOnlyKeys);
+        }));
+    }
+
+    /**
+     * @param string $type
+     * @return array
+     */
+    public static function getExportFieldsRaw(string $type = 'budget'): array
+    {
+        $fields = parent::getExportFieldsRaw();
+
+        if ($type === 'product') {
+            return $fields;
+        }
+
+        return array_values(array_filter($fields, static function (string $item) {
+            return !in_array($item, static::$productVoucherOnlyKeys);
         }));
     }
 
