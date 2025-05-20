@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Exports;
+namespace Tests\Feature\Exports;
 
 use App\Exports\VoucherExport;
 use App\Models\Voucher;

@@ -25,10 +25,10 @@ trait ExportTrait
      * @param string $format
      * @param array $fields
      * @param string $selector
-     * @param string|null $qrCodeFormat
+     * @param callable|null $fillCallback
+     * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
-     * @throws ElementClickInterceptedException
      * @return array|null
      */
     protected function fillExportModalAndDownloadFile(
@@ -36,21 +36,20 @@ trait ExportTrait
         string $format,
         array $fields = [],
         string $selector = '@export',
-        ?string $qrCodeFormat = null,
+        ?callable $fillCallback = null,
     ): ?array {
-        $this->fillExportModal($browser, $fields, $selector, $format, $qrCodeFormat);
+        $this->fillExportModal($browser, $fields, $selector, $format, $fillCallback);
 
         $browser->assertMissing('@dangerNotification');
 
-        return $this->parseExportedFile($format, $qrCodeFormat);
+        return $this->parseExportedFile($format);
     }
 
     /**
      * @param string $format
-     * @param string|null $qrCodeFormat
      * @return array|null
      */
-    protected function parseExportedFile(string $format, ?string $qrCodeFormat = null): ?array
+    protected function parseExportedFile(string $format): ?array
     {
         $fileFormat = match ($format) {
             'csv' => ExcelFormat::CSV,
@@ -116,10 +115,10 @@ trait ExportTrait
      * @param array $fields
      * @param string $selector
      * @param string $format
-     * @param string|null $qrCodeFormat
-     *@throws NoSuchElementException
-     * @throws TimeoutException
+     * @param callable|null $fillCallback
      * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
     protected function fillExportModal(
@@ -127,13 +126,13 @@ trait ExportTrait
         array $fields = [],
         string $selector = '@export',
         string $format = 'csv',
-        ?string $qrCodeFormat = null,
+        callable $fillCallback = null,
     ): void {
         $browser->waitFor($selector);
         $browser->element($selector)->click();
         $browser->waitFor('@modalExport');
 
-        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format, $qrCodeFormat) {
+        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format, $fillCallback) {
             $browser->waitFor("@toggle_data_format_$format");
             $browser->element("@toggle_data_format_$format")->click();
 
@@ -146,8 +145,8 @@ trait ExportTrait
                 }
             }
 
-            if ($qrCodeFormat) {
-                $browser->click("@toggle_qr_format_$qrCodeFormat");
+            if ($fillCallback) {
+                $browser = $fillCallback($browser);
             }
 
             $browser->click('@submitBtn');

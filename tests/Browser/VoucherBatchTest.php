@@ -190,20 +190,6 @@ class VoucherBatchTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    private function goToVouchersPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupVouchers');
-        $browser->element('@asideMenuGroupVouchers')->click();
-        $browser->waitFor('@vouchersPage');
-        $browser->element('@vouchersPage')->click();
-        $browser->waitFor('@vouchersTitle');
-    }
-
-    /**
-     * @param Browser $browser
      * @param Collection $funds
      * @param array $testCase
      * @throws TimeOutException

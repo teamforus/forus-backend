@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser\Exports;
+namespace Tests\Browser\Exports;
 
 use App\Exports\VoucherExport;
 use App\Imports\BrowserTestEntitiesImport;
@@ -27,10 +27,15 @@ class VouchersExportTest extends DuskTestCase
     use HasFrontendActions;
     use RollbackModelsTrait;
 
-    /** @var array|string[]  */
     protected const array QR_CODE_FORMATS = ['null', 'pdf', 'png'];
 
     /**
+     * Tests the export functionality for vouchers.
+     *
+     * This method sets up a test environment, creates necessary entities,
+     * and performs actions to trigger the voucher export. It then asserts that
+     * the exported data contains the expected fields.
+     *
      * @throws Throwable
      * @return void
      */
@@ -69,14 +74,26 @@ class VouchersExportTest extends DuskTestCase
                         // assert all fields exported
                         $this->openFilterDropdown($browser);
 
-                        $data = $this->fillExportModalAndDownloadFile($browser, $format, $fieldsRaw, qrCodeFormat: $qrFormat);
-                        $data && $this->assertFields($voucher, $data, $fields);
+                        $data = $this->fillExportModalAndDownloadFile(
+                            $browser,
+                            format: $format,
+                            fields: $fieldsRaw,
+                            fillCallback: fn (Browser $browser) => $browser->click("@toggle_qr_format_$qrFormat"),
+                        );
+
+                        $data && $this->assertExportedDataHasRequestedFields($voucher, $data, $fields);
 
                         // assert specific fields exported
                         $this->openFilterDropdown($browser);
-                        $data = $this->fillExportModalAndDownloadFile($browser, $format, ['number'], qrCodeFormat: $qrFormat);
 
-                        $data && $this->assertFields($voucher, $data, [
+                        $data = $this->fillExportModalAndDownloadFile(
+                            $browser,
+                            format: $format,
+                            fields: ['number'],
+                            fillCallback: fn (Browser $browser) => $browser->click("@toggle_qr_format_$qrFormat"),
+                        );
+
+                        $data && $this->assertExportedDataHasRequestedFields($voucher, $data, [
                             VoucherExport::trans('number'),
                         ]);
                     }
@@ -91,9 +108,11 @@ class VouchersExportTest extends DuskTestCase
     }
 
     /**
-     * @param string $format
-     * @param string|null $qrCodeFormat
-     * @return array|null
+     * Parses the exported file and returns its contents.
+     *
+     * @param string $format The format of the exported file ('csv', 'xls', or 'all').
+     * @param string|null $qrCodeFormat The format of the QR code file ('pdf' or 'png'), if applicable.
+     * @return array|null An array containing the parsed data from the exported file, or null if the file is not found or an error occurs.
      */
     protected function parseExportedFile(string $format, ?string $qrCodeFormat = null): ?array
     {
@@ -117,6 +136,8 @@ class VouchersExportTest extends DuskTestCase
         }
 
         $zip = new ZipArchive();
+        $filePath = null;
+
         if ($zip->open(Storage::path($zipFilePath)) === true) {
             $zip->extractTo(Storage::path('dusk-downloads'));
             $zip->close();
@@ -133,6 +154,9 @@ class VouchersExportTest extends DuskTestCase
             } else {
                 $filePath = $this->findExportedFileAndAssertExists($format);
             }
+
+            $data = Excel::toArray(new BrowserTestEntitiesImport(), $filePath, null, $fileFormat)[0];
+            $this->assertNotEmpty($data, 'File is empty.');
 
             // assert QR code files
             if ($qrCodeFormat && $qrCodeFormat !== 'null') {
@@ -151,15 +175,12 @@ class VouchersExportTest extends DuskTestCase
                     $this->assertNotNull($imageDirectory);
 
                     $files = Storage::files($imageDirectory);
-                    $this->assertGreaterThanOrEqual(1, count($files));
+                    $this->assertSame(count($data) - 1, count($files));
                 }
             }
         } else {
             $this->fail("File $zipFilePath with format zip was not extracted.");
         }
-
-        $data = Excel::toArray(new BrowserTestEntitiesImport(), $filePath, null, $fileFormat)[0];
-        $this->assertNotEmpty($data, 'File is empty.');
 
         try {
             Storage::delete($filePath);
@@ -174,8 +195,10 @@ class VouchersExportTest extends DuskTestCase
     }
 
     /**
-     * @param string $format
-     * @return string|null
+     * Finds the exported file for a given format and asserts its existence.
+     *
+     * @param string $format The format of the exported file to find.
+     * @return ?string The path to the exported file if it exists, null otherwise.
      */
     protected function findExportedFileAndAssertExists(string $format): ?string
     {
@@ -189,19 +212,16 @@ class VouchersExportTest extends DuskTestCase
     }
 
     /**
-     * @param Voucher $voucher
-     * @param array $rows
-     * @param array $fields
-     * @return void
+     * Asserts that the exported data contains the requested fields for a given voucher.
+     *
+     * @param Voucher $voucher The voucher model to be checked.
+     * @param array $rows An array of rows containing the exported data.
+     * @param array $fields An array of expected field names in the first row (header).
      */
-    protected function assertFields(
-        Voucher $voucher,
-        array $rows,
-        array $fields
-    ): void {
+    protected function assertExportedDataHasRequestedFields(Voucher $voucher, array $rows, array $fields): void
+    {
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
-
         $this->assertEquals($voucher->number, $rows[1][0]);
     }
 }

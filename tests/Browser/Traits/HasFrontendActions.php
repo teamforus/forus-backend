@@ -458,5 +458,6 @@ trait HasFrontendActions
         $browser->element('@asideMenuGroupVouchers')->click();
         $browser->waitFor('@vouchersPage');
         $browser->element('@vouchersPage')->click();
+        $browser->waitFor('@vouchersTitle');
     }
 }
