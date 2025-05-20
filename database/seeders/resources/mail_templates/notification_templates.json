@@ -66,10 +66,7 @@
         }
     },
     "notifications_fund_providers.revoked_budget": {
-        "mail": {
-            "title": "Afgewezen als aanbieder",
-            "template": "notifications_fund_providers/revoked_budget.md"
-        },
+        "mail": {},
         "push": {},
         "database": {
             "title": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.",

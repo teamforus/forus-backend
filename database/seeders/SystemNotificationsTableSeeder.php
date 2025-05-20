@@ -16,7 +16,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.approved_budget' => ['database', 'mail', 'push'],
         'notifications_fund_providers.approved_products' => [], // TODO can database notifications be removed
 
-        'notifications_fund_providers.revoked_budget' => ['database', 'mail'],
+        'notifications_fund_providers.revoked_budget' => ['database'],
         'notifications_fund_providers.revoked_products' => [], // TODO can database notifications be removed
         'notifications_fund_providers.sponsor_message' => ['database'],
 
@@ -98,7 +98,6 @@ class SystemNotificationsTableSeeder extends Seeder
 
     protected array $optionalNotifications = [
         'notifications_fund_providers.approved_budget',
-        'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.state_accepted',
         'notifications_fund_providers.state_rejected',
         'notifications_identities.identity_voucher_assigned_budget',
@@ -110,7 +109,6 @@ class SystemNotificationsTableSeeder extends Seeder
 
     protected array $visibleNotifications = [
         'notifications_fund_providers.approved_budget',
-        'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.sponsor_message',
         'notifications_fund_providers.state_accepted',
         'notifications_fund_providers.state_rejected',
@@ -161,7 +159,6 @@ class SystemNotificationsTableSeeder extends Seeder
 
     protected array $editableNotifications = [
         'notifications_fund_providers.approved_budget',
-        'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.state_accepted',
         'notifications_fund_providers.state_rejected',
 
