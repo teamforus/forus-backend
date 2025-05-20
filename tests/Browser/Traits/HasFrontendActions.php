@@ -302,7 +302,7 @@ trait HasFrontendActions
         int $expected = 1,
     ): void {
         $browser->waitFor($selector . 'Search');
-        $browser->typeSlowly($selector . 'Search', $value, 1);
+        $browser->typeSlowly($selector . 'Search', $value, .1);
 
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");
@@ -362,6 +362,7 @@ trait HasFrontendActions
     {
         $browser->waitFor('@asideMenuGroupFundRequests');
         $browser->element('@asideMenuGroupFundRequests')->click();
+        $browser->waitFor('@tablePrevalidationContent');
         $browser->waitFor('@fundRequestsPage');
         $browser->element('@fundRequestsPage')->click();
     }

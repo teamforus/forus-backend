@@ -15,7 +15,7 @@ abstract class BasePolicy
      * Name of prevalidation errors file.
      * @return string
      */
-    abstract public function getPolicyKey(): string;
+    abstract protected function getPolicyKey(): string;
 
     /**
      * @param mixed $message

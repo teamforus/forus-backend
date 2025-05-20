@@ -121,16 +121,6 @@ Route::group(['middleware' => ['api.auth']], static function () {
         });
 
         /**
-         * Record validations.
-         */
-        Route::group(['prefix' => '/record-validations'], static function () {
-            Route::post('/', 'Api\Identity\RecordValidationController@store');
-            Route::get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
-            Route::patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
-            Route::patch('/{recordUuid}/decline', 'Api\Identity\RecordValidationController@decline');
-        });
-
-        /**
          * 2FA.
          */
         Route::group(['prefix' => '/2fa'], static function () {
