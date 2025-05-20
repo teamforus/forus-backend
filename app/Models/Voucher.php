@@ -1295,7 +1295,7 @@ class Voucher extends BaseModel
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+                $voucherData = new VoucherExportData($voucher, $fields);
             } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $dataItem = $data[] = [
@@ -1358,7 +1358,7 @@ class Voucher extends BaseModel
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, true);
+                $voucherData = new VoucherExportData($voucher, $fields);
             } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $data[] = [

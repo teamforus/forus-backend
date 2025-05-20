@@ -447,7 +447,7 @@ class VouchersController extends Controller
         $this->authorize('export', [Voucher::class, $organization]);
 
         $fundId = $request->get('fund_id');
-        $fields = $request->input('fields', VoucherExport::getExportFields('product'));
+        $fields = $request->input('fields', array_pluck(VoucherExport::getExportFields(), 'key'));
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 

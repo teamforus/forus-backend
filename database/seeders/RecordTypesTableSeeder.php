@@ -132,6 +132,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'name' => 'Geslacht',
         'system' => true,
         'type' => 'select',
+        'criteria' => true,
         'options' => [
             ['value' => 'onbekend', 'name' => 'Onbekend'],
             ['value' => 'mannelijk', 'name' => 'Mannelijk'],

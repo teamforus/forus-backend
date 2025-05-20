@@ -6,7 +6,7 @@ use Tests\Browser\Traits\ExportsFundsStatisticsTrait;
 use Tests\DuskTestCase;
 use Throwable;
 
-class FundsStatisticsExportTest extends DuskTestCase
+class FundsStatisticsBudgetExportTest extends DuskTestCase
 {
     use ExportsFundsStatisticsTrait;
 
@@ -14,8 +14,8 @@ class FundsStatisticsExportTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
-    public function testFundsStatisticsExport(): void
+    public function testFundStatisticsBudgetExport(): void
     {
-        $this->doTestExportFundFinancialStatistics(false);
+        $this->doTestExportFundFinancialStatistics(true);
     }
 }
