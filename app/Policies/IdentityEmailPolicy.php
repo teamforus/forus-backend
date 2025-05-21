@@ -107,15 +107,34 @@ class IdentityEmailPolicy
      * @return Response|bool
      * @noinspection PhpUnused
      */
-    public function verifyToken(
+    public function emailTokenRedirect(
         ?Identity $identity,
+        IdentityEmail $identityEmail,
+    ): Response|bool {
+        return $identity === null || $identity->exists() && $identityEmail->exists() && $identityEmail->redirect;
+    }
+
+    /**
+     * Determine whether the identity email verification token can be used.
+     *
+     * @param Identity $identity
+     * @param IdentityEmail $identityEmail
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function emailTokenVerify(
+        Identity $identity,
         IdentityEmail $identityEmail,
     ): Response|bool {
         if ($identityEmail->verified) {
             return $this->deny(trans('policies.email.already_verified'));
         }
 
-        return !$identity || $identity->exists();
+        if ($identityEmail->identity_address !== $identity->address) {
+            return $this->deny(trans('policies.email.invalid_identity'));
+        }
+
+        return $identity->exists();
     }
 
     /**

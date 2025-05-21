@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Mail\User\IdentityEmailVerificationMail;
+use App\Models\Identity;
 use App\Models\IdentityEmail;
-use App\Models\IdentityProxy;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -16,11 +17,15 @@ class IdentityEmailTest extends TestCase
     use DatabaseTransactions;
 
     /**
+     * The API endpoint for handling identity emails.
+     *
      * @var string
      */
     protected string $apiEmailUrl = '/api/v1/identity/emails';
 
     /**
+     * The structure of the identity email resource in JSON responses.
+     *
      * @var array
      */
     protected array $resourceStructure = [
@@ -36,185 +41,212 @@ class IdentityEmailTest extends TestCase
     ];
 
     /**
+     * Tests storing a new email for an identity.
+     *
      * @return void
      */
     public function testStoreNewEmail(): void
     {
-        $this->storeNewEmail();
+        $this->addEmailAndAssertLinkeSent($this->makeIdentity(), $this->makeUniqueEmail());
     }
 
     /**
+     * Tests attempting to store a new email as a guest user, expecting unauthorized access.
+     *
      * @return void
      */
     public function testStoreNewEmailAsGuest(): void
     {
-        $email = $this->makeUniqueEmail();
-        $this->post($this->apiEmailUrl, ['email' => $email], $this->makeApiHeaders())->assertUnauthorized();
+        $this->postJson($this->apiEmailUrl, [
+            'email' => $this->makeUniqueEmail(),
+        ], $this->makeApiHeaders())->assertUnauthorized();
     }
 
     /**
+     * Tests storing an invalid email, expecting a JSON validation error for the 'email' field.
+     *
      * @return void
      */
     public function testStoreInvalidEmail(): void
     {
-        $this
-            ->storeNewEmailRequest('not_valid_email')
-            ->assertJsonValidationErrorFor('email');
+        $this->addEmail($this->makeIdentity(), 'not_a_valid_email')->assertJsonValidationErrorFor('email');
     }
 
     /**
+     * Tests deleting an email as the author of the identity, expecting a successful deletion.
+     *
      * @return void
      */
     public function testDeleteAsAuthorEmail(): void
     {
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy);
-        $headers = $this->makeApiHeaders($proxy);
+        $identity = $this->makeIdentity();
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
-        // Delete as creator
-        $this->delete("$this->apiEmailUrl/$identityEmail->id", [], $headers)->assertSuccessful();
+        $this->deleteEmail($identity, $identityEmail)->assertSuccessful();
         $this->assertNull(IdentityEmail::find($identityEmail->id));
     }
 
     /**
+     * Tests attempting to delete an email as a different user, expecting forbidden access.
+     *
      * @return void
      */
     public function testDeleteAsDifferentUserEmail(): void
     {
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy);
-        $headers = $this->makeApiHeaders(true);
+        $identity = $this->makeIdentity();
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
         // Delete as different user
-        $this->delete("$this->apiEmailUrl/$identityEmail->id", [], $headers)->assertForbidden();
+        $this->deleteEmail($this->makeIdentity(), $identityEmail)->assertForbidden();
     }
 
     /**
+     * Tests attempting to delete an email as a guest, expecting unauthorized access.
+     *
      * @return void
      */
     public function testDeleteAsGuestEmail(): void
     {
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy);
-        $headers = $this->makeApiHeaders();
+        $identity = $this->makeIdentity();
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
         // Delete as guest
-        $this->delete("$this->apiEmailUrl/$identityEmail->id", [], $headers)->assertUnauthorized();
+        $this->deleteEmail(null, $identityEmail)->assertUnauthorized();
     }
 
     /**
+     * Tests the verification process of an email when no target is specified.
+     *
+     * @param string|null $target The target parameter for the verification link.
      * @return void
      */
-    public function testVerificationEmail(): void
+    public function testVerificationEmailNoTarget(string $target = null): void
     {
-        $link = $this->createEmailAndGetVerificationLink();
-        $this->get($link)->assertRedirectContains('redirect');
+        $verification = $this->createEmailAndGetVerificationLink($target);
+        $redirectString = 'redirect' . ($target ? ('?target=' . $target) : '');
+
+        $this->get($verification->link)->assertRedirectContains($redirectString);
+
+        $this->verifyEmail($verification->email->identity, $verification->email->verification_token)->assertSuccessful();
+        $this->assertTrue($verification->email->fresh()->verified);
     }
 
     /**
-     * @return void
-     */
-    public function testAlreadyVerifiedEmail(): void
-    {
-        $link = $this->createEmailAndGetVerificationLink();
-        $this->get($link)->assertRedirectContains('redirect');
-        $this->get($link)->assertForbidden();
-    }
-
-    /**
+     * Tests sending a verification email with a target specified for an identity.
+     *
      * @return void
      */
     public function testVerificationEmailWithTarget(): void
     {
-        $link = $this->createEmailAndGetVerificationLink('fundRequest');
-        $this->get($link)->assertRedirectContains('target=fundRequest');
+        $this->testVerificationEmailNoTarget('fundRequest');
     }
 
     /**
+     * Tests attempting to verify an already verified email, expecting forbidden access.
+     *
+     * @return void
+     */
+    public function testAlreadyVerifiedEmail(): void
+    {
+        $verification = $this->createEmailAndGetVerificationLink();
+
+        $this->verifyEmail($verification->email->identity, $verification->email->verification_token)->assertSuccessful();
+        $this->assertTrue($verification->email->fresh()->verified);
+
+        $this->verifyEmail($verification->email->identity, $verification->email->verification_token)->assertForbidden();
+    }
+
+    /**
+     * Tests the limit on the number of identity emails per identity, expecting validation error when exceeding the limit.
+     *
      * @return void
      */
     public function testMaxIdentityEmails()
     {
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
+        $identity = $this->makeIdentity();
 
-        for ($i = 1; $i <= config('forus.mail.max_identity_emails'); $i++) {
-            $email = microtime(true) . '@example.com';
-            $response = $this->storeNewEmailRequest($email, $proxy);
+        // Loop to store the maximum allowed emails for an identity
+        for ($i = 1; $i <= Config::get('forus.mail.max_identity_emails'); $i++) {
+            // Generate a unique random email
+            $email = $this->makeUniqueEmail();
 
-            $response->assertStatus(201);
-            $response->assertJsonStructure(['data' => $this->resourceStructure]);
+            // Store the new email request and assert status and JSON structure
+            $this->addEmail($identity, $email)
+                ->assertStatus(201)
+                ->assertJsonStructure(['data' => $this->resourceStructure]);
         }
 
-        $email = microtime(true) . '@example.com';
-        $response = $this->storeNewEmailRequest($email, $proxy);
+        // Attempt to store one more email than allowed and assert JSON validation error for 'email'
+        $email = $this->makeUniqueEmail();
+        $response = $this->addEmail($identity, $email);
         $response->assertJsonValidationErrorFor('email');
     }
 
     /**
+     * Tests the functionality of setting an email as the primary email for an identity.
+     *
+     * This test ensures that:
+     * 1. The initial email set during identity creation is marked as primary.
+     * 2. A non-verified email cannot be set as the primary email.
+     * 3. Once verified, an email can be successfully set as the primary email.
+     * 4. Setting an already primary email as primary again results in a forbidden action.
+     *
      * @return void
      */
     public function testPrimaryEmail(): void
     {
         $primaryEmail = $this->makeUniqueEmail();
-        $startTime = now();
 
         $identity = $this->makeIdentity($primaryEmail);
-        $proxy = $this->makeIdentityProxy($identity);
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
+        // Assert initial email is primary
         $this->assertEquals($primaryEmail, $identity->email);
 
-        $identityEmail = $this->storeNewEmail($proxy);
-        $headers = $this->makeApiHeaders($proxy);
-        $setPrimaryLink = "$this->apiEmailUrl/$identityEmail->id/primary";
-
-        // Set as primary not verified email
-        $this->patch($setPrimaryLink, [], $headers)->assertForbidden();
+        // Assert non verified email can't be set as primary
+        $this->setEmailPrimary($identity, $identityEmail)->assertForbidden();
 
         // Verify email
-        $verificationLink = $this->findFirstEmailVerificationLink($identityEmail->email, $startTime);
-        $this->get($verificationLink)->assertRedirectContains('redirect');
+        $this->verifyEmail($identity, $identityEmail->verification_token)->assertSuccessful();
 
-        // Set as primary
-        $this->patch($setPrimaryLink, [], $headers)->assertSuccessful();
-
-        $identity->unsetRelations();
-        $this->assertEquals($identityEmail->email, $identity->email);
+        // Assert verified email can be used as primary
+        $this->setEmailPrimary($identity, $identityEmail)->assertSuccessful();
+        $this->assertEquals($identityEmail->email, $identity->fresh()->email);
 
         // Set as primary already primary email
-        $this->patch($setPrimaryLink, [], $headers)->assertForbidden();
+        $this->setEmailPrimary($identity, $identityEmail)->assertForbidden();
     }
 
     /**
+     * Tests resending the verification email for an identity email.
+     *
      * @return void
      */
     public function testResendEmail(): void
     {
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy);
-        $headers = $this->makeApiHeaders($proxy);
-
+        $identity = $this->makeIdentity();
         $startTime = now();
-        $this->post("$this->apiEmailUrl/$identityEmail->id/resend", [], $headers)->assertSuccessful();
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
+
+        $this->resendEmail($identity, $identityEmail)->assertSuccessful();
 
         $this->assertMailableSent($identityEmail->email, IdentityEmailVerificationMail::class, $startTime);
         $this->assertEmailVerificationLinkSent($identityEmail->email, $startTime);
     }
 
     /**
-     * @param IdentityProxy|bool|null $authProxy
-     * @param string|null $email
-     * @param string|null $target
-     * @return IdentityEmail
+     * Adds an email to the given identity and asserts that a verification link has been sent.
+     *
+     * @param Identity $identity The identity to which the email will be added.
+     * @param string $email The email address to add.
+     * @param string|null $target The target for the email addition (optional).
+     *
+     * @return IdentityEmail The newly created identity email.
      */
-    protected function storeNewEmail(
-        IdentityProxy|bool $authProxy = true,
-        ?string $email = null,
-        ?string $target = null
-    ): IdentityEmail {
+    protected function addEmailAndAssertLinkeSent(Identity $identity, string $email, ?string $target = null): IdentityEmail
+    {
         $startTime = now();
-
-        $email = $email ?: microtime(true) . '@example.com';
-        $response = $this->storeNewEmailRequest($email, $authProxy, $target);
+        $response = $this->addEmail($identity, $email, $target);
 
         $response->assertStatus(201);
         $response->assertJsonStructure(['data' => $this->resourceStructure]);
@@ -231,35 +263,94 @@ class IdentityEmailTest extends TestCase
     }
 
     /**
-     * @param string $email
-     * @param IdentityProxy|bool $authProxy
-     * @param string|null $target
-     * @return TestResponse
+     * Adds an email to the specified identity.
+     *
+     * @param Identity $identity The identity to which the email is being added.
+     * @param string $email The email address to add.
+     * @param string|null $target An optional target parameter for the email addition process.
+     * @return TestResponse The response from the API call.
      */
-    protected function storeNewEmailRequest(
-        string $email,
-        IdentityProxy|bool $authProxy = true,
-        ?string $target = null,
-    ): TestResponse {
-        return $this->post($this->apiEmailUrl, [
+    protected function addEmail(Identity $identity, string $email, ?string $target = null): TestResponse
+    {
+        return $this->postJson($this->apiEmailUrl, [
             'target' => $target,
             'email' => $email,
-        ], $this->makeApiHeaders($authProxy, [
+        ], $this->makeApiHeaders($identity, [
             'Client-Type' => 'webshop',
         ]));
     }
 
     /**
-     * @param string|null $target
-     * @return string|null
+     * Verifies an email for a given identity using a verification token.
+     *
+     * @param Identity $identity The identity associated with the email to be verified.
+     * @param string $token The verification token used to verify the email.
+     * @return TestResponse The response from the API after attempting to verify the email.
      */
-    private function createEmailAndGetVerificationLink(?string $target = null): ?string
+    protected function verifyEmail(Identity $identity, string $token): TestResponse
+    {
+        return $this->postJson("$this->apiEmailUrl/$token/verify", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * Deletes an email associated with an identity.
+     *
+     * @param Identity|null $identity The identity to which the email belongs.
+     * @param IdentityEmail $identityEmail The email to be deleted.
+     *
+     * @return TestResponse The response from the delete request.
+     */
+    protected function deleteEmail(?Identity $identity, IdentityEmail $identityEmail): TestResponse
+    {
+        return $this->deleteJson("$this->apiEmailUrl/$identityEmail->id", [], $identity ? $this->makeApiHeaders($identity) : []);
+    }
+
+    /**
+     * Resends an email verification for a given identity and its associated email.
+     *
+     * @param Identity $identity The identity to which the email belongs.
+     * @param IdentityEmail $identityEmail The specific email to resend the verification for.
+     * @return TestResponse The response from the API request to resend the email.
+     */
+    protected function resendEmail(Identity $identity, IdentityEmail $identityEmail): TestResponse
+    {
+        return $this->postJson("$this->apiEmailUrl/$identityEmail->id/resend", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * Resends the primary email for a given identity and email.
+     *
+     * @param Identity $identity The identity associated with the email.
+     * @param IdentityEmail $identityEmail The email to be set as primary.
+     * @return TestResponse The response from the API request.
+     */
+    protected function setEmailPrimary(Identity $identity, IdentityEmail $identityEmail): TestResponse
+    {
+        return $this->patchJson("$this->apiEmailUrl/$identityEmail->id/primary", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * Creates a new email for an identity and retrieves its verification link.
+     *
+     * @param string|null $target The target parameter to pass to storeNewEmail method.
+     * @return object An anonymous class instance containing the verification link and the IdentityEmail object.
+     */
+    private function createEmailAndGetVerificationLink(?string $target = null): object
     {
         $startTime = now();
 
-        $proxy = $this->makeIdentityProxy($this->makeIdentity());
-        $identityEmail = $this->storeNewEmail($proxy, null, $target);
+        // Create an identity proxy and store a new email with it
+        $identity = $this->makeIdentity();
+        $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail(), $target);
 
-        return $this->findFirstEmailVerificationLink($identityEmail->email, $startTime);
+        // Find the first email verification link sent after the start time
+        $link = $this->findFirstEmailVerificationLink($identityEmail->email, $startTime);
+
+        // Return an anonymous class instance with the link and identity email
+        return new class ($link, $identityEmail) {
+            public function __construct(public string $link, public IdentityEmail $email)
+            {
+            }
+        };
     }
 }

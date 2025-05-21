@@ -105,7 +105,7 @@ class Handler extends ExceptionHandler
         }
 
         if ($e instanceof AuthorizationException) {
-            return trans('exceptions.forbidden');
+            return $e->getMessage() === 'This action is unauthorized.' ? trans('exceptions.forbidden') : $e->getMessage();
         }
 
         if ($e instanceof ValidationException) {

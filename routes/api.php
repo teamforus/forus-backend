@@ -80,6 +80,7 @@ Route::group(['middleware' => ['api.auth']], static function () {
 
         Route::post('emails/{identity_email}/resend', 'Api\Identity\IdentityEmailsController@resend');
         Route::patch('emails/{identity_email}/primary', 'Api\Identity\IdentityEmailsController@primary');
+        Route::post('emails/{identity_email_token}/verify', 'Api\Identity\IdentityEmailsController@emailVerificationTokenVerify');
 
         /**
          * Identity proxies.

@@ -23,7 +23,7 @@ Route::get('/', function () {
 Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
 Route::get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');
 
-Route::get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationToken');
+Route::get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationTokenRedirect');
 
 Route::get('/bng/bank-connections/{bngBankConnectionToken}', 'BNGController@bankConnectionRedirect');
 Route::get('/bng/payment-bulks/{bngVoucherTransactionBulkToken}', 'BNGController@voucherTransactionBulkRedirect');

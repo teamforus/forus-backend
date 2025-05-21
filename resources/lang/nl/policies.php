@@ -41,6 +41,7 @@ return [
     'email' => [
         'already_primary' => 'Reeds primair.',
         'already_verified' => 'Je hebt je e-mailadres al geverifieerd.',
+        'invalid_identity' => 'Ongeldige bevestigingscode of onjuist account.',
         'cant_delete_primary_email' => 'Primair e-mailadres kan niet worden verwijderd.',
         'not_verified' => 'Verifieer eerst je e-mailadres.',
         'invalid_2fa' => 'Ongeldige 2FA-status.',
