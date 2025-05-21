@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\Rule;
 
@@ -31,13 +32,20 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        if (!empty($this->organization->fund_providers()->where(
-            'fund_id',
-            $value
-        )->first())) {
-            $this->message = trans(
-                'validation.organization_fund.already_requested'
-            );
+        $fundProvider = $this->organization->fund_providers()->where('fund_id', $value)->first();
+
+        if (!empty($fundProvider)) {
+            $this->message = trans('validation.organization_fund.already_requested');
+
+            return false;
+        }
+
+        $fundExists = FundProvider::queryAvailableFunds($this->organization)
+            ->where('id', $value)
+            ->exists();
+
+        if (!$fundExists) {
+            $this->message = trans('validation.organization_fund.not_allowed');
 
             return false;
         }

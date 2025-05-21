@@ -199,6 +199,7 @@ class FundProvider extends BaseModel
         $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
         $query->where('type', '!=', Fund::TYPE_EXTERNAL);
         $query->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+        $query->whereHas('fund_config', fn (Builder $b) => $b->where('allow_provider_sign_up', true));
 
         FundQuery::whereIsInternal($query);
         FundQuery::whereIsConfiguredByForus($query);

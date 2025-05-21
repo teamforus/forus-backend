@@ -160,10 +160,15 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param string $selector
      * @param string $title
+     * @param bool $assertExists
      * @return RemoteWebElement|null
      */
-    private function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
-    {
+    private function findOptionElement(
+        Browser $browser,
+        string $selector,
+        string $title,
+        bool $assertExists = true
+    ): ?RemoteWebElement {
         $option = null;
 
         $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
@@ -172,7 +177,9 @@ trait HasFrontendActions
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
         });
 
-        $this->assertNotNull($option);
+        $assertExists
+            ? $this->assertNotNull($option, "Option $title not found in $selector.")
+            : $this->assertNull($option, "Option $title found in $selector.");
 
         return $option;
     }
@@ -460,5 +467,30 @@ trait HasFrontendActions
         $browser->waitFor('@vouchersPage');
         $browser->element('@vouchersPage')->click();
         $browser->waitFor('@vouchersTitle');
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToProviderFundsList(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupSales');
+        $browser->element('@asideMenuGroupSales')->click();
+        $browser->waitFor('@fundsPage');
+        $browser->element('@fundsPage')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToFundsAvailableList(Browser $browser): void
+    {
+        $browser->waitFor('@fundsAvailableTab');
+        $browser->element('@fundsAvailableTab')->click();
+        $browser->waitFor('@tableFundsAvailableContent');
     }
 }
