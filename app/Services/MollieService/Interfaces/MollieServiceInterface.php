@@ -102,9 +102,9 @@ interface MollieServiceInterface
     /**
      * @param string $profileId
      * @param string $method
-     * @return bool
+     * @return void
      */
-    public function disablePaymentMethod(string $profileId, string $method): bool;
+    public function disablePaymentMethod(string $profileId, string $method): void;
 
     /**
      * @param string $profileId
