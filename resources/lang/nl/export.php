@@ -120,6 +120,7 @@ return [
         'updated_at' => 'Bijgewerkt op',
         'is_2fa_configured' => '2FA',
         'roles' => 'Rollen',
+        'last_activity' => 'Laatste handeling',
     ],
 
     'fund_identities' => [
@@ -164,6 +165,7 @@ return [
         'expire_at' => 'Verlopen op',
         'ean' => 'EAN',
         'sku' => 'SKU',
+        'transaction_id' => 'Transactie ID',
     ],
 
     'reimbursements' => [
@@ -249,6 +251,7 @@ return [
         'bulk_status_locale' => 'In de wachtrij (dagen)',
         'product_id' => 'Aanbod ID',
         'notes_provider' => 'Notities',
+        'reservation_code' => 'Reservering nummer',
         'state-values' => [
             'success' => 'voltooid',
             'pending' => 'in afwachting',

@@ -4,31 +4,39 @@ namespace App\Policies;
 
 use App\Exceptions\AuthorizationJsonException;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Scopes\Builders\PrevalidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 
 class PrevalidationPolicy extends BasePolicy
 {
     /**
      * @param Identity $identity
+     * @param Organization $organization
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function viewAny(Identity $identity): bool
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists;
+        return $organization->identityCan($identity, [
+            Permission::VALIDATE_RECORDS,
+            Permission::MANAGE_ORGANIZATION,
+        ], false);
     }
 
     /**
      * @param Identity $identity
+     * @param Organization $organization
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function store(Identity $identity): bool
+    public function create(Identity $identity, Organization $organization): bool
     {
-        return $identity->exists;
+        return $organization->identityCan($identity, [
+            Permission::VALIDATE_RECORDS,
+            Permission::MANAGE_ORGANIZATION,
+        ], false);
     }
 
     /**
@@ -62,25 +70,42 @@ class PrevalidationPolicy extends BasePolicy
         return true;
     }
 
+    public function destroy(Identity $identity, Prevalidation $prevalidation, Organization $organization): bool
+    {
+        return $this->canManagePrevalidation($identity, $prevalidation, $organization);
+    }
+
     /**
+     * Determine if the identity can manage the given prevalidation.
+     *
      * @param Identity $identity
      * @param Prevalidation $prevalidation
+     * @param Organization $organization
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function destroy(Identity $identity, Prevalidation $prevalidation): bool
-    {
-        $organization = $prevalidation->organization;
-        $isCreator = $prevalidation->identity_address === $identity->address;
-        $isValidator = $organization?->identityCan($identity, Permission::VALIDATE_RECORDS);
+    private function canManagePrevalidation(
+        Identity $identity,
+        Prevalidation $prevalidation,
+        Organization $organization,
+    ): bool {
+        if ($prevalidation->is_used) {
+            return false;
+        }
 
-        return ($isCreator || $isValidator) && !$prevalidation->is_used;
+        if ($prevalidation->organization_id !== $organization->id) {
+            return false;
+        }
+
+        return PrevalidationQuery::whereVisibleToIdentity(
+            $organization->prevalidations(),
+            $identity->address,
+        )->where('id', $prevalidation->id)->exists();
     }
 
     /**
      * @return string
      */
-    public function getPolicyKey(): string
+    protected function getPolicyKey(): string
     {
         return 'prevalidations';
     }

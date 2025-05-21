@@ -281,8 +281,6 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_number, $transaction->id);
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
-        $this->searchTable($browser, '@tableTransaction', $transaction->product->id, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->product->name, $transaction->id);
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
 

@@ -3,28 +3,27 @@
 namespace Tests\Traits;
 
 use App\Mail\Reimbursements\ReimbursementSubmittedMail;
+use App\Models\Employee;
 use App\Models\Reimbursement;
+use App\Models\Role;
 use App\Models\Voucher;
+use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Testing\TestResponse;
 use Throwable;
 
-trait MakesReimbursements
+trait MakesTestReimbursements
 {
     use WithFaker;
     use DoesTesting;
-
-    /**
-     * @var string
-     */
-    protected string $apiReimbursementUrl = '/api/v1/platform/reimbursements';
+    use AssertsSentEmails;
 
     /**
      * @var array
      */
-    protected array $resourceStructure = [
+    protected array $reimbursementResourceStructure = [
         'id',
         'title',
         'description',
@@ -89,7 +88,7 @@ trait MakesReimbursements
      * @throws Throwable
      * @return Reimbursement
      */
-    protected function makeTestReimbursement(Voucher $voucher, bool $submit): Reimbursement
+    protected function makeReimbursement(Voucher $voucher, bool $submit): Reimbursement
     {
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
         $submitTime = now();
@@ -100,10 +99,10 @@ trait MakesReimbursements
         ]);
 
         // assert created
-        $response = $this->postJson($this->apiReimbursementUrl, $body, $headers);
+        $response = $this->postJson('/api/v1/platform/reimbursements', $body, $headers);
         $response->assertCreated();
         $response->assertJsonStructure([
-            'data' => $this->resourceStructure,
+            'data' => $this->reimbursementResourceStructure,
         ]);
 
         $reimbursementId = $response->json('data.id');
@@ -130,7 +129,7 @@ trait MakesReimbursements
             'description' => $this->faker->text(600),
             'amount' => random_int(1, 10),
             'iban' => $this->faker()->iban('NL'),
-            'iban_name' => 'John Doe',
+            'iban_name' => $this->makeIbanName(),
             'voucher_id' => $voucher?->id,
             'files' => [
                 $this->makeReimbursementProofFile($headers)->json('data.uid'),
@@ -152,5 +151,91 @@ trait MakesReimbursements
         $response->assertCreated();
 
         return $response;
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @return Employee
+     */
+    protected function makeReimbursementValidatorEmployee(Reimbursement $reimbursement): Employee
+    {
+        return $reimbursement
+            ->voucher
+            ->fund
+            ->organization
+            ->addEmployee($this->makeIdentity(), Role::pluck('id')->toArray());
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @param Employee $employee
+     * @param bool $assertSuccess
+     * @return void
+     */
+    protected function assignReimbursementInDashboard(
+        Reimbursement $reimbursement,
+        Employee $employee,
+        bool $assertSuccess,
+    ): void {
+        $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
+        $headers = $this->makeApiHeaders($employee->identity);
+
+        $response = $this->postJson("$endpoint/$reimbursement->id/assign", [], $headers);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonPath('data.id', $reimbursement->id);
+            $response->assertJsonPath('data.employee_id', $employee->id);
+        } else {
+            $response->assertForbidden();
+        }
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @param Employee $employee
+     * @return void
+     */
+    protected function resignReimbursementInDashboard(
+        Reimbursement $reimbursement,
+        Employee $employee
+    ): void {
+        $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
+        $headers = $this->makeApiHeaders($employee->identity);
+
+        $response = $this->postJson("$endpoint/$reimbursement->id/resign", [], $headers);
+        $response->assertSuccessful();
+        $response->assertJsonPath('data.id', $reimbursement->id);
+        $response->assertJsonPath('data.employee_id', null);
+    }
+
+    /**
+     * @param Reimbursement $reimbursement
+     * @param Employee $employee
+     * @param bool $approve
+     * @param bool $assertSuccess
+     * @return void
+     */
+    protected function resolveReimbursementInDashboard(
+        Reimbursement $reimbursement,
+        Employee $employee,
+        bool $approve,
+        bool $assertSuccess,
+    ): void {
+        $headers = $this->makeApiHeaders($employee->identity);
+        $assertState = $approve ? $reimbursement::STATE_APPROVED : $reimbursement::STATE_DECLINED;
+
+        $endpoint = "/api/v1/platform/organizations/$employee->organization_id/reimbursements";
+        $endpoint = "$endpoint/$reimbursement->id/" . ($approve ? 'approve' : 'decline');
+
+        $response = $this->postJson($endpoint, [], $headers);
+
+        if ($assertSuccess) {
+            $response->assertSuccessful();
+            $response->assertJsonPath('data.id', $reimbursement->id);
+            $response->assertJsonPath('data.state', $assertState);
+        } else {
+            $response->assertForbidden();
+        }
     }
 }
