@@ -46,10 +46,10 @@ class RecordController extends Controller
     public function store(RecordStoreRequest $request): ?RecordResource
     {
         return RecordResource::create($request->identity()->makeRecord(
-            RecordType::findByKey($request->get('type')),
-            $request->get('value'),
-            $request->get('record_category_id'),
-            $request->get('order')
+            type: RecordType::findByKey($request->get('type')),
+            value: $request->get('value'),
+            recordCategoryId: $request->get('record_category_id'),
+            order: $request->get('order'),
         ));
     }
 

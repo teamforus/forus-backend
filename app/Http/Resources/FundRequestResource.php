@@ -2,8 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Tiny\VoucherTinyResource;
 use App\Models\FundRequest;
 use App\Models\Voucher;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -19,21 +21,26 @@ class FundRequestResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        return array_merge($this->resource->only([
-            'id', 'state', 'employee_id', 'fund_id', 'contact_information',
-        ]), [
+        $activeVouchers = $this->getActiveVouchers($this->resource);
+
+        return [
+            ...$this->resource->only([
+                'id', 'state', 'employee_id', 'fund_id', 'contact_information',
+            ]),
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),
-            'current_period' => $this->activePeriod($this->resource),
-        ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
+            'current_period' => $activeVouchers->isNotEmpty(),
+            'active_vouchers' => VoucherTinyResource::collection($activeVouchers),
+            ...$this->timestamps($this->resource, 'created_at', 'updated_at'),
+        ];
     }
 
     /**
      * @param FundRequest $fundRequest
-     * @return bool
+     * @return Voucher[]|Collection
      */
-    public function activePeriod(FundRequest $fundRequest): bool
+    public function getActiveVouchers(FundRequest $fundRequest): Collection|array
     {
-        return (bool) $fundRequest->vouchers->first(fn (Voucher $voucher) => !$voucher->expired);
+        return $fundRequest->vouchers->filter(fn (Voucher $voucher) => !$voucher->expired);
     }
 }

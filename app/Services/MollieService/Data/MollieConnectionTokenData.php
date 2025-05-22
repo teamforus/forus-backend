@@ -41,11 +41,12 @@ class MollieConnectionTokenData implements MollieToken
     public function setAccessToken(AccessTokenInterface|AccessToken $token): void
     {
         $expire_at = Carbon::createFromTimestamp($token->getExpires());
+        $expire_offset = Config::get('mollie.token_expire_offset');
 
         $this->connection->tokens()->delete();
 
         $this->connection->tokens()->create([
-            'expired_at' => $expire_at->subSeconds(Config::get('mollie.token_expire_offset')),
+            'expired_at' => now()->addSeconds(now()->diffInSeconds($expire_at) - $expire_offset),
             'access_token' => $token->getToken(),
             'remember_token' => $token->getRefreshToken(),
         ]);

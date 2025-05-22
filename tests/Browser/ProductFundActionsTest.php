@@ -237,7 +237,7 @@ class ProductFundActionsTest extends DuskTestCase
             ]],
             'requester_records' => [
                 'iban' => $this->faker->iban(),
-                'iban_name' => $this->faker->firstName(),
+                'iban_name' => $this->makeIbanName(),
                 'children_nth' => 3,
             ],
         ];

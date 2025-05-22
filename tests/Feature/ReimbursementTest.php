@@ -227,8 +227,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-            'q' => $reimbursement->voucher->identity->email,
-        ]), $headers);
+                'q' => $reimbursement->voucher->identity->email,
+            ]), $headers);
 
         $response->assertSuccessful();
     }
@@ -246,8 +246,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-            'q' => $reimbursement->voucher->identity->email,
-        ]), $headers);
+                'q' => $reimbursement->voucher->identity->email,
+            ]), $headers);
 
         $response->assertJsonCount(0, 'data');
     }

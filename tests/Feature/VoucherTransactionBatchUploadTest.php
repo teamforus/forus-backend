@@ -243,7 +243,7 @@ class VoucherTransactionBatchUploadTest extends TestCase
             'uid' => Str::random(15),
             'note' => $this->faker()->sentence(),
             'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'direct_payment_name' => $this->makeIbanName(),
         ];
     }
 

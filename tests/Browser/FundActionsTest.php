@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -274,20 +274,6 @@ class FundActionsTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @param int $count
-     * @param string $selector
-     * @return void
-     */
-    protected function assertRowsCount(Browser $browser, int $count, string $selector): void
-    {
-        $browser->within($selector, function (Browser $browser) use ($count) {
-            $browser->assertSeeIn('@paginatorTotal', $count);
-            $this->assertCount(1, $browser->elements('tr>td'));
-        });
-    }
-
-    /**
      * @param Organization $organization
      * @param array $settings
      * @return Fund
@@ -329,7 +315,7 @@ class FundActionsTest extends DuskTestCase
             ]],
             'requester_records' => [
                 'iban' => $this->faker->iban(),
-                'iban_name' => $this->faker->firstName(),
+                'iban_name' => $this->makeIbanName(),
                 'children_nth' => 3,
             ],
         ];
