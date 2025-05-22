@@ -70,7 +70,7 @@ class PrevalidationController extends Controller
         UploadPrevalidationsRequest $request,
         Organization $organization,
     ): AnonymousResourceCollection {
-        $this->authorize('store', [Prevalidation::class, $organization]);
+        $this->authorize('create', [Prevalidation::class, $organization]);
 
         $file = $request->post('file');
         $fund = Fund::find($request->input('fund_id'));
@@ -105,7 +105,7 @@ class PrevalidationController extends Controller
         UploadPrevalidationsRequest $request,
         Organization $organization,
     ): array {
-        $this->authorize('store', [Prevalidation::class, $organization]);
+        $this->authorize('create', [Prevalidation::class, $organization]);
 
         $fund = Fund::find($request->input('fund_id'));
         $primaryKey = $fund->fund_config->csv_primary_key;
