@@ -2,15 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Models\Fund;
+use App\Models\Identity;
+use App\Models\Organization;
+use App\Models\Product;
+use App\Models\Voucher;
+use App\Services\Forus\TestData\TestData;
 use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesVoucherTransaction;
 use Tests\Traits\TestsBackoffice;
+use Throwable;
 
 class BackofficeTest extends TestCase
 {
@@ -23,7 +31,7 @@ class BackofficeTest extends TestCase
     use MakesVoucherTransaction;
 
     /**
-     * Tests the eligibility check functionality for a fund.
+     * Tests the complete happy flow for a fund application.
      *
      * This method sets up a test environment, generates backoffice credentials,
      * creates a test fund and identity, and checks the eligibility of the identity
@@ -31,65 +39,302 @@ class BackofficeTest extends TestCase
      * becomes successful after setting a BSN record, and verifies the correct
      * backoffice log fields for both received and first use actions.
      *
+     * @throws Throwable
+     * @return void
+     */
+    public function testCompleteFundApplicationHappyFlow(): void
+    {
+        // Generate test backoffice credentials, fund, identity and a product approved for the fund
+        $credentials = self::generateTestBackofficeCredentials();
+        $bsn = TestData::randomFakeBsn();
+
+        $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
+        $fund2 = $this->makeAndSetupBackofficeTestFund('fund_002', $credentials);
+        $identity = $this->makeIdentity();
+
+        // Set up backoffice responses with the generated credentials
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key, $fund2->fund_config->key],
+            residentBsn: [$bsn],
+            eligibleBsn: [$bsn],
+        );
+
+        // Test the initial eligibility check, which should be forbidden since the identity has no BSN record
+        $this->makeFundCheckRequest($fund, $identity)->assertForbidden();
+        $this->makeFundCheckRequest($fund2, $identity)->assertForbidden();
+
+        // Set a BSN record for the identity
+        $identity->setBsnRecord($bsn);
+
+        // Test the eligibility check again, which should be successful
+        $this->makeFundCheckRequest($fund, $identity)->assertSuccessful();
+        $this->makeFundCheckRequest($fund2, $identity)->assertSuccessful();
+
+        // Assert that there is one voucher for the identity (by backoffice)
+        $this->assertCount(2, $identity->vouchers()->get());
+
+        // Get the backoffice voucher for the identity
+        $voucher1 = $identity->vouchers->where('fund_id', $fund->id)->first();
+        $voucher2 = $identity->vouchers->where('fund_id', $fund2->id)->first();
+
+        // Assert both voucher initially have a pending received log and after "send-logs" command they are updated to success
+        $this->assertBackOfficeReceivedLogIsCreatedAndUpdateAfterVoucherIsAssigned([$voucher1, $voucher2]);
+
+        // Assert that first voucher creates and submits first use log after product reservation
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProductReservation($voucher1, $bsn);
+
+        // Assert that second voucher creates and submits first use log after a transaction be provider is created
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProviderTransaction($voucher2, $bsn);
+    }
+
+    /**
+     * Tests the complete logs happy flow for vouchers created via voucher generator.
+     *
+     * This method sets up test backoffice credentials, creates a fund, and generates two vouchers for an identity.
+     * It asserts that the identity has no vouchers initially, then verifies that after creating and activating the vouchers,
+     * the identity has two vouchers. It further checks the status of the received logs and first use logs for both vouchers.
+     *
      * @throws Exception
      * @return void
      */
-    public function testEligibilityCheck(): void
+    public function testCompleteVoucherGeneratorHappyFlow(): void
     {
         // Generate test backoffice credentials, fund, identity and a product approved for the fund
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $identity = $this->makeIdentity();
-        $product = $this->makeProviderAndProducts($fund)['approved'][0];
+        $bsn = TestData::randomFakeBsn();
 
         // Set up backoffice responses with the generated credentials
-        $this->setupBackofficeResponses($credentials);
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            residentBsn: [$bsn],
+            eligibleBsn: [$bsn],
+        );
 
-        // Test the initial eligibility check, which should be forbidden since the identity has no BSN record
-        $this->postJson("/api/v1/platform/funds/$fund->id/check", [], $this->makeApiHeaders($identity))->assertForbidden();
+        // Set identity bsn and assert that identity has no vouchers
+        $identity->setBsnRecord($bsn);
+        $this->assertCount(0, $identity->vouchers()->get());
 
-        // Set a BSN record for the identity
-        $identity->setBsnRecord('123456789');
+        $voucher1 = $this->makeSponsorVoucherRequest($fund->organization, [
+            'bsn' => $identity->bsn,
+            'amount' => 100,
+            'fund_id' => $fund->id,
+            'activate' => 1,
+            'assign_by_type' => 'bsn',
+        ])->assertSuccessful()->json('data.id');
 
-        // Test the eligibility check again, which should be successful
-        $this->postJson("/api/v1/platform/funds/$fund->id/check", [], $this->makeApiHeaders($identity))->assertSuccessful();
+        $voucher2 = $this->makeSponsorVoucherRequest($fund->organization, [
+            'bsn' => $identity->bsn,
+            'amount' => 100,
+            'fund_id' => $fund->id,
+            'activate' => 1,
+            'assign_by_type' => 'bsn',
+        ])->assertSuccessful()->json('data.id');
 
-        // Assert that there is one voucher for the identity (by backoffice)
-        $this->assertCount(1, $identity->vouchers()->get());
-
-        // Get the backoffice voucher for the identity
-        $backofficeVoucher = $identity->vouchers[0];
-
-        // Create a manual voucher for the fund and get its token without confirmation
-        $manualVoucher = $fund->makeVoucher($identity);
-        $manualVoucherToken = $manualVoucher->token_without_confirmation->address;
-
-        // Assert that there are now two vouchers for the identity
         $this->assertCount(2, $identity->vouchers()->get());
 
-        // Assert that "received" log is initially "pending" and changes to "success"
-        $this->assertBackofficeReceivedLogPending($backofficeVoucher->backoffice_log_received()->first(), $identity->bsn);
+        $voucher1 = $identity->vouchers()->where('id', $voucher1)->first();
+        $voucher2 = $identity->vouchers()->where('id', $voucher2)->first();
+
+        // Assert both voucher initially have a pending received log and after "send-logs" command they are updated to success
+        $this->assertBackOfficeReceivedLogIsCreatedAndUpdateAfterVoucherIsAssigned([$voucher1, $voucher2]);
+
+        // Assert that first voucher creates and submits first use log after product reservation
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProductReservation($voucher1, $bsn);
+
+        // Assert that second voucher creates and submits first use log after a transaction be provider is created
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProviderTransaction($voucher2, $bsn);
+    }
+
+    /**
+     * Tests the complete logs happy flow for vouchers created via voucher generator.
+     *
+     * This method sets up test backoffice credentials, creates a fund, and generates two vouchers for an identity.
+     * It asserts that the identity has no vouchers initially, then verifies that after creating and activating the vouchers,
+     * the identity has two vouchers. It further checks the status of the received logs and first use logs for both vouchers.
+     *
+     * @throws Exception
+     * @return void
+     */
+    public function testCompleteVoucherGeneratorHappyFlowForRelationTypeBsn(): void
+    {
+        // Generate test backoffice credentials, fund, identity and a product approved for the fund
+        $credentials = self::generateTestBackofficeCredentials();
+        $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
+        $bsn = TestData::randomFakeBsn();
+        $bsn2 = TestData::randomFakeBsn();
+        $identity = $this->makeIdentity();
+        $identity2 = $this->makeIdentity();
+
+        $identity2->setBsnRecord($bsn2);
+
+        // Set up backoffice responses with the generated credentials
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+        );
+
+        $voucher1 = $this->makeSponsorVoucherRequest($fund->organization, [
+            'bsn' => $bsn,
+            'amount' => 100,
+            'fund_id' => $fund->id,
+            'activate' => 1,
+            'report_type' => 'relation',
+            'assign_by_type' => 'bsn',
+        ])->assertSuccessful()->json('data.id');
+
+        $voucher2 = $this->makeSponsorVoucherRequest($fund->organization, [
+            'bsn' => $bsn,
+            'amount' => 100,
+            'fund_id' => $fund->id,
+            'activate' => 1,
+            'report_type' => 'relation',
+            'assign_by_type' => 'bsn',
+        ])->assertSuccessful()->json('data.id');
+
+        $voucher1 = Voucher::find($voucher1);
+        $voucher2 = Voucher::find($voucher2);
+
+        $this->assertNull($voucher1->identity);
+        $this->assertNull($voucher2->identity);
+
+        // Assert both voucher initially have a pending received log and after "send-logs" command they are updated to success
+        $this->assertBackOfficeReceivedLogIsCreatedAndUpdateAfterVoucherIsAssigned([$voucher1, $voucher2], $bsn);
+
+        $voucher1->assignToIdentity($identity)->refresh();
+        $voucher2->assignToIdentity($identity2)->refresh();
+
+        // Assert that first voucher creates and submits first use log after product reservation
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProductReservation($voucher1, $bsn);
+
+        // Assert that second voucher creates and submits first use log after a transaction be provider is created
+        $this->assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProviderTransaction($voucher2, $bsn);
+    }
+
+    /**
+     * @param Voucher[] $vouchers
+     * @param string|null $bsn
+     * @return void
+     */
+    protected function assertBackOfficeReceivedLogIsCreatedAndUpdateAfterVoucherIsAssigned(array $vouchers, ?string $bsn = null): void
+    {
+        foreach ($vouchers as $voucher) {
+            $this->assertBackofficeReceivedLogPending($voucher->backoffice_log_received()->first(), $bsn ?: $voucher->identity->bsn);
+        }
+
         $this->artisan('funds.backoffice:send-logs');
-        $this->assertBackofficeReceivedLogSuccess($backofficeVoucher->backoffice_log_received()->first(), $identity->bsn);
 
-        // assert no "first use" log and create a reservation which should trigger "first use" event
-        $this->assertNull($backofficeVoucher->backoffice_log_first_use()->first());
-        $backofficeVoucher->reserveProduct($product);
+        foreach ($vouchers as $voucher) {
+            $this->assertBackofficeReceivedLogSuccess($voucher->backoffice_log_received()->first(), $bsn ?: $voucher->identity->bsn);
+        }
+    }
 
-        // Assert that "first use" log is initially "pending" and changes to "success"
-        $this->assertBackofficeFirstUseLogPending($backofficeVoucher->backoffice_log_first_use()->first(), $identity->bsn);
+    /**
+     * @param Voucher $voucher
+     * @param string $bsn
+     * @return void
+     */
+    protected function assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProductReservation(Voucher $voucher, string $bsn): void
+    {
+        $product = $this->makeProviderAndProducts($voucher->fund)['approved'][0];
+
+        $this->assertNull($voucher->backoffice_log_first_use()->first());
+        $this->makeProductReservationRequest($voucher, $product)->assertSuccessful();
+        $this->assertVoucherFirstUseLogGoesFromPendingToSuccess($voucher, $bsn);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param string $bsn
+     * @return void
+     */
+    protected function assertBackOfficeFirstUseLogIsCreatedAndUpdateAfterProviderTransaction(Voucher $voucher, string $bsn): void
+    {
+        $product = $this->makeProviderAndProducts($voucher->fund)['approved'][0];
+
+        $this->assertNull($voucher->backoffice_log_first_use()->first());
+        $this->makeProviderVoucherTransactionRequest($voucher, $product->organization)->assertSuccessful();
+        $this->assertVoucherFirstUseLogGoesFromPendingToSuccess($voucher, $bsn);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Identity $identity
+     * @return void
+     */
+    protected function assertVoucherReceivedLogGoesFromPendingToSuccess(Voucher $voucher, Identity $identity): void
+    {
+        // Assert that "first_use" log is initially "pending" and changes to "success"
+        $this->assertBackofficeReceivedLogPending($voucher->backoffice_log_received()->first(), $identity->bsn);
         $this->artisan('funds.backoffice:send-logs');
-        $this->assertBackofficeFirstUseLogSuccess($backofficeVoucher->backoffice_log_first_use()->first(), $identity->bsn);
+        $this->assertBackofficeReceivedLogSuccess($voucher->backoffice_log_received()->first(), $identity->bsn);
+    }
 
-        // Make a transaction with the manual voucher token (which should also trigger first use)
-        $this->postJson("/api/v1/platform/provider/vouchers/$manualVoucherToken/transactions", [
-            'amount' => 10,
-            'organization_id' => $product->organization_id,
-        ], $this->makeApiHeaders($product->organization->identity))->assertSuccessful();
-
-        // Assert that "received" log is initially "pending" and changes to "success"
-        $this->assertBackofficeFirstUseLogPending($manualVoucher->backoffice_log_first_use()->first(), $identity->bsn);
+    /**
+     * @param Voucher $voucher
+     * @param string $bsn
+     * @return void
+     */
+    protected function assertVoucherFirstUseLogGoesFromPendingToSuccess(Voucher $voucher, string $bsn): void
+    {
+        // Assert that "first_use" log is initially "pending" and changes to "success"
+        $this->assertBackofficeFirstUseLogPending($voucher->backoffice_log_first_use()->first(), $bsn);
         $this->artisan('funds.backoffice:send-logs');
-        $this->assertBackofficeFirstUseLogSuccess($manualVoucher->backoffice_log_first_use()->first(), $identity->bsn);
+        $this->assertBackofficeFirstUseLogSuccess($voucher->backoffice_log_first_use()->first(), $bsn);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function makeFundCheckRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson("/api/v1/platform/funds/$fund->id/check", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @return TestResponse
+     */
+    protected function makeProviderVoucherTransactionRequest(Voucher $voucher, Organization $providerOrganization): TestResponse
+    {
+        $manualVoucherToken = $voucher->token_without_confirmation->address;
+
+        return $this->postJson("/api/v1/platform/provider/vouchers/$manualVoucherToken/transactions", [
+            'amount' => 1,
+            'organization_id' => $providerOrganization->id,
+        ], $this->makeApiHeaders($providerOrganization->identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function makeSponsorVoucherRequest(Organization $organization, array $data): TestResponse
+    {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers", [
+            ...$data,
+        ], $this->makeApiHeaders($organization->identity));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return TestResponse
+     */
+    protected function makeProductReservationRequest(Voucher $voucher, Product $product): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/product-reservations', [
+            'product_id' => $product->id,
+            'voucher_id' => $voucher->id,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ], $this->makeApiHeaders($voucher->identity));
     }
 }

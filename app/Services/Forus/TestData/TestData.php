@@ -964,21 +964,20 @@ class TestData
     }
 
     /**
-     * @throws Throwable
-     * @return int
+     * @return string
      */
-    public static function randomFakeBsn(): int
+    public static function randomFakeBsn(): string
     {
         static $generated = [];
         static $rule = new BsnRule();
 
         do {
             try {
-                $bsn = random_int(10_000_000, 999_999_999);
+                $bsn = (string) random_int(10_000_000, 999_999_999);
             } catch (Throwable) {
                 continue;
             }
-        } while (!$rule->passes('bsn', (string) $bsn) || in_array($bsn, $generated, true));
+        } while (!$rule->passes('bsn', $bsn) || in_array($bsn, $generated, true));
 
         return $generated[] = $bsn;
     }
