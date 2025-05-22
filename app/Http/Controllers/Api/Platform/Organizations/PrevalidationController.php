@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\Api\Platform;
+namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Exports\PrevalidationsExport;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
-use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
-use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\SearchPrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\StorePrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
+use App\Models\Organization;
 use App\Models\Prevalidation;
-use Exception;
+use App\Scopes\Builders\PrevalidationQuery;
+use App\Searches\PrevalidationSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -19,17 +21,41 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class PrevalidationController extends Controller
 {
     /**
-     * @param StorePrevalidationsRequest $request
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return PrevalidationResource
-     * @noinspection PhpUnused
+     * @param SearchPrevalidationsRequest $request
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
      */
-    public function store(StorePrevalidationsRequest $request): PrevalidationResource
-    {
-        $this->authorize('store', Prevalidation::class);
+    public function index(
+        SearchPrevalidationsRequest $request,
+        Organization $organization,
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAny', [Prevalidation::class, $organization]);
+
+        $query = PrevalidationQuery::whereVisibleToIdentity(
+            $organization->prevalidations(),
+            $request->auth_address(),
+        );
+
+        $search = new PrevalidationSearch($request->only([
+            'q', 'fund_id', 'from', 'to', 'state', 'exported',
+        ]), $query);
+
+        return PrevalidationResource::queryCollection($search->query(), $request);
+    }
+
+    /**
+     * @param StorePrevalidationsRequest $request
+     * @param Organization $organization
+     * @return PrevalidationResource
+     */
+    public function store(
+        StorePrevalidationsRequest $request,
+        Organization $organization,
+    ): PrevalidationResource {
+        $this->authorize('create', [Prevalidation::class, $organization]);
 
         return PrevalidationResource::create(Prevalidation::storePrevalidations(
-            $request->identity(),
+            $request->employee($organization),
             Fund::find($request->input('fund_id')),
             [$request->input('data')]
         )->first());
@@ -37,24 +63,24 @@ class PrevalidationController extends Controller
 
     /**
      * @param UploadPrevalidationsRequest $request
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @noinspection PhpUnused
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request,
+        Organization $organization,
     ): AnonymousResourceCollection {
-        $this->authorize('store', Prevalidation::class);
+        $this->authorize('create', [Prevalidation::class, $organization]);
 
         $file = $request->post('file');
         $fund = Fund::find($request->input('fund_id'));
         $data = $request->input('data', []);
 
-        $employee = $fund?->organization?->findEmployee($request->auth_address());
+        $employee = $request->employee($organization);
         $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATIONS, $file, $data);
 
         $prevalidations = Prevalidation::storePrevalidations(
-            $request->identity(),
+            $employee,
             $fund,
             $data,
             $request->input('overwrite', [])
@@ -72,21 +98,27 @@ class PrevalidationController extends Controller
      * Generate pre-validations hashes for frontend.
      *
      * @param UploadPrevalidationsRequest $request
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param Organization $organization
      * @return array
-     * @noinspection PhpUnused
      */
-    public function collectionHash(UploadPrevalidationsRequest $request): array
-    {
-        $this->authorize('store', Prevalidation::class);
+    public function collectionHash(
+        UploadPrevalidationsRequest $request,
+        Organization $organization,
+    ): array {
+        $this->authorize('create', [Prevalidation::class, $organization]);
 
         $fund = Fund::find($request->input('fund_id'));
         $primaryKey = $fund->fund_config->csv_primary_key;
 
+        $query = PrevalidationQuery::whereVisibleToIdentity(
+            $organization->prevalidations(),
+            $request->auth_address(),
+        );
+
         return [
-            'db' => Prevalidation::where([
+            'db' => $query->where([
                 'fund_id' => $fund->id,
-                'identity_address' => $request->auth_address(),
+                'employee_id' => $request->employee($organization)->id,
                 'state' => Prevalidation::STATE_PENDING,
             ])->select(['id', 'uid_hash', 'records_hash'])->get()->toArray(),
             'collection' => array_map(static function ($row) use ($primaryKey) {
@@ -102,62 +134,58 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * @param SearchPrevalidationsRequest $request
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @noinspection PhpUnused
-     */
-    public function index(
-        SearchPrevalidationsRequest $request
-    ): AnonymousResourceCollection {
-        $this->authorize('viewAny', Prevalidation::class);
-
-        return PrevalidationResource::queryCollection(Prevalidation::search($request), $request);
-    }
-
-    /**
+     * @param Organization $organization
      * @return AnonymousResourceCollection
-     * @noinspection PhpUnused
      */
-    public function getExportFields(): AnonymousResourceCollection
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Prevalidation::class);
+        $this->authorize('viewAny', [Prevalidation::class, $organization]);
 
         return ExportFieldArrResource::collection(PrevalidationsExport::getExportFields());
     }
 
     /**
      * @param SearchPrevalidationsRequest $request
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param Organization $organization
      * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @noinspection PhpUnused
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @return BinaryFileResponse
      */
     public function export(
         SearchPrevalidationsRequest $request,
+        Organization $organization,
     ): BinaryFileResponse {
-        $this->authorize('viewAny', Prevalidation::class);
+        $this->authorize('viewAny', [Prevalidation::class, $organization]);
+
+        $query = PrevalidationQuery::whereVisibleToIdentity(
+            $organization->prevalidations(),
+            $request->auth_address(),
+        );
+
+        $search = new PrevalidationSearch($request->only([
+            'q', 'fund_id', 'from', 'to', 'state', 'exported',
+        ]), $query);
 
         $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
+
         $fields = $request->input('fields', PrevalidationsExport::getExportFieldsRaw());
-        $fileData = new PrevalidationsExport($request, $fields);
+        $fileData = new PrevalidationsExport($fields, $search->query());
 
         return resolve('excel')->download($fileData, $fileName);
     }
 
     /**
      * Delete prevalidation.
+     * @param Organization $organization
      * @param Prevalidation $prevalidation
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws Exception
-     * @return \Illuminate\Http\JsonResponse
-     * @noinspection PhpUnused
+     * @return JsonResponse
      */
     public function destroy(
-        Prevalidation $prevalidation
+        Organization $organization,
+        Prevalidation $prevalidation,
     ): JsonResponse {
-        $this->authorize('destroy', $prevalidation);
+        $this->authorize('destroy', [$prevalidation, $organization]);
 
         $prevalidation->delete();
 

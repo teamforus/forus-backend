@@ -34,17 +34,10 @@ class FundsController extends Controller
      */
     public function index(IndexFundsRequest $request): AnonymousResourceCollection
     {
-        $state = $request->input('state') === 'active_paused_and_closed' ? [
-            Fund::STATE_CLOSED,
-            Fund::STATE_PAUSED,
-            Fund::STATE_ACTIVE,
-        ] : Fund::STATE_ACTIVE;
-
         $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
-            'with_external', 'has_products', 'has_subsidies', 'has_providers',
-            'order_by', 'order_dir',
-        ]), Implementation::queryFundsByState($state)))->query();
+            'with_external', 'has_products', 'has_subsidies', 'has_providers', 'order_by', 'order_dir',
+        ]), Implementation::queryFundsByState(Fund::STATE_ACTIVE)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn (Organization $item) => $item->only('id', 'name'));

@@ -994,7 +994,7 @@ class Fund extends BaseModel
         $builder = Record::fromSub($builder->getQuery(), 'records')->select([
             '*',
             DB::raw('IF(`validated_at_prevalidation`, `validated_at_prevalidation`, `validated_at_validation`) as `validated_at`'),
-        ])->orderByDesc('validated_at');
+        ])->orderByDesc('validated_at')->orderByDesc('id');
 
         return $builder->first();
     }
@@ -1629,8 +1629,12 @@ class Fund extends BaseModel
                 });
             });
 
-            $builder->whereHas('validations', function (Builder $builder) {
-                $builder->whereIn('identity_address', $this->validatorEmployees());
+            $daysTrusted = $this->getTrustedDays($this->isHashingBsn() ? 'bsn_hash' : 'bsn');
+            $startDate = $this->fund_config?->record_validity_start_date;
+
+            $builder->whereHas('validations', function (Builder $query) use ($daysTrusted, $startDate) {
+                RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
+                RecordValidationQuery::whereTrustedByQuery($query, $this);
             });
         })->exists();
     }
