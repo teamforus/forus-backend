@@ -3,9 +3,8 @@
 namespace Tests\Unit;
 
 use App\Services\BackofficeApiService\BackofficeApi;
+use App\Services\Forus\TestData\TestData;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\Http;
-use ReflectionObject;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -26,6 +25,7 @@ class BackofficeApiTest extends TestCase
      * eligibility checks for two different IDs. It asserts whether each ID is
      * eligible or not and verifies that the log fields are correctly set.
      *
+     * @throws Throwable
      * @return void
      */
     public function testEligibilityCheck(): void
@@ -34,19 +34,26 @@ class BackofficeApiTest extends TestCase
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $api = $fund->getBackofficeApi();
 
-        $this->setupBackofficeResponses($credentials);
+        $bsn1 = TestData::randomFakeBsn();
+        $bsn2 = TestData::randomFakeBsn();
 
-        $response = $api->eligibilityCheck('123456789');
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            eligibleBsn: [$bsn1],
+        );
+
+        $response = $api->eligibilityCheck($bsn1);
         $log = $response->getLog();
 
         $this->assertTrue($response->isEligible());
-        $this->assertBackofficeLogFields($log, '123456789', BackofficeApi::ACTION_ELIGIBILITY_CHECK, BackofficeApi::STATE_SUCCESS);
+        $this->assertBackofficeLogFields($log, $bsn1, BackofficeApi::ACTION_ELIGIBILITY_CHECK, BackofficeApi::STATE_SUCCESS);
 
-        $response = $api->eligibilityCheck('111111111');
+        $response = $api->eligibilityCheck($bsn2);
         $log = $response->getLog();
 
         $this->assertFalse($response->isEligible());
-        $this->assertBackofficeLogFields($log, '111111111', BackofficeApi::ACTION_ELIGIBILITY_CHECK, BackofficeApi::STATE_SUCCESS);
+        $this->assertBackofficeLogFields($log, $bsn2, BackofficeApi::ACTION_ELIGIBILITY_CHECK, BackofficeApi::STATE_SUCCESS);
     }
 
     /**
@@ -57,6 +64,7 @@ class BackofficeApiTest extends TestCase
      * the first identifier is recognized as a resident, while the second is not.
      * Additionally, it verifies the correctness of the log fields for each check.
      *
+     * @throws Throwable
      * @return void
      */
     public function testResidencyCheck(): void
@@ -65,19 +73,26 @@ class BackofficeApiTest extends TestCase
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $api = $fund->getBackofficeApi();
 
-        $this->setupBackofficeResponses($credentials);
+        $bsn1 = TestData::randomFakeBsn();
+        $bsn2 = TestData::randomFakeBsn();
 
-        $response = $api->residencyCheck('123456789');
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            residentBsn: [$bsn1],
+        );
+
+        $response = $api->residencyCheck($bsn1);
         $log = $response->getLog();
 
         $this->assertTrue($response->isResident());
-        $this->assertBackofficeLogFields($log, '123456789', BackofficeApi::ACTION_RESIDENCY_CHECK, BackofficeApi::STATE_SUCCESS);
+        $this->assertBackofficeLogFields($log, $bsn1, BackofficeApi::ACTION_RESIDENCY_CHECK, BackofficeApi::STATE_SUCCESS);
 
-        $response = $api->residencyCheck('111111111');
+        $response = $api->residencyCheck($bsn2);
         $log = $response->getLog();
 
         $this->assertFalse($response->isResident());
-        $this->assertBackofficeLogFields($log, '111111111', BackofficeApi::ACTION_RESIDENCY_CHECK, BackofficeApi::STATE_SUCCESS);
+        $this->assertBackofficeLogFields($log, $bsn2, BackofficeApi::ACTION_RESIDENCY_CHECK, BackofficeApi::STATE_SUCCESS);
     }
 
     /**
@@ -87,6 +102,7 @@ class BackofficeApiTest extends TestCase
      * 1. A scenario where the partner is found, expecting a valid BSN to be returned.
      * 2. A scenario where the partner is not found, expecting no BSN to be returned.
      *
+     * @throws Throwable
      * @return void
      */
     public function testPartnerBSNRequest(): void
@@ -95,21 +111,29 @@ class BackofficeApiTest extends TestCase
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $api = $fund->getBackofficeApi();
 
-        $this->setupBackofficeResponses($credentials);
+        $bsn1 = TestData::randomFakeBsn();
+        $bsn2 = TestData::randomFakeBsn();
+        $bsn3 = TestData::randomFakeBsn();
+
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            partnerMappings: [$bsn1 => $bsn2, $bsn2 => $bsn1],
+        );
 
         // Test partner found
-        $response = $api->partnerBsn('123456789');
+        $response = $api->partnerBsn($bsn1);
         $log = $response->getLog();
 
-        $this->assertSame('987654321', $response->getBsn());
-        $this->assertBackofficeLogFields($log, '123456789', BackofficeApi::ACTION_PARTNER_BSN, BackofficeApi::STATE_SUCCESS);
+        $this->assertSame($bsn2, $response->getBsn());
+        $this->assertBackofficeLogFields($log, $bsn1, BackofficeApi::ACTION_PARTNER_BSN, BackofficeApi::STATE_SUCCESS);
 
         // Test partner not found
-        $response = $api->partnerBsn('111111111');
+        $response = $api->partnerBsn($bsn3);
         $log = $response->getLog();
 
         $this->assertFalse($response->getBsn());
-        $this->assertBackofficeLogFields($log, '111111111', BackofficeApi::ACTION_PARTNER_BSN, BackofficeApi::STATE_SUCCESS);
+        $this->assertBackofficeLogFields($log, $bsn3, BackofficeApi::ACTION_PARTNER_BSN, BackofficeApi::STATE_SUCCESS);
     }
 
     /**
@@ -126,10 +150,14 @@ class BackofficeApiTest extends TestCase
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $voucher = $fund->makeVoucher(identity: $this->makeIdentity(), amount: 100);
+        $bsn = TestData::randomFakeBsn();
 
-        $this->setupBackofficeResponses($credentials);
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+        );
 
-        $voucher->identity->setBsnRecord('123456789');
+        $voucher->identity->setBsnRecord($bsn);
         $voucher->reportBackofficeReceived();
 
         $this->assertBackofficeLogFields(
@@ -180,10 +208,15 @@ class BackofficeApiTest extends TestCase
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $voucher = $fund->makeVoucher(identity: $this->makeIdentity(), amount: 100);
+        $bsn = TestData::randomFakeBsn();
 
-        $this->setupBackofficeResponses($credentials, showError: true);
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            showError: true,
+        );
 
-        $voucher->identity->setBsnRecord('123456789');
+        $voucher->identity->setBsnRecord($bsn);
         $voucher->reportBackofficeReceived();
 
         $this->assertBackofficeLogFields(
@@ -215,8 +248,11 @@ class BackofficeApiTest extends TestCase
             BackofficeApi::STATE_ERROR,
         );
 
-        $this->clearExistingFakes();
-        $this->setupBackofficeResponses($credentials, showMaintenance: true);
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+            showMaintenance: true,
+        );
 
         $this->travelTo(now()->addHours(8)->addMinutes(5));
         $this->artisan('funds.backoffice:send-logs');
@@ -229,8 +265,10 @@ class BackofficeApiTest extends TestCase
             BackofficeApi::STATE_ERROR,
         );
 
-        $this->clearExistingFakes();
-        $this->setupBackofficeResponses($credentials);
+        $this->setupBackofficeResponses(
+            $credentials,
+            fundKeys: [$fund->fund_config->key],
+        );
 
         $this->travelTo(now()->addHours(16)->addMinutes(10));
 
@@ -353,22 +391,5 @@ class BackofficeApiTest extends TestCase
 
         self::assertSame(503, $responseLog['response_code']);
         self::assertSame('Maintenance mode.', $responseLog['response_body']['message']);
-    }
-
-    /**
-     * Clears existing fake callbacks from the HTTP facade.
-     *
-     * This method uses reflection to access and reset the 'stubCallbacks' property
-     * of the HTTP facade's root object. It catches any exceptions that may occur
-     * during this process to prevent errors from propagating.
-     */
-    protected function clearExistingFakes(): void
-    {
-        try {
-            $reflection = new ReflectionObject(Http::getFacadeRoot());
-            $property = $reflection->getProperty('stubCallbacks');
-            $property->setValue(Http::getFacadeRoot(), collect());
-        } catch (Throwable) {
-        }
     }
 }

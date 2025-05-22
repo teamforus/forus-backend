@@ -182,6 +182,7 @@ return [
     'iban' => 'Vul een geldig IBAN-nummer in, bijvoorbeeld NL02ABNA0123456789',
     'iban_name' => 'De :attribute mag alleen letters, spaties en punten bevatten',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
+    'bsn' => 'Het :attribute moet een geldig burgerservicenummer (BSN) zijn.',
     'business_type_id' => 'Organisatie type',
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',

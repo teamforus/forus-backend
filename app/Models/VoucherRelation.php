@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $voucher_id
  * @property string|null $bsn
+ * @property string|null $report_type
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereReportType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation whereVoucherId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherRelation withTrashed()
@@ -34,11 +36,19 @@ class VoucherRelation extends Model
 {
     use SoftDeletes;
 
+    public const string REPORT_TYPE_USER = 'user';
+    public const string REPORT_TYPE_RELATION = 'relation';
+
+    public const array REPORT_TYPES = [
+        self::REPORT_TYPE_USER,
+        self::REPORT_TYPE_RELATION,
+    ];
+
     /**
      * @var string[]
      */
     protected $fillable = [
-        'voucher_id', 'bsn',
+        'voucher_id', 'bsn', 'report_type',
     ];
 
     /**
@@ -61,5 +71,15 @@ class VoucherRelation extends Model
         }
 
         return (bool) $this->voucher->assignToIdentity($identity);
+    }
+
+    /**
+     * Checks if the report type is set to relation.
+     *
+     * @return bool
+     */
+    public function isReportByRelation(): bool
+    {
+        return $this->report_type = self::REPORT_TYPE_RELATION;
     }
 }
