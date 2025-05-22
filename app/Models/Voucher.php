@@ -1436,14 +1436,18 @@ class Voucher extends BaseModel
      * Set voucher relation to bsn number.
      *
      * @param string $bsn
-     * @return VoucherRelation|\Illuminate\Database\Eloquent\Model
+     * @param string $reportType
+     * @return VoucherRelation|Model
      */
-    public function setBsnRelation(string $bsn): VoucherRelation|Model
+    public function setBsnRelation(string $bsn, string $reportType): VoucherRelation|Model
     {
         $this->voucher_relation()->delete();
 
         /** @var VoucherRelation $voucher_relation */
-        return $this->voucher_relation()->create(compact('bsn'));
+        return $this->voucher_relation()->create([
+            'bsn' => $bsn,
+            'report_type' => $reportType,
+        ]);
     }
 
     /**
@@ -1620,24 +1624,30 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param bool $onlyAssigned
      * @return FundBackofficeLog|null
      */
-    public function reportBackofficeReceived(): ?FundBackofficeLog
+    public function reportBackofficeReceived(bool $onlyAssigned = true): ?FundBackofficeLog
     {
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_id &&
+            (!$onlyAssigned || $this->identity_id) &&
             !$this->backoffice_log_received()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
             $eligibilityLog = $this->backoffice_log_eligible;
-            $bsn = $this->identity?->bsn;
+            $useRelationBsn = $this->voucher_relation?->isReportByRelation();
+            $bsn = $useRelationBsn ? $this->voucher_relation?->bsn : $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
-                $requestId = $eligibilityLog->response_id ?? null;
+                $requestId = $eligibilityLog?->response_id ?? null;
                 $backofficeLog = $backOffice->reportReceived($bsn, $requestId);
-                $backofficeLog->updateModel(['voucher_id' => $this->id]);
+
+                $backofficeLog->update([
+                    'voucher_id' => $this->id,
+                    'voucher_relation_id' => $useRelationBsn ? $this->voucher_relation?->id : null,
+                ]);
 
                 return $backofficeLog;
             }
@@ -1646,25 +1656,33 @@ class Voucher extends BaseModel
         return null;
     }
 
+
     /**
      * @return FundBackofficeLog|null
      */
     public function reportBackofficeFirstUse(): ?FundBackofficeLog
     {
+        $receivedLog = $this->backoffice_log_received;
+        $reportByRelation = $this?->voucher_relation?->isReportByRelation();
+        $onlyAssigned = !$reportByRelation;
+
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_id &&
+            (!$onlyAssigned || $this->identity_id) &&
             !$this->backoffice_log_first_use()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
-            $firstUseLog = $this->backoffice_log_first_use;
-            $bsn = $this->identity?->bsn;
+            $bsn = $reportByRelation ? $this?->voucher_relation?->bsn : $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
-                $requestId = $firstUseLog->response_id ?? null;
+                $requestId = $receivedLog->response_id ?? null;
                 $backofficeLog = $backOffice->reportFirstUse($bsn, $requestId);
-                $backofficeLog->update(['voucher_id' => $this->id]);
+
+                $backofficeLog->update([
+                    'voucher_id' => $this->id,
+                    'voucher_relation_id' => $reportByRelation ? $receivedLog?->voucher_relation?->id : null,
+                ]);
 
                 return $backofficeLog;
             }
