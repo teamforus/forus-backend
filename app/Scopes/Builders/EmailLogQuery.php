@@ -30,6 +30,7 @@ use App\Services\EventLogService\Models\EventLog;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class EmailLogQuery
 {
@@ -90,27 +91,33 @@ class EmailLogQuery
             FundRequestDisregardedMail::class,
             FundRequestClarificationRequestedMail::class,
         ])->whereHas('event_log', function (Builder $builder) use ($identity) {
+            $vouchers = $identity->vouchers()->select('id', 'product_reservation_id')->get();
+            $voucherIds = $vouchers->pluck('id')->all();
+
             $builder->where(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 Voucher::class,
-                $identity->vouchers(),
+                $voucherIds,
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 ProductReservation::class,
-                ProductReservation::whereIn('id', $identity->vouchers()->select('product_reservation_id')),
+                ProductReservation::whereIn(
+                    'id',
+                    $vouchers->pluck('product_reservation_id')->unique()->filter()->all()
+                )->pluck('id')->all(),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 Reimbursement::class,
-                Reimbursement::whereIn('voucher_id', $identity->vouchers()->select('id')),
+                Reimbursement::whereIn('voucher_id', $voucherIds)->pluck('id')->all(),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
                 $builder,
-                $identity->fund_requests(),
+                $identity->fund_requests()->pluck('id')->all(),
             ));
         });
     }
@@ -134,12 +141,12 @@ class EmailLogQuery
 
     /**
      * @param Builder|Relation $builder
-     * @param Builder|Relation $loggable
+     * @param Builder|Relation|int|array $loggable
      * @return Builder|Relation
      */
     protected static function eventsOfTypeFundRequestQuery(
         Builder|Relation $builder,
-        Builder|Relation $loggable,
+        mixed $loggable,
     ): Builder|Relation {
         return $builder->where(function (Builder $builder) use ($loggable) {
             $builder->where(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
@@ -148,7 +155,13 @@ class EmailLogQuery
                 $builder,
             ));
 
-            $recordIds = FundRequestRecord::whereIn('fund_request_id', $loggable->select('id'));
+            if ($loggable instanceof Builder ||
+                $loggable instanceof QBuilder ||
+                $loggable instanceof Relation) {
+                $recordIds = FundRequestRecord::whereIn('fund_request_id', $loggable->select('id'));
+            } else {
+                $recordIds = FundRequestRecord::whereIn('fund_request_id', (array) $loggable)->pluck('id')->all();
+            }
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 FundRequestRecord::class,
