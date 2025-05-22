@@ -129,6 +129,7 @@ return [
     'organization_fund' => [
         'wrong_categories' => 'Verkeerde categorieën.',
         'already_requested' => 'U heeft dit al een keer aangevraagd.',
+        'not_allowed' => 'Niet toegestaan.',
     ],
 
     'city_name' => 'Het lijkt erop dat de :attribute niet klopt.',
