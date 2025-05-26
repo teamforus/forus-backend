@@ -1629,8 +1629,12 @@ class Fund extends BaseModel
                 });
             });
 
-            $builder->whereHas('validations', function (Builder $builder) {
-                $builder->whereIn('identity_address', $this->validatorEmployees());
+            $daysTrusted = $this->getTrustedDays($this->isHashingBsn() ? 'bsn_hash' : 'bsn');
+            $startDate = $this->fund_config?->record_validity_start_date;
+
+            $builder->whereHas('validations', function (Builder $query) use ($daysTrusted, $startDate) {
+                RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
+                RecordValidationQuery::whereTrustedByQuery($query, $this);
             });
         })->exists();
     }
