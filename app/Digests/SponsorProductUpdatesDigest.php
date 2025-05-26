@@ -47,13 +47,12 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
 
         $emailBody->text(trans('digests.sponsor_product_updates.details', [
             'nr_changes' => $numberOfChanges,
-            'sponsor_dashboard_link' => Implementation::general()->urlProviderDashboard(),
         ]), ['text_center']);
 
         $emailBody->space();
 
         $emailBody->button_primary(
-            Implementation::general()->urlSponsorDashboard("/organisaties/$organization->id/producten?view=history"),
+            Implementation::general()->urlSponsorDashboard("/organisaties/$organization->id/sponsor/producten?view=history"),
             trans('digests.sponsor_product_updates.dashboard_button')
         );
 
