@@ -80,6 +80,6 @@ class VoucherRelation extends Model
      */
     public function isReportByRelation(): bool
     {
-        return $this->report_type = self::REPORT_TYPE_RELATION;
+        return $this->report_type == self::REPORT_TYPE_RELATION;
     }
 }
