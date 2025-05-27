@@ -33,6 +33,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
 use App\Models\VoucherTransaction;
+use App\Rules\BsnRule;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\FileService\Models\File;
@@ -963,22 +964,22 @@ class TestData
     }
 
     /**
-     * @throws Throwable
-     * @return int
+     * @return string
      */
-    public static function randomFakeBsn(): int
+    public static function randomFakeBsn(): string
     {
-        static $randomBsn = [];
+        static $generated = [];
+        static $rule = new BsnRule();
 
         do {
             try {
-                $bsn = random_int(100000000, 900000000);
+                $bsn = (string) random_int(10_000_000, 999_999_999);
             } catch (Throwable) {
-                $bsn = false;
+                continue;
             }
-        } while ($bsn && in_array($bsn, $randomBsn, true));
+        } while (!$rule->passes('bsn', $bsn) || in_array($bsn, $generated, true));
 
-        return $randomBsn[] = $bsn;
+        return $generated[] = $bsn;
     }
 
     /**

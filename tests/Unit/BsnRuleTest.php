@@ -29,8 +29,8 @@ class BsnRuleTest extends TestCase
         $this->assertTrue(Validation::check('6058012', [new BsnRule()])->fails());
         $this->assertTrue(Validation::check('', ['required', new BsnRule()])->fails());
 
-        $this->assertTrue(Validation::check('605801290', [new BsnRule()])->passes());
-        $this->assertTrue(Validation::check('60580129', [new BsnRule()])->passes());
+        $this->assertTrue(Validation::check('569657222', [new BsnRule()])->passes());
+        $this->assertTrue(Validation::check('834884148', [new BsnRule()])->passes());
         $this->assertTrue(Validation::check('', [new BsnRule()])->passes());
     }
 }
