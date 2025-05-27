@@ -83,7 +83,10 @@ trait ExportsFundsStatisticsTrait
             return;
         }
 
-        $fields = array_pluck(FundsExportDetailed::getExportFields(), 'name');
+        $fields = array_pluck(
+            FundsExportDetailed::getExportFields($fund->organization->hasPayoutFund()),
+            'name'
+        );
 
         $fields = array_values(array_filter(
             $fields,

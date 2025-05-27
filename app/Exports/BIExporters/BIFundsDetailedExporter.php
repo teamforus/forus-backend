@@ -26,7 +26,7 @@ class BIFundsDetailedExporter extends BaseBIExporter
             $activeFunds,
             Carbon::createFromFormat('Y', 2000),
             now()->endOfYear(),
-            FundsExportDetailed::getExportFieldsRaw(),
+            FundsExportDetailed::getExportFieldsRaw($this->organization->hasPayoutFund()),
         );
 
         return $data->collection()->toArray();

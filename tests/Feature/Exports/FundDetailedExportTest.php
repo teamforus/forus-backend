@@ -44,7 +44,7 @@ class FundDetailedExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $fields = $this->getExportFields();
+        $fields = $this->getExportFields($fund);
         $this->assertFields($response, $fund, $fields);
 
         // Assert with passed all fields
@@ -52,7 +52,7 @@ class FundDetailedExportTest extends TestCase
             'year' => now()->year,
             'detailed' => true,
             'data_format' => 'csv',
-            'fields' => FundsExportDetailed::getExportFieldsRaw(),
+            'fields' => FundsExportDetailed::getExportFieldsRaw($fund->organization->hasPayoutFund()),
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
@@ -74,12 +74,15 @@ class FundDetailedExportTest extends TestCase
     }
 
     /**
+     * @param Fund $fund
      * @return array
      */
-    protected function getExportFields(): array
+    protected function getExportFields(Fund $fund): array
     {
+        $hasPayoutFund = $fund->organization->hasPayoutFund();
+
         return array_values(array_filter(
-            array_pluck(FundsExportDetailed::getExportFields(), 'name'),
+            array_pluck(FundsExportDetailed::getExportFields($hasPayoutFund), 'name'),
             fn (string $field) => $field !== FundsExportDetailed::trans('budget_children_count')
         ));
     }

@@ -1090,4 +1090,19 @@ class Organization extends BaseModel
             ]);
         }
     }
+
+    /**
+     * @return bool
+     */
+    public function hasPayoutFund(): bool
+    {
+        $hasPayoutFund = $this
+            ->funds()
+            ->where('type', Fund::TYPE_BUDGET)
+            ->whereRelation('fund_config', [
+                'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
+            ]);
+
+        return $this->allow_payouts && $hasPayoutFund->exists();
+    }
 }
