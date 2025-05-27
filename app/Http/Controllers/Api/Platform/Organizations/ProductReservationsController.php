@@ -56,13 +56,10 @@ class ProductReservationsController extends Controller
 
         $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+            'order_by', 'order_dir',
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
-        return ProductReservationResource::collection($search->query()->with(
-            ProductReservationResource::load()
-        )->orderByDesc('product_reservations.created_at')->paginate(
-            $request->input('per_page')
-        ));
+        return ProductReservationResource::queryCollection($search->query());
     }
 
     /**

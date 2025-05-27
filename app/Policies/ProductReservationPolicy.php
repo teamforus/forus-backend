@@ -40,6 +40,19 @@ class ProductReservationPolicy
     }
 
     /**
+     * Determine whether the user can view any product reservations.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnySponsor(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'view_vouchers');
+    }
+
+    /**
      * Determine whether the user can view the product reservation.
      *
      * @param Identity $identity
