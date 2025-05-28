@@ -5,7 +5,6 @@ namespace App\Rules;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\Rule;
-use Predis\Command\Redis\STRLEN;
 
 class FundApplicableRule implements Rule
 {

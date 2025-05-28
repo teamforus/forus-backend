@@ -476,12 +476,12 @@ trait HasFrontendActions
      * @return void
      * @throws TimeoutException
      */
-    protected function goToProviderFundsList(
+    protected function goToProviderFundsPage(
         Browser $browser,
         ?string $tab = null,
         ?bool $skipPageNavigation = false,
     ): void {
-        if (!$skipPageNavigation ) {
+        if (!$skipPageNavigation) {
             $browser->waitFor('@asideMenuGroupSales');
             $browser->element('@asideMenuGroupSales')->click();
             $browser->waitFor('@fundsPage');

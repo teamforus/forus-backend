@@ -58,7 +58,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
                 $this->selectDashboardOrganization($browser, $provider);
 
-                $this->goToProviderFundsList($browser, 'funds_available');
+                $this->goToProviderFundsPage($browser, 'funds_available');
 
                 // assert visible in list and filters
                 $this->assertFundAvailability($browser, $fund, available: true);
@@ -69,7 +69,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
 
                 $browser->refresh();
                 // todo: remove when tab will be added to url
-                $this->goToProviderFundsList($browser, 'funds_available', skipPageNavigation: true);
+                $this->goToProviderFundsPage($browser, 'funds_available', skipPageNavigation: true);
 
                 // assert missing in list and in filters
                 $this->assertFundAvailability($browser, $fund, available: false);
@@ -83,7 +83,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
 
                 $browser->refresh();
                 // todo: remove when tab will be added to url
-                $this->goToProviderFundsList($browser, 'funds_available', skipPageNavigation: true);
+                $this->goToProviderFundsPage($browser, 'funds_available', skipPageNavigation: true);
 
                 $this->assertFundAvailability($browser, $fund, available: false);
                 $this->assertFundAvailability($browser, $fund2, available: true);
