@@ -161,7 +161,6 @@ class ProviderFundsAvailableTest extends DuskTestCase
         $browser->waitFor('@showFilters')->click('@showFilters');
         $this->assertOptionExistsInFilter($browser, '@selectControlImplementations', $fund->getImplementation()->name, $available);
         $this->assertOptionExistsInFilter($browser, '@selectControlOrganizations', $fund->getImplementation()->organization->name, $available);
-        $browser->waitFor('@showFilters')->click('@showFilters');
     }
 
     /**
