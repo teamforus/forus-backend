@@ -471,26 +471,27 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
-     * @throws TimeoutException
+     * @param string|null $tab
+     * @param bool|null $skipPageNavigation
      * @return void
+     * @throws TimeoutException
      */
-    protected function goToProviderFundsList(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupSales');
-        $browser->element('@asideMenuGroupSales')->click();
-        $browser->waitFor('@fundsPage');
-        $browser->element('@fundsPage')->click();
-    }
+    protected function goToProviderFundsList(
+        Browser $browser,
+        ?string $tab = null,
+        ?bool $skipPageNavigation = false,
+    ): void {
+        if (!$skipPageNavigation ) {
+            $browser->waitFor('@asideMenuGroupSales');
+            $browser->element('@asideMenuGroupSales')->click();
+            $browser->waitFor('@fundsPage');
+            $browser->element('@fundsPage')->click();
+        }
 
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function goToFundsAvailableList(Browser $browser): void
-    {
-        $browser->waitFor('@fundsAvailableTab');
-        $browser->element('@fundsAvailableTab')->click();
-        $browser->waitFor('@tableFundsAvailableContent');
+        if ($tab === 'funds_available') {
+            $browser->waitFor('@fundsAvailableTab');
+            $browser->element('@fundsAvailableTab')->click();
+            $browser->waitFor('@tableFundsAvailableContent');
+        }
     }
 }

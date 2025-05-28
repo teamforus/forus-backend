@@ -5,6 +5,7 @@ namespace App\Rules;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\Rule;
+use Predis\Command\Redis\STRLEN;
 
 class FundApplicableRule implements Rule
 {
@@ -30,21 +31,15 @@ class FundApplicableRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
-        $fundProvider = $this->organization->fund_providers()->where('fund_id', $value)->first();
-
-        if (!empty($fundProvider)) {
+        if ($this->organization->fund_providers()->where('fund_id', $value)->exists()) {
             $this->message = trans('validation.organization_fund.already_requested');
 
             return false;
         }
 
-        $fundExists = FundProvider::queryAvailableFunds($this->organization)
-            ->where('id', $value)
-            ->exists();
-
-        if (!$fundExists) {
+        if (!FundProvider::queryAvailableFunds($this->organization)->where('id', $value)->exists()) {
             $this->message = trans('validation.organization_fund.not_allowed');
 
             return false;
@@ -58,7 +53,7 @@ class FundApplicableRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->message;
     }

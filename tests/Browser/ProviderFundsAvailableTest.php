@@ -1,9 +1,11 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\Implementation;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
@@ -29,11 +31,12 @@ class ProviderFundsAvailableTest extends DuskTestCase
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $implementation = $this->makeTestImplementation($organization);
+        $fundTag = $this->faker->name;
+
         $fund = $this->makeTestFund(organization: $organization, fundConfigsData: [
             'allow_provider_sign_up' => true,
         ]);
 
-        $fundTag = $this->faker->name;
         $tag = $fund->tags()->firstOrCreate([
             'key' => Str::slug($fundTag),
             'scope' => 'provider',
@@ -55,26 +58,22 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
                 $this->selectDashboardOrganization($browser, $provider);
 
-                $this->goToProviderFundsList($browser);
-                $this->goToFundsAvailableList($browser);
+                $this->goToProviderFundsList($browser, 'funds_available');
 
                 // assert visible in list and filters
-                $this->searchTable($browser, '@tableFundsAvailable', $fund->name, $fund->id);
-                $browser->waitFor('@showFilters')->click('@showFilters');
-                $this->assertOptionExistsInFilter($browser, '@selectControlImplementations', $implementation->name);
-                $this->assertOptionExistsInFilter($browser, '@selectControlOrganizations', $implementation->organization->name);
+                $this->assertFundAvailability($browser, $fund, available: true);
+                $this->assertFundRelatedFiltersVisibility($browser, $fund, available: true);
                 $this->assertOptionExistsInFilter($browser, '@selectControlTags', $fund->tags->first()->name);
 
                 $fund->fund_config->update(['allow_provider_sign_up' => false]);
 
                 $browser->refresh();
-                $this->goToFundsAvailableList($browser);
+                // todo: remove when tab will be added to url
+                $this->goToProviderFundsList($browser, 'funds_available', skipPageNavigation: true);
 
                 // assert missing in list and in filters
-                $this->searchTable($browser, '@tableFundsAvailable', $fund->name, null, 0);
-                $browser->click('@showFilters');
-                $this->assertOptionExistsInFilter($browser, '@selectControlImplementations', $implementation->name, false);
-                $this->assertOptionExistsInFilter($browser, '@selectControlOrganizations', $implementation->organization->name, false);
+                $this->assertFundAvailability($browser, $fund, available: false);
+                $this->assertFundRelatedFiltersVisibility($browser, $fund, available: false);
                 $this->assertOptionExistsInFilter($browser, '@selectControlTags', $fund->tags->first()->name, false);
 
                 // create another fund that allow provider sign_up - assert implementation and organization exist in filters
@@ -83,16 +82,15 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 ]);
 
                 $browser->refresh();
-                $this->goToFundsAvailableList($browser);
+                // todo: remove when tab will be added to url
+                $this->goToProviderFundsList($browser, 'funds_available', skipPageNavigation: true);
 
-                $this->searchTable($browser, '@tableFundsAvailable', $fund->name, null, 0);
-                $this->searchTable($browser, '@tableFundsAvailable', $fund2->name, $fund2->id);
+                $this->assertFundAvailability($browser, $fund, available: false);
+                $this->assertFundAvailability($browser, $fund2, available: true);
+                $this->assertFundRelatedFiltersVisibility($browser, $fund, available: true);
 
-                $browser->click('@showFilters');
-                $this->assertOptionExistsInFilter($browser, '@selectControlImplementations', $implementation->name);
-                $this->assertOptionExistsInFilter($browser, '@selectControlOrganizations', $implementation->organization->name);
                 // assert tag from the first fund doesn't exist
-                $this->assertOptionExistsInFilter($browser, '@selectControlTags', $fund->tags->first()->name, false);
+                $this->assertOptionExistsInFilter($browser, '@selectControlTags', $fund->tags->first()->name, available: false);
 
                 // Logout
                 $this->logout($browser);
@@ -127,8 +125,8 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 $browser->assertMissing('@providerSignUpLink');
 
                 $fund->fund_config->update(['allow_provider_sign_up' => true]);
-                $browser->refresh();
 
+                $browser->refresh();
                 $browser->waitFor('@providerSignUpLink');
             });
         }, function () use ($fund, $organization) {
@@ -139,16 +137,49 @@ class ProviderFundsAvailableTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param string $selector
-     * @param string $text
-     * @param bool $exists
+     * @param Fund $fund
+     * @param bool $available
      * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
      * @return void
      */
-    protected function assertOptionExistsInFilter(Browser $browser, string $selector, string $text, bool $exists = true): void
+    protected function assertFundAvailability(Browser $browser, Fund $fund, bool $available): void
     {
+        $this->searchTable($browser, '@tableFundsAvailable', $fund->name, $fund->id, $available ? 1 : 0);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Fund $fund
+     * @param bool $available
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertFundRelatedFiltersVisibility(Browser $browser, Fund $fund, bool $available): void
+    {
+        $browser->waitFor('@showFilters')->click('@showFilters');
+        $this->assertOptionExistsInFilter($browser, '@selectControlImplementations', $fund->getImplementation()->name, $available);
+        $this->assertOptionExistsInFilter($browser, '@selectControlOrganizations', $fund->getImplementation()->organization->name, $available);
+        $browser->waitFor('@showFilters')->click('@showFilters');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string $text
+     * @param bool $available
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function assertOptionExistsInFilter(
+        Browser $browser,
+        string $selector,
+        string $text,
+        bool $available = true,
+    ): void {
         $browser->waitFor("{$selector}Toggle");
 
         $elements = $browser->elements($selector);
@@ -158,7 +189,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
 
         $browser->waitFor($selector);
         $browser->click("$selector .select-control-search");
-        $this->findOptionElement($browser, $selector, $text, $exists);
+        $this->findOptionElement($browser, $selector, $text, $available);
         $browser->click("{$selector}Toggle");
     }
 }

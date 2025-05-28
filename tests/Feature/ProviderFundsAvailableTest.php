@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Fund;
+use App\Models\Organization;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -26,12 +28,13 @@ class ProviderFundsAvailableTest extends TestCase
     {
         // make organization and fund which has allow_provider_sign_up = true
         $organization = $this->makeTestOrganization($this->makeIdentity());
-        $this->makeTestImplementation($organization);
+        $provider = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
+        $fundTag = $this->faker->name;
+
         $fund = $this->makeTestFund(organization: $organization, fundConfigsData: [
             'allow_provider_sign_up' => true,
         ]);
 
-        $fundTag = $this->faker->name;
         $tag = $fund->tags()->firstOrCreate([
             'key' => Str::slug($fundTag),
             'scope' => 'provider',
@@ -41,37 +44,26 @@ class ProviderFundsAvailableTest extends TestCase
             'name' => $fundTag,
         ])->save();
 
-        // make provider and proxy for requests
-        $provider = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
-        $proxy = $this->makeIdentityProxy($provider->identity);
-        $headers = $this->makeApiHeaders($proxy);
+        $this->makeTestImplementation($organization);
 
         // assert fund exists in a list of funds available for provider, and meta contains organization, implementation and tag
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$provider->id/provider/funds-available?per_page=100",
-            $headers
-        );
-
-        $response->assertSuccessful();
-        $this->assertTrue(in_array($fund->id, Arr::pluck($response->json('data'), 'id')));
-        $this->assertTrue(in_array($organization->id, Arr::pluck($response->json('meta.organizations'), 'id')));
-        $this->assertTrue(in_array($fund->getImplementation()->id, Arr::pluck($response->json('meta.implementations'), 'id')));
-        $this->assertTrue(in_array($fund->tags()->first()->id, Arr::pluck($response->json('meta.tags'), 'id')));
+        $this->makeProviderAvailableFundsRequest($provider)
+            ->assertSuccessful()
+            ->assertJsonPath('data.*.id', fn ($ids) => in_array($fund->id, $ids))
+            ->assertJsonPath('meta.organizations.*.id', fn ($ids) => in_array($organization->id, $ids))
+            ->assertJsonPath('meta.implementations.*.id', fn ($ids) => in_array($fund->getImplementation()->id, $ids))
+            ->assertJsonPath('meta.tags.*.id', fn ($ids) => in_array($fund->tags()->first()->id, $ids));
 
         // assert fund doesn't exists in a list of funds available for provider as allow_provider_sign_up = false
         // and meta doesn't contains organization, implementation and tag
         $fund->fund_config->update(['allow_provider_sign_up' => false]);
 
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$provider->id/provider/funds-available?per_page=100",
-            $headers
-        );
-
-        $response->assertSuccessful();
-        $this->assertFalse(in_array($fund->id, Arr::pluck($response->json('data'), 'id')));
-        $this->assertFalse(in_array($organization->id, Arr::pluck($response->json('meta.organizations'), 'id')));
-        $this->assertFalse(in_array($fund->getImplementation()->id, Arr::pluck($response->json('meta.implementations'), 'id')));
-        $this->assertFalse(in_array($fund->tags()->first()->id, Arr::pluck($response->json('meta.tags'), 'id')));
+        $this->makeProviderAvailableFundsRequest($provider)
+            ->assertSuccessful()
+            ->assertJsonPath('data.*.id', fn ($ids) => ! in_array($fund->id, $ids))
+            ->assertJsonPath('meta.organizations.*.id', fn ($ids) => !in_array($organization->id, $ids))
+            ->assertJsonPath('meta.implementations.*.id', fn ($ids) => !in_array($fund->getImplementation()->id, $ids))
+            ->assertJsonPath('meta.tags.*.id', fn ($ids) => ! in_array($fund->tags()->first()->id, $ids));
 
         // create new fund (fund2) for current sponsor and assert fund doesn't exists in a list but fund2 exists
         // and meta contains organization and implementation (as one of sponsor funds is available)
@@ -80,35 +72,46 @@ class ProviderFundsAvailableTest extends TestCase
             'allow_provider_sign_up' => true,
         ]);
 
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$provider->id/provider/funds-available?per_page=100",
-            $headers
-        );
-
-        $response->assertSuccessful();
-        $this->assertFalse(in_array($fund->id, Arr::pluck($response->json('data'), 'id')));
-        $this->assertTrue(in_array($fund2->id, Arr::pluck($response->json('data'), 'id')));
-        $this->assertTrue(in_array($organization->id, Arr::pluck($response->json('meta.organizations'), 'id')));
-        $this->assertTrue(in_array($fund->getImplementation()->id, Arr::pluck($response->json('meta.implementations'), 'id')));
-        $this->assertFalse(in_array($fund->tags()->first()->id, Arr::pluck($response->json('meta.tags'), 'id')));
+        $this->makeProviderAvailableFundsRequest($provider)
+            ->assertSuccessful()
+            ->assertJsonPath('data.*.id', fn ($ids) => !in_array($fund->id, $ids))
+            ->assertJsonPath('data.*.id', fn ($ids) => in_array($fund2->id, $ids))
+            ->assertJsonPath('meta.organizations.*.id', fn ($ids) => in_array($organization->id, $ids))
+            ->assertJsonPath('meta.implementations.*.id', fn ($ids) => in_array($fund->getImplementation()->id, $ids))
+            ->assertJsonPath('meta.tags.*.id', fn ($ids) => !in_array($fund->tags()->first()->id, $ids));
 
         // assert apply for fund with valid and invalid fund_id
-        $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/provider/funds",
-            [],
-            $headers
-        )->assertJsonValidationErrors(['fund_id']);
+        $this->makeFundApplyRequest($provider, fund: null)->assertJsonValidationErrors('fund_id');
+        $this->makeFundApplyRequest($provider, fund: $fund)->assertJsonValidationErrors('fund_id');
+        $this->makeFundApplyRequest($provider, fund: $fund2)->assertSuccessful();
+    }
 
-        $this->postJson(
-            "/api/v1/platform/organizations/$provider->id/provider/funds",
-            ['fund_id' => $fund->id],
-            $headers
-        )->assertJsonValidationErrors(['fund_id']);
+    /**
+     * Makes a GET request to retrieve available funds for a provider.
+     *
+     * @param Organization $provider The provider model.
+     * @return TestResponse The response from the API call.
+     */
+    protected function makeProviderAvailableFundsRequest(Organization $provider): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$provider->id/provider/funds-available?per_page=100",
+            $this->makeApiHeaders($provider->identity),
+        );
+    }
 
-        $this->postJson(
+    /**
+     * Makes a POST request to apply funds for a provider.
+     *
+     * @param Organization $provider The provider model.
+     * @return TestResponse The response from the API call.
+     */
+    protected function makeFundApplyRequest(Organization $provider, ?Fund $fund): TestResponse
+    {
+        return $this->postJson(
             "/api/v1/platform/organizations/$provider->id/provider/funds",
-            ['fund_id' => $fund2->id],
-            $headers
-        )->assertSuccessful();
+            ['fund_id' => $fund?->id],
+            $this->makeApiHeaders($provider->identity),
+        );
     }
 }
