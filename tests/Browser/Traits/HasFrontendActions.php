@@ -85,6 +85,32 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string|null $tab
+     * @param bool|null $skipPageNavigation
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToProviderFundsPage(
+        Browser $browser,
+        ?string $tab = null,
+        ?bool $skipPageNavigation = false,
+    ): void {
+        if (!$skipPageNavigation) {
+            $browser->waitFor('@asideMenuGroupSales');
+            $browser->element('@asideMenuGroupSales')->click();
+            $browser->waitFor('@fundsPage');
+            $browser->element('@fundsPage')->click();
+        }
+
+        if ($tab === 'funds_available') {
+            $browser->waitFor('@fundsAvailableTab');
+            $browser->element('@fundsAvailableTab')->click();
+            $browser->waitFor('@tableFundsAvailableContent');
+        }
+    }
+
+    /**
+     * @param Browser $browser
      * @param Identity $identity
      * @return void
      */
@@ -309,7 +335,7 @@ trait HasFrontendActions
         int $expected = 1,
     ): void {
         $browser->waitFor($selector . 'Search');
-        $browser->typeSlowly($selector . 'Search', $value, .1);
+        $browser->typeSlowly($selector . 'Search', $value, 50);
 
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");
@@ -467,31 +493,5 @@ trait HasFrontendActions
         $browser->waitFor('@vouchersPage');
         $browser->element('@vouchersPage')->click();
         $browser->waitFor('@vouchersTitle');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string|null $tab
-     * @param bool|null $skipPageNavigation
-     * @return void
-     * @throws TimeoutException
-     */
-    protected function goToProviderFundsPage(
-        Browser $browser,
-        ?string $tab = null,
-        ?bool $skipPageNavigation = false,
-    ): void {
-        if (!$skipPageNavigation) {
-            $browser->waitFor('@asideMenuGroupSales');
-            $browser->element('@asideMenuGroupSales')->click();
-            $browser->waitFor('@fundsPage');
-            $browser->element('@fundsPage')->click();
-        }
-
-        if ($tab === 'funds_available') {
-            $browser->waitFor('@fundsAvailableTab');
-            $browser->element('@fundsAvailableTab')->click();
-            $browser->waitFor('@tableFundsAvailableContent');
-        }
     }
 }
