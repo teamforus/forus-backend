@@ -48,9 +48,10 @@ class Redirect extends Model
             return url($this->url, $params);
         }
 
-        return $this->implementation?->urlFrontend($this->client_type, $this->getTargetUri(), array_merge([
+        return $this->implementation?->urlFrontend($this->client_type, $this->getRedirectUri(), [
             'target' => $this->target,
-        ], $params));
+            ...$params,
+        ]);
     }
 
     /**
@@ -64,7 +65,7 @@ class Redirect extends Model
     /**
      * @return string
      */
-    private function getTargetUri(): string
+    private function getRedirectUri(): string
     {
         return '/redirect';
     }

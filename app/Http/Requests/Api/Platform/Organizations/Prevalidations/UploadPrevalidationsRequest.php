@@ -27,7 +27,7 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('store', [Prevalidation::class, $this->organization]);
+        return Gate::allows('create', [Prevalidation::class, $this->organization]);
     }
 
     /**

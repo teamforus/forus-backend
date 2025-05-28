@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Models\VoucherRelation;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Scopes\Builders\FundQuery;
@@ -39,6 +40,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'assign_by_type' => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'activation_code' => 'boolean',
             'limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+            'report_type' => ['nullable', Rule::in(VoucherRelation::REPORT_TYPES)],
         ];
     }
 
