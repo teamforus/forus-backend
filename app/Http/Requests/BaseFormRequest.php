@@ -21,7 +21,6 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     use ThrottleWithMeta;
 
     protected string $message;
-    protected Implementation|null $implementationModel = null;
 
     /**
      * @return array
