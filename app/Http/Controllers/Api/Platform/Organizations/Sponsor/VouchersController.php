@@ -24,6 +24,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Models\VoucherRelation;
 use App\Scopes\Builders\VoucherSubQuery;
 use Carbon\Carbon;
 use Exception;
@@ -58,13 +59,12 @@ class VouchersController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Stores a new voucher for the given organization.
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @throws AuthorizationException|Exception
      * @return SponsorVoucherResource
-     * @noinspection PhpUnused
+     * @throws AuthorizationException|Exception
      */
     public function store(
         StoreVoucherRequest $request,
@@ -85,6 +85,9 @@ class VouchersController extends Controller
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
 
+        $bsn = $request->input('bsn', false);
+        $report_type = $request->input('report_type', VoucherRelation::REPORT_TYPE_USER);
+
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $extraFields = compact('note', 'employee_id');
         $productVouchers = [];
@@ -102,8 +105,8 @@ class VouchersController extends Controller
         $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
         foreach ($vouchers as $voucher) {
-            if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
-                $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
+            if ($organization->bsn_enabled && $bsn) {
+                $voucher->setBsnRelation($bsn, $report_type)->assignByBsnIfExists();
             }
 
             if (!$voucher->is_granted) {
@@ -120,6 +123,10 @@ class VouchersController extends Controller
                 $voucher->update([
                     'client_uid' => $client_uid,
                 ]);
+            }
+
+            if ($voucher->voucher_relation?->bsn && $voucher->voucher_relation?->isReportByRelation()) {
+                $voucher->reportBackofficeReceived(onlyAssigned: false);
             }
         }
 
@@ -198,7 +205,9 @@ class VouchersController extends Controller
 
             foreach ($vouchers as $voucherModel) {
                 if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
-                    $voucherModel->setBsnRelation((string) $bsn)->assignByBsnIfExists();
+                    $voucherModel
+                        ->setBsnRelation((string) $bsn, VoucherRelation::REPORT_TYPE_USER)
+                        ->assignByBsnIfExists();
                 }
 
                 if (!$voucherModel->is_granted) {
@@ -287,7 +296,7 @@ class VouchersController extends Controller
         if ($email) {
             $voucher->assignToIdentity(Identity::findOrMake($email));
         } elseif ($organization->bsn_enabled && $bsn) {
-            $voucher->setBsnRelation($bsn)->assignByBsnIfExists();
+            $voucher->setBsnRelation($bsn, VoucherRelation::REPORT_TYPE_USER)->assignByBsnIfExists();
         }
 
         return SponsorVoucherResource::create($voucher);
