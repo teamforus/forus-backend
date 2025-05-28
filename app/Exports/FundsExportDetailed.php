@@ -51,7 +51,9 @@ class FundsExportDetailed extends BaseFieldedExport
     /**
      * @var array|string[]
      */
-    protected static array $payoutVoucherOnlyKeys = ['payout_vouchers_amount'];
+    protected static array $exportFieldsPayouts = [
+        'payout_vouchers_amount',
+    ];
 
     /**
      * @var array[]
@@ -108,13 +110,7 @@ class FundsExportDetailed extends BaseFieldedExport
      */
     public static function getExportFields(bool $withPayoutFields = true): array
     {
-        $fields = $withPayoutFields
-            ? static::$exportFields
-            : array_filter(static::$exportFields, static function (string $item) {
-                return !in_array($item, static::$payoutVoucherOnlyKeys);
-            });
-
-        return array_reduce($fields, fn ($list, $key) => array_merge($list, [[
+        return array_reduce(self::getExportFieldsRaw($withPayoutFields), fn ($list, $key) => array_merge($list, [[
             'key' => $key,
             'name' => static::trans($key),
         ]]), []);
@@ -128,9 +124,7 @@ class FundsExportDetailed extends BaseFieldedExport
     {
         return $withPayoutFields
             ? static::$exportFields
-            : array_filter(static::$exportFields, static function (string $item) {
-                return !in_array($item, static::$payoutVoucherOnlyKeys);
-            });
+            : array_filter(static::$exportFields, fn (string $item) => !in_array($item, static::$exportFieldsPayouts));
     }
 
     /**

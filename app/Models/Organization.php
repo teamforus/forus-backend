@@ -1094,15 +1094,13 @@ class Organization extends BaseModel
     /**
      * @return bool
      */
-    public function hasPayoutFund(): bool
+    public function hasPayoutFunds(): bool
     {
-        $hasPayoutFund = $this
+        $payoutFundsQuery = $this
             ->funds()
             ->where('type', Fund::TYPE_BUDGET)
-            ->whereRelation('fund_config', [
-                'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
-            ]);
+            ->whereRelation('fund_config', 'outcome_type', FundConfig::OUTCOME_TYPE_PAYOUT);
 
-        return $this->allow_payouts && $hasPayoutFund->exists();
+        return $this->allow_payouts && $payoutFundsQuery->exists();
     }
 }

@@ -84,7 +84,7 @@ trait ExportsFundsStatisticsTrait
         }
 
         $fields = array_pluck(
-            FundsExportDetailed::getExportFields($fund->organization->hasPayoutFund()),
+            FundsExportDetailed::getExportFields($fund->organization->hasPayoutFunds()),
             'name'
         );
 

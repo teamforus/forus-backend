@@ -405,7 +405,7 @@ class FundsController extends Controller
 
         return ExportFieldArrResource::collection(
             $detailed
-                ? FundsExportDetailed::getExportFields($organization->hasPayoutFund())
+                ? FundsExportDetailed::getExportFields($organization->hasPayoutFunds())
                 : FundsExport::getExportFields()
         );
     }
@@ -437,8 +437,8 @@ class FundsController extends Controller
 
         if ($detailed) {
             $budgetFunds = $organization->funds()->where('type', Fund::TYPE_BUDGET)->get();
-            $hasPayoutFund = $organization->hasPayoutFund();
-            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw($hasPayoutFund));
+            $hasPayoutFunds = $organization->hasPayoutFunds();
+            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw($hasPayoutFunds));
             $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);
         } else {
             $fields = $request->input('fields', FundsExport::getExportFieldsRaw());

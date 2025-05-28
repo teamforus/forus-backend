@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\FundStatisticsOverview;
+namespace Tests\Feature\FundStatisticsOverview;
 
 use App\Models\Data\BankAccount;
 use App\Models\Fund;

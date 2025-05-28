@@ -130,22 +130,18 @@ class FinancialOverviewStatistic
     }
 
     /**
-     * @param Voucher|Builder|Relation $vouchersQuery
+     * @param Builder|Relation|Voucher $vouchersQuery
      * @param Carbon|null $from
      * @param Carbon|null $to
      * @return array
      */
     public static function getFundPayoutDetails(
-        Voucher|Builder|Relation $vouchersQuery,
+        Builder|Relation|Voucher $vouchersQuery,
         ?Carbon $from,
         ?Carbon $to,
     ): array {
-        /** @var Voucher|Builder|Relation $vouchersQuery */
         $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($vouchersQuery, $from, $to);
-
-        $vouchersQuery->whereHas('transactions', function (Builder $builder) {
-            $builder->where('state', VoucherTransaction::STATE_SUCCESS);
-        });
+        $vouchersQuery->whereRelation('transactions', 'state', VoucherTransaction::STATE_SUCCESS);
 
         return [
             'vouchers_amount' => $vouchersQuery->sum('amount'),
