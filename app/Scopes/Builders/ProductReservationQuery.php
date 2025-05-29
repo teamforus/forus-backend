@@ -60,11 +60,11 @@ class ProductReservationQuery
      */
     public static function whereSponsorFilter(
         Builder|Relation|ProductReservation $query,
-        mixed $organization,
+        int|array|Builder $organization,
     ): Builder|Relation|ProductReservation {
         return $query->where(function (Builder $builder) use ($organization) {
             $builder->whereHas('voucher.fund', function (Builder $builder) use ($organization) {
-                $builder->whereIn('organization_id', (array) $organization);
+                $builder->whereIn('organization_id', is_numeric($organization) ? [$organization] : $organization);
             });
         });
     }
