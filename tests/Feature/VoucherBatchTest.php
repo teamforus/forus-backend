@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -137,7 +138,7 @@ class VoucherBatchTest extends TestCase
 
             $vouchersBuilder = $this->getVouchersBuilder($fund, $startDate, $assert['type'] ?? 'budget');
             $this->assertVouchersCreated($vouchersBuilder, $startDate, $data['vouchers'], $assert);
-            $vouchersBuilder->delete();
+            $vouchersBuilder->each(fn (Voucher $voucher) => $this->deleteVoucher($voucher));
         } else {
             $validateResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
             $uploadResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);

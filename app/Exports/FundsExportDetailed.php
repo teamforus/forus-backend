@@ -8,6 +8,7 @@ use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
@@ -43,6 +44,15 @@ class FundsExportDetailed extends BaseFieldedExport
         'product_vouchers_active_amount',
         'product_vouchers_inactive_amount',
         'product_vouchers_deactivated_amount',
+
+        'payout_vouchers_amount',
+    ];
+
+    /**
+     * @var array|string[]
+     */
+    protected static array $exportFieldsPayouts = [
+        'payout_vouchers_amount',
     ];
 
     /**
@@ -62,6 +72,7 @@ class FundsExportDetailed extends BaseFieldedExport
             'product_vouchers_active_amount',
             'product_vouchers_inactive_amount',
             'product_vouchers_deactivated_amount',
+            'payout_vouchers_amount',
         ],
         NumberFormat::FORMAT_PERCENTAGE_00 => [
             'budget_total_spent_percentage',
@@ -91,6 +102,29 @@ class FundsExportDetailed extends BaseFieldedExport
         protected array $fields
     ) {
         $this->data = $this->export($funds);
+    }
+
+    /**
+     * @param bool $withPayoutFields
+     * @return array
+     */
+    public static function getExportFields(bool $withPayoutFields = true): array
+    {
+        return array_reduce(self::getExportFieldsRaw($withPayoutFields), fn ($list, $key) => array_merge($list, [[
+            'key' => $key,
+            'name' => static::trans($key),
+        ]]), []);
+    }
+
+    /**
+     * @param bool $withPayoutFields
+     * @return array
+     */
+    public static function getExportFieldsRaw(bool $withPayoutFields = true): array
+    {
+        return $withPayoutFields
+            ? static::$exportFields
+            : array_filter(static::$exportFields, fn (string $item) => !in_array($item, static::$exportFieldsPayouts));
     }
 
     /**
@@ -130,6 +164,7 @@ class FundsExportDetailed extends BaseFieldedExport
         $detailsByType = [
             'budget' => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
             'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
+            'payout' => FinancialOverviewStatistic::getFundPayoutDetails($fund->payout_vouchers()->getQuery(), $this->from, $this->to),
         ];
 
         $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
@@ -176,10 +211,10 @@ class FundsExportDetailed extends BaseFieldedExport
             }
 
             $voucherData = array_merge($voucherData, [
-                "{$type}_vouchers_amount" => currency_format($details['vouchers_amount']),
-                "{$type}_vouchers_active_amount" => currency_format($details['active_amount']),
-                "{$type}_vouchers_inactive_amount" => currency_format($details['inactive_amount']),
-                "{$type}_vouchers_deactivated_amount" => currency_format($details['deactivated_amount']),
+                "{$type}_vouchers_amount" => currency_format(Arr::get($details, 'vouchers_amount', 0)),
+                "{$type}_vouchers_active_amount" => currency_format(Arr::get($details, 'active_amount', 0)),
+                "{$type}_vouchers_inactive_amount" => currency_format(Arr::get($details, 'inactive_amount', 0)),
+                "{$type}_vouchers_deactivated_amount" => currency_format(Arr::get($details, 'deactivated_amount', 0)),
             ]);
         }
 
