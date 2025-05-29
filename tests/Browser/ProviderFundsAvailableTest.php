@@ -144,7 +144,13 @@ class ProviderFundsAvailableTest extends DuskTestCase
      */
     protected function assertFundAvailability(Browser $browser, Fund $fund, bool $available): void
     {
-        $this->searchTable($browser, '@tableFundsAvailable', $fund->name, $fund->id, $available ? 1 : 0);
+        $this->searchTable(
+            $browser,
+            selector: '@tableFundsAvailable',
+            value: $fund->name,
+            id: $available ? $fund->id : null,
+            expected: $available ? 1 : 0,
+        );
     }
 
     /**
