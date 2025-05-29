@@ -23,6 +23,7 @@ use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
@@ -37,12 +38,18 @@ class EmailLogQuery
     /**
      * @param Builder|Relation|EmailLog $builder
      * @param FundRequest $fundRequest
+     * @param ?Organization $organization
      * @return Builder|Relation|EmailLog
      */
     public static function whereFundRequest(
         Builder|Relation|EmailLog $builder,
         FundRequest $fundRequest,
+        ?Organization $organization,
     ): Builder|Relation|EmailLog {
+        $fundRequestsQuery = FundRequest::query()
+            ->where('id', $fundRequest->id)
+            ->whereRelation('fund', 'organization_id', $organization->id);
+
         return $builder->whereIn('mailable', [
             FundRequestDeniedMail::class,
             FundRequestCreatedMail::class,
@@ -51,18 +58,20 @@ class EmailLogQuery
             FundRequestClarificationRequestedMail::class,
         ])->whereHas('event_log', fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
             $builder,
-            FundRequest::where('id', $fundRequest->id),
+            $fundRequestsQuery,
         ));
     }
 
     /**
      * @param Builder|Relation|EmailLog $builder
      * @param Identity $identity
+     * @param ?Organization $organization
      * @return Builder|Relation|EmailLog
      */
     public static function whereIdentity(
         Builder|Relation|EmailLog $builder,
         Identity $identity,
+        ?Organization $organization,
     ): Builder|Relation|EmailLog {
         return $builder->whereIn('mailable', [
             // Voucher
@@ -90,34 +99,40 @@ class EmailLogQuery
             FundRequestApprovedMail::class,
             FundRequestDisregardedMail::class,
             FundRequestClarificationRequestedMail::class,
-        ])->whereHas('event_log', function (Builder $builder) use ($identity) {
-            $vouchers = $identity->vouchers()->select('id', 'product_reservation_id')->get();
-            $voucherIds = $vouchers->pluck('id')->all();
+        ])->whereHas('event_log', function (Builder $builder) use ($identity, $organization) {
+            $vouchersQuery = $identity->vouchers();
+            $fundRequestsQuery = $identity->fund_requests();
+            $reservationsQuery = $identity->product_reservations();
+            $reimbursementsQuery = $identity->reimbursements();
+
+            if ($organization) {
+                $vouchersQuery->whereRelation('fund', 'organization_id', $organization->id);
+                $reservationsQuery->whereRelation('voucher.fund', 'organization_id', $organization->id);
+                $fundRequestsQuery->whereRelation('fund', 'organization_id', $organization->id);
+                $reimbursementsQuery->whereRelation('voucher.fund', 'organization_id', $organization->id);
+            }
 
             $builder->where(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 Voucher::class,
-                $voucherIds,
+                $vouchersQuery->pluck('vouchers.id')->unique()->toArray(),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 ProductReservation::class,
-                ProductReservation::whereIn(
-                    'id',
-                    $vouchers->pluck('product_reservation_id')->unique()->filter()->all()
-                )->pluck('id')->all(),
+                $reservationsQuery->pluck('product_reservations.id')->unique()->toArray(),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => EventLog::eventsOfTypeQuery(
                 Reimbursement::class,
-                Reimbursement::whereIn('voucher_id', $voucherIds)->pluck('id')->all(),
+                $reimbursementsQuery->pluck('reimbursements.id')->unique()->toArray(),
                 $builder,
             ));
 
             $builder->orWhere(fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
                 $builder,
-                $identity->fund_requests()->pluck('id')->all(),
+                $fundRequestsQuery->pluck('fund_requests.id')->unique()->toArray(),
             ));
         });
     }
