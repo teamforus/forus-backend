@@ -54,6 +54,8 @@ use Illuminate\Support\Arr;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_note
+ * @property string|null $reservation_note_text
  * @property string $reservation_extra_payments
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -125,6 +127,8 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Product whereReservationEnabled($value)
  * @method static Builder<static>|Product whereReservationExtraPayments($value)
  * @method static Builder<static>|Product whereReservationFields($value)
+ * @method static Builder<static>|Product whereReservationNote($value)
+ * @method static Builder<static>|Product whereReservationNoteText($value)
  * @method static Builder<static>|Product whereReservationPhone($value)
  * @method static Builder<static>|Product whereReservationPolicy($value)
  * @method static Builder<static>|Product whereShowOnWebshop($value)
@@ -169,6 +173,7 @@ class Product extends BaseModel
     public const string RESERVATION_FIELD_REQUIRED = 'required';
     public const string RESERVATION_FIELD_OPTIONAL = 'optional';
     public const string RESERVATION_FIELD_GLOBAL = 'global';
+    public const string RESERVATION_FIELD_CUSTOM = 'custom';
     public const string RESERVATION_FIELD_NO = 'no';
 
     public const string RESERVATION_EXTRA_PAYMENT_GLOBAL = 'global';
@@ -180,6 +185,12 @@ class Product extends BaseModel
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_GLOBAL,
         self::RESERVATION_FIELD_NO,
+    ];
+
+    public const array RESERVATION_NOTE_PRODUCT_OPTIONS = [
+        self::RESERVATION_FIELD_GLOBAL,
+        self::RESERVATION_FIELD_NO,
+        self::RESERVATION_FIELD_CUSTOM,
     ];
 
     public const array RESERVATION_FIELDS_ORGANIZATION = [
@@ -227,7 +238,7 @@ class Product extends BaseModel
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
-        'reservation_fields', 'sku', 'ean',
+        'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
     ];
 
     /**
@@ -426,6 +437,22 @@ class Product extends BaseModel
         }
 
         return $this->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getReservationNoteValue(): ?string
+    {
+        if ($this->reservation_note === self::RESERVATION_FIELD_GLOBAL) {
+            return $this->organization->reservation_note
+                ? $this->organization->reservation_note_text
+                : null;
+        }
+
+        return $this->reservation_note === self::RESERVATION_FIELD_CUSTOM
+            ? $this->reservation_note_text
+            : null;
     }
 
     /**
@@ -940,7 +967,7 @@ class Product extends BaseModel
                 'name', 'description', 'price', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean',
+                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -984,7 +1011,7 @@ class Product extends BaseModel
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean',
+                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',

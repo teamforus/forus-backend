@@ -43,6 +43,20 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
             'fields.*.type' => trans('validation.attributes.type'),
             'fields.*.label' => trans('validation.attributes.label'),
             'fields.*.description' => trans('validation.attributes.description'),
+            'reservation_note' => trans('validation.attributes.reservation_note'),
+            'reservation_note_text' => trans('validation.attributes.reservation_note_text'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'reservation_note_text.required_if_accepted' => trans('validation.required', [
+                'attribute' => trans('validation.attributes.reservation_note_text'),
+            ]),
         ];
     }
 

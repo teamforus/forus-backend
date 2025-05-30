@@ -239,6 +239,7 @@ class OrganizationsController extends Controller
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date',
+            'reservation_note', 'reservation_note_text',
             ...$allowExtraPayments ? ['reservation_allow_extra_payments'] : [],
         ])));
 
