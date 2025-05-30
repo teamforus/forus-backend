@@ -85,6 +85,32 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string|null $tab
+     * @param bool|null $skipPageNavigation
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToProviderFundsPage(
+        Browser $browser,
+        ?string $tab = null,
+        ?bool $skipPageNavigation = false,
+    ): void {
+        if (!$skipPageNavigation) {
+            $browser->waitFor('@asideMenuGroupSales');
+            $browser->element('@asideMenuGroupSales')->click();
+            $browser->waitFor('@fundsPage');
+            $browser->element('@fundsPage')->click();
+        }
+
+        if ($tab === 'funds_available') {
+            $browser->waitFor('@fundsAvailableTab');
+            $browser->element('@fundsAvailableTab')->click();
+            $browser->waitFor('@tableFundsAvailableContent');
+        }
+    }
+
+    /**
+     * @param Browser $browser
      * @param Identity $identity
      * @return void
      */
@@ -160,10 +186,15 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param string $selector
      * @param string $title
+     * @param bool $assertExists
      * @return RemoteWebElement|null
      */
-    private function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
-    {
+    private function findOptionElement(
+        Browser $browser,
+        string $selector,
+        string $title,
+        bool $assertExists = true
+    ): ?RemoteWebElement {
         $option = null;
 
         $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
@@ -172,7 +203,9 @@ trait HasFrontendActions
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
         });
 
-        $this->assertNotNull($option);
+        $assertExists
+            ? $this->assertNotNull($option, "Option $title not found in $selector.")
+            : $this->assertNull($option, "Option $title found in $selector.");
 
         return $option;
     }

@@ -524,7 +524,7 @@ class Fund extends BaseModel
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
-            'pre_check_excluded', 'pre_check_note',
+            'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

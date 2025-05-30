@@ -50,6 +50,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_custom_amounts_validator
  * @property bool $allow_preset_amounts
  * @property bool $allow_preset_amounts_validator
+ * @property bool $allow_provider_sign_up
  * @property string|null $custom_amount_min
  * @property string|null $custom_amount_max
  * @property bool $employee_can_see_product_vouchers
@@ -123,6 +124,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmounts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmountsValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowProviderSignUp($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
@@ -257,7 +259,7 @@ class FundConfig extends BaseModel
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
         'provider_products_required', 'criteria_label_requirement_show',
         'pre_check_excluded', 'pre_check_note',
-        'reservation_approve_offset', 'reimbursement_approve_offset',
+        'reservation_approve_offset', 'reimbursement_approve_offset', 'allow_provider_sign_up',
     ];
 
     /**
@@ -278,6 +280,7 @@ class FundConfig extends BaseModel
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
+        'allow_provider_sign_up',
     ];
 
     /**
@@ -328,6 +331,7 @@ class FundConfig extends BaseModel
         'help_show_phone' => 'boolean',
         'help_show_website' => 'boolean',
         'help_show_chat' => 'boolean',
+        'allow_provider_sign_up' => 'boolean',
     ];
 
     /**
