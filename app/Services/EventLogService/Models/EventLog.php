@@ -93,15 +93,15 @@ class EventLog extends Model
     ): Builder|EventLog {
         $query = $query ?: self::query();
 
-        $query->whereHasMorph('loggable', $loggableType, function (Builder $builder) use ($loggable) {
-            if ($loggable instanceof Builder ||
-                $loggable instanceof QBuilder ||
-                $loggable instanceof Relation) {
-                $builder->whereIn('id', (clone $loggable)->select('id'));
-            } else {
-                $builder->whereIn('id', (array) $loggable);
-            }
-        });
+        $query->where('loggable_type', (new $loggableType())->getMorphClass());
+
+        if ($loggable instanceof Builder ||
+            $loggable instanceof QBuilder ||
+            $loggable instanceof Relation) {
+            $query->whereIn('loggable_id', (clone $loggable)->select('id'));
+        } else {
+            $query->whereIn('loggable_id', (array) $loggable);
+        }
 
         return $query;
     }
