@@ -89,7 +89,7 @@ class OrganizationResource extends BaseJsonResource
             ...$organization->only([
                 'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
                 'website_public', 'description', 'reservation_phone', 'reservation_address',
-                'reservation_birth_date', 'description_html',
+                'reservation_birth_date', 'description_html', 'reservation_note', 'reservation_note_text',
             ]),
             ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
                 'description_html',

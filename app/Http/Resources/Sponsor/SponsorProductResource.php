@@ -214,6 +214,8 @@ class SponsorProductResource extends BaseJsonResource
             'reservation_phone' => $product->reservation_phone,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
+            'reservation_note' => $product->reservation_note,
+            'reservation_note_text' => $product->reservation_note_text,
         ];
     }
 }

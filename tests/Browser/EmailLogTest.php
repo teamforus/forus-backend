@@ -64,7 +64,7 @@ class EmailLogTest extends DuskTestCase
                 $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);
                 $browser->click("@tableProfilesRow$identity->id");
 
-                $log = $this->findEmailLog($identity, VoucherAssignedBudgetMail::class);
+                $log = $this->findEmailLog($identity, VoucherAssignedBudgetMail::class, $this->startTime);
 
                 $this->assertEmailLogsExistAreVisibleAndExportable($browser, $log);
                 $this->assertDontSeeUnrelatedEmailLogsFromTheSameOrganization($browser, $log, $fund);
@@ -110,7 +110,7 @@ class EmailLogTest extends DuskTestCase
                 $this->searchTable($browser, '@tableFundRequest', $fundRequest->identity->email, $fundRequest->id);
                 $browser->click("@tableFundRequestRow$fundRequest->id");
 
-                $log = $this->findEmailLog($identity, FundRequestCreatedMail::class);
+                $log = $this->findEmailLog($identity, FundRequestCreatedMail::class, $this->startTime);
 
                 $this->assertEmailLogsExistAreVisibleAndExportable($browser, $log);
                 $this->assertDontSeeUnrelatedEmailLogsFromTheSameOrganization($browser, $log, $fund, $fundRequest);
@@ -121,24 +121,6 @@ class EmailLogTest extends DuskTestCase
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
         });
-    }
-
-    /**
-     * @param Identity $identity
-     * @param string $mailable
-     * @return EmailLog
-     */
-    protected function findEmailLog(
-        Identity $identity,
-        string $mailable,
-    ): EmailLog {
-        $this->assertMailableSent($identity->email, $mailable, $this->startTime);
-
-        /** @var EmailLog $log */
-        $log = $this->getEmailOfTypeQuery($identity->email, $mailable, $this->startTime)->first();
-        $this->assertNotNull($log);
-
-        return $log;
     }
 
     /**
