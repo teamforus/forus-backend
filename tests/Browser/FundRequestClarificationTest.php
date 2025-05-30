@@ -63,13 +63,9 @@ class FundRequestClarificationTest extends DuskTestCase
 
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));
 
-        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest, $headers);
-        $this->assertFundRequestClarificationEmailLog(
-            $organization,
-            $fundRequest,
-            $questionToken,
-            $headers
-        );
+        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest);
+
+        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest, $questionToken);
 
         $this->browse(function (Browser $browser) use ($fundRequest, $identity, $startTime) {
             $browser->visit($this->findFirstEmailFundRequestClarificationLink(

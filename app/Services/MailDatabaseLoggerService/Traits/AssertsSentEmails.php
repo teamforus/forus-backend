@@ -188,13 +188,13 @@ trait AssertsSentEmails
      * @param string $email
      * @param string $mailable
      * @param Carbon|null $after
-     * @return Builder
+     * @return Builder|EmailLog
      */
     protected function getEmailOfTypeQuery(
         string $email,
         string $mailable,
         ?Carbon $after = null
-    ): Builder {
+    ): Builder|EmailLog {
         return $this->getEmailQuery($email, $after)->where(compact('mailable'));
     }
 
