@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Scopes\Builders\EmailLogQuery;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -50,12 +51,20 @@ class EmailLogPolicy
         EmailLog $emailLog,
         Organization $organization
     ): Response|bool {
-        if ($fundRequest = $emailLog->getRelatedFundRequest()) {
-            return Gate::forUser($identity)->allows('viewAsValidator', [$fundRequest, $organization]);
+        $logs = EmailLog::where('id', $emailLog->id);
+        $fundRequest = $emailLog->getRelatedFundRequest();
+        $relatedIdentity = $emailLog->getRelatedIdentity();
+
+        if ($fundRequest) {
+            return
+                EmailLogQuery::whereFundRequest($logs, $fundRequest, $organization)->exists() &&
+                Gate::forUser($identity)->allows('viewAsValidator', [$fundRequest, $organization]);
         }
 
-        if ($relatedIdentity = $emailLog->getRelatedIdentity()) {
-            return Gate::forUser($identity)->allows('showSponsorIdentities', [$organization, $relatedIdentity]);
+        if ($relatedIdentity) {
+            return
+                EmailLogQuery::whereIdentity($logs, $relatedIdentity, $organization)->exists() &&
+                Gate::forUser($identity)->allows('showSponsorIdentities', [$organization, $relatedIdentity]);
         }
 
         return false;
