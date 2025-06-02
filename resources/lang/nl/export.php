@@ -108,6 +108,9 @@ return [
         'product_vouchers_active_amount' => 'Totaal aanbiedingsvouchers actief €',
         'product_vouchers_inactive_amount' => 'Totaal aanbiedingsvouchers inactief €',
         'product_vouchers_deactivated_amount' => 'Totaal aanbiedingsvouchers gedeactiveerd €',
+
+        // Payout vouchers
+        'payout_vouchers_amount' => 'Totaal uitbetalingen €',
     ],
 
     'employees' => [
