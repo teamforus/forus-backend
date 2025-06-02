@@ -30,7 +30,7 @@ class EmailLogsController extends Controller
 
         $search = new EmailLogSearch($request->only([
             'q', 'fund_request_id', 'identity_id',
-        ]), EmailLog::query());
+        ]), EmailLog::query(), $organization);
 
         return EmailLogResource::queryCollection($search->query(), $request);
     }
