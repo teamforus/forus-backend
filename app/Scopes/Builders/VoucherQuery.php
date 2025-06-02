@@ -270,13 +270,17 @@ class VoucherQuery
             $builder->whereNotNull('parent_id');
 
             $builder->where(static function (Builder $builder) {
-                $builder->whereDoesntHave('product_reservation');
-                $builder->orWhereHas('product_reservation', function (Builder $builder) {
-                    $builder->whereIn('state', [
-                        ProductReservation::STATE_WAITING,
-                        ProductReservation::STATE_PENDING,
-                        ProductReservation::STATE_ACCEPTED,
-                    ]);
+                $builder->whereNull('product_reservation_id');
+                $builder->orWhereExists(function (QBuilder $query) {
+                    $query->select(DB::raw(1))
+                        ->from('product_reservations')
+                        ->whereColumn('product_reservations.id', 'product_reservation_id')
+                        ->whereNull('product_reservations.deleted_at')
+                        ->whereIn('product_reservations.state', [
+                            ProductReservation::STATE_WAITING,
+                            ProductReservation::STATE_PENDING,
+                            ProductReservation::STATE_ACCEPTED,
+                        ]);
                 });
             });
         });
@@ -400,9 +404,7 @@ class VoucherQuery
                 ->where(fn ($builder) => VoucherTransactionQuery::whereOutgoing($builder))
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
                 ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
-            'vouchers_amount' => Voucher::query()
-                ->fromSub(Voucher::query(), 'product_vouchers')
-                ->whereColumn('vouchers.id', 'product_vouchers.parent_id')
+            'vouchers_amount' => VoucherSubQuery::getReservationOrProductVoucherSubQuery()
                 ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
             'reimbursements_pending_amount' => Reimbursement::query()
                 ->whereColumn('reimbursements.voucher_id', 'vouchers.id')
