@@ -37,7 +37,7 @@ class FundIdentitiesExport extends BaseFieldedExport
      */
     protected function export(EloquentCollection|array $identities): Collection
     {
-        return $this->exportTransform($identities->load('primary_email'));
+        return $this->exportTransform($identities);
     }
 
     /**

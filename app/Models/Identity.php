@@ -486,7 +486,13 @@ class Identity extends Model implements Authenticatable
      */
     public function getEmailAttribute(): ?string
     {
-        return $this->primary_email?->email;
+        if (array_key_exists('email', $this->attributes)) {
+            return $this->attributes['email'];
+        }
+
+        $this->setAttribute('email', $this->primary_email?->email);
+
+        return $this->getAttribute('email');
     }
 
     /**
