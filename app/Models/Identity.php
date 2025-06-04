@@ -67,6 +67,8 @@ use Throwable;
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\IdentityEmail|null $primary_email
+ * @property-read Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read int|null $product_reservations_count
  * @property-read Collection|\App\Models\Profile[] $profiles
  * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\IdentityProxy[] $proxies
@@ -373,6 +375,21 @@ class Identity extends Model implements Authenticatable
     {
         return $this->hasManyThrough(
             Reimbursement::class,
+            Voucher::class,
+            'identity_id',
+            'voucher_id',
+            'id',
+            'id',
+        );
+    }
+
+    /**
+     * @return HasManyThrough
+     */
+    public function product_reservations(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            ProductReservation::class,
             Voucher::class,
             'identity_id',
             'voucher_id',

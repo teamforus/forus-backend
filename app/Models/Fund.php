@@ -385,7 +385,10 @@ class Fund extends BaseModel
      */
     public function budget_vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereNull('product_id');
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
+            ->whereNull('product_id');
     }
 
     /**
@@ -393,7 +396,20 @@ class Fund extends BaseModel
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereNotNull('product_id');
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
+            ->whereNotNull('product_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function payout_vouchers(): HasMany
+    {
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);
     }
 
     /**
