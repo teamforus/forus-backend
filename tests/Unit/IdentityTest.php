@@ -35,7 +35,7 @@ class IdentityTest extends TestCase
         $identity->addEmail($emails[2])->setPrimary();
 
         // check that user has now 3 emails and the primary emails has changed
-        $identity->unsetRelations();
+        $identity->refresh();
         $this->assertCount(3, $identity->emails);
         $this->assertEquals($emails[2], $identity->email);
     }

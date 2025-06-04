@@ -29,7 +29,7 @@ class BIVouchersExporter extends BaseBIExporter
         $vouchers = $query->with([
             'transactions', 'voucher_relation', 'product', 'fund.fund_config.implementation',
             'token_without_confirmation', 'identity.primary_email', 'identity.record_bsn',
-            'product_vouchers', 'top_up_transactions', 'reimbursements_pending',
+            'product_vouchers.paid_out_transactions', 'top_up_transactions', 'reimbursements_pending',
             'voucher_records.record_type', 'paid_out_transactions', 'fund.organization',
         ])->get();
 
