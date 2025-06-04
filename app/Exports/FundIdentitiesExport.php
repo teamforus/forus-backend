@@ -32,12 +32,14 @@ class FundIdentitiesExport extends BaseFieldedExport
     }
 
     /**
-     * @param EloquentCollection|array $identities
+     * @param EloquentCollection|Identity[] $identities
      * @return Collection
      */
     protected function export(EloquentCollection|array $identities): Collection
     {
-        return $this->exportTransform($identities);
+        return $this->exportTransform($identities->load([
+            'primary_email',
+        ]));
     }
 
     /**
