@@ -225,14 +225,10 @@ class VoucherQuery
         return $builder->where(static function (Builder $builder) use ($inUse) {
             if ($inUse) {
                 $builder->whereHas('transactions');
-                $builder->orWhereHas('product_vouchers', function (Builder $builder) {
-                    static::whereIsProductVoucher($builder);
-                });
+                $builder->orWhereHas('product_vouchers');
             } else {
                 $builder->whereDoesntHave('transactions');
-                $builder->whereDoesntHave('product_vouchers', function (Builder $builder) {
-                    static::whereIsProductVoucher($builder);
-                });
+                $builder->whereDoesntHave('product_vouchers');
             }
         });
     }
@@ -270,17 +266,13 @@ class VoucherQuery
             $builder->whereNotNull('parent_id');
 
             $builder->where(static function (Builder $builder) {
-                $builder->whereNull('product_reservation_id');
-                $builder->orWhereExists(function (QBuilder $query) {
-                    $query->select(DB::raw(1))
-                        ->from('product_reservations')
-                        ->whereColumn('product_reservations.id', 'product_reservation_id')
-                        ->whereNull('product_reservations.deleted_at')
-                        ->whereIn('product_reservations.state', [
-                            ProductReservation::STATE_WAITING,
-                            ProductReservation::STATE_PENDING,
-                            ProductReservation::STATE_ACCEPTED,
-                        ]);
+                $builder->whereDoesntHave('product_reservation');
+                $builder->orWhereHas('product_reservation', function (Builder $builder) {
+                    $builder->whereIn('state', [
+                        ProductReservation::STATE_WAITING,
+                        ProductReservation::STATE_PENDING,
+                        ProductReservation::STATE_ACCEPTED,
+                    ]);
                 });
             });
         });
