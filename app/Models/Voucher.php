@@ -497,7 +497,7 @@ class Voucher extends BaseModel
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id')->where(function (Builder $builder) {
+        return $this->hasMany(Voucher::class, 'parent_id')->where(function (Builder $builder) {
             VoucherQuery::whereIsProductVoucher($builder);
         });
     }

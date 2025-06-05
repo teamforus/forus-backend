@@ -18,12 +18,8 @@ class VoucherSubQuery
     ): Builder|Relation|Voucher {
         $builder = $builder->addSelect([
             'vouchers.*',
-            'first_transaction_date' => static::limitFirst(
-                static::getFirstTransactionSubQuery()
-            ),
-            'first_reservation_date' => static::limitFirst(
-                static::getFirstReservationOrProductVoucherSubQuery()
-            ),
+            'first_transaction_date' => static::limitFirst(static::getTransactionSubQuery()),
+            'first_reservation_date' => static::limitFirst(static::getReservationOrProductVoucherSubQuery()),
         ])->getQuery();
 
         $builder = Voucher::fromSub($builder, 'vouchers');
@@ -49,7 +45,7 @@ class VoucherSubQuery
     /**
      * @return Builder|Relation|VoucherTransaction
      */
-    private static function getFirstTransactionSubQuery(): Builder|Relation|VoucherTransaction
+    private static function getTransactionSubQuery(): Builder|Relation|VoucherTransaction
     {
         return VoucherTransactionQuery::whereOutgoing(VoucherTransaction::whereColumn([
             'voucher_transactions.voucher_id' => 'vouchers.id',
@@ -60,11 +56,10 @@ class VoucherSubQuery
      * Product vouchers and product vouchers from reservations.
      * @return Builder|Relation|Voucher
      */
-    private static function getFirstReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
+    public static function getReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
     {
-        return Voucher::query()
-            ->from('vouchers as product_vouchers')
-            ->whereColumn('product_vouchers.parent_id', 'vouchers.id')
-            ->where(fn (Builder $builder) => VoucherQuery::whereIsProductVoucher($builder));
+        return Voucher::fromSub(Voucher::query()
+            ->where(fn (Builder $builder) => VoucherQuery::whereIsProductVoucher($builder)), 'product_vouchers')
+            ->whereColumn('product_vouchers.parent_id', 'vouchers.id');
     }
 }
