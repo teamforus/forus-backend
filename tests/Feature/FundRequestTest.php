@@ -16,16 +16,18 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestRecords;
+use Tests\Traits\MakesTestVouchers;
 
 class FundRequestTest extends TestCase
 {
-    use UsesMediaService;
-    use DatabaseTransactions;
     use WithFaker;
     use MakesTestFunds;
-    use MakesTestOrganizations;
-    use MakesTestIdentities;
     use MakesTestRecords;
+    use UsesMediaService;
+    use MakesTestVouchers;
+    use MakesTestIdentities;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
     use MakesTestFundRequests;
 
     /**
@@ -121,7 +123,7 @@ class FundRequestTest extends TestCase
             'children_nth' => 10,
         ]);
 
-        $voucher = $fund->makeVoucher($requester, amount: 100);
+        $voucher = $this->makeTestVoucher($fund, $requester, amount: 100);
 
         $this->assertEquals(100, $voucher->amount);
         $this->assertEquals(1, $requester->fresh()->vouchers()->count());

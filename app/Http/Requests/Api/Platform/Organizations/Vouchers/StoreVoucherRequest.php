@@ -41,6 +41,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'activation_code' => 'boolean',
             'limit_multiplier' => 'nullable|numeric|min:1|max:1000',
             'report_type' => ['nullable', Rule::in(VoucherRelation::REPORT_TYPES)],
+            'notify_provider' => 'nullable|boolean',
         ];
     }
 

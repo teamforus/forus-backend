@@ -126,7 +126,7 @@ class FundRequestSubscriber
                                 'fund_request_id' => $fundRequest->id,
                             ],
                             amount: $amount,
-                        );
+                        )?->dispatchCreated();
                     }
 
                     $fund->makeFundFormulaProductVouchers(

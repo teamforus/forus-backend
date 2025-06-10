@@ -29,12 +29,14 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class ProductReservationTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use AssertsSentEmails;
     use MakesTestProducts;
     use HasFrontendActions;
@@ -56,7 +58,7 @@ class ProductReservationTest extends DuskTestCase
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -82,7 +84,7 @@ class ProductReservationTest extends DuskTestCase
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -200,7 +202,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -298,7 +300,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -378,7 +380,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 

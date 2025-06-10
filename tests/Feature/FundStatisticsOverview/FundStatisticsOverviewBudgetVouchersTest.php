@@ -14,6 +14,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class FundStatisticsOverviewBudgetVouchersTest extends TestCase
@@ -21,6 +22,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     use WithFaker;
     use DoesTesting;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use CreatesApplication;
     use MakesTestIdentities;
     use DatabaseTransactions;
@@ -488,7 +490,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $vouchers = collect();
 
         for ($i = 1; $i <= $count; $i++) {
-            $voucher = $fund->makeVoucher($this->makeIdentity(), [], $amount);
+            $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: $amount);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 
 trait MakesVoucherTransaction
 {
+    use MakesTestVouchers;
     use MakesTestFundProviders;
 
     /**
@@ -55,7 +56,7 @@ trait MakesVoucherTransaction
             $product = $products[$i - 1];
             $this->addProductFundToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $vouchers->push($voucher);
         }
 

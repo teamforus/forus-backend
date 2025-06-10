@@ -9,10 +9,12 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 
 class VoucherTransactionNoteTest extends TestCase
 {
     use MakesTestFunds;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
@@ -38,7 +40,7 @@ class VoucherTransactionNoteTest extends TestCase
         $fund = $this->makeTestFund($sponsorOrganization);
         $this->makeTestFundProvider($providerOrganization, $fund);
 
-        $voucher = $fund->makeVoucher($this->makeIdentity());
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
         $address = $voucher->token_without_confirmation->address;
 
         $headers = $this->makeApiHeaders($providerOrganization->identity);
@@ -84,7 +86,7 @@ class VoucherTransactionNoteTest extends TestCase
 
         $fund = $this->makeTestFund($sponsorOrganization);
         $this->makeTestFundProvider($providerOrganization, $fund);
-        $voucher = $fund->makeVoucher($this->makeIdentity());
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
 
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity));
         $response = $this->post("/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/transactions", [

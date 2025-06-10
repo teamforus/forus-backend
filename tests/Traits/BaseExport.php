@@ -8,6 +8,7 @@ use Illuminate\Testing\TestResponse;
 
 trait BaseExport
 {
+    use MakesTestVouchers;
     use MakesTestFundProviders;
 
     /**
@@ -40,7 +41,7 @@ trait BaseExport
             $product = $products[$i - 1];
             $this->addProductFundToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

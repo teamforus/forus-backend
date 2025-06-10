@@ -10,12 +10,14 @@ use Tests\TestCase;
 use Tests\Traits\BaseExport;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class IdentityProfilesExportTest extends TestCase
 {
     use BaseExport;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
 
@@ -33,7 +35,7 @@ class IdentityProfilesExportTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
         $fund = $this->makeTestFund($organization);
-        $fund->makeVoucher($identity);
+        $this->makeTestVoucher($fund, $identity);
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
