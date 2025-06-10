@@ -38,7 +38,7 @@ class ReimbursementTest extends TestCase
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-        $this->makeInvalidReimbursement($this->makeTestVoucher($identity, $implementation->funds[0]));
+        $this->makeInvalidReimbursement($this->makeTestVoucher($implementation->funds[0], $identity));
     }
 
     /**
@@ -49,7 +49,7 @@ class ReimbursementTest extends TestCase
     {
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
 
         // create draft reimbursement
         $reimbursement = $this->makeReimbursement($voucher, false);
@@ -73,7 +73,7 @@ class ReimbursementTest extends TestCase
     {
         $implementation = $this->findImplementation('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
 
         // make reimbursement and sponsor employee
         $reimbursement = $this->makeReimbursement($voucher, true);
@@ -96,7 +96,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -123,7 +123,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -144,7 +144,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -181,7 +181,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
@@ -202,7 +202,7 @@ class ReimbursementTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         // make reimbursement and sponsor employee
-        $voucher = $this->makeTestVoucher($identity, $implementation->funds[0]);
+        $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
         $unassignedEmployee = $this->makeReimbursementValidatorEmployee($reimbursement);
@@ -227,8 +227,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-                'q' => $reimbursement->voucher->identity->email,
-            ]), $headers);
+            'q' => $reimbursement->voucher->identity->email,
+        ]), $headers);
 
         $response->assertSuccessful();
     }
@@ -246,8 +246,8 @@ class ReimbursementTest extends TestCase
         $headers = $this->makeApiHeaders($employee->identity);
 
         $response = $this->getJson("$endpoint?" . http_build_query([
-                'q' => $reimbursement->voucher->identity->email,
-            ]), $headers);
+            'q' => $reimbursement->voucher->identity->email,
+        ]), $headers);
 
         $response->assertJsonCount(0, 'data');
     }

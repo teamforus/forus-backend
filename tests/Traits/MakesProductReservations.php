@@ -22,6 +22,7 @@ trait MakesProductReservations
 {
     use WithFaker;
     use HasDbTokens;
+    use MakesTestVouchers;
     use MakesTestProducts;
     use TestsReservations;
 
@@ -70,9 +71,9 @@ trait MakesProductReservations
         )->whereNull('product_id')->first();
 
         if (!$voucher) {
-            $voucher = $funds->first()->makeVoucher($organization->identity, [
+            $voucher = $this->makeTestVoucher($funds->first(), $organization->identity, [
                 'state' => Voucher::STATE_ACTIVE,
-            ], 10000);
+            ], amount: 10000);
         }
 
         $this->assertNotNull($voucher, 'No suitable voucher found.');

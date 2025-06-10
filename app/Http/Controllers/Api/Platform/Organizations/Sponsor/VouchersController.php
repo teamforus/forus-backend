@@ -63,8 +63,8 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      */
     public function store(
         StoreVoucherRequest $request,
@@ -84,6 +84,7 @@ class VouchersController extends Controller
         $identity = $email ? Identity::findOrMake($email) : null;
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
+        $notifyProvider = $request->input('notify_provider', false);
 
         $bsn = $request->input('bsn', false);
         $report_type = $request->input('report_type', VoucherRelation::REPORT_TYPE_USER);
@@ -94,9 +95,14 @@ class VouchersController extends Controller
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
         if ($product_id) {
-            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+            $mainVoucher = $fund
+                ->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, $notifyProvider)
+                ->dispatchCreated(notifyRequesterReserved: false, notifyProviderReserved: false, notifyProviderReservedBySponsor: $notifyProvider);
         } else {
-            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+            $mainVoucher = $fund
+                ->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier)
+                ->dispatchCreated();
+
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
 
@@ -186,6 +192,7 @@ class VouchersController extends Controller
             $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
+            $notifyProvider = $voucher['notify_provider'] ?? false;
 
             $employee_id = $employee->id;
             $extraFields = compact('note', 'employee_id');
@@ -193,9 +200,14 @@ class VouchersController extends Controller
             $payment_name = $voucher['direct_payment_name'] ?? null;
 
             if ($product_id) {
-                $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+                $mainVoucher = $fund
+                    ->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, $notifyProvider)
+                    ->dispatchCreated(notifyRequesterReserved: false, notifyProviderReserved: false, notifyProviderReservedBySponsor: $notifyProvider);
             } else {
-                $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
+                $mainVoucher = $fund
+                    ->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier)
+                    ->dispatchCreated();
+
                 $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
             }
 

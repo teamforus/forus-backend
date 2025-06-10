@@ -14,13 +14,23 @@ trait MakesTestVouchers
     use MakesTestFundProviders;
 
     /**
-     * @param Identity $identity
      * @param Fund $fund
+     * @param Identity|null $identity
+     * @param array $fields
+     * @param int|null $amount
+     * @param int|null $limit_multiplier
      * @return Voucher
      */
-    protected function makeTestVoucher(Identity $identity, Fund $fund): Voucher
-    {
-        return $fund->makeVoucher($identity);
+    protected function makeTestVoucher(
+        Fund $fund,
+        ?Identity $identity = null,
+        array $fields = [],
+        ?int $amount = null,
+        ?int $limit_multiplier = null,
+    ): Voucher {
+        return $fund
+            ->makeVoucher($identity, voucherFields: $fields, amount: $amount, limit_multiplier: $limit_multiplier)
+            ?->dispatchCreated();
     }
 
     /**
@@ -42,5 +52,27 @@ trait MakesTestVouchers
         ]);
 
         return $voucher;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity|null $identity
+     * @param array $voucherFields
+     * @param int|null $product_id
+     * @param Carbon|null $expire_at
+     * @param float|null $price
+     * @return Voucher
+     */
+    protected function makeTestProductVoucher(
+        Fund $fund,
+        ?Identity $identity = null,
+        array $voucherFields = [],
+        int $product_id = null,
+        Carbon $expire_at = null,
+        float $price = null,
+    ): Voucher {
+        return $fund
+            ->makeProductVoucher($identity, $voucherFields, $product_id, $expire_at, $price)
+            ->dispatchCreated(notifyRequesterReserved: false);
     }
 }

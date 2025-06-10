@@ -474,6 +474,17 @@
             "content": "Aanbod :product_name is gereserveerd."
         }
     },
+    "notifications_products.reserved_by_sponsor": {
+        "mail": {
+            "title": "Uw aanbod :product_name is gereserveerd",
+            "template": "notifications_products/reserved_by_sponsor.md"
+        },
+        "push": {},
+        "database": {
+            "title": ":product_name is aangemaakt namens u door :sponsor_name.",
+            "content": ":product_name is aangemaakt namens u door :sponsor_name en de klant kan bij u terecht om gebruik te maken van het aanbod."
+        }
+    },
     "notifications_products.reservation_canceled": {
         "mail": {},
         "push": {},

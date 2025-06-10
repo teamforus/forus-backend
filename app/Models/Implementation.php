@@ -1030,7 +1030,7 @@ class Implementation extends BaseModel
             }
 
             if ($voucher = $fund->makeVoucher($identity)) {
-                $vouchers[] = $voucher;
+                $vouchers[] = $voucher->dispatchCreated();
             }
 
             return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity));

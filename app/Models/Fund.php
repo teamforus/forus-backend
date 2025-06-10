@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
-use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Data\BankAccount;
 use App\Models\Traits\HasFaq;
@@ -1227,7 +1226,7 @@ class Fund extends BaseModel
         $amount = $presetModel ? $presetModel->amount : $amount;
         $amount = $amount === null ? $this->amountForIdentity($identity) : $amount;
 
-        $voucher = Voucher::create([
+        return Voucher::create([
             'number' => Voucher::makeUniqueNumber(),
             'identity_id' => $identity?->id,
             'amount' => $amount,
@@ -1238,10 +1237,6 @@ class Fund extends BaseModel
             'fund_amount_preset_id' => $presetModel?->id,
             ...$voucherFields,
         ]);
-
-        VoucherCreated::dispatch($voucher);
-
-        return $voucher;
     }
 
     /**
@@ -1265,7 +1260,7 @@ class Fund extends BaseModel
             'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
             'employee_id' => $employee->id,
             ...$voucherFields,
-        ], $amount);
+        ], $amount)->dispatchCreated();
 
         return $voucher->makeTransactionBySponsor($employee, [
             'amount' => $voucher->amount,
@@ -1298,13 +1293,19 @@ class Fund extends BaseModel
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
             $multiplier = $formulaProduct->getIdentityMultiplier($identity);
 
-            $vouchers = array_merge($vouchers, array_map(fn () => $this->makeProductVoucher(
-                $identity,
-                $voucherFields,
-                $formulaProduct->product->id,
-                $voucherExpireAt,
-                $formulaProduct->price
-            ), array_fill(0, $multiplier, null)));
+            $vouchers = array_merge(
+                $vouchers,
+                array_map(
+                    fn () => $this->makeProductVoucher(
+                        $identity,
+                        $voucherFields,
+                        $formulaProduct->product->id,
+                        $voucherExpireAt,
+                        $formulaProduct->price
+                    )->dispatchCreated(notifyRequesterReserved: false),
+                    array_fill(0, $multiplier, null)
+                )
+            );
         }
 
         return $vouchers;
@@ -1325,7 +1326,7 @@ class Fund extends BaseModel
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        $voucher = Voucher::create([
+        return Voucher::create([
             'number' => Voucher::makeUniqueNumber(),
             'amount' => $price ?: Product::findOrFail($product_id)->price,
             'fund_id' => $this->id,
@@ -1335,10 +1336,6 @@ class Fund extends BaseModel
             'identity_id' => $identity?->id,
             ...$voucherFields,
         ]);
-
-        VoucherCreated::dispatch($voucher, false);
-
-        return $voucher;
     }
 
     /**
@@ -1730,7 +1727,7 @@ class Fund extends BaseModel
 
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
                 $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
-                $voucher = $this->makeVoucher($identity, $extraFields);
+                $voucher = $this->makeVoucher($identity, $extraFields)?->dispatchCreated();
                 $this->makeFundFormulaProductVouchers($identity, $extraFields);
 
                 $response->getLog()->update([

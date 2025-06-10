@@ -84,18 +84,21 @@ class VoucherBatchTestCases
             'type' => 'product',
             'assign_by' => 'email',
             'assert_created' => true,
+            'notify_provider' => true,
         ], [
             'type' => 'product',
             'activate' => false,
             'assign_by' => 'bsn',
             'assert_active' => false,
             'assert_created' => true,
+            'notify_provider' => true,
         ], [
             'type' => 'product',
             'activate' => true,
             'assign_by' => 'email',
             'assert_created' => true,
             'assert_active' => true,
+            'notify_provider' => true,
         ]],
     ];
 

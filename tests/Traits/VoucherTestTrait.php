@@ -66,6 +66,7 @@ trait VoucherTestTrait
             $activationCode = $assert['activation_code'] ?? 0;
             $directPayment = Arr::get($assert, 'direct_payment') ? $this->makeDirectPaymentData() : [];
             $exceedVoucherAmountLimit = $assert['exceed_voucher_amount_limit'] ?? false;
+            $notifyProvider = $assert['notify_provider'] ?? false;
 
             if ($sameAssignBy > $index && count($vouchers)) {
                 $params[$assert['assign_by']] = $vouchers[$index - 1][$assert['assign_by']];
@@ -87,6 +88,7 @@ trait VoucherTestTrait
                 'note' => $this->faker()->sentence(),
                 'amount' => $amount ?? null,
                 'product_id' => $productId ?? null,
+                'notify_provider' => $notifyProvider,
             ], $directPayment, $this->recordsFields(), $assert['replacement'] ?? []);
 
             return array_merge($vouchers, [
