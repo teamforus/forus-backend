@@ -1354,20 +1354,9 @@ class Voucher extends BaseModel
      */
     public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
     {
-        $data = [];
-
-        foreach ($vouchers as $voucher) {
-            do {
-                $voucherData = new VoucherExportData($voucher, $fields);
-            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
-
-            $data[] = [
-                'name' => $voucherData->getName(),
-                'values' => $voucherData->toArray(),
-            ];
-        }
-
-        return Arr::pluck($data, 'values');
+        return $vouchers->map(function (Voucher $voucher) use ($fields) {
+            return (new VoucherExportData($voucher, $fields))->toArray();
+        })->all();
     }
 
     /**
