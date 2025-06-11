@@ -385,7 +385,10 @@ class Fund extends BaseModel
      */
     public function budget_vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereNull('product_id');
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
+            ->whereNull('product_id');
     }
 
     /**
@@ -393,7 +396,20 @@ class Fund extends BaseModel
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereNotNull('product_id');
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
+            ->whereNotNull('product_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function payout_vouchers(): HasMany
+    {
+        return $this
+            ->vouchers()
+            ->where('voucher_type', Voucher::VOUCHER_TYPE_PAYOUT);
     }
 
     /**
@@ -524,7 +540,7 @@ class Fund extends BaseModel
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
-            'pre_check_excluded', 'pre_check_note',
+            'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
         ]);
 
         $replaceValues = $this->isExternal() ? array_fill_keys([

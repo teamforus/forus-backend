@@ -14,12 +14,12 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class FinancialOverviewStatisticQueries
 {
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|Voucher $builder
      * @param Carbon|null $from
      * @param Carbon|null $to
-     * @return Builder|Relation
+     * @return Builder|Relation|Voucher
      */
-    public static function whereDate(Builder|Relation $builder, ?Carbon $from, ?Carbon $to): Builder|Relation
+    public static function whereDate(Builder|Relation|Voucher $builder, ?Carbon $from, ?Carbon $to): Builder|Relation|Voucher
     {
         return $builder->where(static function (Builder $builder) use ($from, $to) {
             if ($from) {
@@ -33,19 +33,19 @@ class FinancialOverviewStatisticQueries
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpired(Builder|Relation $builder): Builder|Relation
+    public static function whereNotExpired(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return VoucherQuery::whereNotExpired($builder);
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereNotExpiredAndActive(Builder|Relation $builder): Builder|Relation
+    public static function whereNotExpiredAndActive(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return self::whereNotExpired(self::whereActive($builder));
     }
@@ -61,19 +61,19 @@ class FinancialOverviewStatisticQueries
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function wherePending(Builder $builder): Builder
+    public static function wherePending(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return $builder->where('state', Voucher::STATE_PENDING);
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
      */
-    public static function whereDeactivated(Builder $builder): Builder
+    public static function whereDeactivated(Builder|Relation|Voucher $builder): Builder|Relation|Voucher
     {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
     }

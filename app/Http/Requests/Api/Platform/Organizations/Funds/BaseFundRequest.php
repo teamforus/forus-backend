@@ -87,6 +87,8 @@ abstract class BaseFundRequest extends BaseFormRequest
             'auth_2fa_restrict_reimbursements' => 'nullable|boolean',
             'provider_products_required' => 'nullable|boolean',
 
+            'allow_provider_sign_up' => 'nullable|boolean',
+
             // help columns
             ...$this->fundConfigHelpRules(),
         ];

@@ -13,6 +13,7 @@ use App\Models\Prevalidation;
 use App\Models\ProductReservation;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Testing\TestResponse;
@@ -81,9 +82,10 @@ trait MakesTestFunds
         ]);
 
         $fund->changeState($fund::STATE_ACTIVE);
+        $implementations = $organization->implementations()->get();
 
-        $implementation = $organization->implementations->isNotEmpty() ?
-            $organization->implementations[0] :
+        $implementation = $implementations->isNotEmpty() ?
+            $implementations[0] :
             $this->makeTestImplementation($organization);
 
         $fund->fund_config()->forceCreate([
@@ -404,5 +406,15 @@ trait MakesTestFunds
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();
         $fund->forceDelete();
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return void
+     */
+    protected function deleteVoucher(Voucher $voucher): void
+    {
+        $voucher->backoffice_logs()->delete();
+        $voucher->delete();
     }
 }
