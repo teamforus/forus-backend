@@ -117,7 +117,7 @@ class FundsController extends Controller
             'email_required', 'contact_info_enabled', 'contact_info_required',
             'contact_info_message_custom', 'contact_info_message_text', 'hide_meta',
             'voucher_amount_visible', 'outcome_type', 'provider_products_required',
-            'criteria_label_requirement_show',
+            'criteria_label_requirement_show', 'allow_provider_sign_up',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -225,7 +225,7 @@ class FundsController extends Controller
                     'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
                     'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
                     'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
-                    'criteria_label_requirement_show',
+                    'criteria_label_requirement_show', 'allow_provider_sign_up',
                 ]),
                 ...($fund->organization->allow_payouts ? $request->only([
                     'custom_amount_min', 'custom_amount_max',
@@ -404,7 +404,9 @@ class FundsController extends Controller
         $detailed = $request->input('detailed', false);
 
         return ExportFieldArrResource::collection(
-            $detailed ? FundsExportDetailed::getExportFields() : FundsExport::getExportFields()
+            $detailed
+                ? FundsExportDetailed::getExportFields($organization->hasPayoutFunds())
+                : FundsExport::getExportFields()
         );
     }
 
@@ -434,8 +436,9 @@ class FundsController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         if ($detailed) {
-            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw());
             $budgetFunds = $organization->funds()->where('type', Fund::TYPE_BUDGET)->get();
+            $hasPayoutFunds = $organization->hasPayoutFunds();
+            $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw($hasPayoutFunds));
             $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);
         } else {
             $fields = $request->input('fields', FundsExport::getExportFieldsRaw());
