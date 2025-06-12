@@ -295,7 +295,7 @@ class VoucherTest extends TestCase
 
             $vouchersBuilder = $this->getVouchersBuilder($fund, $startDate, $assert['type'] ?? 'budget');
             $this->assertVouchersCreated($vouchersBuilder, $startDate, [$data], $assert);
-            $vouchersBuilder->delete();
+            $vouchersBuilder->each(fn (Voucher $voucher) => $this->deleteVoucher($voucher));
         } else {
             $validateResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
             $uploadResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
