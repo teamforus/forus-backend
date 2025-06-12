@@ -296,6 +296,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'physical-cards' => 'physical_card',
     ])->only('index', 'store');
 
+    $router->resource(
+        'organizations/{organization}/sponsor/product-reservations',
+        "Api\Platform\Organizations\Sponsor\ProductReservationsController",
+    )->only('index');
+
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
         $router->resource(
