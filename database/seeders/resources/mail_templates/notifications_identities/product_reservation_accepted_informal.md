@@ -5,6 +5,8 @@ Beste deelnemer,
 :provider_name heeft jouw reservering voor het aanbod :product_name geaccepteerd. Je kunt gebruik maken van dit aanbod.
 &nbsp;
 
+:note
+
 Heb je vragen over het aanbod? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
 &nbsp;
 
