@@ -225,14 +225,10 @@ class VoucherQuery
         return $builder->where(static function (Builder $builder) use ($inUse) {
             if ($inUse) {
                 $builder->whereHas('transactions');
-                $builder->orWhereHas('product_vouchers', function (Builder $builder) {
-                    static::whereIsProductVoucher($builder);
-                });
+                $builder->orWhereHas('product_vouchers');
             } else {
                 $builder->whereDoesntHave('transactions');
-                $builder->whereDoesntHave('product_vouchers', function (Builder $builder) {
-                    static::whereIsProductVoucher($builder);
-                });
+                $builder->whereDoesntHave('product_vouchers');
             }
         });
     }
@@ -399,9 +395,7 @@ class VoucherQuery
                 ->where(fn ($builder) => VoucherTransactionQuery::whereOutgoing($builder))
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
                 ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
-            'vouchers_amount' => Voucher::query()
-                ->fromSub(Voucher::query(), 'product_vouchers')
-                ->whereColumn('vouchers.id', 'product_vouchers.parent_id')
+            'vouchers_amount' => VoucherSubQuery::getReservationOrProductVoucherSubQuery()
                 ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
             'reimbursements_pending_amount' => Reimbursement::query()
                 ->whereColumn('reimbursements.voucher_id', 'vouchers.id')
