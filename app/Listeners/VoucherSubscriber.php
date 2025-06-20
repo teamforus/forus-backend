@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\Products\ProductReserved;
+use App\Events\Products\ProductReservedBySponsor;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
@@ -57,7 +58,6 @@ class VoucherSubscriber
 
         if ($product) {
             $product->updateSoldOutState();
-            ProductReserved::dispatch($product, $voucher);
 
             $event = $voucher->log(Voucher::EVENT_CREATED_PRODUCT, [
                 'fund' => $voucher->fund,
@@ -68,6 +68,14 @@ class VoucherSubscriber
                 'employee' => $voucher->employee,
                 'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
+
+            if ($voucherCreated->shouldNotifyProviderReserved()) {
+                ProductReserved::dispatch($product, $voucher);
+            }
+
+            if ($voucherCreated->shouldNotifyProviderReservedBySponsor()) {
+                ProductReservedBySponsor::dispatch($product, $voucher);
+            }
 
             if ($voucher->identity) {
                 VoucherAssigned::dispatch($voucher, !$voucher->product_reservation_id);

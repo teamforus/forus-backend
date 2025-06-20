@@ -12,6 +12,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestBankConnections;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 use Throwable;
 
@@ -19,6 +20,7 @@ class VoucherHasPayoutTest extends TestCase
 {
     use MakesTestFunds;
     use TestsReservations;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesProductReservations;
     use MakesTestBankConnections;
@@ -37,7 +39,7 @@ class VoucherHasPayoutTest extends TestCase
         $this->makeTestFundProvider($providerOrganization, $fund);
 
         $identity = $this->makeIdentity();
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestVoucher($fund, $identity);
         $products = $this->makeProviderAndProducts($fund);
 
         /** @var Product $product */
@@ -83,7 +85,7 @@ class VoucherHasPayoutTest extends TestCase
         $this->makeBankConnection($sponsorOrganization->refresh());
         $this->makeTestFundProvider($providerOrganization, $fund);
 
-        $voucher = $fund->makeVoucher($this->makeIdentity());
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
         $address = $voucher->token_without_confirmation->address;
 
         // has_payouts must be false by default

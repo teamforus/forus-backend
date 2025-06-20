@@ -11,12 +11,14 @@ use Tests\Traits\BaseExport;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestReimbursements;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class ReimbursementsExportTest extends TestCase
 {
     use BaseExport;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesTestReimbursements;
@@ -39,7 +41,7 @@ class ReimbursementsExportTest extends TestCase
             'allow_reimbursements' => true,
         ]);
 
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()));
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()));
         $reimbursement = $this->makeReimbursement($voucher, true);
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));

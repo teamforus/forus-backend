@@ -10,12 +10,14 @@ use Tests\TestCase;
 use Tests\Traits\BaseExport;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class VouchersExportTest extends TestCase
 {
     use BaseExport;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
 
@@ -33,7 +35,7 @@ class VouchersExportTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity, ['bsn_enabled' => true]);
         $fund = $this->makeTestFund($organization, fundConfigsData: ['allow_voucher_records' => false]);
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()));
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()));
 
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 

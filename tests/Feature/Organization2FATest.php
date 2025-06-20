@@ -12,14 +12,16 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 
 class Organization2FATest extends TestCase
 {
-    use DatabaseTransactions;
     use WithFaker;
-    use MakesTestIdentities;
-    use MakesTestOrganizations;
     use MakesTestFunds;
+    use MakesTestVouchers;
+    use MakesTestIdentities;
+    use DatabaseTransactions;
+    use MakesTestOrganizations;
 
     /**
      * @return void
@@ -74,7 +76,7 @@ class Organization2FATest extends TestCase
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($organization->identity));
 
         $fund = $organization->funds[0];
-        $fund->makeVoucher($organization->identity);
+        $this->makeTestVoucher($fund, $organization->identity);
 
         $fund->fund_config->update([
             'auth_2fa_policy' => FundConfig::AUTH_2FA_POLICY_GLOBAL,

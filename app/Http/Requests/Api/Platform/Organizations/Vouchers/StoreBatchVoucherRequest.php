@@ -39,6 +39,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',
             'vouchers.*.limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+            'vouchers.*.notify_provider' => 'nullable|boolean',
             'vouchers.*.records' => $this->recordsRule(),
             ...$this->uploadedCSVFileRules(),
             ...$this->directPaymentRules($fund),

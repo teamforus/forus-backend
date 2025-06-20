@@ -268,7 +268,7 @@ class TestData
         foreach ($prevalidations as $prevalidation) {
             $prevalidation->assignToIdentity($identity);
 
-            $voucher = $prevalidation->fund->makeVoucher($identity);
+            $voucher = $prevalidation->fund->makeVoucher($identity)->dispatchCreated();
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
 
             /** @var Product $product */
@@ -1200,7 +1200,7 @@ class TestData
                 $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
 
-                $fund->makeVoucher($identity, compact('note'));
+                $fund->makeVoucher($identity, compact('note'))?->dispatchCreated();
                 $fund->makeFundFormulaProductVouchers($identity, compact('note'));
             }
         }
@@ -1218,7 +1218,7 @@ class TestData
             ->get();
 
         foreach ($funds as $fund) {
-            $voucher = $fund->makeVoucher($identity, amount: 20);
+            $voucher = $fund->makeVoucher($identity, amount: 20)->dispatchCreated();
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
                 $product = ProductQuery::approvedForFundsFilter(Product::query(), $fund->id)
