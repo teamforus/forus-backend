@@ -49,9 +49,10 @@ class ProductLimitsTest extends TestCase
         ]);
 
         $fund = $this->apiMakeFund($organizationSponsor, [], $identitySponsor);
-        $fundProvider = $this->apiApplyProviderToFund($organizationProvider, $fund, $identityProvider);
 
         $this->activateFundAndSetImplementation($fund, $implementation);
+
+        $fundProvider = $this->apiApplyProviderToFund($organizationProvider, $fund, $identityProvider);
 
         $voucher = $this->apiMakeVoucherAsSponsor($organizationSponsor, $fund, [
             'assign_by_type' => 'email',
