@@ -77,7 +77,7 @@ trait MakesTestFunds
             'start_date' => now()->subDay(),
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
-            'type' => Fund::TYPE_BUDGET,
+            'external' => false,
             ...$fundData,
         ]);
 
@@ -132,23 +132,6 @@ trait MakesTestFunds
         self::assertEquals(100000, $fund->refresh()->budget_left);
 
         return $fund->refresh();
-    }
-
-    /**
-     * @param Organization $organization
-     * @param array $fundData
-     * @param array $fundConfigsData
-     * @return Fund
-     */
-    protected function makeTestSubsidyFund(
-        Organization $organization,
-        array $fundData = [],
-        array $fundConfigsData = [],
-    ): Fund {
-        return $this->makeTestFund($organization, [
-            'type' => Fund::TYPE_SUBSIDIES,
-            ...$fundData,
-        ], $fundConfigsData);
     }
 
     /**

@@ -196,9 +196,9 @@ class FundProvider extends BaseModel
      */
     public static function queryAvailableFunds(Organization $organization): Builder
     {
-        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
-        $query->where('type', '!=', Fund::TYPE_EXTERNAL);
-        $query->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED)
+            ->where('external', false)
+            ->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
 
         FundQuery::whereIsInternal($query);
         FundQuery::whereIsConfiguredByForus($query);
@@ -399,9 +399,9 @@ class FundProvider extends BaseModel
         }
 
         if ($allow_budget !== null) {
-            $query->whereHas('fund', function (Builder $builder) {
-                $builder->where('type', Fund::TYPE_BUDGET);
-            })->where('allow_budget', (bool) $allow_budget);
+            $query
+                ->whereHas('fund', fn (Builder $builder) => FundQuery::whereIsInternal($builder))
+                ->where('allow_budget', (bool) $allow_budget);
         }
 
         if ($has_products) {
@@ -422,30 +422,18 @@ class FundProvider extends BaseModel
             if ($allow_products === 'some') {
                 $query->where(function (Builder $builder) {
                     $builder->where(function (Builder $builder) {
-                        $builder->whereHas('fund', function (Builder $builder) {
-                            $builder->where('type', Fund::TYPE_BUDGET);
-                        })->whereHas('products');
+                        FundQuery::whereIsInternal($builder)->whereHas('products');
                     });
 
-                    $builder->orWhere(function (Builder $builder) {
-                        $builder->whereHas('fund', function (Builder $builder) {
-                            $builder->where('type', Fund::TYPE_SUBSIDIES);
-                        })->whereHas('fund_provider_products.product');
-                    });
+                    $builder->orWhereHas('fund_provider_products.product');
                 });
             } else {
                 $query->where(function (Builder $builder) use ($allow_products) {
                     $builder->where(function (Builder $builder) use ($allow_products) {
-                        $builder->whereHas('fund', function (Builder $builder) {
-                            $builder->where('type', Fund::TYPE_BUDGET);
-                        })->where('allow_products', (bool) $allow_products);
+                        FundQuery::whereIsInternal($builder)->where('allow_products', (bool) $allow_products);
                     });
 
                     $builder->orWhere(function (Builder $builder) use ($allow_products) {
-                        $builder->whereHas('fund', function (Builder $builder) {
-                            $builder->where('type', Fund::TYPE_SUBSIDIES);
-                        });
-
                         if ($allow_products) {
                             $builder->whereHas('fund_provider_products.product');
                         } else {
@@ -483,28 +471,11 @@ class FundProvider extends BaseModel
         $newProducts = array_diff($productIds, $oldProducts);
 
         foreach ($products as $product) {
-            if ($this->fund->isTypeBudget()) {
-                $this->approveProduct($this->prepareProductApproveData($product));
-            } else {
-                $this->approveSubsidyProduct($this->prepareProductApproveData($product));
-            }
+            $this->approveProduct($this->prepareProductApproveData($product));
         }
 
         foreach (Product::whereIn('products.id', $newProducts)->get() as $product) {
             Event::dispatch(new ProductApproved($product, $this->fund));
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param array $products
-     * @return $this
-     */
-    public function resetProducts(array $products): self
-    {
-        foreach ($products as $product) {
-            $this->resetProduct($product);
         }
 
         return $this;
@@ -540,7 +511,7 @@ class FundProvider extends BaseModel
     {
         return FundProviderQuery::whereApprovedForFundsFilter(
             self::query()->where('id', $this->id),
-            $this->fund_id
+            $this->fund_id,
         )->exists();
     }
 
@@ -610,26 +581,23 @@ class FundProvider extends BaseModel
      */
     protected function prepareProductApproveData(array $productData): array
     {
-        $isTypeSubsidy = $this->fund->isTypeSubsidy();
-
-        if (is_null($productData['limit_total'] ?? null) && $isTypeSubsidy) {
-            $productData['limit_total'] = 1;
-        }
-
-        if (is_null($productData['limit_per_identity'] ?? null) && $isTypeSubsidy) {
-            $productData['limit_per_identity'] = 1;
-        }
-
         if ($productData['limit_total_unlimited'] ?? false) {
             $productData['limit_total'] = null;
             $productData['limit_total_unlimited'] = 1;
         }
 
-        return array_merge(array_only($productData, [
-            'id', 'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'expire_at', 'amount',
-        ]), $isTypeSubsidy ? [
+        if ($productData['limit_per_identity_unlimited'] ?? false) {
+            $productData['limit_per_identity'] = null;
+            $productData['limit_per_identity_unlimited'] = 1;
+        }
+
+        return [
+            ...array_only($productData, [
+                'id', 'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'limit_per_identity_unlimited',
+                'expire_at', 'amount', 'payment_type', 'allow_scanning',
+            ]),
             'price' => Product::findOrFail($productData['id'])->price,
-        ] : []);
+        ];
     }
 
     /**
@@ -641,7 +609,6 @@ class FundProvider extends BaseModel
         array $data,
         bool $withTrashed = false,
     ): FundProviderProduct {
-        /** @var FundProviderProduct $query */
         $query = $this->fund_provider_products()
             ->latest()
             ->latest('id');
@@ -659,15 +626,6 @@ class FundProvider extends BaseModel
      * @param array $data
      * @return FundProviderProduct
      */
-    protected function approveSubsidyProduct(array $data): FundProviderProduct
-    {
-        return $this->findFundProviderProductByIdOrCreate($data)->updateModel($data);
-    }
-
-    /**
-     * @param array $data
-     * @return FundProviderProduct
-     */
     protected function approveProduct(array $data): FundProviderProduct
     {
         $fundProviderProduct = $this->findFundProviderProductByIdOrCreate($data, true);
@@ -679,14 +637,16 @@ class FundProvider extends BaseModel
         $hasConfigs =
             !is_null(Arr::get($data, 'expire_at')) ||
             !is_null(Arr::get($data, 'limit_total')) ||
+            !is_null(Arr::get($data, 'limit_total_unlimited')) ||
             !is_null(Arr::get($data, 'limit_per_identity')) ||
-            !is_null(Arr::get($data, 'limit_total_unlimited'));
+            !is_null(Arr::get($data, 'limit_per_identity_unlimited'));
 
         $hasChanged =
             (Arr::get($data, 'expire_at') !== $fundProviderProduct->expire_at?->format('Y-m-d')) ||
             (Arr::get($data, 'limit_total') !== $fundProviderProduct->limit_total) ||
+            (((bool) Arr::get($data, 'limit_total_unlimited')) !== $fundProviderProduct->limit_total_unlimited) ||
             (Arr::get($data, 'limit_per_identity') !== $fundProviderProduct->limit_per_identity) ||
-            (((bool) Arr::get($data, 'limit_total_unlimited')) !== $fundProviderProduct->limit_total_unlimited);
+            (((bool) Arr::get($data, 'limit_per_identity_unlimited')) !== $fundProviderProduct->limit_per_identity_unlimited);
 
         if ($hasChanged) {
             $fundProviderProduct->delete();
@@ -694,26 +654,5 @@ class FundProvider extends BaseModel
         }
 
         return $fundProviderProduct->updateModel(array_merge($hasConfigs ? $data : []));
-    }
-
-    /**
-     * @param array $data
-     * @return FundProviderProduct|null
-     */
-    protected function resetProduct(array $data): ?FundProviderProduct
-    {
-        /** @var FundProviderProduct $query */
-        $query = $this->fund_provider_products()->latest();
-
-        if ($this->fund->isTypeBudget()) {
-            $fundProviderProducts = (clone $query)->where('product_id', $data['id'])->latest()->get();
-            $fundProviderProducts->each(fn (FundProviderProduct $product) => $product->delete());
-
-            return $query->firstOrCreate([
-                'product_id' => $data['id'],
-            ]);
-        }
-
-        return null;
     }
 }

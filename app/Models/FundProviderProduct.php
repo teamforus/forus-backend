@@ -15,9 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $fund_provider_id
  * @property int $product_id
+ * @property string $payment_type
+ * @property bool $allow_scanning
  * @property int|null $limit_total
  * @property bool $limit_total_unlimited
  * @property int|null $limit_per_identity
+ * @property bool $limit_per_identity_unlimited
  * @property string|null $amount
  * @property string|null $price
  * @property \Illuminate\Support\Carbon|null $expire_at
@@ -26,6 +29,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundProvider|null $fund_provider
  * @property-read bool $active
+ * @property-read string $amount_locale
+ * @property-read string $payment_type_locale
  * @property-read float $user_price
  * @property-read string $user_price_locale
  * @property-read \App\Models\Product|null $product
@@ -39,6 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|FundProviderProduct newQuery()
  * @method static Builder<static>|FundProviderProduct onlyTrashed()
  * @method static Builder<static>|FundProviderProduct query()
+ * @method static Builder<static>|FundProviderProduct whereAllowScanning($value)
  * @method static Builder<static>|FundProviderProduct whereAmount($value)
  * @method static Builder<static>|FundProviderProduct whereCreatedAt($value)
  * @method static Builder<static>|FundProviderProduct whereDeletedAt($value)
@@ -46,8 +52,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|FundProviderProduct whereFundProviderId($value)
  * @method static Builder<static>|FundProviderProduct whereId($value)
  * @method static Builder<static>|FundProviderProduct whereLimitPerIdentity($value)
+ * @method static Builder<static>|FundProviderProduct whereLimitPerIdentityUnlimited($value)
  * @method static Builder<static>|FundProviderProduct whereLimitTotal($value)
  * @method static Builder<static>|FundProviderProduct whereLimitTotalUnlimited($value)
+ * @method static Builder<static>|FundProviderProduct wherePaymentType($value)
  * @method static Builder<static>|FundProviderProduct wherePrice($value)
  * @method static Builder<static>|FundProviderProduct whereProductId($value)
  * @method static Builder<static>|FundProviderProduct whereUpdatedAt($value)
@@ -59,12 +67,21 @@ class FundProviderProduct extends BaseModel
 {
     use SoftDeletes;
 
+    public const string PAYMENT_TYPE_BUDGET = 'budget';
+    public const string PAYMENT_TYPE_SUBSIDY = 'subsidy';
+
+    public const array PAYMENT_TYPES = [
+        self::PAYMENT_TYPE_BUDGET,
+        self::PAYMENT_TYPE_SUBSIDY,
+    ];
+
     /**
      * @var string[]
      */
     protected $fillable = [
-        'product_id', 'fund_provider_id', 'limit_total', 'limit_total_unlimited',
-        'limit_per_identity', 'price', 'old_price', 'amount', 'expire_at',
+        'product_id', 'fund_provider_id', 'price', 'old_price', 'amount', 'expire_at',
+        'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'limit_per_identity_unlimited',
+        'payment_type', 'allow_scanning',
     ];
 
     /**
@@ -72,7 +89,9 @@ class FundProviderProduct extends BaseModel
      */
     protected $casts = [
         'expire_at' => 'datetime',
+        'allow_scanning' => 'bool',
         'limit_total_unlimited' => 'bool',
+        'limit_per_identity_unlimited' => 'bool',
     ];
 
     /**
@@ -175,6 +194,14 @@ class FundProviderProduct extends BaseModel
     }
 
     /**
+     * @return string
+     */
+    public function getAmountLocaleAttribute(): string
+    {
+        return currency_format_locale($this->amount ?: 0);
+    }
+
+    /**
      * @param string $price_type
      * @param string $price_discount
      * @return string
@@ -211,5 +238,33 @@ class FundProviderProduct extends BaseModel
     public function getActiveAttribute(): bool
     {
         return !$this->trashed();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaymentTypeSubsidy(): bool
+    {
+        return $this->payment_type === self::PAYMENT_TYPE_SUBSIDY;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaymentTypeBudget(): bool
+    {
+        return $this->payment_type === self::PAYMENT_TYPE_BUDGET;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getPaymentTypeLocaleAttribute(): string
+    {
+        return match ($this->payment_type) {
+            self::PAYMENT_TYPE_BUDGET => 'Budget',
+            self::PAYMENT_TYPE_SUBSIDY => 'Subsidie',
+            default => null,
+        };
     }
 }

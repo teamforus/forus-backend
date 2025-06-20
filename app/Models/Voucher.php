@@ -98,13 +98,13 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $external
  * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $granted
  * @property-read bool $has_payouts
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
- * @property-read bool $is_external
- * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
  * @property-read bool $reimbursement_approval_time_expired
  * @property-read bool $reservation_approval_time_expired
@@ -524,9 +524,9 @@ class Voucher extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getIsExternalAttribute(): bool
+    public function getExternalAttribute(): bool
     {
-        return $this->isExternal();
+        return $this->fund->fund_config->usesExternalVouchers();
     }
 
     /**
@@ -540,14 +540,6 @@ class Voucher extends BaseModel
             $this->product_vouchers->reduce(function (int $total, Voucher $voucher) {
                 return $total + $voucher->paid_out_transactions->count();
             }, 0) > 0;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isExternal(): bool
-    {
-        return $this->fund->fund_config->usesExternalVouchers();
     }
 
     /**
@@ -1016,7 +1008,7 @@ class Voucher extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getIsGrantedAttribute(): bool
+    public function getGrantedAttribute(): bool
     {
         return !empty($this->identity_id);
     }
@@ -1172,29 +1164,30 @@ class Voucher extends BaseModel
      * @param Product $product
      * @param Employee|null $employee
      * @param array $extraData
-     * @throws Exception
+     * @param bool|null $hasExtraPayment
      * @return ProductReservation
+     * @throws Exception
      */
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
         array $extraData = [],
+        bool $hasExtraPayment = false,
     ): ProductReservation {
-        $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
-        if ($extraData['has_extra_payment'] ?? false) {
+        if ($hasExtraPayment) {
             $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
             $state = ProductReservation::STATE_WAITING;
             $extraAmount = $product->price - $amount;
         } else {
-            $amount = ($isSubsidy && $fundProviderProduct) ? $fundProviderProduct->amount : $product->price;
+            $amount = $fundProviderProduct?->isPaymentTypeSubsidy() ? $fundProviderProduct->amount : $product->price;
             $state = ProductReservation::STATE_PENDING;
             $extraAmount = 0;
         }
 
         /** @var ProductReservation $reservation */
-        $reservation = $this->product_reservations()->create(array_merge([
+        $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
             'state' => $state,
@@ -1202,10 +1195,14 @@ class Voucher extends BaseModel
             'employee_id' => $employee?->id,
             'fund_provider_product_id' => $fundProviderProduct?->id,
             'amount_extra' => $extraAmount,
-        ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
-            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
-        ]), $product->only('price', 'price_type', 'price_discount')));
+            ...array_only($extraData, [
+                'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
+                'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
+            ]),
+            ...$product->only([
+                'price', 'price_type', 'price_discount',
+            ]),
+        ]);
 
         // store custom fields
         $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
@@ -1655,7 +1652,6 @@ class Voucher extends BaseModel
 
         return null;
     }
-
 
     /**
      * @return FundBackofficeLog|null

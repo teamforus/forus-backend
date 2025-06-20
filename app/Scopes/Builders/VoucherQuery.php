@@ -47,7 +47,7 @@ class VoucherQuery
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
 
                 $builder->whereHas('fund_providers', static function (Builder $builder) use ($fund_id) {
-                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'product');
+                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'allow_products');
                 });
             });
 
@@ -374,7 +374,6 @@ class VoucherQuery
 
             $builder->whereNull('product_id');
             $builder->whereNull('product_reservation_id');
-            $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
             $builder->whereRelation('fund.fund_config', 'allow_reimbursements', true);
         });
     }

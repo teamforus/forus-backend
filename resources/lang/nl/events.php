@@ -43,7 +43,6 @@ return [
             // 'fund_product_added' => 'Product :product_name was added in fund :fund_name',
             // 'fund_product_approved' => 'Product :product_name was approved in fund :fund_name',
             // 'fund_product_revoked' => 'Product :product_name was revoked in fund :fund_name',
-            // 'fund_product_subsidy_removed' => 'Subsidy product :product_name was removed in fund :fund_name',
         ],
     ],
     'loggable' => [

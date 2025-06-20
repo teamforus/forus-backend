@@ -13,7 +13,6 @@ return [
         'Indien we tijdens de beoordeling aanvullende informatie nodig hebben, zullen we via de opgegeven contactgegevens contact met je opnemen.',
     ]),
     'types' => [
-        'subsidies' => 'Acties',
         'external' => 'External',
         'budget' => 'Budget',
     ],

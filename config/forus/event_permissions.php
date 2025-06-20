@@ -77,7 +77,6 @@ return [
             // 'fund_product_added',
             // 'fund_product_approved',
             // 'fund_product_revoked',
-            // 'fund_product_subsidy_removed',
         ],
     ],
 ];

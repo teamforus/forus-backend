@@ -5,7 +5,6 @@ return [
         'implementation_name' => 'Zuidhorn',
         'organization_name' => 'Zuidhorn',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -19,7 +18,6 @@ return [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'auto_requests_validation' => true,
             'criteria_editable_after_start' => true,
         ],
@@ -31,18 +29,23 @@ return [
             'allow_voucher_records' => true,
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
     ],
     'Nijmegen II' => [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
     ],
     'Nijmegen III' => [
@@ -57,6 +60,9 @@ return [
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
         'fund_criteria' => [
             [
@@ -116,7 +122,6 @@ return [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -132,6 +137,9 @@ return [
             'allow_preset_amounts_validator' => true,
             'iban_record_key' => 'iban',
             'iban_name_record_key' => 'iban_name',
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
         'fund_amount_presets' => [
             [ 'name' => 'Preset #1', 'amount' => '10.00'],
@@ -218,7 +226,6 @@ return [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -480,7 +487,6 @@ return [
         'implementation_name' => 'Noordoostpolder',
         'organization_name' => 'Gemeente Noordoostpolder',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'meedoenpakket_2020',
@@ -520,7 +526,6 @@ return [
         'implementation_name' => 'Berkelland',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -559,7 +564,6 @@ return [
         'implementation_name' => 'Oostgelre',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -598,7 +602,6 @@ return [
         'implementation_name' => 'Winterswijk',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -637,7 +640,6 @@ return [
         'implementation_name' => 'Winterswijk',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'meedoenregeling_volwassenen_ww',
@@ -677,7 +679,6 @@ return [
         'organization_name' => 'Gemeente Westerkwartier',
         'fund' => [
             'request_btn_text' => 'Activeren',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'kindpakket_2020',
@@ -738,7 +739,6 @@ return [
         'implementation_name' => 'Goeree-Overflakkee',
         'organization_name' => 'Gemeente Goeree-Overflakkee',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'goeree',
@@ -777,7 +777,6 @@ return [
         'implementation_name' => 'Goeree-Overflakkee',
         'organization_name' => 'Gemeente Goeree-Overflakkee',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'goeree',
@@ -816,7 +815,6 @@ return [
         'implementation_name' => 'Geertruidenberg',
         'organization_name' => 'Gemeente Geertruidenberg',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'gtb_2020',
@@ -856,7 +854,6 @@ return [
         'implementation_name' => 'Heumen',
         'organization_name' => 'Gemeente Heumen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'heu_2021',
@@ -895,7 +892,6 @@ return [
         'implementation_name' => 'Schagen',
         'organization_name' => 'Gemeente Schagen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'schagen',
@@ -935,7 +931,6 @@ return [
         'organization_name' => 'Etten-Leur - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -975,7 +970,6 @@ return [
         'organization_name' => 'Halderberge - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1015,7 +1009,6 @@ return [
         'organization_name' => 'Moerdijk - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1055,7 +1048,6 @@ return [
         'organization_name' => 'Zundert - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1094,7 +1086,6 @@ return [
         'implementation_name' => 'Waalwijk',
         'organization_name' => 'Gemeente Waalwijk',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'paswijzer',
@@ -1190,7 +1181,6 @@ return [
         'implementation_name' => 'Waalwijk',
         'organization_name' => 'Gemeente Waalwijk',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'paswijzer',
@@ -1250,7 +1240,6 @@ return [
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1366,7 +1355,6 @@ return [
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1421,7 +1409,6 @@ return [
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1477,7 +1464,6 @@ return [
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\FundProviderChatResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
@@ -10,7 +11,6 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
 /**
  * @property int $sponsor_id
  * @property Product $resource
+ * @property ?FundProvider $fundProvider
  * @property Collection|Fund[] $funds
  * @property bool|null $with_monitored_history
  */
@@ -46,9 +47,9 @@ class SponsorProductResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        /** @var FundProvider $fundProvider */
-        $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
+        $fundProvider = $this->fundProvider;
+        $chat = $fundProvider ? $product->fund_provider_chats->where('fund_provider_id', $fundProvider->id)->first() : null;
 
         return [
             ...$product->only([
@@ -77,6 +78,7 @@ class SponsorProductResource extends BaseJsonResource
             'funds' => $this->funds ? $this->getFundData($this->funds, $product) : [],
             'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
             'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
+            'fund_provider_product_chat' => $chat ? new FundProviderChatResource($chat) : null,
             ...$this->productReservationFieldSettings($product),
             ...$this->makeTimestamps($product->only([
                 'expire_at', 'deleted_at',
@@ -188,20 +190,26 @@ class SponsorProductResource extends BaseJsonResource
                 'product_reservations_pending',
             ])
             ->withTrashed()
-            ->latest();
+            ->latest('created_at')
+            ->latest('id');
 
-        if (!$fundProvider->fund->isTypeSubsidy()) {
-            FundProviderProductQuery::whereConfigured($dealsHistoryQuery);
-        }
+        return $dealsHistoryQuery->get()->map(function (FundProviderProduct $productHistory) use ($product) {
+            $amountIdentity = currency_format(floatval($product->price) - floatval($productHistory->amount));
 
-        return $dealsHistoryQuery->get()->map(fn (FundProviderProduct $product) => array_merge($product->only([
-            'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',
-            'voucher_transactions_count', 'product_reservations_pending_count', 'active', 'product_id',
-        ]), [
-            'expire_at' => $product->expire_at?->format('Y-m-d'),
-            'amount_locale' => currency_format_locale($product->amount),
-            'expire_at_locale' => format_date_locale($product->expire_at),
-        ]))->toArray();
+            return [
+                ...$productHistory->only([
+                    'id', 'amount',
+                    'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'limit_per_identity_unlimited',
+                    'voucher_transactions_count', 'product_reservations_pending_count', 'active', 'product_id',
+                    'payment_type', 'payment_type_locale', 'allow_scanning',
+                ]),
+                'amount_identity' => $amountIdentity,
+                'amount_identity_locale' => currency_format_locale($amountIdentity),
+                'amount_locale' => currency_format_locale($productHistory->amount),
+                ...$this->makeTimestamps($productHistory->only(['expire_at']), dateOnly: true),
+                ...$this->makeTimestamps($productHistory->only(['created_at', 'updated_at'])),
+            ];
+        })->toArray();
     }
 
     /**

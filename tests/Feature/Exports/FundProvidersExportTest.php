@@ -59,7 +59,7 @@ class FundProvidersExportTest extends TestCase
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
             'data_format' => 'csv',
-            'fields' => ['fund', 'implementation', 'fund_type', 'provider'],
+            'fields' => ['fund', 'implementation', 'provider'],
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
@@ -67,7 +67,6 @@ class FundProvidersExportTest extends TestCase
         $this->assertFields($response, $fundProvider, [
             FundProvidersExport::trans('fund'),
             FundProvidersExport::trans('implementation'),
-            FundProvidersExport::trans('fund_type'),
             FundProvidersExport::trans('provider'),
         ]);
     }
@@ -93,6 +92,6 @@ class FundProvidersExportTest extends TestCase
 
         // Assert values
         $this->assertEquals($fundProvider->fund->name, $rows[1][0]);
-        $this->assertEquals($fundProvider->organization->name, $rows[1][3]);
+        $this->assertEquals($fundProvider->organization->name, $rows[1][2]);
     }
 }

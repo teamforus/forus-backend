@@ -189,8 +189,8 @@ class TestData
                 FundProviderApplied::dispatch($fund, $fund->providers()->forceCreate([
                     'fund_id' => $fund->id,
                     'organization_id' => $organization->id,
-                    'allow_budget' => $fund->isTypeBudget() && random_int(0, 1) == 0,
-                    'allow_products' => $fund->isTypeBudget() && random_int(0, 10) == 0,
+                    'allow_budget' => random_int(0, 1) == 0,
+                    'allow_products' => random_int(0, 10) == 0,
                     'state' => FundProvider::STATE_ACCEPTED,
                 ]));
             }
@@ -214,8 +214,8 @@ class TestData
                 ]);
 
                 FundProviderApplied::dispatch($fund, $provider->updateModel([
-                    'allow_products' => $fund->isTypeBudget(),
-                    'allow_budget' => $fund->isTypeBudget(),
+                    'allow_products' => true,
+                    'allow_budget' => true,
                     'state' => FundProvider::STATE_ACCEPTED,
                 ]));
             }
@@ -280,7 +280,7 @@ class TestData
                 $voucher->buyProductVoucher($product);
             }
 
-            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 3)) {
+            while ($voucher->amount_available > ($voucher->amount / 3)) {
                 $product = Product::find((random_int(0, 10) > 6 && $productIds->count()) ? $productIds->random() : null);
 
                 $transaction = $voucher->transactions()->forceCreate([
@@ -358,8 +358,7 @@ class TestData
             'phone_public' => true,
             'email_public' => true,
             'business_type_id' => BusinessType::pluck('id')->random(),
-            'reservations_budget_enabled' => true,
-            'reservations_subsidy_enabled' => true,
+            'reservations_enabled' => true,
             ...$this->config('default.organizations', []),
             ...$this->config("organizations.$name.organization", []),
             ...$fields,
@@ -464,7 +463,7 @@ class TestData
             'auto_requests_validation' => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
             'criteria_editable_after_start' => false,
-            'type' => Fund::TYPE_BUDGET,
+            'external' => false,
             ...$this->config('default.funds', []),
             ...$config,
         ]);
@@ -703,15 +702,15 @@ class TestData
             ];
         }
 
-        $limitMultiplier = !$configLimitMultiplier && $fund->isTypeSubsidy() ? [[
+        $limitMultiplier = $configLimitMultiplier ?: [[
             'record_type_key' => 'children_nth',
             'multiplier' => 1,
             'fund_id' => $fund->id,
-        ]] : ($configLimitMultiplier ?: []);
+        ]];
 
         $fundFormula = $configFormula ?: [[
             'type' => FundFormula::TYPE_FIXED,
-            'amount' => $fund->isTypeBudget() ? $this->config('voucher_amount') : 0,
+            'amount' => $this->config('voucher_amount'),
             'fund_id' => $fund->id,
         ]];
 
@@ -1213,9 +1212,7 @@ class TestData
      */
     public function makeReservations(Identity $identity): void
     {
-        $funds = FundQuery::whereActiveFilter(Fund::query())
-            ->where('type', '=', Fund::TYPE_BUDGET)
-            ->get();
+        $funds = FundQuery::whereIsInternalConfiguredAndActive(Fund::query())->get();
 
         foreach ($funds as $fund) {
             $voucher = $fund->makeVoucher($identity, amount: 20);
@@ -1230,7 +1227,7 @@ class TestData
                     continue;
                 }
 
-                $voucher->reserveProduct($product, null, [
+                $voucher->reserveProduct(product: $product, extraData: [
                     'first_name' => $this->faker->firstName,
                     'last_name' => $this->faker->lastName,
                     'user_note' => $this->faker->text(random_int(64, 256)),

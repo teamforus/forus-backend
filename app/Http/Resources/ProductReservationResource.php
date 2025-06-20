@@ -35,10 +35,11 @@ class ProductReservationResource extends BaseJsonResource
         $reservation = $this->resource;
         $voucher = $this->resource->voucher;
         $transaction = $this->resource->voucher_transaction;
+        $fundProviderProduct = $reservation->product->getFundProviderProduct($reservation->voucher->fund);
 
         $productSnapshot = new Product(array_merge($reservation->only([
             'price_type', 'price_discount',
-        ]), $voucher->fund->isTypeSubsidy() ? [
+        ]), ($fundProviderProduct && $fundProviderProduct->isPaymentTypeSubsidy()) ? [
             'price' => is_null($reservation->price) ? null : max($reservation->price - $reservation->amount, 0),
         ] : [
             'price' => $reservation->price,
