@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\Api\Platform\FundRequests\FundRequestClarifications;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use Illuminate\Validation\Rule;
 
-class UpdateFundRequestClarificationRequest extends FormRequest
+class UpdateFundRequestClarificationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +25,16 @@ class UpdateFundRequestClarificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'answer' => 'nullable|between:0,2000',
+            'answer' => 'required|between:0,2000',
             'files' => 'required|array',
-            'files.*' => 'required|exists:files,uid',
+            'files.*' => [
+                'required',
+                Rule::exists('files', 'uid')
+                    ->whereNull('fileable_id')
+                    ->whereNull('fileable_type')
+                    ->where('type', 'fund_request_clarification_proof')
+                    ->where('identity_address', $this->auth_address()),
+            ],
         ];
     }
 }

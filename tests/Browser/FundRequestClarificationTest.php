@@ -125,7 +125,8 @@ class FundRequestClarificationTest extends DuskTestCase
 
                 $browser->waitFor('@openReplyForm')->click('@openReplyForm');
                 $browser->waitFor('@submitBtn')->click('@submitBtn');
-                $browser->waitFor('.form-error');
+                $browser->waitFor('@errorAnswer1');
+                $browser->waitFor('@errorFiles1');
 
                 // add a file
                 $browser->within('@fileUploader', function (Browser $browser) {
@@ -142,6 +143,9 @@ class FundRequestClarificationTest extends DuskTestCase
                 $browser->typeSlowly('@answerInput', $text, 10);
 
                 $browser->click('@submitBtn');
+
+                $browser->waitUntilMissing('@errorAnswer1');
+                $browser->waitUntilMissing('@errorFiles1');
 
                 $browser->waitFor('@clarificationAnswer');
                 $browser->assertSeeIn('@clarificationAnswer', $text);
