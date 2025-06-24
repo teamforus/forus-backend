@@ -594,9 +594,14 @@ class FundProvider extends BaseModel
 
         return [
             ...array_only($productData, [
-                'id', 'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'limit_per_identity_unlimited',
-                'expire_at', 'amount', 'payment_type', 'allow_scanning',
+                'id', 'expire_at', 'payment_type', 'limit_total_unlimited', 'limit_per_identity_unlimited',
             ]),
+            'amount' => !isset($productData['amount']) ? null : currency_format($productData['amount']),
+            'limit_total' => is_numeric($productData['limit_total'] ?? null) ? intval($productData['limit_total']) : null,
+            'limit_total_unlimited' => isset($productData['limit_total_unlimited']) && $productData['limit_total_unlimited'],
+            'limit_per_identity' => is_numeric($productData['limit_per_identity'] ?? null) ? intval($productData['limit_per_identity']) : null,
+            'limit_per_identity_unlimited' => isset($productData['limit_per_identity_unlimited']) && $productData['limit_per_identity_unlimited'],
+            'allow_scanning' => !isset($productData['allow_scanning']) || $productData['allow_scanning'],
             'price' => Product::findOrFail($productData['id'])->price,
         ];
     }
@@ -620,7 +625,7 @@ class FundProvider extends BaseModel
 
         return $query->firstOrCreate([
             'product_id' => $data['id'],
-        ]);
+        ], $data);
     }
 
     /**
@@ -636,18 +641,24 @@ class FundProvider extends BaseModel
         }
 
         $hasConfigs =
+            !is_null(Arr::get($data, 'price')) ||
+            !is_null(Arr::get($data, 'amount')) ||
             !is_null(Arr::get($data, 'expire_at')) ||
             !is_null(Arr::get($data, 'limit_total')) ||
+            !is_null(Arr::get($data, 'allow_scanning')) ||
             !is_null(Arr::get($data, 'limit_total_unlimited')) ||
             !is_null(Arr::get($data, 'limit_per_identity')) ||
             !is_null(Arr::get($data, 'limit_per_identity_unlimited'));
 
         $hasChanged =
+            (Arr::get($data, 'price') != $fundProviderProduct->price) ||
+            (Arr::get($data, 'amount') != $fundProviderProduct->amount) ||
             (Arr::get($data, 'expire_at') !== $fundProviderProduct->expire_at?->format('Y-m-d')) ||
-            (Arr::get($data, 'limit_total') !== $fundProviderProduct->limit_total) ||
-            (((bool) Arr::get($data, 'limit_total_unlimited')) !== $fundProviderProduct->limit_total_unlimited) ||
-            (Arr::get($data, 'limit_per_identity') !== $fundProviderProduct->limit_per_identity) ||
-            (((bool) Arr::get($data, 'limit_per_identity_unlimited')) !== $fundProviderProduct->limit_per_identity_unlimited);
+            (Arr::get($data, 'limit_total') != $fundProviderProduct->limit_total) ||
+            (Arr::get($data, 'allow_scanning') != $fundProviderProduct->allow_scanning) ||
+            (((bool) Arr::get($data, 'limit_total_unlimited')) != $fundProviderProduct->limit_total_unlimited) ||
+            (Arr::get($data, 'limit_per_identity') != $fundProviderProduct->limit_per_identity) ||
+            (((bool) Arr::get($data, 'limit_per_identity_unlimited')) != $fundProviderProduct->limit_per_identity_unlimited);
 
         if ($hasChanged) {
             $fundProviderProduct->delete();

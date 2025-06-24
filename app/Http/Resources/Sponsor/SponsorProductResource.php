@@ -194,7 +194,9 @@ class SponsorProductResource extends BaseJsonResource
             ->latest('id');
 
         return $dealsHistoryQuery->get()->map(function (FundProviderProduct $productHistory) use ($product) {
-            $amountIdentity = currency_format(floatval($product->price) - floatval($productHistory->amount));
+            $amountIdentity = $productHistory->isPaymentTypeSubsidy()
+                ? currency_format(floatval($productHistory->price) - floatval($productHistory->amount))
+                : $productHistory->price;
 
             return [
                 ...$productHistory->only([
@@ -204,7 +206,7 @@ class SponsorProductResource extends BaseJsonResource
                     'payment_type', 'payment_type_locale', 'allow_scanning',
                 ]),
                 'amount_identity' => $amountIdentity,
-                'amount_identity_locale' => currency_format_locale($amountIdentity),
+                'amount_identity_locale' => $amountIdentity === null ? 'Geen informatie' : currency_format_locale($amountIdentity),
                 'amount_locale' => currency_format_locale($productHistory->amount),
                 ...$this->makeTimestamps($productHistory->only(['expire_at']), dateOnly: true),
                 ...$this->makeTimestamps($productHistory->only(['created_at', 'updated_at'])),

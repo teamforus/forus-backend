@@ -172,12 +172,13 @@ class ProductResource extends BaseJsonResource
             return [
                 ...$data,
                 ...$productData,
-                'amount' => $fundProviderProduct?->amount,
-                'amount_locale' => $fundProviderProduct?->amount_locale,
-                'payment_type' => $fundProviderProduct?->payment_type,
-                'payment_type_locale' => $fundProviderProduct?->payment_type_locale,
-                'user_price' => $fundProviderProduct?->user_price,
-                'user_price_locale' => $fundProviderProduct?->user_price_locale,
+                ...$fundProviderProduct?->isPaymentTypeSubsidy() ? [
+                    'user_price' => $fundProviderProduct->user_price,
+                    'user_price_locale' => $fundProviderProduct->user_price_locale,
+                ] : [
+                    'user_price' => $product->price,
+                    'user_price_locale' => $product->price_locale,
+                ],
                 'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
             ];
         })->values();
