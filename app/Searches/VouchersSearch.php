@@ -81,6 +81,6 @@ class VouchersSearch extends BaseSearch
             ]);
         }
 
-        return $builder->orderBy($orderBy, $orderDir)->latest('created_at');
+        return $builder->orderBy($orderBy, $orderDir)->latest('created_at')->latest('id');
     }
 }

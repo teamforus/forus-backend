@@ -258,12 +258,13 @@ class TestData
     public function applyFunds(Identity $identity): void
     {
         /** @var Prevalidation[] $prevalidations */
-        $prevalidations = Prevalidation::where([
-            'state' => 'pending',
-            'identity_address' => $identity->address,
-        ])->get()->groupBy('fund_id')->map(static function (SupportCollection $arr) {
-            return $arr->first();
-        });
+        $prevalidations = Prevalidation::query()
+            ->where('state', Prevalidation::STATE_PENDING)
+            ->where('identity_address', $identity->address)
+            ->orderBy('fund_id', 'desc')
+            ->get()
+            ->groupBy('fund_id')
+            ->map(fn (SupportCollection $arr) => $arr->first());
 
         foreach ($prevalidations as $prevalidation) {
             $prevalidation->assignToIdentity($identity);
@@ -691,7 +692,7 @@ class TestData
         ]);
 
         if (!$fund->isAutoValidatingRequests()) {
-            $criteria = array_merge($criteria, $this->config('funds_criteria'));
+            $criteria = array_merge($criteria, $this->config('fund_criteria'));
         } else {
             $criteria[] = [
                 'record_type_key' => $recordType->key,
@@ -1191,7 +1192,7 @@ class TestData
      */
     public function makeVouchers(): void
     {
-        $funds = Fund::where(fn (Builder $q) => FundQuery::whereActiveFilter($q))->get();
+        $funds = Fund::where(fn (Builder $q) => FundQuery::whereIsInternalConfiguredAndActive($q))->get();
         $vouchersPerFund = $this->config('vouchers_per_fund_count');
 
         foreach ($funds as $fund) {
@@ -1215,7 +1216,11 @@ class TestData
         $funds = FundQuery::whereIsInternalConfiguredAndActive(Fund::query())->get();
 
         foreach ($funds as $fund) {
-            $voucher = $fund->makeVoucher($identity, amount: 20);
+            if (!($this->config('funds')[$fund->name]['test_reservations'] ?? true)) {
+                continue;
+            }
+
+            $voucher = $fund->makeVoucher($identity, amount: 200);
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
                 $product = ProductQuery::approvedForFundsFilter(Product::query(), $fund->id)
