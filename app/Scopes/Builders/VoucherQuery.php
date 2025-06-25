@@ -2,7 +2,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
@@ -394,7 +393,7 @@ class VoucherQuery
             'transactions_amount' => VoucherTransaction::query()
                 ->where(fn ($builder) => VoucherTransactionQuery::whereOutgoing($builder))
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
-                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
+                ->selectRaw('IFNULL(sum(IFNULL(voucher_transactions.amount_voucher, voucher_transactions.amount)), 0)'),
             'vouchers_amount' => VoucherSubQuery::getReservationOrProductVoucherSubQuery()
                 ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
             'reimbursements_pending_amount' => Reimbursement::query()

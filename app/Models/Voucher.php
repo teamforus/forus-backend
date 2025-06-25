@@ -26,7 +26,6 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
-use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -196,7 +195,6 @@ class Voucher extends BaseModel
 
     public const string EVENT_TRANSACTION = 'transaction';
     public const string EVENT_TRANSACTION_PRODUCT = 'transaction_product';
-    public const string EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
 
     public const string EVENT_SHARED_BY_EMAIL = 'shared_by_email';
     public const string EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
@@ -601,7 +599,7 @@ class Voucher extends BaseModel
     public function getAmountSpentAttribute(): string
     {
         return currency_format(array_sum([
-            $this->transactions()->sum('amount'),
+            $this->transactions()->selectRaw('IFNULL(SUM(IFNULL(amount_voucher, amount)), 0) as total')->value('total'),
             $this->product_vouchers()->sum('amount'),
             $this->reimbursements_pending()->sum('amount'),
         ]));
@@ -614,7 +612,7 @@ class Voucher extends BaseModel
     public function getAmountSpentCachedAttribute(): string
     {
         return currency_format(array_sum([
-            $this->transactions->sum('amount'),
+            $this->transactions->sum(fn (VoucherTransaction $item) => $item->amount_voucher ?? $item->amount),
             $this->product_vouchers->sum('amount'),
             $this->reimbursements_pending->sum('amount'),
         ]));
@@ -827,23 +825,11 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('from')) {
-            $query->where(
-                'created_at',
-                '>=',
-                Carbon::parse(
-                    $request->input('from')
-                )->startOfDay()
-            );
+            $query->where('created_at', '>=', Carbon::parse($request->input('from'))->startOfDay());
         }
 
         if ($request->has('to')) {
-            $query->where(
-                'created_at',
-                '<=',
-                Carbon::parse(
-                    $request->input('to')
-                )->endOfDay()
-            );
+            $query->where('created_at', '<=', Carbon::parse($request->input('to'))->endOfDay());
         }
 
         if ($request->has('amount_available_min') || $request->has('amount_available_max')) {
@@ -866,7 +852,7 @@ class Voucher extends BaseModel
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
-     * @throws Exception
+     * @throws Throwable
      * @return Builder
      */
     public static function searchSponsorQuery(
@@ -1093,7 +1079,9 @@ class Voucher extends BaseModel
 
         $voucher = self::create([
             'number' => self::makeUniqueNumber(),
-            'amount' => $productReservation->amount ?? $product->price,
+            'amount' => is_null($productReservation?->amount_voucher)
+                ? $productReservation->amount ?? $product->price
+                : $productReservation->amount_voucher,
             'fund_id' => $this->fund_id,
             'expire_at' => $voucherExpireAt,
             'parent_id' => $this->id,
@@ -1165,8 +1153,8 @@ class Voucher extends BaseModel
      * @param Employee|null $employee
      * @param array $extraData
      * @param bool|null $hasExtraPayment
+     * @throws Throwable
      * @return ProductReservation
-     * @throws Exception
      */
     public function reserveProduct(
         Product $product,
@@ -1176,12 +1164,16 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
+        $amount_voucher = $fundProviderProduct?->isPaymentTypeSubsidy()
+            ? max($product->price - $fundProviderProduct->amount, 0)
+            : null;
+
         if ($hasExtraPayment) {
-            $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+            $amount = ($amount_voucher > $this->amount_available) ? $amount_voucher : $product->price;
             $state = ProductReservation::STATE_WAITING;
             $extraAmount = $product->price - $amount;
         } else {
-            $amount = $fundProviderProduct?->isPaymentTypeSubsidy() ? $fundProviderProduct->amount : $product->price;
+            $amount = $product->price;
             $state = ProductReservation::STATE_PENDING;
             $extraAmount = 0;
         }
@@ -1190,6 +1182,7 @@ class Voucher extends BaseModel
         $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
+            'amount_voucher' => $amount_voucher,
             'state' => $state,
             'product_id' => $product->id,
             'employee_id' => $employee?->id,
@@ -1221,7 +1214,7 @@ class Voucher extends BaseModel
 
     /**
      * @param array $data
-     * @throws Exception
+     * @throws Throwable
      * @return Reimbursement
      */
     public function makeReimbursement(array $data = []): Reimbursement
@@ -1708,7 +1701,7 @@ class Voucher extends BaseModel
      */
     public function makeTransaction(
         array $attributes = [],
-        bool $reviewRequired = false
+        bool $reviewRequired = false,
     ): VoucherTransaction {
         $data = array_merge([
             'state' => VoucherTransaction::STATE_PENDING,
@@ -1773,7 +1766,7 @@ class Voucher extends BaseModel
         }
 
         Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [
-            'voucher_transaction_note' => $note,
+            'employee_note' => $note,
         ] : []));
 
         return $transaction;
