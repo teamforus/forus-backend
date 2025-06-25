@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\Products\IndexProductsRequest;
-use App\Http\Resources\Provider\App\ProviderProductAppResource;
-use App\Http\Resources\Provider\ProviderSubsidyProductResource;
-use App\Models\FundProviderProduct;
+use App\Http\Resources\Provider\App\ProviderAppProductResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,29 +28,25 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
 
-        $checkForReservableFlag = $request->input('reservable', false);
+        $voucher = $voucherToken->voucher;
+        $checkForReservableFlag = $request->get('reservable', false);
         $organizationQuery = Organization::queryByIdentityPermissions($request->auth_address(), 'scan_vouchers');
 
-        if ($request->input('organization_id') !== null) {
+        if ($request->get('organization_id') !== null) {
             $organizationQuery->where('id', $request->input('organization_id'));
         }
 
-        if ($voucherToken->voucher->fund->isTypeSubsidy()) {
-            $query = FundProviderProductQuery::whereAvailableForSubsidyVoucher(
-                FundProviderProduct::query(),
-                $voucherToken->voucher,
-                $organizationQuery->select('id')
-            );
-
-            return ProviderSubsidyProductResource::queryCollection($query, $request);
-        }
-
-        // Product approved to be bought by target voucher
-        return ProviderProductAppResource::queryCollection(ProductQuery::whereAvailableForVoucher(
+        $query = ProductQuery::whereAvailableForVoucher(
             Product::query(),
             $voucherToken->voucher,
             $organizationQuery->select('id'),
-            $checkForReservableFlag
-        ), $request);
+            $checkForReservableFlag,
+        );
+
+        // Product approved to be bought by target voucher
+        return ProviderAppProductResource::queryCollection($query, $request, [
+            'voucher' => $voucher,
+            'reservable' => !!$checkForReservableFlag,
+        ]);
     }
 }

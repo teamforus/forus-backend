@@ -37,11 +37,7 @@ class ProductCategorySearch extends BaseSearch
 
         if ($this->hasFilter('used') && $this->getFilter('used', false)) {
             $builder->where(function (ProductCategory|Builder $builder) {
-                $fundFilters = $this->hasFilter('used_type') ? [
-                    'type' => $this->getfilter('used_type'),
-                ] : [];
-
-                $fundIds = Implementation::activeFundsQuery()->where($fundFilters)->pluck('id')->toArray();
+                $fundIds = Implementation::activeFundsQuery()->pluck('id')->toArray();
                 $ids = Product::searchQuery($fundIds)->distinct()->pluck('product_category_id')->toArray();
 
                 $builder->whereIn('id', $ids);

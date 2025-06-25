@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Fund;
-use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -38,24 +36,7 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->checkValidReservation($voucher, $product);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithSubsidyVoucherAsUser(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
         $this->checkValidReservation($voucher, $product);
@@ -72,84 +53,10 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
         $this->makeReservationStoreRequest($voucher, $product, [], false)->assertUnauthorized();
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithSubsidyVoucherAsGuest(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->makeReservationStoreRequest($voucher, $product, [], false)->assertUnauthorized();
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithInvalidVoucher(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        Organization::query()
-            ->where('reservations_subsidy_enabled', true)
-            ->update(['reservations_subsidy_enabled' => false]);
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $voucherBudget = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucherBudget);
-
-        $this
-            ->makeReservationStoreRequest($voucher, $product)
-            ->assertJsonValidationErrorFor('product_id');
-
-        Organization::query()
-            ->where('reservations_subsidy_enabled', false)
-            ->update(['reservations_subsidy_enabled' => true]);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithInvalidProduct(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        Organization::query()
-            ->where('reservations_budget_enabled', true)
-            ->update(['reservations_budget_enabled' => false]);
-
-        $voucherSubsidy = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucherSubsidy);
-
-        $this
-            ->makeReservationStoreRequest($voucher, $product)
-            ->assertJsonValidationErrorFor('product_id');
-
-        Organization::where('reservations_budget_enabled', false)
-            ->update(['reservations_budget_enabled' => true]);
     }
 
     /**
@@ -163,24 +70,7 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->checkAcceptAndRejectByProvider($voucher, $product);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationProviderWithSubsidyVoucher(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
         $this->checkAcceptAndRejectByProvider($voucher, $product);
@@ -197,7 +87,7 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
         $this->checkReservationArchiving($voucher, $product);
@@ -214,7 +104,7 @@ class ProductReservationTest extends TestCase
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
         $originalAmount = (float) $voucher->amount_available;

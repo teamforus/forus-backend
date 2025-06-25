@@ -27,7 +27,7 @@ return new class () extends Migration {
     {
     }
 
-    protected function migrateVouchersCreated()
+    protected function migrateVouchersCreated(): void
     {
         $events = $this->getEvents('voucher', 'assigned');
 
@@ -36,26 +36,21 @@ return new class () extends Migration {
                 continue;
             }
 
-            $voucher = $event->loggable;
             $notifications = Notification::where([
                 'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedNotification',
             ])->where('data->event_id', $event->id);
 
-            if ($voucher->fund->isTypeSubsidy()) {
-                $notifications->update([
-                    'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification',
-                    'data->key' => 'notifications_identities.identity_voucher_assigned_subsidy',
-                ]);
-            } else {
-                $notifications->update([
-                    'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification',
-                    'data->key' => 'notifications_identities.identity_voucher_assigned_budget',
-                ]);
-            }
+            $notifications->update([
+                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification',
+                'data->key' => 'notifications_identities.identity_voucher_assigned_budget',
+            ]);
         }
     }
 
-    protected function migrateVouchersAssigned()
+    /**
+     * @return void
+     */
+    protected function migrateVouchersAssigned(): void
     {
         $events = $this->getEvents('voucher', 'created_budget');
 
@@ -64,22 +59,14 @@ return new class () extends Migration {
                 continue;
             }
 
-            $voucher = $event->loggable;
             $notifications = Notification::where([
                 'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedNotification',
             ])->where('data->event_id', $event->id);
 
-            if ($voucher->fund->isTypeSubsidy()) {
-                $notifications->update([
-                    'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification',
-                    'data->key' => 'notifications_identities.voucher_added_subsidy',
-                ]);
-            } else {
-                $notifications->update([
-                    'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification',
-                    'data->key' => 'notifications_identities.voucher_added_budget',
-                ]);
-            }
+            $notifications->update([
+                'type' => 'App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification',
+                'data->key' => 'notifications_identities.voucher_added_budget',
+            ]);
         }
     }
 

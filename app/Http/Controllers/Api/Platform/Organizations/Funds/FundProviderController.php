@@ -91,9 +91,7 @@ class FundProviderController extends Controller
 
         DB::transaction(function () use ($organization, $fundProvider, $request, $fund) {
             $fundProvider->update($request->only([
-                ...($fund->isTypeBudget() ? [
-                    'allow_products', 'allow_budget', 'excluded',
-                ] : ['excluded']),
+                'allow_products', 'allow_budget', 'excluded',
                 ...($organization->allow_provider_extra_payments ? [
                     'allow_extra_payments', 'allow_extra_payments_full',
                 ] : []),
@@ -109,10 +107,6 @@ class FundProviderController extends Controller
 
             if ($request->has('disable_products')) {
                 $fundProvider->declineProducts($request->input('disable_products'));
-            }
-
-            if ($fundProvider->fund->isTypeBudget() && $request->has('reset_products')) {
-                $fundProvider->resetProducts($request->input('reset_products'));
             }
 
             $fundProvider->update([

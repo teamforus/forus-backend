@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|Eloquent|null $fileable
+ * @property-read Model|\Eloquent|null $fileable
  * @property-read string $url_public
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
@@ -51,7 +51,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @method static Builder<static>|File whereType($value)
  * @method static Builder<static>|File whereUid($value)
  * @method static Builder<static>|File whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class File extends Model
 {

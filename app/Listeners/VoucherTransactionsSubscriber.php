@@ -9,7 +9,6 @@ use App\Models\FundProvider;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Exception;
 use Illuminate\Events\Dispatcher;
@@ -27,7 +26,7 @@ class VoucherTransactionsSubscriber
         $transaction = $event->getVoucherTransaction();
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
-        $type = $voucher->isProductType() ? 'product' : ($fund->isTypeBudget() ? 'budget' : 'subsidy');
+        $type = $voucher->isProductType() ? 'product' : 'budget';
         $logData = $event->getLogData();
 
         if (!$voucher->parent_id && $voucher->usedCount() == 1) {
@@ -49,23 +48,13 @@ class VoucherTransactionsSubscriber
         if ($type == 'product') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta, $logData);
             IdentityProductVoucherTransactionNotification::send($event);
-        } elseif ($type == 'budget') {
+        }
+
+        if ($type == 'budget') {
             $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta, $logData);
 
             if ($transaction->isOutgoing()) {
                 IdentityVoucherBudgetTransactionNotification::send($event);
-            }
-        } elseif ($type == 'subsidy') {
-            $fundProviderProduct = $transaction->product->getFundProviderProduct($fund);
-
-            if ($fundProviderProduct) {
-                $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, array_merge([
-                    'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
-                ], $logData));
-
-                if ($transaction->voucher->identity_id) {
-                    IdentityVoucherSubsidyTransactionNotification::send($eventLog);
-                }
             }
         }
 

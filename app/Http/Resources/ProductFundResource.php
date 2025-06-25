@@ -48,10 +48,9 @@ class ProductFundResource extends BaseJsonResource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($fund->organization),
             'implementation' => new ImplementationResource($fund->fund_config->implementation),
-            'approved' => FundQuery::whereProductsAreApprovedFilter(
-                Fund::query()->whereId($fund->id),
-                $this->product
-            )->exists(),
+            'approved' => FundQuery::whereProductsAreApprovedFilter(Fund::where([
+                'id' => $fund->id,
+            ]), $this->product)->exists(),
             'provider_excluded' => $fundProvider?->excluded,
         ]);
     }
