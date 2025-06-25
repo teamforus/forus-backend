@@ -22,6 +22,7 @@ class ProductReservationResource extends BaseJsonResource
         'extra_payment.refunds',
         'extra_payment.refunds_active',
         'custom_fields.organization_reservation_field',
+        'fund_provider_product_with_trashed',
     ];
 
     /**

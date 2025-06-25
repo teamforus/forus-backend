@@ -1207,7 +1207,7 @@ class TestData
 
     /**
      * @param Identity $identity
-     * @throws Exception
+     * @throws Throwable
      * @return void
      */
     public function makeReservations(Identity $identity): void

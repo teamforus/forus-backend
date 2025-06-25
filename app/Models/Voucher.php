@@ -1766,7 +1766,7 @@ class Voucher extends BaseModel
         }
 
         Event::dispatch(new VoucherTransactionCreated($transaction, $note ? [
-            'employee_note' => $note,
+            'voucher_transaction_note' => $note,
         ] : []));
 
         return $transaction;
