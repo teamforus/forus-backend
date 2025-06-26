@@ -30,7 +30,6 @@ class FinancialOverviewStatistic
 
         return [
             'funds' => $this->getFundTotals($this->getFunds($organization), $from, $to),
-            'budget_funds' => $this->getFundTotals($this->getBudgetFunds($organization), $from, $to),
             'year' => $year,
         ];
     }
@@ -249,15 +248,6 @@ class FinancialOverviewStatistic
             '!=',
             Fund::STATE_WAITING
         )->get();
-    }
-
-    /**
-     * @param Organization $organization
-     * @return Collection|Arrayable
-     */
-    private function getBudgetFunds(Organization $organization): Collection|Arrayable
-    {
-        return $this->getFunds($organization)->where('type', Fund::TYPE_BUDGET);
     }
 
     /**

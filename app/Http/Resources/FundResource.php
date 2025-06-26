@@ -80,7 +80,7 @@ class FundResource extends BaseJsonResource
         $data = array_merge($fund->only([
             'id', 'description', 'description_position', 'organization_id', 'state',
             'notification_amount', 'type', 'type_locale', 'archived', 'external_link_url',
-            'is_external', 'external_page', 'external_page_url', 'description_html',
+            'external', 'external_page', 'external_page_url', 'description_html',
         ]), [
             ...$fund->translateColumns(
                 $this->isCollection()
@@ -156,6 +156,7 @@ class FundResource extends BaseJsonResource
         return $isVoucherManager ? array_merge($fund->fund_config->only([
             'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
             'limit_voucher_top_up_amount', 'limit_voucher_total_amount',
+            'show_subsidies', 'show_qr_limits', 'show_requester_limits',
         ]), [
             'limit_per_voucher' => currency_format($limitPerVoucher),
             'limit_per_voucher_locale' => currency_format_locale($limitPerVoucher),

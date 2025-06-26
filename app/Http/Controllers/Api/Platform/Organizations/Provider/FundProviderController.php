@@ -146,7 +146,7 @@ class FundProviderController extends Controller
 
         $fund_id = $request->input('fund_id');
 
-        if (Fund::find($fund_id)->isExternal()) {
+        if (Fund::find($fund_id)->external) {
             abort(403, 'provider_apply_no_permission');
         }
 

@@ -38,7 +38,7 @@ class ProductReservationsExportTest extends TestCase
         $fund = $this->makeTestFund($sponsorOrganization);
         $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($sponsorOrganization, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($sponsorOrganization);
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);

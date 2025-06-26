@@ -33,6 +33,7 @@ use Throwable;
  * @property int|null $voucher_transaction_id
  * @property int|null $fund_provider_product_id
  * @property string $amount
+ * @property string|null $amount_voucher
  * @property string $amount_extra
  * @property string $price
  * @property string $price_discount
@@ -63,6 +64,7 @@ use Throwable;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\ReservationExtraPayment|null $extra_payment
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read \App\Models\FundProviderProduct|null $fund_provider_product_with_trashed
  * @property-read Carbon $expire_at
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -79,6 +81,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountExtra($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountVoucher($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCanceledAt($value)
@@ -194,7 +197,7 @@ class ProductReservation extends BaseModel
      */
     protected $fillable = [
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
-        'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at',
+        'amount', 'amount_voucher', 'state', 'accepted_at', 'rejected_at', 'canceled_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
         'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
@@ -295,6 +298,15 @@ class ProductReservation extends BaseModel
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_provider_product_with_trashed(): BelongsTo
+    {
+        return $this->belongsTo(FundProviderProduct::class, 'fund_provider_product_id')->withTrashed();
     }
 
     /**
@@ -440,6 +452,7 @@ class ProductReservation extends BaseModel
 
         $transaction = $this->product_voucher->makeTransaction(array_merge([
             'amount' => $this->amount,
+            'amount_voucher' => $this->amount_voucher,
             'product_id' => $this->product_id,
             'transfer_at' => $transfer_at,
             'employee_id' => $employee?->id,
@@ -716,7 +729,7 @@ class ProductReservation extends BaseModel
         if ($this->created_at && $this->isWaiting()) {
             $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');
             $expireAt = $this->created_at->clone()->addMinutes($timeOffset);
-            $expiresIn = now()->diffInSeconds($expireAt, false);
+            $expiresIn = now()->diffInSeconds($expireAt);
 
             return max(min($expiresIn, $this->extra_payment->expiresIn() ?: 0), 0) ?: null;
         }

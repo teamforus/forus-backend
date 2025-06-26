@@ -2,7 +2,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
@@ -47,7 +46,7 @@ class VoucherQuery
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
 
                 $builder->whereHas('fund_providers', static function (Builder $builder) use ($fund_id) {
-                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'product');
+                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'allow_products');
                 });
             });
 
@@ -370,7 +369,6 @@ class VoucherQuery
 
             $builder->whereNull('product_id');
             $builder->whereNull('product_reservation_id');
-            $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
             $builder->whereRelation('fund.fund_config', 'allow_reimbursements', true);
         });
     }
@@ -395,7 +393,7 @@ class VoucherQuery
             'transactions_amount' => VoucherTransaction::query()
                 ->where(fn ($builder) => VoucherTransactionQuery::whereOutgoing($builder))
                 ->whereColumn('vouchers.id', 'voucher_transactions.voucher_id')
-                ->selectRaw('IFNULL(sum(voucher_transactions.amount), 0)'),
+                ->selectRaw('IFNULL(sum(IFNULL(voucher_transactions.amount_voucher, voucher_transactions.amount)), 0)'),
             'vouchers_amount' => VoucherSubQuery::getReservationOrProductVoucherSubQuery()
                 ->selectRaw('IFNULL(sum(product_vouchers.amount), 0)'),
             'reimbursements_pending_amount' => Reimbursement::query()

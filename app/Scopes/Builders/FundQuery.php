@@ -54,7 +54,7 @@ class FundQuery
             }
 
             if (!$includeExternal) {
-                $builder->where('type', '!=', Fund::TYPE_EXTERNAL);
+                $builder->where('external', false);
             }
         });
     }
@@ -79,8 +79,6 @@ class FundQuery
 
         return $query->where(function (Builder $builder) use ($product) {
             $builder->where(function (Builder $builder) use ($product) {
-                $builder->where('type', '=', Fund::TYPE_BUDGET);
-
                 $builder->whereHas('providers', static function (Builder $builder) use ($product) {
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     $builder->where('allow_products', '=', true);
@@ -182,7 +180,7 @@ class FundQuery
      */
     public static function whereIsInternal(Builder|Relation|Fund $query): Builder|Relation|Fund
     {
-        return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+        return $query->where('external', false);
     }
 
     /**

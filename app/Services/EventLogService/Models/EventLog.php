@@ -32,7 +32,7 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
- * @property-read Model|Eloquent $loggable
+ * @property-read Model|\Eloquent $loggable
  * @method static Builder<static>|EventLog newModelQuery()
  * @method static Builder<static>|EventLog newQuery()
  * @method static Builder<static>|EventLog query()
@@ -45,7 +45,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|EventLog whereLoggableType($value)
  * @method static Builder<static>|EventLog whereOriginal($value)
  * @method static Builder<static>|EventLog whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class EventLog extends Model
 {

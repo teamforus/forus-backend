@@ -68,14 +68,14 @@ class OrganizationQuery
                 FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
                     $voucher->fund_id,
-                    'product',
+                    'allow_products',
                     $voucher->product_id
                 );
             } else {
                 FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
                     $voucher->fund_id,
-                    $voucher->fund->isTypeBudget() ? 'budget' : 'subsidy'
+                    'allow_budget',
                 );
             }
         });

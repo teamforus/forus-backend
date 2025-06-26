@@ -20,7 +20,6 @@ class FundProvidersExport extends BaseFieldedExport
     protected static array $exportFields = [
         'fund',
         'implementation',
-        'fund_type',
         'provider',
         'iban',
         'provider_last_activity',
@@ -110,7 +109,6 @@ class FundProvidersExport extends BaseFieldedExport
         return [
             'fund' => $fundProvider->fund->name,
             'implementation' => $fundProvider->fund->fund_config?->implementation?->name,
-            'fund_type' => $fundProvider->fund->type,
             'provider' => $provider->name,
             'iban' => $provider->iban,
             'provider_last_activity' => $lastActivity?->diffForHumans(now()),

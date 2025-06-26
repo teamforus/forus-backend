@@ -43,7 +43,6 @@ return [
             // 'fund_product_added' => 'Product :product_name was added in fund :fund_name',
             // 'fund_product_approved' => 'Product :product_name was approved in fund :fund_name',
             // 'fund_product_revoked' => 'Product :product_name was revoked in fund :fund_name',
-            // 'fund_product_subsidy_removed' => 'Subsidy product :product_name was removed in fund :fund_name',
         ],
     ],
     'loggable' => [
@@ -66,7 +65,6 @@ return [
             'expired_budget' => 'Verlopen',
             'expired_product' => 'Verlopen',
             'transaction' => 'Transactie',
-            'transaction_subsidy' => 'Transactie',
             'transaction_budget' => 'Transactie',
             'transaction_product' => 'Transactie',
         ],
@@ -86,7 +84,6 @@ return [
                 'basic' => 'Tegoed #:number :transaction_type transactie aangemaakt',
                 'complete' => 'Tegoed #:number :transaction_type transactie met het bedrag van :amount_locale',
             ],
-            'transaction_subsidy' => 'Tegoed #:number transactie is aangemaakt',
             'transaction_budget' => 'Tegoed #:number transactie is aangemaakt',
             'transaction_product' => 'Tegoed #:number transactie is aangemaakt',
             'physical_card_requested' => 'Tegoed #:number plastic pas is besteld',

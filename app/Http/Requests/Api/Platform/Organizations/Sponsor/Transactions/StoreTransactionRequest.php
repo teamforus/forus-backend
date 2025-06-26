@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Reimbursement;
@@ -111,8 +110,6 @@ class StoreTransactionRequest extends BaseFormRequest
         $builder = VoucherQuery::whereNotExpiredAndActive(Voucher::query());
 
         $builder = $builder->whereHas('fund', function (Builder $builder) {
-            $builder->where('funds.type', Fund::TYPE_BUDGET);
-
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
                 'organization_id' => $this->organization->id,
             ]))->select('funds.id');
@@ -127,13 +124,13 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     protected function fundProviderIds(?Voucher $voucher): array
     {
-        return $voucher ? FundProviderQuery::whereApprovedForFundsFilter(
-            FundProvider::query(),
-            $voucher->fund_id,
-            'budget'
-        )->whereHas('fund', function (Builder $builder) {
-            $builder->where('type', Fund::TYPE_BUDGET);
-        })->pluck('fund_providers.organization_id')->toArray() : [];
+        if (!$voucher) {
+            return [];
+        }
+
+        return FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $voucher->fund_id, 'allow_budget')
+            ->whereHas('fund', fn (Builder $builder) => FundQuery::whereIsInternal($builder))
+            ->pluck('fund_providers.organization_id')->toArray();
     }
 
     /**
