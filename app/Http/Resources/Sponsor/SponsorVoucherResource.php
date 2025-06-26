@@ -60,20 +60,21 @@ class SponsorVoucherResource extends BaseJsonResource
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards->first();
         $bsn_enabled = $voucher->fund->organization->bsn_enabled;
-        $amount_available = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
+        $amount_available = $voucher->amount_available_cached;
         $amount_spent = floatval($voucher->amount_total) - $amount_available;
         $first_use_date = $voucher->first_use_date;
 
-        if ($voucher->is_granted && $voucher->identity_id) {
+        if ($voucher->granted && $voucher->identity_id) {
             $identity_email = $voucher->identity?->email;
             $identity_bsn = $bsn_enabled ? $voucher->identity?->bsn : null;
         }
 
-        return array_merge($voucher->only([
-            'id', 'number', 'note', 'identity_id', 'state', 'state_locale',
-            'is_granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
-            'in_use', 'limit_multiplier', 'fund_id', 'is_external',
-        ]), [
+        return [
+            ...$voucher->only([
+                'id', 'number', 'note', 'identity_id', 'state', 'state_locale',
+                'granted', 'expired', 'activation_code', 'client_uid', 'has_transactions',
+                'in_use', 'limit_multiplier', 'fund_id', 'external',
+            ]),
             'amount' => currency_format($voucher->amount),
             'amount_locale' => currency_format_locale($voucher->amount),
             'amount_spent' => currency_format($amount_spent),
@@ -92,6 +93,9 @@ class SponsorVoucherResource extends BaseJsonResource
             'address' => $address ?? null,
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'url_webshop' => $voucher->fund->fund_config->implementation->url_webshop ?? null,
+                'show_subsidies' => $voucher->fund->fund_config->show_subsidies ?? false,
+                'show_qr_limits' => $voucher->fund->fund_config->show_qr_limits ?? false,
+                'show_requester_limits' => $voucher->fund->fund_config->show_requester_limits ?? false,
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
                 'allow_voucher_records' => $voucher->fund->fund_config->allow_voucher_records ?? false,
                 'implementation' => $voucher->fund->fund_config->implementation?->only([
@@ -107,7 +111,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
-        ]);
+        ];
     }
 
     /**
@@ -116,15 +120,16 @@ class SponsorVoucherResource extends BaseJsonResource
      */
     private function getProductDetails(Voucher $voucher): array
     {
-        return array_merge($voucher->product->only([
-            'id', 'name', 'description', 'price', 'total_amount', 'sold_amount',
-            'product_category_id', 'organization_id',
-        ]), [
+        return [
+            ...$voucher->product->only([
+                'id', 'name', 'description', 'price', 'total_amount', 'sold_amount',
+                'product_category_id', 'organization_id',
+            ]),
             'product_category' => $voucher->product->product_category,
             'expire_at' => $voucher->product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
             'photo' => new MediaResource($voucher->product->photo),
             'organization' => new OrganizationBasicResource($voucher->product->organization),
-        ]);
+        ];
     }
 }

@@ -80,7 +80,7 @@ class EventLogService implements IEventLogService
         return $this->keyPrepend([
             'id' => $fund->id,
             'name' => $fund->name,
-            'type' => $fund->type,
+            'external' => $fund->external,
             'start_date' => $fund->start_date->format('Y-m-d'),
             'end_date' => $fund->start_date->clone()->addDay()->format('Y-m-d'),
             'end_date_minus1' => $fund->end_date->format('Y-m-d'),

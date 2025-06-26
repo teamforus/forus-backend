@@ -101,14 +101,13 @@ class FundsController extends Controller
             $request->input('default_validator_employee_id') &&
             $request->input('auto_requests_validation');
 
-        /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
             'name', 'description', 'description_short', 'description_position', 'start_date', 'end_date',
-            'type', 'notification_amount', 'default_validator_employee_id',
+            'external', 'notification_amount', 'default_validator_employee_id',
             'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
             'external_page', 'external_page_url',
         ]), [
-            'state' => $organization->initialFundState($request->input('type')),
+            'state' => $organization->initialFundState(!!$request->post('external')),
             'auto_requests_validation' => $auto_requests_validation,
         ]));
 
@@ -125,11 +124,11 @@ class FundsController extends Controller
         $fund->syncTagsOptional($request->input('tag_ids'));
         $fund->syncFaqOptional($request->input('faq'));
 
-        if (config('forus.features.dashboard.organizations.funds.criteria')) {
-            $fund->syncCriteria($request->input('criteria'));
+        if (Config::get('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->syncCriteria($request->input('criteria', []));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.formula_products') &&
+        if (Config::get('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
@@ -436,7 +435,7 @@ class FundsController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         if ($detailed) {
-            $budgetFunds = $organization->funds()->where('type', Fund::TYPE_BUDGET)->get();
+            $budgetFunds = FundQuery::whereIsInternal($organization->funds())->get();
             $hasPayoutFunds = $organization->hasPayoutFunds();
             $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw($hasPayoutFunds));
             $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);

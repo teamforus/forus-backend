@@ -20,10 +20,8 @@ use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotificati
 use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedProductNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
@@ -93,11 +91,7 @@ class VoucherSubscriber
                 VoucherAssigned::dispatch($voucher);
 
                 if (!$voucher->isTypePayout()) {
-                    if ($voucher->fund->isTypeSubsidy()) {
-                        IdentityVoucherAddedSubsidyNotification::send($event);
-                    } else {
-                        IdentityVoucherAddedBudgetNotification::send($event);
-                    }
+                    IdentityVoucherAddedBudgetNotification::send($event);
                 }
             }
         }
@@ -133,7 +127,6 @@ class VoucherSubscriber
     public function onVoucherAssigned(VoucherAssigned $voucherAssigned): void
     {
         $voucher = $voucherAssigned->getVoucher();
-        $type = $voucher->isBudgetType() ? ($voucher->fund->isTypeBudget() ? 'budget' : 'subsidy') : 'product';
 
         $event = $voucher->log(Voucher::EVENT_ASSIGNED, [
             'fund' => $voucher->fund,
@@ -146,18 +139,17 @@ class VoucherSubscriber
             'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
 
-        if ($voucherAssigned->shouldNotifyRequesterAssigned() && !$voucher->isTypePayout()) {
-            switch ($type) {
-                case 'budget': IdentityVoucherAssignedBudgetNotification::send($event);
-                    break;
-                case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event);
-                    break;
-                case 'product': IdentityVoucherAssignedProductNotification::send($event);
-                    break;
-            }
-        }
-
         if (!$voucher->isTypePayout()) {
+            if ($voucherAssigned->shouldNotifyRequesterAssigned()) {
+                if ($voucher->isBudgetType()) {
+                    IdentityVoucherAssignedBudgetNotification::send($event);
+                }
+
+                if ($voucher->isProductType()) {
+                    IdentityVoucherAssignedProductNotification::send($event);
+                }
+            }
+
             $voucher->reportBackofficeReceived();
         }
     }

@@ -28,7 +28,7 @@ return [
     'bunq_key' => '',
 
     // criteria for generated funds
-    'funds_criteria' => [[
+    'fund_criteria' => [[
         'record_type_key' => 'children_nth',
         'operator' => '>',
         'value' => 2,

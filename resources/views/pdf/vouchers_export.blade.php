@@ -5,6 +5,7 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
+    <title></title>
 </head>
 <style>
     @page {
@@ -21,9 +22,7 @@
             <img width="400" style="border: 1px solid silver;" alt="qr-code" src="data:image/png;base64, {!! base64_encode($qr_code) !!} "/>
             <div style="position: absolute; bottom: 25px; left: 0;">
                 <span>{{ $voucherData->getName() }}</span>
-                @if ($voucherData->getVoucher()->fund->isTypeBudget())
-                    <span> - {{ $voucherData->getVoucher()->amount_total }}€</span>
-                @endif
+                <span> - {{ $voucherData->getVoucher()->amount_total }}€</span>
             </div>
         </div>
     @endforeach

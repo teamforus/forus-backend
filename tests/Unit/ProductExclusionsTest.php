@@ -32,7 +32,7 @@ class ProductExclusionsTest extends TestCase
 
         // One subsidy and one budget fund with 2 products and 2 providers each
         $this->makeProviderAndProducts($this->makeTestFund($organization), 2);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization), 2);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 2);
 
         foreach ($organization->funds as $fund) {
             $this->assertEquals(2, $fund->providers->count());
@@ -66,7 +66,7 @@ class ProductExclusionsTest extends TestCase
 
         $this->assertNotNull($organization);
         $this->makeProviderAndProducts($this->makeTestFund($organization), 2);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization), 2);
+        $this->makeProviderAndProducts($this->makeTestFund($organization), 2);
 
         foreach ($organization->funds as $fund) {
             $this->assertEquals(2, $fund->providers->count());

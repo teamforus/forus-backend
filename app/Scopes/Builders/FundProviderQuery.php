@@ -12,34 +12,34 @@ class FundProviderQuery extends BaseQuery
     /**
      * @param Builder|Relation|FundProvider $query
      * @param $fund_id
-     * @param null $type
+     * @param null $approvalType
      * @param null $product_id
      * @return Builder|Relation|FundProvider
      */
     public static function whereApprovedForFundsFilter(
         Builder|Relation|FundProvider $query,
         $fund_id,
-        $type = null,
+        $approvalType = null,
         $product_id = null,
     ): Builder|Relation|FundProvider {
-        return $query->where(static function (Builder $builder) use ($fund_id, $type, $product_id) {
+        return $query->where(static function (Builder $builder) use ($fund_id, $approvalType, $product_id) {
             $builder->where('state', FundProvider::STATE_ACCEPTED);
             $builder->where('excluded', false);
             $builder->whereIn('fund_id', self::isQueryable($fund_id) ? $fund_id : (array) $fund_id);
 
-            $builder->where(static function (Builder $builder) use ($type, $product_id) {
-                if ($type === null) {
+            $builder->where(static function (Builder $builder) use ($approvalType, $product_id) {
+                if ($approvalType === null) {
                     $builder->where(function (Builder $builder) {
                         $builder->where('allow_budget', true);
                         $builder->orWhere('allow_products', true);
                     });
-                } elseif ($type === 'budget') {
+                } elseif ($approvalType === 'allow_budget') {
                     $builder->where('allow_budget', true);
-                } elseif ($type === 'product') {
+                } elseif ($approvalType === 'allow_products') {
                     $builder->where('allow_products', true);
                 }
 
-                if ($type === null || $type === 'product' || $type === 'subsidy') {
+                if ($approvalType === null || $approvalType === 'allow_products') {
                     if ($product_id) {
                         $builder->orWhereHas('fund_provider_products', static function (Builder $builder) use ($product_id) {
                             $builder->whereHas('product', static function (Builder $builder) use ($product_id) {
@@ -52,7 +52,7 @@ class FundProviderQuery extends BaseQuery
                 }
             });
 
-            if ($type === 'product' && $product_id) {
+            if ($approvalType === 'allow_products' && $product_id) {
                 $builder->whereHas('organization.products', static function (Builder $builder) use ($product_id) {
                     $builder->whereIn('products.id', (array) $product_id);
                 });

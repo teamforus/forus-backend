@@ -98,8 +98,8 @@ class ProductResource extends BaseJsonResource
      */
     protected function priceFields(Product $product): array
     {
-        $price_min = $this->getProductSubsidyPrice($product, 'max');
-        $price_max = $this->getProductSubsidyPrice($product, 'min');
+        $price_min = $this->getProductSubsidyPrice($product, 'min');
+        $price_max = $this->getProductSubsidyPrice($product, 'max');
         $lowest_price = min($product->price, $price_min);
 
         return [
@@ -136,25 +136,28 @@ class ProductResource extends BaseJsonResource
         ]);
 
         return $fundsQuery->get()->map(function (Fund $fund) use ($product, $request) {
-            $reservationsEnabled = $product->reservationsEnabled($fund);
+            $fundProviderProduct = $product->getFundProviderProduct($fund);
+
+            $reservationsEnabled = $product->reservationsEnabled();
             $reservationsExtraPaymentEnabled = $reservationsEnabled && $product->reservationExtraPaymentsEnabled($fund);
+
+            $scanningEnabled = $product->organization->fund_providers
+                ->where('allow_budget', true)
+                ->where('fund_id', $fund->id)
+                ->isNotEmpty() && (!$fundProviderProduct || $fundProviderProduct->allow_scanning);
 
             $data = [
                 'id' => $fund->id,
                 ...$fund->translateColumns($fund->only(['name'])),
                 'logo' => new MediaResource($fund->logo),
-                'type' => $fund->type,
                 'organization' => $fund->organization->only([
                     'id', 'name',
                 ]),
                 'end_at' => $fund->end_date?->format('Y-m-d'),
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
-                'reservations_enabled' => $reservationsEnabled,
-                'reservation_extra_payments_enabled' => $reservationsExtraPaymentEnabled,
-                'scanning_enabled' => $product->organization->fund_providers
-                    ->where('allow_budget', true)
-                    ->where('fund_id', $fund->id)
-                    ->isNotEmpty(),
+                'feature_reservations_enabled' => $reservationsEnabled,
+                'feature_reservation_extra_payments_enabled' => $reservationsExtraPaymentEnabled,
+                'feature_scanning_enabled' => $scanningEnabled,
             ];
 
             $productData = ProductSubQuery::appendReservationStats([
@@ -166,12 +169,18 @@ class ProductResource extends BaseJsonResource
 
             $fundProviderProduct = $product->getFundProviderProduct($fund);
 
-            return array_merge($data, $productData, [
+            return [
+                ...$data,
+                ...$productData,
+                ...$fundProviderProduct?->isPaymentTypeSubsidy() ? [
+                    'user_price' => $fundProviderProduct->user_price,
+                    'user_price_locale' => $fundProviderProduct->user_price_locale,
+                ] : [
+                    'user_price' => $product->price,
+                    'user_price_locale' => $product->price_locale,
+                ],
                 'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
-            ], $fund->isTypeSubsidy() ? [
-                'price' => $fundProviderProduct->user_price,
-                'price_locale' => $fundProviderProduct->user_price_locale,
-            ] : []);
+            ];
         })->values();
     }
 
@@ -185,7 +194,6 @@ class ProductResource extends BaseJsonResource
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
         ])->whereHas('fund_provider.fund', function (Builder $builder) {
-            $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
     }

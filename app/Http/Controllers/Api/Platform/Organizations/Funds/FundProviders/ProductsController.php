@@ -34,11 +34,18 @@ class ProductsController extends Controller
 
         $query = $fundProvider->organization->providerProductsQuery($fund->id);
 
-        if ($request->input('q')) {
+        if ($request->get('q')) {
             $query = ProductQuery::queryFilter($query, $request->input('q'));
         }
 
-        return SponsorProductResource::queryCollection($query, $request);
+        match ($request->get('type')) {
+            'provider' => $query->whereNull('sponsor_organization_id'),
+            'sponsor' => $query->where('sponsor_organization_id', $organization->id),
+        };
+
+        return SponsorProductResource::queryCollection($query, $request, [
+            'fundProvider' => $fundProvider,
+        ]);
     }
 
     /**
@@ -59,6 +66,8 @@ class ProductsController extends Controller
     ): SponsorProductResource {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        return SponsorProductResource::create($product);
+        return SponsorProductResource::create($product, [
+            'fundProvider' => $fundProvider,
+        ]);
     }
 }

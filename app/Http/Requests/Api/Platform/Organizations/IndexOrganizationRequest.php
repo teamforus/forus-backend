@@ -37,10 +37,6 @@ class IndexOrganizationRequest extends BaseFormRequest
             'is_provider' => 'nullable|boolean',
             'is_validator' => 'nullable|boolean',
             'has_reservations' => 'nullable|boolean',
-            'fund_type' => [
-                'nullable',
-                Rule::in(Fund::TYPES),
-            ],
             'dependency' => [
                 'nullable',
                 new DependencyRule(OrganizationResource::DEPENDENCIES),

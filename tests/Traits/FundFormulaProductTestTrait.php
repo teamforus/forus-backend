@@ -24,7 +24,7 @@ trait FundFormulaProductTestTrait
         Carbon $startDate,
         string $note = null,
     ): void {
-        assertCount($fund->isTypeBudget() ? 3 : 0, $fund->fund_formula_products);
+        assertCount(3, $fund->fund_formula_products);
 
         foreach ($fund->fund_formula_products as $formulaProduct) {
             $productVoucherCount = Voucher::query()

@@ -449,6 +449,7 @@ class ProductFundLimitsTest extends TestCase
                 $this->updateProvider($fund, $fundProvider, [
                     'enable_products' => array_map(fn ($productLimit) => [
                         'id' => $product->id,
+                        'payment_type' => 'budget',
                         'limit_total' => Arr::get($productLimit, 'limit_total'),
                         'limit_per_identity' => Arr::get($productLimit, 'limit_per_identity'),
                     ], $limits),
@@ -625,6 +626,7 @@ class ProductFundLimitsTest extends TestCase
             $this->updateProvider($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,
+                    'payment_type' => 'budget',
                     'limit_total' => $limits['limit_total'],
                     'limit_per_identity' => $limits['limit_per_identity'],
                 ]],
@@ -883,6 +885,7 @@ class ProductFundLimitsTest extends TestCase
     ): void {
         $proxy = $this->makeIdentityProxy($fund->organization->identity);
         $headers = $this->makeApiHeaders($proxy);
+
         $url = sprintf(
             $this->urls['organization'] . '/%s/funds/%s/providers/%s',
             $fund->organization->id,

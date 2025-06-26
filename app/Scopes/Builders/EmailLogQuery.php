@@ -18,7 +18,6 @@ use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
@@ -76,7 +75,6 @@ class EmailLogQuery
         return $builder->whereIn('mailable', [
             // Voucher
             VoucherAssignedBudgetMail::class,
-            VoucherAssignedSubsidyMail::class,
             VoucherAssignedProductMail::class,
             DeactivationVoucherMail::class,
             VoucherExpireSoonBudgetMail::class,

@@ -31,7 +31,7 @@ class UpdateVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'limit_multiplier' => 'nullable|numeric|min:1',
+            'limit_multiplier' => 'sometimes|numeric|min:1',
         ];
     }
 }

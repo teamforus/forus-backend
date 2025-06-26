@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\Log;
  * @property bool $external_page
  * @property string|null $external_page_url
  * @property string|null $type
+ * @property bool $external
  * @property string $state
  * @property bool $archived
  * @property bool $public
@@ -121,8 +122,6 @@ use Illuminate\Support\Facades\Log;
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read string $description_html
- * @property-read bool $is_external
- * @property-read string $type_locale
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -130,6 +129,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
  * @property-read Fund|null $parent
+ * @property-read Collection|\App\Models\Voucher[] $payout_vouchers
+ * @property-read int|null $payout_vouchers_count
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -173,6 +174,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|Fund whereDescriptionShort($value)
  * @method static Builder<static>|Fund whereDescriptionText($value)
  * @method static Builder<static>|Fund whereEndDate($value)
+ * @method static Builder<static>|Fund whereExternal($value)
  * @method static Builder<static>|Fund whereExternalLinkText($value)
  * @method static Builder<static>|Fund whereExternalLinkUrl($value)
  * @method static Builder<static>|Fund whereExternalPage($value)
@@ -217,7 +219,6 @@ class Fund extends BaseModel
     public const string EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const string EVENT_PRODUCT_APPROVED = 'fund_product_approved';
     public const string EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
-    public const string EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const string EVENT_FUND_EXPIRING = 'fund_expiring';
     public const string EVENT_ARCHIVED = 'archived';
     public const string EVENT_UNARCHIVED = 'unarchived';
@@ -243,16 +244,6 @@ class Fund extends BaseModel
         self::STATE_CLOSED,
     ];
 
-    public const string TYPE_BUDGET = 'budget';
-    public const string TYPE_EXTERNAL = 'external';
-    public const string TYPE_SUBSIDIES = 'subsidies';
-
-    public const array TYPES = [
-        self::TYPE_BUDGET,
-        self::TYPE_SUBSIDIES,
-        self::TYPE_EXTERNAL,
-    ];
-
     public const string DESCRIPTION_POSITION_AFTER = 'after';
     public const string DESCRIPTION_POSITION_BEFORE = 'before';
     public const string DESCRIPTION_POSITION_REPLACE = 'replace';
@@ -270,9 +261,9 @@ class Fund extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
-        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public', 'external',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start', 'type', 'archived', 'description_short',
+        'criteria_editable_after_start', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
         'description_position', 'external_page', 'external_page_url', 'pre_check_note',
     ];
@@ -283,6 +274,7 @@ class Fund extends BaseModel
 
     protected $casts = [
         'public' => 'boolean',
+        'external' => 'boolean',
         'archived' => 'boolean',
         'end_date' => 'datetime',
         'start_date' => 'datetime',
@@ -508,7 +500,7 @@ class Fund extends BaseModel
             return;
         }
 
-        $preApprove = $this->isExternal() && $this->organization->pre_approve_external_funds;
+        $preApprove = $this->external && $this->organization->pre_approve_external_funds;
 
         $this->fund_config()->create()->forceFill($preApprove ? [
             'key' => str_slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
@@ -543,7 +535,7 @@ class Fund extends BaseModel
             'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
         ]);
 
-        $replaceValues = $this->isExternal() ? array_fill_keys([
+        $replaceValues = $this->external ? array_fill_keys([
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
         ], false) : [];
 
@@ -690,22 +682,6 @@ class Fund extends BaseModel
     /**
      * @return bool
      */
-    public function isExternal(): bool
-    {
-        return $this->type === static::TYPE_EXTERNAL;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isInternal(): bool
-    {
-        return $this->type !== static::TYPE_EXTERNAL;
-    }
-
-    /**
-     * @return bool
-     */
     public function isConfigured(): bool
     {
         return $this->fund_config->is_configured ?? false;
@@ -718,19 +694,6 @@ class Fund extends BaseModel
     public function getBudgetValidatedAttribute(): float
     {
         return 0;
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getTypeLocaleAttribute(): string
-    {
-        return [
-            self::TYPE_SUBSIDIES => trans('fund.types.subsidies'),
-            self::TYPE_EXTERNAL => trans('fund.types.external'),
-            self::TYPE_BUDGET => trans('fund.types.budget'),
-        ][$this->type] ?? $this->type;
     }
 
     /**
@@ -780,15 +743,6 @@ class Fund extends BaseModel
     public function getBudgetReservedAttribute(): float
     {
         return round($this->budget_vouchers()->sum('amount'), 2);
-    }
-
-    /**
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function getIsExternalAttribute(): bool
-    {
-        return $this->isExternal();
     }
 
     /**
@@ -1169,11 +1123,11 @@ class Fund extends BaseModel
      */
     public static function sendUserStatisticsReport(string $email): void
     {
-        $funds = Fund::whereHas('fund_config', static function (Builder $query) {
-            return $query->where('is_configured', true);
-        })->whereIn('state', [
-            self::STATE_ACTIVE, self::STATE_PAUSED,
-        ])->where('type', '!=', self::TYPE_EXTERNAL)->get();
+        $funds = Fund::query()
+            ->whereRelation('fund_config', 'is_configured', true)
+            ->whereIn('state', [self::STATE_ACTIVE, self::STATE_PAUSED])
+            ->where('external', false)
+            ->get();
 
         foreach ($funds as $fund) {
             $organization = $fund->organization;
@@ -1576,22 +1530,6 @@ class Fund extends BaseModel
     /**
      * @return bool
      */
-    public function isTypeSubsidy(): bool
-    {
-        return $this->type === $this::TYPE_SUBSIDIES;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isTypeBudget(): bool
-    {
-        return $this->type === $this::TYPE_BUDGET;
-    }
-
-    /**
-     * @return bool
-     */
     public function isHashingBsn(): bool
     {
         return $this->fund_config->hash_bsn;
@@ -1832,7 +1770,7 @@ class Fund extends BaseModel
     {
         return
             $this->fund_config &&
-            !$this->is_external &&
+            !$this->external &&
             $this->isIconnectApiConfigured() &&
             $this->organization->bsn_enabled &&
             !empty($this->fund_config->iconnect_target_binding) &&
@@ -1870,7 +1808,6 @@ class Fund extends BaseModel
     public function generatorDirectPaymentsAllowed(): bool
     {
         return
-            $this->isTypeBudget() &&
             $this->fund_config?->allow_direct_payments &&
             $this->fund_config?->allow_generator_direct_payments;
     }

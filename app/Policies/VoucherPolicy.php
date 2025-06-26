@@ -5,13 +5,11 @@ namespace App\Policies;
 use App\Http\Responses\AuthorizationJsonResponse;
 use App\Models\Fund;
 use App\Models\FundProvider;
-use App\Models\FundProviderProduct;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\Product;
 use App\Models\Voucher;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -75,7 +73,7 @@ class VoucherPolicy
             return $this->deny('no_permission_to_make_vouchers');
         }
 
-        if ($fund->isExternal()) {
+        if ($fund->external) {
             return $this->deny("External funds can't have vouchers.");
         }
 
@@ -124,9 +122,9 @@ class VoucherPolicy
             $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             !$voucher->deactivated &&
-            !$voucher->is_granted;
+            !$voucher->granted;
     }
 
     /**
@@ -145,7 +143,7 @@ class VoucherPolicy
             $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             !$voucher->activated &&
             !$voucher->expired;
     }
@@ -213,7 +211,7 @@ class VoucherPolicy
         return
             $this->assignSponsor($identity, $voucher, $organization) &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->isInternal() &&
             !$voucher->activation_code &&
             !$voucher->deactivated &&
@@ -233,7 +231,7 @@ class VoucherPolicy
             $identity->exists &&
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->activation_code &&
             !$voucher->identity_id &&
             !$voucher->deactivated;
@@ -279,7 +277,7 @@ class VoucherPolicy
         return
             $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired &&
@@ -297,7 +295,7 @@ class VoucherPolicy
         return
             $this->show($identity, $voucher) &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->isProductType() &&
             $voucher->isInternal() &&
             !$voucher->deactivated &&
@@ -316,7 +314,7 @@ class VoucherPolicy
             $this->show($identity, $voucher) &&
             Gate::allows('create', [PhysicalCard::class, $voucher]) &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->isInternal() &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -337,7 +335,7 @@ class VoucherPolicy
         return
             $organization->identityCan($identity, 'manage_vouchers') &&
             $voucher->fund->isConfigured() &&
-            $voucher->fund->isInternal() &&
+            !$voucher->fund->external &&
             $voucher->fund->fund_config->allow_physical_cards &&
             $voucher->fund->organization_id === $organization->id &&
             $voucher->isInternal() &&
@@ -454,29 +452,12 @@ class VoucherPolicy
         }
 
         // Identity is allowed to make transactions with at least one product
-        if ($voucher->fund->isTypeBudget()) {
-            $products = Product::whereHas('organization', function (Builder $builder) use ($identity) {
-                OrganizationQuery::whereHasPermissions($builder, $identity->address, 'scan_vouchers');
-            });
+        $products = Product::whereHas('organization', function (Builder $builder) use ($identity) {
+            OrganizationQuery::whereHasPermissions($builder, $identity->address, 'scan_vouchers');
+        });
 
-            if (ProductQuery::whereAvailableForVoucher($products, $voucher, null, false)->doesntExist()) {
-                return $this->deny('no_available_products');
-            }
-        }
-
-        // Identity is allowed to make transactions with at least one product
-        if ($voucher->fund->isTypeSubsidy()) {
-            $organizationsQuery = Organization::queryByIdentityPermissions($identity->address, 'scan_vouchers');
-
-            $providerProducts = FundProviderProductQuery::whereAvailableForSubsidyVoucher(
-                FundProviderProduct::query(),
-                $voucher,
-                $organizationsQuery->select('organizations.id')
-            );
-
-            if ($providerProducts->doesntExist()) {
-                return $this->deny('no_available_voucher_products');
-            }
+        if (ProductQuery::whereAvailableForVoucher($products, $voucher, null, false)->doesntExist()) {
+            return $this->deny('no_available_products');
         }
 
         return true;
@@ -577,7 +558,7 @@ class VoucherPolicy
             return $this->deny('Fund not configured.');
         }
 
-        if (!$voucher->fund->isInternal()) {
+        if ($voucher->fund->external) {
             return $this->deny('External fund.');
         }
 
@@ -641,61 +622,44 @@ class VoucherPolicy
      */
     private function getVoucherProvidersLists(Voucher $voucher, int $product_id = null): Response|array
     {
-        if ($voucher->fund->isTypeBudget()) {
-            if ($voucher->isBudgetType()) {
-                $approved = FundProviderQuery::whereApprovedForFundsFilter(
-                    FundProvider::query(),
-                    $voucher->fund->id,
-                    $product_id ? 'product' : 'budget',
-                    $product_id
-                )->pluck('organization_id');
+        if ($voucher->isBudgetType()) {
+            $approved = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(),
+                $voucher->fund->id,
+                $product_id ? 'allow_products' : 'allow_budget',
+                $product_id
+            )->pluck('organization_id');
 
-                $declined = $voucher->fund->providers()->where(function (Builder $builder) {
+            $declined = $voucher->fund->providers()->where(function (Builder $builder) {
+                $builder->where('allow_budget', false);
+                $builder->orWhere('state', FundProvider::STATE_REJECTED);
+            })->pluck('organization_id');
+
+            $pending = $voucher->fund->providers()->where(function (Builder $builder) {
+                $builder->where('state', FundProvider::STATE_PENDING);
+                $builder->orWhere(function (Builder $builder) {
+                    $builder->where('state', FundProvider::STATE_ACCEPTED);
                     $builder->where('allow_budget', false);
-                    $builder->orWhere('state', FundProvider::STATE_REJECTED);
-                })->pluck('organization_id');
-
-                $pending = $voucher->fund->providers()->where(function (Builder $builder) {
-                    $builder->where('state', FundProvider::STATE_PENDING);
-                    $builder->orWhere(function (Builder $builder) {
-                        $builder->where('state', FundProvider::STATE_ACCEPTED);
-                        $builder->where('allow_budget', false);
-                    });
-                })->pluck('organization_id');
-            } else {
-                if ($voucher->product->expired) {
-                    return $this->deny('product_expired');
-                }
-
-                if ($voucher->product->trashed()) {
-                    return $this->deny('product_no_longer_available');
-                }
-
-                if (!$voucher->product->unlimited_stock &&
-                    ($voucher->product->countSold() >= $voucher->product->total_amount)) {
-                    return $this->deny('product_sold_out');
-                }
-
-                $approved = FundProviderQuery::whereApprovedForFundsFilter(
-                    FundProvider::query(),
-                    $voucher->fund_id,
-                    'product',
-                    $voucher->product_id
-                )->pluck('organization_id');
-
-                $declined = $voucher->fund->providers()
-                    ->where('state', FundProvider::STATE_REJECTED)
-                    ->pluck('organization_id')->diff($approved)->values();
-
-                $pending = $voucher->fund->providers()
-                    ->where('state', FundProvider::STATE_PENDING)
-                    ->pluck('organization_id')->diff($approved)->values();
+                });
+            })->pluck('organization_id');
+        } else {
+            if ($voucher->product->expired) {
+                return $this->deny('product_expired');
             }
-        } elseif ($voucher->fund->isTypeSubsidy()) {
+
+            if ($voucher->product->trashed()) {
+                return $this->deny('product_no_longer_available');
+            }
+
+            if (!$voucher->product->unlimited_stock &&
+                ($voucher->product->countSold() >= $voucher->product->total_amount)) {
+                return $this->deny('product_sold_out');
+            }
+
             $approved = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(),
                 $voucher->fund_id,
-                'subsidy',
+                'allow_products',
                 $voucher->product_id
             )->pluck('organization_id');
 
@@ -706,8 +670,6 @@ class VoucherPolicy
             $pending = $voucher->fund->providers()
                 ->where('state', FundProvider::STATE_PENDING)
                 ->pluck('organization_id')->diff($approved)->values();
-        } else {
-            return $this->deny('unknown_fund_type');
         }
 
         return compact('approved', 'declined', 'pending');

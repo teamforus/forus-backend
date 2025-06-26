@@ -51,7 +51,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_funds.product_added' => ['database'],
         'notifications_funds.provider_applied' => ['database', 'mail'],
         'notifications_funds.provider_message' => ['database'],
-        'notifications_funds.product_subsidy_removed' => ['database'],
         'notifications_funds.balance_low' => ['database', 'mail'],
         'notifications_funds.balance_supplied' => ['database'],
 
@@ -69,11 +68,9 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.product_voucher_shared' => ['database', 'mail'],
         'notifications_identities.identity_voucher_assigned_budget' => ['database', 'mail', 'push'],
-        'notifications_identities.identity_voucher_assigned_subsidy' => ['database', 'mail', 'push'],
         'notifications_identities.identity_voucher_assigned_product' => ['database', 'mail', 'push'],
         'notifications_identities.product_voucher_added' => ['database'],
         'notifications_identities.product_voucher_reserved' => ['database', 'mail'],
-        'notifications_identities.voucher_added_subsidy' => ['database'],
         'notifications_identities.voucher_added_budget' => ['database'],
         'notifications_identities.voucher_deactivated' => ['mail'],
         'notifications_identities.budget_voucher_expired' => [], // TODO can database notifications be removed
@@ -83,7 +80,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.voucher_physical_card_requested' => ['database', 'mail'],
         'notifications_identities.voucher_shared_by_email' => ['database'],
         'notifications_identities.voucher_budget_transaction' => ['database', 'mail', 'push'],
-        'notifications_identities.voucher_subsidy_transaction' => ['database', 'mail', 'push'],
         'notifications_identities.product_voucher_transaction' => ['database', 'push'],
 
         'notifications_fund_providers.bunq_transaction_success' => ['database'],
@@ -101,7 +97,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.state_accepted',
         'notifications_fund_providers.state_rejected',
         'notifications_identities.identity_voucher_assigned_budget',
-        'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
         'notifications_identities.product_voucher_reserved',
         'notifications_identities.voucher_expire_soon_budget',
@@ -138,11 +133,9 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.reservation_canceled',
 
         'notifications_identities.identity_voucher_assigned_budget',
-        'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
 
         'notifications_identities.voucher_added_budget',
-        'notifications_identities.voucher_added_subsidy',
         'notifications_identities.product_voucher_added',
         'notifications_identities.product_voucher_reserved',
         'notifications_identities.voucher_deactivated',
@@ -152,7 +145,6 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.product_voucher_transaction',
         'notifications_identities.voucher_budget_transaction',
-        'notifications_identities.voucher_subsidy_transaction',
 
         'notifications_fund_providers.bunq_transaction_success',
     ];
@@ -171,7 +163,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.reimbursement_declined',
 
         'notifications_identities.identity_voucher_assigned_budget',
-        'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
 
         'notifications_identities.product_reservation_accepted',
@@ -198,8 +189,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'requester_vouchers' => [
             'notifications_identities.identity_voucher_assigned_budget',
             'notifications_identities.voucher_added_budget',
-            'notifications_identities.identity_voucher_assigned_subsidy',
-            'notifications_identities.voucher_added_subsidy',
             'notifications_identities.identity_voucher_assigned_product',
             'notifications_identities.voucher_deactivated',
             'notifications_identities.voucher_expire_soon_budget',
@@ -220,7 +209,6 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_identities.product_reservation_canceled',
             'notifications_identities.voucher_shared_by_email',
             'notifications_identities.voucher_budget_transaction',
-            'notifications_identities.voucher_subsidy_transaction',
             'notifications_identities.product_voucher_transaction',
         ],
         'provider_fund_requests' => [
@@ -245,7 +233,6 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_fund_providers.fund_expiring',
         ],
         'sponsor' => [
-            'notifications_funds.product_subsidy_removed',
             'notifications_funds.balance_supplied',
             'notifications_funds.balance_low',
             'notifications_funds.provider_message',

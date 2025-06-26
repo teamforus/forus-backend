@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers\IndexProductVouchersRequest;
-use App\Http\Resources\Provider\App\ProviderVoucherResource;
+use App\Http\Resources\Provider\App\ProviderAppVoucherResource;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\VoucherQuery;
@@ -31,6 +31,6 @@ class ProductVouchersController extends Controller
             $request->input('organization_id')
         );
 
-        return ProviderVoucherResource::queryCollection($productVouchersQuery, $request);
+        return ProviderAppVoucherResource::queryCollection($productVouchersQuery, $request);
     }
 }

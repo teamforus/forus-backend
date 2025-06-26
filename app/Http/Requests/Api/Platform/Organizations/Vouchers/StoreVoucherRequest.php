@@ -99,12 +99,12 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
      */
     private function amountRule(Fund $fund): array|string
     {
-        return $fund->isTypeBudget() ? [
+        return [
             'nullable',
             'required_without:product_id',
             'numeric',
-            'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
-        ] : 'nullable';
+            'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
+        ];
     }
 
     /**
@@ -113,16 +113,12 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
      */
     private function productIdRule(Fund $fund): array
     {
-        $rule = $fund->isTypeBudget() ? [
-            'nullable', 'required_without:amount',
-        ] : [
+        return [
             'nullable',
-        ];
-
-        return array_merge($rule, [
+            'required_without:amount',
             'exists:products,id',
             new ProductIdInStockRule($fund),
-        ]);
+        ];
     }
 
     /**

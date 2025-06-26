@@ -35,7 +35,6 @@ class IndexFundsRequest extends FormRequest
             'order_dir' => 'nullable|in:asc,desc',
             'with_external' => 'nullable|bool',
             'has_products' => 'nullable|bool',
-            'has_subsidies' => 'nullable|bool',
             'has_providers' => 'nullable|bool',
             'implementation_id' => 'nullable|exists:implementations,id',
         ];
