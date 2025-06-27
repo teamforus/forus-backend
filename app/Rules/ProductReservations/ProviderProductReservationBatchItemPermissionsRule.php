@@ -7,14 +7,13 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
 class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 {
+    protected int $index;
     protected BaseFormRequest $request;
     protected Organization $organization;
     protected array $reservationsData;
@@ -93,7 +92,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
      * @param Voucher $voucher
      * @return bool|string|null
      */
-    protected function validateVoucherAccess(Voucher $voucher)
+    protected function validateVoucherAccess(Voucher $voucher): bool|string|null
     {
         // only regular vouchers can be used for reservations
         if (!$voucher->isBudgetType()) {
@@ -118,16 +117,11 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
      * @param Product $product
      * @return bool|string
      */
-    protected function validateProductAccess(Voucher $voucher, Product $product)
+    protected function validateProductAccess(Voucher $voucher, Product $product): bool|string
     {
-        // The provider didn't enabled subsidy products reservation
-        if ($voucher->fund->isTypeSubsidy() && !$product['reservations_subsidy_enabled']) {
-            return 'U mag geen reserveringen plaatsen voor actie fondsen.';
-        }
-
-        // The provider didn't enabled budget products reservation
-        if ($voucher->fund->isTypeBudget() && !$product['reservations_budget_enabled']) {
-            return 'U mag geen reserveringen plaatsen voor budget fondsen.';
+        // The provider didn't enabled products reservation
+        if (!$product['reservations_enabled']) {
+            return 'U mag geen reserveringen plaatsen voor fondsen.';
         }
 
         // The fund doesn't allow reservations
@@ -150,18 +144,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
             ->whereId($product->id)
             ->whereOrganizationId($this->organization->id);
 
-        if ($voucher->fund->isTypeBudget()) {
-            $allowed = ProductQuery::approvedForFundsFilter($productQuery, $voucher->fund_id)->exists();
-        } elseif ($voucher->fund->isTypeSubsidy()) {
-            $allowed = $productQuery->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
-                FundProviderProductQuery::whereAvailableForSubsidyVoucher(
-                    $builder,
-                    $voucher,
-                    $this->organization->id,
-                    false
-                );
-            })->exists();
-        }
+        $allowed = ProductQuery::approvedForFundsFilter($productQuery, $voucher->fund_id)->exists();
 
         // This product was not approved for this found.
         return $allowed ?: 'Dit aanbod is niet geaccepteerd voor dit fonds.';

@@ -40,7 +40,7 @@ class OfficeSearch extends BaseSearch
             $builder->whereHas('organization.fund_providers', static function (Builder $builder) {
                 return FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
-                    Implementation::activeFundsQuery()->pluck('id')->toArray()
+                    Implementation::activeFundsQuery()->pluck('id')->toArray(),
                 );
             });
         }

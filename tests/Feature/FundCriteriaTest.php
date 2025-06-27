@@ -415,9 +415,7 @@ class FundCriteriaTest extends TestCase
         $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        if ($fund->isTypeBudget()) {
-            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
-        }
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         if ($assertRedeem) {
             $code = $prevalidation->uid;
@@ -457,9 +455,7 @@ class FundCriteriaTest extends TestCase
 
         $products = $this->makeProviderAndProducts($fund);
 
-        if ($fund->isTypeBudget()) {
-            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
-        }
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         $response = $this->postJson(sprintf($this->apiUrlFundsCheck, $fund->id), [], $identityHeaders);
         $response->assertSuccessful();

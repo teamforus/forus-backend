@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Log;
  * @property int|null $fund_provider_product_id
  * @property int|null $voucher_transaction_bulk_id
  * @property string $amount
+ * @property string|null $amount_voucher
  * @property string|null $amount_extra_cash
  * @property string|null $iban_from
  * @property string|null $iban_to
@@ -93,6 +94,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|VoucherTransaction whereAddress($value)
  * @method static Builder<static>|VoucherTransaction whereAmount($value)
  * @method static Builder<static>|VoucherTransaction whereAmountExtraCash($value)
+ * @method static Builder<static>|VoucherTransaction whereAmountVoucher($value)
  * @method static Builder<static>|VoucherTransaction whereAttempts($value)
  * @method static Builder<static>|VoucherTransaction whereBranchId($value)
  * @method static Builder<static>|VoucherTransaction whereBranchName($value)
@@ -197,7 +199,7 @@ class VoucherTransaction extends BaseModel
      */
     protected $fillable = [
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
-        'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
+        'address', 'amount', 'amount_voucher', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'iban_to_name', 'payment_time', 'employee_id', 'transfer_at',
         'voucher_transaction_bulk_id', 'payment_description', 'initiator', 'reimbursement_id',
         'target', 'target_iban', 'target_name', 'target_reimbursement_id', 'uid',

@@ -26,7 +26,7 @@ use Illuminate\Notifications\DatabaseNotification;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EventLog|null $event
- * @property-read \Illuminate\Database\Eloquent\Model|Eloquent $notifiable
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
  * @property-read \App\Models\SystemNotification|null $system_notification
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] all($columns = ['*'])
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] get($columns = ['*'])
@@ -47,7 +47,7 @@ use Illuminate\Notifications\DatabaseNotification;
  * @method static Builder<static>|Notification whereScope($value)
  * @method static Builder<static>|Notification whereType($value)
  * @method static Builder<static>|Notification whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class Notification extends DatabaseNotification
 {

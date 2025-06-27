@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProductReservationsController extends Controller
@@ -64,10 +65,7 @@ class ProductReservationsController extends Controller
             $product = Product::find($request->input('product_id'));
             $voucher = Voucher::find($request->input('voucher_id'));
             $postCode = $request->input('postal_code') ?: '';
-
-            $extraPaymentRequired =
-                $voucher->fund->isTypeBudget() &&
-                $product->price > $voucher->amount_available;
+            $extraPaymentRequired = $product->price > $voucher->amount_available;
 
             if ($extraPaymentRequired) {
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
@@ -81,11 +79,11 @@ class ProductReservationsController extends Controller
                 'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
             ] : [];
 
-            $reservation = $voucher->reserveProduct($product, null, [
-                ...$request->only('first_name', 'last_name', 'user_note'),
-                ...$reservationFields,
-                'has_extra_payment' => $extraPaymentRequired,
-            ]);
+            $reservation = $voucher->reserveProduct(
+                product: $product,
+                extraData: [...$request->only('first_name', 'last_name', 'user_note'), ...$reservationFields],
+                hasExtraPayment: $extraPaymentRequired
+            );
 
             if ($extraPaymentRequired) {
                 $payment = $reservation->createExtraPayment($request->implementation());
@@ -106,14 +104,15 @@ class ProductReservationsController extends Controller
                 ], 503);
             }
 
-            if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
+            if ($reservation->product->autoAcceptsReservations()) {
                 $reservation->acceptProvider();
             }
 
             DB::commit();
 
             return ProductReservationResource::create($reservation);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            Log::error($exception);
             DB::rollBack();
         }
 

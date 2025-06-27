@@ -53,9 +53,7 @@ class TransactionsController extends Controller
         StoreVoucherTransactionRequest $request,
         VoucherToken $voucherToken
     ): VoucherTransactionResource {
-        if ($voucherToken->voucher->fund->isTypeBudget() &&
-            $voucherToken->voucher->isBudgetType() &&
-            $request->has('product_id')) {
+        if ($voucherToken->voucher->isBudgetType() && $request->has('product_id')) {
             $this->authorize('useAsProviderWithProducts', [
                 $voucherToken->voucher,
                 $request->input('product_id'),
@@ -84,38 +82,33 @@ class TransactionsController extends Controller
             );
         }
 
-        // Budget fund voucher
-        if ($voucher->fund->isTypeBudget()) {
-            if ($voucher->isBudgetType()) {
-                if ($request->has('product_id')) {
-                    $product = Product::findOrFail($request->input('product_id'));
-                    $amount = $product->price;
-                    $organization = $product->organization;
-                } else {
-                    // budget fund and budget voucher
-                    $amount = $request->input('amount');
-                    $organization = Organization::findOrFail($request->input('organization_id'));
-                }
-
-                $amountExtraCash = $request->input('amount_extra_cash');
-            } else {
-                // budget fund and product voucher
-                $amount = $voucher->amount;
-                $product = $voucher->product;
+        if ($voucher->isBudgetType()) {
+            if ($request->has('product_id')) {
+                $product = Product::findOrFail($request->input('product_id'));
+                $amount = $product->price;
                 $organization = $product->organization;
+                $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
+
+                if ($fundProviderProduct->isPaymentTypeSubsidy()) {
+                    $amount = $fundProviderProduct->amount;
+
+                    if ($amount === 0) {
+                        $transactionState = VoucherTransaction::STATE_SUCCESS;
+                    }
+                }
+            } else {
+                // budget fund and budget voucher
+                $amount = $request->input('amount');
+                $organization = Organization::findOrFail($request->input('organization_id'));
             }
 
-            $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
+            $amountExtraCash = $request->input('amount_extra_cash');
         } else {
-            // Subsidy fund voucher
-            $product = Product::findOrFail($request->input('product_id'));
-            $fundProviderProduct = $product->getFundProviderProductOrFail($voucher->fund);
+            // budget fund and product voucher
+            $amount = $voucher->amount;
+            $product = $voucher->product;
             $organization = $product->organization;
-            $amount = $fundProviderProduct->amount;
-
-            if ($amount === 0) {
-                $transactionState = VoucherTransaction::STATE_SUCCESS;
-            }
+            $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
         }
 
         $employee = $organization->findEmployee($request->auth_address());

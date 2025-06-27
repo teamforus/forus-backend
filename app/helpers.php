@@ -187,14 +187,18 @@ if (!function_exists('json_pretty')) {
 
 if (!function_exists('log_debug')) {
     /**
-     * @param $message
-     * @param array $context
+     * @param mixed ...$arg
+     * @return string|false|null
      */
-    function log_debug($message, array $context = []): void
+    function log_debug(...$arg): string|null|false
     {
         if (!is_null($logger = logger())) {
-            $logger->debug(is_string($message) ? $message : json_pretty($message), $context);
+            $logger->debug(json_pretty($arg));
+
+            return json_pretty($arg);
         }
+
+        return null;
     }
 }
 

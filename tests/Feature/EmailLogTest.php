@@ -20,7 +20,6 @@ use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -108,28 +107,6 @@ class EmailLogTest extends TestCase
             organization1: $organization1,
             organization2: $organization2,
             mailable: VoucherAssignedProductMail::class,
-        );
-    }
-
-    /**
-     * @return void
-     */
-    public function testVoucherAssignedSubsidyMailLog(): void
-    {
-        $startTime = now();
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization1 = $this->makeTestOrganization($identity);
-        $organization2 = $this->makeTestOrganization($identity);
-
-        $this->makeTestSubsidyFund($organization1)->makeVoucher($identity);
-        $this->makeTestSubsidyFund($organization2)->makeVoucher($identity);
-
-        $this->assertIdentityEmailLogVisibilityForOrganizations(
-            startTime: $startTime,
-            identity: $identity,
-            organization1: $organization1,
-            organization2: $organization2,
-            mailable: VoucherAssignedSubsidyMail::class,
         );
     }
 
@@ -295,8 +272,8 @@ class EmailLogTest extends TestCase
         $this->makeTestFund($organization1);
         $this->makeTestFund($organization2);
 
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->findVoucherForReservation($organization1);
+        $voucher2 = $this->findVoucherForReservation($organization2);
 
         $product1 = $this->findProductForReservation($voucher1);
         $product2 = $this->findProductForReservation($voucher2);
@@ -327,8 +304,8 @@ class EmailLogTest extends TestCase
         $this->makeTestFund($organization1);
         $this->makeTestFund($organization2);
 
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->findVoucherForReservation($organization1);
+        $voucher2 = $this->findVoucherForReservation($organization2);
 
         $product1 = $this->findProductForReservation($voucher1);
         $product2 = $this->findProductForReservation($voucher2);
@@ -359,8 +336,8 @@ class EmailLogTest extends TestCase
         $this->makeTestFund($organization1);
         $this->makeTestFund($organization2);
 
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->findVoucherForReservation($organization1);
+        $voucher2 = $this->findVoucherForReservation($organization2);
 
         $this->makeReservation($voucher1, $this->findProductForReservation($voucher1))->rejectOrCancelProvider();
         $this->makeReservation($voucher2, $this->findProductForReservation($voucher2))->rejectOrCancelProvider();
