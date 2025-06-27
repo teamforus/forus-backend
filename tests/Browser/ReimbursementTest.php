@@ -326,7 +326,7 @@ class ReimbursementTest extends DuskTestCase
         $this->assertIdentityAuthenticatedOnWebshop($browser, $reimbursement->voucher->identity);
         $this->goToReimbursementsPage($browser);
 
-        $duskSelector = "@reimbursementsItem$reimbursement->id";
+        $duskSelector = "@listReimbursementsRow$reimbursement->id";
 
         $this->selectReimbursementTabByState($browser, $reimbursement);
         $browser->waitFor($duskSelector);

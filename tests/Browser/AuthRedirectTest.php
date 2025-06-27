@@ -108,7 +108,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 // assert requester was redirected to funds page when several funds exist
                 // where requester does not have voucher
-                $browser->waitFor('@fundsList');
+                $browser->waitFor('@listFundsContent');
 
                 $this->logout($browser);
             });

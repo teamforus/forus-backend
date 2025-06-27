@@ -35,12 +35,15 @@ trait HasFrontendActions
         string $message = null,
     ): Browser {
         return $browser->waitUsing(null, 100, function () use ($browser, $selector, $count, $operator) {
+            $scriptSelector = str_replace('@', '', $selector);
+            $value = (int) $browser->script("return document.querySelector('[data-dusk=\"$scriptSelector\"]')?.textContent;")[0];
+
             return match ($operator) {
-                '=' => (int) $browser->text($selector) === $count,
-                '>=' => (int) $browser->text($selector) >= $count,
-                '<=' => (int) $browser->text($selector) <= $count,
-                '>' => (int) $browser->text($selector) > $count,
-                '<' => (int) $browser->text($selector) < $count,
+                '=' => $value === $count,
+                '>=' => $value >= $count,
+                '<=' => $value <= $count,
+                '>' => $value > $count,
+                '<' => $value < $count,
             };
         }, $message);
     }
@@ -107,6 +110,45 @@ trait HasFrontendActions
             $browser->element('@fundsAvailableTab')->click();
             $browser->waitFor('@tableFundsAvailableContent');
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $count
+     * @param string $selector
+     * @param string $operator
+     * @return void
+     */
+    protected function assertWebshopRowsCount(
+        Browser $browser,
+        int $count,
+        string $selector,
+        string $operator = '=',
+    ): void {
+        $this->assertRowsCount($browser, $count, $selector, $operator, $this->getWebshopRowsSelector());
+    }
+
+    /**
+     * @return string
+     */
+    protected function getWebshopRowsSelector(): string
+    {
+        return '[data-search-item]';
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    protected function clearField(Browser $browser, string $selector): void
+    {
+        /** @var string $value */
+        $value = $browser->value($selector);
+
+        do {
+            $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+        } while (!empty($browser->value($selector)));
     }
 
     /**
@@ -215,13 +257,20 @@ trait HasFrontendActions
      * @param int $count
      * @param string $selector
      * @param string $operator
+     * @param string $rowSelector
      * @return void
      */
-    private function assertRowsCount(Browser $browser, int $count, string $selector, string $operator = '='): void
-    {
-        $browser->within($selector, function (Browser $browser) use ($count, $operator, $selector) {
+    private function assertRowsCount(
+        Browser $browser,
+        int $count,
+        string $selector,
+        string $operator = '=',
+        string $rowSelector = 'tbody>tr',
+    ): void {
+        $browser->within($selector, function (Browser $browser) use ($count, $operator, $selector, $rowSelector) {
             if ($count === 0 && $operator === '=') {
                 $browser->waitUntilMissing('@paginatorTotal');
+                $browser->waitUntilMissing($rowSelector);
             } else {
                 $this->waitForNumber(
                     $browser,
@@ -232,7 +281,7 @@ trait HasFrontendActions
                 );
             }
 
-            $rows = $browser->elements('tbody>tr');
+            $rows = $browser->elements($rowSelector);
             $rowCount = count($rows);
 
             $message = "Assertion failed for \"$selector\": expected rows $operator $count, got $rowCount.";
@@ -343,6 +392,33 @@ trait HasFrontendActions
         }
 
         $this->assertRowsCount($browser, $expected, $selector . 'Content');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string $value
+     * @param string|null $id
+     * @param int $expected
+     * @throws TimeoutException
+     * @return void
+     */
+    private function searchWebshopList(
+        Browser $browser,
+        string $selector,
+        string $value,
+        ?string $id,
+        int $expected = 1,
+    ): void {
+        $browser->waitFor($selector . 'Search');
+        $browser->typeSlowly($selector . 'Search', $value, 50);
+
+        if ($id !== null) {
+            $browser->waitFor($selector . "Row$id");
+            $browser->assertVisible($selector . "Row$id");
+        }
+
+        $this->assertWebshopRowsCount($browser, $expected, $selector . 'Content');
     }
 
     /**
@@ -493,5 +569,68 @@ trait HasFrontendActions
         $browser->waitFor('@vouchersPage');
         $browser->element('@vouchersPage')->click();
         $browser->waitFor('@vouchersTitle');
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToIdentityFundRequests(Browser $browser): void
+    {
+        $browser->waitFor('@userProfile');
+        $browser->element('@userProfile')->click();
+        $browser->waitFor('@btnFundRequests');
+        $browser->element('@btnFundRequests')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToIdentityReimbursements(Browser $browser): void
+    {
+        $browser->waitFor('@userProfile');
+        $browser->element('@userProfile')->click();
+        $browser->waitFor('@btnReimbursements');
+        $browser->element('@btnReimbursements')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToIdentityPayouts(Browser $browser): void
+    {
+        $browser->waitFor('@userProfile');
+        $browser->element('@userProfile')->click();
+        $browser->waitFor('@btnPayouts');
+        $browser->element('@btnPayouts')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToIdentityReservations(Browser $browser): void
+    {
+        $browser->waitFor('@userProfile');
+        $browser->element('@userProfile')->click();
+        $browser->waitFor('@btnReservations');
+        $browser->element('@btnReservations')->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    private function goToIdentityVouchers(Browser $browser): void
+    {
+        $browser->waitFor('@userVouchers');
+        $browser->element('@userVouchers')->click();
     }
 }

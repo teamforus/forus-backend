@@ -10,13 +10,12 @@ use App\Models\Organization;
 use App\Models\OrganizationReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
-use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -581,7 +580,7 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop());
 
             $this->loginAndGoToFundVoucher($browser, $identity, $fund);
-            $this->openFirstProductAvailableForVoucher($browser, $fund);
+            $this->openFirstProductAvailableForVoucher($browser, $fund, $product);
 
             $browser->waitFor('@productName');
             $browser->assertSeeIn('@productName', $product->name);
@@ -622,14 +621,14 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
+     * @param Product $product
      * @throws TimeoutException
      * @return void
      */
-    private function openFirstProductAvailableForVoucher(Browser $browser, Fund $fund): void
+    private function openFirstProductAvailableForVoucher(Browser $browser, Fund $fund, Product $product): void
     {
-        // Find available product and open it
-        $browser->waitFor('@productItem')->press('@productItem');
-        $browser->waitFor("@fundItem$fund->id");
+        $browser->waitFor("@listProductsRow$product->id")->press("@listProductsRow$product->id");
+        $browser->waitFor("@listFundsRow$fund->id");
     }
 
     /**
@@ -643,7 +642,7 @@ class ProductReservationTest extends DuskTestCase
     private function openReservationModal(Browser $browser, Fund $fund): void
     {
         // Find available fund and reserve product
-        $browser->click("@fundItem$fund->id @reserveProduct");
+        $browser->click("@listFundsRow$fund->id @reserveProduct");
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
@@ -664,7 +663,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitFor('@headerTitle');
 
         $this->goToVouchersPage($browser, $identity);
-        $this->goToVoucherPage($browser, $fund);
+        $this->goToVoucherPage($browser, $fund->vouchers()->where('identity_id', $identity->id)->first());
     }
 
     /**
@@ -993,39 +992,16 @@ class ProductReservationTest extends DuskTestCase
         $this->assertReservationElementExists($browser, $reservation);
 
         // cancel reservation
-        $browser->within("@reservationItem$reservation->id", fn (Browser $el) => $el->press('@btnCancelReservation'));
+        $browser->within("@listReservationsRow$reservation->id", fn (Browser $el) => $el->press('@btnCancelReservation'));
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn (Browser $el) => $el->press('@btnSubmit'));
 
         $browser->waitUntilMissingText($reservation->code);
-        $browser->assertMissing("@reservationItem$reservation->id");
+        $browser->assertMissing("@listReservationsRow$reservation->id");
 
         $reservation->refresh();
         $this->assertTrue($reservation->isCanceledByClient(), 'Reservation not canceled.');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $voucherTitle
-     * @throws TimeOutException
-     * @return RemoteWebElement|null
-     */
-    private function findVoucherElement(Browser $browser, string $voucherTitle): ?RemoteWebElement
-    {
-        $selector = '@voucherItem';
-
-        $browser->waitFor($selector);
-
-        foreach ($browser->elements($selector) as $element) {
-            $text = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='voucherName']"))->getText();
-
-            if (trim($text) === $voucherTitle) {
-                return $element;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -1038,7 +1014,7 @@ class ProductReservationTest extends DuskTestCase
         Browser $browser,
         ProductReservation $reservation,
     ): void {
-        $selector = "@reservationItem$reservation->id";
+        $selector = "@listReservationsRow$reservation->id";
         $browser->waitFor($selector);
 
         $browser->within($selector, function (Browser $browser) use ($reservation) {
@@ -1071,19 +1047,16 @@ class ProductReservationTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Fund $fund
-     * @throws TimeOutException
+     * @param Voucher $voucher
+     * @throws TimeoutException
      * @return void
      */
-    private function goToVoucherPage(Browser $browser, Fund $fund): void
+    private function goToVoucherPage(Browser $browser, Voucher $voucher): void
     {
-        // find voucher and open it
-        $voucherElement = $this->findVoucherElement($browser, $fund->name);
-        $this->assertNotNull($voucherElement, "Voucher for '$fund->name' not found!");
-
-        $voucherElement->click();
+        $browser->waitFor("@listVouchersRow$voucher->id");
+        $browser->element("@listVouchersRow$voucher->id")->click();
 
         $browser->waitFor('@voucherTitle');
-        $browser->assertSeeIn('@voucherTitle', $fund->name);
+        $browser->assertSeeIn('@voucherTitle', $voucher->fund->name);
     }
 }
