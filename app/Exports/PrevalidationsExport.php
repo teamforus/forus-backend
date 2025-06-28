@@ -8,6 +8,7 @@ use App\Models\PrevalidationRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class PrevalidationsExport extends BaseFieldedExport
 {
@@ -90,7 +91,7 @@ class PrevalidationsExport extends BaseFieldedExport
     protected static function getRecords(Prevalidation $prevalidation): array
     {
         return $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
-            return !str_contains($record->record_type->key, '_eligible');
+            return !Str::endsWith($record->record_type->key, '_eligible');
         })->pluck('value', 'record_type.name')->toArray();
     }
 }
