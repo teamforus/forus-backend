@@ -29,6 +29,8 @@ use Illuminate\Support\Arr;
  * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|\App\Models\PreCheckRecord[] $pre_check_records
  * @property-read int|null $pre_check_records_count
+ * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck query()
@@ -120,7 +122,7 @@ class PreCheck extends BaseModel
             $baseFields = [
                 ...$fund->only([
                     'id', 'name', 'description', 'description_short',
-                    'external_link_text', 'external_link_url', 'is_external',
+                    'external_link_text', 'external_link_url', 'external',
                 ]),
                 ...$fund->translateColumns($fund->only([
                     'name', 'description_short', 'external_link_text',

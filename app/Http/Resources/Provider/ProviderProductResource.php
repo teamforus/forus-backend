@@ -7,16 +7,17 @@ use App\Http\Resources\ProductResource;
 use App\Models\Fund;
 use App\Models\FundProviderChatMessage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class ProviderProductResource extends ProductResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
             ...parent::toArray($request),
@@ -37,9 +38,9 @@ class ProviderProductResource extends ProductResource
     }
 
     /**
-     * @return bool
+     * @return int
      */
-    protected function hasUnseenMessages(): bool
+    protected function hasUnseenMessages(): int
     {
         return FundProviderChatMessage::whereIn(
             'fund_provider_chat_id',

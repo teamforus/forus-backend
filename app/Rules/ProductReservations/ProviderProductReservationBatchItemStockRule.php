@@ -53,7 +53,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         $allowed = $this->isValidProductStock($voucher, $product, $prevReservations);
 
         // when product is in stock check the amount on the voucher as well
-        if ($allowed === true && $voucher->fund->isTypeBudget()) {
+        if ($allowed === true) {
             $allowed = $this->isValidProductAmount($voucher, $prevReservations);
         }
 
@@ -94,8 +94,8 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         }));
 
         // skip limits check budget products where limits are not set
-        $skipTotalLimit = $voucher->fund->isTypeBudget() && is_null($product['limit_total_available']);
-        $skipVoucherLimit = $voucher->fund->isTypeBudget() && is_null($product['limit_available']);
+        $skipTotalLimit = is_null($product['limit_total_available']);
+        $skipVoucherLimit = is_null($product['limit_available']);
 
         // Sponsor total limit for the product reached.
         // Total limit of %s for the product "%s" reached!

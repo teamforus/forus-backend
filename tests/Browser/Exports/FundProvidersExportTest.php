@@ -58,13 +58,12 @@ class FundProvidersExportTest extends DuskTestCase
                     $this->openFilterDropdown($browser);
 
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, [
-                        'fund', 'implementation', 'fund_type', 'provider',
+                        'fund', 'implementation', 'provider',
                     ]);
 
                     $data && $this->assertFields($fundProvider, $data, [
                         FundProvidersExport::trans('fund'),
                         FundProvidersExport::trans('implementation'),
-                        FundProvidersExport::trans('fund_type'),
                         FundProvidersExport::trans('provider'),
                     ]);
                 }
@@ -91,6 +90,6 @@ class FundProvidersExportTest extends DuskTestCase
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
         $this->assertEquals($fundProvider->fund->name, $rows[1][0]);
-        $this->assertEquals($fundProvider->organization->name, $rows[1][3]);
+        $this->assertEquals($fundProvider->organization->name, $rows[1][2]);
     }
 }

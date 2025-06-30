@@ -4,16 +4,19 @@ namespace Tests\Traits;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
 use Throwable;
@@ -57,12 +60,11 @@ trait MakesProductReservations
 
     /**
      * @param Organization $organization
-     * @param string $fundType
      * @return Voucher
      */
-    public function findVoucherForReservation(Organization $organization, string $fundType): Voucher
+    public function findVoucherForReservation(Organization $organization): Voucher
     {
-        $funds = $organization->funds()->where('type', $fundType)->get();
+        $funds = FundQuery::whereIsInternalAndConfigured($organization->funds())->get();
         $this->assertNotNull($funds->count() ?: null);
 
         $voucher = VoucherQuery::whereHasBalanceIsActiveAndNotExpired(
@@ -98,13 +100,32 @@ trait MakesProductReservations
             ->where('limit_total_available', '>', 0)
             ->where('limit_available', '>', 0);
 
-        if ($voucher->fund->isTypeSubsidy()) {
-            $product->where('reservations_subsidy_enabled', true);
-        } else {
-            $product
-                ->where('reservations_budget_enabled', true)
-                ->where('price', '<=', $voucher->amount_available);
-        }
+
+        $product
+            ->where('reservations_enabled', true)
+            ->where(function (Builder $builder) use ($voucher) {
+                $builder->where(function (Builder|Product $builder) use ($voucher) {
+                    $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($voucher) {
+                        $builder->where('fund_id', $voucher->fund_id);
+                    });
+                    $builder->where('price', '<=', $voucher->amount_available);
+                });
+
+                $builder->orWhere(function (Builder|Product $builder) use ($voucher) {
+                    $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
+                        $builder->whereHas('fund_provider', function (Builder $builder) use ($voucher) {
+                            $builder->where('fund_id', $voucher->fund_id);
+                        });
+
+                        $builder->where(function (Builder $builder) {
+                            $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_BUDGET);
+                            $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_SUBSIDY);
+                        });
+
+                        $builder->whereRaw('price - amount <= ?', [$voucher->amount_available]);
+                    });
+                });
+            });
 
         /** @var Product $product */
         $product = $product->first();
@@ -123,16 +144,16 @@ trait MakesProductReservations
      */
     public function makeBudgetReservationInDb(Organization $organization): ProductReservation
     {
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->findVoucherForReservation($organization);
         $product = $this->findProductForReservation($voucher);
 
-        $reservation = $voucher->reserveProduct($product, null, [
+        $reservation = $voucher->reserveProduct(product: $product, extraData: [
             'first_name' => 'John',
             'last_name' => 'Doe',
             'user_note' => '',
         ]);
 
-        if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
+        if ($reservation->product->autoAcceptsReservations()) {
             $reservation->acceptProvider();
         }
 
@@ -191,7 +212,7 @@ trait MakesProductReservations
         /** @var \Illuminate\Database\Eloquent\Collection|FundProvider[] $fund_providers */
         $fund_providers = FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
-            collect($funds)->pluck('id')->toArray()
+            collect($funds)->pluck('id')->toArray(),
         )->get();
 
         foreach ($fund_providers as $fund_provider) {

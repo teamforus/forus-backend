@@ -7,8 +7,6 @@ use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasBookmarks;
-use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\TrashedQuery;
@@ -315,7 +313,8 @@ class Product extends BaseModel
      */
     public function fund_providers(): BelongsToMany
     {
-        return $this->belongsToMany(FundProvider::class, 'fund_provider_products')
+        return $this
+            ->belongsToMany(FundProvider::class, 'fund_provider_products')
             ->whereNull('fund_provider_products.deleted_at');
     }
 
@@ -443,7 +442,7 @@ class Product extends BaseModel
             $allowed = $this->reservation_extra_payments === self::RESERVATION_EXTRA_PAYMENT_YES;
         }
 
-        if (!$allowed || $fund->isTypeSubsidy() || !$this->organization->canReceiveExtraPayments()) {
+        if (!$allowed || !$this->organization->canReceiveExtraPayments()) {
             return false;
         }
 
@@ -578,18 +577,11 @@ class Product extends BaseModel
     }
 
     /**
-     * @param Request $request
      * @return Builder
      */
-    public static function searchSample(Request $request): Builder
+    public static function implementationSample(): Builder
     {
-        $query = self::searchQuery(Implementation::activeFundsQuery()->pluck('id')->toArray());
-
-        if ($request->input('fund_type')) {
-            $query = self::filterFundType($query, $request->input('fund_type'));
-        }
-
-        return $query->inRandomOrder();
+        return self::searchQuery(Implementation::activeFundsQuery()->pluck('id')->toArray())->inRandomOrder();
     }
 
     /**
@@ -601,10 +593,6 @@ class Product extends BaseModel
     {
         $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
         $query = $builder ?: self::searchQuery($activeFunds);
-
-        if ($fund_type = Arr::get($options, 'fund_type')) {
-            $query = self::filterFundType($query, $fund_type);
-        }
 
         if ($product_category_id = Arr::get($options, 'product_category_id')) {
             $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
@@ -645,31 +633,32 @@ class Product extends BaseModel
         }
 
         if (Arr::get($options, 'qr')) {
-            $query->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
-                $builder->whereIn('fund_id', $activeFunds);
-                $builder->where('allow_budget', true);
+            $query->where(function (Builder $builder) use ($activeFunds) {
+                $builder->where(function (Builder $builder) use ($activeFunds) {
+                    $builder->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
+                        $builder->whereIn('fund_id', $activeFunds);
+                        $builder->where('allow_budget', true);
+                    });
+
+                    $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($activeFunds) {
+                        $builder->whereIn('fund_id', $activeFunds);
+                    });
+                });
+
+                $builder->orWhereHas('fund_provider_products', function (Builder $builder) use ($activeFunds) {
+                    $builder->whereHas('fund_provider', fn (Builder $b) => $b->whereIn('fund_id', $activeFunds));
+                    $builder->where('allow_scanning', true);
+                });
             });
         }
 
         if (Arr::get($options, 'reservation')) {
-            $query->where(function (Builder $builder) {
-                $builder->where('reservation_enabled', true);
-
-                $builder->whereHas('organization', function (Builder $builder) {
-                    $builder->where('reservations_budget_enabled', true);
-                    $builder->orWhere('reservations_subsidy_enabled', true);
-                });
-            });
+            ProductQuery::whereReservationEnabled($query);
         }
 
         if (Arr::get($options, 'extra_payment')) {
             $query->where(function (Builder $builder) use ($activeFunds) {
-                $builder->where('reservation_enabled', true);
-
-                $builder->whereHas('organization', function (Builder $builder) {
-                    $builder->where('reservations_budget_enabled', true);
-                    $builder->orWhere('reservations_subsidy_enabled', true);
-                });
+                ProductQuery::whereReservationEnabled($builder);
 
                 $builder->where(function (Builder $builder) {
                     $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_YES);
@@ -865,59 +854,6 @@ class Product extends BaseModel
     }
 
     /**
-     * @return void
-     */
-    public function resetSubsidyApprovals(): void
-    {
-        $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(Fund::query(), $this)->where([
-            'type' => Fund::TYPE_SUBSIDIES,
-        ])->get();
-
-        $subsidyFunds->each(function (Fund $fund) {
-            FundProductSubsidyRemovedNotification::send(
-                $fund->log($fund::EVENT_PRODUCT_SUBSIDY_REMOVED, [
-                    'product' => $this,
-                    'fund' => $fund,
-                    'sponsor' => $fund->organization,
-                    'provider' => $this->organization,
-                ])
-            );
-        });
-
-        $this->fund_provider_products()->whereHas('fund_provider', function (Builder $builder) {
-            $builder->whereHas('fund', function (Builder $builder) {
-                $builder->where('type', '=', Fund::TYPE_SUBSIDIES);
-            });
-        })->delete();
-    }
-
-    /**
-     * Check if price will change after update.
-     * @param string $price_type
-     * @param float $price
-     * @param float $price_discount
-     * @return bool
-     */
-    public function priceWillChanged(string $price_type, float $price, float $price_discount): bool
-    {
-        if ($price_type !== $this->price_type) {
-            return true;
-        }
-
-        if ($this->price_type === self::PRICE_TYPE_REGULAR &&
-            currency_format($price) !== currency_format($this->price)) {
-            return true;
-        }
-
-        if (in_array($this->price_type, self::PRICE_DISCOUNT_TYPES, true) &&
-            currency_format($price_discount) !== currency_format($this->price_discount)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * @param Organization $organization
      * @param BaseFormRequest $request
      * @return $this
@@ -975,10 +911,6 @@ class Product extends BaseModel
 
         $this->attachMediaByUid($request->input('media_uid'));
 
-        if ($this->priceWillChanged($price_type, $price, $price_discount)) {
-            $this->resetSubsidyApprovals();
-        }
-
         $this->update([
             ...$request->only([
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
@@ -1003,24 +935,19 @@ class Product extends BaseModel
     }
 
     /**
-     * @param Fund $fund
      * @return bool
      */
-    public function reservationsEnabled(Fund $fund): bool
+    public function reservationsEnabled(): bool
     {
-        return $this->reservation_enabled && (
-            ($fund->isTypeSubsidy() && $this->organization->reservations_subsidy_enabled) ||
-            ($fund->isTypeBudget() && $this->organization->reservations_budget_enabled)
-        );
+        return $this->reservation_enabled && $this->organization->reservations_enabled;
     }
 
     /**
-     * @param Fund $fund
      * @return bool
      */
-    public function autoAcceptsReservations(Fund $fund): bool
+    public function autoAcceptsReservations(): bool
     {
-        $reservationsEnabled = $this->reservationsEnabled($fund);
+        $reservationsEnabled = $this->reservationsEnabled();
 
         if ($reservationsEnabled && $this->reservation_policy === self::RESERVATION_POLICY_ACCEPT) {
             return true;

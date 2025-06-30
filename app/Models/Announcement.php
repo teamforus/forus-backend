@@ -32,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|Eloquent|null $announceable
+ * @property-read Model|\Eloquent|null $announceable
  * @property-read string $description_html
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Role|null $role
@@ -62,7 +62,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|Announcement whereUpdatedAt($value)
  * @method static Builder<static>|Announcement withTrashed()
  * @method static Builder<static>|Announcement withoutTrashed()
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class Announcement extends Model
 {

@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ProductBasicResource;
 use App\Http\Resources\Requester\ProductResource;
-use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,7 +26,7 @@ class ProductsController extends Controller
         $this->authorize('viewAnyPublic', Product::class);
 
         $query = Product::search($request->only([
-            'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
+            'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
             'organization_id', 'q', 'order_by', 'order_dir', 'postcode', 'distance',
             'qr', 'reservation', 'extra_payment',
         ]));
@@ -44,7 +43,7 @@ class ProductsController extends Controller
             return ProductBasicResource::queryCollection($query, $request);
         }
 
-        $priceField = $request->input('fund_type') === Fund::TYPE_SUBSIDIES ? 'price_min' : 'price';
+        $priceField = 'price_min';
         $priceQuery = (clone $query);
 
         $priceMax = DB::table(DB::raw("({$priceQuery->toSql()}) as sub"))
@@ -75,7 +74,7 @@ class ProductsController extends Controller
 
         $per_page = $request->input('per_page', 6);
 
-        $resultProducts = Product::searchSample($request)
+        $resultProducts = Product::implementationSample()
             ->whereHas('medias')
             ->where('show_on_webshop', true)
             ->take($per_page)->groupBy('organization_id')->distinct()
@@ -83,7 +82,7 @@ class ProductsController extends Controller
 
         if ($resultProducts->count() < 6) {
             $resultProducts = $resultProducts->merge(
-                Product::searchSample($request)->whereKeyNot($resultProducts->pluck('id'))
+                Product::implementationSample()->whereKeyNot($resultProducts->pluck('id'))
                     ->take($per_page - $resultProducts->count())
                     ->where('show_on_webshop', true)
                     ->with(ProductResource::load())->get()

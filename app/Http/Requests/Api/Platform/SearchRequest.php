@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 
 class SearchRequest extends BaseFormRequest
 {
@@ -29,7 +28,6 @@ class SearchRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|max:1000',
             'fund_id' => 'nullable|exists:funds,id',
             'product_category_id' => 'nullable|exists:product_categories,id',
-            'fund_type' => 'nullable|in:' . implode(',', Fund::TYPES),
             'organization_id' => 'nullable|exists:organizations,id',
             'search_item_types' => 'nullable|array',
             'search_item_types.*' => 'required|in:funds,providers,products',

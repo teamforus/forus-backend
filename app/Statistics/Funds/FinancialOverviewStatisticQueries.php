@@ -136,6 +136,10 @@ class FinancialOverviewStatisticQueries
         ?Carbon $to = null,
     ): float {
         return round($fund->voucher_transactions()
+            ->whereIn('voucher_transactions.state', [
+                VoucherTransaction::STATE_SUCCESS,
+                VoucherTransaction::STATE_PENDING,
+            ])
             ->where(function (Builder $builder) use ($from, $to) {
                 if ($from) {
                     $builder->where('vouchers.expire_at', '>=', $from);

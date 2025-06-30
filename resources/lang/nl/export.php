@@ -18,7 +18,6 @@ return [
     'providers' => [
         'fund' => 'Fondsnaam',
         'implementation' => 'Website',
-        'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
         'provider_last_activity' => 'Laatst actief',
         'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',

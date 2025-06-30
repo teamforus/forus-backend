@@ -6,7 +6,6 @@ use App\Models\Identity;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Contracts\Validation\Rule;
-use Illuminate\Database\Eloquent\Builder;
 
 class IdentityVoucherAddressRule implements Rule
 {
@@ -15,12 +14,10 @@ class IdentityVoucherAddressRule implements Rule
      *
      * @param Identity|null $identity
      * @param string|null $voucher_type
-     * @param string|null $fund_type
      */
     public function __construct(
         protected ?Identity $identity,
         protected ?string $voucher_type = null,
-        protected ?string $fund_type = null,
     ) {
     }
 
@@ -36,12 +33,6 @@ class IdentityVoucherAddressRule implements Rule
         $query = VoucherQuery::whereNotExpiredAndActive(Voucher::query()
             ->where('identity_id', $this->identity?->id)
             ->where('id', $value));
-
-        if (!is_null($this->fund_type)) {
-            $query->whereHas('fund', function (Builder $builder) {
-                $builder->where('type', '=', $this->fund_type);
-            });
-        }
 
         switch ($this->voucher_type) {
             case Voucher::TYPE_BUDGET: $query->whereNull('product_id');

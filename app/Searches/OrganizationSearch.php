@@ -54,15 +54,8 @@ class OrganizationSearch extends BaseSearch
         }
 
         $builder = match ($this->getFilter('type')) {
-            'sponsor' => $this->whereHasFunds(
-                $builder,
-                $this->getFilter('implementation_id'),
-            ),
-            'provider' => $this->whereHasProducts(
-                $builder,
-                $this->getFilter('implementation_id'),
-                $this->getFilter('fund_type', 'budget'),
-            ),
+            'sponsor' => $this->whereHasFunds($builder, $this->getFilter('implementation_id')),
+            'provider' => $this->whereHasProducts($builder, $this->getFilter('implementation_id')),
             default => $builder->where(function (Builder $builder) {
                 if ($this->getFilter('auth_address')) {
                     OrganizationQuery::whereIsEmployee($builder, $this->getFilter('auth_address'));
@@ -96,17 +89,15 @@ class OrganizationSearch extends BaseSearch
     /**
      * @param Builder|Relation|Organization $builder
      * @param int $implementationId
-     * @param string $fundType
      * @return Builder|Relation|Organization
      */
     protected function whereHasProducts(
         Builder|Relation|Organization $builder,
         int $implementationId,
-        string $fundType,
     ): Builder|Relation|Organization {
-        return $builder->whereHas('products', function (Builder $builder) use ($fundType, $implementationId) {
-            $activeFunds = Implementation::find($implementationId)->funds()->where('type', $fundType);
-            $activeFunds = FundQuery::whereIsConfiguredByForus(FundQuery::whereActiveFilter($activeFunds));
+        return $builder->whereHas('products', function (Builder $builder) use ($implementationId) {
+            $activeFunds = Implementation::find($implementationId)->funds();
+            $activeFunds = FundQuery::whereIsInternalConfiguredAndActive($activeFunds);
 
             // only in stock and not expired
             $builder = ProductQuery::inStockAndActiveFilter($builder->select('id'));
