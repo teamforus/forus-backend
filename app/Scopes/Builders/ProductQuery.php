@@ -48,6 +48,15 @@ class ProductQuery
                     $builder->where('excluded', false);
                 });
             });
+
+            $builder->whereDoesntHave('fund_provider_products', static function (Builder $builder) use ($fund_id) {
+                $builder->wherePast('fund_provider_products.expire_at');
+
+                $builder->whereHas('fund_provider', static function (Builder $builder) use ($fund_id) {
+                    $builder->whereIn('fund_id', (array) $fund_id);
+                    $builder->where('state', FundProvider::STATE_ACCEPTED);
+                });
+            });
         });
     }
 
