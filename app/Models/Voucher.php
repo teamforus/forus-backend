@@ -1165,7 +1165,7 @@ class Voucher extends BaseModel
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
         $amount_voucher = $fundProviderProduct?->isPaymentTypeSubsidy()
-            ? max($product->price - $fundProviderProduct->amount, 0)
+            ? $fundProviderProduct->user_price
             : null;
 
         if ($hasExtraPayment) {

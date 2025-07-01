@@ -1011,4 +1011,15 @@ class Product extends BaseModel
             ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
     }
+
+    /**
+     * @param Fund $fund
+     * @return string
+     */
+    public function fundPrice(Fund $fund): string
+    {
+        $providerProduct = $this->getFundProviderProduct($fund);
+
+        return $providerProduct ? $providerProduct->user_price : $this->price;
+    }
 }

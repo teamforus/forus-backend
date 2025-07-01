@@ -144,7 +144,11 @@ class FundProviderProduct extends BaseModel
      */
     public function getUserPriceAttribute(): float
     {
-        return $this->getUserPrice($this->product->price);
+        if ($this->isPaymentTypeSubsidy()) {
+            return $this->getUserPrice($this->product->price);
+        }
+
+        return $this->product->price;
     }
 
     /**

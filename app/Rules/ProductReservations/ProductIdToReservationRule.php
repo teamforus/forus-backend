@@ -71,7 +71,7 @@ class ProductIdToReservationRule extends BaseRule
         }
 
         if (
-            $product->price > $voucher->amount_available &&
+            $product->fundPrice($voucher->fund) > $voucher->amount_available &&
             !$this->isExtraPaymentEnabled($voucher, $product)
         ) {
             return $this->rejectTrans('not_enough_voucher_funds');
