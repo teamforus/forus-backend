@@ -33,7 +33,7 @@ class FundProviderProductAvailableRule extends BaseRule
     {
         $id = $value['id'] ?? null;
         $amount = $value['amount'] ?? null;
-        $limit = $value['limit_total'] ?? null;
+        $limit_total = $value['limit_total'] ?? null;
         $limit_per_identity = $value['limit_per_identity'] ?? null;
         $is_subsidy_product = ($value['payment_type'] ?? null) === FundProviderProduct::PAYMENT_TYPE_SUBSIDY;
 
@@ -53,14 +53,14 @@ class FundProviderProductAvailableRule extends BaseRule
         }
 
         if (!$product->unlimited_stock) {
-            if (!is_null($limit) && (!is_numeric($limit) || $product->stock_amount < $limit)) {
+            if (!is_null($limit_total) && (!is_numeric($limit_total) || $product->stock_amount < $limit_total)) {
                 return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total'),
                 ]));
             }
 
-            if (!is_null($limit) && (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity)) {
+            if (!is_null($limit_per_identity) && (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity)) {
                 return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total_per_identity'),

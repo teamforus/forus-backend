@@ -65,7 +65,7 @@ class ProductReservationsController extends Controller
             $product = Product::find($request->input('product_id'));
             $voucher = Voucher::find($request->input('voucher_id'));
             $postCode = $request->input('postal_code') ?: '';
-            $extraPaymentRequired = $product->price > $voucher->amount_available;
+            $extraPaymentRequired = $product->fundPrice($voucher->fund) > $voucher->amount_available;
 
             if ($extraPaymentRequired) {
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
