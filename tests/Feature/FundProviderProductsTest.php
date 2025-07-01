@@ -13,7 +13,6 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
@@ -475,8 +474,9 @@ class FundProviderProductsTest extends TestCase
         $this->updateFundProvider($fundProvider, enable: [$this->productData($product1->id, 'budget', expireAt: $expireAt)]);
         $this->updateFundProvider($fundProvider, enable: [$this->productData($product2->id, 'subsidy', amount: 2.5, expireAt: $expireAt)]);
 
-        // move 7 days to the date where the products are supposed to be expired
-        $this->travelTo($expireAt);
+        // move to the next day after the product's expiration date and execute expiration:check command
+        $this->travelTo($expireAt->clone()->addDay());
+        $this->artisan('forus.action.expiration:check');
 
         // assert the products are no longer visible or reservable
         $this->assertWebshopProductsListVisibility($implementation, $product1, false);
@@ -484,24 +484,23 @@ class FundProviderProductsTest extends TestCase
         $this->makeProductReservation($voucher, $product1, assertSuccess: false, assertErrors: ['product_id']);
         $this->makeProductReservation($voucher, $product2, assertSuccess: false, assertErrors: ['product_id']);
 
-        // approve the provider as for both budget and products
-        $this->updateFundProvider($fundProvider, state: 'accepted', budget: true, products: true);
+        // approve all provider's products
+        $this->updateFundProvider($fundProvider, products: true);
 
-        // assert the products are still not available as long as the custom product config exists
-        $this->assertWebshopProductsListVisibility($implementation, $product1, false);
-        $this->assertWebshopProductsListVisibility($implementation, $product2, false);
-        $this->makeProductReservation($voucher, $product1, assertSuccess: false, assertErrors: ['product_id']);
-        $this->makeProductReservation($voucher, $product2, assertSuccess: false, assertErrors: ['product_id']);
-
-        // remove custom products configs
-        $this->updateFundProvider($fundProvider, state: 'accepted', disable: [$product1->id]);
-        $this->updateFundProvider($fundProvider, state: 'accepted', disable: [$product2->id]);
-
-        // assert that now global rules are in place and the products are visible and reservable again
+        // assert the products are now available since all products are now available and the product
         $this->assertWebshopProductsListVisibility($implementation, $product1, true);
         $this->assertWebshopProductsListVisibility($implementation, $product2, true);
         $this->makeProductReservation($voucher, $product1, assertSuccess: true);
         $this->makeProductReservation($voucher, $product2, assertSuccess: true);
+
+        // remove products approval
+        $this->updateFundProvider($fundProvider, products: false);
+
+        // assert the products are no longer visible or reservable
+        $this->assertWebshopProductsListVisibility($implementation, $product1, false);
+        $this->assertWebshopProductsListVisibility($implementation, $product2, false);
+        $this->makeProductReservation($voucher, $product1, assertSuccess: false, assertErrors: ['product_id']);
+        $this->makeProductReservation($voucher, $product2, assertSuccess: false, assertErrors: ['product_id']);
     }
 
     /**
