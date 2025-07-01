@@ -13,6 +13,8 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesProductReservations;
@@ -29,6 +31,29 @@ class FundProviderProductsTest extends TestCase
     use AssertsSentEmails;
     use DatabaseTransactions;
     use MakesProductReservations;
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->throttleTotalPendingCount = Config::get('forus.reservations.throttle_total_pending');
+        $this->throttleRecentlyCanceledCount = Config::get('forus.reservations.throttle_recently_canceled');
+
+        Config::set('forus.reservations.throttle_total_pending', 4);
+        Config::set('forus.reservations.throttle_recently_canceled', 2);
+    }
+
+    /**
+     * @return void
+     */
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        Config::set('forus.reservations.throttle_total_pending', $this->throttleTotalPendingCount);
+        Config::set('forus.reservations.throttle_recently_canceled', $this->throttleRecentlyCanceledCount);
+    }
 
     /**
      * @return void
