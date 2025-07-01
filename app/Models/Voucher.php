@@ -45,6 +45,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Maatwebsite\Excel\Facades\Excel;
+use Matrix\Exception;
 use Throwable;
 use ZipArchive;
 
@@ -1164,12 +1165,16 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
-        $amount_voucher = $fundProviderProduct?->isPaymentTypeSubsidy()
+        $user_price = $fundProviderProduct?->isPaymentTypeSubsidy()
             ? $fundProviderProduct->user_price
             : null;
 
         if ($hasExtraPayment) {
-            $amount = ($amount_voucher > $this->amount_available) ? $amount_voucher : $product->price;
+            if ($fundProviderProduct?->isPaymentTypeSubsidy()) {
+                throw new Exception('Extra payment types are not allowed');
+            }
+
+            $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
             $state = ProductReservation::STATE_WAITING;
             $extraAmount = $product->price - $amount;
         } else {
@@ -1182,7 +1187,7 @@ class Voucher extends BaseModel
         $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
-            'amount_voucher' => $amount_voucher,
+            'amount_voucher' => $user_price,
             'state' => $state,
             'product_id' => $product->id,
             'employee_id' => $employee?->id,

@@ -50,6 +50,9 @@ class ProductIdToReservationRule extends BaseRule
             'voucher_id' => $voucher->id ?? null,
         ], Product::whereId($value))->first();
 
+        $providerProduct = $product->getFundProviderProduct($voucher->fund);
+        $userPrice = $product->fundPrice($voucher->fund);
+
         if (!$this->voucherId || !$voucher) {
             return $this->rejectTrans('voucher_address_required');
         }
@@ -71,8 +74,8 @@ class ProductIdToReservationRule extends BaseRule
         }
 
         if (
-            $product->fundPrice($voucher->fund) > $voucher->amount_available &&
-            !$this->isExtraPaymentEnabled($voucher, $product)
+            $userPrice > $voucher->amount_available &&
+            (!$this->isExtraPaymentEnabled($voucher, $product) || $providerProduct?->isPaymentTypeSubsidy())
         ) {
             return $this->rejectTrans('not_enough_voucher_funds');
         }
