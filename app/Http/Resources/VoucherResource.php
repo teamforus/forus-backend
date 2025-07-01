@@ -137,7 +137,7 @@ class VoucherResource extends BaseJsonResource
         $allow_reservations = $voucher->fund->fund_config->allow_reservations;
         $reservable_enabled = $allow_reservations && $product->reservationsEnabled();
 
-        $has_amount = $voucher->amount_available >= $product->price;
+        $has_amount = $voucher->amount_available >= $product->fundPrice($voucher->fund);
         $extra_payment_possible = $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available);
 
         $reservable_count = isset($product['limit_available']) && is_numeric($product['limit_available'])
