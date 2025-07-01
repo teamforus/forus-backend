@@ -1164,30 +1164,39 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
-        $amount_voucher = $fundProviderProduct?->isPaymentTypeSubsidy()
+        $user_price = $fundProviderProduct?->isPaymentTypeSubsidy()
             ? $fundProviderProduct->user_price
             : null;
 
         if ($hasExtraPayment) {
-            $amount = ($amount_voucher > $this->amount_available) ? $amount_voucher : $product->price;
+            if ($fundProviderProduct?->isPaymentTypeSubsidy()) {
+                $amount = ($user_price > $this->amount_available) ?
+                    ($product->price - ($user_price - $this->amount_available)) :
+                    $product->price;
+                $extra_amount = $product->price - $amount;
+                $user_price = ($user_price - $extra_amount);
+            } else {
+                $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+                $extra_amount = $product->price - $amount;
+            }
+
             $state = ProductReservation::STATE_WAITING;
-            $extraAmount = $product->price - $amount;
         } else {
             $amount = $product->price;
             $state = ProductReservation::STATE_PENDING;
-            $extraAmount = 0;
+            $extra_amount = 0;
         }
 
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
-            'amount_voucher' => $amount_voucher,
+            'amount_voucher' => $user_price,
             'state' => $state,
             'product_id' => $product->id,
             'employee_id' => $employee?->id,
             'fund_provider_product_id' => $fundProviderProduct?->id,
-            'amount_extra' => $extraAmount,
+            'amount_extra' => $extra_amount,
             ...array_only($extraData, [
                 'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
                 'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
