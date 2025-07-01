@@ -653,7 +653,7 @@ class Product extends BaseModel
         }
 
         if (Arr::get($options, 'reservation')) {
-            ProductQuery::whereReservationEnabled($builder);
+            ProductQuery::whereReservationEnabled($query);
         }
 
         if (Arr::get($options, 'extra_payment')) {
