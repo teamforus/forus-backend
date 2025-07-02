@@ -10,12 +10,14 @@ use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class VouchersProviderMeAppTest extends TestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use MakesTestProducts;
     use DatabaseTransactions;
     use MakesTestOrganizations;
@@ -34,9 +36,9 @@ class VouchersProviderMeAppTest extends TestCase
             'voucher_amount_visible' => false,
         ]);
 
-        $voucher = $fund->makeVoucher($this->makeIdentity(), [
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), [
             'state' => Voucher::STATE_ACTIVE,
-        ], 100);
+        ], amount: 100);
 
         $this->assertNotNull($voucher);
 

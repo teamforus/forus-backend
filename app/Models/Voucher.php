@@ -1091,9 +1091,10 @@ class Voucher extends BaseModel
             'product_reservation_id' => $productReservation?->id,
         ]);
 
-        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
-
-        return $voucher;
+        return $voucher->dispatchCreated(
+            notifyRequesterReserved: !$productReservation,
+            notifyRequesterAdded: !$productReservation,
+        );
     }
 
     /**
@@ -1820,6 +1821,30 @@ class Voucher extends BaseModel
         $familyName = Arr::get($recordsMap, 'family_name');
 
         return $givenName ? trim("$givenName $familyName") : null;
+    }
+
+    /**
+     * @param bool $notifyRequesterReserved
+     * @param bool $notifyRequesterAdded
+     * @param bool $notifyProviderReserved
+     * @param bool $notifyProviderReservedBySponsor
+     * @return $this
+     */
+    public function dispatchCreated(
+        bool $notifyRequesterReserved = true,
+        bool $notifyRequesterAdded = true,
+        bool $notifyProviderReserved = true,
+        bool $notifyProviderReservedBySponsor = false,
+    ): Voucher {
+        Event::dispatch(new VoucherCreated(
+            $this,
+            $notifyRequesterReserved,
+            $notifyRequesterAdded,
+            $notifyProviderReserved,
+            $notifyProviderReservedBySponsor,
+        ));
+
+        return $this;
     }
 
     /**

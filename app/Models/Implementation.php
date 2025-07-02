@@ -1027,7 +1027,7 @@ class Implementation extends BaseModel
                 return $vouchers;
             }
 
-            if ($voucher = $fund->makeVoucher($identity)) {
+            if ($voucher = $fund->makeVoucher(identity: $identity)) {
                 $vouchers[] = $voucher;
             }
 

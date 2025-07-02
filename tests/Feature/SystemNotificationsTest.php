@@ -15,12 +15,14 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestVouchers;
 
 class SystemNotificationsTest extends TestCase
 {
-    use UsesMediaService;
-    use DatabaseTransactions;
     use WithFaker;
+    use UsesMediaService;
+    use MakesTestVouchers;
+    use DatabaseTransactions;
 
     protected array $templateStructure = [
         'id', 'content', 'formal', 'fund_id', 'implementation_id', 'key', 'title', 'type',
@@ -349,7 +351,7 @@ class SystemNotificationsTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-        return $fund->makeVoucher($identity, [], 100);
+        return $this->makeTestVoucher($fund, $identity, amount: 100);
     }
 
     /**

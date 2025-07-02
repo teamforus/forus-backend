@@ -11,11 +11,13 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class MeAppBasicRoutersTest extends TestCase
 {
     use MakesTestFunds;
+    use MakesTestVouchers;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
 
@@ -68,7 +70,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testProviderVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity(), [], 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: 100);
         $provider = $this->makeTestFundProvider($this->makeTestOrganization($this->makeIdentity()), $fund);
         $headers = $this->makeApiHeaders($provider->organization->identity);
         $address = $voucher->token_without_confirmation->address;
@@ -89,7 +91,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testRequesterVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()), [], 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()), amount: 100);
         $headers = $this->makeApiHeaders($voucher->identity);
         $address = $voucher->token_without_confirmation->address;
 
