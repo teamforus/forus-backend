@@ -1091,9 +1091,10 @@ class Voucher extends BaseModel
             'product_reservation_id' => $productReservation?->id,
         ]);
 
-        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
-
-        return $voucher;
+        return $voucher->dispatchCreated(
+            notifyRequesterReserved: !$productReservation,
+            notifyRequesterAdded: !$productReservation,
+        );
     }
 
     /**

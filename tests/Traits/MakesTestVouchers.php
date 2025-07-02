@@ -28,9 +28,7 @@ trait MakesTestVouchers
         ?int $amount = null,
         ?int $limit_multiplier = null,
     ): Voucher {
-        return $fund
-            ->makeVoucher($identity, voucherFields: $fields, amount: $amount, limit_multiplier: $limit_multiplier)
-            ?->dispatchCreated();
+        return $fund->makeVoucher($identity, voucherFields: $fields, amount: $amount, limitMultiplier: $limit_multiplier);
     }
 
     /**
@@ -71,8 +69,12 @@ trait MakesTestVouchers
         Carbon $expire_at = null,
         float $price = null,
     ): Voucher {
-        return $fund
-            ->makeProductVoucher($identity, $voucherFields, $product_id, $expire_at, $price)
-            ->dispatchCreated(notifyRequesterReserved: false);
+        return $fund->makeProductVoucher(
+            identity: $identity,
+            voucherFields: $voucherFields,
+            productId: $product_id,
+            expireAt: $expire_at,
+            price: $price,
+        );
     }
 }

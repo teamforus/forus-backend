@@ -109,7 +109,7 @@ class FundsController extends Controller
             throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
         }
 
-        $voucher = $fund->makeVoucher($request->identity())->dispatchCreated();
+        $voucher = $fund->makeVoucher(identity: $request->identity());
         $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
 
         $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([

@@ -7,7 +7,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 
 /**
- * The product was reserved by sponsor.
+ * The product was reserved by the sponsor.
  */
 class ProductReservedBySponsorNotification extends BaseProductsNotification
 {

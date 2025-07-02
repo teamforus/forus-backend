@@ -40,8 +40,8 @@ class VouchersController extends Controller
      *
      * @param IndexVouchersRequest $request
      * @param Organization $organization
+     * @throws Throwable
      * @throws AuthorizationException
-     * @throws Exception
      * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
@@ -97,12 +97,26 @@ class VouchersController extends Controller
 
         if ($product_id) {
             $mainVoucher = $fund
-                ->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, $notifyProvider)
-                ->dispatchCreated(notifyRequesterReserved: false, notifyProviderReserved: false, notifyProviderReservedBySponsor: $notifyProvider);
+                ->makeProductVoucher(
+                    identity: $identity,
+                    voucherFields: $extraFields,
+                    productId: $product_id,
+                    expireAt: $expire_at,
+                    dispatchCreated: false,
+                )
+                ->dispatchCreated(
+                    notifyRequesterReserved: false,
+                    notifyProviderReserved: false,
+                    notifyProviderReservedBySponsor: $notifyProvider,
+                );
         } else {
-            $mainVoucher = $fund
-                ->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier)
-                ->dispatchCreated();
+            $mainVoucher = $fund->makeVoucher(
+                identity: $identity,
+                voucherFields:  $extraFields,
+                amount: $amount,
+                expireAt: $expire_at,
+                limitMultiplier: $multiplier,
+            );
 
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
         }
@@ -196,20 +210,34 @@ class VouchersController extends Controller
             $notifyProvider = $voucher['notify_provider'] ?? false;
 
             $employee_id = $employee->id;
-            $extraFields = compact('note', 'employee_id');
+            $voucherFields = compact('note', 'employee_id');
             $payment_iban = $voucher['direct_payment_iban'] ?? null;
             $payment_name = $voucher['direct_payment_name'] ?? null;
 
             if ($product_id) {
                 $mainVoucher = $fund
-                    ->makeProductVoucher($identity, $extraFields, $product_id, $expire_at, $notifyProvider)
-                    ->dispatchCreated(notifyRequesterReserved: false, notifyProviderReserved: false, notifyProviderReservedBySponsor: $notifyProvider);
+                    ->makeProductVoucher(
+                        identity: $identity,
+                        voucherFields: $voucherFields,
+                        productId: $product_id,
+                        expireAt: $expire_at,
+                        dispatchCreated: false,
+                    )
+                    ->dispatchCreated(
+                        notifyRequesterReserved: false,
+                        notifyProviderReserved: false,
+                        notifyProviderReservedBySponsor: $notifyProvider,
+                    );
             } else {
-                $mainVoucher = $fund
-                    ->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier)
-                    ->dispatchCreated();
+                $mainVoucher = $fund->makeVoucher(
+                    identity: $identity,
+                    voucherFields: $voucherFields,
+                    amount: $amount,
+                    expireAt: $expire_at,
+                    limitMultiplier: $multiplier,
+                );
 
-                $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
+                $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
             }
 
             /** @var Voucher[] $vouchers */
@@ -457,7 +485,7 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @throws AuthorizationException|Exception
+     * @throws Throwable
      * @return VoucherExportArrResource
      */
     public function export(
