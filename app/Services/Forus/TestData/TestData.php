@@ -1220,7 +1220,7 @@ class TestData
                 continue;
             }
 
-            $voucher = $fund->makeVoucher($identity, amount: 20);
+            $voucher = $fund->makeVoucher($identity, amount: 200);
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
                 $product = ProductQuery::approvedForFundsFilter(Product::query(), $fund->id)

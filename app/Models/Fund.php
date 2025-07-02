@@ -1171,7 +1171,7 @@ class Fund extends BaseModel
         string|FundAmountPreset $amount = null,
         Carbon $expireAt = null,
         ?int $limitMultiplier = null,
-        ?bool $dispatchCreated = true,
+        bool $dispatchCreated = true,
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
@@ -1283,7 +1283,7 @@ class Fund extends BaseModel
      * @param int|null $productId
      * @param Carbon|null $expireAt
      * @param float|null $price
-     * @param bool|null $dispatchCreated
+     * @param bool $dispatchCreated
      * @return Voucher
      */
     public function makeProductVoucher(
@@ -1292,7 +1292,7 @@ class Fund extends BaseModel
         int $productId = null,
         Carbon $expireAt = null,
         float $price = null,
-        ?bool $dispatchCreated = true,
+        bool $dispatchCreated = true,
     ): Voucher {
         $voucher = Voucher::create([
             'number' => Voucher::makeUniqueNumber(),

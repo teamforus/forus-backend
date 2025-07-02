@@ -91,7 +91,7 @@ class VouchersController extends Controller
         $report_type = $request->input('report_type', VoucherRelation::REPORT_TYPE_USER);
 
         $employee_id = $organization->findEmployee($request->auth_address())->id;
-        $extraFields = compact('note', 'employee_id');
+        $voucherFields = compact('note', 'employee_id');
         $productVouchers = [];
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
@@ -99,7 +99,7 @@ class VouchersController extends Controller
             $mainVoucher = $fund
                 ->makeProductVoucher(
                     identity: $identity,
-                    voucherFields: $extraFields,
+                    voucherFields: $voucherFields,
                     productId: $product_id,
                     expireAt: $expire_at,
                     dispatchCreated: false,
@@ -112,13 +112,13 @@ class VouchersController extends Controller
         } else {
             $mainVoucher = $fund->makeVoucher(
                 identity: $identity,
-                voucherFields:  $extraFields,
+                voucherFields: $voucherFields,
                 amount: $amount,
                 expireAt: $expire_at,
                 limitMultiplier: $multiplier,
             );
 
-            $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
+            $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
         }
 
         /** @var Voucher[] $vouchers */

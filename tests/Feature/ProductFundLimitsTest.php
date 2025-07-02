@@ -411,7 +411,7 @@ class ProductFundLimitsTest extends TestCase
             foreach ($identityData['vouchers'] as $voucherArr) {
                 $fund = $this->findFund($voucherArr['fund_id']);
                 $limit = $voucherArr['limit_multiplier'];
-                $voucher = $this->makeTestVoucher($fund, $identity, amount: $voucherArr['amount'], limit_multiplier: $limit);
+                $voucher = $this->makeTestVoucher($fund, $identity, amount: $voucherArr['amount'], limitMultiplier: $limit);
 
                 $this->assertNotNull($voucher, 'Voucher not found');
                 $this->vouchers[] = $voucher;
