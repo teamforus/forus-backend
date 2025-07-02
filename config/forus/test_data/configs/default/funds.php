@@ -2,10 +2,10 @@
 
 return [
     'Zuidhorn' => [
+        'test_reservations' => false,
         'implementation_name' => 'Zuidhorn',
         'organization_name' => 'Zuidhorn',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -16,10 +16,10 @@ return [
         ],
     ],
     'Nijmegen' => [
+        'test_reservations' => false,
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'auto_requests_validation' => true,
             'criteria_editable_after_start' => true,
         ],
@@ -31,18 +31,24 @@ return [
             'allow_voucher_records' => true,
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
     ],
     'Nijmegen II' => [
+        'test_reservations' => false,
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
     ],
     'Nijmegen III' => [
@@ -57,6 +63,9 @@ return [
             'auth_2fa_restrict_emails' => true,
             'auth_2fa_restrict_auth_sessions' => true,
             'auth_2fa_restrict_reimbursements' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
         'fund_criteria' => [
             [
@@ -116,7 +125,6 @@ return [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -132,6 +140,9 @@ return [
             'allow_preset_amounts_validator' => true,
             'iban_record_key' => 'iban',
             'iban_name_record_key' => 'iban_name',
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
         ],
         'fund_amount_presets' => [
             [ 'name' => 'Preset #1', 'amount' => '10.00'],
@@ -218,7 +229,6 @@ return [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
         'fund' => [
-            'type' => 'budget',
             'criteria_editable_after_start' => true,
         ],
         'fund_config' => [
@@ -273,6 +283,7 @@ return [
         ]],
     ],
     'Stadjerspas: Jeugd' => [
+        'test_reservations' => false,
         'implementation_name' => 'Stadjerspas',
         'organization_name' => 'Gemeente Groningen',
         'fund' => [
@@ -374,6 +385,7 @@ return [
         'fund_limit_multiplier' => null,
     ],
     'Stadjerspas' => [
+        'test_reservations' => false,
         'implementation_name' => 'Stadjerspas',
         'organization_name' => 'Gemeente Groningen',
         'fund' => [
@@ -477,10 +489,10 @@ return [
         'fund_limit_multiplier' => null,
     ],
     'Noordoostpolder' => [
+        'test_reservations' => false,
         'implementation_name' => 'Noordoostpolder',
         'organization_name' => 'Gemeente Noordoostpolder',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'meedoenpakket_2020',
@@ -517,10 +529,10 @@ return [
         ],
     ],
     'Berkelland' => [
+        'test_reservations' => false,
         'implementation_name' => 'Berkelland',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -556,10 +568,10 @@ return [
         ],
     ],
     'Oostgelre' => [
+        'test_reservations' => false,
         'implementation_name' => 'Oostgelre',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -595,10 +607,10 @@ return [
         ],
     ],
     'Winterswijk I' => [
+        'test_reservations' => false,
         'implementation_name' => 'Winterswijk',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'sociaalcultureel',
@@ -634,10 +646,10 @@ return [
         ],
     ],
     'Winterswijk II' => [
+        'test_reservations' => false,
         'implementation_name' => 'Winterswijk',
         'organization_name' => 'Fijnder (Berkelland, Oostgelre and Winterswijk combined)',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'meedoenregeling_volwassenen_ww',
@@ -673,11 +685,11 @@ return [
         ],
     ],
     'Kindpakket Westerkwartier' => [
+        'test_reservations' => false,
         'implementation_name' => 'Potjeswijzer',
         'organization_name' => 'Gemeente Westerkwartier',
         'fund' => [
             'request_btn_text' => 'Activeren',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'kindpakket_2020',
@@ -712,6 +724,13 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
+        'fund_formula' => [
+            [
+                'type' => 'multiply',
+                'amount' => '250.00',
+                'record_type_key' => 'children_nth',
+            ],
+        ],
         'fund_criteria' => [
             [
                 'record_type_key' => 'kindpakket_2020_eligible',
@@ -726,19 +745,12 @@ return [
                 'show_attachment' => false,
             ],
         ],
-        'fund_formula' => [
-            [
-                'type' => 'multiply',
-                'amount' => '250.00',
-                'record_type_key' => 'children_nth',
-            ],
-        ],
     ],
     'Goeree-Overflakkee I' => [
+        'test_reservations' => false,
         'implementation_name' => 'Goeree-Overflakkee',
         'organization_name' => 'Gemeente Goeree-Overflakkee',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'goeree',
@@ -774,10 +786,10 @@ return [
         ],
     ],
     'Goeree-Overflakkee II' => [
+        'test_reservations' => false,
         'implementation_name' => 'Goeree-Overflakkee',
         'organization_name' => 'Gemeente Goeree-Overflakkee',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'goeree',
@@ -813,10 +825,10 @@ return [
         ],
     ],
     'Geertruidenberg' => [
+        'test_reservations' => false,
         'implementation_name' => 'Geertruidenberg',
         'organization_name' => 'Gemeente Geertruidenberg',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'gtb_2020',
@@ -853,10 +865,10 @@ return [
         ],
     ],
     'Heumen' => [
+        'test_reservations' => false,
         'implementation_name' => 'Heumen',
         'organization_name' => 'Gemeente Heumen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'heu_2021',
@@ -892,10 +904,10 @@ return [
         ],
     ],
     'Schagen' => [
+        'test_reservations' => false,
         'implementation_name' => 'Schagen',
         'organization_name' => 'Gemeente Schagen',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'schagen',
@@ -931,11 +943,12 @@ return [
         ],
     ],
     'Meedoenregeling (Etten-Leur)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Hart van West Brabant',
         'organization_name' => 'Etten-Leur - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -969,13 +982,16 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
+        'fund_formula' => [
+        ],
     ],
     'Meedoenregeling (Halderberge)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Hart van West Brabant',
         'organization_name' => 'Halderberge - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1009,13 +1025,16 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
+        'fund_formula' => [
+        ],
     ],
     'Meedoenregeling (Moerdijk)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Hart van West Brabant',
         'organization_name' => 'Moerdijk - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1049,13 +1068,16 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
+        'fund_formula' => [
+        ],
     ],
     'Meedoenregeling (Zundert)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Hart van West Brabant',
         'organization_name' => 'Zundert - Werkplein Hart van West-Brabant',
         'fund' => [
             'request_btn_text' => 'Ik heb een toekenning ontvangen',
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'hvwb',
@@ -1089,12 +1111,15 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
+        'fund_formula' => [
+        ],
     ],
     'Waalwijk: Volwassenpakket (Adult fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Waalwijk',
         'organization_name' => 'Gemeente Waalwijk',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'paswijzer',
@@ -1128,6 +1153,13 @@ return [
             'backoffice_enabled' => false,
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
+        ],
+        'fund_formula' => [
+            [
+                'type' => 'multiply',
+                'amount' => '200.00',
+                'record_type_key' => 'adults_nth',
+            ],
         ],
         'fund_criteria' => [
             [
@@ -1178,19 +1210,13 @@ return [
                 'show_attachment' => false,
             ],
         ],
-        'fund_formula' => [
-            [
-                'type' => 'multiply',
-                'amount' => '200.00',
-                'record_type_key' => 'adults_nth',
-            ],
-        ],
     ],
     'Waalwijk: Kinderpakket (Child fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Waalwijk',
         'organization_name' => 'Gemeente Waalwijk',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'paswijzer',
@@ -1225,14 +1251,6 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
-        'fund_criteria' => [
-            [
-                'record_type_key' => 'children_nth',
-                'operator' => '>',
-                'value' => '0',
-                'show_attachment' => false,
-            ],
-        ],
         'fund_formula' => [
             [
                 'type' => 'multiply',
@@ -1245,12 +1263,21 @@ return [
                 'record_type_key' => 'waa_kind_4_tm_18_2021_eligible_nth',
             ],
         ],
+        'fund_criteria' => [
+            [
+                'record_type_key' => 'children_nth',
+                'operator' => '>',
+                'value' => '0',
+                'show_attachment' => false,
+            ],
+        ],
     ],
     'Eemsdelta: Volwassenpakket (Adult fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1284,6 +1311,13 @@ return [
             'backoffice_enabled' => false,
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
+        ],
+        'fund_formula' => [
+            [
+                'type' => 'multiply',
+                'amount' => '100.00',
+                'record_type_key' => 'adults_nth',
+            ],
         ],
         'fund_criteria' => [
             [
@@ -1354,19 +1388,13 @@ return [
                 'show_attachment' => false,
             ],
         ],
-        'fund_formula' => [
-            [
-                'type' => 'multiply',
-                'amount' => '100.00',
-                'record_type_key' => 'adults_nth',
-            ],
-        ],
     ],
     'Eemsdelta: Kinderpakket (Child fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1400,6 +1428,13 @@ return [
             'backoffice_enabled' => false,
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
+        ],
+        'fund_formula' => [
+            [
+                'type' => 'multiply',
+                'amount' => '100.00',
+                'record_type_key' => 'children_nth',
+            ],
         ],
         'fund_criteria' => [
             [
@@ -1409,19 +1444,13 @@ return [
                 'show_attachment' => false,
             ],
         ],
-        'fund_formula' => [
-            [
-                'type' => 'multiply',
-                'amount' => '100.00',
-                'record_type_key' => 'children_nth',
-            ],
-        ],
     ],
     'Eemsdelta: Childrens Bicycle (product voucher fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1455,6 +1484,8 @@ return [
             'backoffice_enabled' => false,
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
+        ],
+        'fund_formula' => [
         ],
         'fund_criteria' => [
             [
@@ -1474,10 +1505,11 @@ return [
         ],
     ],
     'Eemsdelta: Passport photo (budget plus product voucher fund)' => [
+        'test_prevalidations' => false,
+        'test_reservations' => false,
         'implementation_name' => 'Eemsdelta',
         'organization_name' => 'Gemeente Eemsdelta',
         'fund' => [
-            'type' => 'budget',
         ],
         'fund_config' => [
             'key' => 'eemsdelta',
@@ -1512,14 +1544,6 @@ return [
             'backoffice_check_partner' => false,
             'backoffice_fallback' => false,
         ],
-        'fund_criteria' => [
-            [
-                'record_type_key' => 'adults_nth',
-                'operator' => '>=',
-                'value' => '1',
-                'show_attachment' => false,
-            ],
-        ],
         'fund_formula' => [
             [
                 'type' => 'multiply',
@@ -1530,6 +1554,14 @@ return [
                 'type' => 'multiply',
                 'amount' => '15.00',
                 'record_type_key' => 'eem_kind_4_tm_12_eligible_nth',
+            ],
+        ],
+        'fund_criteria' => [
+            [
+                'record_type_key' => 'adults_nth',
+                'operator' => '>=',
+                'value' => '1',
+                'show_attachment' => false,
             ],
         ],
         'fund_formula_products' => [

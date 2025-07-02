@@ -105,9 +105,7 @@ class VoucherBatchTest extends TestCase
         $this->addTestCriteriaToFund($fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        if ($fund->isTypeBudget()) {
-            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
-        }
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         // create vouchers
         foreach ($testCase['asserts'] as $assert) {

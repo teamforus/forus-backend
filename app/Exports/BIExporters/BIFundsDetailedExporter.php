@@ -19,7 +19,7 @@ class BIFundsDetailedExporter extends BaseBIExporter
     public function toArray(): array
     {
         $activeFunds = FundQuery::whereActiveFilter($this->organization->funds())
-            ->where('type', Fund::TYPE_BUDGET)
+            ->where('external', false)
             ->get();
 
         $data = new FundsExportDetailed(

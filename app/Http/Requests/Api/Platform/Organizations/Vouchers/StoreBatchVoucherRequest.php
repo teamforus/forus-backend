@@ -130,13 +130,13 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
      */
     private function amountRule(Fund $fund): array|string
     {
-        return $fund->isTypeBudget() ? [
+        return [
             'nullable',
             'required_without:vouchers.*.product_id',
             'numeric',
-            'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
+            'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
             new VouchersArraySumAmountsRule($fund, $this->input('vouchers')),
-        ] : 'nullable';
+        ];
     }
 
     /**
@@ -147,17 +147,12 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     {
         $vouchers = $this->input('vouchers');
 
-        $rule = $fund->isTypeBudget() ? [
+        return [
             'nullable',
             'required_without:vouchers.*.amount',
-        ] : [
-            'nullable',
-        ];
-
-        return array_merge($rule, [
             'exists:products,id',
             new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray()),
-        ]);
+        ];
     }
 
     /**

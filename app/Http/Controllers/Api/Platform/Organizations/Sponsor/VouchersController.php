@@ -30,6 +30,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Event;
 use Throwable;
 
 class VouchersController extends Controller
@@ -77,7 +78,7 @@ class VouchersController extends Controller
 
         $note = $request->input('note');
         $email = $request->input('email', false);
-        $amount = currency_format($fund->isTypeBudget() ? $request->input('amount', 0) : 0);
+        $amount = currency_format($request->input('amount', 0));
         $expire_at = $request->input('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
@@ -115,7 +116,7 @@ class VouchersController extends Controller
                 $voucher->setBsnRelation($bsn, $report_type)->assignByBsnIfExists();
             }
 
-            if (!$voucher->is_granted) {
+            if (!$voucher->granted) {
                 if (!$request->input('activate')) {
                     $voucher->setPending();
                 }
@@ -185,7 +186,7 @@ class VouchersController extends Controller
         ) {
             $note = $voucher['note'] ?? null;
             $email = $voucher['email'] ?? false;
-            $amount = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
+            $amount = currency_format($voucher['amount'] ?? 0);
             $records = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
             $identity = $email ? Identity::findOrMake($email) : null;
             $expire_at = $voucher['expire_at'] ?? false;
@@ -222,7 +223,7 @@ class VouchersController extends Controller
                         ->assignByBsnIfExists();
                 }
 
-                if (!$voucherModel->is_granted) {
+                if (!$voucherModel->granted) {
                     if (!($voucher['activate'] ?? false)) {
                         $voucherModel->setPending();
                     }
@@ -329,15 +330,14 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$voucher, $organization]);
 
-        if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
-            $currentLimitMultiplier = $voucher->limit_multiplier;
+        $currentLimitMultiplier = $voucher->limit_multiplier;
 
-            if ($request->input('limit_multiplier') != $currentLimitMultiplier) {
-                VoucherLimitUpdated::dispatch(
-                    $voucher->updateModel($request->only('limit_multiplier')),
-                    $currentLimitMultiplier,
-                );
-            }
+        if ($request->post('limit_multiplier') != $currentLimitMultiplier) {
+            $voucher->update([
+                'limit_multiplier' => $request->post('limit_multiplier'),
+            ]);
+
+            Event::dispatch(new VoucherLimitUpdated($voucher, $currentLimitMultiplier));
         }
 
         return SponsorVoucherResource::create($voucher);

@@ -35,6 +35,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string|null $csv_primary_key
  * @property int $reservation_approve_offset
  * @property int $reimbursement_approve_offset
+ * @property bool $show_subsidies
+ * @property bool $show_qr_limits
+ * @property bool $show_requester_limits
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
@@ -205,6 +208,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReimbursementApproveOffset($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReservationApproveOffset($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowQrLimits($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowRequesterLimits($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowSubsidies($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVouchersType($value)
@@ -300,6 +306,9 @@ class FundConfig extends BaseModel
         'allow_direct_payments' => 'boolean',
         'allow_voucher_top_ups' => 'boolean',
         'allow_voucher_records' => 'boolean',
+        'show_subsidies' => 'boolean',
+        'show_qr_limits' => 'boolean',
+        'show_requester_limits' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'record_validity_start_date' => 'date',
         'employee_can_see_product_vouchers' => 'boolean',

@@ -36,7 +36,6 @@ trait MakesVoucherTransaction
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
-                'type' => Fund::TYPE_BUDGET,
                 'organization_id' => $organization->id,
             ]));
         });

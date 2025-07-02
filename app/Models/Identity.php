@@ -64,6 +64,8 @@ use Throwable;
  * @property-read int|null $notification_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
+ * @property-read Collection|\App\Models\Organization[] $organizations
+ * @property-read int|null $organizations_count
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\IdentityEmail|null $primary_email
@@ -181,6 +183,18 @@ class Identity extends Model implements Authenticatable
         return $this->hasMany(Profile::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function organizations(): HasMany
+    {
+        return $this->hasMany(Organization::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     */
     public function notification_tokens(): HasMany
     {
         return $this->hasMany(NotificationToken::class, 'identity_address', 'address');

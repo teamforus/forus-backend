@@ -263,7 +263,7 @@ class ReservationExtraPayment extends Model
         if ($becomePaid) {
             $reservation->setPending();
 
-            if ($reservation->product->autoAcceptsReservations($reservation->voucher->fund)) {
+            if ($reservation->product->autoAcceptsReservations()) {
                 $reservation->acceptProvider();
             }
 

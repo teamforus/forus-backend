@@ -62,9 +62,9 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Providers created!');
         $testData->separator();
 
-        $testData->info('⇾ Applying providers to funds!');
-        $testData->applyFunds($baseIdentity);
-        $testData->success('✓ Providers applied to funds!');
+        $testData->info('⇾ Making reservations!');
+        $testData->makeReservations($baseIdentity);
+        $testData->success('✓ Reservations created!');
         $testData->separator();
 
         $testData->info('⇾ Making vouchers!');
@@ -72,9 +72,9 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Vouchers created!');
         $testData->separator();
 
-        $testData->info('⇾ Making reservations!');
-        $testData->makeReservations($baseIdentity);
-        $testData->success('✓ Reservations created!');
+        $testData->info('⇾ Applying providers to funds!');
+        $testData->applyFunds($baseIdentity);
+        $testData->success('✓ Providers applied to funds!');
         $testData->separator();
 
         $testData->info('⇾ Making fund requests!');

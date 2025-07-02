@@ -4,7 +4,6 @@ namespace Tests\Traits;
 
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Product;
@@ -359,13 +358,8 @@ trait VoucherTestTrait
      */
     protected function getMailableClass(Voucher $voucher): string
     {
-        $voucherType = $voucher->isBudgetType()
-            ? ($voucher->fund->isTypeBudget() ? 'budget' : 'subsidy')
-            : 'product';
-
-        return match ($voucherType) {
+        return match ($voucher->isBudgetType() ? 'budget' : 'product') {
             'budget' => VoucherAssignedBudgetMail::class,
-            'subsidy' => VoucherAssignedSubsidyMail::class,
             'product' => VoucherAssignedProductMail::class
         };
     }

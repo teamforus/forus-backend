@@ -132,9 +132,7 @@ class VoucherTest extends TestCase
         $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        if ($fund->isTypeBudget()) {
-            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
-        }
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         $prevalidation->assignToIdentity($identity);
         $this->makeVoucherForFundFormulaProduct($fund, $identity);
@@ -147,11 +145,11 @@ class VoucherTest extends TestCase
     public function testDeactivateVoucherBySponsor(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);
@@ -178,13 +176,11 @@ class VoucherTest extends TestCase
     public function testDeactivateVoucherByRequester(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, [], ['allow_blocking_vouchers' => true]);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization, [], [
-            'allow_blocking_vouchers' => true,
-        ]), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);
@@ -249,7 +245,6 @@ class VoucherTest extends TestCase
         Cache::clear();
 
         $fund = $this->findFund($testCase['fund_id']);
-        $this->assertEquals($fund->type, $testCase['assert_fund_type'], 'Unexpected fund type.');
 
         $fund->fund_config->forceFill($testCase['fund_config'] ?? [])->save();
         $fund->organization->forceFill($testCase['organization'] ?? [])->save();
@@ -257,9 +252,7 @@ class VoucherTest extends TestCase
         $this->addTestCriteriaToFund($fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        if ($fund->isTypeBudget()) {
-            $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
-        }
+        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
 
         foreach ($testCase['asserts'] as $assert) {
             $this->storeVoucher($fund, $assert, $products[$assert['product'] ?? 'approved']);
@@ -335,15 +328,12 @@ class VoucherTest extends TestCase
             $this->assertAbilityUpdateLimitMultiplier($voucher);
             $this->assertAbilityGenerateActivationCode($voucher);
 
-            if ($assert['type'] === 'budget' && $voucher->fund->isTypeSubsidy()) {
+            if ($assert['type'] === 'budget') {
                 Cache::clear();
 
                 $this->assertAbilityAssignPhysicalCard($voucher);
                 $this->assertAbilityRemovePhysicalCard($voucher);
                 $this->assertAbilityCreatePhysicalCardRequest($voucher);
-            }
-
-            if ($assert['type'] === 'budget' && $voucher->fund->isTypeBudget()) {
                 $this->assertAbilityCreateTransactions($voucher);
                 $this->assertAbilityCreateTopUp($voucher);
             }
@@ -468,20 +458,18 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        if ($voucher->fund->isTypeSubsidy()) {
-            $limitMultiplier = $voucher->limit_multiplier + random_int(1, 10);
-            $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
-            $url = $this->getSponsorApiUrl($voucher);
+        $limitMultiplier = $voucher->limit_multiplier + random_int(1, 10);
+        $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
+        $url = $this->getSponsorApiUrl($voucher);
 
-            $response = $this->patch($url, ['limit_multiplier' => $limitMultiplier], $headers);
-            $response->assertSuccessful();
+        $response = $this->patch($url, ['limit_multiplier' => $limitMultiplier], $headers);
+        $response->assertSuccessful();
 
-            $this->assertEquals(
-                $limitMultiplier,
-                $voucher->refresh()->limit_multiplier,
-                'Voucher update limit multiplier failed'
-            );
-        }
+        $this->assertEquals(
+            $limitMultiplier,
+            $voucher->refresh()->limit_multiplier,
+            'Voucher update limit multiplier failed'
+        );
     }
 
     /**
@@ -492,7 +480,7 @@ class VoucherTest extends TestCase
     {
         $voucher->refresh();
 
-        if (!$voucher->is_granted && !$voucher->activation_code && !$voucher->isDeactivated()) {
+        if (!$voucher->granted && !$voucher->activation_code && !$voucher->isDeactivated()) {
             $headers = $this->makeApiHeaders($voucher->fund->organization->identity);
             $url = $this->getSponsorApiUrl($voucher, '/activation-code');
 
@@ -578,7 +566,7 @@ class VoucherTest extends TestCase
         $fundProvider = FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
             $voucher->fund_id,
-            'budget'
+            'allow_budget',
         )->first();
 
         $this->assertNotNull($fundProvider);
@@ -810,7 +798,7 @@ class VoucherTest extends TestCase
             $this->assertNotNull($voucher);
 
             if ($voucher->identity) {
-                if ($voucher->fund->isTypeSubsidy() && $voucher->isBudgetType()) {
+                if ($voucher->isBudgetType()) {
                     Cache::clear();
 
                     $this->assertAbilityIdentityAssignPhysicalCard($voucher);
