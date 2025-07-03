@@ -420,15 +420,18 @@ class VoucherPolicy
      */
     public function useChildVoucherAsProvider(Identity $identity, Voucher $voucher): Response|bool
     {
+        $voucherAvailable = $this->checkBaseVoucherProviderAvailability($voucher);
+
         // Check basic voucher availability by state and relations
-        if (($voucherAvailable = $this->checkBaseVoucherProviderAvailability($voucher)) !== true) {
+        if ($voucherAvailable !== true) {
             return $voucherAvailable;
         }
 
         if (VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
-            $voucher->product_vouchers()->getQuery(),
-            $identity->address,
-            $voucher->fund_id
+            builder: $voucher->product_vouchers()->getQuery(),
+            identity_address: $identity->address,
+            fund_id: $voucher->fund_id,
+            organization_id: null
         )->doesntExist()) {
             return $this->deny('no_available_product_voucher');
         }

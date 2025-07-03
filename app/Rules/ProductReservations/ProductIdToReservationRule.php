@@ -11,6 +11,7 @@ use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use Exception;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Config;
 
 class ProductIdToReservationRule extends BaseRule
 {
@@ -30,8 +31,8 @@ class ProductIdToReservationRule extends BaseRule
         private readonly bool $throttle = false,
         private readonly bool $allowExtraPayment = false,
     ) {
-        $this->throttleTotalPendingCount = Env::get('RESERVATION_THROTTLE_TOTAL_PENDING', 100);
-        $this->throttleRecentlyCanceledCount = Env::get('RESERVATION_THROTTLE_RECENTLY_CANCELED', 10);
+        $this->throttleTotalPendingCount = Config::get('forus.reservations.throttle_total_pending', 100);
+        $this->throttleRecentlyCanceledCount = Config::get('forus.reservations.throttle_recently_canceled', 10);
     }
 
     /**

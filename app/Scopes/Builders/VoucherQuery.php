@@ -18,14 +18,14 @@ class VoucherQuery
      * @param Builder|Relation|Voucher $builder
      * @param string $identity_address
      * @param $fund_id
-     * @param null $organization_id Provider organization id
+     * @param Builder|int|array|null $organization_id Provider organization id
      * @return Builder|Relation|Voucher
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
         Builder|Relation|Voucher $builder,
         string $identity_address,
         $fund_id,
-        $organization_id = null
+        Builder|int|array|null $organization_id,
     ): Builder|Relation|Voucher {
         $builder->whereHas('product', static function (Builder $builder) use (
             $fund_id,
@@ -37,10 +37,12 @@ class VoucherQuery
                 $identity_address,
                 $organization_id
             ) {
-                if ($organization_id instanceof Builder) {
-                    $builder->whereIn('organizations.id', $organization_id);
-                } else {
-                    $builder->whereIn('organizations.id', (array) $organization_id);
+                if ($organization_id !== null) {
+                    if ($organization_id instanceof Builder) {
+                        $builder->whereIn('organizations.id', $organization_id);
+                    } else {
+                        $builder->whereIn('organizations.id', (array) $organization_id);
+                    }
                 }
 
                 OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');

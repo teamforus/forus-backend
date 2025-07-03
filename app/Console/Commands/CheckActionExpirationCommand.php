@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\FundProviderProduct;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Collection;
 
 class CheckActionExpirationCommand extends Command
 {
@@ -37,14 +36,9 @@ class CheckActionExpirationCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
-        /** @var FundProviderProduct[]|Collection $provider_products */
-        $provider_products = FundProviderProduct::where(
-            'expire_at',
-            '<',
-            now()
-        )->get();
+        $provider_products = FundProviderProduct::where('expire_at', '<', now())->get();
 
         foreach ($provider_products as $provider_product) {
             $provider_product->fund_provider->declineProducts([$provider_product->product_id]);
