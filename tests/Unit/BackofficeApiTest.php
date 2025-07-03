@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsBackoffice;
 use Throwable;
 
@@ -15,6 +16,7 @@ class BackofficeApiTest extends TestCase
 {
     use MakesTestFunds;
     use TestsBackoffice;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
 
@@ -149,7 +151,7 @@ class BackofficeApiTest extends TestCase
     {
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
-        $voucher = $fund->makeVoucher(identity: $this->makeIdentity(), amount: 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: 100);
         $bsn = TestData::randomFakeBsn();
 
         $this->setupBackofficeResponses(
@@ -207,7 +209,7 @@ class BackofficeApiTest extends TestCase
     {
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
-        $voucher = $fund->makeVoucher(identity: $this->makeIdentity(), amount: 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: 100);
         $bsn = TestData::randomFakeBsn();
 
         $this->setupBackofficeResponses(

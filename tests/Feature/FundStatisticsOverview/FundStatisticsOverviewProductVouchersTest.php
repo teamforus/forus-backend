@@ -15,6 +15,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class FundStatisticsOverviewProductVouchersTest extends TestCase
@@ -22,6 +23,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
     use WithFaker;
     use DoesTesting;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use CreatesApplication;
     use MakesTestIdentities;
     use DatabaseTransactions;
@@ -498,7 +500,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
             $product = $products[$i - 1];
             $this->addProductFundToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

@@ -30,8 +30,6 @@ class ProductSubQuery
             throw new Exception('At least one filter is required.');
         }
 
-        $builder = $builder ?: Product::query();
-
         $baseQuery = $builder->addSelect([
             'limit_multiplier' => self::limitMultiplierQuery($options),
             'limit_total' => self::limitTotalSubQuery($options),

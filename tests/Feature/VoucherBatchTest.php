@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\Vouchers\ProductBoughtProviderBySponsorMail;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Voucher;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -136,11 +139,33 @@ class VoucherBatchTest extends TestCase
 
             $vouchersBuilder = $this->getVouchersBuilder($fund, $startDate, $assert['type'] ?? 'budget');
             $this->assertVouchersCreated($vouchersBuilder, $startDate, $data['vouchers'], $assert);
+            $this->assertEmailSentToProvider($vouchersBuilder, $assert, $startDate);
             $vouchersBuilder->each(fn (Voucher $voucher) => $this->deleteVoucher($voucher));
         } else {
             $validateResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
             $uploadResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
         }
+    }
+
+    /**
+     * @param Builder|Voucher $query
+     * @param array $assert
+     * @param Carbon $startDate
+     * @return void
+     */
+    protected function assertEmailSentToProvider(Builder|Voucher $query, array $assert, Carbon $startDate): void
+    {
+        $query->each(function (Voucher $voucher) use ($assert, $startDate) {
+            $voucherType = $assert['type'] ?? 'budget';
+            $notifyProvider = $assert['notify_provider'] ?? false;
+            if ($voucherType === 'product') {
+                if ($notifyProvider) {
+                    $this->assertMailableSent($voucher->product->organization->identity->email, ProductBoughtProviderBySponsorMail::class, $startDate);
+                } else {
+                    $this->assertMailableNotSent($voucher->product->organization->identity->email, ProductBoughtProviderBySponsorMail::class, $startDate);
+                }
+            }
+        });
     }
 
     /**

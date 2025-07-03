@@ -9,12 +9,14 @@ use App\Models\Implementation;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Laravel\Dusk\Browser;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 trait ExportsFundsStatisticsTrait
 {
     use ExportTrait;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
 
@@ -28,7 +30,7 @@ trait ExportsFundsStatisticsTrait
         $implementation = Implementation::byKey('nijmegen');
 
         $fund = $this->makeTestFund($implementation->organization);
-        $fund->makeVoucher($implementation->organization->identity);
+        $this->makeTestVoucher($fund, $implementation->organization->identity);
 
         $this->rollbackModels([], function () use ($implementation, $fund, $budget) {
             $this->browse(function (Browser $browser) use ($implementation, $fund, $budget) {

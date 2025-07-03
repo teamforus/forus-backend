@@ -62,6 +62,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.approved' => ['database'],
         'notifications_products.expired' => ['database'],
         'notifications_products.reserved' => ['database', 'mail'],
+        'notifications_products.reserved_by_sponsor' => ['database', 'mail'],
         'notifications_products.revoked' => ['database'],
         'notifications_products.sold_out' => ['database', 'mail'],
         'notifications_products.reservation_canceled' => ['database'],
@@ -128,6 +129,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.approved',
         'notifications_products.expired',
         'notifications_products.reserved',
+        'notifications_products.reserved_by_sponsor',
         'notifications_products.revoked',
         'notifications_products.sold_out',
         'notifications_products.reservation_canceled',
@@ -226,6 +228,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'provider_voucher_and_transactions' => [
             'notifications_fund_providers.bunq_transaction_success',
             'notifications_products.reserved',
+            'notifications_products.reserved_by_sponsor',
             'notifications_products.expired',
             'notifications_products.sold_out',
             'notifications_fund_providers.fund_started',
