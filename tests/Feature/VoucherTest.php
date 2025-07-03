@@ -145,11 +145,11 @@ class VoucherTest extends TestCase
     public function testDeactivateVoucherBySponsor(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);
@@ -176,13 +176,11 @@ class VoucherTest extends TestCase
     public function testDeactivateVoucherByRequester(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, [], ['allow_blocking_vouchers' => true]);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization, [], [
-            'allow_blocking_vouchers' => true,
-        ]), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);

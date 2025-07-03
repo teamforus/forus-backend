@@ -10,6 +10,7 @@ use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductExpired;
 use App\Events\Products\ProductMonitoredFieldsUpdated;
 use App\Events\Products\ProductReserved;
+use App\Events\Products\ProductReservedBySponsor;
 use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
@@ -18,6 +19,7 @@ use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Notifications\Organizations\Products\ProductApprovedNotification;
 use App\Notifications\Organizations\Products\ProductExpiredNotification;
+use App\Notifications\Organizations\Products\ProductReservedBySponsorNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
 use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
@@ -139,6 +141,26 @@ class ProductSubscriber
     }
 
     /**
+     * @param ProductReservedBySponsor $productReserved
+     * @noinspection PhpUnused
+     */
+    public function onProductReservedBySponsor(ProductReservedBySponsor $productReserved): void
+    {
+        $product = $productReserved->getProduct();
+        $voucher = $productReserved->getVoucher();
+
+        ProductReservedBySponsorNotification::send($product->log($product::EVENT_RESERVED, [
+            'fund' => $voucher->fund,
+            'sponsor' => $voucher->fund->organization,
+            'product' => $product,
+            'provider' => $product->organization,
+            'implementation' => $voucher->fund->getImplementation(),
+        ], [
+            'expiration_date' => format_date_locale($voucher->last_active_day),
+        ]));
+    }
+
+    /**
      * @param ProductApproved $productApproved
      * @noinspection PhpUnused
      */
@@ -200,6 +222,7 @@ class ProductSubscriber
         $events->listen(ProductExpired::class, "$class@onProductExpired");
         $events->listen(ProductReserved::class, "$class@onProductReserved");
         $events->listen(ProductApproved::class, "$class@onProductApproved");
+        $events->listen(ProductReservedBySponsor::class, "$class@onProductReservedBySponsor");
         $events->listen(ProductMonitoredFieldsUpdated::class, "$class@onProductMonitoredFieldsUpdated");
     }
 }

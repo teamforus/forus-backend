@@ -11,12 +11,14 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Tests\Traits\MakesTestVouchers;
 
 class VoucherBalanceTest extends TestCase
 {
     use DoesTesting;
     use MakesTestFunds;
     use MakesTestProducts;
+    use MakesTestVouchers;
     use CreatesApplication;
     use DatabaseTransactions;
     use MakesTestOrganizations;
@@ -32,7 +34,7 @@ class VoucherBalanceTest extends TestCase
 
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization);
-        $voucher = $fund->makeVoucher($this->makeIdentity(), amount: $voucherAmount);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity(), amount: $voucherAmount);
 
         $provider = $this->makeTestOrganization($this->makeIdentity());
         $product = $this->makeTestProduct($provider, price: $productPrice);

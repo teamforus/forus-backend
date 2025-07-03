@@ -1091,9 +1091,10 @@ class Voucher extends BaseModel
             'product_reservation_id' => $productReservation?->id,
         ]);
 
-        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
-
-        return $voucher;
+        return $voucher->dispatchCreated(
+            notifyRequesterReserved: !$productReservation,
+            notifyRequesterAdded: !$productReservation,
+        );
     }
 
     /**
@@ -1353,20 +1354,9 @@ class Voucher extends BaseModel
      */
     public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
     {
-        $data = [];
-
-        foreach ($vouchers as $voucher) {
-            do {
-                $voucherData = new VoucherExportData($voucher, $fields);
-            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
-
-            $data[] = [
-                'name' => $voucherData->getName(),
-                'values' => $voucherData->toArray(),
-            ];
-        }
-
-        return Arr::pluck($data, 'values');
+        return $vouchers->map(function (Voucher $voucher) use ($fields) {
+            return (new VoucherExportData($voucher, $fields))->toArray();
+        })->all();
     }
 
     /**
@@ -1831,6 +1821,30 @@ class Voucher extends BaseModel
         $familyName = Arr::get($recordsMap, 'family_name');
 
         return $givenName ? trim("$givenName $familyName") : null;
+    }
+
+    /**
+     * @param bool $notifyRequesterReserved
+     * @param bool $notifyRequesterAdded
+     * @param bool $notifyProviderReserved
+     * @param bool $notifyProviderReservedBySponsor
+     * @return $this
+     */
+    public function dispatchCreated(
+        bool $notifyRequesterReserved = true,
+        bool $notifyRequesterAdded = true,
+        bool $notifyProviderReserved = true,
+        bool $notifyProviderReservedBySponsor = false,
+    ): Voucher {
+        Event::dispatch(new VoucherCreated(
+            $this,
+            $notifyRequesterReserved,
+            $notifyRequesterAdded,
+            $notifyProviderReserved,
+            $notifyProviderReservedBySponsor,
+        ));
+
+        return $this;
     }
 
     /**

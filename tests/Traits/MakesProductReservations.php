@@ -4,19 +4,14 @@ namespace Tests\Traits;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
-use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
-use App\Scopes\Builders\ProductSubQuery;
-use App\Scopes\Builders\VoucherQuery;
 use Exception;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\WithFaker;
 use Throwable;
@@ -25,6 +20,7 @@ trait MakesProductReservations
 {
     use WithFaker;
     use HasDbTokens;
+    use MakesTestVouchers;
     use MakesTestProducts;
     use TestsReservations;
 
@@ -59,76 +55,13 @@ trait MakesProductReservations
     ];
 
     /**
-     * @param Organization $organization
-     * @return Voucher
-     */
-    public function findVoucherForReservation(Organization $organization): Voucher
-    {
-        $funds = FundQuery::whereIsInternalAndConfigured($organization->funds())->get();
-        $this->assertNotNull($funds->count() ?: null);
-
-        $voucher = VoucherQuery::whereHasBalanceIsActiveAndNotExpired(
-            $organization->identity->vouchers()->whereIn('fund_id', $funds->pluck('id'))
-        )->whereNull('product_id')->first();
-
-        if (!$voucher) {
-            $voucher = $funds->first()->makeVoucher($organization->identity, [
-                'state' => Voucher::STATE_ACTIVE,
-            ], 10000);
-        }
-
-        $this->assertNotNull($voucher, 'No suitable voucher found.');
-
-        return $voucher;
-    }
-
-    /**
      * @param Voucher $voucher
      * @throws Exception
      * @return Product
      */
     public function findProductForReservation(Voucher $voucher): Product
     {
-        $product = ProductQuery::approvedForFundsAndActiveFilter(
-            ProductSubQuery::appendReservationStats([
-                'identity_id' => $voucher->identity_id,
-                'voucher_id' => $voucher->id,
-                'fund_id' => $voucher->fund_id,
-            ]),
-            $voucher->fund_id
-        )
-            ->where('limit_total_available', '>', 0)
-            ->where('limit_available', '>', 0);
-
-
-        $product
-            ->where('reservations_enabled', true)
-            ->where(function (Builder $builder) use ($voucher) {
-                $builder->where(function (Builder|Product $builder) use ($voucher) {
-                    $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($voucher) {
-                        $builder->where('fund_id', $voucher->fund_id);
-                    });
-                    $builder->where('price', '<=', $voucher->amount_available);
-                });
-
-                $builder->orWhere(function (Builder|Product $builder) use ($voucher) {
-                    $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
-                        $builder->whereHas('fund_provider', function (Builder $builder) use ($voucher) {
-                            $builder->where('fund_id', $voucher->fund_id);
-                        });
-
-                        $builder->where(function (Builder $builder) {
-                            $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_BUDGET);
-                            $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_SUBSIDY);
-                        });
-
-                        $builder->whereRaw('price - amount <= ?', [$voucher->amount_available]);
-                    });
-                });
-            });
-
-        /** @var Product $product */
-        $product = $product->first();
+        $product = ProductQuery::whereAvailableForVoucher(Product::query(), $voucher)->first();
 
         if (!$product) {
             return $this->createProductForReservation($voucher->fund->organization, [$voucher->fund]);
@@ -144,7 +77,7 @@ trait MakesProductReservations
      */
     public function makeBudgetReservationInDb(Organization $organization): ProductReservation
     {
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($organization->funds[0]);
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $voucher->reserveProduct(product: $product, extraData: [

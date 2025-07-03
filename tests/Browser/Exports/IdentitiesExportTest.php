@@ -11,12 +11,14 @@ use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class IdentitiesExportTest extends DuskTestCase
 {
     use ExportTrait;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
 
@@ -30,7 +32,7 @@ class IdentitiesExportTest extends DuskTestCase
 
         $fund = $this->makeTestFund($implementation->organization);
         $identity = $implementation->organization->identity;
-        $fund->makeVoucher($identity);
+        $this->makeTestVoucher($fund, $identity);
 
         $this->rollbackModels([], function () use ($implementation, $fund, $identity) {
             $this->browse(function (Browser $browser) use ($implementation, $fund, $identity) {
