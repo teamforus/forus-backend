@@ -32,7 +32,7 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
- * @property-read Model|Eloquent $loggable
+ * @property-read Model|\Eloquent $loggable
  * @method static Builder<static>|EventLog newModelQuery()
  * @method static Builder<static>|EventLog newQuery()
  * @method static Builder<static>|EventLog query()
@@ -45,7 +45,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|EventLog whereLoggableType($value)
  * @method static Builder<static>|EventLog whereOriginal($value)
  * @method static Builder<static>|EventLog whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class EventLog extends Model
 {
@@ -83,21 +83,25 @@ class EventLog extends Model
     /**
      * @param string $loggableType
      * @param Builder|Relation|int|array $loggable
+     * @param Builder|Relation|null $query
      * @return Builder|EventLog
      */
-    public static function eventsOfTypeQuery(string $loggableType, mixed $loggable): Builder|EventLog
-    {
-        $query = self::query();
+    public static function eventsOfTypeQuery(
+        string $loggableType,
+        mixed $loggable,
+        Builder|Relation|null $query = null,
+    ): Builder|EventLog {
+        $query = $query ?: self::query();
 
-        $query->whereHasMorph('loggable', $loggableType, function (Builder $builder) use ($loggable) {
-            if ($loggable instanceof Builder ||
-                $loggable instanceof QBuilder ||
-                $loggable instanceof Relation) {
-                $builder->whereIn('id', (clone $loggable)->select('id'));
-            } else {
-                $builder->whereIn('id', (array) $loggable);
-            }
-        });
+        $query->where('loggable_type', (new $loggableType())->getMorphClass());
+
+        if ($loggable instanceof Builder ||
+            $loggable instanceof QBuilder ||
+            $loggable instanceof Relation) {
+            $query->whereIn('loggable_id', (clone $loggable)->select('id'));
+        } else {
+            $query->whereIn('loggable_id', (array) $loggable);
+        }
 
         return $query;
     }

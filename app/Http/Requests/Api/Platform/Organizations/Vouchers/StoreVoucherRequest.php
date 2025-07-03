@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Models\VoucherRelation;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Scopes\Builders\FundQuery;
@@ -39,6 +40,8 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'assign_by_type' => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'activation_code' => 'boolean',
             'limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+            'report_type' => ['nullable', Rule::in(VoucherRelation::REPORT_TYPES)],
+            'notify_provider' => 'nullable|boolean',
         ];
     }
 
@@ -97,12 +100,12 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
      */
     private function amountRule(Fund $fund): array|string
     {
-        return $fund->isTypeBudget() ? [
+        return [
             'nullable',
             'required_without:product_id',
             'numeric',
-            'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
-        ] : 'nullable';
+            'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
+        ];
     }
 
     /**
@@ -111,16 +114,12 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
      */
     private function productIdRule(Fund $fund): array
     {
-        $rule = $fund->isTypeBudget() ? [
-            'nullable', 'required_without:amount',
-        ] : [
+        return [
             'nullable',
-        ];
-
-        return array_merge($rule, [
+            'required_without:amount',
             'exists:products,id',
             new ProductIdInStockRule($fund),
-        ]);
+        ];
     }
 
     /**

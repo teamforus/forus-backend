@@ -26,7 +26,6 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
-use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -98,13 +97,13 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $external
  * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $granted
  * @property-read bool $has_payouts
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
- * @property-read bool $is_external
- * @property-read bool $is_granted
  * @property-read \Illuminate\Support\Carbon|null $last_active_day
  * @property-read bool $reimbursement_approval_time_expired
  * @property-read bool $reservation_approval_time_expired
@@ -196,7 +195,6 @@ class Voucher extends BaseModel
 
     public const string EVENT_TRANSACTION = 'transaction';
     public const string EVENT_TRANSACTION_PRODUCT = 'transaction_product';
-    public const string EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
 
     public const string EVENT_SHARED_BY_EMAIL = 'shared_by_email';
     public const string EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
@@ -497,7 +495,7 @@ class Voucher extends BaseModel
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id')->where(function (Builder $builder) {
+        return $this->hasMany(Voucher::class, 'parent_id')->where(function (Builder $builder) {
             VoucherQuery::whereIsProductVoucher($builder);
         });
     }
@@ -524,9 +522,9 @@ class Voucher extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getIsExternalAttribute(): bool
+    public function getExternalAttribute(): bool
     {
-        return $this->isExternal();
+        return $this->fund->fund_config->usesExternalVouchers();
     }
 
     /**
@@ -540,14 +538,6 @@ class Voucher extends BaseModel
             $this->product_vouchers->reduce(function (int $total, Voucher $voucher) {
                 return $total + $voucher->paid_out_transactions->count();
             }, 0) > 0;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isExternal(): bool
-    {
-        return $this->fund->fund_config->usesExternalVouchers();
     }
 
     /**
@@ -609,7 +599,7 @@ class Voucher extends BaseModel
     public function getAmountSpentAttribute(): string
     {
         return currency_format(array_sum([
-            $this->transactions()->sum('amount'),
+            $this->transactions()->selectRaw('IFNULL(SUM(IFNULL(amount_voucher, amount)), 0) as total')->value('total'),
             $this->product_vouchers()->sum('amount'),
             $this->reimbursements_pending()->sum('amount'),
         ]));
@@ -622,7 +612,7 @@ class Voucher extends BaseModel
     public function getAmountSpentCachedAttribute(): string
     {
         return currency_format(array_sum([
-            $this->transactions->sum('amount'),
+            $this->transactions->sum(fn (VoucherTransaction $item) => $item->amount_voucher ?? $item->amount),
             $this->product_vouchers->sum('amount'),
             $this->reimbursements_pending->sum('amount'),
         ]));
@@ -835,23 +825,11 @@ class Voucher extends BaseModel
         }
 
         if ($request->has('from')) {
-            $query->where(
-                'created_at',
-                '>=',
-                Carbon::parse(
-                    $request->input('from')
-                )->startOfDay()
-            );
+            $query->where('created_at', '>=', Carbon::parse($request->input('from'))->startOfDay());
         }
 
         if ($request->has('to')) {
-            $query->where(
-                'created_at',
-                '<=',
-                Carbon::parse(
-                    $request->input('to')
-                )->endOfDay()
-            );
+            $query->where('created_at', '<=', Carbon::parse($request->input('to'))->endOfDay());
         }
 
         if ($request->has('amount_available_min') || $request->has('amount_available_max')) {
@@ -874,7 +852,7 @@ class Voucher extends BaseModel
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
-     * @throws Exception
+     * @throws Throwable
      * @return Builder
      */
     public static function searchSponsorQuery(
@@ -1016,7 +994,7 @@ class Voucher extends BaseModel
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getIsGrantedAttribute(): bool
+    public function getGrantedAttribute(): bool
     {
         return !empty($this->identity_id);
     }
@@ -1101,7 +1079,9 @@ class Voucher extends BaseModel
 
         $voucher = self::create([
             'number' => self::makeUniqueNumber(),
-            'amount' => $productReservation->amount ?? $product->price,
+            'amount' => is_null($productReservation?->amount_voucher)
+                ? $productReservation->amount ?? $product->price
+                : $productReservation->amount_voucher,
             'fund_id' => $this->fund_id,
             'expire_at' => $voucherExpireAt,
             'parent_id' => $this->id,
@@ -1111,9 +1091,10 @@ class Voucher extends BaseModel
             'product_reservation_id' => $productReservation?->id,
         ]);
 
-        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
-
-        return $voucher;
+        return $voucher->dispatchCreated(
+            notifyRequesterReserved: !$productReservation,
+            notifyRequesterAdded: !$productReservation,
+        );
     }
 
     /**
@@ -1172,40 +1153,59 @@ class Voucher extends BaseModel
      * @param Product $product
      * @param Employee|null $employee
      * @param array $extraData
-     * @throws Exception
+     * @param bool|null $hasExtraPayment
+     * @throws Throwable
      * @return ProductReservation
      */
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
         array $extraData = [],
+        bool $hasExtraPayment = false,
     ): ProductReservation {
-        $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
-        if ($extraData['has_extra_payment'] ?? false) {
-            $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+        $user_price = $fundProviderProduct?->isPaymentTypeSubsidy()
+            ? $fundProviderProduct->user_price
+            : null;
+
+        if ($hasExtraPayment) {
+            if ($fundProviderProduct?->isPaymentTypeSubsidy()) {
+                $amount = ($user_price > $this->amount_available) ?
+                    ($product->price - ($user_price - $this->amount_available)) :
+                    $product->price;
+                $extra_amount = $product->price - $amount;
+                $user_price = ($user_price - $extra_amount);
+            } else {
+                $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+                $extra_amount = $product->price - $amount;
+            }
+
             $state = ProductReservation::STATE_WAITING;
-            $extraAmount = $product->price - $amount;
         } else {
-            $amount = ($isSubsidy && $fundProviderProduct) ? $fundProviderProduct->amount : $product->price;
+            $amount = $product->price;
             $state = ProductReservation::STATE_PENDING;
-            $extraAmount = 0;
+            $extra_amount = 0;
         }
 
         /** @var ProductReservation $reservation */
-        $reservation = $this->product_reservations()->create(array_merge([
+        $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
+            'amount_voucher' => $user_price,
             'state' => $state,
             'product_id' => $product->id,
             'employee_id' => $employee?->id,
             'fund_provider_product_id' => $fundProviderProduct?->id,
-            'amount_extra' => $extraAmount,
-        ], array_only($extraData, [
-            'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
-            'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
-        ]), $product->only('price', 'price_type', 'price_discount')));
+            'amount_extra' => $extra_amount,
+            ...array_only($extraData, [
+                'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
+                'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
+            ]),
+            ...$product->only([
+                'price', 'price_type', 'price_discount',
+            ]),
+        ]);
 
         // store custom fields
         $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
@@ -1224,7 +1224,7 @@ class Voucher extends BaseModel
 
     /**
      * @param array $data
-     * @throws Exception
+     * @throws Throwable
      * @return Reimbursement
      */
     public function makeReimbursement(array $data = []): Reimbursement
@@ -1295,7 +1295,7 @@ class Voucher extends BaseModel
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+                $voucherData = new VoucherExportData($voucher, $fields);
             } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
             $dataItem = $data[] = [
@@ -1354,20 +1354,9 @@ class Voucher extends BaseModel
      */
     public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
     {
-        $data = [];
-
-        foreach ($vouchers as $voucher) {
-            do {
-                $voucherData = new VoucherExportData($voucher, $fields, true);
-            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
-
-            $data[] = [
-                'name' => $voucherData->getName(),
-                'values' => $voucherData->toArray(),
-            ];
-        }
-
-        return Arr::pluck($data, 'values');
+        return $vouchers->map(function (Voucher $voucher) use ($fields) {
+            return (new VoucherExportData($voucher, $fields))->toArray();
+        })->all();
     }
 
     /**
@@ -1436,14 +1425,18 @@ class Voucher extends BaseModel
      * Set voucher relation to bsn number.
      *
      * @param string $bsn
-     * @return VoucherRelation|\Illuminate\Database\Eloquent\Model
+     * @param string $reportType
+     * @return VoucherRelation|Model
      */
-    public function setBsnRelation(string $bsn): VoucherRelation|Model
+    public function setBsnRelation(string $bsn, string $reportType): VoucherRelation|Model
     {
         $this->voucher_relation()->delete();
 
         /** @var VoucherRelation $voucher_relation */
-        return $this->voucher_relation()->create(compact('bsn'));
+        return $this->voucher_relation()->create([
+            'bsn' => $bsn,
+            'report_type' => $reportType,
+        ]);
     }
 
     /**
@@ -1620,24 +1613,30 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param bool $onlyAssigned
      * @return FundBackofficeLog|null
      */
-    public function reportBackofficeReceived(): ?FundBackofficeLog
+    public function reportBackofficeReceived(bool $onlyAssigned = true): ?FundBackofficeLog
     {
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_id &&
+            (!$onlyAssigned || $this->identity_id) &&
             !$this->backoffice_log_received()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
             $eligibilityLog = $this->backoffice_log_eligible;
-            $bsn = $this->identity?->bsn;
+            $useRelationBsn = $this->voucher_relation?->isReportByRelation();
+            $bsn = $useRelationBsn ? $this->voucher_relation?->bsn : $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
-                $requestId = $eligibilityLog->response_id ?? null;
+                $requestId = $eligibilityLog?->response_id ?? null;
                 $backofficeLog = $backOffice->reportReceived($bsn, $requestId);
-                $backofficeLog->updateModel(['voucher_id' => $this->id]);
+
+                $backofficeLog->update([
+                    'voucher_id' => $this->id,
+                    'voucher_relation_id' => $useRelationBsn ? $this->voucher_relation?->id : null,
+                ]);
 
                 return $backofficeLog;
             }
@@ -1651,20 +1650,27 @@ class Voucher extends BaseModel
      */
     public function reportBackofficeFirstUse(): ?FundBackofficeLog
     {
+        $receivedLog = $this->backoffice_log_received;
+        $reportByRelation = $this?->voucher_relation?->isReportByRelation();
+        $onlyAssigned = !$reportByRelation;
+
         $voucherShouldReport =
             !$this->parent_id &&
-            $this->identity_id &&
+            (!$onlyAssigned || $this->identity_id) &&
             !$this->backoffice_log_first_use()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
-            $firstUseLog = $this->backoffice_log_first_use;
-            $bsn = $this->identity?->bsn;
+            $bsn = $reportByRelation ? $this?->voucher_relation?->bsn : $this->identity?->bsn;
 
             if ($backOffice && $bsn) {
-                $requestId = $firstUseLog->response_id ?? null;
+                $requestId = $receivedLog->response_id ?? null;
                 $backofficeLog = $backOffice->reportFirstUse($bsn, $requestId);
-                $backofficeLog->update(['voucher_id' => $this->id]);
+
+                $backofficeLog->update([
+                    'voucher_id' => $this->id,
+                    'voucher_relation_id' => $reportByRelation ? $receivedLog?->voucher_relation?->id : null,
+                ]);
 
                 return $backofficeLog;
             }
@@ -1694,7 +1700,7 @@ class Voucher extends BaseModel
      */
     public function makeTransaction(
         array $attributes = [],
-        bool $reviewRequired = false
+        bool $reviewRequired = false,
     ): VoucherTransaction {
         $data = array_merge([
             'state' => VoucherTransaction::STATE_PENDING,
@@ -1815,6 +1821,30 @@ class Voucher extends BaseModel
         $familyName = Arr::get($recordsMap, 'family_name');
 
         return $givenName ? trim("$givenName $familyName") : null;
+    }
+
+    /**
+     * @param bool $notifyRequesterReserved
+     * @param bool $notifyRequesterAdded
+     * @param bool $notifyProviderReserved
+     * @param bool $notifyProviderReservedBySponsor
+     * @return $this
+     */
+    public function dispatchCreated(
+        bool $notifyRequesterReserved = true,
+        bool $notifyRequesterAdded = true,
+        bool $notifyProviderReserved = true,
+        bool $notifyProviderReservedBySponsor = false,
+    ): Voucher {
+        Event::dispatch(new VoucherCreated(
+            $this,
+            $notifyRequesterReserved,
+            $notifyRequesterAdded,
+            $notifyProviderReserved,
+            $notifyProviderReservedBySponsor,
+        ));
+
+        return $this;
     }
 
     /**

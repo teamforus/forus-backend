@@ -126,8 +126,8 @@ class VoucherBatchTest extends DuskTestCase
             foreach ($vouchers->groupBy('fund_id') as $fundId => $list) {
                 $this->switchToFund($browser, $fundId);
 
-                $browser->waitFor('@searchVoucher');
-                $browser->waitFor("@vouchersCard$fundId");
+                $browser->waitFor('@tableVoucherSearch');
+                $browser->waitFor("@tableVoucherContent$fundId");
 
                 $list->each(fn (Voucher $item) => $this->searchVoucher($browser, $item, $type));
                 $list->each(fn (Voucher $item) => $item->delete());
@@ -146,7 +146,7 @@ class VoucherBatchTest extends DuskTestCase
     {
         return $allowDirectPayments ? [
             'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'direct_payment_name' => $this->makeIbanName(),
         ] : [
             'direct_payment_iban' => '',
             'direct_payment_name' => '',
@@ -181,25 +181,11 @@ class VoucherBatchTest extends DuskTestCase
             'email' => $voucher->identity?->email,
         };
 
-        $browser->waitFor('@searchVoucher');
-        $browser->value('@searchVoucher', $search);
+        $browser->waitFor('@tableVoucherSearch');
+        $browser->value('@tableVoucherSearch', $search);
 
-        $browser->waitFor("@voucherItem$voucher->id");
-        $browser->assertSeeIn("@voucherItem$voucher->id", $search);
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    private function goToVouchersPage(Browser $browser): void
-    {
-        $browser->waitFor('@asideMenuGroupVouchers');
-        $browser->element('@asideMenuGroupVouchers')->click();
-        $browser->waitFor('@vouchersPage');
-        $browser->element('@vouchersPage')->click();
-        $browser->waitFor('@vouchersTitle');
+        $browser->waitFor("@tableVoucherRow$voucher->id");
+        $browser->assertSeeIn("@tableVoucherRow$voucher->id", $search);
     }
 
     /**

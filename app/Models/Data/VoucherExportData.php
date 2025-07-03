@@ -9,7 +9,6 @@ use App\Models\Voucher;
  */
 class VoucherExportData
 {
-    protected ?bool $onlyData;
     protected Voucher $voucher;
     protected array $fields;
     protected string $name;
@@ -18,14 +17,12 @@ class VoucherExportData
      * VoucherExportData constructor.
      * @param Voucher $voucher
      * @param array $fields
-     * @param bool|null $onlyData
      */
-    public function __construct(Voucher $voucher, array $fields, ?bool $onlyData = false)
+    public function __construct(Voucher $voucher, array $fields)
     {
         $this->name = token_generator()->generate(6, 2);
         $this->fields = $fields;
         $this->voucher = $voucher;
-        $this->onlyData = $onlyData;
     }
 
     /**
@@ -51,7 +48,7 @@ class VoucherExportData
     public function toArray(): array
     {
         $sponsor = $this->voucher->fund->organization;
-        $assigned = $this->voucher->identity_id && $this->voucher->is_granted;
+        $assigned = $this->voucher->identity_id && $this->voucher->granted;
         $identity = $this->voucher->identity;
         $firstUseDate = $this->voucher->first_use_date;
         $allowRecords = $this->voucher->fund?->fund_config?->allow_voucher_records;
@@ -61,9 +58,7 @@ class VoucherExportData
             'identity_bsn' => $assigned ? $this->voucher->identity?->record_bsn?->value : null,
         ] : [];
 
-        $export_data = array_merge($this->onlyData ? [] : [
-            'name' => $this->name,
-        ], [
+        $export_data = [
             'number' => $this->voucher->number,
             ...$bsnData,
             'identity_email' => $assigned ? ($identity?->email) : null,
@@ -85,12 +80,12 @@ class VoucherExportData
             'has_transactions' => $this->voucher->has_transactions ? 'Ja' : 'Nee',
             'has_reservations' => $this->voucher->has_reservations ? 'Ja' : 'Nee',
             'has_payouts' => $this->voucher->has_payouts ? 'Ja' : 'Nee',
-        ]);
+        ];
 
         return array_only(array_merge(
             $export_data,
             $allowRecords ? $this->getRecordsData($this->voucher) : [],
-        ), array_merge(['name'], $this->fields));
+        ), $this->fields);
     }
 
     /**

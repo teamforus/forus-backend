@@ -64,9 +64,13 @@ use Throwable;
  * @property-read int|null $notification_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
  * @property-read int|null $notifications_count
+ * @property-read Collection|\App\Models\Organization[] $organizations
+ * @property-read int|null $organizations_count
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\IdentityEmail|null $primary_email
+ * @property-read Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read int|null $product_reservations_count
  * @property-read Collection|\App\Models\Profile[] $profiles
  * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\IdentityProxy[] $proxies
@@ -179,6 +183,18 @@ class Identity extends Model implements Authenticatable
         return $this->hasMany(Profile::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function organizations(): HasMany
+    {
+        return $this->hasMany(Organization::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     */
     public function notification_tokens(): HasMany
     {
         return $this->hasMany(NotificationToken::class, 'identity_address', 'address');
@@ -373,6 +389,21 @@ class Identity extends Model implements Authenticatable
     {
         return $this->hasManyThrough(
             Reimbursement::class,
+            Voucher::class,
+            'identity_id',
+            'voucher_id',
+            'id',
+            'id',
+        );
+    }
+
+    /**
+     * @return HasManyThrough
+     */
+    public function product_reservations(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            ProductReservation::class,
             Voucher::class,
             'identity_id',
             'voucher_id',
@@ -709,27 +740,31 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param RecordType $recordType
+     * @param RecordType $type
      * @param string $value
      * @param int|null $recordCategoryId
      * @param int|null $order
+     * @param FundRequest|null $fundRequest
+     * @param Prevalidation|null $prevalidation
      * @return array|null
      */
     public function makeRecord(
-        RecordType $recordType,
+        RecordType $type,
         string $value,
         ?int $recordCategoryId = null,
-        ?int $order = null
+        ?int $order = null,
+        ?FundRequest $fundRequest = null,
+        ?Prevalidation $prevalidation = null,
     ): ?Record {
         $hasRecordOfSameType = $this->records()->where([
-            'record_type_id' => $recordType->id,
+            'record_type_id' => $type->id,
         ])->exists();
 
-        if ($recordType->key === 'primary_email' && $hasRecordOfSameType) {
+        if ($type->key === 'primary_email' && $hasRecordOfSameType) {
             abort(403, 'record.exceptions.primary_email_already_exists');
         }
 
-        if ($recordType->key === 'bsn') {
+        if ($type->key === 'bsn') {
             abort(403, 'record.exceptions.bsn_record_cant_be_created');
         }
 
@@ -737,8 +772,10 @@ class Identity extends Model implements Authenticatable
             'identity_address' => $this->address,
             'order' => $order ?: 0,
             'value' => $value,
-            'record_type_id' => $recordType->id,
+            'record_type_id' => $type->id,
             'record_category_id' => $recordCategoryId,
+            'fund_request_id' => $fundRequest?->id,
+            'prevalidation_id' => $prevalidation?->id,
         ]);
     }
 

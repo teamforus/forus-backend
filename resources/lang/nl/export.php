@@ -18,7 +18,6 @@ return [
     'providers' => [
         'fund' => 'Fondsnaam',
         'implementation' => 'Website',
-        'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
         'provider_last_activity' => 'Laatst actief',
         'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',
@@ -108,6 +107,9 @@ return [
         'product_vouchers_active_amount' => 'Totaal aanbiedingsvouchers actief €',
         'product_vouchers_inactive_amount' => 'Totaal aanbiedingsvouchers inactief €',
         'product_vouchers_deactivated_amount' => 'Totaal aanbiedingsvouchers gedeactiveerd €',
+
+        // Payout vouchers
+        'payout_vouchers_amount' => 'Totaal uitbetalingen €',
     ],
 
     'employees' => [
@@ -120,6 +122,7 @@ return [
         'updated_at' => 'Bijgewerkt op',
         'is_2fa_configured' => '2FA',
         'roles' => 'Rollen',
+        'last_activity' => 'Laatste handeling',
     ],
 
     'fund_identities' => [
@@ -164,6 +167,7 @@ return [
         'expire_at' => 'Verlopen op',
         'ean' => 'EAN',
         'sku' => 'SKU',
+        'transaction_id' => 'Transactie ID',
     ],
 
     'reimbursements' => [
@@ -249,6 +253,7 @@ return [
         'bulk_status_locale' => 'In de wachtrij (dagen)',
         'product_id' => 'Aanbod ID',
         'notes_provider' => 'Notities',
+        'reservation_code' => 'Reservering nummer',
         'state-values' => [
             'success' => 'voltooid',
             'pending' => 'in afwachting',

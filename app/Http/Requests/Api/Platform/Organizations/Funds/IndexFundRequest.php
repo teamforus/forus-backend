@@ -38,9 +38,9 @@ class IndexFundRequest extends BaseFormRequest
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',
             'archived' => 'nullable|bool',
-            'stats' => 'nullable|string|in:all,budget,product_vouchers,min',
+            'stats' => 'nullable|string|in:all,budget,product_vouchers,payout_vouchers,min',
             'per_page' => $this->perPageRule(),
-            'state' => 'nullable|in:' . implode(',', Fund::STATES),
+            'state' => 'nullable|in:' . implode(',', [...Fund::STATES, 'active_paused_and_closed']),
             'year' => 'nullable|integer',
         ];
     }

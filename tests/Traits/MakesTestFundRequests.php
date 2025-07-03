@@ -74,7 +74,7 @@ trait MakesTestFundRequests
     ): void {
         // assert email log exists
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
+            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
             $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
         );
 
@@ -108,7 +108,11 @@ trait MakesTestFundRequests
                 'fund_request_record_id' => $fundRequestRecord->id,
                 'question' => $questionToken,
             ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
+                'Accept' => 'application/json',
+                'client_type' => 'webshop',
+                ...$headers,
+            ]),
         );
 
         $response->assertSuccessful();
@@ -131,8 +135,12 @@ trait MakesTestFundRequests
     ): void {
         // assert email log exists
         $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/email-logs",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
+            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
+                'Accept' => 'application/json',
+                'client_type' => 'webshop',
+                ...$headers,
+            ]),
         );
 
         $response->assertSuccessful();
@@ -144,5 +152,26 @@ trait MakesTestFundRequests
                 $item['type'] == 'fund_request_feedback_requested' &&
                 Str::contains($item['content'], $questionToken);
         }));
+    }
+
+    /**
+     * @param Identity $requester
+     * @param Fund $fund
+     * @param array $records
+     * @return FundRequest
+     */
+    protected function setCriteriaAndMakeFundRequest(Identity $requester, Fund $fund, array $records): FundRequest
+    {
+        $recordsList = collect($records)->map(function (string|int $value, string $key) use ($fund) {
+            return $this->makeRequestCriterionValue($fund, $key, $value);
+        });
+
+        $response = $this->makeFundRequest($requester, $fund, $recordsList, false);
+        $response->assertSuccessful();
+
+        $fundRequest = FundRequest::find($response->json('data.id'));
+        $this->assertNotNull($fundRequest);
+
+        return $fundRequest;
     }
 }

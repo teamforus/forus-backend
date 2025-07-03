@@ -30,7 +30,6 @@ return [
             'deactivated',
             'transaction',
             'transaction_product',
-            'transaction_subsidy',
             'physical_card_requested',
             'expiring_soon_budget',
             'expiring_soon_product',
@@ -77,7 +76,6 @@ return [
             // 'fund_product_added',
             // 'fund_product_approved',
             // 'fund_product_revoked',
-            // 'fund_product_subsidy_removed',
         ],
     ],
 ];

@@ -4,7 +4,6 @@ namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -210,27 +209,6 @@ class ProductFundActionsTest extends DuskTestCase
     }
 
     /**
-     * @param Identity $requester
-     * @param Fund $fund
-     * @param array $records
-     * @return FundRequest
-     */
-    protected function setCriteriaAndMakeFundRequest(Identity $requester, Fund $fund, array $records): FundRequest
-    {
-        $recordsList = collect($records)->map(function (string|int $value, string $key) use ($fund) {
-            return $this->makeRequestCriterionValue($fund, $key, $value);
-        });
-
-        $response = $this->makeFundRequest($requester, $fund, $recordsList, false);
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-
-        return $fundRequest;
-    }
-
-    /**
      * @return array
      */
     protected function getPayoutFundSettings(): array
@@ -259,7 +237,7 @@ class ProductFundActionsTest extends DuskTestCase
             ]],
             'requester_records' => [
                 'iban' => $this->faker->iban(),
-                'iban_name' => $this->faker->firstName(),
+                'iban_name' => $this->makeIbanName(),
                 'children_nth' => 3,
             ],
         ];

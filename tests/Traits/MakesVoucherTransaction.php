@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 
 trait MakesVoucherTransaction
 {
+    use MakesTestVouchers;
     use MakesTestFundProviders;
 
     /**
@@ -35,7 +36,6 @@ trait MakesVoucherTransaction
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
-                'type' => Fund::TYPE_BUDGET,
                 'organization_id' => $organization->id,
             ]));
         });
@@ -55,7 +55,7 @@ trait MakesVoucherTransaction
             $product = $products[$i - 1];
             $this->addProductFundToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $vouchers->push($voucher);
         }
 

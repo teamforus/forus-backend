@@ -18,7 +18,11 @@ trait MakesTestFundProviders
     /**
      * @param Fund $fund
      * @param int $countProducts
-     * @return array
+     * @return array{
+     *    approved: Product[],
+     *    unapproved: Product[],
+     *    empty_stock: Product[]
+     *  }
      */
     protected function makeProviderAndProducts(Fund $fund, int $countProducts = 5): array
     {
@@ -83,28 +87,31 @@ trait MakesTestFundProviders
      * @param Fund $fund
      * @param Product $product
      * @param bool $approveGlobal
+     * @param bool|null $subsidyProduct
      * @return void
      */
     protected function addProductFundToFund(
         Fund $fund,
         Product $product,
         bool $approveGlobal,
+        bool $subsidyProduct = false,
     ): void {
         /** @var FundProvider $fundProvider */
         $fundProvider = $fund->providers()->firstOrCreate([
             'state' => FundProvider::STATE_ACCEPTED,
-            'allow_budget' => $fund->isTypeBudget(),
+            'allow_budget' => true,
             'allow_products' => $approveGlobal,
             'organization_id' => $product->organization_id,
         ]);
 
-        if (!$approveGlobal || $fund->isTypeSubsidy()) {
+        if (!$approveGlobal) {
             $this->updateProductsRequest($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,
                     'limit_total' => $product->stock_amount,
                     'limit_per_identity' => 1,
-                    ...($fund->isTypeSubsidy() ? ['amount' => $product->price] : []),
+                    'payment_type' => $subsidyProduct ? 'subsidy' : 'budget',
+                    ...($subsidyProduct ? ['amount' => $product->price] : []),
                 ]],
             ]);
         }

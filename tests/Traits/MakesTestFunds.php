@@ -7,12 +7,13 @@ use App\Models\Fund;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundFormula;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\ProductReservation;
+use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Testing\TestResponse;
@@ -29,11 +30,6 @@ trait MakesTestFunds
     protected string $apiUrlCriteria = '/api/v1/platform/organizations/%s/funds/%s/criteria';
 
     /**
-     * @var string
-     */
-    protected string $apiUrlPrevalidations = '/api/v1/platform/prevalidations';
-
-    /**
      * @param Organization $organization
      * @param Fund $fund
      * @param string|null $primaryKey
@@ -45,7 +41,7 @@ trait MakesTestFunds
         ?string $primaryKey = null,
     ): Prevalidation {
         // create prevalidation
-        $response = $this->makeStorePrevalidationRequest($organization->identity, $fund, [
+        $response = $this->makeStorePrevalidationRequest($organization, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
             $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
@@ -81,14 +77,15 @@ trait MakesTestFunds
             'start_date' => now()->subDay(),
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
-            'type' => Fund::TYPE_BUDGET,
+            'external' => false,
             ...$fundData,
         ]);
 
         $fund->changeState($fund::STATE_ACTIVE);
+        $implementations = $organization->implementations()->get();
 
-        $implementation = $organization->implementations->isNotEmpty() ?
-            $organization->implementations[0] :
+        $implementation = $implementations->isNotEmpty() ?
+            $implementations[0] :
             $this->makeTestImplementation($organization);
 
         $fund->fund_config()->forceCreate([
@@ -140,23 +137,6 @@ trait MakesTestFunds
 
     /**
      * @param Organization $organization
-     * @param array $fundData
-     * @param array $fundConfigsData
-     * @return Fund
-     */
-    protected function makeTestSubsidyFund(
-        Organization $organization,
-        array $fundData = [],
-        array $fundConfigsData = [],
-    ): Fund {
-        return $this->makeTestFund($organization, [
-            'type' => Fund::TYPE_SUBSIDIES,
-            ...$fundData,
-        ], $fundConfigsData);
-    }
-
-    /**
-     * @param Organization $organization
      * @param array $implementationData
      * @return Implementation
      */
@@ -192,22 +172,22 @@ trait MakesTestFunds
     }
 
     /**
-     * @param Identity $identity
+     * @param Organization $organization
      * @param Fund $fund
      * @param array $records
      * @param array $extraData
      * @return TestResponse
      */
     protected function makeStorePrevalidationRequest(
-        Identity $identity,
+        Organization $organization,
         Fund $fund,
         array $records,
         array $extraData = [],
     ): TestResponse {
-        $proxy = $this->makeIdentityProxy($identity);
+        $proxy = $this->makeIdentityProxy($organization->identity);
         $criteria = $fund->criteria()->pluck('record_type_key', 'id')->toArray();
 
-        return $this->postJson($this->apiUrlPrevalidations, [
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations", [
             'fund_id' => $fund->id,
             'data' => [
                 ...array_reduce($records, fn ($list, $record) => [
@@ -404,10 +384,21 @@ trait MakesTestFunds
         VoucherTransaction::whereIn('voucher_id', $fund->vouchers()->select('id'))->forceDelete();
         $fund->vouchers()->whereNotNull('product_reservation_id')->forceDelete();
         ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
+        Record::where('fund_request_id', $fund->fund_requests()->pluck('id')->toArray())->forceDelete();
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();
         $fund->amount_presets()->forceDelete();
         $fund->forceDelete();
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return void
+     */
+    protected function deleteVoucher(Voucher $voucher): void
+    {
+        $voucher->backoffice_logs()->delete();
+        $voucher->delete();
     }
 }

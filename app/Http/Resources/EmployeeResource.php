@@ -16,6 +16,7 @@ class EmployeeResource extends BaseJsonResource
         'roles.permissions',
         'identity.primary_email',
         'identity.identity_2fa_active',
+        'identity.session_last_activity',
     ];
 
     /**
@@ -44,6 +45,10 @@ class EmployeeResource extends BaseJsonResource
                 'number' => $employee->office?->branch_number,
                 'full_name' => $employee->office?->branch_full_name ?? '',
             ],
+            ...static::makeTimestampsStatic([
+                'created_at' => $employee->created_at,
+                'last_activity_at' => $employee->identity->session_last_activity?->last_activity_at,
+            ]),
         ]);
     }
 }

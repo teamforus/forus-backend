@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $identity_address
  * @property string|null $bsn
  * @property int|null $voucher_id
+ * @property int|null $voucher_relation_id
  * @property string $action
  * @property string $state
  * @property string|null $request_id
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Voucher|null $voucher
+ * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog query()
@@ -45,6 +47,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereVoucherRelationId($value)
  * @mixin \Eloquent
  */
 class FundBackofficeLog extends BaseModel
@@ -52,7 +55,7 @@ class FundBackofficeLog extends BaseModel
     protected $fillable = [
         'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
         'response_code', 'response_body', 'response_error', 'attempts', 'last_attempt_at',
-        'voucher_id',
+        'voucher_id', 'voucher_relation_id',
     ];
 
     protected $casts = [
@@ -76,9 +79,17 @@ class FundBackofficeLog extends BaseModel
     }
 
     /**
-     * @return FundBackofficeLog|bool
+     * @return BelongsTo
      */
-    public function increaseAttempts()
+    public function voucher_relation(): BelongsTo
+    {
+        return $this->belongsTo(VoucherRelation::class);
+    }
+
+    /**
+     * @return FundBackofficeLog
+     */
+    public function increaseAttempts(): FundBackofficeLog
     {
         return $this->updateModel([
             'attempts' => ++$this->attempts,

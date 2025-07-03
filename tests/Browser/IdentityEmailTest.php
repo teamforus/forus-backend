@@ -38,7 +38,7 @@ class IdentityEmailTest extends DuskTestCase
         $this->makeIdentityEmailTests(
             Implementation::byKey('nijmegen'),
             $this->makeIdentity($this->makeUniqueEmail('base-')),
-            'webshop'
+            'webshop',
         );
     }
 
@@ -53,7 +53,7 @@ class IdentityEmailTest extends DuskTestCase
         $this->makeIdentityEmailTests(
             Implementation::general(),
             $this->makeOrganizationIdentity(Organization::whereHas('funds')->first())->identity,
-            'sponsor'
+            'sponsor',
         );
     }
 
@@ -68,7 +68,7 @@ class IdentityEmailTest extends DuskTestCase
         $this->makeIdentityEmailTests(
             Implementation::general(),
             $this->makeOrganizationIdentity(Organization::whereHas('products')->first())->identity,
-            'provider'
+            'provider',
         );
     }
 
@@ -83,7 +83,7 @@ class IdentityEmailTest extends DuskTestCase
         $this->makeIdentityEmailTests(
             Implementation::general(),
             $this->makeOrganizationIdentity(Organization::whereHas('funds')->first())->identity,
-            'validator'
+            'validator',
         );
     }
 
@@ -115,17 +115,15 @@ class IdentityEmailTest extends DuskTestCase
             // Visit the url and wait for the page to load
             $browser->visit($implementation->urlFrontend($frontend));
 
-            // Authorize identity
+            // Authorize identity and go to identity emails page
             $this->loginIdentity($browser, $identity);
             $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
-
-            $this->goToIdentityEmailPage($browser, $identity, $frontend);
+            $this->goToIdentityEmailPage($browser);
 
             $email = $this->addNewEmail($browser, $identity);
 
             // Check if email exists in database
-            /** @var IdentityEmail $identityEmail */
-            $identityEmail = $identity->emails()->where('email', $email)->first();
+            $identityEmail = $identity->emails()->get()->where('email', $email)[0] ?? null;
             $this->assertNotNull($identityEmail);
 
             $startTime = now();
@@ -133,8 +131,15 @@ class IdentityEmailTest extends DuskTestCase
 
             // Verify email
             $browser->visit($this->findFirstEmailVerificationLink($identityEmail->email, $startTime));
+            $this->assertAndCloseSuccessNotification($browser);
 
-            $this->goToIdentityEmailPage($browser, $identity, $frontend, $frontend != 'webshop');
+            if ($frontend != 'webshop') {
+                $browser->waitFor('@identityEmailConfirmedButton');
+                $browser->element('@identityEmailConfirmedButton')->click();
+            }
+
+            $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
+            $this->goToIdentityEmailPage($browser);
 
             $this->setEmailAsPrimary($browser, $identityEmail);
             $this->deleteEmail($browser, $identity, $frontend);
@@ -144,25 +149,11 @@ class IdentityEmailTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Identity $identity
-     * @param string $frontend
-     * @param bool $hasButton
      * @throws TimeoutException
      * @return void
      */
-    private function goToIdentityEmailPage(
-        Browser $browser,
-        Identity $identity,
-        string $frontend,
-        bool $hasButton = false,
-    ): void {
-        if ($hasButton) {
-            $browser->waitFor('@identityEmailConfirmedButton');
-            $browser->element('@identityEmailConfirmedButton')->click();
-        }
-
-        $this->assertIdentityAuthenticatedFrontend($browser, $identity, $frontend);
-
+    private function goToIdentityEmailPage(Browser $browser): void
+    {
         $browser->waitFor('@userProfile');
         $browser->element('@userProfile')->click();
         $browser->waitFor('@btnUserEmails');
@@ -173,6 +164,8 @@ class IdentityEmailTest extends DuskTestCase
      * @param Browser $browser
      * @param Identity $identity
      * @param string $frontend
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
      * @return void
      */
@@ -194,12 +187,15 @@ class IdentityEmailTest extends DuskTestCase
         $browser->assertNotPresent('#email_' . $notPrimaryEmail->id);
 
         $this->assertNull($identity->emails()->where('email', $notPrimaryEmail->email)->first());
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
      * @param Browser $browser
      * @param IdentityEmail $identityEmail
-     * @throws \Facebook\WebDriver\Exception\TimeOutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
     private function setEmailAsPrimary(Browser $browser, IdentityEmail $identityEmail): void
@@ -215,6 +211,7 @@ class IdentityEmailTest extends DuskTestCase
             $browser->waitFor('@identityEmailListItemPrimary');
             $browser->assertPresent('@identityEmailListItemPrimary');
         });
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
@@ -247,7 +244,7 @@ class IdentityEmailTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Identity $identity
-     * @throws TimeOutException
+     * @throws TimeoutException
      * @return string
      */
     private function addNewEmail(Browser $browser, Identity $identity): string

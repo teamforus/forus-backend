@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexFundProviderProductsRequest extends FormRequest
+class IndexFundProviderProductsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,8 @@ class IndexFundProviderProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => 'nullable|string',
-            'per_page' => 'nullable|numeric|between:1,100',
+            'type' => 'nullable|sometimes|in:provider,sponsor',
+            ...$this->sortableResourceRules(),
         ];
     }
 }

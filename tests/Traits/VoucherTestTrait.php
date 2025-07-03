@@ -4,7 +4,6 @@ namespace Tests\Traits;
 
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Product;
@@ -66,6 +65,7 @@ trait VoucherTestTrait
             $activationCode = $assert['activation_code'] ?? 0;
             $directPayment = Arr::get($assert, 'direct_payment') ? $this->makeDirectPaymentData() : [];
             $exceedVoucherAmountLimit = $assert['exceed_voucher_amount_limit'] ?? false;
+            $notifyProvider = $assert['notify_provider'] ?? false;
 
             if ($sameAssignBy > $index && count($vouchers)) {
                 $params[$assert['assign_by']] = $vouchers[$index - 1][$assert['assign_by']];
@@ -87,6 +87,7 @@ trait VoucherTestTrait
                 'note' => $this->faker()->sentence(),
                 'amount' => $amount ?? null,
                 'product_id' => $productId ?? null,
+                'notify_provider' => $notifyProvider,
             ], $directPayment, $this->recordsFields(), $assert['replacement'] ?? []);
 
             return array_merge($vouchers, [
@@ -150,7 +151,7 @@ trait VoucherTestTrait
     {
         return [
             'direct_payment_iban' => $this->faker()->iban('NL'),
-            'direct_payment_name' => $this->faker()->firstName . ' ' . $this->faker()->lastName,
+            'direct_payment_name' => $this->makeIbanName(),
         ];
     }
 
@@ -357,13 +358,8 @@ trait VoucherTestTrait
      */
     protected function getMailableClass(Voucher $voucher): string
     {
-        $voucherType = $voucher->isBudgetType()
-            ? ($voucher->fund->isTypeBudget() ? 'budget' : 'subsidy')
-            : 'product';
-
-        return match ($voucherType) {
+        return match ($voucher->isBudgetType() ? 'budget' : 'product') {
             'budget' => VoucherAssignedBudgetMail::class,
-            'subsidy' => VoucherAssignedSubsidyMail::class,
             'product' => VoucherAssignedProductMail::class
         };
     }

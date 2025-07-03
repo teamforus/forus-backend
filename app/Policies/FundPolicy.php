@@ -161,7 +161,7 @@ class FundPolicy
             return $this->deny('Bank connection invalid or expired.', 403);
         }
 
-        if ($fund->isExternal()) {
+        if ($fund->external) {
             return $this->deny('Top-up not allowed for external funds', 403);
         }
 
@@ -232,7 +232,7 @@ class FundPolicy
     public function updateBackoffice(Identity $identity, Fund $fund, Organization $organization): bool
     {
         return $organization->backoffice_available &&
-            $fund->isInternal() &&
+            !$fund->external &&
             $fund->isConfigured() &&
             $this->update($identity, $fund, $organization);
     }
@@ -264,7 +264,7 @@ class FundPolicy
             return $this->deny(trans('fund.state_' . $fund->state));
         }
 
-        if (!$fund->isInternal()) {
+        if ($fund->external) {
             return $this->deny(trans('fund.type_external'));
         }
 

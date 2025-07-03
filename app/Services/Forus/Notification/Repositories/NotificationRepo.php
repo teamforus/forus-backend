@@ -12,7 +12,6 @@ use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
-use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\FundRequestAssignedBySupervisorMail;
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
@@ -43,10 +42,8 @@ use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotificat
 use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedProductNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
@@ -54,7 +51,6 @@ use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotifica
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedBudgetNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedProductsNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderSponsorChatMessageNotification;
@@ -68,7 +64,6 @@ use App\Notifications\Organizations\Funds\FundCreatedNotification;
 use App\Notifications\Organizations\Funds\FundEndedNotification;
 use App\Notifications\Organizations\Funds\FundExpiringNotification;
 use App\Notifications\Organizations\Funds\FundProductAddedNotification;
-use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Notifications\Organizations\Funds\FundProviderAppliedNotification;
 use App\Notifications\Organizations\Funds\FundProviderChatMessageNotification;
 use App\Notifications\Organizations\Funds\FundStartedNotification;
@@ -120,7 +115,6 @@ class NotificationRepo implements INotificationRepo
         FundProductAddedNotification::class,
         FundProviderAppliedNotification::class,
         FundProviderChatMessageNotification::class,
-        FundProductSubsidyRemovedNotification::class,
 
         BalanceLowNotification::class,
         BalanceSuppliedNotification::class,
@@ -141,12 +135,10 @@ class NotificationRepo implements INotificationRepo
         // vouchers
         IdentityProductVoucherSharedNotification::class,
         IdentityVoucherAssignedBudgetNotification::class,
-        IdentityVoucherAssignedSubsidyNotification::class,
         IdentityVoucherAssignedProductNotification::class,
 
         IdentityProductVoucherAddedNotification::class,
         IdentityProductVoucherReservedNotification::class,
-        IdentityVoucherAddedSubsidyNotification::class,
         IdentityVoucherAddedBudgetNotification::class,
 
         IdentityVoucherDeactivatedNotification::class,
@@ -161,7 +153,6 @@ class NotificationRepo implements INotificationRepo
 
         // voucher transactions
         IdentityVoucherBudgetTransactionNotification::class,
-        IdentityVoucherSubsidyTransactionNotification::class,
         IdentityProductVoucherTransactionNotification::class,
         FundProviderTransactionBunqSuccessNotification::class,
 
@@ -180,7 +171,6 @@ class NotificationRepo implements INotificationRepo
         // Mails for sponsors/providers
         'funds.provider_applied' => ProviderAppliedMail::class,
         'funds.provider_approved' => ProviderApprovedMail::class,
-        'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
         'funds.fund_expires' => VoucherExpireSoonBudgetMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,

@@ -58,7 +58,7 @@ class ProductIdToReservationRule extends BaseRule
             return $this->rejectTrans('product_not_found');
         }
 
-        if (!$product->reservationsEnabled($voucher->fund)) {
+        if (!$product->reservationsEnabled()) {
             return $this->rejectTrans('reservation_not_enabled');
         }
 
@@ -71,20 +71,19 @@ class ProductIdToReservationRule extends BaseRule
         }
 
         if (
-            $product->price > $voucher->amount_available &&
-            $voucher->fund->isTypeBudget() &&
+            $product->fundPrice($voucher->fund) > $voucher->amount_available &&
             !$this->isExtraPaymentEnabled($voucher, $product)
         ) {
             return $this->rejectTrans('not_enough_voucher_funds');
         }
 
         // validate total limit
-        if (!$this->hasStock($voucher, $product['limit_total_available'] ?? null)) {
+        if (!$this->hasStock($product['limit_total_available'] ?? null)) {
             return $this->reject(trans('validation.product_reservation.no_total_stock'));
         }
 
         // validate voucher limit
-        if (!$this->hasStock($voucher, $product['limit_available'] ?? null)) {
+        if (!$this->hasStock($product['limit_available'] ?? null)) {
             return $this->reject(trans('validation.product_reservation.no_identity_stock'));
         }
 
@@ -136,12 +135,11 @@ class ProductIdToReservationRule extends BaseRule
     }
 
     /**
-     * @param Voucher $voucher
      * @param ?int $limit
      * @return bool
      */
-    protected function hasStock(Voucher $voucher, ?int $limit): bool
+    protected function hasStock(?int $limit): bool
     {
-        return $voucher->fund->isTypeBudget() ? (is_null($limit) || ($limit > 0)) : ($limit > 0);
+        return is_null($limit) || ($limit > 0);
     }
 }

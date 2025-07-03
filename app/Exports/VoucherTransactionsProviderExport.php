@@ -30,6 +30,7 @@ class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
         'provider',
         'state',
         'notes_provider',
+        'reservation_code',
     ];
 
     /**
@@ -45,6 +46,14 @@ class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
             $request->get('order_dir')
         );
 
-        return $this->exportTransform($builder->with('voucher.fund', 'provider', 'product')->get());
+        $builder->with([
+            'product',
+            'provider',
+            'voucher.fund',
+            'notes_provider',
+            'product_reservation',
+        ]);
+
+        return $this->exportTransform($builder->get());
     }
 }

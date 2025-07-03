@@ -14,10 +14,13 @@ use InvalidArgumentException;
 use Laravel\Dusk\Browser;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 trait ExportTrait
 {
+    use MakesTestVouchers;
+
     public const array FORMATS = ['csv', 'xls'];
 
     /**
@@ -25,18 +28,20 @@ trait ExportTrait
      * @param string $format
      * @param array $fields
      * @param string $selector
+     * @param callable|null $fillCallback
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
      * @return array|null
      */
     protected function fillExportModalAndDownloadFile(
         Browser $browser,
         string $format,
         array $fields = [],
-        string $selector = '@export'
+        string $selector = '@export',
+        ?callable $fillCallback = null,
     ): ?array {
-        $this->fillExportModal($browser, $fields, $selector, $format);
+        $this->fillExportModal($browser, $fields, $selector, $format, $fillCallback);
 
         $browser->assertMissing('@dangerNotification');
 
@@ -113,9 +118,10 @@ trait ExportTrait
      * @param array $fields
      * @param string $selector
      * @param string $format
-     * @throws TimeoutException
+     * @param callable|null $fillCallback
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
     protected function fillExportModal(
@@ -123,12 +129,13 @@ trait ExportTrait
         array $fields = [],
         string $selector = '@export',
         string $format = 'csv',
+        callable $fillCallback = null,
     ): void {
         $browser->waitFor($selector);
         $browser->element($selector)->click();
         $browser->waitFor('@modalExport');
 
-        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format) {
+        $browser->within('@modalExport', function (Browser $browser) use ($fields, $format, $fillCallback) {
             $browser->waitFor("@toggle_data_format_$format");
             $browser->element("@toggle_data_format_$format")->click();
 
@@ -139,6 +146,10 @@ trait ExportTrait
                 foreach ($fields as $field) {
                     $browser->click("@option_$field");
                 }
+            }
+
+            if ($fillCallback) {
+                $browser = $fillCallback($browser);
             }
 
             $browser->click('@submitBtn');
@@ -163,7 +174,7 @@ trait ExportTrait
             $product = $products[$i - 1];
             $this->addProductFundToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

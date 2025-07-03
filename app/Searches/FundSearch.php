@@ -33,7 +33,7 @@ class FundSearch extends BaseSearch
         }
 
         if (!$this->getFilter('with_external', false)) {
-            $builder->where('type', '!=', Fund::TYPE_EXTERNAL);
+            $builder->where('external', false);
         }
 
         if ($this->getFilter('configured', false)) {
@@ -68,16 +68,12 @@ class FundSearch extends BaseSearch
             $builder->whereRelation('fund_config', 'implementation_id', $this->getFilter('implementation_id'));
         }
 
-        if ($this->hasFilter('state')) {
-            $builder->where('state', $this->getFilter('state'));
+        if ($this->getFilter('state')) {
+            $builder->whereIn('state', (array) $this->getFilter('state'));
         }
 
         if (!is_null($this->getFilter('has_products'))) {
-            $this->filterByApproval($builder, (bool) $this->getFilter('has_products'), 'product');
-        }
-
-        if (!is_null($this->getFilter('has_subsidies'))) {
-            $this->filterByApproval($builder, (bool) $this->getFilter('has_subsidies'), 'subsidy');
+            $this->filterByApproval($builder, (bool) $this->getFilter('has_products'));
         }
 
         if (!is_null($this->getFilter('has_providers'))) {
@@ -90,28 +86,19 @@ class FundSearch extends BaseSearch
     /**
      * @param Builder|Fund $builder
      * @param bool $approved
-     * @param string|null $type
      * @return void
      */
-    protected function filterByApproval(Builder|Fund $builder, bool $approved, ?string $type = null): void
+    protected function filterByApproval(Builder|Fund $builder, bool $approved): void
     {
         $funds = (clone $builder)->pluck('id')->toArray();
 
-        if ($type === 'subsidy') {
-            $builder->where('type', Fund::TYPE_SUBSIDIES);
-        }
-
-        if ($type === 'product') {
-            $builder->where('type', Fund::TYPE_BUDGET);
-        }
-
         if ($approved) {
-            $builder->whereHas('fund_providers', function (Builder $builder) use ($funds, $type) {
-                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds, $type);
+            $builder->whereHas('fund_providers', function (Builder $builder) use ($funds) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds);
             });
         } else {
-            $builder->whereDoesntHave('fund_providers', function (Builder $builder) use ($funds, $type) {
-                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds, $type);
+            $builder->whereDoesntHave('fund_providers', function (Builder $builder) use ($funds) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds);
             });
         }
     }

@@ -19,11 +19,13 @@ use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizationOffices;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class VoucherTransactionsSearchFilterTest extends DuskTestCase
 {
     use MakesTestFunds;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
     use MakesTestOrganizationOffices;
@@ -140,7 +142,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $employees = $this->makeEmployeesAndOffices($fund->organization, $transactionsCount);
 
         $vouchers = array_map(
-            fn (Product $product) => $fund->makeProductVoucher($this->makeIdentity(), [], $product->id),
+            fn (Product $product) => $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id),
             $this->makeProviderAndProducts($fund, $transactionsCount)['approved']
         );
 
@@ -168,7 +170,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $otherFund = $this->makeTestFund($fund->organization);
 
         $vouchers = array_map(
-            fn (Product $product) => $otherFund->makeProductVoucher($this->makeIdentity(), [], $product->id),
+            fn (Product $product) => $this->makeTestProductVoucher($otherFund, $this->makeIdentity(), [], $product->id),
             $this->makeProductsFundFund(2)
         );
 
@@ -179,7 +181,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $otherFund2 = $this->makeTestFund($otherOrganization);
 
         $vouchers = array_map(
-            fn (Product $product) => $otherFund2->makeProductVoucher($this->makeIdentity(), [], $product->id),
+            fn (Product $product) => $this->makeTestProductVoucher($otherFund2, $this->makeIdentity(), [], $product->id),
             $this->makeTestProducts($provider, 2)
         );
 
@@ -261,8 +263,8 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
      * @param VoucherTransaction $transaction
      * @param int $count
      * @param string $dashboard
-     * @return void
      *@throws TimeOutException
+     * @return void
      */
     protected function assertTransactionsSearchIsWorking(
         Browser $browser,
@@ -280,8 +282,6 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_name, $transaction->id);
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_number, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
-        $this->searchTable($browser, '@tableTransaction', $transaction->product->id, $transaction->id);
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->product->name, $transaction->id);
         $this->searchTable($browser, '@tableTransaction', '###############', null, 0);

@@ -80,6 +80,7 @@ Route::group(['middleware' => ['api.auth']], static function () {
 
         Route::post('emails/{identity_email}/resend', 'Api\Identity\IdentityEmailsController@resend');
         Route::patch('emails/{identity_email}/primary', 'Api\Identity\IdentityEmailsController@primary');
+        Route::post('emails/{identity_email_token}/verify', 'Api\Identity\IdentityEmailsController@emailVerificationTokenVerify');
 
         /**
          * Identity proxies.
@@ -118,16 +119,6 @@ Route::group(['middleware' => ['api.auth']], static function () {
             Route::patch('/{recordId}', 'Api\Identity\RecordController@update');
             Route::patch('/{recordId}/validate', 'Api\Identity\RecordController@updateValidate');
             Route::delete('/{recordId}', 'Api\Identity\RecordController@destroy');
-        });
-
-        /**
-         * Record validations.
-         */
-        Route::group(['prefix' => '/record-validations'], static function () {
-            Route::post('/', 'Api\Identity\RecordValidationController@store');
-            Route::get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
-            Route::patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
-            Route::patch('/{recordUuid}/decline', 'Api\Identity\RecordValidationController@decline');
         });
 
         /**

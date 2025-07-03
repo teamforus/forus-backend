@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Reimbursements;
 
 use App\Models\Reimbursement;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\FileUidRule;
 use Illuminate\Support\Facades\Gate;
@@ -41,7 +42,7 @@ class UpdateReimbursementRequest extends StoreReimbursementRequest
                 ...$this->emailRules(),
             ],
             'iban' => ['nullable', 'string', new IbanRule()],
-            'iban_name' => 'nullable|string|min:5|max:200',
+            'iban_name' => ['nullable', new IbanNameRule()],
             'voucher_id' => $this->voucherIdRule($this->reimbursement),
             'state' => 'nullable|in:' . implode(',', [
                 Reimbursement::STATE_DRAFT,

@@ -2,7 +2,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,46 +22,43 @@ class FundProviderProductQuery
     /**
      * @param Builder|Relation|FundProviderProduct $query
      * @param Voucher $voucher
-     * @param null|int|array|Builder $organization_id
+     * @param null|int|array|Builder $organizationId
      * @param bool $validateLimits
      * @return Builder|Relation|FundProviderProduct
      */
-    public static function whereAvailableForSubsidyVoucher(
+    public static function whereAvailableForVoucher(
         Builder|Relation|FundProviderProduct $query,
         Voucher $voucher,
-        null|int|array|Builder $organization_id = null,
+        null|int|array|Builder $organizationId = null,
         bool $validateLimits = true,
     ): Builder|Relation|FundProviderProduct {
-        $query->whereHas('product', static function (Builder $query) use ($voucher, $organization_id) {
-            $query->where(static function (Builder $builder) use ($voucher, $organization_id) {
-                $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
-                    FundProvider::query(),
-                    $voucher->fund_id,
-                    'subsidy',
-                    $voucher->product_id
-                );
+        $query->where(function (Builder $builder) use ($voucher, $organizationId, $validateLimits) {
+            $builder->whereHas('fund_provider', function (Builder $builder) use ($voucher, $organizationId) {
+                $builder->where('fund_id', $voucher->fund_id);
 
-                if (is_numeric($organization_id) || is_array($organization_id)) {
-                    $providersQuery->whereIn('organization_id', (array) $organization_id);
+                if ($organizationId) {
+                    if (is_numeric($organizationId) || is_array($organizationId)) {
+                        $builder->whereIn('organization_id', (array) $organizationId);
+                    }
+
+                    if ($organizationId instanceof Builder) {
+                        $builder->whereIn('organization_id', $organizationId);
+                    }
                 }
-
-                if ($organization_id instanceof Builder) {
-                    $providersQuery->whereIn('organization_id', $organization_id);
-                }
-
-                $builder->whereIn('organization_id', $providersQuery->pluck('organization_id'));
             });
 
-            return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
-        });
+            $builder->where(function (Builder $builder) use ($voucher) {
+                $builder->where(function (Builder $builder) use ($voucher) {
+                    $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_BUDGET);
+                    $builder->whereRelation('product', 'price', '<=', $voucher->amount_available);
+                });
 
-        $query->whereHas('fund_provider', static function (Builder $builder) use ($voucher) {
-            $builder->where('fund_id', '=', $voucher->fund_id);
+                $builder->orWhere(function (Builder $builder) use ($voucher) {
+                    $builder->where('payment_type', FundProviderProduct::PAYMENT_TYPE_SUBSIDY);
+                    $builder->where('price', '<=', $voucher->amount_available);
+                });
+            });
         });
-
-        if ($voucher->product_id) {
-            $query->where('product_id', $voucher->product_id);
-        }
 
         return $validateLimits ? self::whereInLimitsFilter($query, $voucher) : $query;
     }
@@ -83,28 +79,10 @@ class FundProviderProductQuery
 
             $query->where(function (Builder $builder) use ($voucher) {
                 $builder->where('limit_available', '>', 0);
-
-                if ($voucher->fund->isTypeBudget()) {
-                    $builder->orWhereNull('limit_available');
-                }
+                $builder->orWhereNull('limit_available');
             });
 
             $builder->whereIn('id', $query->select('id'));
-        });
-    }
-
-    /**
-     * @param Builder|Relation|FundProviderProduct $builder
-     * @return Builder|Relation|FundProviderProduct
-     */
-    public static function whereConfigured(
-        Builder|Relation|FundProviderProduct $builder,
-    ): Builder|Relation|FundProviderProduct {
-        return $builder->where(function (Builder|FundProviderProduct $builder) {
-            $builder->whereNotNull('expire_at');
-            $builder->whereNotNull('limit_total');
-            $builder->orWhereNotNull('limit_per_identity');
-            $builder->orWhere('limit_total_unlimited', true);
         });
     }
 }

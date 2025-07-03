@@ -44,9 +44,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_fund_providers.approved_products' => [
             'fund_name',
         ],
-        'notifications_fund_providers.revoked_budget' => [
-            'fund_name', 'provider_name', 'sponsor_name', 'sponsor_phone',
-        ],
         'notifications_fund_providers.revoked_products' => [
             'fund_name',
         ],
@@ -110,9 +107,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_funds.provider_message' => [
             'fund_name', 'product_name', 'provider_name',
         ],
-        'notifications_funds.product_subsidy_removed' => [
-            'product_name', 'provider_name',
-        ],
         'notifications_funds.balance_low' => [
             'fund_budget_left_locale', 'fund_name', 'fund_notification_amount_locale',
             'sponsor_name', 'fund_transaction_costs', 'fund_transaction_costs_locale',
@@ -158,10 +152,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             'fund_name', 'qr_token', 'voucher_amount_locale', 'voucher_expire_date_locale',
             'webshop_link', 'webshop_button',
         ],
-        'notifications_identities.identity_voucher_assigned_subsidy' => [
-            'fund_name', 'webshop_link', 'webshop_button', 'sponsor_email', 'sponsor_phone',
-            'voucher_expire_date_locale', 'qr_token',
-        ],
         'notifications_identities.identity_voucher_assigned_product' => [
             'implementation_name', 'product_name', 'provider_email', 'provider_name',
             'provider_phone', 'qr_token', 'sponsor_name', 'voucher_expire_date_locale',
@@ -173,9 +163,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_identities.product_voucher_reserved' => [
             'product_name', 'product_price_locale', 'provider_email', 'provider_name',
             'provider_phone', 'qr_token', 'voucher_expire_date_locale',
-        ],
-        'notifications_identities.voucher_added_subsidy' => [
-            'fund_name', 'voucher_expire_date_locale',
         ],
         'notifications_identities.voucher_added_budget' => [
             'fund_name', 'voucher_amount_locale', 'voucher_expire_date_locale',
@@ -204,9 +191,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         'notifications_identities.voucher_shared_by_email' => [],
         'notifications_identities.voucher_budget_transaction' => [
             'amount', 'fund_name', 'voucher_amount_locale',
-        ],
-        'notifications_identities.voucher_subsidy_transaction' => [
-            'fund_name', 'product_name', 'subsidy_new_limit', 'webshop_link', 'webshop_button',
         ],
         'notifications_identities.product_voucher_transaction' => [
             'product_name',

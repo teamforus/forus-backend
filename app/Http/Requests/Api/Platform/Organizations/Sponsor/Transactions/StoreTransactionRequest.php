@@ -3,12 +3,12 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
@@ -75,7 +75,7 @@ class StoreTransactionRequest extends BaseFormRequest
             'target' => ['required', Rule::in(array_filter($targets))],
         ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
             'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
-            'target_name' => 'required_without:target_reimbursement_id|string|min:3|max:200',
+            'target_name' => ['required_without:target_reimbursement_id', new IbanNameRule()],
             'target_reimbursement_id' => [
                 'required_without:target_iban',
                 Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher)),
@@ -110,8 +110,6 @@ class StoreTransactionRequest extends BaseFormRequest
         $builder = VoucherQuery::whereNotExpiredAndActive(Voucher::query());
 
         $builder = $builder->whereHas('fund', function (Builder $builder) {
-            $builder->where('funds.type', Fund::TYPE_BUDGET);
-
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
                 'organization_id' => $this->organization->id,
             ]))->select('funds.id');
@@ -126,13 +124,13 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     protected function fundProviderIds(?Voucher $voucher): array
     {
-        return $voucher ? FundProviderQuery::whereApprovedForFundsFilter(
-            FundProvider::query(),
-            $voucher->fund_id,
-            'budget'
-        )->whereHas('fund', function (Builder $builder) {
-            $builder->where('type', Fund::TYPE_BUDGET);
-        })->pluck('fund_providers.organization_id')->toArray() : [];
+        if (!$voucher) {
+            return [];
+        }
+
+        return FundProviderQuery::whereApprovedForFundsFilter(FundProvider::query(), $voucher->fund_id, 'allow_budget')
+            ->whereHas('fund', fn (Builder $builder) => FundQuery::whereIsInternal($builder))
+            ->pluck('fund_providers.organization_id')->toArray();
     }
 
     /**

@@ -28,7 +28,7 @@ return [
     'bunq_key' => '',
 
     // criteria for generated funds
-    'funds_criteria' => [[
+    'fund_criteria' => [[
         'record_type_key' => 'children_nth',
         'operator' => '>',
         'value' => 2,
@@ -62,6 +62,7 @@ return [
     'backoffice_client_cert' => '',
     'backoffice_client_cert_key' => '',
     'backoffice_fallback' => true,
+    'backoffice_enabled' => false,
 
     'digid_cgi_tls_key' => '',
     'digid_cgi_tls_cert' => '',

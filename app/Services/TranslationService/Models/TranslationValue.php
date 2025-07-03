@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -33,7 +34,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|Eloquent $translatable
+ * @property-read Model|\Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue query()
@@ -78,20 +79,20 @@ class TranslationValue extends Model
     }
 
     /**
-     * Calculate symbol usage with detailed breakdown and projected costs.
+     * Retrieves usage statistics for a given organization within a specified date range.
      *
-     * @param int $organization_id
-     * @param Carbon $from
-     * @param Carbon $to
-     * @param callable|null $callback
-     * @return array
+     * @param int $organizationId The ID of the organization to filter by.
+     * @param Carbon $from The start date of the date range.
+     * @param Carbon $to The end date of the date range.
+     * @param callable|null $callback An optional callback function to modify the query.
+     * @return array An associative array containing total usage and grouped statistics.
      */
-    public static function getUsage(int $organization_id, Carbon $from, Carbon $to, ?callable $callback = null): array
+    public static function getUsage(int $organizationId, Carbon $from, Carbon $to, ?callable $callback = null): array
     {
         // Base query to filter by organization_id and date range
         $query = self::query()
-            ->where('organization_id', $organization_id)
-            ->whereBetween('created_at', [$from, $to]);
+            ->where('organization_id', $organizationId)
+            ->whereBetween('created_at', [$from->startOfDay(), $to->endOfMonth()]);
 
         // Apply the callback if provided
         if ($callback) {
@@ -109,13 +110,16 @@ class TranslationValue extends Model
 
         // Get all possible translatable types and locales
         $availableTypes = self::getAvailableTranslatableTypes();
-        $availableLocales = self::getAvailableLocales();
 
         // Get type group mapping
         $typeGroups = self::getTranslatableTypeGroups();
 
+        // Get all locales
+        $availableLocales = self::getAvailableLocales();
+
         // Reverse the type group mapping for easier lookup
         $typeToGroupMap = [];
+
         foreach ($typeGroups as $group => $types) {
             foreach ($types as $type) {
                 $typeToGroupMap[$type] = $group;
@@ -134,12 +138,14 @@ class TranslationValue extends Model
             if (!isset($countPerType[$typeKey])) {
                 $countPerType[$typeKey] = 0;
             }
+
             $countPerType[$typeKey] += $symbolCount;
 
             // Count per locale
             if (!isset($totalPerLocale[$row->locale])) {
                 $totalPerLocale[$row->locale] = 0;
             }
+
             $totalPerLocale[$row->locale] += $symbolCount;
 
             // Count per translatable_type + locale
@@ -148,6 +154,7 @@ class TranslationValue extends Model
             if (!isset($totalPerTypeAndLocale[$typeAndLocaleKey])) {
                 $totalPerTypeAndLocale[$typeAndLocaleKey] = 0;
             }
+
             $totalPerTypeAndLocale[$typeAndLocaleKey] += $symbolCount;
         }
 
@@ -159,15 +166,16 @@ class TranslationValue extends Model
                 $countPerType[$typeKey] = 0;
             }
 
-            foreach ($availableLocales as $locale) {
+            foreach (array_keys($availableLocales) as $locale) {
                 $key = $typeKey . '_' . $locale;
+
                 if (!isset($totalPerTypeAndLocale[$key])) {
                     $totalPerTypeAndLocale[$key] = 0;
                 }
             }
         }
 
-        foreach ($availableLocales as $locale) {
+        foreach (array_keys($availableLocales) as $locale) {
             if (!isset($totalPerLocale[$locale])) {
                 $totalPerLocale[$locale] = 0;
             }
@@ -176,22 +184,33 @@ class TranslationValue extends Model
         // Format the result
         $result = [
             'total' => self::formatAndCalculateCost($totalSymbols),
-            'count_per_type' => (object) [],
-            'total_per_locale' => (object) [],
-            'total_per_type_and_locale' => (object) [],
+            'groups' => [],
         ];
 
         foreach ($countPerType as $type => $symbols) {
-            $typeKey = static::$fieldMap[$type] ?? $type;
-            $result['count_per_type']->$typeKey = (object) self::formatAndCalculateCost($symbols);
-        }
+            $friendlyName = static::$fieldMap[$type] ?? $type;
+            $formattedGroup = self::formatAndCalculateCost($symbols);
 
-        foreach ($totalPerLocale as $locale => $symbols) {
-            $result['total_per_locale']->$locale = (object) self::formatAndCalculateCost($symbols);
-        }
+            $group = [
+                'name' => $friendlyName,
+                'symbols' => $formattedGroup['symbols'],
+                'costs' => $formattedGroup['cost'],
+                'locales' => [],
+            ];
 
-        foreach ($totalPerTypeAndLocale as $key => $symbols) {
-            $result['total_per_type_and_locale']->$key = (object) self::formatAndCalculateCost($symbols);
+            foreach (array_keys($availableLocales) as $locale) {
+                $key = $type . '_' . $locale;
+                $localeSymbols = Arr::get($totalPerTypeAndLocale, $key, 0);
+                $formattedLocale = self::formatAndCalculateCost($localeSymbols);
+
+                $group['locales'][] = [
+                    'name' => $availableLocales[$locale] ?? null,
+                    'symbols' => $formattedLocale['symbols'],
+                    'costs' => $formattedLocale['cost'],
+                ];
+            }
+
+            $result['groups'][] = $group;
         }
 
         return $result;
@@ -258,7 +277,15 @@ class TranslationValue extends Model
      */
     private static function getAvailableLocales(): array
     {
-        return Language::pluck('locale')->toArray();
+        $locales = Language::query()
+            ->where('base', '=', false)
+            ->pluck('name', 'locale')
+            ->toArray();
+
+        return array_combine(
+            array_replace_values(array_keys($locales), Config::get('translation-service.translations_map')),
+            array_values($locales),
+        );
     }
 
     /**

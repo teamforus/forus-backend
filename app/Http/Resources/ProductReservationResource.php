@@ -22,6 +22,7 @@ class ProductReservationResource extends BaseJsonResource
         'extra_payment.refunds',
         'extra_payment.refunds_active',
         'custom_fields.organization_reservation_field',
+        'fund_provider_product_with_trashed',
     ];
 
     /**
@@ -36,29 +37,32 @@ class ProductReservationResource extends BaseJsonResource
         $voucher = $this->resource->voucher;
         $transaction = $this->resource->voucher_transaction;
 
-        $productSnapshot = new Product(array_merge($reservation->only([
-            'price_type', 'price_discount',
-        ]), $voucher->fund->isTypeSubsidy() ? [
-            'price' => is_null($reservation->price) ? null : max($reservation->price - $reservation->amount, 0),
-        ] : [
-            'price' => $reservation->price,
+        $productSnapshot = new Product([
+            ...$reservation->only([
+                'price_type', 'price_discount',
+            ]),
+            ...($reservation->fund_provider_product_with_trashed?->isPaymentTypeSubsidy()) ? [
+                'price' => is_null($reservation->amount_voucher)
+                    ? ($reservation->amount ?: $reservation->price)
+                    : $reservation->amount_voucher,
+            ] : [
+                'price' => $reservation->price,
+            ],
+        ]);
+
+        $productSnapshotProvider = new Product($reservation->only([
+            'price_type', 'price_discount', 'price',
         ]));
-
-        $price = is_null($productSnapshot->price) ? null : currency_format($productSnapshot->price);
-
-        if ($reservation->price_type === 'regular' && ($price === currency_format(0))) {
-            $price_locale = 'Gratis';
-        } else {
-            $price_locale = $productSnapshot->price_locale;
-        }
 
         return [
             ...$reservation->only([
                 'id', 'state', 'state_locale', 'amount', 'code', 'amount_extra',
                 'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
             ]),
-            'price' => $price,
-            'price_locale' => $price_locale,
+            'price' => $productSnapshotProvider->price,
+            'price_locale' => $productSnapshotProvider->price_locale,
+            'price_voucher' => $productSnapshot->price,
+            'price_voucher_locale' => $productSnapshot->price_locale,
             'amount_locale' => currency_format_locale($reservation->amount),
             'expired' => $reservation->isExpired(),
             'canceled' => $reservation->isCanceled(),
@@ -69,6 +73,8 @@ class ProductReservationResource extends BaseJsonResource
             'product' => [
                 'id' => $reservation->product->id,
                 ...$reservation->product->translateColumns($reservation->product->only('name')),
+                'price' => $reservation->product->price,
+                'price_locale' => $reservation->product->price_locale,
                 'deleted' => $reservation->product->trashed(),
                 'organization_id' => $reservation->product->organization_id,
                 'organization' => [

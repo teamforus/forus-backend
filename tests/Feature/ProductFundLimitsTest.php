@@ -19,11 +19,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 use Throwable;
 
 class ProductFundLimitsTest extends TestCase
 {
+    use MakesTestVouchers;
     use TestsReservations;
     use DatabaseTransactions;
 
@@ -409,7 +411,7 @@ class ProductFundLimitsTest extends TestCase
             foreach ($identityData['vouchers'] as $voucherArr) {
                 $fund = $this->findFund($voucherArr['fund_id']);
                 $limit = $voucherArr['limit_multiplier'];
-                $voucher = $fund->makeVoucher($identity, [], $voucherArr['amount'], null, $limit);
+                $voucher = $this->makeTestVoucher($fund, $identity, amount: $voucherArr['amount'], limitMultiplier: $limit);
 
                 $this->assertNotNull($voucher, 'Voucher not found');
                 $this->vouchers[] = $voucher;
@@ -449,6 +451,7 @@ class ProductFundLimitsTest extends TestCase
                 $this->updateProvider($fund, $fundProvider, [
                     'enable_products' => array_map(fn ($productLimit) => [
                         'id' => $product->id,
+                        'payment_type' => 'budget',
                         'limit_total' => Arr::get($productLimit, 'limit_total'),
                         'limit_per_identity' => Arr::get($productLimit, 'limit_per_identity'),
                     ], $limits),
@@ -493,7 +496,7 @@ class ProductFundLimitsTest extends TestCase
             $identity = $this->identities[$action['identity']] ?? null;
             $this->assertNotNull($identity, 'Identity not found');
 
-            $productVoucher = $fund->makeProductVoucher($identity, [], $product->id);
+            $productVoucher = $this->makeTestProductVoucher($fund, $identity, [], $product->id);
             $this->assertNotNull($productVoucher, 'Product voucher not created');
 
             $this->assertProductLimits($identity, $product, $action['assert_limits']);
@@ -625,6 +628,7 @@ class ProductFundLimitsTest extends TestCase
             $this->updateProvider($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,
+                    'payment_type' => 'budget',
                     'limit_total' => $limits['limit_total'],
                     'limit_per_identity' => $limits['limit_per_identity'],
                 ]],
@@ -883,6 +887,7 @@ class ProductFundLimitsTest extends TestCase
     ): void {
         $proxy = $this->makeIdentityProxy($fund->organization->identity);
         $headers = $this->makeApiHeaders($proxy);
+
         $url = sprintf(
             $this->urls['organization'] . '/%s/funds/%s/providers/%s',
             $fund->organization->id,

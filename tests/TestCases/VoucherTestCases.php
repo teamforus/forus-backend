@@ -7,7 +7,6 @@ class VoucherTestCases
     /** @var array|array[] */
     public static array $featureTestCaseBudgetVouchers = [
         'fund_id' => 1,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => true,
@@ -97,7 +96,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseProductVouchers = [
         'fund_id' => 1,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => true,
@@ -126,7 +124,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseBudgetVouchersExceedAmount = [
         'fund_id' => 2,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => true,
@@ -151,7 +148,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseBudgetVouchersNoBSNExceedAmount = [
         'fund_id' => 2,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => false,
@@ -185,7 +181,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseProductVouchersEdgeCases = [
         'fund_id' => 2,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => true,
@@ -238,7 +233,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseSubsidyFundBudgetVouchers = [
         'fund_id' => 4,
-        'assert_fund_type' => 'subsidies',
 
         'organization' => [
             'bsn_enabled' => true,
@@ -279,7 +273,6 @@ class VoucherTestCases
     /** @var array|array[]  */
     public static array $featureTestCaseBudgetVouchersExcludedFields = [
         'fund_id' => 3,
-        'assert_fund_type' => 'budget',
 
         'organization' => [
             'bsn_enabled' => true,
