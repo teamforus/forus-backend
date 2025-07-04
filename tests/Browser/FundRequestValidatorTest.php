@@ -1,12 +1,13 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Role;
@@ -15,11 +16,11 @@ use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Testing\TestResponse;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Throwable;
@@ -28,115 +29,97 @@ class FundRequestValidatorTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesApiRequests;
     use HasFrontendActions;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
 
     /**
-     * Check that partner bsn can be assigned.
+     * Tests the assignment of a partner BSN to a fund request.
+     *
      * @throws Throwable
+     * @return void
      */
-    public function testFundRequestAssignPartnerBsn()
+    public function testFundRequestAssignPartnerBsn(): void
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fundRequest->assignEmployee($organization->findEmployee($organization->identity));
-        $fund = $fundRequest->fund;
+        $fund = $this->setupNewFundAndCriteria();
+        $partnerBsn = 123456782;
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
+
+        $this->apiFundRequestAssignRequest(
+            $fundRequest,
+            $fund->organization->findEmployee($fund->organization->identity),
+        )->assertSuccessful();
 
         $this->rollbackModels([
-            [$organization, $organization->only(['bsn_enabled'])],
-        ], function () use ($implementation, $organization, $fundRequest) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $bsn = 123456781;
-                $browser->visit($implementation->urlValidatorDashboard());
+            [$fund->organization, $fund->organization->only(['bsn_enabled'])],
+        ], function () use ($partnerBsn, $fundRequest) {
+            $this->browse(function (Browser $browser) use ($partnerBsn, $fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
 
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
+                $browser
+                    ->waitFor('@addPartnerBsnBtn')
+                    ->click('@addPartnerBsnBtn');
 
-                $this->goToFundRequestPage($browser, $fundRequest);
-
-                $browser->waitFor('@addPartnerBsnBtn');
-                $browser->click('@addPartnerBsnBtn');
-
-                $browser->waitFor('@modalFundRequestRecordCreate');
-                $browser->within('@modalFundRequestRecordCreate', function (Browser $browser) use ($bsn) {
-                    $browser->waitFor('@partnerBsnInput');
-                    $browser->typeSlowly('@partnerBsnInput', $bsn, 1);
-                    $browser->click('@verifyBtn');
-
-                    $browser->waitFor('@submitBtn');
-                    $browser->click('@submitBtn');
-                });
+                $browser
+                    ->waitFor('@modalFundRequestRecordCreate')
+                    ->within('@modalFundRequestRecordCreate', function (Browser $browser) use ($partnerBsn) {
+                        $browser->waitFor('@partnerBsnInput');
+                        $browser->type('@partnerBsnInput', $partnerBsn);
+                        $browser->click('@verifyBtn');
+                        $browser->waitFor('@submitBtn');
+                        $browser->click('@submitBtn');
+                    });
 
                 $this->assertAndCloseSuccessNotification($browser);
 
                 $record = $fundRequest->records()->where('record_type_key', 'partner_bsn')->first();
-                $this->assertNotNull($record);
-                $this->assertEquals($bsn, $record->value);
 
-                $browser->waitFor("@tableFundRequestRecordRow$record->id");
-                $browser->with("@tableFundRequestRecordRow$record->id", function (Browser $browser) use ($record) {
-                    $browser->assertSee($record->record_type->name);
-                    $browser->assertSee($record->value);
-                });
+                $browser
+                    ->waitFor("@tableFundRequestRecordRow$record->id")
+                    ->assertSeeIn("@tableFundRequestRecordRow$record->id", $record->record_type->name)
+                    ->assertSeeIn("@tableFundRequestRecordRow$record->id", $partnerBsn);
 
                 $this->logout($browser);
             });
-        }, function () use ($fund) {
-            $fund && $this->deleteFund($fund);
+        }, function () use ($fundRequest) {
+            $fundRequest?->fund && $this->deleteFund($fundRequest?->fund);
         });
     }
 
     /**
-     * Check that fund-request can be assigned, accepted, refused or dismissed.
+     * Check that fund-request can be accepted, refused or dismissed.
+     *
      * @throws Throwable
      */
-    public function testFundRequestStateActions()
+    public function testFundRequestResolving()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fund = $this->makeTestFund($implementation->organization);
-        $fund->criteria()->delete();
+        $fund = $this->setupNewFundAndCriteria();
 
-        $fund->criteria()->create([
-            'value' => 2,
-            'operator' => '>=',
-            'show_attachment' => false,
-            'record_type_key' => 'children_nth',
-        ]);
+        $this->rollbackModels([], function () use ($fund) {
+            $this->browse(function (Browser $browser) use ($fund) {
+                $fundRequest1 = $this->makeIdentityAndFundRequest($fund);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund) {
-                $browser->visit($implementation->urlValidatorDashboard());
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest1, $fundRequest1->fund->organization->identity);
 
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                // create new fund request, assign employee and assert approved
-                $fundRequest = $this->prepareFundRequest($implementation, $fund);
-                $this->goToFundRequestPage($browser, $fundRequest);
-                $this->assignEmployee($browser);
+                // assign the employee and approve the fund request
+                $this->assignFundRequestAsValidator($browser);
                 $this->approveFundRequest($browser);
-                $this->assertEquals(FundRequest::STATE_APPROVED, $fundRequest->fresh()->state);
+                $this->assertEquals(FundRequest::STATE_APPROVED, $fundRequest1->fresh()->state);
 
                 // create new fund request, assign employee and assert disregarded
-                $fundRequest = $this->prepareFundRequest($implementation, $fund);
-                $this->goToFundRequestPage($browser, $fundRequest);
-                $this->assignEmployee($browser);
+                $fundRequest2 = $this->makeIdentityAndFundRequest($fund);
+                $this->goToFundRequestPage($browser, $fundRequest2);
+                $this->assignFundRequestAsValidator($browser);
                 $this->disregardFundRequest($browser);
-                $this->assertEquals(FundRequest::STATE_DISREGARDED, $fundRequest->fresh()->state);
+                $this->assertEquals(FundRequest::STATE_DISREGARDED, $fundRequest2->fresh()->state);
 
                 // create new fund request, assign employee and assert declined
-                $fundRequest = $this->prepareFundRequest($implementation, $fund);
-                $this->goToFundRequestPage($browser, $fundRequest);
-                $this->assignEmployee($browser);
+                $fundRequest3 = $this->makeIdentityAndFundRequest($fund);
+                $this->goToFundRequestPage($browser, $fundRequest3);
+                $this->assignFundRequestAsValidator($browser);
                 $this->declineFundRequest($browser);
-                $this->assertEquals(FundRequest::STATE_DECLINED, $fundRequest->fresh()->state);
+                $this->assertEquals(FundRequest::STATE_DECLINED, $fundRequest3->fresh()->state);
 
                 $this->logout($browser);
             });
@@ -146,61 +129,44 @@ class FundRequestValidatorTest extends DuskTestCase
     }
 
     /**
+     * Tests the access permissions for employees based on their role and organization affiliation.
+     *
      * @throws Throwable
      */
-    public function testFundRequestAccessible()
+    public function testFundRequestAccessibleByEmployees()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fund = $fundRequest->fund;
-        $now = now();
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fundRequest) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $browser->visit($implementation->urlValidatorDashboard());
+        $this->rollbackModels([], function () use ($fund, $fundRequest) {
+            $this->browse(function (Browser $browser) use ($fund, $fundRequest) {
+                $roles = Role::pluck('id')->toArray();
 
                 // assert access for organization employee with correct permissions
-                $employee = $organization->addEmployee(
-                    $this->makeIdentity($this->makeUniqueEmail()),
-                    Role::pluck('id')->toArray(),
-                );
-
-                // Authorize identity
-                $this->loginIdentity($browser, $employee->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $employee->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestPage($browser, $fundRequest);
-
+                $employees1 = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $roles);
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $employees1->identity);
                 $this->logout($browser);
 
                 // assert no permissions page for organization employee without correct permissions
-                $employee = $organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()));
-                $this->loginIdentity($browser, $employee->identity);
+                $employees2 = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()));
+                $this->loginIdentity($browser, $employees2->identity);
                 $browser->waitFor('@noPermissionsPageContent');
                 $this->logout($browser);
 
                 // assert a missing fund request in the list for employee with correct permissions from another organization
                 $otherOrganization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-
-                $employee = $otherOrganization->addEmployee(
-                    $this->makeIdentity($this->makeUniqueEmail()),
-                    Role::pluck('id')->toArray(),
-                );
-
-                $this->loginIdentity($browser, $employee->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $employee->identity);
-
-                $this->goToFundRequestsPage($browser);
+                $employees3 = $otherOrganization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $roles);
+                $this->loginIdentity($browser, $employees3->identity);
+                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $employees3->identity);
+                $this->goToFundRequestsPage($browser, true);
 
                 $browser->waitFor('@tableFundRequestSearch');
                 $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
                 $this->assertRowsCount($browser, 0, '@fundRequestsPageContent');
             });
-        }, function () use ($fund, $organization, $now) {
-            $fund && $this->deleteFund($fund);
-            $organization->employees()->where('created_at', '>=', $now)->forceDelete();
+        }, function () use ($fund) {
+            $this->deleteFund($fund);
+            $fund->organization->employees()->where('created_at', '>=', $this->testStartDateTime)->forceDelete();
         });
     }
 
@@ -213,130 +179,100 @@ class FundRequestValidatorTest extends DuskTestCase
      */
     public function testFundRequestAssignEmployee()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fund = $fundRequest->fund;
-        $now = now();
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fundRequest) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $supervisorEmployee = $organization->addEmployee(
-                    $this->makeIdentity($this->makeUniqueEmail()),
-                    Role::where('key', 'supervisor_validator')->pluck('id')->toArray(),
-                );
+        $this->rollbackModels([], function () use ($fund, $fundRequest, &$employees) {
+            $this->browse(function (Browser $browser) use ($fund, $fundRequest, &$employees) {
+                $rolesValidator = Role::where('key', 'validation')->pluck('id')->toArray();
+                $rolesSupervisor = Role::where('key', 'supervisor_validator')->pluck('id')->toArray();
 
-                // create employee with correct permissions
-                $employee = $organization->addEmployee(
-                    $this->makeIdentity($this->makeUniqueEmail()),
-                    Role::where('key', 'validation')->pluck('id')->toArray(),
-                );
+                $employeeValidator = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $rolesValidator);
+                $employeeSupervisor = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $rolesSupervisor);
 
-                $browser->visit($implementation->urlValidatorDashboard());
+                $browser->visit($fund->urlValidatorDashboard());
 
-                // Authorize identity
-                $this->loginIdentity($browser, $employee->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $employee->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestPage($browser, $fundRequest);
-
-                $this->assignEmployee($browser);
+                // Authorize identity and self-assign fund request
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $employeeValidator->identity);
+                $this->assignFundRequestAsValidator($browser);
                 $this->resignEmployee($browser);
-
                 $this->logout($browser);
 
-                $browser->visit($implementation->urlValidatorDashboard());
-
-                // Authorize supervisor employee
-                $this->loginIdentity($browser, $supervisorEmployee->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $supervisorEmployee->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestPage($browser, $fundRequest);
-
-                $this->assignEmployee($browser, $employee);
+                // Authorize supervisor employee and assign validator employee
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $employeeSupervisor->identity);
+                $this->assignFundRequestAsValidatorAsManager($browser, $employeeValidator);
                 $this->resignEmployee($browser);
-
                 $this->logout($browser);
             });
-        }, function () use ($fund, $organization, $now) {
-            $fund && $this->deleteFund($fund);
-            $organization->employees()->where('created_at', '>=', $now)->forceDelete();
+        }, function () use ($fund, $employees) {
+            $this->deleteFund($fund);
+            $fund->organization->employees()->where('created_at', '>=', $this->testStartDateTime)->forceDelete();
         });
     }
 
     /**
-     * Check that requests are shown on the correct tab: state_group param and can be searched by string.
+     * Tests the visibility of fund requests based on different state groups.
+     *
      * @throws Throwable
      */
     public function testFundRequestFilterByState()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fund = $fundRequest->fund;
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
+        $organization = $fundRequest->fund->organization;
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fundRequest) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $browser->visit($implementation->urlValidatorDashboard());
-
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestsPage($browser);
-
+        $this->rollbackModels([], function () use ($fundRequest, $organization) {
+            $this->browse(function (Browser $browser) use ($fundRequest, $organization) {
+                $this->signInAndOpenFundRequestsPage($browser, $organization, $organization->identity);
                 $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
-                $this->assertExistInList($browser, $fundRequest, 'all');
+                $this->assertExistInList($browser, $fundRequest, 'all', true);
 
                 // pending
+                $this->assertExistInList($browser, $fundRequest, 'pending', true);
                 $this->assertExistInList($browser, $fundRequest, 'assigned', false);
                 $this->assertExistInList($browser, $fundRequest, 'resolved', false);
-                $this->assertExistInList($browser, $fundRequest, 'pending');
 
                 // assigned
-                $fundRequest->assignEmployee($organization->findEmployee($organization->identity));
-                $this->assertExistInList($browser, $fundRequest, 'resolved', false);
+                $this->goToFundRequestPage($browser, $fundRequest);
+                $this->assignFundRequestAsValidator($browser);
+                $browser->back();
+                $browser->waitFor('@tableFundRequestSearch');
+
                 $this->assertExistInList($browser, $fundRequest, 'pending', false);
-                $this->assertExistInList($browser, $fundRequest, 'assigned');
+                $this->assertExistInList($browser, $fundRequest, 'assigned', true);
+                $this->assertExistInList($browser, $fundRequest, 'resolved', false);
 
                 // resolved
-                $this->approveFundRequestApi($organization, $fundRequest);
+                $this->goToFundRequestPage($browser, $fundRequest);
+                $this->approveFundRequest($browser);
+                $browser->back();
+                $browser->waitFor('@tableFundRequestSearch');
+
                 $this->assertExistInList($browser, $fundRequest, 'pending', false);
                 $this->assertExistInList($browser, $fundRequest, 'assigned', false);
-                $this->assertExistInList($browser, $fundRequest, 'resolved');
+                $this->assertExistInList($browser, $fundRequest, 'resolved', true);
 
                 $this->logout($browser);
             });
-        }, function () use ($fund) {
-            $fund && $this->deleteFund($fund);
+        }, function () use ($fund, $fundRequest) {
+            $this->deleteFund($fund);
         });
     }
 
     /**
      * Check that employee can create and remove their own notes.
+     *
      * @throws Throwable
      */
     public function testFundRequestEmployeeNote()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fundRequest->assignEmployee($organization->findEmployee($organization->identity));
-        $fund = $fundRequest->fund;
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fundRequest) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $browser->visit($implementation->urlValidatorDashboard());
-
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestPage($browser, $fundRequest);
+        $this->rollbackModels([], function () use ($fundRequest) {
+            $this->browse(function (Browser $browser) use ($fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
+                $this->assignFundRequestAsValidator($browser);
 
                 // add note
                 $browser->waitFor('@addNoteBtn');
@@ -385,37 +321,29 @@ class FundRequestValidatorTest extends DuskTestCase
 
     /**
      * Check that the record can be edited (and it is only possible to change it to a valid value in terms of criteria).
+     *
      * @throws Throwable
      */
     public function testFundRequestRecordEdit()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-
-        $fundRequest = $this->prepareFundRequest($implementation);
-        $fundRequest->assignEmployee($organization->findEmployee($organization->identity));
-        $fund = $fundRequest->fund;
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
         $this->rollbackModels([
-            [$organization, $organization->only('allow_fund_request_record_edit')],
-        ], function () use ($implementation, $organization, $fundRequest) {
-            $organization->forceFill(['allow_fund_request_record_edit' => true])->save();
+            [$fund->organization, $fund->organization->only('allow_fund_request_record_edit')],
+        ], function () use ($fundRequest) {
+            $fundRequest->fund->organization
+                ->forceFill(['allow_fund_request_record_edit' => true])
+                ->save();
 
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $browser->visit($implementation->urlValidatorDashboard());
-
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                $this->goToFundRequestPage($browser, $fundRequest);
+            $this->browse(function (Browser $browser) use ($fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
+                $this->assignFundRequestAsValidator($browser);
                 $this->assertUpdateFundRequestRecord($browser, $fundRequest);
-
                 $this->logout($browser);
             });
         }, function () use ($fund) {
-            $fund && $this->deleteFund($fund);
+            $this->deleteFund($fund);
         });
     }
 
@@ -425,31 +353,26 @@ class FundRequestValidatorTest extends DuskTestCase
      */
     public function testFundRequestRecordTabs()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-
-        $fundRequest = $this->prepareFundRequest(implementation: $implementation, fileCountPerRecord: 2);
-        $fundRequest->assignEmployee($organization->findEmployee($organization->identity));
-        $fund = $fundRequest->fund;
+        $fund = $this->setupNewFundAndCriteria(true);
+        $fundRequest = $this->makeIdentityAndFundRequest($fund, 2);
 
         $this->rollbackModels([
-            [$organization, $organization->only('allow_fund_request_record_edit')],
-        ], function () use ($implementation, $organization, $fundRequest) {
-            $organization->forceFill(['allow_fund_request_record_edit' => true])->save();
+            [$fund->organization, $fund->organization->only('allow_fund_request_record_edit')],
+        ], function () use ($fundRequest) {
+            $fundRequest->fund->organization
+                ->forceFill(['allow_fund_request_record_edit' => true])
+                ->save();
 
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fundRequest) {
-                $browser->visit($implementation->urlValidatorDashboard());
+            $this->browse(function (Browser $browser) use ($fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
+                $this->assignFundRequestAsValidator($browser);
 
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
+                $fundRequest->refresh();
 
-                $this->goToFundRequestPage($browser, $fundRequest);
-
-                // make clarification so tabs will be visible (as we already have files)
-                $clarification = $this->makeClarification($organization, $fundRequest);
+                $clarification = $this->requestClarification($fundRequest);
                 $this->answerOnFundRequestClarification($fundRequest, $clarification);
+
+                $clarification->refresh();
 
                 // make record update action so the tab with history will be visible too
                 $record = $this->assertUpdateFundRequestRecord($browser, $fundRequest);
@@ -457,17 +380,44 @@ class FundRequestValidatorTest extends DuskTestCase
                 // assert files tab
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
-                $this->assertFilesPresent($browser, $record);
+
+                $browser->within(
+                    "@fundRequestRecordTabs$record->id",
+                    function (Browser $browser) use ($record) {
+                        $files = $record->files()->get()->pluck('original_name')->toArray();
+                        $browser->waitFor('@attachmentsTabContent');
+                        array_map(fn ($file) => $browser->assertSee($file), $files);
+                    }
+                );
 
                 // assert clarification tab
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordClarificationsTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordClarificationsTab");
-                $this->assertClarificationPresent($browser, $clarification);
+
+                $browser->within(
+                    "@fundRequestRecordTabs$clarification->fund_request_record_id",
+                    function (Browser $browser) use ($clarification) {
+                        $browser->waitFor('@clarificationsTabContent');
+                        $browser->assertSee($clarification->question);
+                        $browser->assertSee($clarification->answer);
+                    }
+                );
 
                 // assert history tab
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordHistoryTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordHistoryTab");
-                $this->assertHistoryLogPresent($browser, $record);
+                $browser->within(
+                    "@fundRequestRecordTabs$record->id",
+                    function (Browser $browser) use ($record) {
+                        $log = $record->historyLogs()->first();
+                        $this->assertNotNull($log);
+
+                        $browser->waitFor('@historyTabContent');
+                        $browser->waitFor("@recordHistoryRow$log->id");
+                        $browser->assertSeeIn("@recordHistoryRow$log->id", 5);
+                        $browser->assertSeeIn("@recordHistoryRow$log->id", $record->value);
+                    }
+                );
 
                 $this->logout($browser);
             });
@@ -477,51 +427,36 @@ class FundRequestValidatorTest extends DuskTestCase
     }
 
     /**
-     * Check that the acceptance with amount presets is working and only allows predefined values.
+     * Check that the acceptance with presets is working and only allows predefined values.
+     *
      * @throws Throwable
      * @return void
      */
     public function testFundRequestAmountPresets()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fund = $this->makeTestFund($implementation->organization);
-        $fund->criteria()->delete();
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
-        $fund->criteria()->create([
-            'value' => 2,
-            'operator' => '>=',
-            'show_attachment' => false,
-            'record_type_key' => 'children_nth',
+        $fund->updateFundsConfig([
+            'allow_preset_amounts_validator' => true,
         ]);
-
-        $fund->updateFundsConfig(['allow_preset_amounts_validator' => true]);
 
         $fund->amount_presets()->create([
             'name' => 'AMOUNT OPTION 1',
             'amount' => 100,
         ]);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund) {
-                $browser->visit($implementation->urlValidatorDashboard());
+        $this->rollbackModels([], function () use ($fundRequest) {
+            $this->browse(function (Browser $browser) use ($fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
+                $this->assignFundRequestAsValidator($browser);
 
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                // create new fund request, assign employee and assert approved
-                $fundRequest = $this->prepareFundRequest($implementation, $fund);
-                $this->goToFundRequestPage($browser, $fundRequest);
-                $this->assignEmployee($browser);
-
-                $amountPreset = $fund->amount_presets()->first();
+                $amountPreset = $fundRequest->fund->amount_presets[0];
                 $optionValue = $amountPreset->name . ' ' . currency_format_locale($amountPreset->amount);
 
                 $this->assertVisibleAmountTypesWhenApproveRequest($browser, false);
 
-                $fund->updateFundsConfig([
+                $fundRequest->fund->updateFundsConfig([
                     'allow_custom_amounts_validator' => true,
                     'custom_amount_min' => 100,
                     'custom_amount_max' => 200,
@@ -529,7 +464,6 @@ class FundRequestValidatorTest extends DuskTestCase
 
                 $browser->refresh();
                 $this->assertVisibleAmountTypesWhenApproveRequest($browser, true);
-
                 $this->approveFundRequestCustomAmount($browser, 'predefined', $optionValue);
 
                 $this->assertEquals(FundRequest::STATE_APPROVED, $fundRequest->fresh()->state);
@@ -544,22 +478,14 @@ class FundRequestValidatorTest extends DuskTestCase
 
     /**
      * Check that the acceptance allows custom values within defined ranges.
+     *
      * @throws Throwable
      * @return void
      */
     public function testFundRequestCustomAmounts()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $fund = $this->makeTestFund($implementation->organization);
-        $fund->criteria()->delete();
-
-        $fund->criteria()->create([
-            'value' => 2,
-            'operator' => '>=',
-            'show_attachment' => false,
-            'record_type_key' => 'children_nth',
-        ]);
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
 
         $fund->updateFundsConfig(['allow_preset_amounts_validator' => true]);
         $fund->amount_presets()->create([
@@ -573,19 +499,10 @@ class FundRequestValidatorTest extends DuskTestCase
             'custom_amount_max' => 200,
         ]);
 
-        $this->rollbackModels([], function () use ($implementation, $organization, $fund) {
-            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund) {
-                $browser->visit($implementation->urlValidatorDashboard());
-
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                // create new fund request, assign employee and assert approved
-                $fundRequest = $this->prepareFundRequest($implementation, $fund);
-                $this->goToFundRequestPage($browser, $fundRequest);
-                $this->assignEmployee($browser);
+        $this->rollbackModels([], function () use ($fundRequest) {
+            $this->browse(function (Browser $browser) use ($fundRequest) {
+                $this->signInAndOpenFundRequestPage($browser, $fundRequest, $fundRequest->fund->organization->identity);
+                $this->assignFundRequestAsValidator($browser);
 
                 $this->approveFundRequestCustomAmount($browser, 'custom', 150);
                 $this->assertEquals(FundRequest::STATE_APPROVED, $fundRequest->fresh()->state);
@@ -601,14 +518,15 @@ class FundRequestValidatorTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param FundRequest $fundRequest
+     * @param bool $validator
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
      * @return void
      */
-    protected function goToFundRequestPage(Browser $browser, FundRequest $fundRequest): void
+    protected function goToFundRequestPage(Browser $browser, FundRequest $fundRequest, bool $validator = true): void
     {
-        $this->goToFundRequestsPage($browser);
+        $this->goToFundRequestsPage($browser, $validator);
         $this->searchTable($browser, '@tableFundRequest', $fundRequest->identity->email, $fundRequest->id);
 
         $browser->click("@tableFundRequestRow$fundRequest->id");
@@ -616,79 +534,47 @@ class FundRequestValidatorTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @param FundRequestRecord $record
-     * @return void
-     */
-    protected function assertFilesPresent(Browser $browser, FundRequestRecord $record): void
-    {
-        $browser->within(
-            "@fundRequestRecordTabs$record->id",
-            function (Browser $browser) use ($record) {
-                $files = $record->files()->get()->pluck('original_name')->toArray();
-                $browser->waitFor('@attachmentsTabContent');
-                array_map(fn ($file) => $browser->assertSee($file), $files);
-            }
-        );
-    }
-
-    /**
-     * @param Browser $browser
-     * @param FundRequestClarification $clarification
-     * @return void
-     */
-    protected function assertClarificationPresent(
-        Browser $browser,
-        FundRequestClarification $clarification,
-    ): void {
-        $browser->within(
-            "@fundRequestRecordTabs$clarification->fund_request_record_id",
-            function (Browser $browser) use ($clarification) {
-                $browser->waitFor('@clarificationsTabContent');
-                $browser->assertSee($clarification->question);
-                $browser->assertSee($clarification->answer);
-            }
-        );
-    }
-
-    /**
-     * @param Browser $browser
-     * @param FundRequestRecord $record
-     * @return void
-     */
-    protected function assertHistoryLogPresent(Browser $browser, FundRequestRecord $record): void
-    {
-        $browser->within(
-            "@fundRequestRecordTabs$record->id",
-            function (Browser $browser) use ($record) {
-                $log = $record->historyLogs()->first();
-                $this->assertNotNull($log);
-
-                $browser->waitFor('@historyTabContent');
-                $browser->waitFor("@recordHistoryRow$log->id");
-                $browser->assertSeeIn("@recordHistoryRow$log->id", 5);
-                $browser->assertSeeIn("@recordHistoryRow$log->id", $record->value);
-            }
-        );
-    }
-
-    /**
-     * @param Organization $organization
+     * TODO: replace with dusk implementation.
+     *
      * @param FundRequest $fundRequest
      * @return FundRequestClarification
      */
-    protected function makeClarification(
-        Organization $organization,
+    protected function requestClarification(
         FundRequest $fundRequest
     ): FundRequestClarification {
-        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest);
-        $clarifications = $fundRequest->clarifications()->get();
-        $this->assertCount(1, $clarifications);
+        $questionData = ['question' => $this->faker()->text(), 'fund_request_record_id' => $fundRequest->records[0]->id];
 
-        $clarification = $clarifications[0];
-        $this->assertEquals($questionToken, $clarification->question);
+        $response = $this->apiMakeFundRequestClarificationRequest($fundRequest, $fundRequest->employee, $questionData)
+            ->assertSuccessful()
+            ->assertJsonPath('data.question', $questionData['question']);
 
-        return $clarification;
+        return FundRequestClarification::find($response->json('data.id'));
+    }
+
+    /**
+     * TODO: replace with dusk implementation.
+     *
+     * @param FundRequest $fundRequest
+     * @param FundRequestClarification $clarification
+     * @return void
+     */
+    protected function answerOnFundRequestClarification(
+        FundRequest $fundRequest,
+        FundRequestClarification $clarification
+    ): void {
+        $answerData = ['answer' => $this->faker()->text()];
+        $answerFileData = ['file' => UploadedFile::fake()->image('doc.jpg'), 'type' => 'fund_request_clarification_proof'];
+
+        // upload files for clarification request
+        $answerData['files'] = (array) $this->apiUploadFileRequest($fundRequest->identity, $answerFileData)
+            ->assertSuccessful()
+            ->json('data.uid');
+
+        $this->apiRespondFundRequestClarificationRequest($clarification, $fundRequest->identity, $answerData)
+            ->assertSuccessful()
+            ->assertJsonPath('data.answer', $answerData['answer'])
+            ->assertJsonPath('data.fund_request_record_id', $fundRequest->records[0]->id)
+            ->assertJsonPath('data.state', $fundRequest->clarifications[0]::STATE_ANSWERED);
     }
 
     /**
@@ -704,7 +590,7 @@ class FundRequestValidatorTest extends DuskTestCase
         FundRequest $fundRequest
     ): FundRequestRecord {
         // the first record is children_nth, and it can be an int and >= 2.
-        // value for the current fund request record is 5
+        // the value for the current fund request record is 5
         $record = $fundRequest->records()->first();
 
         $browser->waitFor("@fundRequestRecordMenuBtn$record->id");
@@ -740,48 +626,41 @@ class FundRequestValidatorTest extends DuskTestCase
     }
 
     /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
+     * @param Browser $browser
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
-    protected function approveFundRequestApi(
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): void {
-        $response = $this->patch(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/approve",
-            [],
-            $this->makeApiHeaders($organization->identity),
-        );
+    protected function assignFundRequestAsValidator(Browser $browser): void
+    {
+        $browser->waitFor('@fundRequestAssignBtn');
+        $browser->click('@fundRequestAssignBtn');
 
-        $response->assertSuccessful();
+        $this->assertAndCloseSuccessNotification($browser);
     }
 
     /**
      * @param Browser $browser
-     * @param Employee|null $employee
+     * @param Employee $employee
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
      * @return void
      */
-    protected function assignEmployee(Browser $browser, ?Employee $employee = null): void
+    protected function assignFundRequestAsValidatorAsManager(Browser $browser, Employee $employee): void
     {
-        if ($employee) {
-            $browser->waitFor('@fundRequestAssignAsSupervisorBtn');
-            $browser->click('@fundRequestAssignAsSupervisorBtn');
+        $browser->waitFor('@fundRequestAssignAsSupervisorBtn');
+        $browser->click('@fundRequestAssignAsSupervisorBtn');
 
-            $browser->waitFor('@modalAssignValidator');
+        $browser->waitFor('@modalAssignValidator');
 
-            $browser->waitFor('@employeeSelect');
-            $browser->click('@employeeSelect .select-control-search');
-            $this->findOptionElement($browser, '@employeeSelect', $employee->identity->email)->click();
+        $browser->waitFor('@employeeSelect');
+        $browser->click('@employeeSelect .select-control-search');
 
-            $browser->click('@submitBtn');
-        } else {
-            $browser->waitFor('@fundRequestAssignBtn');
-            $browser->click('@fundRequestAssignBtn');
-        }
+        $this->findOptionElement($browser, '@employeeSelect', $employee->identity->email)->click();
+
+        $browser->click('@submitBtn');
 
         $this->assertAndCloseSuccessNotification($browser);
     }
@@ -938,71 +817,50 @@ class FundRequestValidatorTest extends DuskTestCase
     }
 
     /**
-     * @param Implementation $implementation
-     * @param Fund|null $fund
-     * @param int $fileCountPerRecord
+     * @param bool $requireFiles
+     * @return Fund
+     */
+    protected function setupNewFundAndCriteria(bool $requireFiles = false): Fund
+    {
+        // create sponsor and requester identities
+        $organization = Implementation::byKey('nijmegen')->organization;
+        $fund = $this->makeTestFund($organization);
+
+        $fund->criteria()->delete();
+
+        $fund->criteria()->create([
+            'value' => 2,
+            'operator' => '>=',
+            'show_attachment' => $requireFiles,
+            'record_type_key' => 'children_nth',
+        ]);
+
+        return $fund;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param int $filesPerRecord
      * @return FundRequest
      */
-    protected function prepareFundRequest(
-        Implementation $implementation,
-        ?Fund $fund = null,
-        int $fileCountPerRecord = 0
-    ): FundRequest {
-        $requesterIdentity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
-
-        if (!$fund) {
-            $fund = $this->makeTestFund($implementation->organization);
-
-            $fund->criteria()->delete();
-
-            $fund->criteria()->create([
-                'value' => 2,
-                'operator' => '>=',
-                'show_attachment' => $fileCountPerRecord > 0,
-                'record_type_key' => 'children_nth',
-            ]);
-        }
-
-        $files = [];
-
-        for ($i = 0; $i < $fileCountPerRecord; $i++) {
-            $file = $this->makeRecordProofFile($this->makeApiHeaders($this->makeIdentityProxy($requesterIdentity)));
-            $files = [
-                ...$files,
-                $file->json('data.uid'),
-            ];
-        }
+    protected function makeIdentityAndFundRequest(Fund $fund, int $filesPerRecord = 0): FundRequest
+    {
+        // create sponsor and requester identities
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
 
         $records = [[
             'fund_criterion_id' => $fund->criteria[0]?->id,
             'value' => 5,
-            'files' => $files,
+            'files' => array_map(fn () => $this->apiUploadFileRequest($identity, [
+                'file' => UploadedFile::fake()->image('doc.jpg'),
+                'type' => 'fund_request_record_proof',
+            ])->json('data.uid'), $filesPerRecord > 0 ? range(1, $filesPerRecord) : []),
         ]];
 
-        $response = $this->makeFundRequest($requesterIdentity, $fund, $records, false);
-        $response->assertSuccessful();
-
-        /** @var FundRequest $fundRequest */
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-
-        return $fundRequest;
-    }
-
-    /**
-     * @param array $headers
-     * @return \Illuminate\Testing\TestResponse
-     */
-    protected function makeRecordProofFile(array $headers): TestResponse
-    {
-        $type = 'fund_request_record_proof';
-        $filePath = base_path('tests/assets/test.png');
-        $file = UploadedFile::fake()->createWithContent($this->faker()->uuid . '.png', $filePath);
-
-        $response = $this->postJson('/api/v1/files', compact('type', 'file'), $headers);
-        $response->assertCreated();
-
-        return $response;
+        return FundRequest::find($this
+            ->apiMakeFundRequestRequest($identity, $fund, ['records' => $records], false)
+            ->assertSuccessful()
+            ->json('data.id'));
     }
 
     /**
@@ -1010,49 +868,72 @@ class FundRequestValidatorTest extends DuskTestCase
      * @param FundRequest $fundRequest
      * @param string $state
      * @param bool $assertExists
+     * @throws TimeoutException
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
-     * @throws TimeoutException
      * @return void
      */
     protected function assertExistInList(
         Browser $browser,
         FundRequest $fundRequest,
         string $state,
-        bool $assertExists = true,
+        bool $assertExists,
     ): void {
         $browser->click("@fundRequestsStateTab_$state");
 
         if ($assertExists) {
-            $browser->waitFor("@tableFundRequestRow$fundRequest->id", 20);
+            $browser->waitFor("@tableFundRequestRow$fundRequest->id");
             $browser->assertVisible("@tableFundRequestRow$fundRequest->id");
         } else {
+            $browser->waitUntilMissing("@tableFundRequestRow$fundRequest->id");
             $this->assertRowsCount($browser, 0, '@fundRequestsPageContent');
-            $browser->assertMissing("@tableFundRequestRow$fundRequest->id");
+            $browser->assertNotPresent("@tableFundRequestRow$fundRequest->id");
         }
     }
 
     /**
+     * @param Browser $browser
      * @param FundRequest $fundRequest
-     * @param FundRequestClarification $clarification
+     * @param Identity $identity
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
-    protected function answerOnFundRequestClarification(
+    protected function signInAndOpenFundRequestPage(
+        Browser $browser,
         FundRequest $fundRequest,
-        FundRequestClarification $clarification
+        Identity $identity,
     ): void {
-        $this->patchJson(
-            "/api/v1/platform/fund-requests/$fundRequest->id/clarifications/$clarification->id",
-            [
-                'answer' => 'answer',
-                'files' => [],
-            ],
-            $this->makeApiHeaders($fundRequest->identity)
-        )->assertSuccessful();
+        $browser->visit($fundRequest->fund->urlValidatorDashboard());
 
-        $clarification->refresh();
-        $this->assertEquals('answer', $clarification->answer);
-        $this->assertEquals(FundRequestClarification::STATE_ANSWERED, $clarification->state);
-        $this->assertNotNull($clarification->answered_at);
+        // Authorize identity
+        $this->loginIdentity($browser, $identity);
+        $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $identity);
+        $this->selectDashboardOrganization($browser, $fundRequest->fund->organization);
+
+        $this->goToFundRequestPage($browser, $fundRequest);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Organization $organization
+     * @param Identity $identity
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function signInAndOpenFundRequestsPage(
+        Browser $browser,
+        Organization $organization,
+        Identity $identity,
+    ): void {
+        $browser->visit(Implementation::general()->urlValidatorDashboard());
+
+        // Authorize identity
+        $this->loginIdentity($browser, $identity);
+        $this->assertIdentityAuthenticatedOnValidatorDashboard($browser, $identity);
+        $this->selectDashboardOrganization($browser, $organization);
+
+        $this->goToFundRequestsPage($browser, true);
     }
 }

@@ -43,21 +43,19 @@ trait MakesTestFundRequests
      * @param FundRequest $fundRequest
      * @param FundRequestRecord $fundRequestRecord
      * @param string|int $value
-     * @param Employee|null $employee
      * @return TestResponse
      */
     protected function updateFundRequestRecordRequest(
         FundRequest $fundRequest,
         FundRequestRecord $fundRequestRecord,
         string|int $value,
-        ?Employee $employee = null,
     ): TestResponse {
         $organization = $fundRequest->fund->organization;
 
         return $this->patchJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/records/$fundRequestRecord->id",
             ['value' => $value],
-            $this->makeApiHeaders(($employee ?? $organization)->identity),
+            $this->makeApiHeaders($organization->identity),
         );
     }
 

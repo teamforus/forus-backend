@@ -107,7 +107,7 @@ class Identity extends Model implements Authenticatable
     use Notifiable;
 
     /**
-     * How much time user has to exchange their exchange_token.
+     * How much time a user has to exchange their exchange_token.
      * @var array
      */
     public const array EXPIRATION_TIMES = [
