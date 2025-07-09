@@ -69,7 +69,7 @@ if (!function_exists('currency_format')) {
         string $decPoint = '.',
         string $thousandsSep = ''
     ): string {
-        return number_format($number, $decimals, $decPoint, $thousandsSep);
+        return number_format(is_null($number) ? 0 : $number, $decimals, $decPoint, $thousandsSep);
     }
 }
 

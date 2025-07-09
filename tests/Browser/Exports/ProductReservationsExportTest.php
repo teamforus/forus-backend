@@ -86,7 +86,7 @@ class ProductReservationsExportTest extends DuskTestCase
     {
         $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($fund->organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity(), amount: 1000);
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product, [

@@ -14,13 +14,58 @@ trait MakesTestVouchers
     use MakesTestFundProviders;
 
     /**
-     * @param Identity $identity
      * @param Fund $fund
+     * @param Identity|null $identity
+     * @param array $voucherFields
+     * @param int|null $amount
+     * @param int|null $limitMultiplier
+     * @param bool $dispatchCreated
      * @return Voucher
      */
-    protected function makeTestVoucher(Identity $identity, Fund $fund): Voucher
-    {
-        return $fund->makeVoucher($identity);
+    protected function makeTestVoucher(
+        Fund $fund,
+        ?Identity $identity = null,
+        array $voucherFields = [],
+        ?int $amount = null,
+        ?int $limitMultiplier = null,
+        bool $dispatchCreated = true,
+    ): Voucher {
+        return $fund->makeVoucher(
+            identity: $identity,
+            voucherFields: $voucherFields,
+            amount: $amount,
+            limitMultiplier: $limitMultiplier,
+            dispatchCreated: $dispatchCreated,
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity|null $identity
+     * @param array $voucherFields
+     * @param int|null $productId
+     * @param Carbon|null $expireAt
+     * @param float|null $price
+     * @param bool $dispatchCreated
+     * @return Voucher
+     */
+    protected function makeTestProductVoucher(
+        Fund $fund,
+        ?Identity $identity = null,
+        array $voucherFields = [],
+        int $productId = null,
+        Carbon $expireAt = null,
+        float $price = null,
+        bool $dispatchCreated = true,
+    ): Voucher {
+        return $fund->makeProductVoucher(
+            identity: $identity,
+            voucherFields: $voucherFields,
+            productId: $productId,
+            expireAt: $expireAt,
+            price: $price,
+            dispatchCreated: $dispatchCreated,
+        );
     }
 
     /**

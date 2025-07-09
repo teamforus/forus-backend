@@ -36,7 +36,7 @@ class VoucherTransactionTransferDaysTest extends TestCase
         $fund = $this->makeTestFund($sponsorOrganization);
         $this->makeTestFundProvider($providerOrganization, $fund);
 
-        $voucher = $this->findVoucherForReservation($sponsorOrganization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkTransactionTransferDays($voucher, $product);

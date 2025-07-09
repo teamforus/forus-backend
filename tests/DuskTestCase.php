@@ -18,6 +18,8 @@ abstract class DuskTestCase extends BaseTestCase
     use CreatesApplication;
     use DoesTesting;
 
+    protected ?string $testStartDateTime;
+
     /**
      * @var string[]
      */
@@ -29,6 +31,7 @@ abstract class DuskTestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->testStartDateTime = now()->format('Y-m-d H:i:s');
 
         Dusk::selectorHtmlAttribute(Config::get('tests.dusk_selector'));
         Browser::$waitSeconds = Config::get('tests.dusk_wait_for_time');

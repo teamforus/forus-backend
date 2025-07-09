@@ -653,7 +653,7 @@ class Product extends BaseModel
         }
 
         if (Arr::get($options, 'reservation')) {
-            ProductQuery::whereReservationEnabled($builder);
+            ProductQuery::whereReservationEnabled($query);
         }
 
         if (Arr::get($options, 'extra_payment')) {
@@ -1010,5 +1010,16 @@ class Product extends BaseModel
         if (count($changedMonitoredFields) > 0) {
             ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string
+     */
+    public function fundPrice(Fund $fund): string
+    {
+        $providerProduct = $this->getFundProviderProduct($fund);
+
+        return $providerProduct ? $providerProduct->user_price : $this->price;
     }
 }

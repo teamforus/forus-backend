@@ -1091,9 +1091,10 @@ class Voucher extends BaseModel
             'product_reservation_id' => $productReservation?->id,
         ]);
 
-        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
-
-        return $voucher;
+        return $voucher->dispatchCreated(
+            notifyRequesterReserved: !$productReservation,
+            notifyRequesterAdded: !$productReservation,
+        );
     }
 
     /**
@@ -1164,30 +1165,39 @@ class Voucher extends BaseModel
     ): ProductReservation {
         $fundProviderProduct = $product->getFundProviderProduct($this->fund);
 
-        $amount_voucher = $fundProviderProduct?->isPaymentTypeSubsidy()
-            ? max($product->price - $fundProviderProduct->amount, 0)
+        $user_price = $fundProviderProduct?->isPaymentTypeSubsidy()
+            ? $fundProviderProduct->user_price
             : null;
 
         if ($hasExtraPayment) {
-            $amount = ($amount_voucher > $this->amount_available) ? $amount_voucher : $product->price;
+            if ($fundProviderProduct?->isPaymentTypeSubsidy()) {
+                $amount = ($user_price > $this->amount_available) ?
+                    ($product->price - ($user_price - $this->amount_available)) :
+                    $product->price;
+                $extra_amount = $product->price - $amount;
+                $user_price = ($user_price - $extra_amount);
+            } else {
+                $amount = ($product->price > $this->amount_available) ? $this->amount_available : $product->price;
+                $extra_amount = $product->price - $amount;
+            }
+
             $state = ProductReservation::STATE_WAITING;
-            $extraAmount = $product->price - $amount;
         } else {
             $amount = $product->price;
             $state = ProductReservation::STATE_PENDING;
-            $extraAmount = 0;
+            $extra_amount = 0;
         }
 
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create([
             'code' => ProductReservation::makeCode(),
             'amount' => $amount,
-            'amount_voucher' => $amount_voucher,
+            'amount_voucher' => $user_price,
             'state' => $state,
             'product_id' => $product->id,
             'employee_id' => $employee?->id,
             'fund_provider_product_id' => $fundProviderProduct?->id,
-            'amount_extra' => $extraAmount,
+            'amount_extra' => $extra_amount,
             ...array_only($extraData, [
                 'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
                 'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
@@ -1344,20 +1354,9 @@ class Voucher extends BaseModel
      */
     public static function exportOnlyDataArray(Collection|Arrayable $vouchers, array $fields): array
     {
-        $data = [];
-
-        foreach ($vouchers as $voucher) {
-            do {
-                $voucherData = new VoucherExportData($voucher, $fields);
-            } while (in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
-
-            $data[] = [
-                'name' => $voucherData->getName(),
-                'values' => $voucherData->toArray(),
-            ];
-        }
-
-        return Arr::pluck($data, 'values');
+        return $vouchers->map(function (Voucher $voucher) use ($fields) {
+            return (new VoucherExportData($voucher, $fields))->toArray();
+        })->all();
     }
 
     /**
@@ -1822,6 +1821,30 @@ class Voucher extends BaseModel
         $familyName = Arr::get($recordsMap, 'family_name');
 
         return $givenName ? trim("$givenName $familyName") : null;
+    }
+
+    /**
+     * @param bool $notifyRequesterReserved
+     * @param bool $notifyRequesterAdded
+     * @param bool $notifyProviderReserved
+     * @param bool $notifyProviderReservedBySponsor
+     * @return $this
+     */
+    public function dispatchCreated(
+        bool $notifyRequesterReserved = true,
+        bool $notifyRequesterAdded = true,
+        bool $notifyProviderReserved = true,
+        bool $notifyProviderReservedBySponsor = false,
+    ): Voucher {
+        Event::dispatch(new VoucherCreated(
+            $this,
+            $notifyRequesterReserved,
+            $notifyRequesterAdded,
+            $notifyProviderReserved,
+            $notifyProviderReservedBySponsor,
+        ));
+
+        return $this;
     }
 
     /**

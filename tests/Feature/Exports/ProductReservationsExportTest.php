@@ -3,7 +3,6 @@
 namespace Tests\Feature\Exports;
 
 use App\Exports\ProductReservationsExport;
-use App\Models\Fund;
 use App\Models\ProductReservation;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
@@ -38,7 +37,7 @@ class ProductReservationsExportTest extends TestCase
         $fund = $this->makeTestFund($sponsorOrganization);
         $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($sponsorOrganization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);

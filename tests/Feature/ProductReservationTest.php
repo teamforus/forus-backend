@@ -32,11 +32,11 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucher(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkValidReservation($voucher, $product);
@@ -49,11 +49,11 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucherAsGuest(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->makeReservationStoreRequest($voucher, $product, [], false)->assertUnauthorized();
@@ -66,11 +66,11 @@ class ProductReservationTest extends TestCase
     public function testReservationProviderWithBudgetVoucher(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkAcceptAndRejectByProvider($voucher, $product);
@@ -83,11 +83,11 @@ class ProductReservationTest extends TestCase
     public function testReservationArchiving(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkReservationArchiving($voucher, $product);
@@ -100,11 +100,11 @@ class ProductReservationTest extends TestCase
     public function testReservationExpireOffset(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $originalAmount = (float) $voucher->amount_available;
