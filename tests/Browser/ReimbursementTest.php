@@ -437,7 +437,7 @@ class ReimbursementTest extends DuskTestCase
         array $data,
     ): void {
         $this->assertNotNull($reimbursement);
-        $duskSelector = "@reimbursementsItem$reimbursement->id";
+        $duskSelector = "@listReimbursementsRow$reimbursement->id";
 
         $submitTime = now();
         $requesterEmail = $reimbursement->voucher->identity->email;
