@@ -2,6 +2,7 @@
 
 namespace Tests\Traits;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;

@@ -121,7 +121,7 @@ class FundRequestSubscriber
                         );
                     } else {
                         $fund->makeVoucher(
-                            $fundRequest->identity,
+                            identity: $fundRequest->identity,
                             voucherFields: [
                                 'fund_request_id' => $fundRequest->id,
                             ],

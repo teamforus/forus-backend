@@ -210,7 +210,7 @@ class PaymentDescriptionTest extends TestCase
         $employee = $organization->employees[0];
         $fund = $this->makeTestFund($organization);
 
-        return $fund->makeVoucher()->makeTransaction([
+        return $this->makeTestVoucher($fund)->makeTransaction([
             'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
             'employee_id' => $employee?->id,
             'branch_id' => $employee?->office?->branch_id,
