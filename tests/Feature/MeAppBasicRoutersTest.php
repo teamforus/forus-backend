@@ -8,16 +8,20 @@ use App\Models\Implementation;
 use App\Models\Role;
 use Illuminate\Support\Str;
 use Tests\TestCase;
+use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class MeAppBasicRoutersTest extends TestCase
 {
     use MakesTestFunds;
+    use MakesTestVouchers;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
+    use MakesProductReservations;
 
     /**
      * @throws Throwable
@@ -68,7 +72,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testProviderVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity(), [], 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: 100);
         $provider = $this->makeTestFundProvider($this->makeTestOrganization($this->makeIdentity()), $fund);
         $headers = $this->makeApiHeaders($provider->organization->identity);
         $address = $voucher->token_without_confirmation->address;
@@ -77,10 +81,25 @@ class MeAppBasicRoutersTest extends TestCase
         $this->getJson("/api/v1/platform/provider/vouchers/$address", $headers)->assertSuccessful();
 
         //platform/provider/vouchers/{address}/product-vouchers
-        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)->assertSuccessful();
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)->assertForbidden();
 
         //platform/provider/vouchers/{address}/products
-        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)->assertSuccessful();
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)->assertForbidden();
+
+        $product = $this->makeTestProductForReservation($provider->organization, 10);
+        $reservation = $this->makeReservation($voucher, $product);
+
+        //platform/provider/vouchers/{address}/product-vouchers
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.address', $reservation->product_voucher->token_without_confirmation->address)
+            ->assertSuccessful();
+
+        //platform/provider/vouchers/{address}/products
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $product->id)
+            ->assertSuccessful();
     }
 
     /**
@@ -89,7 +108,7 @@ class MeAppBasicRoutersTest extends TestCase
     public function testRequesterVoucherEndpoints(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()), [], 100);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()), amount: 100);
         $headers = $this->makeApiHeaders($voucher->identity);
         $address = $voucher->token_without_confirmation->address;
 

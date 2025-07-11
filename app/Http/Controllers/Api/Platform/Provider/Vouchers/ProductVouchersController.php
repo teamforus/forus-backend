@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers\IndexProductVouchersRequest;
-use App\Http\Resources\Provider\App\ProviderVoucherResource;
+use App\Http\Resources\Provider\App\ProviderAppVoucherResource;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\VoucherQuery;
@@ -23,14 +23,15 @@ class ProductVouchersController extends Controller
         VoucherToken $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
+        $this->authorize('useChildVoucherAsProvider', $voucherToken->voucher);
 
         $productVouchersQuery = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
-            $voucherToken->voucher->product_vouchers()->getQuery(),
-            $request->auth_address(),
-            $voucherToken->voucher->fund_id,
-            $request->input('organization_id')
+            builder: $voucherToken->voucher->product_vouchers()->getQuery(),
+            identity_address: $request->auth_address(),
+            fund_id: $voucherToken->voucher->fund_id,
+            organization_id: $request->get('organization_id'),
         );
 
-        return ProviderVoucherResource::queryCollection($productVouchersQuery, $request);
+        return ProviderAppVoucherResource::queryCollection($productVouchersQuery, $request);
     }
 }

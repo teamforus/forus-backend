@@ -6,12 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\Provider\ProviderSubsidyProductResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,7 +20,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * @property VoucherToken|Voucher $resource
  */
-class ProviderVoucherResource extends BaseJsonResource
+class ProviderAppVoucherResource extends BaseJsonResource
 {
     protected BaseFormRequest $request;
 
@@ -32,10 +30,10 @@ class ProviderVoucherResource extends BaseJsonResource
      */
     public static function load(?string $append = null): array
     {
-        return array_merge(
-            parent::load($append),
-            ProviderProductAppResource::load('product')
-        );
+        return [
+            ...parent::load($append),
+            ...ProviderAppProductResource::load('product'),
+        ];
     }
 
     /**
@@ -44,7 +42,7 @@ class ProviderVoucherResource extends BaseJsonResource
      * @param Request $request
      * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         $this->request = BaseFormRequest::createFrom($request);
 
@@ -79,17 +77,22 @@ class ProviderVoucherResource extends BaseJsonResource
         $voucher = $voucherToken->voucher;
         $fund = $voucher->fund;
 
-        return array_merge($voucher->only('identity_id', 'fund_id'), [
+        return [
+            ...$voucher->only([
+                'identity_id', 'fund_id',
+            ]),
             'type' => 'regular',
             'fund' => $this->fundDetails($fund),
             'address' => $voucherToken->address,
             'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
             'allowed_product_organizations' => $this->getAllowedProductOrganizations($voucher, $identityAddress),
-        ], $useAsProvider ? [
-            'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
-            'amount_locale' => currency_format_locale($fund->isTypeBudget() ? $voucher->amount_available : 0),
-            'amount_visible' => $fund->fund_config?->voucher_amount_visible,
-        ] : [], $this->timestamps($this, 'created_at'));
+            ...$useAsProvider ? [
+                'amount' => currency_format($voucher->amount_available),
+                'amount_locale' => currency_format_locale($voucher->amount_available),
+                'amount_visible' => $fund->fund_config?->voucher_amount_visible,
+            ] : [],
+            ...$this->timestamps($this, 'created_at'),
+        ];
     }
 
     /**
@@ -103,20 +106,21 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         $voucher = $voucherToken->voucher;
 
-        if ($voucher->fund->isTypeSubsidy()) {
-            $productData = $voucher->product->getFundProviderProduct($voucher->fund);
-            $productData = ProviderSubsidyProductResource::create($productData)->toArray($this->request);
-        } else {
-            $productData = ProviderProductAppResource::create($voucher->product);
-        }
+        $productData = ProviderAppProductResource::create($voucher->product, [
+            'voucher' => $voucher,
+        ]);
 
-        return array_merge($voucher->only('identity_id', 'fund_id'), [
+        return [
+            ...$voucher->only([
+                'identity_id', 'fund_id',
+            ]),
             'type' => 'product',
             'address' => $voucherToken->address,
             'fund' => $this->fundDetails($voucher->fund),
             'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
             'product' => $productData,
-        ], $this->timestamps($this, 'created_at'));
+            ...$this->timestamps($this, 'created_at'),
+        ];
     }
 
     /**
@@ -125,10 +129,13 @@ class ProviderVoucherResource extends BaseJsonResource
      */
     protected function fundDetails(Fund $fund): array
     {
-        return array_merge($fund->only('id', 'name', 'state', 'type'), [
+        return [
+            ...$fund->only([
+                'id', 'name', 'state', 'type',
+            ]),
             'organization' => (new OrganizationBasicResource($fund->organization))->toArray($this->request),
             'logo' => (new MediaCompactResource($fund->logo))->toArray($this->request),
-        ]);
+        ];
     }
 
     /**
@@ -161,18 +168,10 @@ class ProviderVoucherResource extends BaseJsonResource
             $builder->where(function (Builder $builder) use ($voucher, $identityAddress) {
                 OrganizationQuery::whereHasPermissions($builder, $identityAddress, 'scan_vouchers');
 
-                if ($voucher->fund->isTypeSubsidy()) {
-                    $builder->whereHas('fund_providers', function (Builder $builder) use ($voucher) {
-                        $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
-                            FundProviderProductQuery::whereAvailableForSubsidyVoucher($builder, $voucher);
-                        });
-                    });
-                } else {
-                    // Product approved to be bought by target voucher
-                    $builder->whereHas('products', function (Builder $builder) use ($voucher) {
-                        ProductQuery::whereAvailableForVoucher($builder, $voucher, null, false);
-                    });
-                }
+                // Product approved to be bought by target voucher
+                $builder->whereHas('products', function (Builder $builder) use ($voucher) {
+                    ProductQuery::whereAvailableForVoucher($builder, $voucher, null, false);
+                });
             });
 
             foreach ($voucher->product_vouchers as $product_voucher) {
@@ -194,11 +193,12 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         $organizations = $builder->orderBy('name')->get();
 
-        return $organizations->map(function (Organization $organization) {
-            return array_merge($organization->only('id', 'name'), [
-                'logo' => (new MediaCompactResource($organization->logo))->toArray($this->request),
-            ]);
-        });
+        return $organizations->map(fn (Organization $organization) => [
+            ...$organization->only([
+                'id', 'name',
+            ]),
+            'logo' => (new MediaCompactResource($organization->logo))->toArray($this->request),
+        ]);
     }
 
     /**

@@ -40,7 +40,6 @@ class FundsController extends Controller
         if ($product->sponsor_organization) {
             $query->where([
                 'organization_id' => $product->sponsor_organization->id,
-                'type' => Fund::TYPE_SUBSIDIES,
             ]);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\FundProvider;
+use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Support\Env;
@@ -10,17 +11,15 @@ use Illuminate\Support\Env;
 class FundProviderProductAvailableRule extends BaseRule
 {
     protected int $maxAmount;
-    private FundProvider $fundProvider;
 
     /**
      * Create a new rule instance.
      *
      * @param FundProvider $fundProvider
      */
-    public function __construct(FundProvider $fundProvider)
+    public function __construct(protected FundProvider $fundProvider)
     {
         $this->maxAmount = Env::get('MAX_SPONSOR_SUBSIDY_AMOUNT', 10000);
-        $this->fundProvider = $fundProvider;
     }
 
     /**
@@ -34,11 +33,10 @@ class FundProviderProductAvailableRule extends BaseRule
     {
         $id = $value['id'] ?? null;
         $amount = $value['amount'] ?? null;
-        $limit = $value['limit_total'] ?? null;
+        $limit_total = $value['limit_total'] ?? null;
         $limit_per_identity = $value['limit_per_identity'] ?? null;
-        $isSubsidyFund = $this->fundProvider->fund->isTypeSubsidy();
+        $is_subsidy_product = ($value['payment_type'] ?? null) === FundProviderProduct::PAYMENT_TYPE_SUBSIDY;
 
-        /** @var Product $product */
         $product = ProductQuery::inStockAndActiveFilter(Product::whereOrganizationId(
             $this->fundProvider->organization_id
         ))->find($id);
@@ -47,7 +45,7 @@ class FundProviderProductAvailableRule extends BaseRule
             return $this->rejectTrans('product_not_found');
         }
 
-        if ($isSubsidyFund && (!is_numeric($amount) || $amount > $this->maxAmount || $amount < 0)) {
+        if ($is_subsidy_product && (!is_numeric($amount) || $amount > $this->maxAmount || $amount < 0)) {
             return $this->reject(trans('validation.max.numeric', [
                 'max' => currency_format_locale($product->price),
                 'attribute' => trans('validation.attributes.amount'),
@@ -55,14 +53,14 @@ class FundProviderProductAvailableRule extends BaseRule
         }
 
         if (!$product->unlimited_stock) {
-            if (!is_null($limit) && (!is_numeric($limit) || $product->stock_amount < $limit)) {
+            if (!is_null($limit_total) && (!is_numeric($limit_total) || $product->stock_amount < $limit_total)) {
                 return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total'),
                 ]));
             }
 
-            if (!is_null($limit) && (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity)) {
+            if (!is_null($limit_per_identity) && (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity)) {
                 return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total_per_identity'),

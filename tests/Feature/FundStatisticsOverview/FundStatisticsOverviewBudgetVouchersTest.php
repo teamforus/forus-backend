@@ -14,6 +14,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class FundStatisticsOverviewBudgetVouchersTest extends TestCase
@@ -21,6 +22,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
     use WithFaker;
     use DoesTesting;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use CreatesApplication;
     use MakesTestIdentities;
     use DatabaseTransactions;
@@ -447,15 +449,15 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         );
 
         $response->assertSuccessful();
-        $response->assertJsonPath('budget_funds.vouchers_count', $vouchersCount);
-        $response->assertJsonPath('budget_funds.vouchers_amount', currency_format($vouchersAmount));
-        $response->assertJsonPath('budget_funds.active_vouchers_count', $vouchersCount);
-        $response->assertJsonPath('budget_funds.active_vouchers_amount', currency_format($vouchersAmount));
-        $response->assertJsonPath('budget_funds.deactivated_vouchers_count', 0);
-        $response->assertJsonPath('budget_funds.deactivated_vouchers_amount', currency_format(0));
-        $response->assertJsonPath('budget_funds.inactive_vouchers_count', 0);
-        $response->assertJsonPath('budget_funds.inactive_vouchers_amount', currency_format(0));
-        $response->assertJsonPath('budget_funds.budget_used_active_vouchers', $usedVouchersAmount);
+        $response->assertJsonPath('funds.vouchers_count', $vouchersCount);
+        $response->assertJsonPath('funds.vouchers_amount', currency_format($vouchersAmount));
+        $response->assertJsonPath('funds.active_vouchers_count', $vouchersCount);
+        $response->assertJsonPath('funds.active_vouchers_amount', currency_format($vouchersAmount));
+        $response->assertJsonPath('funds.deactivated_vouchers_count', 0);
+        $response->assertJsonPath('funds.deactivated_vouchers_amount', currency_format(0));
+        $response->assertJsonPath('funds.inactive_vouchers_count', 0);
+        $response->assertJsonPath('funds.inactive_vouchers_amount', currency_format(0));
+        $response->assertJsonPath('funds.budget_used_active_vouchers', $usedVouchersAmount);
     }
 
     /**
@@ -488,7 +490,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $vouchers = collect();
 
         for ($i = 1; $i <= $count; $i++) {
-            $voucher = $fund->makeVoucher($this->makeIdentity(), [], $amount);
+            $voucher = $this->makeTestVoucher($fund, $this->makeIdentity(), amount: $amount);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

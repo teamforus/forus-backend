@@ -17,6 +17,7 @@ use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 use Throwable;
 
@@ -26,6 +27,7 @@ class MollieExtraPaymentsTest extends TestCase
     use MakesTestFunds;
     use MakesTestProducts;
     use TestsReservations;
+    use MakesTestVouchers;
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
@@ -491,9 +493,9 @@ class MollieExtraPaymentsTest extends TestCase
             'allow_reservations' => true,
         ]);
 
-        $this->assertNotNull($fund->makeVoucher($organization->identity, [
+        $this->assertNotNull($this->makeTestVoucher($fund, $organization->identity, [
             'state' => Voucher::STATE_ACTIVE,
-        ], 100));
+        ], amount: 100));
 
         $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $product = $this->makeTestProductForReservation($provider);
@@ -604,7 +606,7 @@ class MollieExtraPaymentsTest extends TestCase
         $this->setupMollieConnection($fundProvider->organization);
 
         $amount = $emptyVoucher ? 0 : 5;
-        $voucher = $fundProvider->fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()), [], $amount);
+        $voucher = $this->makeTestVoucher($fundProvider->fund, $this->makeIdentity($this->makeUniqueEmail()), amount: $amount);
         $product = $this->makeTestProductForReservation($fundProvider->organization);
 
         $product->update(['price' => 10]);

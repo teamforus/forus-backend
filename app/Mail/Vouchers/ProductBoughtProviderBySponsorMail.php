@@ -6,9 +6,9 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-class PaymentSuccessSubsidyMail extends ImplementationMail
+class ProductBoughtProviderBySponsorMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = 'notifications_identities.voucher_subsidy_transaction';
+    public ?string $notificationTemplateKey = 'notifications_products.reserved_by_sponsor';
 
     /**
      * @throws CommonMarkException
@@ -25,9 +25,11 @@ class PaymentSuccessSubsidyMail extends ImplementationMail
      */
     protected function getMailExtraData(array $data): array
     {
+        $link = $data['provider_dashboard_link'];
+
         return [
-            'webshop_link' => $this->makeLink($data['webshop_link'], $data['webshop_link']),
-            'webshop_button' => $this->makeButton($data['webshop_link'], 'Ga naar webshop'),
+            'provider_dashboard_link' => $this->makeLink($link, 'hier', '#315EFD'),
+            'provider_dashboard_button' => $this->makeButton($link, 'GA NAAR DE BEHEEROMGEVING', '#315EFD'),
         ];
     }
 }

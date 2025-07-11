@@ -405,7 +405,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                             @if ($fund['is_valid'])
                                 De regeling kunt u aanvragen
 
-                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                @if ($fund['external'] && $fund['external_link_url'])
                                     via
                                     <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
                                 @endif
@@ -413,7 +413,7 @@ $baseColor = $borderColors[0] ?? '#cecece';
                             @else
                                 U komt waarschijnlijk niet in aanmerking voor deze regeling.
 
-                                @if ($fund['is_external'] && $fund['external_link_url'])
+                                @if ($fund['external'] && $fund['external_link_url'])
                                     Meer weten? Klik op de link:
                                     <a href="{{ $fund['external_link_url'] }}">{{ $fund['external_link_text'] ?: 'Externe website bekijken' }}</a>
                                 @endif

@@ -777,8 +777,7 @@ class Implementation extends BaseModel
         return [
             ...$config,
             'media' => self::getPlatformMediaConfig(),
-            'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
-            'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+            'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
             'has_payouts' => $implementation->hasPayouts(),
             'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
@@ -853,12 +852,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param string $type
      * @return bool
      */
-    public static function hasFundsOfType(string $type): bool
+    public static function hasInternalFunds(): bool
     {
-        return self::activeFundsQuery()->where('type', $type)->exists();
+        return FundQuery::whereIsInternal(self::activeFundsQuery())->exists();
     }
 
     /**
@@ -1029,7 +1027,7 @@ class Implementation extends BaseModel
                 return $vouchers;
             }
 
-            if ($voucher = $fund->makeVoucher($identity)) {
+            if ($voucher = $fund->makeVoucher(identity: $identity)) {
                 $vouchers[] = $voucher;
             }
 

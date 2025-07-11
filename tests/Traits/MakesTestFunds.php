@@ -13,6 +13,7 @@ use App\Models\Prevalidation;
 use App\Models\ProductReservation;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Testing\TestResponse;
@@ -76,14 +77,15 @@ trait MakesTestFunds
             'start_date' => now()->subDay(),
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
-            'type' => Fund::TYPE_BUDGET,
+            'external' => false,
             ...$fundData,
         ]);
 
         $fund->changeState($fund::STATE_ACTIVE);
+        $implementations = $organization->implementations()->get();
 
-        $implementation = $organization->implementations->isNotEmpty() ?
-            $organization->implementations[0] :
+        $implementation = $implementations->isNotEmpty() ?
+            $implementations[0] :
             $this->makeTestImplementation($organization);
 
         $fund->fund_config()->forceCreate([
@@ -131,23 +133,6 @@ trait MakesTestFunds
         self::assertEquals(100000, $fund->refresh()->budget_left);
 
         return $fund->refresh();
-    }
-
-    /**
-     * @param Organization $organization
-     * @param array $fundData
-     * @param array $fundConfigsData
-     * @return Fund
-     */
-    protected function makeTestSubsidyFund(
-        Organization $organization,
-        array $fundData = [],
-        array $fundConfigsData = [],
-    ): Fund {
-        return $this->makeTestFund($organization, [
-            'type' => Fund::TYPE_SUBSIDIES,
-            ...$fundData,
-        ], $fundConfigsData);
     }
 
     /**
@@ -403,6 +388,17 @@ trait MakesTestFunds
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();
+        $fund->amount_presets()->forceDelete();
         $fund->forceDelete();
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return void
+     */
+    protected function deleteVoucher(Voucher $voucher): void
+    {
+        $voucher->backoffice_logs()->delete();
+        $voucher->delete();
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Voucher;
 use App\Models\VoucherRecord;
+use App\Models\VoucherTransaction;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +30,6 @@ class FinancialOverviewStatistic
 
         return [
             'funds' => $this->getFundTotals($this->getFunds($organization), $from, $to),
-            'budget_funds' => $this->getFundTotals($this->getBudgetFunds($organization), $from, $to),
             'year' => $year,
         ];
     }
@@ -75,6 +75,7 @@ class FinancialOverviewStatistic
 
         $loadBudgetStats = $stats == 'all' || $stats == 'budget';
         $loadProductVouchersStats = $stats == 'all' || $stats == 'product_vouchers';
+        $loadPayoutsStats = $stats == 'all' || $stats == 'payout_vouchers';
 
         return [
             'sponsor_count' => $fund->organization->employees->count(),
@@ -85,6 +86,8 @@ class FinancialOverviewStatistic
                 self::getVoucherData($fund, 'budget', $from, $to) : null,
             'product_vouchers' => $loadProductVouchersStats ?
                 self::getVoucherData($fund, 'product', $from, $to) : null,
+            'payout_vouchers' => $loadPayoutsStats ?
+                self::getVoucherData($fund, 'payout', $from, $to) : null,
         ];
     }
 
@@ -126,6 +129,26 @@ class FinancialOverviewStatistic
     }
 
     /**
+     * @param Builder|Relation|Voucher $vouchersQuery
+     * @param Carbon|null $from
+     * @param Carbon|null $to
+     * @return array
+     */
+    public static function getFundPayoutDetails(
+        Builder|Relation|Voucher $vouchersQuery,
+        ?Carbon $from,
+        ?Carbon $to,
+    ): array {
+        $vouchersQuery = FinancialOverviewStatisticQueries::whereDate($vouchersQuery, $from, $to);
+        $vouchersQuery->whereRelation('transactions', 'state', VoucherTransaction::STATE_SUCCESS);
+
+        return [
+            'vouchers_amount' => $vouchersQuery->sum('amount'),
+            'vouchers_count' => $vouchersQuery->count(),
+        ];
+    }
+
+    /**
      * @param Fund $fund
      * @param string $type
      * @param Carbon|null $from
@@ -141,7 +164,16 @@ class FinancialOverviewStatistic
         $details = match($type) {
             'budget' => self::getFundDetails($fund->budget_vouchers()->getQuery(), $from, $to),
             'product' => self::getFundDetails($fund->product_vouchers()->getQuery(), $from, $to),
+            'payout' => self::getFundPayoutDetails($fund->payout_vouchers()->getQuery(), $from, $to),
         };
+
+        if ($type === 'payout') {
+            return [
+                'vouchers_count' => $details['vouchers_count'],
+                'vouchers_amount' => currency_format($details['vouchers_amount']),
+                'vouchers_amount_locale' => currency_format_locale($details['vouchers_amount']),
+            ];
+        }
 
         $budgetData = $type == 'budget' ? self::getVoucherDataBudget($fund, $from, $to) : [];
 
@@ -216,15 +248,6 @@ class FinancialOverviewStatistic
             '!=',
             Fund::STATE_WAITING
         )->get();
-    }
-
-    /**
-     * @param Organization $organization
-     * @return Collection|Arrayable
-     */
-    private function getBudgetFunds(Organization $organization): Collection|Arrayable
-    {
-        return $this->getFunds($organization)->where('type', Fund::TYPE_BUDGET);
     }
 
     /**

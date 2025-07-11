@@ -47,6 +47,18 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    public function clearField(Browser $browser, string $selector): void
+    {
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
+
+    /**
+     * @param Browser $browser
      * @throws TimeoutException
      * @return void
      */
@@ -81,6 +93,43 @@ trait HasFrontendActions
             $browser->element('@identities_tab')->click();
             $browser->waitFor('@tableIdentityContent');
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string|null $tab
+     * @param bool|null $skipPageNavigation
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToProviderFundsPage(
+        Browser $browser,
+        ?string $tab = null,
+        ?bool $skipPageNavigation = false,
+    ): void {
+        if (!$skipPageNavigation) {
+            $browser->waitFor('@asideMenuGroupSales');
+            $browser->element('@asideMenuGroupSales')->click();
+            $browser->waitFor('@fundsPage');
+            $browser->element('@fundsPage')->click();
+        }
+
+        if ($tab === 'funds_available') {
+            $browser->waitFor('@fundsAvailableTab');
+            $browser->element('@fundsAvailableTab')->click();
+            $browser->waitFor('@tableFundsAvailableContent');
+        }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Identity $identity
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertIdentityAuthenticatedOnValidatorDashboard(Browser $browser, Identity $identity): void
+    {
+        $this->assertIdentityAuthenticatedFrontend($browser, $identity, 'validator');
     }
 
     /**
@@ -160,10 +209,15 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param string $selector
      * @param string $title
+     * @param bool $assertExists
      * @return RemoteWebElement|null
      */
-    private function findOptionElement(Browser $browser, string $selector, string $title): ?RemoteWebElement
-    {
+    private function findOptionElement(
+        Browser $browser,
+        string $selector,
+        string $title,
+        bool $assertExists = true
+    ): ?RemoteWebElement {
         $option = null;
 
         $browser->elsewhereWhenAvailable($selector . 'Options', function (Browser $browser) use (&$option, $title) {
@@ -172,7 +226,9 @@ trait HasFrontendActions
             $option = Arr::first($options, fn (RemoteWebElement $element) => trim($element->getText()) === $title);
         });
 
-        $this->assertNotNull($option);
+        $assertExists
+            ? $this->assertNotNull($option, "Option $title not found in $selector.")
+            : $this->assertNull($option, "Option $title found in $selector.");
 
         return $option;
     }
@@ -355,14 +411,19 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param bool $validator
      * @throws TimeoutException
      * @return void
      */
-    private function goToFundRequestsPage(Browser $browser): void
+    private function goToFundRequestsPage(Browser $browser, bool $validator = false): void
     {
         $browser->waitFor('@asideMenuGroupFundRequests');
         $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@tablePrevalidationContent');
+
+        if (!$validator) {
+            $browser->waitFor('@tablePrevalidationContent');
+        }
+
         $browser->waitFor('@fundRequestsPage');
         $browser->element('@fundRequestsPage')->click();
     }

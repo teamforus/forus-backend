@@ -19,11 +19,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 use Throwable;
 
 class ProductFundLimitsTest extends TestCase
 {
+    use MakesTestVouchers;
     use TestsReservations;
     use DatabaseTransactions;
 
@@ -409,7 +411,7 @@ class ProductFundLimitsTest extends TestCase
             foreach ($identityData['vouchers'] as $voucherArr) {
                 $fund = $this->findFund($voucherArr['fund_id']);
                 $limit = $voucherArr['limit_multiplier'];
-                $voucher = $fund->makeVoucher($identity, [], $voucherArr['amount'], null, $limit);
+                $voucher = $this->makeTestVoucher($fund, $identity, amount: $voucherArr['amount'], limitMultiplier: $limit);
 
                 $this->assertNotNull($voucher, 'Voucher not found');
                 $this->vouchers[] = $voucher;
@@ -449,6 +451,7 @@ class ProductFundLimitsTest extends TestCase
                 $this->updateProvider($fund, $fundProvider, [
                     'enable_products' => array_map(fn ($productLimit) => [
                         'id' => $product->id,
+                        'payment_type' => 'budget',
                         'limit_total' => Arr::get($productLimit, 'limit_total'),
                         'limit_per_identity' => Arr::get($productLimit, 'limit_per_identity'),
                     ], $limits),
@@ -493,7 +496,7 @@ class ProductFundLimitsTest extends TestCase
             $identity = $this->identities[$action['identity']] ?? null;
             $this->assertNotNull($identity, 'Identity not found');
 
-            $productVoucher = $fund->makeProductVoucher($identity, [], $product->id);
+            $productVoucher = $this->makeTestProductVoucher($fund, $identity, [], $product->id);
             $this->assertNotNull($productVoucher, 'Product voucher not created');
 
             $this->assertProductLimits($identity, $product, $action['assert_limits']);
@@ -534,12 +537,9 @@ class ProductFundLimitsTest extends TestCase
     ): void {
         $proxy = $this->makeIdentityProxy($provider->identity);
         $headers = $this->makeApiHeaders($proxy);
-
         $voucherToken = $voucher->token_without_confirmation->address;
 
-        $url = sprintf($this->urls['provider'] . '/vouchers/%s/transactions', $voucherToken);
-
-        $response = $this->postJson($url, [
+        $response = $this->postJson("/api/v1/platform/provider/vouchers/$voucherToken/transactions", [
             'product_id' => $product->id,
             'organization_id' => $provider->id,
         ], $headers);
@@ -625,6 +625,7 @@ class ProductFundLimitsTest extends TestCase
             $this->updateProvider($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,
+                    'payment_type' => 'budget',
                     'limit_total' => $limits['limit_total'],
                     'limit_per_identity' => $limits['limit_per_identity'],
                 ]],
@@ -670,6 +671,7 @@ class ProductFundLimitsTest extends TestCase
         };
 
         $reservation = ProductReservation::find($reservation->id);
+
         $this->assertSame(
             $reservation->state,
             $state,
@@ -682,18 +684,11 @@ class ProductFundLimitsTest extends TestCase
      * @param ProductReservation $reservation
      * @return void
      */
-    protected function cancelReservationByProvider(
-        Organization $provider,
-        ProductReservation $reservation
-    ): void {
+    protected function cancelReservationByProvider(Organization $provider, ProductReservation $reservation): void
+    {
         $proxy = $this->makeIdentityProxy($provider->identity);
         $headers = $this->makeApiHeaders($proxy);
-        $url = sprintf(
-            $this->urls['organization'] . '/%s/product-reservations/%s/reject',
-            $provider->id,
-            $reservation->id
-        );
-
+        $url = "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/reject";
         $response = $this->postJson($url, [], $headers);
 
         $response->assertSuccessful();
@@ -704,19 +699,13 @@ class ProductFundLimitsTest extends TestCase
      * @param ProductReservation $reservation
      * @return void
      */
-    protected function approveReservationByProvider(
-        Organization $provider,
-        ProductReservation $reservation
-    ): void {
-        $proxy = $this->makeIdentityProxy($provider->identity);
-        $headers = $this->makeApiHeaders($proxy);
-        $url = sprintf(
-            $this->urls['organization'] . '/%s/product-reservations/%s/accept',
-            $provider->id,
-            $reservation->id
-        );
-
-        $this->postJson($url, [], $headers)->assertSuccessful();
+    protected function approveReservationByProvider(Organization $provider, ProductReservation $reservation): void
+    {
+        $this->postJson(
+            "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/accept",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        )->assertSuccessful();
     }
 
     /**
@@ -742,7 +731,7 @@ class ProductFundLimitsTest extends TestCase
             $vouchers = array_filter($this->vouchers, fn (Voucher $item) => $assert['fund_id'] === $item->fund_id);
             $this->assertNotEmpty($vouchers, 'Vouchers not found');
 
-            $exists = false;
+            $exists = null;
 
             foreach ($vouchers as $voucher) {
                 if ($exists) {
@@ -750,13 +739,18 @@ class ProductFundLimitsTest extends TestCase
                 }
 
                 $this->checkAllowedOrganizationsForProvider($provider, $voucher, $assert['organizations']);
-                $products = $this->getProductsForProvider($provider, $voucher);
+                $response = $this->getProductsForProviderRequest($provider, $voucher);
 
-                $exists = array_first($products['data'], fn ($item) => $product->id === $item['id']);
+                if ($assert['products']) {
+                    $response->assertSuccessful();
+                    $exists = array_first($response['data'], fn ($item) => $product->id === $item['id']);
+                } else {
+                    $response->assertForbidden();
+                }
             }
 
             $assert['products']
-                ? $this->assertNotNull($exists, 'The product be available to the provider.')
+                ? $this->assertNotNull($exists, 'The product must be available to the provider.')
                 : $this->assertNull($exists, 'The product must not be available to the provider.');
         }
     }
@@ -799,9 +793,7 @@ class ProductFundLimitsTest extends TestCase
         $proxy = $this->makeIdentityProxy($identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $url = sprintf($this->urls['products'] . '?organization_id=%s', $product->organization_id);
-
-        $response = $this->getJson($url, $headers);
+        $response = $this->getJson("/api/v1/platform/products?organization_id=$product->organization_id", $headers);
         $response->assertSuccessful();
 
         $productArr = array_first($response['data'], fn ($item) => $product->id === $item['id']);
@@ -811,29 +803,22 @@ class ProductFundLimitsTest extends TestCase
     }
 
     /**
-     * @param Organization $provider
+     * @param Organization $providerOrganization
      * @param Voucher $voucher
      * @return Collection|TestResponse|array
      */
-    protected function getProductsForProvider(
-        Organization $provider,
-        Voucher $voucher
+    protected function getProductsForProviderRequest(
+        Organization $providerOrganization,
+        Voucher $voucher,
     ): Collection|TestResponse|array {
-        $proxy = $this->makeIdentityProxy($provider->identity);
+        $proxy = $this->makeIdentityProxy($providerOrganization->identity);
         $headers = $this->makeApiHeaders($proxy);
 
         $voucherToken = $voucher->token_without_confirmation->address;
 
-        $url = sprintf(
-            $this->urls['provider'] . '/vouchers/%s/products?organization_id=%s',
-            $voucherToken,
-            $provider->id
-        );
+        $url = "/api/v1/platform/provider/vouchers/$voucherToken/products?organization_id=$providerOrganization->id";
 
-        $response = $this->getJson($url, $headers);
-        $response->assertSuccessful();
-
-        return $response;
+        return $this->getJson($url, $headers);
     }
 
     /**
@@ -851,9 +836,7 @@ class ProductFundLimitsTest extends TestCase
         $headers = $this->makeApiHeaders($proxy);
 
         $voucherToken = $voucher->token_without_confirmation->address;
-        $url = sprintf($this->urls['provider'] . '/vouchers/%s', $voucherToken);
-
-        $response = $this->getJson($url, $headers);
+        $response = $this->getJson("/api/v1/platform/provider/vouchers/$voucherToken", $headers);
         $response->assertSuccessful();
 
         $organizationExists = array_first(
@@ -883,13 +866,8 @@ class ProductFundLimitsTest extends TestCase
     ): void {
         $proxy = $this->makeIdentityProxy($fund->organization->identity);
         $headers = $this->makeApiHeaders($proxy);
-        $url = sprintf(
-            $this->urls['organization'] . '/%s/funds/%s/providers/%s',
-            $fund->organization->id,
-            $fund->id,
-            $fundProvider->id
-        );
 
+        $url = "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id/providers/$fundProvider->id";
         $response = $this->patch($url, $params, $headers);
 
         if (is_null($assertErrors)) {

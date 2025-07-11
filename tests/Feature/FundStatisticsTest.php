@@ -9,12 +9,14 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class FundStatisticsTest extends TestCase
 {
     use DoesTesting;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use CreatesApplication;
     use MakesTestIdentities;
     use DatabaseTransactions;
@@ -52,8 +54,8 @@ class FundStatisticsTest extends TestCase
         $fund->top_ups()->forceDelete();
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 20000]);
 
-        $fund
-            ->makeVoucher($this->makeIdentity())
+        $this
+            ->makeTestVoucher($fund, $this->makeIdentity())
             ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000])
             ->setPaid(null, now());
 
@@ -67,8 +69,8 @@ class FundStatisticsTest extends TestCase
 
         $this->travelTo('2030-01-01');
 
-        $fund
-            ->makeVoucher($this->makeIdentity())
+        $this
+            ->makeTestVoucher($fund, $this->makeIdentity())
             ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 2000])
             ->setPaid(null, now());
 
@@ -91,7 +93,7 @@ class FundStatisticsTest extends TestCase
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
         $fund->top_ups()->forceDelete();
         $this->travelTo('2020-01-01');
-        $voucher = $fund->makeVoucher($this->makeIdentity());
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
         $employee = $fund->organization->employees[0];
 
         $this->travelTo('2021-01-01');
@@ -129,7 +131,7 @@ class FundStatisticsTest extends TestCase
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
         $fund->top_ups()->forceDelete();
-        $voucher = $fund->makeVoucher($this->makeIdentity());
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
 
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 10000]);
         $transaction = $voucher->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000]);

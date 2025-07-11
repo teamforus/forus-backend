@@ -2,6 +2,7 @@
 
 namespace Tests\Traits;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
@@ -105,7 +106,11 @@ trait MakesTestFundRequests
                 'fund_request_record_id' => $fundRequestRecord->id,
                 'question' => $questionToken,
             ],
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
+                'Accept' => 'application/json',
+                'client_type' => 'webshop',
+                ...$headers,
+            ]),
         );
 
         $response->assertSuccessful();
@@ -129,7 +134,11 @@ trait MakesTestFundRequests
         // assert email log exists
         $response = $this->getJson(
             "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
+                'Accept' => 'application/json',
+                'client_type' => 'webshop',
+                ...$headers,
+            ]),
         );
 
         $response->assertSuccessful();

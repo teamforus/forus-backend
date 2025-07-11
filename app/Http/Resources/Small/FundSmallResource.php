@@ -34,7 +34,7 @@ class FundSmallResource extends BaseJsonResource
             ...$this->resource->only([
                 'id', 'name', 'description', 'description_html', 'description_short',
                 'organization_id', 'state', 'type', 'type_locale', 'archived', 'request_btn_text',
-                'external_link_text', 'external_link_url', 'is_external',
+                'external_link_text', 'external_link_url', 'external',
             ]),
             'logo' => new MediaResource($this->resource->logo),
             'organization' => new OrganizationTinyResource($this->resource->organization),

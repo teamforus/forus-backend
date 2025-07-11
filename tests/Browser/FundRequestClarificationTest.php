@@ -4,6 +4,7 @@ namespace Tests\Browser;
 
 use App\Mail\Auth\UserLoginMail;
 use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
@@ -63,15 +64,24 @@ class FundRequestClarificationTest extends DuskTestCase
 
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));
 
-        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest, $headers);
-        $this->assertFundRequestClarificationEmailLog(
-            $organization,
-            $fundRequest,
-            $questionToken,
-            $headers
-        );
+        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest);
+        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest, $questionToken);
 
-        $this->browse(function (Browser $browser) use ($fundRequest, $identity, $startTime) {
+        $record = $fundRequest
+            ->records()
+            ->with('fund_request_clarifications')
+            ->whereRelation('fund_request_clarifications', 'state', FundRequestClarification::STATE_PENDING)
+            ->first();
+
+        $this->assertNotNull($record);
+
+        $clarification = $record
+            ->fund_request_clarifications
+            ->first(fn (FundRequestClarification $clarification) => $clarification->state === FundRequestClarification::STATE_PENDING);
+
+        $this->assertNotNull($clarification);
+
+        $this->browse(function (Browser $browser) use ($fundRequest, $identity, $startTime, $record, $clarification) {
             $browser->visit($this->findFirstEmailFundRequestClarificationLink(
                 $identity->email,
                 $startTime
@@ -106,6 +116,43 @@ class FundRequestClarificationTest extends DuskTestCase
             // assert requester was redirected to fund request page
             $browser->waitFor('@fundRequestFund');
             $browser->assertSeeIn('@fundRequestFund', $fundRequest->fund->name);
+
+            $browser->waitFor("@toggleClarifications$record->id")->click("@toggleClarifications$record->id");
+            $browser->waitFor("@clarificationCard$clarification->id");
+
+            $browser->within("@clarificationCard$clarification->id", function (Browser $browser) use ($clarification) {
+                $browser->assertSeeIn('@clarificationQuestion', $clarification->question);
+
+                $browser->waitFor('@openReplyForm')->click('@openReplyForm');
+                $browser->waitFor('@submitBtn')->click('@submitBtn');
+                $browser->waitFor('@errorAnswer1');
+                $browser->waitFor('@errorFiles1');
+
+                // add a file
+                $browser->within('@fileUploader', function (Browser $browser) {
+                    $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'block'");
+                    $browser->waitFor('[name=file_uploader_input_hidden]');
+                    $browser->assertVisible('[name=file_uploader_input_hidden]');
+                    $browser->element('[name=file_uploader_input_hidden]');
+                    $browser->attach('file_uploader_input_hidden', base_path('tests/assets/test.png'));
+                    $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'none'");
+                });
+
+                // fill text
+                $text = $this->faker->sentence();
+                $browser->typeSlowly('@answerInput', $text, 10);
+
+                $browser->click('@submitBtn');
+
+                $browser->waitUntilMissing('@errorAnswer1');
+                $browser->waitUntilMissing('@errorFiles1');
+
+                $browser->waitFor('@clarificationAnswer');
+                $browser->assertSeeIn('@clarificationAnswer', $text);
+                $browser->assertSeeIn('@clarificationAnswer', 'test.png');
+            });
+
+            $this->assertAndCloseSuccessNotification($browser);
 
             // Logout identity
             $this->logout($browser);
