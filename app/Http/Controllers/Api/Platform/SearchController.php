@@ -23,6 +23,7 @@ class SearchController extends Controller
         $overview = $request->get('overview', false);
         $search = new WebshopGenericSearch($request->only([
             'q', 'fund_id', 'product_category_id', 'organization_id', 'with_external', 'postcode', 'distance',
+            'order_by', 'order_dir',
         ]));
 
         if (!$overview) {

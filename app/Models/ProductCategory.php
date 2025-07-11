@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Translations\ProductCategoryTranslationTrait;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -106,6 +107,7 @@ class ProductCategory extends BaseModel
     use Translatable;
     use NodeTrait;
     use HasTranslationCaches;
+    use ProductCategoryTranslationTrait;
 
     /**
      * The attributes that are translatable.

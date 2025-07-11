@@ -57,8 +57,8 @@ class ProductFundActionsTest extends DuskTestCase
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
 
                 // assert only fund request button present
-                $browser->waitFor("@fundItem$fund->id");
-                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                $browser->waitFor("@listFundsRow$fund->id");
+                $browser->within("@listFundsRow$fund->id", function (Browser $browser) {
                     $browser->assertPresent('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertMissing('@fundRequests');
@@ -74,9 +74,9 @@ class ProductFundActionsTest extends DuskTestCase
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fund->id");
+                $browser->waitFor("@listFundsRow$fund->id");
 
-                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                $browser->within("@listFundsRow$fund->id", function (Browser $browser) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertPresent('@fundRequests');
@@ -92,9 +92,9 @@ class ProductFundActionsTest extends DuskTestCase
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fund->id");
+                $browser->waitFor("@listFundsRow$fund->id");
 
-                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                $browser->within("@listFundsRow$fund->id", function (Browser $browser) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertPresent('@reserveProduct');
                     $browser->assertMissing('@fundRequests');
@@ -112,9 +112,9 @@ class ProductFundActionsTest extends DuskTestCase
                 // Assert only activate button is present
                 $browser->visit($implementation->urlWebshop("products/$product->id"));
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fund2->id");
+                $browser->waitFor("@listFundsRow$fund2->id");
 
-                $browser->within("@fundItem$fund2->id", function (Browser $browser) {
+                $browser->within("@listFundsRow$fund2->id", function (Browser $browser) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertMissing('@fundRequests');
@@ -133,9 +133,9 @@ class ProductFundActionsTest extends DuskTestCase
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fundPayout->id");
+                $browser->waitFor("@listFundsRow$fundPayout->id");
 
-                $browser->within("@fundItem$fundPayout->id", function (Browser $browser) {
+                $browser->within("@listFundsRow$fundPayout->id", function (Browser $browser) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertMissing('@fundRequests');
@@ -152,9 +152,9 @@ class ProductFundActionsTest extends DuskTestCase
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fund->id");
+                $browser->waitFor("@listFundsRow$fund->id");
 
-                $browser->within("@fundItem$fund->id", function (Browser $browser) {
+                $browser->within("@listFundsRow$fund->id", function (Browser $browser) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertMissing('@fundRequests');
@@ -175,9 +175,9 @@ class ProductFundActionsTest extends DuskTestCase
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
-                $browser->waitFor("@fundItem$fund->id");
+                $browser->waitFor("@listFundsRow$fund->id");
 
-                $browser->within("@fundItem$fund->id", function (Browser $browser) use ($btnText) {
+                $browser->within("@listFundsRow$fund->id", function (Browser $browser) use ($btnText) {
                     $browser->assertMissing('@fundRequest');
                     $browser->assertMissing('@reserveProduct');
                     $browser->assertMissing('@fundRequests');

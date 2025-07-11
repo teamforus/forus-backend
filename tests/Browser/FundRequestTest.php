@@ -6,7 +6,6 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Searches\FundRequestSearch;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -57,7 +56,7 @@ class FundRequestTest extends DuskTestCase
             $this->goToIdentityFundRequests($browser);
 
             foreach ($fundRequests as $request) {
-                $element = '@fundRequestsItem' . $request->id;
+                $element = '@listFundRequestsRow' . $request->id;
                 $browser->waitFor($element);
                 $browser->assertSeeIn($element, $request->fund->name);
 
@@ -71,18 +70,5 @@ class FundRequestTest extends DuskTestCase
             // Logout user
             $this->logout($browser);
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return void
-     */
-    private function goToIdentityFundRequests(Browser $browser): void
-    {
-        $browser->waitFor('@userProfile');
-        $browser->element('@userProfile')->click();
-        $browser->waitFor('@btnFundRequests');
-        $browser->element('@btnFundRequests')->click();
     }
 }
