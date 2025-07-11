@@ -39,7 +39,7 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
     public function testProductReservationsFilters(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $organization->identity;
 
         $fundConfigsData = [
@@ -83,21 +83,20 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
                 $this->assertReservationsSearchIsWorking($browser, $pendingReservation)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertReservationsSearchByProvider($browser, $pendingReservation)
+                $this->assertReservationsFilterByProvider($browser, $pendingReservation)
                     ->clearProviderSelect($browser)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertReservationsSearchByFund($browser, $pendingReservation, $fund)
+                $this->assertReservationsFilterByFund($browser, $pendingReservation, $fund)
                     ->clearFundSelect($browser)
                     ->fillSearchForEmptyResults($browser);
 
                 $this
-                    ->assertReservationsSearchByState($browser, $pendingReservation, $pendingReservation::STATE_PENDING)
+                    ->assertReservationsFilterByState($browser, $pendingReservation, $pendingReservation::STATE_PENDING)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertReservationsSearchByState($browser, $acceptedReservation, $acceptedReservation::STATE_ACCEPTED)
+                    ->assertReservationsFilterByState($browser, $acceptedReservation, $acceptedReservation::STATE_ACCEPTED)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertReservationsSearchByState($browser, $pendingReservation->rejectOrCancelProvider(), $pendingReservation::STATE_REJECTED)
-                    ->fillSearchForEmptyResults($browser);
+                    ->assertReservationsFilterByState($browser, $pendingReservation->rejectOrCancelProvider(), $pendingReservation::STATE_REJECTED);
 
                 $this->logout($browser);
             });
@@ -113,7 +112,7 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
     public function testProductReservationsFilterByActiveTabs(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $organization->identity;
 
         $fundConfigsData = [
@@ -215,7 +214,7 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ProductReservationsSearchFilterTest
      */
-    protected function assertReservationsSearchByProvider(
+    protected function assertReservationsFilterByProvider(
         Browser $browser,
         ProductReservation $reservation
     ): static {
@@ -237,7 +236,7 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ProductReservationsSearchFilterTest
      */
-    protected function assertReservationsSearchByFund(
+    protected function assertReservationsFilterByFund(
         Browser $browser,
         ProductReservation $reservation,
         Fund $fund,
@@ -292,7 +291,7 @@ class ProductReservationsSearchFilterTest extends DuskTestCase
      * @throws TimeOutException
      * @return ProductReservationsSearchFilterTest
      */
-    protected function assertReservationsSearchByState(
+    protected function assertReservationsFilterByState(
         Browser $browser,
         ProductReservation $reservation,
         string $state,

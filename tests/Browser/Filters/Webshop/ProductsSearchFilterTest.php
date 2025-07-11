@@ -37,7 +37,7 @@ class ProductsSearchFilterTest extends DuskTestCase
     public function testProductsFilters(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
 
         $fund = $this->makeTestFund($organization, fundConfigsData: [
             'implementation_id' => $implementation->id,
@@ -53,22 +53,22 @@ class ProductsSearchFilterTest extends DuskTestCase
                 $this->assertProductsSearchIsWorking($browser, $providerOrganization, $product)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchByOrganization($browser, $providerOrganization, $product)
+                $this->assertProductsFilterByOrganization($browser, $providerOrganization, $product)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchBySubCategory($browser, $product)
+                $this->assertProductsFilterBySubCategory($browser, $product)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchByFund($browser, $product, $fund)
+                $this->assertProductsFilterByFund($browser, $product, $fund)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchByDistance($browser, $providerOrganization, $product)
+                $this->assertProductsFilterByDistance($browser, $providerOrganization, $product)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchByPrice($browser, $product)
+                $this->assertProductsFilterByPrice($browser, $product)
                     ->fillSearchForEmptyResults($browser);
 
-                $this->assertProductsSearchByOptions($browser, $product);
+                $this->assertProductsFilterByOptions($browser, $product);
             });
         }, function () use ($fund, $product) {
             $fund && $this->deleteFund($fund);
@@ -90,7 +90,7 @@ class ProductsSearchFilterTest extends DuskTestCase
         ];
 
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
 
         $fund = $this->makeTestFund($organization, fundConfigsData: [
             'implementation_id' => $implementation->id,
@@ -104,7 +104,7 @@ class ProductsSearchFilterTest extends DuskTestCase
                 $browser->visit($implementation->urlWebshop('aanbod'))->refresh();
                 $browser->waitFor($this->getWebshopRowsSelector());
 
-                $this->assertProductsSearchByFund($browser, $product, $fund, 2);
+                $this->assertProductsFilterByFund($browser, $product, $fund, 2);
 
                 foreach ($orderByColumns as $item => $dirs) {
                     array_walk($dirs, fn ($dir) => $this->assertProductsSorting($browser, $product, $product2, $item, $dir));
@@ -287,7 +287,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeOutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchByOrganization(
+    protected function assertProductsFilterByOrganization(
         Browser $browser,
         Organization $provider,
         Product $product
@@ -309,7 +309,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchBySubCategory(Browser $browser, Product $product): static
+    protected function assertProductsFilterBySubCategory(Browser $browser, Product $product): static
     {
         $browser->waitFor('@selectControlCategories');
         $browser->click('@selectControlCategories .select-control-search');
@@ -334,7 +334,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchByFund(
+    protected function assertProductsFilterByFund(
         Browser $browser,
         Product $product,
         Fund $fund,
@@ -358,7 +358,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeOutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchByDistance(
+    protected function assertProductsFilterByDistance(
         Browser $browser,
         Organization $provider,
         Product $product
@@ -381,7 +381,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeOutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchByPrice(Browser $browser, Product $product): static
+    protected function assertProductsFilterByPrice(Browser $browser, Product $product): static
     {
         $browser->waitFor('@inputPriceFrom');
         $browser->typeSlowly('@inputPriceFrom', $product->price - 5, 50);
@@ -419,7 +419,7 @@ class ProductsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ProductsSearchFilterTest
      */
-    protected function assertProductsSearchByOptions(Browser $browser, Product $product): static
+    protected function assertProductsFilterByOptions(Browser $browser, Product $product): static
     {
         $browser->waitFor('@paymentOptionQr');
         $browser->click('@paymentOptionQr');

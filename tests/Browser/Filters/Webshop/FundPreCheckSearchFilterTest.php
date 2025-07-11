@@ -56,9 +56,9 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
 
                 $this->assertFundsSearchIsWorking($browser, $fund)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertFundsSearchByOrganization($browser, $fund)
+                    ->assertFundsFilterByOrganization($browser, $fund)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertFundsSearchByTag($browser, $fund);
+                    ->assertFundsFilterByTag($browser, $fund);
 
                 $this->logout($browser);
             });
@@ -128,7 +128,7 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return FundPreCheckSearchFilterTest
      */
-    protected function assertFundsSearchByOrganization(Browser $browser, Fund $fund): static
+    protected function assertFundsFilterByOrganization(Browser $browser, Fund $fund): static
     {
         $browser->waitFor('@selectControlOrganizations');
         $browser->click('@selectControlOrganizations .select-control-search');
@@ -145,7 +145,7 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return FundPreCheckSearchFilterTest
      */
-    protected function assertFundsSearchByTag(Browser $browser, Fund $fund): static
+    protected function assertFundsFilterByTag(Browser $browser, Fund $fund): static
     {
         $browser->waitFor('@selectControlTags');
         $browser->click('@selectControlTags .select-control-search');

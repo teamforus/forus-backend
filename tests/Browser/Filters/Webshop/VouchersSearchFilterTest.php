@@ -28,7 +28,7 @@ class VouchersSearchFilterTest extends DuskTestCase
     public function testVouchersFilterByActiveTabs(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $organization->identity;
 
         $fundConfigsData = [

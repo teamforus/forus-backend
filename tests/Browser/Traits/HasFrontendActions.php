@@ -6,12 +6,15 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Filters\Webshop\ProductReservationsSearchFilterTest;
 use Tests\Traits\MakesTestIdentities;
 
 trait HasFrontendActions
@@ -46,18 +49,6 @@ trait HasFrontendActions
                 '<' => $value < $count,
             };
         }, $message);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $selector
-     * @return void
-     */
-    public function clearField(Browser $browser, string $selector): void
-    {
-        /** @var string $value */
-        $value = $browser->value($selector);
-        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
     }
 
     /**

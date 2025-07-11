@@ -28,7 +28,7 @@ class FundsSearchFilterTest extends DuskTestCase
     public function testFundsFilter(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
 
         $fund = $this->makeTestFund($organization, [
             'description_text' => $this->faker->sentence,
@@ -52,9 +52,9 @@ class FundsSearchFilterTest extends DuskTestCase
 
                 $this->assertFundsSearchIsWorking($browser, $fund)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertFundsSearchByOrganization($browser, $fund)
+                    ->assertFundsFilterByOrganization($browser, $fund)
                     ->fillSearchForEmptyResults($browser)
-                    ->assertFundsSearchByTag($browser, $fund, $tagName);
+                    ->assertFundsFilterByTag($browser, $fund, $tagName);
             });
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
@@ -69,7 +69,7 @@ class FundsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return FundsSearchFilterTest
      */
-    protected function assertFundsSearchByOrganization(Browser $browser, Fund $fund): static
+    protected function assertFundsFilterByOrganization(Browser $browser, Fund $fund): static
     {
         $browser->waitFor('@selectControlOrganizations');
         $browser->click('@selectControlOrganizations .select-control-search');
@@ -87,7 +87,7 @@ class FundsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return FundsSearchFilterTest
      */
-    protected function assertFundsSearchByTag(Browser $browser, Fund $fund, string $tagName): static
+    protected function assertFundsFilterByTag(Browser $browser, Fund $fund, string $tagName): static
     {
         $browser->waitFor('@selectControlTags');
         $browser->click('@selectControlTags .select-control-search');

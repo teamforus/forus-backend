@@ -30,7 +30,7 @@ class ReimbursementsSearchFilterTest extends DuskTestCase
     public function testReimbursementsFilter(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -55,8 +55,8 @@ class ReimbursementsSearchFilterTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
                 $this->goToIdentityReimbursements($browser);
 
-                $this->assertReimbursementsSearchByFund($browser, $reimbursement, $reimbursement2);
-                $this->assertReimbursementsSearchByFund($browser, $reimbursement2, $reimbursement);
+                $this->assertReimbursementsFilterByFund($browser, $reimbursement, $reimbursement2);
+                $this->assertReimbursementsFilterByFund($browser, $reimbursement2, $reimbursement);
 
                 $this->logout($browser);
             });
@@ -72,7 +72,7 @@ class ReimbursementsSearchFilterTest extends DuskTestCase
     public function testReimbursementsFilterByStateTabs(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $employee = $organization->findEmployee($organization->identity);
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -151,7 +151,7 @@ class ReimbursementsSearchFilterTest extends DuskTestCase
     public function testReimbursementsFilterByActiveTabs(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $fundConfig = [
@@ -192,7 +192,7 @@ class ReimbursementsSearchFilterTest extends DuskTestCase
      * @throws TimeoutException
      * @return ReimbursementsSearchFilterTest
      */
-    protected function assertReimbursementsSearchByFund(
+    protected function assertReimbursementsFilterByFund(
         Browser $browser,
         Reimbursement $reimbursement,
         Reimbursement $reimbursementOtherFund,

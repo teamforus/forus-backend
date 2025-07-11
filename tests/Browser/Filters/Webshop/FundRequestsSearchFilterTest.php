@@ -31,7 +31,7 @@ class FundRequestsSearchFilterTest extends DuskTestCase
     public function testFundRequestsFilter(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $fundConfigsData = [
@@ -52,8 +52,8 @@ class FundRequestsSearchFilterTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
                 $this->goToIdentityFundRequests($browser);
 
-                $this->assertFundRequestSearchByFund($browser, $fundRequest, $fundRequest2);
-                $this->assertFundRequestSearchByFund($browser, $fundRequest2, $fundRequest);
+                $this->assertFundRequestFilterByFund($browser, $fundRequest, $fundRequest2);
+                $this->assertFundRequestFilterByFund($browser, $fundRequest2, $fundRequest);
 
                 $this->logout($browser);
             });
@@ -69,7 +69,7 @@ class FundRequestsSearchFilterTest extends DuskTestCase
     public function testFundRequestsFilterByActiveTabs(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $implementation = Implementation::general();
+        $implementation = Implementation::byKey('nijmegen');
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $fundConfigsData = [
@@ -130,7 +130,7 @@ class FundRequestsSearchFilterTest extends DuskTestCase
      * @throws TimeOutException
      * @return FundRequestsSearchFilterTest
      */
-    protected function assertFundRequestSearchByFund(
+    protected function assertFundRequestFilterByFund(
         Browser $browser,
         FundRequest $fundRequest,
         FundRequest $fundRequestOtherFund,
