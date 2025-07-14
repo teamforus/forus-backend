@@ -49,7 +49,7 @@ class ProductReservationPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'view_vouchers');
+        return $organization->identityCan($identity, ['view_vouchers', 'manage_vouchers'], false);
     }
 
     /**
