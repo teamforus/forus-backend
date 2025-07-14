@@ -15,8 +15,14 @@ on:
 jobs:
 
   test_ui:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 1,2,3,4 ]
+        total: [ 4 ]
+
     defaults:
       run:
         working-directory: forus-backend
@@ -111,15 +117,29 @@ jobs:
         run: docker compose exec -T app bash -c "php artisan dusk:chrome"
 
       - name: --- RUN BROWSER TESTS ---
-        run: docker compose exec -T app bash -c "php artisan dusk --testdox --stop-on-error --stop-on-failure"
+        # run: docker compose exec -T app bash -c "php artisan dusk --testdox --stop-on-error --stop-on-failure"
+        run: |
+          docker compose exec -T app bash -lc "\
+            files=(\$(find tests/Browser -type f -name '*Test.php' | sort)); \
+            total=${{ matrix.total }}; shard=${{ matrix.shard }}; \
+            shard_size=\$(( (\${#files[@]} + total - 1) / total )); \
+            start=\$(( (shard - 1) * shard_size )); \
+            subset=( \"\${files[@]:start:shard_size}\" ); \
+            if [ \${#subset[@]} -gt 0 ]; then \
+              php artisan dusk \"\${subset[@]}\" --testdox --stop-on-error --stop-on-failure; \
+            else \
+              echo \"No tests for shard \$shard\"; \
+            fi"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Upload test results artifacts
+          name: dusk-results-shard-${{ matrix.shard }}
           path: |
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
             forus-backend/storage/app/dusk-downloads/*
             forus-backend/storage/logs/laravel.log
+          if-no-files-found: warn
           retention-days: 5
+          overwrite: false
