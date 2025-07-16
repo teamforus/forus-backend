@@ -65,6 +65,6 @@ class PrevalidationSearch extends BaseSearch
         string $orderBy,
         string $orderDir,
     ): Prevalidation|Relation|Builder {
-        return $builder->orderBy($orderBy, $orderDir);
+        return $builder->orderBy($orderBy, $orderDir)->orderBy('id', 'desc');
     }
 }
