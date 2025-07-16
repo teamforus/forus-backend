@@ -300,18 +300,6 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @param string $selector
-     * @return void
-     */
-    protected function clearField(Browser $browser, string $selector): void
-    {
-        /** @var string $value */
-        $value = $browser->value($selector);
-        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
-    }
-
-    /**
      * @param VoucherTransaction $transaction
      * @param string $as
      * @return void
