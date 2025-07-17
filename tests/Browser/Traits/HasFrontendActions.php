@@ -47,6 +47,18 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    public function clearField(Browser $browser, string $selector): void
+    {
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
+
+    /**
+     * @param Browser $browser
      * @throws TimeoutException
      * @return void
      */
@@ -107,6 +119,17 @@ trait HasFrontendActions
             $browser->element('@fundsAvailableTab')->click();
             $browser->waitFor('@tableFundsAvailableContent');
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Identity $identity
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertIdentityAuthenticatedOnValidatorDashboard(Browser $browser, Identity $identity): void
+    {
+        $this->assertIdentityAuthenticatedFrontend($browser, $identity, 'validator');
     }
 
     /**
@@ -388,14 +411,19 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param bool $validator
      * @throws TimeoutException
      * @return void
      */
-    private function goToFundRequestsPage(Browser $browser): void
+    private function goToFundRequestsPage(Browser $browser, bool $validator = false): void
     {
         $browser->waitFor('@asideMenuGroupFundRequests');
         $browser->element('@asideMenuGroupFundRequests')->click();
-        $browser->waitFor('@tablePrevalidationContent');
+
+        if (!$validator) {
+            $browser->waitFor('@tablePrevalidationContent');
+        }
+
         $browser->waitFor('@fundRequestsPage');
         $browser->element('@fundRequestsPage')->click();
     }

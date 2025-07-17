@@ -27,6 +27,7 @@ class ProductsController extends Controller
         VoucherToken $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
+        $this->authorize('viewRegularVoucherAvailableProductsAsProvider', $voucherToken->voucher);
 
         $voucher = $voucherToken->voucher;
         $checkForReservableFlag = $request->get('reservable', false);

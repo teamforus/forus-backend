@@ -97,15 +97,15 @@ class FundProviderController extends Controller
                 ] : []),
             ]));
 
-            if ($request->has('state') && ($request->input('state') !== $fundProvider->state)) {
-                $fundProvider->setState($request->input('state'));
+            if ($request->post('state') && ($request->post('state') !== $fundProvider->state)) {
+                $fundProvider->setState($request->post('state'));
             }
 
-            if ($request->has('enable_products')) {
+            if ($request->post('enable_products')) {
                 $fundProvider->approveProducts($request->input('enable_products'));
             }
 
-            if ($request->has('disable_products')) {
+            if ($request->post('disable_products')) {
                 $fundProvider->declineProducts($request->input('disable_products'));
             }
 
