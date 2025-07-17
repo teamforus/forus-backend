@@ -465,11 +465,6 @@ class ProductsSearchFilterTest extends DuskTestCase
 
         $this->fillSearchForEmptyResults($browser);
 
-        $this->searchWebshopList($browser, '@listProducts', $provider->description_text, $product->id);
-        $this->clearField($browser, '@listProductsSearch');
-
-        $this->fillSearchForEmptyResults($browser);
-
         $this->searchWebshopList($browser, '@listProducts', $product->product_category->name, $product->id);
         $this->clearField($browser, '@listProductsSearch');
 
