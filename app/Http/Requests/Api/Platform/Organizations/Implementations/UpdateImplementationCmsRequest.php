@@ -6,6 +6,7 @@ use App\Models\Language;
 use App\Rules\MaxStringRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateImplementationCmsRequest extends FormRequest
 {
@@ -53,6 +54,19 @@ class UpdateImplementationCmsRequest extends FormRequest
             'page_title_suffix' => 'nullable|string|max:60',
             'languages' => 'array',
             'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
+            'products_default_sort' => [
+                'nullable',
+                Rule::in([
+                    'name_asc',
+                    'name_desc',
+                    'created_at_asc',
+                    'created_at_desc',
+                    'price_asc',
+                    'price_desc',
+                    'most_popular_desc',
+                    'randomized_desc',
+                ]),
+            ],
         ], $this->announcementsRules(), $this->showBlockFlags());
     }
 
