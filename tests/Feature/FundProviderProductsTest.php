@@ -645,7 +645,9 @@ class FundProviderProductsTest extends TestCase
                 ->assertJsonCount(1, 'data')
                 ->assertJsonPath('data.0.address', $reservation->product_voucher->token_without_confirmation->address);
         } else {
-            $response->assertForbidden();
+            $response
+                ->assertSuccessful()
+                ->assertJsonCount(0, 'data');
         }
     }
 
