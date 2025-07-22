@@ -54,7 +54,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'page_title_suffix' => 'nullable|string|max:60',
             'languages' => 'array',
             'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
-            'products_default_sort' => [
+            'products_default_sorting' => [
                 'nullable',
                 Rule::in([
                     'name_asc',
@@ -64,7 +64,7 @@ class UpdateImplementationCmsRequest extends FormRequest
                     'price_asc',
                     'price_desc',
                     'most_popular_desc',
-                    'randomized_desc',
+                    'randomized',
                 ]),
             ],
         ], $this->announcementsRules(), $this->showBlockFlags());

@@ -107,7 +107,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string $pre_check_banner_description
  * @property string|null $pre_check_banner_label
  * @property string $pre_check_banner_state
- * @property string $products_default_sort
+ * @property string $products_default_sorting
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
@@ -268,7 +268,7 @@ class Implementation extends BaseModel
         'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
         'banner_color', 'banner_position', 'banner_wide', 'banner_collapse', 'banner_button',
         'banner_button_url', 'banner_button_text', 'banner_button_target', 'banner_button_type',
-        'banner_background', 'banner_background_mobile', 'products_default_sort',
+        'banner_background', 'banner_background_mobile', 'products_default_sorting',
     ];
 
     /**
@@ -830,7 +830,7 @@ class Implementation extends BaseModel
             ...$implementation->only([
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
-                'show_privacy_checkbox', 'show_terms_checkbox', 'products_default_sort',
+                'show_privacy_checkbox', 'show_terms_checkbox', 'products_default_sorting',
             ]),
         ];
     }

@@ -49,7 +49,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'show_privacy_checkbox', 'show_terms_checkbox',
                 'banner_button', 'banner_button_text', 'banner_button_url', 'banner_button_target', 'banner_button_type',
                 'banner_position', 'banner_collapse', 'banner_wide', 'banner_color',
-                'banner_background', 'banner_background_mobile', 'products_default_sort',
+                'banner_background', 'banner_background_mobile', 'products_default_sorting',
             ]),
             'banner_media_uid' => $implementation->banner?->uid,
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
