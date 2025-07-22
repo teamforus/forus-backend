@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\ProductReservation;
+use App\Rules\MaxStringRule;
 
 /**
  * @property Organization $organization
@@ -32,6 +33,13 @@ class RejectProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'note' => [
+                'nullable',
+                'string',
+                new MaxStringRule(255),
+            ],
+            'notify_with_note' => 'nullable|boolean',
+        ];
     }
 }

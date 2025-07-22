@@ -202,9 +202,11 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('rejectProvider', [$productReservation, $organization]);
 
-        $productReservation->rejectOrCancelProvider($organization->findEmployee(
-            $request->auth_address()
-        ));
+        $productReservation->rejectOrCancelProvider(
+            $organization->findEmployee($request->auth_address()),
+            $request->get('note'),
+            $request->get('notify_with_note', false)
+        );
 
         return new ProductReservationResource($productReservation);
     }

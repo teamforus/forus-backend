@@ -83,6 +83,7 @@ class ProductReservationSubscriber
             IdentityProductReservationCanceledNotification::send($productReservation->log(
                 $productReservation::EVENT_CANCELED_BY_PROVIDER,
                 $this->getReservationLogModels($productReservation),
+                ['product_reservation_notify_with_note' => $event->getNotifyWithNote()],
             ));
         }
     }
@@ -97,7 +98,8 @@ class ProductReservationSubscriber
 
         IdentityProductReservationRejectedNotification::send($productReservation->log(
             $productReservation::EVENT_REJECTED,
-            $this->getReservationLogModels($productReservation)
+            $this->getReservationLogModels($productReservation),
+            ['product_reservation_notify_with_note' => $event->getNotifyWithNote()],
         ));
     }
 

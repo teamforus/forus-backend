@@ -15,16 +15,16 @@ class BaseProductReservationEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    protected ProductReservation $productReservation;
-
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(ProductReservation $productReservation)
-    {
-        $this->productReservation = $productReservation;
+    public function __construct(
+        protected ProductReservation $productReservation,
+        protected bool $notifyWithNote = false
+    ) {
+
     }
 
     /**
@@ -33,6 +33,14 @@ class BaseProductReservationEvent
     public function getProductReservation(): ProductReservation
     {
         return $this->productReservation;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getNotifyWithNote(): bool
+    {
+        return $this->notifyWithNote;
     }
 
     /**
