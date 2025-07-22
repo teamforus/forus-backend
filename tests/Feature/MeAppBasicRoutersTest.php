@@ -81,7 +81,9 @@ class MeAppBasicRoutersTest extends TestCase
         $this->getJson("/api/v1/platform/provider/vouchers/$address", $headers)->assertSuccessful();
 
         //platform/provider/vouchers/{address}/product-vouchers
-        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)->assertForbidden();
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)
+            ->assertSuccessful()
+            ->assertJsonCount(0, 'data');
 
         //platform/provider/vouchers/{address}/products
         $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)->assertForbidden();
