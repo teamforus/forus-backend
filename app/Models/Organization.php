@@ -66,6 +66,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
@@ -244,6 +245,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationUserNote($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsEnabled($value)
  * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
@@ -315,7 +317,7 @@ class Organization extends BaseModel
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
-        'bank_reservation_first_name', 'bank_reservation_last_name',
+        'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_user_note',
     ];
 
     /**
