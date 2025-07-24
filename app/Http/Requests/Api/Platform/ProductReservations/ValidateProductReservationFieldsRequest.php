@@ -11,6 +11,14 @@ class ValidateProductReservationFieldsRequest extends StoreProductReservationReq
      */
     public function rules(): array
     {
-        return $this->baseRules($this->getProduct());
+        $product = $this->getProduct();
+
+        return [
+            ...$this->baseRules($product),
+            'user_note_skip' => 'sometimes|boolean',
+            ...$this->boolean('user_note_skip') ? [
+                'user_note' => 'nullable|string',
+            ] : [],
+        ];
     }
 }

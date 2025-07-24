@@ -88,7 +88,7 @@ class OrganizationResource extends BaseJsonResource
         return array_filter([
             ...$organization->only([
                 'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
-                'website_public', 'description', 'reservation_phone', 'reservation_address',
+                'website_public', 'description', 'reservation_phone', 'reservation_address', 'reservation_user_note',
                 'reservation_birth_date', 'description_html',
             ]),
             ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([

@@ -237,7 +237,7 @@ class OrganizationsController extends Controller
         $allowExtraPayments = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'reservation_phone', 'reservation_address', 'reservation_birth_date',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
             ...$allowExtraPayments ? ['reservation_allow_extra_payments'] : [],
         ])));
 

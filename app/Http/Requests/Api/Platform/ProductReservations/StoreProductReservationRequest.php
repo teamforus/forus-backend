@@ -131,7 +131,11 @@ class StoreProductReservationRequest extends BaseFormRequest
         return [
             'first_name' => 'required|string|max:20',
             'last_name' => 'required|string|max:20',
-            'user_note' => 'nullable|string|max:400',
+            'user_note' => [
+                $product->reservation_user_note_is_required ? 'required' : 'nullable',
+                'string',
+                'max:400',
+            ],
             'phone' => [
                 $product->reservation_phone_is_required ? 'required' : 'nullable',
                 'string',
