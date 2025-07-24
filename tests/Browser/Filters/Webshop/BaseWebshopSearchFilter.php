@@ -76,6 +76,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param int $totalRows
      * @param string|null $listSelector
      * @return void
+     * @throws TimeoutException
      */
     protected function assertListCount(
         Browser $browser,
@@ -86,8 +87,16 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
 
         $attribute = Config::get('tests.dusk_selector');
         $duskPrefix = ltrim($listSelector, '@');
+        $selector = "[$attribute^=\"{$duskPrefix}Row\"]";
 
-        $rows = $browser->elements("[$attribute^=\"{$duskPrefix}Row\"]");
+        $browser->waitUsing(
+            null,
+            100,
+            fn () => count($browser->elements($selector)) === $totalRows,
+            "Timeout waiting for $totalRows rows with selector: $selector"
+        );
+
+        $rows = $browser->elements($selector);
         Assert::assertCount($totalRows, $rows, "Expected $totalRows rows, got " . count($rows));
     }
 

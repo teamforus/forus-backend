@@ -124,10 +124,10 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
      * @param Product $product2
      * @param string $column
      * @param string $dir
-     * @return GlobalWebshopSearchFilterTest
-     *@throws ElementClickInterceptedException
+     * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
+     * @return GlobalWebshopSearchFilterTest
      */
     protected function assertProductsSorting(
         Browser $browser,
@@ -146,7 +146,7 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->assertProductVisible($browser, $product, 2);
         $this->assertProductVisible($browser, $product2, 2);
 
-        $browser->waitUsing(5, 100, function () use ($browser, $dir, $product, $product2) {
+        $browser->waitUsing(null, 100, function () use ($browser, $dir, $product, $product2) {
             $elements = $browser->elements($this->getWebshopRowsSelector());
 
             if ($dir === 'asc') {
