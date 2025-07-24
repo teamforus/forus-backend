@@ -167,7 +167,7 @@ class SponsorFinancialStatisticsTest extends TestCase
 
                 $product = $this->makeTestProduct($provider, $item['product_price'], $category->id);
 
-                $this->addProductFundToFund($fund, $product, false);
+                $this->addProductToFund($fund, $product, false);
                 $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
 
                 $params = [

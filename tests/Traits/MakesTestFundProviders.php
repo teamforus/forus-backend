@@ -26,16 +26,16 @@ trait MakesTestFundProviders
      */
     protected function makeProviderAndProducts(Fund $fund, int $countProducts = 5): array
     {
-        $approvedProducts = $this->makeProductsFundFund($countProducts);
-        $emptyStockProducts = $this->makeProductsFundFund($countProducts);
-        $unapprovedProducts = $this->makeProductsFundFund($countProducts);
+        $approvedProducts = $this->makeTestProviderWithProducts($countProducts);
+        $emptyStockProducts = $this->makeTestProviderWithProducts($countProducts);
+        $unapprovedProducts = $this->makeTestProviderWithProducts($countProducts);
 
         foreach ($approvedProducts as $product) {
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
         }
 
         foreach ($emptyStockProducts as $product) {
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
             $product->update([ 'total_amount' => 0 ]);
             $product->updateSoldOutState();
         }
@@ -72,7 +72,7 @@ trait MakesTestFundProviders
      * @param float $price
      * @return Product[]
      */
-    protected function makeProductsFundFund(int $count, float $price = 10): array
+    protected function makeTestProviderWithProducts(int $count, float $price = 10): array
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
         $provider = $this->makeTestProviderOrganization($identity);
@@ -90,7 +90,7 @@ trait MakesTestFundProviders
      * @param bool|null $subsidyProduct
      * @return void
      */
-    protected function addProductFundToFund(
+    protected function addProductToFund(
         Fund $fund,
         Product $product,
         bool $approveGlobal,

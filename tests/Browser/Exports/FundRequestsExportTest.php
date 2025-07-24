@@ -10,6 +10,7 @@ use App\Models\Implementation;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFundRequests;
@@ -23,6 +24,7 @@ class FundRequestsExportTest extends DuskTestCase
     use HasFrontendActions;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable

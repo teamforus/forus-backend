@@ -128,7 +128,7 @@ trait MakesProductReservations
      * @param Collection|Fund[] $funds
      * @return Product
      */
-    private function createProductForReservation(Organization $organization, Collection|array $funds): Product
+    protected function createProductForReservation(Organization $organization, Collection|array $funds): Product
     {
         $product = $this->makeTestProduct($organization);
 
