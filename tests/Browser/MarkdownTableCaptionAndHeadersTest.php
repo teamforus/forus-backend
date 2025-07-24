@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Implementation;
 use Laravel\Dusk\Browser;

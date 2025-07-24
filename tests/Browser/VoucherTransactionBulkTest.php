@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestBankConnections;
@@ -32,6 +33,7 @@ class VoucherTransactionBulkTest extends DuskTestCase
     use MakesTestOrganizations;
     use MakesVoucherTransaction;
     use MakesTestBankConnections;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
@@ -251,11 +253,9 @@ class VoucherTransactionBulkTest extends DuskTestCase
         // filter by fund
         $browser->waitFor('@showFilters')->click('@showFilters');
         $browser->waitFor('@fundSelectToggle')->click('@fundSelectToggle');
-        $browser->waitFor('@fundSelect .select-control-search')->click('@fundSelect .select-control-search');
+        $this->changeSelectControl($browser, '@fundSelect', $fund->name);
 
-        $this->findOptionElement($browser, '@fundSelect', $fund->name)->click();
         $browser->click('@hideFilters');
-
         $this->assertRowsCount($browser, $expectedCount, '@tableTransactionContent');
     }
 

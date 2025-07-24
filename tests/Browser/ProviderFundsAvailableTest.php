@@ -10,6 +10,7 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
@@ -22,6 +23,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
     use HasFrontendActions;
     use MakesTestIdentities;
     use RollbackModelsTrait;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
