@@ -54,6 +54,22 @@ class ProductReservationQuery
     }
 
     /**
+     * @param Builder|Relation|ProductReservation $query
+     * @param int|array|Builder $organization
+     * @return Builder|Relation|ProductReservation
+     */
+    public static function whereSponsorFilter(
+        Builder|Relation|ProductReservation $query,
+        int|array|Builder $organization,
+    ): Builder|Relation|ProductReservation {
+        return $query->where(function (Builder $builder) use ($organization) {
+            $builder->whereHas('voucher.fund', function (Builder $builder) use ($organization) {
+                $builder->whereIn('organization_id', is_numeric($organization) ? [$organization] : $organization);
+            });
+        });
+    }
+
+    /**
      * @param Builder|Relation|ProductReservation $builder
      * @return Builder|Relation|ProductReservation
      */

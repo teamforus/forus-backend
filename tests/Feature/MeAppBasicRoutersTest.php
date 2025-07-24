@@ -8,6 +8,7 @@ use App\Models\Implementation;
 use App\Models\Role;
 use Illuminate\Support\Str;
 use Tests\TestCase;
+use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -20,6 +21,7 @@ class MeAppBasicRoutersTest extends TestCase
     use MakesTestVouchers;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
+    use MakesProductReservations;
 
     /**
      * @throws Throwable
@@ -79,10 +81,27 @@ class MeAppBasicRoutersTest extends TestCase
         $this->getJson("/api/v1/platform/provider/vouchers/$address", $headers)->assertSuccessful();
 
         //platform/provider/vouchers/{address}/product-vouchers
-        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)->assertSuccessful();
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)
+            ->assertSuccessful()
+            ->assertJsonCount(0, 'data');
 
         //platform/provider/vouchers/{address}/products
-        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)->assertSuccessful();
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)->assertForbidden();
+
+        $product = $this->makeTestProductForReservation($provider->organization, 10);
+        $reservation = $this->makeReservation($voucher, $product);
+
+        //platform/provider/vouchers/{address}/product-vouchers
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/product-vouchers", $headers)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.address', $reservation->product_voucher->token_without_confirmation->address)
+            ->assertSuccessful();
+
+        //platform/provider/vouchers/{address}/products
+        $this->getJson("/api/v1/platform/provider/vouchers/$address/products", $headers)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $product->id)
+            ->assertSuccessful();
     }
 
     /**
