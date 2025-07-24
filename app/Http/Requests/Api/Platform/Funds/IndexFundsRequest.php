@@ -31,7 +31,7 @@ class IndexFundsRequest extends FormRequest
             'fund_ids.*' => 'nullable|exists:funds,id',
             'per_page' => 'nullable|numeric|between:1,100',
             'organization_id' => 'nullable|exists:organizations,id',
-            'order_by' => 'nullable|in:created_at,name,organization_name,start_date,end_date',
+            'order_by' => 'nullable|in:created_at,name,organization_name,start_date,end_date,order',
             'order_dir' => 'nullable|in:asc,desc',
             'with_external' => 'nullable|bool',
             'has_products' => 'nullable|bool',

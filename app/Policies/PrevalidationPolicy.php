@@ -76,6 +76,14 @@ class PrevalidationPolicy extends BasePolicy
     }
 
     /**
+     * @return string
+     */
+    protected function getPolicyKey(): string
+    {
+        return 'prevalidations';
+    }
+
+    /**
      * Determine if the identity can manage the given prevalidation.
      *
      * @param Identity $identity
@@ -100,13 +108,5 @@ class PrevalidationPolicy extends BasePolicy
             $organization->prevalidations(),
             $identity->address,
         )->where('id', $prevalidation->id)->exists();
-    }
-
-    /**
-     * @return string
-     */
-    protected function getPolicyKey(): string
-    {
-        return 'prevalidations';
     }
 }

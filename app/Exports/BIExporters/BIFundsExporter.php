@@ -3,7 +3,6 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\FundsExport;
-use App\Models\Fund;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 use Illuminate\Support\Carbon;

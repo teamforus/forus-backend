@@ -5,8 +5,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 use App\Exports\IdentityProfilesExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Support\Arr;
 use App\Searches\Sponsor\IdentitiesSearch;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**

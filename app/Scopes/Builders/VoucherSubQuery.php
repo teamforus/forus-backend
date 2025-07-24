@@ -33,6 +33,17 @@ class VoucherSubQuery
     }
 
     /**
+     * Product vouchers and product vouchers from reservations.
+     * @return Builder|Relation|Voucher
+     */
+    public static function getReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
+    {
+        return Voucher::fromSub(Voucher::query()
+            ->where(fn (Builder $builder) => VoucherQuery::whereIsProductVoucher($builder)), 'product_vouchers')
+            ->whereColumn('product_vouchers.parent_id', 'vouchers.id');
+    }
+
+    /**
      * @param Builder|Relation|Voucher $builder
      * @return Builder|Relation|Voucher
      */
@@ -50,16 +61,5 @@ class VoucherSubQuery
         return VoucherTransactionQuery::whereOutgoing(VoucherTransaction::whereColumn([
             'voucher_transactions.voucher_id' => 'vouchers.id',
         ]));
-    }
-
-    /**
-     * Product vouchers and product vouchers from reservations.
-     * @return Builder|Relation|Voucher
-     */
-    public static function getReservationOrProductVoucherSubQuery(): Builder|Relation|Voucher
-    {
-        return Voucher::fromSub(Voucher::query()
-            ->where(fn (Builder $builder) => VoucherQuery::whereIsProductVoucher($builder)), 'product_vouchers')
-            ->whereColumn('product_vouchers.parent_id', 'vouchers.id');
     }
 }

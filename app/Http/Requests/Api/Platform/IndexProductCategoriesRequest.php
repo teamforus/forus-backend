@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 
 class IndexProductCategoriesRequest extends BaseFormRequest
 {

@@ -12,6 +12,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
 use Tests\Traits\MakesTestVouchers;
+use Throwable;
 
 class VoucherBalanceTest extends TestCase
 {
@@ -24,8 +25,8 @@ class VoucherBalanceTest extends TestCase
     use MakesTestOrganizations;
 
     /**
+     * @throws Throwable
      * @return void
-     * @throws \Throwable
      */
     public function testVoucherBalance(): void
     {

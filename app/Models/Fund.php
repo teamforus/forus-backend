@@ -71,6 +71,7 @@ use Illuminate\Support\Facades\Log;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property int $order
  * @property-read Collection|\App\Models\FundAmountPreset[] $amount_presets
  * @property-read int|null $amount_presets_count
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -183,6 +184,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|Fund whereName($value)
  * @method static Builder<static>|Fund whereNotificationAmount($value)
  * @method static Builder<static>|Fund whereNotifiedAt($value)
+ * @method static Builder<static>|Fund whereOrder($value)
  * @method static Builder<static>|Fund whereOrganizationId($value)
  * @method static Builder<static>|Fund whereParentId($value)
  * @method static Builder<static>|Fund wherePublic($value)

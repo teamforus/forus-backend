@@ -32,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent|null $announceable
+ * @property-read Model|Eloquent|null $announceable
  * @property-read string $description_html
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Role|null $role

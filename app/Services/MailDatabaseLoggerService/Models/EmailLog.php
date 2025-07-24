@@ -137,6 +137,42 @@ class EmailLog extends Model
     }
 
     /**
+     * @return Model|FundRequest|null
+     */
+    public function getRelatedFundRequest(): Model|FundRequest|null
+    {
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof FundRequest) {
+            return $loggable;
+        }
+
+        if ($loggable instanceof FundRequestRecord) {
+            return $loggable->fund_request;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return Identity|null
+     */
+    public function getRelatedIdentity(): ?Identity
+    {
+        $loggable = $this?->event_log?->loggable;
+
+        if ($loggable instanceof Voucher) {
+            return $loggable->identity;
+        }
+
+        if ($loggable instanceof ProductReservation || $loggable instanceof Reimbursement) {
+            return $loggable->voucher->identity;
+        }
+
+        return $this->getRelatedFundRequest()?->identity;
+    }
+
+    /**
      * @param string $html
      * @return string
      */
@@ -172,41 +208,5 @@ class EmailLog extends Model
         $pos = strrpos($html, '</html>');
 
         return $pos !== false ? substr_replace($html, $insert, $pos, 0) : $html;
-    }
-
-    /**
-     * @return Model|FundRequest|null
-     */
-    public function getRelatedFundRequest(): Model|FundRequest|null
-    {
-        $loggable = $this?->event_log?->loggable;
-
-        if ($loggable instanceof FundRequest) {
-            return $loggable;
-        }
-
-        if ($loggable instanceof FundRequestRecord) {
-            return $loggable->fund_request;
-        }
-
-        return null;
-    }
-
-    /**
-     * @return Identity|null
-     */
-    public function getRelatedIdentity(): ?Identity
-    {
-        $loggable = $this?->event_log?->loggable;
-
-        if ($loggable instanceof Voucher) {
-            return $loggable->identity;
-        }
-
-        if ($loggable instanceof ProductReservation || $loggable instanceof Reimbursement) {
-            return $loggable->voucher->identity;
-        }
-
-        return $this->getRelatedFundRequest()?->identity;
     }
 }
