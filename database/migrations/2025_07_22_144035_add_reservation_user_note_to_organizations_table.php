@@ -11,7 +11,9 @@ return new class () extends Migration {
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->string('reservation_user_note')
+            $options = ['no', 'optional', 'required'];
+
+            $table->enum('reservation_user_note', $options)
                 ->default('optional')
                 ->after('reservation_birth_date');
         });
