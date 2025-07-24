@@ -23,7 +23,6 @@ class ProductVouchersController extends Controller
         VoucherToken $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
-        $this->authorize('useChildVoucherAsProvider', $voucherToken->voucher);
 
         $productVouchersQuery = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
             builder: $voucherToken->voucher->product_vouchers()->getQuery(),
