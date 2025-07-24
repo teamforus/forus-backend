@@ -76,6 +76,7 @@ use Illuminate\Support\Arr;
  * @property-read bool $reservation_address_is_required
  * @property-read bool $reservation_birth_date_is_required
  * @property-read bool $reservation_phone_is_required
+ * @property-read bool $reservation_user_note_is_required
  * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
@@ -425,6 +426,15 @@ class Product extends BaseModel
         }
 
         return $this->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationUserNoteIsRequiredAttribute(): bool
+    {
+        return $this->organization->reservation_user_note === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**

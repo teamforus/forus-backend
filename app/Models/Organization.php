@@ -307,8 +307,8 @@ class Organization extends BaseModel
         'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
-        'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
+        'allow_bi_connection', 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
@@ -317,7 +317,7 @@ class Organization extends BaseModel
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
-        'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_user_note',
+        'bank_reservation_first_name', 'bank_reservation_last_name',
     ];
 
     /**

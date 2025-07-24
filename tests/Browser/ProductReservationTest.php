@@ -397,7 +397,17 @@ class ProductReservationTest extends DuskTestCase
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
                 'first_name' => $this->faker->firstName,
                 'last_name' => $this->faker->lastName,
-            ], noteOptional: false);
+            ], noteDisabled: true);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
         }
@@ -598,7 +608,7 @@ class ProductReservationTest extends DuskTestCase
      * @param array|null $userData
      * @param array|null $addressData
      * @param array|null $otherFields
-     * @param bool $noteOptional
+     * @param bool $noteDisabled
      * @throws Throwable
      * @return void
      */
@@ -609,7 +619,7 @@ class ProductReservationTest extends DuskTestCase
         array $userData = null,
         array $addressData = null,
         array $otherFields = null,
-        bool $noteOptional = true,
+        bool $noteDisabled = false,
     ): void {
         Cache::clear();
         $implementation = $fund->getImplementation();
@@ -622,7 +632,7 @@ class ProductReservationTest extends DuskTestCase
             $addressData,
             $product,
             $otherFields,
-            $noteOptional
+            $noteDisabled
         ) {
             $browser->visit($implementation->urlWebshop());
 
@@ -650,7 +660,7 @@ class ProductReservationTest extends DuskTestCase
                 $this->fillReservationModalAddress($browser, $addressData);
             }
 
-            if ($noteOptional) {
+            if (!$noteDisabled) {
                 $this->fillReservationModalNote($browser);
             }
 
