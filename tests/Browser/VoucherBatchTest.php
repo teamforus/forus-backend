@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\DuskTestCase;
 use Tests\TestCases\VoucherBatchTestCases;
 use Tests\Traits\VoucherTestTrait;
@@ -22,8 +23,9 @@ use Throwable;
 class VoucherBatchTest extends DuskTestCase
 {
     use WithFaker;
-    use HasFrontendActions;
     use VoucherTestTrait;
+    use HasFrontendActions;
+    use NavigatesFrontendDashboard;
 
     /**
      * @var string

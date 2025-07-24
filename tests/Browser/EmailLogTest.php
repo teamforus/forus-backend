@@ -17,6 +17,7 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFundRequests;
@@ -34,6 +35,7 @@ class EmailLogTest extends DuskTestCase
     use MakesTestIdentities;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
+    use NavigatesFrontendDashboard;
 
     protected ?Carbon $startTime = null;
 

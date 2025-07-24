@@ -19,6 +19,7 @@ trait ExportsFundsStatisticsTrait
     use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
+    use NavigatesFrontendDashboard;
 
     /**
      * @param bool $budget

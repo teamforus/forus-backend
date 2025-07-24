@@ -25,7 +25,7 @@ class VoucherTransactionPayoutResource extends VoucherTransactionResource
 
         return [
             ...$this->resource->only([
-                'state', 'state_locale', 'iban_from',
+                'id', 'state', 'state_locale', 'iban_from',
             ]),
             'iban_to' => $this->resource->getTargetIban(),
             'iban_to_name' => $this->resource->getTargetName(),

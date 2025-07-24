@@ -9,6 +9,7 @@ use App\Models\Role;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\DuskTestCase;
 use Throwable;
 
@@ -16,6 +17,7 @@ class EmployeesExportTest extends DuskTestCase
 {
     use ExportTrait;
     use HasFrontendActions;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
