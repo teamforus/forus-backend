@@ -21,6 +21,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
@@ -43,6 +44,7 @@ class ProductReservationTest extends DuskTestCase
     use MakesTestOrganizations;
     use MakesTestFundProviders;
     use MakesProductReservations;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
@@ -582,7 +584,7 @@ class ProductReservationTest extends DuskTestCase
             $browser->visit($implementation->urlWebshop());
 
             $this->loginAndGoToFundVoucher($browser, $identity, $fund);
-            $this->openFirstProductAvailableForVoucher($browser, $fund, $product);
+            $this->openProductFromAvailableVoucherProductsBlock($browser, $fund, $product);
 
             $browser->waitFor('@productName');
             $browser->assertSeeIn('@productName', $product->name);
@@ -627,7 +629,7 @@ class ProductReservationTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    private function openFirstProductAvailableForVoucher(Browser $browser, Fund $fund, Product $product): void
+    private function openProductFromAvailableVoucherProductsBlock(Browser $browser, Fund $fund, Product $product): void
     {
         $browser->waitFor("@listProductsRow$product->id")->press("@listProductsRow$product->id");
         $browser->waitFor("@listFundsRow$fund->id");
@@ -754,8 +756,7 @@ class ProductReservationTest extends DuskTestCase
                 if (!empty($field['value'])) {
                     switch ($field['type']) {
                         case 'boolean':
-                            $browser->click("{$field['dusk']} .select-control-search");
-                            $this->findOptionElement($browser, $field['dusk'], $field['value'])->click();
+                            $this->changeSelectControl($browser, $field['dusk'], $field['value']);
                             break;
                         case 'number':
                         case 'text':

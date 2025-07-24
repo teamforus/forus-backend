@@ -9,21 +9,26 @@ use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
-use Facebook\WebDriver\Exception\TimeOutException;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendWebshop;
 use Tests\Browser\Traits\RollbackModelsTrait;
-use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Throwable;
 
-class PayoutsSearchFilterTest extends DuskTestCase
+class PayoutsWebshopSearchFilterTest extends BaseWebshopSearchFilter
 {
     use MakesTestFunds;
     use HasFrontendActions;
+    use NavigatesFrontendWebshop;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
+
+    public function getListSelector(): string
+    {
+        return '@listPayouts';
+    }
 
     /**
      * @throws Throwable
@@ -42,10 +47,10 @@ class PayoutsSearchFilterTest extends DuskTestCase
             'iban_name_record_key' => 'iban_name',
         ];
 
-        $fund = $this->makeTestFund($organization, fundConfigsData: $fundConfigsData);
+        $fund = $this->makeTestFund($organization, fundConfigsData: $fundConfigsData, implementation: $implementation);
         $payout = $this->makePayout($fund, $identity);
 
-        $fund2 = $this->makeTestFund($organization, fundConfigsData: $fundConfigsData);
+        $fund2 = $this->makeTestFund($organization, fundConfigsData: $fundConfigsData, implementation: $implementation);
         $payout2 = $this->makePayout($fund2, $identity);
 
         $this->rollbackModels([], function () use ($implementation, $identity, $payout, $payout2) {
@@ -56,11 +61,11 @@ class PayoutsSearchFilterTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
                 $this->goToIdentityPayouts($browser);
 
-                $this->assertSearch($browser, $payout, $payout->voucher->fund->name)
-                    ->assertSearch($browser, $payout, (string) $payout->id);
+                $this->assertListFilterQueryValue($browser, $payout->voucher->fund->name, $payout->id);
+                $this->assertListFilterQueryValue($browser, (string) $payout->id, $payout->id);
 
-                $this->assertSearch($browser, $payout2, $payout2->voucher->fund->name)
-                    ->assertSearch($browser, $payout2, (string) $payout2->id);
+                $this->assertListFilterQueryValue($browser, $payout2->voucher->fund->name, $payout2->id);
+                $this->assertListFilterQueryValue($browser, (string) $payout2->id, $payout2->id);
 
                 $this->logout($browser);
             });
@@ -84,13 +89,8 @@ class PayoutsSearchFilterTest extends DuskTestCase
             identity: $identity,
             amount: 100,
             employee: $employee,
-            bankAccount: new BankAccount(
-                $this->faker()->iban,
-                $this->faker()->name,
-            ),
-            voucherFields: [
-                'fund_request_id' => $fundRequest->id,
-            ],
+            bankAccount: new BankAccount($this->faker()->iban, $this->faker()->name),
+            voucherFields: [ 'fund_request_id' => $fundRequest->id ],
         );
 
         $payout->setPaid(null, now());
@@ -118,33 +118,5 @@ class PayoutsSearchFilterTest extends DuskTestCase
         $this->assertNotNull($fundRequest);
 
         return $fundRequest;
-    }
-
-    /**
-     * @param Browser $browser
-     * @param VoucherTransaction $payout
-     * @param string $q
-     * @throws TimeoutException
-     * @return PayoutsSearchFilterTest
-     */
-    protected function assertSearch(Browser $browser, VoucherTransaction $payout, string $q): static
-    {
-        $this->searchWebshopList($browser, '@listPayouts', $q, $payout->id);
-        $this->clearField($browser, '@listPayoutsSearch');
-
-        return $this;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return PayoutsSearchFilterTest
-     */
-    protected function fillSearchForEmptyResults(Browser $browser): static
-    {
-        $this->searchWebshopList($browser, '@listPayouts', '###############', null, 0);
-        $this->clearField($browser, '@listPayoutsSearch');
-
-        return $this;
     }
 }

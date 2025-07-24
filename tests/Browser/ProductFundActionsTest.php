@@ -50,8 +50,8 @@ class ProductFundActionsTest extends DuskTestCase
                 $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
                 $this->loginIdentity($browser, $requester);
 
-                $product = $this->makeProductsFundFund(1)[0];
-                $this->addProductFundToFund($fund, $product, false);
+                $product = $this->makeTestProviderWithProducts(1)[0];
+                $this->addProductToFund($fund, $product, false);
 
                 $browser->visit($implementation->urlWebshop("products/$product->id"));
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);
@@ -106,7 +106,7 @@ class ProductFundActionsTest extends DuskTestCase
                 });
 
                 // Create fund with same criteria
-                $this->addProductFundToFund($fund2, $product, false);
+                $this->addProductToFund($fund2, $product, false);
                 $browser->visit($implementation->urlWebshop())->refresh();
 
                 // Assert only activate button is present
@@ -129,7 +129,7 @@ class ProductFundActionsTest extends DuskTestCase
                 $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fundPayout, $payoutFundConfigs['requester_records']);
 
                 $this->approveFundRequest($fundRequest);
-                $this->addProductFundToFund($fundPayout, $product, false);
+                $this->addProductToFund($fundPayout, $product, false);
 
                 $browser->refresh();
                 $browser->waitFor('@productName')->assertSeeIn('@productName', $product->name);

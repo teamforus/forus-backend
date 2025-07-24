@@ -12,17 +12,17 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Laravel\Dusk\Browser;
-use Tests\Browser\Traits\HasFrontendActions;
-use Tests\Browser\Traits\RollbackModelsTrait;
-use Tests\DuskTestCase;
-use Tests\Traits\MakesTestFunds;
 use Throwable;
 
-class FundPreCheckSearchFilterTest extends DuskTestCase
+class FundPreCheckWebshopSearchFilterTest extends BaseWebshopSearchFilter
 {
-    use MakesTestFunds;
-    use HasFrontendActions;
-    use RollbackModelsTrait;
+    /**
+     * @return string
+     */
+    public function getListSelector(): string
+    {
+        return '@listFundsPreCheck';
+    }
 
     /**
      * @throws Throwable
@@ -54,11 +54,14 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
 
                 $this->fillPreCheckForm($browser, $criteria);
 
-                $this->assertFundsSearchIsWorking($browser, $fund)
-                    ->fillSearchForEmptyResults($browser)
-                    ->assertFundsFilterByOrganization($browser, $fund)
-                    ->fillSearchForEmptyResults($browser)
-                    ->assertFundsFilterByTag($browser, $fund);
+                $this->fillListSearchForEmptyResults($browser);
+                $this->assertFundsSearchIsWorking($browser, $fund);
+
+                $this->fillListSearchForEmptyResults($browser);
+                $this->assertListFilterByOrganization($browser, $fund->organization, $fund->id, 1);
+
+                $this->fillListSearchForEmptyResults($browser);
+                $this->assertListFilterByTag($browser, $fund->tags[0], $fund->id, 1);
 
                 $this->logout($browser);
             });
@@ -67,8 +70,8 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
                 'archived' => false,
             ]));
 
-            $fund && $this->deleteFund($fund);
-            $fund2 && $this->deleteFund($fund2);
+            $this->deleteFund($fund);
+            $this->deleteFund($fund2);
         });
     }
 
@@ -78,23 +81,10 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
      */
     protected function makeFundAndCriteria(Implementation $implementation): Fund
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()), [
-            'allow_pre_checks' => true,
-        ]);
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_pre_checks' => true]);
+        $fund = $this->makeTestFund($organization, implementation: $implementation);
 
-        $fund = $this->makeTestFund($organization, [
-            'description_text' => $this->faker->sentence,
-            'description_short' => $this->faker->sentence,
-        ], [
-            'implementation_id' => $implementation->id,
-        ]);
-
-        $fund->tags()->firstOrCreate([
-            'key' => $this->faker->slug,
-            'scope' => 'webshop',
-        ])->translateOrNew(app()->getLocale())->fill([
-            'name' => $this->faker->name,
-        ])->save();
+        $this->makeAndAppendTestFundTag($fund);
 
         // add criteria
         $recordType = RecordType::create([
@@ -123,98 +113,15 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @throws ElementClickInterceptedException
-     * @throws NoSuchElementException
-     * @throws TimeoutException
-     * @return FundPreCheckSearchFilterTest
-     */
-    protected function assertFundsFilterByOrganization(Browser $browser, Fund $fund): static
-    {
-        $browser->waitFor('@selectControlOrganizations');
-        $browser->click('@selectControlOrganizations .select-control-search');
-        $this->findOptionElement($browser, '@selectControlOrganizations', $fund->organization->name)->click();
-
-        return $this->assertFundVisible($browser, $fund);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Fund $fund
-     * @throws ElementClickInterceptedException
-     * @throws NoSuchElementException
-     * @throws TimeoutException
-     * @return FundPreCheckSearchFilterTest
-     */
-    protected function assertFundsFilterByTag(Browser $browser, Fund $fund): static
-    {
-        $browser->waitFor('@selectControlTags');
-        $browser->click('@selectControlTags .select-control-search');
-        $this->findOptionElement($browser, '@selectControlTags', $fund->tags()->first()->name)->click();
-
-        return $this->assertFundVisible($browser, $fund);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Fund $fund
      * @throws TimeOutException
-     * @return FundPreCheckSearchFilterTest
+     * @return void
      */
-    protected function assertFundsSearchIsWorking(Browser $browser, Fund $fund): static
+    protected function assertFundsSearchIsWorking(Browser $browser, Fund $fund): void
     {
-        return $this
-            ->assertSearch($browser, $fund, $fund->name)
-            ->fillSearchForEmptyResults($browser)
-            ->assertSearch($browser, $fund, $fund->organization->name)
-            ->fillSearchForEmptyResults($browser)
-            ->assertSearch($browser, $fund, $fund->description_text)
-            ->fillSearchForEmptyResults($browser)
-            ->assertSearch($browser, $fund, $fund->description_short)
-            ->fillSearchForEmptyResults($browser);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Fund $fund
-     * @param string $q
-     * @throws TimeoutException
-     * @return FundPreCheckSearchFilterTest
-     */
-    protected function assertSearch(Browser $browser, Fund $fund, string $q): static
-    {
-        $this->searchWebshopList($browser, '@listFundsPreCheck', $q, $fund->id);
-        $this->clearField($browser, '@listFundsPreCheckSearch');
-
-        return $this;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeoutException
-     * @return FundPreCheckSearchFilterTest
-     */
-    protected function fillSearchForEmptyResults(Browser $browser): static
-    {
-        $this->searchWebshopList($browser, '@listFundsPreCheck', '###############', null, 0);
-        $this->clearField($browser, '@listFundsPreCheckSearch');
-
-        return $this;
-    }
-
-    /**
-     * @param Browser $browser
-     * @param Fund $fund
-     * @param int $count
-     * @throws TimeoutException
-     * @return FundPreCheckSearchFilterTest
-     */
-    protected function assertFundVisible(Browser $browser, Fund $fund, int $count = 1): static
-    {
-        $browser->waitFor("@listFundsPreCheckRow$fund->id");
-        $browser->assertVisible("@listFundsPreCheckRow$fund->id");
-        $this->assertWebshopRowsCount($browser, $count, '@listFundsPreCheckContent');
-
-        return $this;
+        $this->assertListFilterQueryValue($browser, $fund->name, $fund->id);
+        $this->assertListFilterQueryValue($browser, $fund->organization->name, $fund->id);
+        $this->assertListFilterQueryValue($browser, $fund->description_text, $fund->id);
+        $this->assertListFilterQueryValue($browser, $fund->description_short, $fund->id);
     }
 
     /**
@@ -236,7 +143,7 @@ class FundPreCheckSearchFilterTest extends DuskTestCase
             };
 
             $browser->waitFor($selector);
-            $browser->typeSlowly($selector, 50);
+            $browser->typeSlowly($selector, 0);
         }
 
         $browser->click('@submitBtn');

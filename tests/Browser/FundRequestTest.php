@@ -9,6 +9,7 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendWebshop;
 use Tests\DuskTestCase;
 use Throwable;
 
@@ -16,6 +17,7 @@ class FundRequestTest extends DuskTestCase
 {
     use AssertsSentEmails;
     use HasFrontendActions;
+    use NavigatesFrontendWebshop;
     use WithFaker;
 
     protected ?Identity $identity;

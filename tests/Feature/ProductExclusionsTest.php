@@ -80,7 +80,7 @@ class ProductExclusionsTest extends TestCase
         $product = $products['approved'][0] ?? null;
         $this->assertNotNull($product);
 
-        array_walk($funds, fn ($fund) => $this->addProductFundToFund($fund, $product, false));
+        array_walk($funds, fn ($fund) => $this->addProductToFund($fund, $product, false));
 
         $query = http_build_query(['per_page' => 1000]);
         $response = $this->getJson("/api/v1/platform/products?$query", $headers);
@@ -168,7 +168,7 @@ class ProductExclusionsTest extends TestCase
         }
 
         // approve for other funds
-        array_walk($funds, fn ($fund) => $this->addProductFundToFund($fund, $product, false));
+        array_walk($funds, fn ($fund) => $this->addProductToFund($fund, $product, false));
 
         foreach ($funds as $fund) {
             $query = http_build_query([
