@@ -334,6 +334,107 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMeAppVoucherProductVouchersAsProviderRequest(
+        Voucher $voucher,
+        Organization $organization,
+        Identity $identity
+    ): TestResponse {
+        $address = $voucher->token_without_confirmation->address;
+
+        return $this->getJson(
+            "/api/v1/platform/provider/vouchers/$address/product-vouchers?organization_id=$organization->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return FundProvider
+     */
+    public function apiMeAppVoucherProductVouchersAsProvider(
+        Voucher $voucher,
+        Organization $organization,
+        Identity $identity
+    ): FundProvider {
+        $response = $this
+            ->apiMeAppVoucherProductVouchersAsProviderRequest($voucher, $organization, $identity)
+            ->assertSuccessful();
+
+        return FundProvider::findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakeProductReservationRequest(
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            '/api/v1/platform/product-reservations',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return ProductReservation
+     */
+    public function apiMakeProductReservation(
+        array $data,
+        Identity $identity
+    ): ProductReservation {
+        $response = $this
+            ->apiMakeProductReservationRequest($data, $identity)
+            ->assertSuccessful();
+
+        return ProductReservation::findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiCancelProductReservationRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/product-reservations/$reservation->id/cancel",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return ProductReservation
+     */
+    public function apiCancelProductReservation(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): ProductReservation {
+        $response = $this
+            ->apiCancelProductReservationRequest($reservation, $identity)
+            ->assertSuccessful();
+
+        return ProductReservation::findOrFail($response->json('data.id'));
+    }
+
+    /**
      * @param Identity $identity
      * @param Fund $fund
      * @param array $data
@@ -705,106 +806,5 @@ trait MakesApiRequests
             "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query($query),
             $this->makeApiHeaders($organization->identity),
         );
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Organization $organization
-     * @param Identity $identity
-     * @return TestResponse
-     */
-    public function apiMeAppVoucherProductVouchersAsProviderRequest(
-        Voucher $voucher,
-        Organization $organization,
-        Identity $identity
-    ): TestResponse {
-        $address = $voucher->token_without_confirmation->address;
-
-        return $this->getJson(
-            "/api/v1/platform/provider/vouchers/$address/product-vouchers?organization_id=$organization->id",
-            $this->makeApiHeaders($identity),
-        );
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Organization $organization
-     * @param Identity $identity
-     * @return FundProvider
-     */
-    public function apiMeAppVoucherProductVouchersAsProvider(
-        Voucher $voucher,
-        Organization $organization,
-        Identity $identity
-    ): FundProvider {
-        $response = $this
-            ->apiMeAppVoucherProductVouchersAsProviderRequest($voucher, $organization, $identity)
-            ->assertSuccessful();
-
-        return FundProvider::findOrFail($response->json('data.id'));
-    }
-
-    /**
-     * @param array $data
-     * @param Identity $identity
-     * @return TestResponse
-     */
-    public function apiMakeProductReservationRequest(
-        array $data,
-        Identity $identity,
-    ): TestResponse {
-        return $this->postJson(
-            '/api/v1/platform/product-reservations',
-            $data,
-            $this->makeApiHeaders($identity),
-        );
-    }
-
-    /**
-     * @param array $data
-     * @param Identity $identity
-     * @return ProductReservation
-     */
-    public function apiMakeProductReservation(
-        array $data,
-        Identity $identity
-    ): ProductReservation {
-        $response = $this
-            ->apiMakeProductReservationRequest($data, $identity)
-            ->assertSuccessful();
-
-        return ProductReservation::findOrFail($response->json('data.id'));
-    }
-
-    /**
-     * @param ProductReservation $reservation
-     * @param Identity $identity
-     * @return TestResponse
-     */
-    public function apiCancelProductReservationRequest(
-        ProductReservation $reservation,
-        Identity $identity,
-    ): TestResponse {
-        return $this->postJson(
-            "/api/v1/platform/product-reservations/$reservation->id/cancel",
-            [],
-            $this->makeApiHeaders($identity),
-        );
-    }
-
-    /**
-     * @param ProductReservation $reservation
-     * @param Identity $identity
-     * @return ProductReservation
-     */
-    public function apiCancelProductReservation(
-        ProductReservation $reservation,
-        Identity $identity,
-    ): ProductReservation {
-        $response = $this
-            ->apiCancelProductReservationRequest($reservation, $identity)
-            ->assertSuccessful();
-
-        return ProductReservation::findOrFail($response->json('data.id'));
     }
 }
