@@ -5,6 +5,7 @@ namespace App\Notifications\Identities\ProductReservation;
 use App\Mail\ProductReservations\ProductReservationCanceledMail;
 use App\Models\Identity;
 use App\Models\ProductReservation;
+use Illuminate\Support\Arr;
 
 /**
  * The product reservation was canceled.
@@ -24,8 +25,13 @@ class IdentityProductReservationCanceledNotification extends BaseProductReservat
         $refundedExtra = $reservation->extra_payment && $reservation->extra_payment->isFullyRefunded();
         $transKey = 'mails.reservations.extra_payment';
 
+        $note = Arr::get($this->eventLog->data, 'product_reservation_add_note_to_requester_notification', false)
+            ? $reservation->cancellation_note
+            : null;
+
         $mailable = new ProductReservationCanceledMail([
             ...$this->eventLog->data,
+            'provider_note' => $note,
             'webshop_link' => $implementation->urlWebshop("/reservations/$reservation->id"),
             'refunded_body' => $refundedExtra ? trans("$transKey.refunded_body") : '',
         ], $reservation->voucher->fund->getEmailFrom());

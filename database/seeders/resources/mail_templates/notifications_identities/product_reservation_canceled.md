@@ -6,4 +6,6 @@ Beste deelnemer,
 
 :refunded_body
 
+:provider_note
+
 Hebt u vragen over deze annulering? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
