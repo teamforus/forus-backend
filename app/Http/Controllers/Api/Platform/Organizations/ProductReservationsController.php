@@ -204,8 +204,8 @@ class ProductReservationsController extends Controller
 
         $productReservation->rejectOrCancelProvider(
             $organization->findEmployee($request->auth_address()),
-            $request->get('note'),
-            $request->get('notify_with_note', false)
+            $request->post('note'),
+            $request->post('share_note_by_email', false),
         );
 
         return new ProductReservationResource($productReservation);

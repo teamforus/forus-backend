@@ -25,8 +25,8 @@ class IdentityProductReservationRejectedNotification extends BaseProductReservat
         $refundedExtra = $reservation->extra_payment && $reservation->extra_payment->isFullyRefunded();
         $transKey = 'mails.reservations.extra_payment';
 
-        $note = Arr::get($this->eventLog->data, 'product_reservation_notify_with_note', false)
-            ? $reservation->rejected_note
+        $note = Arr::get($this->eventLog->data, 'product_reservation_add_note_to_requester_notification', false)
+            ? $reservation->rejection_note
             : null;
 
         $mailable = new ProductReservationRejectedMail([

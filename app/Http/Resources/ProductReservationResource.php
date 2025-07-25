@@ -43,7 +43,7 @@ class ProductReservationResource extends BaseProductReservationResource
             ...$reservation->only([
                 'id', 'state', 'state_locale', 'amount', 'code', 'amount_extra',
                 'first_name', 'last_name', 'user_note', 'phone', 'address', 'archived',
-                'canceled_note', 'rejected_note',
+                'cancellation_note', 'rejection_note',
             ]),
             'amount_locale' => currency_format_locale($reservation->amount),
             'expired' => $reservation->isExpired(),

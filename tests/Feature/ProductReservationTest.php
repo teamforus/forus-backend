@@ -135,37 +135,35 @@ class ProductReservationTest extends TestCase
      * @throws Throwable
      * @return void
      */
-    public function testProductReservationCanceledMailLog(): void
+    public function testProductReservationCancellationMailLog(): void
     {
-        $startTime = now();
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization = $this->makeTestOrganization($identity);
-        $voucher = $this->makeTestVoucher($this->makeTestFund($organization), $identity);
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $voucher = $this->makeTestVoucher($this->makeTestFund($organization), $organization->identity);
         $product = $this->findProductForReservation($voucher);
         $reservation = $this->makeReservation($voucher, $product);
         $note = 'Test reservation note from provider';
 
-        // assert reject reservation and provider note exists in mail if notify parameter is true
+        // assert reservation rejection note is present in the user email when share_note_by_email is true
         DB::beginTransaction();
-        $this->assertRejectedReservationProviderNote($reservation, $note, $startTime, true);
+        $this->assertRejectedReservationProviderNote($reservation, $note, true);
         DB::rollBack();
 
-        // assert reject reservation and provider note doesn't exist in mail if notify parameter is false
+        // assert reservation rejection note is not present in the user email when share_note_by_email is false
         DB::beginTransaction();
-        $this->assertRejectedReservationProviderNote($reservation, $note, $startTime, false);
+        $this->assertRejectedReservationProviderNote($reservation, $note, false);
         DB::rollBack();
 
         // accept reservation and assert cancel reservation
         $reservation->acceptProvider();
 
-        // assert cancel reservation and provider note exists in mail if notify parameter is true
+        // assert reservation cancellation note is present in the user email when share_note_by_email is true
         DB::beginTransaction();
-        $this->assertCanceledReservationProviderNote($reservation, $note, $startTime, true);
+        $this->assertCanceledReservationProviderNote($reservation, $note, true);
         DB::rollBack();
 
-        // assert cancel reservation and provider note doesn't exist in mail if notify parameter is false
+        // assert reservation cancellation note is not present in the user email when share_note_by_email is false
         DB::beginTransaction();
-        $this->assertCanceledReservationProviderNote($reservation, $note, $startTime, false);
+        $this->assertCanceledReservationProviderNote($reservation, $note, false);
         DB::rollBack();
     }
 
@@ -277,80 +275,66 @@ class ProductReservationTest extends TestCase
     /**
      * @param ProductReservation $reservation
      * @param string $note
-     * @param Carbon $after
-     * @param bool $assertExists
+     * @param bool $exists
      * @return void
      */
     protected function assertRejectedReservationProviderNote(
         ProductReservation $reservation,
         string $note,
-        Carbon $after,
-        bool $assertExists
+        bool $exists,
     ): void {
-        $providerIdentity = $reservation->product->organization->identity;
+        $email = $reservation->voucher->identity->email;
+        $from = now();
 
-        $this->apiCancelReservationByProvider($reservation, $providerIdentity, [
+        $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
             'note' => $note,
-            'notify_with_note' => $assertExists,
+            'share_note_by_email' => $exists,
         ]);
 
-        $this->assertCancelReservationProviderNoteInMail(
-            $reservation->voucher->identity->email,
-            ProductReservationRejectedMail::class,
-            $after,
-            $note,
-            $assertExists
-        );
+        $this->assertReservationCancelNoteInMail($email, ProductReservationRejectedMail::class, $from, $note, $exists);
     }
 
     /**
      * @param ProductReservation $reservation
      * @param string $note
-     * @param Carbon $after
-     * @param bool $assertExists
+     * @param bool $exists
      * @return void
      */
     protected function assertCanceledReservationProviderNote(
         ProductReservation $reservation,
         string $note,
-        Carbon $after,
-        bool $assertExists
+        bool $exists,
     ): void {
-        $providerIdentity = $reservation->product->organization->identity;
+        $email = $reservation->voucher->identity->email;
+        $from = now();
 
-        $this->apiCancelReservationByProvider($reservation, $providerIdentity, [
+        $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
             'note' => $note,
-            'notify_with_note' => $assertExists,
+            'share_note_by_email' => $exists,
         ]);
 
-        $this->assertCancelReservationProviderNoteInMail(
-            $reservation->voucher->identity->email,
-            ProductReservationCanceledMail::class,
-            $after,
-            $note,
-            $assertExists
-        );
+        $this->assertReservationCancelNoteInMail($email, ProductReservationCanceledMail::class, $from, $note, $exists);
     }
 
     /**
      * @param string $email
      * @param string $mailable
-     * @param Carbon $after
+     * @param Carbon $from
      * @param string $note
-     * @param bool $assertExists
+     * @param bool $exists
      * @return void
      */
-    protected function assertCancelReservationProviderNoteInMail(
+    protected function assertReservationCancelNoteInMail(
         string $email,
         string $mailable,
-        Carbon $after,
+        Carbon $from,
         string $note,
-        bool $assertExists
+        bool $exists
     ): void {
-        $this->assertMailableSent($email, $mailable, $after);
-        $email = $this->getEmailOfTypeQuery($email, $mailable, $after)->first();
+        $this->assertMailableSent($email, $mailable, $from);
+        $email = $this->getEmailOfTypeQuery($email, $mailable, $from)->first();
 
-        $assertExists
+        $exists
             ? $this->assertStringContainsString($note, $email->content)
             : $this->assertStringNotContainsString($note, $email->content);
     }

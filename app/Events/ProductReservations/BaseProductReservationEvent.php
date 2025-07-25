@@ -12,8 +12,8 @@ use Illuminate\Queue\SerializesModels;
 class BaseProductReservationEvent
 {
     use Dispatchable;
-    use InteractsWithSockets;
     use SerializesModels;
+    use InteractsWithSockets;
 
     /**
      * Create a new event instance.
@@ -22,7 +22,7 @@ class BaseProductReservationEvent
      */
     public function __construct(
         protected ProductReservation $productReservation,
-        protected bool $notifyWithNote = false
+        protected bool $addNoteToRequesterNotification = false,
     ) {
 
     }
@@ -38,9 +38,9 @@ class BaseProductReservationEvent
     /**
      * @return bool
      */
-    public function getNotifyWithNote(): bool
+    public function getAddNoteToRequesterNotification(): bool
     {
-        return $this->notifyWithNote;
+        return $this->addNoteToRequesterNotification;
     }
 
     /**
