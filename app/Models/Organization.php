@@ -66,6 +66,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
@@ -244,6 +245,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereReservationBirthDate($value)
  * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationUserNote($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsEnabled($value)
  * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
@@ -305,8 +307,8 @@ class Organization extends BaseModel
         'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
-        'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
+        'allow_bi_connection', 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',

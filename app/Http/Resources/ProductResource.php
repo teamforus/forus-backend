@@ -221,11 +221,13 @@ class ProductResource extends BaseJsonResource
                     'birth_date' => $product->reservation_birth_date === $global ?
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
+                    'note' => $organization->reservation_user_note,
                     'fields' => OrganizationReservationFieldResource::collection($fields),
                 ] : [
                     'phone' => $product::RESERVATION_FIELD_NO,
                     'address' => $product::RESERVATION_FIELD_NO,
                     'birth_date' => $product::RESERVATION_FIELD_NO,
+                    'note' => $organization->reservation_user_note,
                     'fields' => [],
                 ],
             ];

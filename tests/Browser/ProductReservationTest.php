@@ -367,6 +367,57 @@ class ProductReservationTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
+    public function testProductReservationUserNoteField(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_OPTIONAL,
+            ])->save();
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            // Test reservation with optional user note field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], noteDisabled: true);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testProductReservationRequiredAddress(): void
     {
         $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
@@ -558,6 +609,7 @@ class ProductReservationTest extends DuskTestCase
      * @param array|null $userData
      * @param array|null $addressData
      * @param array|null $otherFields
+     * @param bool $noteDisabled
      * @throws Throwable
      * @return void
      */
@@ -568,6 +620,7 @@ class ProductReservationTest extends DuskTestCase
         array $userData = null,
         array $addressData = null,
         array $otherFields = null,
+        bool $noteDisabled = false,
     ): void {
         Cache::clear();
         $implementation = $fund->getImplementation();
@@ -579,7 +632,8 @@ class ProductReservationTest extends DuskTestCase
             $userData,
             $addressData,
             $product,
-            $otherFields
+            $otherFields,
+            $noteDisabled
         ) {
             $browser->visit($implementation->urlWebshop());
 
@@ -607,7 +661,9 @@ class ProductReservationTest extends DuskTestCase
                 $this->fillReservationModalAddress($browser, $addressData);
             }
 
-            $this->fillReservationModalNote($browser);
+            if (!$noteDisabled) {
+                $this->fillReservationModalNote($browser);
+            }
 
             $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], $addressData, $otherFields);
             $this->submitReservationModal($browser);
