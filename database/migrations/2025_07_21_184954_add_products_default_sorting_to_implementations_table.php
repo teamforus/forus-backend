@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class () extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('implementations', function (Blueprint $table) {
+            $table
+                ->enum('products_default_sorting', [
+                    'name_asc', 'name_desc', 'created_at_asc', 'created_at_desc',
+                    'price_asc', 'price_desc', 'most_popular_desc', 'randomized',
+                ])
+                ->after('pre_check_banner_state')
+                ->default('created_at_desc');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('implementations', function (Blueprint $table) {
+            $table->dropColumn('products_default_sorting');
+        });
+    }
+};

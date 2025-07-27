@@ -93,12 +93,12 @@ class ImplementationsController extends Controller
             'page_title_suffix', 'show_privacy_checkbox', 'show_terms_checkbox',
             'banner_button', 'banner_button_text', 'banner_button_url', 'banner_button_target',
             'banner_wide', 'banner_collapse', 'banner_position', 'banner_button_type',
-            'banner_color', 'banner_background', 'banner_background_mobile',
+            'banner_color', 'banner_background', 'banner_background_mobile', 'products_default_sorting',
         ]));
 
         $implementation->addWebshopAnnouncement(
             $request->input('announcement', []),
-            $request->boolean('announcement.replace')
+            $request->boolean('announcement.replace'),
         );
 
         if ($implementation->organization->allow_translations && $request->has('languages')) {
