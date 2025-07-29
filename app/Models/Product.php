@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Event;
 
 /**
  * App\Models\Product.
@@ -46,6 +47,7 @@ use Illuminate\Support\Arr;
  * @property string $price_type
  * @property string|null $price_discount
  * @property int $show_on_webshop
+ * @property bool $qr_enabled
  * @property bool $reservation_enabled
  * @property string $reservation_policy
  * @property bool $reservation_fields
@@ -119,6 +121,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Product wherePriceDiscount($value)
  * @method static Builder<static>|Product wherePriceType($value)
  * @method static Builder<static>|Product whereProductCategoryId($value)
+ * @method static Builder<static>|Product whereQrEnabled($value)
  * @method static Builder<static>|Product whereReservationAddress($value)
  * @method static Builder<static>|Product whereReservationBirthDate($value)
  * @method static Builder<static>|Product whereReservationEnabled($value)
@@ -223,7 +226,7 @@ class Product extends BaseModel
     protected $fillable = [
         'name', 'description', 'description_text', 'organization_id', 'product_category_id',
         'price', 'total_amount', 'expire_at', 'sold_out',
-        'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
+        'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id', 'qr_enabled',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
         'reservation_fields', 'sku', 'ean',
@@ -233,6 +236,7 @@ class Product extends BaseModel
      * @var string[]
      */
     protected $casts = [
+        'qr_enabled' => 'boolean',
         'unlimited_stock' => 'boolean',
         'reservation_fields' => 'boolean',
         'reservation_enabled' => 'boolean',
@@ -644,20 +648,24 @@ class Product extends BaseModel
 
         if (Arr::get($options, 'qr')) {
             $query->where(function (Builder $builder) use ($activeFunds) {
+                $builder->where('qr_enabled', true);
+
                 $builder->where(function (Builder $builder) use ($activeFunds) {
-                    $builder->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
-                        $builder->whereIn('fund_id', $activeFunds);
-                        $builder->where('allow_budget', true);
+                    $builder->where(function (Builder $builder) use ($activeFunds) {
+                        $builder->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
+                            $builder->whereIn('fund_id', $activeFunds);
+                            $builder->where('allow_budget', true);
+                        });
+
+                        $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($activeFunds) {
+                            $builder->whereIn('fund_id', $activeFunds);
+                        });
                     });
 
-                    $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($activeFunds) {
-                        $builder->whereIn('fund_id', $activeFunds);
+                    $builder->orWhereHas('fund_provider_products', function (Builder $builder) use ($activeFunds) {
+                        $builder->whereHas('fund_provider', fn (Builder $b) => $b->whereIn('fund_id', $activeFunds));
+                        $builder->where('allow_scanning', true);
                     });
-                });
-
-                $builder->orWhereHas('fund_provider_products', function (Builder $builder) use ($activeFunds) {
-                    $builder->whereHas('fund_provider', fn (Builder $b) => $b->whereIn('fund_id', $activeFunds));
-                    $builder->where('allow_scanning', true);
                 });
             });
         }
@@ -883,7 +891,7 @@ class Product extends BaseModel
         /** @var Product $product */
         $product = $organization->products()->create([
             ...$request->only([
-                'name', 'description', 'price', 'product_category_id', 'expire_at',
+                'name', 'description', 'price', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
                 'reservation_fields', 'sku', 'ean',
@@ -923,7 +931,7 @@ class Product extends BaseModel
 
         $this->update([
             ...$request->only([
-                'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
+                'name', 'description', 'sold_amount', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
                 'reservation_fields', 'sku', 'ean',
@@ -935,7 +943,7 @@ class Product extends BaseModel
             ...compact('price', 'price_type', 'price_discount'),
         ]);
 
-        ProductUpdated::dispatch($this);
+        Event::dispatch(new ProductUpdated($this));
 
         if (!$bySponsor) {
             $this->logChangedMonitoredFields($prevMonitoredValues);

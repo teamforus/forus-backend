@@ -15,6 +15,7 @@ use App\Models\Product;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Event;
 
 class ProductsController extends Controller
 {
@@ -57,7 +58,8 @@ class ProductsController extends Controller
         $this->authorize('store', [Product::class, $organization]);
 
         $product = Product::storeFromRequest($organization, $request);
-        ProductCreated::dispatch($product);
+
+        Event::dispatch(new ProductCreated($product));
 
         return new ProviderProductResource($product);
     }
@@ -119,7 +121,7 @@ class ProductsController extends Controller
 
         $product->updateExclusions($request);
 
-        ProductUpdated::dispatch($product);
+        Event::dispatch(new ProductUpdated($product));
 
         return new ProviderProductResource($product);
     }

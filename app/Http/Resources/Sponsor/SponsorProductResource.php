@@ -53,7 +53,7 @@ class SponsorProductResource extends BaseJsonResource
 
         return [
             ...$product->only([
-                'id', 'name', 'description', 'product_category_id', 'sold_out',
+                'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
                 'reservation_enabled', 'reservation_policy', 'alternative_text', 'ean',
             ]),

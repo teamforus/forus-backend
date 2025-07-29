@@ -63,6 +63,7 @@ abstract class BaseProductRequest extends BaseFormRequest
             'product_category_id' => 'required|exists:product_categories,id',
             'sku' => 'nullable|string|alpha_num|max:200',
             'ean' => ['nullable', 'string', new EanCodeRule()],
+            'qr_enabled' => 'nullable|boolean',
         ];
     }
 
