@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Rules;
+
+use App\Support\MarkdownParser;
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Translation\PotentiallyTranslatedString;
+use Throwable;
+
+class MarkdownTextLengthRule implements ValidationRule
+{
+    /**
+     * @param int|null $minLength
+     * @param int|null $maxLength
+     */
+    public function __construct(
+        protected ?int $minLength = null,
+        protected ?int $maxLength = null,
+    ) {
+    }
+
+    /**
+     * Validate the given attribute.
+     *
+     * @param string $attribute
+     * @param mixed $value
+     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
+     * @return void
+     */
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        try {
+            $text = resolve(MarkdownParser::class)->toText((string) $value);
+        } catch (Throwable) {
+            $fail(__('validation.in', ['attribute' => $attribute]));
+
+            return;
+        }
+
+        $length = mb_strlen($text);
+
+        if (!is_null($this->minLength) && $length < $this->minLength) {
+            $fail(trans('validation.min.string', [
+                'attribute' => $attribute,
+                'min' => $this->minLength,
+            ]));
+
+            return;
+        }
+
+        if (!is_null($this->maxLength) && $length > $this->maxLength) {
+            $fail(trans('validation.max.string', [
+                'attribute' => $attribute,
+                'max' => $this->maxLength,
+            ]));
+        }
+    }
+}

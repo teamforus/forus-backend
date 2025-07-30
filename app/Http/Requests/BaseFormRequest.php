@@ -8,6 +8,7 @@ use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Rules\BsnRule;
+use App\Rules\MarkdownTextLengthRule;
 use App\Services\Forus\Notification\NotificationService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -353,5 +354,16 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
             'fields.*' => ['nullable', Rule::in($fields)],
             'data_format' => ['nullable', Rule::in($formats)],
         ];
+    }
+
+    /**
+     * @param int $minLength
+     * @param int $maxLength
+     * @param int $max
+     * @return array
+     */
+    protected function markdownRules(int $minLength, int $maxLength, int $max = 10000): array
+    {
+        return ['string', "max:$max", new MarkdownTextLengthRule(minLength: $minLength, maxLength: $maxLength)];
     }
 }
