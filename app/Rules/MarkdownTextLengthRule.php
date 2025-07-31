@@ -41,7 +41,7 @@ class MarkdownTextLengthRule implements ValidationRule
         $length = mb_strlen($text);
 
         if (!is_null($this->minLength) && $length < $this->minLength) {
-            $fail(trans('validation.min.string', [
+            $fail(__('validation.min.string', [
                 'attribute' => $attribute,
                 'min' => $this->minLength,
             ]));
@@ -50,7 +50,7 @@ class MarkdownTextLengthRule implements ValidationRule
         }
 
         if (!is_null($this->maxLength) && $length > $this->maxLength) {
-            $fail(trans('validation.max.string', [
+            $fail(__('validation.max.string', [
                 'attribute' => $attribute,
                 'max' => $this->maxLength,
             ]));
