@@ -17,6 +17,7 @@ use App\Models\Tag;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Throwable;
@@ -43,7 +44,24 @@ trait MakesTestFunds
         ?string $primaryKey = null,
     ): Prevalidation {
         // create prevalidation
-        $response = $this->makeStorePrevalidationRequest($organization, $fund, [
+        $response = $this->makePrevalidationForTestCriteriaRequest($organization, $fund, $primaryKey);
+        $response->assertSuccessful();
+
+        return Prevalidation::find($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param string|null $primaryKey
+     * @return TestResponse
+     */
+    public function makePrevalidationForTestCriteriaRequest(
+        Organization $organization,
+        Fund $fund,
+        ?string $primaryKey = null,
+    ): TestResponse {
+        return $this->makeStorePrevalidationRequest($organization, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
             $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
@@ -56,10 +74,6 @@ trait MakesTestFunds
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
-
-        $response->assertSuccessful();
-
-        return Prevalidation::find($response->json('data.id'));
     }
 
     /**
@@ -209,6 +223,26 @@ trait MakesTestFunds
     }
 
     /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param array $data
+     * @param array $extraData
+     * @return TestResponse
+     */
+    protected function makeStorePrevalidationBatchRequest(
+        Organization $organization,
+        Fund $fund,
+        array $data,
+        array $overwrite = [],
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
+            'fund_id' => $fund->id,
+            'data' => $data,
+            'overwrite' => $overwrite,
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
      * @param Fund $fund
      * @return void
      */
@@ -250,6 +284,7 @@ trait MakesTestFunds
 
         $fund->refresh();
         $response->assertSuccessful();
+        Cache::flush();
     }
 
     /**
@@ -281,23 +316,31 @@ trait MakesTestFunds
         ]);
 
         if ($type === $recordType::TYPE_SELECT) {
-            $recordType->record_type_options()->createMany([[
+            $recordType->record_type_options()->firstOrCreate([
                 'value' => 'foo',
+            ])->translateOrNew(app()->getLocale())->fill([
                 'name' => 'Foo',
-            ], [
+            ])->save();
+
+            $recordType->record_type_options()->firstOrCreate([
                 'value' => 'bar',
+            ])->translateOrNew(app()->getLocale())->fill([
                 'name' => 'Bar',
-            ]]);
+            ])->save();
         }
 
         if ($type === $recordType::TYPE_SELECT_NUMBER) {
-            $recordType->record_type_options()->createMany([[
+            $recordType->record_type_options()->firstOrCreate([
                 'value' => 1,
+            ])->translateOrNew(app()->getLocale())->fill([
                 'name' => 'Foo',
-            ], [
+            ])->save();
+
+            $recordType->record_type_options()->firstOrCreate([
                 'value' => 2,
+            ])->translateOrNew(app()->getLocale())->fill([
                 'name' => 'Bar',
-            ]]);
+            ])->save();
         }
 
         return $recordType;
