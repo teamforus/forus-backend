@@ -298,12 +298,10 @@ trait MakesTestFunds
         string $type,
         string $key,
     ): RecordType {
-        $existing = RecordType::where([
-            'organization_id' => $organization->id,
-            'criteria' => true,
-            'type' => $type,
-            'key' => $key,
-        ])->first();
+        $existing = RecordType::query()
+            ->where('type', $type)
+            ->where('key', $key)
+            ->first();
 
         $existing?->record_type_options()->forceDelete();
         $existing?->forceDelete();

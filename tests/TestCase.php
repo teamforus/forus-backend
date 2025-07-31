@@ -6,6 +6,7 @@ use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Cache;
 use Tests\Traits\MakesTestIdentities;
 
 abstract class TestCase extends BaseTestCase
@@ -30,6 +31,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         Implementation::clearMemo();
+        Cache::flush();
     }
 
     /**
