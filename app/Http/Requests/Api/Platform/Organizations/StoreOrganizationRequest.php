@@ -33,7 +33,7 @@ class StoreOrganizationRequest extends BaseFormRequest
 
         return [
             'name' => 'required|between:2,64',
-            'description' => 'nullable|string|max:4096',
+            'description' => ['nullable', ...$this->markdownRules(0, 4000)],
             'iban' => ['required', new IbanRule()],
             'email' => [
                 'required',
