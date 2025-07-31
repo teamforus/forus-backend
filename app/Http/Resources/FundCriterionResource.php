@@ -44,11 +44,11 @@ class FundCriterionResource extends BaseJsonResource
                 'record_type_key', 'operator', 'value',
             ]))->toArray(),
             'record_type' => [
-                ...$criterion->record_type->only([
+                ...$criterion->record_type?->only([
                     'name', 'key', 'type', 'control_type',
-                ]),
+                ]) ?? [],
                 'name' => $criterion->record_type?->name ?: $criterion->record_type?->key,
-                'options' => $criterion->record_type->getOptions(),
+                'options' => $criterion->record_type?->getOptions(),
             ],
             'is_valid' => $this->isValid($request, $criterion->fund, $identity),
             'has_record' => $this->hasTrustedRecord($request, $criterion->fund, $identity),
