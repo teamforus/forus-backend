@@ -30,7 +30,7 @@ class UpdateProductRequest extends BaseProductRequest
         $minAmount = $product->countReserved() + $product->countSold();
 
         return [
-            ...$this->baseProductRules((string) $this->input('price_type')),
+            ...$this->baseProductRules((string) $this->input('price_type'), $product),
             ...$this->reservationRules(),
 
             'total_amount' => [

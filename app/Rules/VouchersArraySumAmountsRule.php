@@ -32,7 +32,7 @@ class VouchersArraySumAmountsRule extends BaseRule
         $vouchersSum = array_sum(array_filter($vouchers, fn ($amount) => is_numeric($amount)));
 
         if ($vouchersSum > $this->fund->getMaxAmountSumVouchers()) {
-            return $this->reject(trans('validation.voucher_generator.budget_exceeded'));
+            return $this->reject(__('validation.voucher_generator.budget_exceeded'));
         }
 
         return true;
