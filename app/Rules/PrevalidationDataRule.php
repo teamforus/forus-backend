@@ -27,7 +27,7 @@ class PrevalidationDataRule extends BaseRule
         $data = collect($value);
 
         if ($data->isEmpty()) {
-            return $this->rejectTrans('validation.prevalidated_empty_data');
+            return $this->reject(__('validation.prevalidated_empty_data'));
         }
 
         $fund = $this->fund;
@@ -37,11 +37,11 @@ class PrevalidationDataRule extends BaseRule
             $records = collect($records);
 
             if ($fund && $records->keys()->search($fund->fund_config->csv_primary_key) === false) {
-                return $this->rejectTrans('validation.prevalidation_missing_primary_key');
+                return $this->reject(__('validation.prevalidation_missing_primary_key'));
             }
 
             if ($fund && $records->keys()->intersect($requiredKeys)->count() < count($requiredKeys)) {
-                return $this->rejectTrans('validation.prevalidation_missing_required_keys');
+                return $this->reject(__('validation.prevalidation_missing_required_keys'));
             }
         }
 

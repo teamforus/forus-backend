@@ -52,12 +52,12 @@ class PrevalidationItemRule extends BaseRule
         }
 
         if (!$this->fund) {
-            return $this->reject(trans('validation.required'));
+            return $this->reject(__('validation.required'));
         }
 
         if ($this->fund->fund_config->csv_primary_key === $key) {
             if ($this->doesPrimaryKeyExists($value)) {
-                return $this->reject(trans('validation.exists'));
+                return $this->reject(__('validation.exists'));
             }
 
             return true;
@@ -99,7 +99,7 @@ class PrevalidationItemRule extends BaseRule
         $validation = $criterion ? BaseFundRequestRule::validateRecordValue($criterion, $value) : null;
 
         if (!$criterion || !$validation) {
-            return $this->reject(trans('validation.in', [
+            return $this->reject(__('validation.in', [
                 'attribute' => trans('validation.attributes.value'),
             ]));
         }

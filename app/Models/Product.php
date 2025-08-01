@@ -161,6 +161,7 @@ class Product extends BaseModel
 
     public const string PRICE_TYPE_FREE = 'free';
     public const string PRICE_TYPE_REGULAR = 'regular';
+    public const string PRICE_TYPE_INFORMATIONAL = 'informational';
     public const string PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
     public const string PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
 
@@ -210,6 +211,7 @@ class Product extends BaseModel
     public const array PRICE_TYPES = [
         self::PRICE_TYPE_FREE,
         self::PRICE_TYPE_REGULAR,
+        self::PRICE_TYPE_INFORMATIONAL,
         self::PRICE_TYPE_DISCOUNT_FIXED,
         self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
     ];
@@ -674,6 +676,26 @@ class Product extends BaseModel
             ProductQuery::whereReservationEnabled($query);
         }
 
+        if (Arr::get($options, 'regular')) {
+            $query->where('price_type', self::PRICE_TYPE_REGULAR);
+        }
+
+        if (Arr::get($options, 'discount_fixed')) {
+            $query->where('price_type', self::PRICE_TYPE_DISCOUNT_FIXED);
+        }
+
+        if (Arr::get($options, 'discount_percentage')) {
+            $query->where('price_type', self::PRICE_TYPE_DISCOUNT_PERCENTAGE);
+        }
+
+        if (Arr::get($options, 'free')) {
+            $query->where('price_type', self::PRICE_TYPE_FREE);
+        }
+
+        if (Arr::get($options, 'informational')) {
+            $query->where('price_type', self::PRICE_TYPE_INFORMATIONAL);
+        }
+
         if (Arr::get($options, 'extra_payment')) {
             $query->where(function (Builder $builder) use ($activeFunds) {
                 ProductQuery::whereReservationEnabled($builder);
@@ -707,20 +729,6 @@ class Product extends BaseModel
             ->orderBy('price_type')
             ->orderBy('price_discount')
             ->orderBy('created_at', 'desc');
-    }
-
-    /**
-     * @param Builder $builder
-     * @param string $fundType
-     * @return Builder
-     */
-    public static function filterFundType(Builder $builder, string $fundType): Builder
-    {
-        $fundIds = Implementation::activeFundsQuery()->where([
-            'type' => $fundType,
-        ])->pluck('id')->toArray();
-
-        return ProductQuery::approvedForFundsAndActiveFilter($builder, $fundIds);
     }
 
     /**
@@ -778,8 +786,9 @@ class Product extends BaseModel
     public function priceLocale(): string
     {
         switch ($this->price_type) {
-            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
             case self::PRICE_TYPE_FREE: return trans('prices.free');
+            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
+            case self::PRICE_TYPE_INFORMATIONAL: return trans('prices.informational');
             case self::PRICE_TYPE_DISCOUNT_FIXED:
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
                 return trans('prices.discount', ['amount' => $this->price_discount_locale]);
@@ -824,22 +833,6 @@ class Product extends BaseModel
     }
 
     /**
-     * @param Fund $fund
-     * @param int $errorCode
-     * @return FundProviderProduct
-     */
-    public function getFundProviderProductOrFail(
-        Fund $fund,
-        int $errorCode = 403
-    ): FundProviderProduct {
-        if (!$fundProviderProduct = $this->getFundProviderProduct($fund)) {
-            abort($errorCode);
-        }
-
-        return $fundProviderProduct;
-    }
-
-    /**
      * @param Request $request
      */
     public function updateExclusions(Request $request): void
@@ -878,15 +871,12 @@ class Product extends BaseModel
      */
     public static function storeFromRequest(Organization $organization, BaseFormRequest $request): self
     {
-        $price_type = $request->input('price_type');
-        $total_amount = $request->input('total_amount');
-        $unlimited_stock = $request->input('unlimited_stock', false);
-        $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
-
-        $price_discount = in_array($price_type, [
-            self::PRICE_TYPE_DISCOUNT_FIXED,
-            self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
-        ], true) ? $request->input('price_discount') : 0;
+        $price_type = $request->post('price_type');
+        $total_amount = $request->post('total_amount');
+        $unlimited_stock = $request->post('unlimited_stock', false);
+        $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->post('price') : 0;
+        $total_amount = $unlimited_stock || ($price_type === self::PRICE_TYPE_INFORMATIONAL) ? 0 : $total_amount;
+        $price_discount = in_array($price_type, self::PRICE_DISCOUNT_TYPES) ? $request->post('price_discount') : 0;
 
         /** @var Product $product */
         $product = $organization->products()->create([
@@ -899,12 +889,14 @@ class Product extends BaseModel
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
             ]) : [],
-            'total_amount' => $unlimited_stock ? 0 : $total_amount,
+            'price' => $price,
+            'price_type' => $price_type,
+            'total_amount' => $total_amount,
+            'price_discount' => $price_discount,
             'unlimited_stock' => $unlimited_stock,
-            ...compact('price', 'price_type', 'price_discount'),
         ]);
 
-        return $product->attachMediaByUid($request->input('media_uid'));
+        return $product->attachMediaByUid($request->post('media_uid'));
     }
 
     /**
@@ -916,18 +908,14 @@ class Product extends BaseModel
         BaseFormRequest $request,
         bool $bySponsor = false,
     ): self {
-        $price_type = $request->input('price_type');
-        $total_amount = $request->input('total_amount');
-        $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
+        $total_amount = $request->post('total_amount');
+        $price = $this->price_type === self::PRICE_TYPE_REGULAR ? $request->post('price') : 0;
+        $total_amount = ($this->unlimited_stock || $this->isInformational()) ? 0 : $total_amount;
+        $price_discount = in_array($this->price_type, self::PRICE_DISCOUNT_TYPES) ? $request->post('price_discount') : 0;
 
         $prevMonitoredValues = $this->getMonitoredFields();
 
-        $price_discount = in_array($price_type, [
-            self::PRICE_TYPE_DISCOUNT_FIXED,
-            self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
-        ], true) ? $request->input('price_discount') : 0;
-
-        $this->attachMediaByUid($request->input('media_uid'));
+        $this->attachMediaByUid($request->post('media_uid'));
 
         $this->update([
             ...$request->only([
@@ -939,8 +927,9 @@ class Product extends BaseModel
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
             ]) : [],
-            'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
-            ...compact('price', 'price_type', 'price_discount'),
+            'price' => $price,
+            'price_discount' => $price_discount,
+            'total_amount' => $total_amount,
         ]);
 
         Event::dispatch(new ProductUpdated($this));
@@ -986,6 +975,14 @@ class Product extends BaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isInformational(): bool
+    {
+        return $this->price_type === self::PRICE_TYPE_INFORMATIONAL;
+    }
+
+    /**
      * @return array
      */
     public function getMonitoredFields(): array
@@ -994,18 +991,31 @@ class Product extends BaseModel
             ...$this->only(static::MONITORED_FIELDS),
             'price' => currency_format_locale(floatval($this->price)),
             'price_type' => match ($this->price_type) {
-                'free' => 'Gratis',
-                'regular' => 'Normaal',
-                'discount_fixed' => 'Korting €',
-                'discount_percentage' => 'Korting %',
+                self::PRICE_TYPE_FREE => __('prices.free'),
+                self::PRICE_TYPE_REGULAR => __('prices.regular'),
+                self::PRICE_TYPE_INFORMATIONAL => __('prices.informational'),
+                self::PRICE_TYPE_DISCOUNT_FIXED => __('prices.discount_fixed'),
+                self::PRICE_TYPE_DISCOUNT_PERCENTAGE => __('prices.discount_percentage'),
             },
             'price_discount' => match ($this->price_type) {
-                'free',
-                'regular' => 'Geen',
-                'discount_fixed' => currency_format_locale(floatval($this->price_discount)),
-                'discount_percentage' => number_format(floatval($this->price_discount)) . '%',
+                self::PRICE_TYPE_FREE,
+                self::PRICE_TYPE_REGULAR,
+                self::PRICE_TYPE_INFORMATIONAL => 'Geen',
+                self::PRICE_TYPE_DISCOUNT_FIXED => currency_format_locale(floatval($this->price_discount)),
+                self::PRICE_TYPE_DISCOUNT_PERCENTAGE => number_format(floatval($this->price_discount)) . '%',
             },
         ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string
+     */
+    public function fundPrice(Fund $fund): string
+    {
+        $providerProduct = $this->getFundProviderProduct($fund);
+
+        return $providerProduct ? $providerProduct->user_price : $this->price;
     }
 
     /**
@@ -1028,16 +1038,5 @@ class Product extends BaseModel
         if (count($changedMonitoredFields) > 0) {
             ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
-    }
-
-    /**
-     * @param Fund $fund
-     * @return string
-     */
-    public function fundPrice(Fund $fund): string
-    {
-        $providerProduct = $this->getFundProviderProduct($fund);
-
-        return $providerProduct ? $providerProduct->user_price : $this->price;
     }
 }

@@ -27,7 +27,7 @@ class RecordTypeKeyExistsRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        return in_array($value, $this->recordTypes) || $this->reject(trans('validation.exists', [
+        return in_array($value, $this->recordTypes) || $this->reject(__('validation.exists', [
             'attribute' => $attribute,
         ]));
     }

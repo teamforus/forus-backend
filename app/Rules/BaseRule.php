@@ -6,18 +6,7 @@ use Illuminate\Contracts\Validation\Rule;
 
 abstract class BaseRule implements Rule
 {
-    protected string $messageTransPrefix = '';
     protected string $messageText = '';
-
-    /**
-     * @param $messageKey
-     * @param array $replace
-     * @return bool
-     */
-    public function rejectTrans($messageKey, array $replace = []): bool
-    {
-        return $this->reject(trans($this->messageTransPrefix . $messageKey, $replace));
-    }
 
     /**
      * @param $message

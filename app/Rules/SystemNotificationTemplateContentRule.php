@@ -16,21 +16,21 @@ class SystemNotificationTemplateContentRule extends BaseRule
         $type = request()->input(substr($attribute, 0, strrpos($attribute, '.')) . '.type');
 
         if ($type == 'push' && strlen($value) > 170) {
-            return $this->reject(trans('validation.max.string', [
+            return $this->reject(__('validation.max.string', [
                 'attribute' => 'content',
                 'max' => 170,
             ]));
         }
 
         if ($type == 'database' && strlen($value) > 400) {
-            return $this->reject(trans('validation.max.string', [
+            return $this->reject(__('validation.max.string', [
                 'attribute' => 'content',
                 'max' => 400,
             ]));
         }
 
         if ($type == 'mail' && strlen($value) > 16384) {
-            return $this->reject(trans('validation.max.string', [
+            return $this->reject(__('validation.max.string', [
                 'attribute' => 'content',
                 'max' => 16384,
             ]));

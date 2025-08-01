@@ -10,12 +10,10 @@ use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use Exception;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
 
 class ProductIdToReservationRule extends BaseRule
 {
-    protected string $messageTransPrefix = 'validation.product_reservation.';
     private int $throttleTotalPendingCount;
     private int $throttleRecentlyCanceledCount;
 
@@ -40,10 +38,10 @@ class ProductIdToReservationRule extends BaseRule
      *
      * @param string $attribute
      * @param mixed $value
-     * @throws Exception
      * @return bool
+     * @throws Exception
      */
-    public function passes($attribute, $value): bool
+    public function passes($attribute, mixed $value): bool
     {
         /** @var Product $product */
         $voucher = Voucher::whereId($this->voucherId)->first();
@@ -52,40 +50,44 @@ class ProductIdToReservationRule extends BaseRule
         ], Product::whereId($value))->first();
 
         if (!$this->voucherId || !$voucher) {
-            return $this->rejectTrans('voucher_address_required');
+            return $this->reject(__('validation.product_reservation.voucher_address_required'));
         }
 
         if (!$product || !$product->exists) {
-            return $this->rejectTrans('product_not_found');
+            return $this->reject(__('validation.product_reservation.product_not_found'));
+        }
+
+        if ($product->isInformational()) {
+            return $this->reject(__('validation.product_reservation.product_is_informational'));
         }
 
         if (!$product->reservationsEnabled()) {
-            return $this->rejectTrans('reservation_not_enabled');
+            return $this->reject(__('validation.product_reservation.reservation_not_enabled'));
         }
 
         if ($product->sold_out) {
-            return $this->rejectTrans('product_sold_out');
+            return $this->reject(__('validation.product_reservation.product_sold_out'));
         }
 
         if (!$voucher->fund->fund_config->allow_reservations) {
-            return $this->rejectTrans('reservation_not_allowed_by_fund');
+            return $this->reject(__('validation.product_reservation.reservation_not_allowed_by_fund'));
         }
 
         if (
             $product->fundPrice($voucher->fund) > $voucher->amount_available &&
             !$this->isExtraPaymentEnabled($voucher, $product)
         ) {
-            return $this->rejectTrans('not_enough_voucher_funds');
+            return $this->reject(__('validation.product_reservation.not_enough_voucher_funds'));
         }
 
         // validate total limit
         if (!$this->hasStock($product['limit_total_available'] ?? null)) {
-            return $this->reject(trans('validation.product_reservation.no_total_stock'));
+            return $this->reject(__('validation.product_reservation.no_total_stock'));
         }
 
         // validate voucher limit
         if (!$this->hasStock($product['limit_available'] ?? null)) {
-            return $this->reject(trans('validation.product_reservation.no_identity_stock'));
+            return $this->reject(__('validation.product_reservation.no_identity_stock'));
         }
 
         // multiple reservations with unpaid extra by the same vouchers are not allowed
@@ -94,14 +96,14 @@ class ProductIdToReservationRule extends BaseRule
             ->where('voucher_id', $voucher->id)
             ->whereRelation('extra_payment', 'state', '!=', ReservationExtraPayment::STATE_PAID)
             ->exists()) {
-            return $this->reject(trans('validation.product_reservation.reservations_has_unpaid_extra'));
+            return $this->reject(__('validation.product_reservation.reservations_has_unpaid_extra'));
         }
 
         if ($this->throttle && $product->product_reservations()->whereIn(
             'state',
             [ProductReservation::STATE_PENDING]
         )->where('voucher_id', $voucher->id)->count() >= $this->throttleTotalPendingCount) {
-            return $this->reject(trans('validation.product_reservation.reservations_limit_reached', [
+            return $this->reject(__('validation.product_reservation.reservations_limit_reached', [
                 'count' => $this->throttleTotalPendingCount,
             ]));
         }
@@ -110,7 +112,7 @@ class ProductIdToReservationRule extends BaseRule
             'voucher_id' => $voucher->id,
             'state' => ProductReservation::STATE_CANCELED_BY_CLIENT,
         ])->where('canceled_at', '>=', now()->subHour())->count() >= $this->throttleRecentlyCanceledCount) {
-            return $this->reject(trans('validation.product_reservation.too_many_canceled_reservations_for_product', [
+            return $this->reject(__('validation.product_reservation.too_many_canceled_reservations_for_product', [
                 'count' => $this->throttleRecentlyCanceledCount,
             ]));
         }

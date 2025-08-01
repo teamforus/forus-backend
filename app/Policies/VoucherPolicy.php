@@ -359,7 +359,7 @@ class VoucherPolicy
         return $hasTransaction ? $this->deny([
             'key' => 'throttled',
             'error' => 'throttled',
-            'message' => trans('validation.voucher.throttled', compact('hardLimit')),
+            'message' => __('validation.voucher.throttled', compact('hardLimit')),
         ]) : $identity->exists();
     }
 
@@ -547,7 +547,7 @@ class VoucherPolicy
         return AuthorizationJsonResponse::deny(is_array($message) ? $message : [
             'key' => $message,
             'error' => $message,
-            'message' => trans("validation.voucher.$message"),
+            'message' => __("validation.voucher.$message"),
         ], $code);
     }
 
@@ -573,7 +573,7 @@ class VoucherPolicy
         // fund should not be expired
         if (!$voucher->isActivated()) {
             return $this->deny($voucher->isPending() ? 'pending' : [
-                'message' => trans('validation.voucher.deactivated', [
+                'message' => __('validation.voucher.deactivated', [
                     'deactivation_date' => format_date_locale($voucher->deactivationDate()),
                 ]),
             ]);
@@ -608,7 +608,7 @@ class VoucherPolicy
             return $this->deny([
                 'key' => 'reservation_not_pending',
                 'error' => 'reservation_not_pending',
-                'message' => trans(
+                'message' => __(
                     'validation.product_reservation.reservation_not_pending',
                     $voucher->product_reservation->only('code', 'state')
                 ),
