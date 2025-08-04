@@ -42,6 +42,11 @@ class SearchProductsRequest extends BaseFormRequest
             'qr' => 'nullable|bool',
             'reservation' => 'nullable|bool',
             'extra_payment' => 'nullable|bool',
+            'regular' => 'nullable|bool',
+            'discount_fixed' => 'nullable|bool',
+            'discount_percentage' => 'nullable|bool',
+            'free' => 'nullable|bool',
+            'informational' => 'nullable|bool',
             'bookmarked' => 'nullable|bool',
         ];
     }
