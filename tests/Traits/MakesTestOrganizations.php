@@ -17,8 +17,7 @@ trait MakesTestOrganizations
     public function makeTestProviderOrganization(Identity $identity, array $organizationData = []): Organization
     {
         $organization = $this->makeTestOrganization($identity, [
-            'reservations_budget_enabled' => true,
-            'reservations_subsidy_enabled' => true,
+            'reservations_enabled' => true,
             'reservation_allow_extra_payments' => true,
             ...$organizationData,
         ]);

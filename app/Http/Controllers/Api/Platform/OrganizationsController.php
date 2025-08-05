@@ -40,8 +40,7 @@ class OrganizationsController extends Controller
 
         $search = new OrganizationSearch([
             ...$request->only([
-                'type', 'is_sponsor', 'is_provider', 'is_validator', 'q',
-                'has_reservations', 'fund_type', 'order_by', 'order_dir',
+                'type', 'is_sponsor', 'is_provider', 'is_validator', 'q', 'has_reservations', 'order_by', 'order_dir',
             ]),
             'auth_address' => $request->auth_address(),
             'implementation_id' => $request->implementation()?->id,
@@ -238,7 +237,7 @@ class OrganizationsController extends Controller
         $allowExtraPayments = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
-            'reservation_phone', 'reservation_address', 'reservation_birth_date',
+            'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
             'reservation_note', 'reservation_note_text',
             ...$allowExtraPayments ? ['reservation_allow_extra_payments'] : [],
         ])));

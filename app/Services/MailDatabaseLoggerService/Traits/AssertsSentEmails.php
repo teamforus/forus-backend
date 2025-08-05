@@ -87,6 +87,25 @@ trait AssertsSentEmails
      * Assert that email confirmation was sent to the identity after given time.
      *
      * @param string $email
+     * @param string $mailable
+     * @param Carbon|null $after
+     * @return void
+     */
+    public function assertMailableNotSent(
+        string $email,
+        string $mailable,
+        ?Carbon $after = null
+    ): void {
+        static::assertFalse(
+            $this->getEmailOfTypeQuery($email, $mailable, $after)->exists(),
+            "No '$mailable' mailable sent."
+        );
+    }
+
+    /**
+     * Assert that email confirmation was sent to the identity after given time.
+     *
+     * @param string $email
      * @param Carbon|null $after
      * @return void
      */

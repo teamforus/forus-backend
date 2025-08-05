@@ -44,7 +44,6 @@ class ProductQuery
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
 
-                    $builder->whereRelation('fund', 'type', Fund::TYPE_BUDGET);
                     $builder->where('allow_products', true);
                     $builder->where('excluded', false);
                 });
@@ -205,10 +204,7 @@ class ProductQuery
             $query->where('products.name', 'LIKE', "%$q%");
             $query->orWhere('products.description_text', 'LIKE', "%$q%");
 
-            $query->orWhereHas('organization', static function (Builder $builder) use ($q) {
-                $builder->where('organizations.name', 'LIKE', "%$q%");
-                $builder->orWhere('organizations.description_text', 'LIKE', "%$q%");
-            });
+            $query->orWhereRelation('organization', 'name', 'LIKE', "%$q%");
 
             if (strlen($q) >= 3) {
                 $query->orWhereHas('product_category.translations', static function (Builder $builder) use ($q) {
@@ -280,7 +276,7 @@ class ProductQuery
     ): Builder|Relation|Product {
         $fundProviderProductQuery = function (string $type) {
             return FundProviderProduct::whereHas('fund_provider.fund', function (Builder $builder) {
-                $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
+                $builder->where('fund_provider_products.payment_type', FundProviderProduct::PAYMENT_TYPE_SUBSIDY);
                 $builder->whereIn('funds.id', Implementation::activeFundsQuery()->pluck('id'));
             })->select('amount')
                 ->orderBy('amount', $type)
@@ -313,41 +309,52 @@ class ProductQuery
     /**
      * @param Builder|Relation|Product $builder
      * @param Voucher $voucher
-     * @param Builder|null $providerOrganization
+     * @param int|array|Builder|null $organization_id
      * @param bool $checkReservationFlags
+     * @param bool $validateLimits
      * @return Builder
      */
     public static function whereAvailableForVoucher(
         Builder|Relation|Product $builder,
         Voucher $voucher,
-        Builder $providerOrganization = null,
+        null|int|array|Builder $organization_id = null,
         bool $checkReservationFlags = true,
+        bool $validateLimits = true,
     ): Builder {
-        $builder->where(function (Builder $builder) use ($voucher) {
-            $builder->whereHas('fund_provider_products', function (Builder $builder) use ($voucher) {
-                FundProviderProductQuery::whereInLimitsFilter($builder, $voucher);
-            });
-
-            if ($voucher->isBudgetType()) {
-                $builder->orWhereDoesntHave('fund_provider_products', function (Builder $builder) use ($voucher) {
+        $builder->where(function (Builder $builder) use ($voucher, $validateLimits, $organization_id) {
+            $builder->where(function (Builder|Product $builder) use ($voucher) {
+                $builder->whereDoesntHave('fund_provider_products', function (Builder $builder) use ($voucher) {
                     $builder->whereRelation('fund_provider', 'fund_id', $voucher->fund_id);
                 });
-            }
+
+                $builder->where('price', '<=', $voucher->amount_available);
+            });
+
+            $builder->orWhereHas('fund_provider_products', function (
+                Builder|Product $builder,
+            ) use ($voucher, $validateLimits, $organization_id) {
+                FundProviderProductQuery::whereAvailableForVoucher($builder, $voucher, $organization_id, $validateLimits);
+            });
         });
 
-        $builder = $builder->where('price', '<=', $voucher->amount_available);
         $builder = ProductQuery::approvedForFundsAndActiveFilter($builder, $voucher->fund_id);
 
         if ($voucher->product_id) {
             $builder->where('id', $voucher->product_id);
         }
 
-        if ($providerOrganization) {
-            $builder->whereIn('organization_id', $providerOrganization);
+        if ($organization_id) {
+            if (is_numeric($organization_id) || is_array($organization_id)) {
+                $builder->whereIn('organization_id', (array) $organization_id);
+            }
+
+            if ($organization_id instanceof Builder) {
+                $builder->whereIn('organization_id', $organization_id);
+            }
         }
 
         if ($checkReservationFlags) {
-            self::whereReservationEnabled($builder, $voucher->fund->isTypeSubsidy() ? 'subsidy' : 'budget');
+            self::whereReservationEnabled($builder);
 
             if (!$voucher->fund->fund_config->allow_reservations) {
                 $builder->whereIn('id', []);
@@ -359,22 +366,20 @@ class ProductQuery
 
     /**
      * @param Builder|Relation|Product $builder
-     * @param string $type
      * @return Builder|Relation|Product
      */
     public static function whereReservationEnabled(
         Builder|Relation|Product $builder,
-        string $type = 'subsidy',
     ): Builder|Relation|Product {
-        return $builder->whereHas('organization', function (Builder $builder) use ($type) {
-            if ($type === 'subsidy') {
-                $builder->where('reservations_subsidy_enabled', true);
-            }
+        $builder->where(function (Builder $builder) {
+            $builder->where('reservation_enabled', true);
 
-            if ($type === 'budget') {
-                $builder->where('reservations_budget_enabled', true);
-            }
+            $builder->whereHas('organization', function (Builder $builder) {
+                $builder->where('reservations_enabled', true);
+            });
         });
+
+        return $builder;
     }
 
     /**

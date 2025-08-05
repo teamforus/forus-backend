@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Str;
 
 trait MakesTestProducts
 {
@@ -51,9 +52,10 @@ trait MakesTestProducts
 
     /**
      * @param Organization $providerOrganization
+     * @param float $price
      * @return Product
      */
-    private function makeTestProductForReservation(Organization $providerOrganization): Product
+    private function makeTestProductForReservation(Organization $providerOrganization, float $price = 120): Product
     {
         return Product::create([
             'name' => $this->faker->text(60),
@@ -67,8 +69,26 @@ trait MakesTestProducts
             'price_discount' => 0,
             'total_amount' => 0,
             'sold_out' => 0,
-            'price' => 120,
+            'price' => $price,
             'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         ]);
+    }
+
+    /**
+     * @return ProductCategory
+     */
+    protected function makeProductCategory(): ProductCategory
+    {
+        $name = $this->faker->sentence(5);
+
+        $category = ProductCategory::create([
+            'key' => Str::slug($name),
+        ]);
+
+        $category->translateOrNew(app()->getLocale())->fill([
+            'name' => $name,
+        ])->save();
+
+        return $category;
     }
 }

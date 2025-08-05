@@ -20,12 +20,14 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 
 class SponsorFinancialStatisticsTest extends TestCase
 {
     use WithFaker;
     use DoesTesting;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use CreatesApplication;
     use MakesTestIdentities;
     use DatabaseTransactions;
@@ -103,7 +105,7 @@ class SponsorFinancialStatisticsTest extends TestCase
 
         foreach ($vouchersArr as $item) {
             if ($item['type'] === 'budget') {
-                $voucher = $fund->makeVoucher($this->makeIdentity());
+                $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
 
                 $voucher
                     ->makeTransactionBySponsor($employee, ['amount' => $item['transaction_amount']])
@@ -165,8 +167,8 @@ class SponsorFinancialStatisticsTest extends TestCase
 
                 $product = $this->makeTestProduct($provider, $item['product_price'], $category->id);
 
-                $this->addProductFundToFund($fund, $product, false);
-                $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+                $this->addProductToFund($fund, $product, false);
+                $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
 
                 $params = [
                     'amount' => $voucher->amount,

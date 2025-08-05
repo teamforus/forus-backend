@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Organization;
 use App\Rules\FundCriteria\FundCriteriaKeyRule;
@@ -10,6 +11,7 @@ use App\Rules\FundCriteria\FundCriteriaMaxRule;
 use App\Rules\FundCriteria\FundCriteriaMinRule;
 use App\Rules\FundCriteria\FundCriteriaOperatorRule;
 use App\Rules\FundCriteria\FundCriteriaValueRule;
+use App\Rules\MediaUidRule;
 use App\Traits\ValidatesFaq;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
@@ -38,6 +40,42 @@ abstract class BaseFundRequest extends BaseFormRequest
     {
         return [
             'external_page_url.required_if' => 'Het external URL veld is verplicht',
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function baseRules(bool $updating): array
+    {
+        $availableEmployees = $this->organization->employeesOfRoleQuery('validation')->pluck('id');
+        $descriptionPositions = implode(',', Fund::DESCRIPTION_POSITIONS);
+
+        return [
+            'name' => [$updating ? 'sometimes' : 'required', 'between:2,200'],
+            'media_uid' => ['sometimes', new MediaUidRule('fund_logo')],
+            'description' => ['nullable', ...$this->markdownRules(0, 15000)],
+            'description_short' => 'sometimes|string|max:500',
+            'description_position' => ['sometimes', 'in:' . $descriptionPositions],
+
+            'notification_amount' => 'nullable|numeric|min:0|max:1000000',
+            'faq_title' => 'nullable|string|max:200',
+            'tag_ids' => 'sometimes|array',
+            'tag_ids.*' => 'sometimes|exists:tags,id',
+
+            'request_btn_text' => 'sometimes|string|max:50',
+            'external_link_text' => 'nullable|string|max:50',
+
+            'external_link_url' => 'nullable|string|max:200',
+            'external_page' => 'nullable|boolean',
+            'external_page_url' => 'nullable|required_if:external_page,true|string|max:200|url',
+
+            'auto_requests_validation' => 'sometimes|boolean',
+            'default_validator_employee_id' => ['nullable', Rule::in($availableEmployees->toArray())],
+
+            'allow_fund_requests' => 'sometimes|boolean',
+            'allow_prevalidations' => 'sometimes|boolean',
+            'allow_direct_requests' => 'sometimes|boolean',
         ];
     }
 
@@ -87,6 +125,8 @@ abstract class BaseFundRequest extends BaseFormRequest
             'auth_2fa_restrict_reimbursements' => 'nullable|boolean',
             'provider_products_required' => 'nullable|boolean',
 
+            'allow_provider_sign_up' => 'nullable|boolean',
+
             // help columns
             ...$this->fundConfigHelpRules(),
         ];
@@ -118,8 +158,8 @@ abstract class BaseFundRequest extends BaseFormRequest
 
             'criteria.*.title' => 'nullable|string|max:100',
             'criteria.*.label' => 'nullable|string|min:1|max:200',
-            'criteria.*.description' => 'nullable|string|max:4000',
-            'criteria.*.extra_description' => 'nullable|string|max:4000',
+            'criteria.*.description' => ['nullable', ...$this->markdownRules(0, 4000)],
+            'criteria.*.extra_description' => ['nullable', ...$this->markdownRules(0, 4000)],
         ] : [];
     }
 

@@ -15,14 +15,16 @@ use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class ReimbursementTest extends DuskTestCase
 {
-    use AssertsSentEmails;
-    use MakesTestIdentities;
     use WithFaker;
+    use MakesTestVouchers;
+    use AssertsSentEmails;
     use HasFrontendActions;
+    use MakesTestIdentities;
 
     /**
      * @throws Throwable
@@ -113,7 +115,7 @@ class ReimbursementTest extends DuskTestCase
             $this->loginIdentity($browser, $identity);
             $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
-            $voucher = $implementation->funds[0]->makeVoucher($identity);
+            $voucher = $this->makeTestVoucher($implementation->funds[0], $identity);
             $shouldSubmit = $state != 'draft';
 
             $data = $this->prepareReimbursementRequestForm($browser, $voucher);
@@ -326,7 +328,7 @@ class ReimbursementTest extends DuskTestCase
         $this->assertIdentityAuthenticatedOnWebshop($browser, $reimbursement->voucher->identity);
         $this->goToReimbursementsPage($browser);
 
-        $duskSelector = "@reimbursementsItem$reimbursement->id";
+        $duskSelector = "@listReimbursementsRow$reimbursement->id";
 
         $this->selectReimbursementTabByState($browser, $reimbursement);
         $browser->waitFor($duskSelector);
@@ -435,7 +437,7 @@ class ReimbursementTest extends DuskTestCase
         array $data,
     ): void {
         $this->assertNotNull($reimbursement);
-        $duskSelector = "@reimbursementsItem$reimbursement->id";
+        $duskSelector = "@listReimbursementsRow$reimbursement->id";
 
         $submitTime = now();
         $requesterEmail = $reimbursement->voucher->identity->email;

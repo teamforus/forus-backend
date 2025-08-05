@@ -111,7 +111,7 @@ class FundSubscriber
         /** @var FundProvider[] $fundProviders */
         $fundProviders = FundProviderQuery::whereApprovedForFundsFilter(
             $fund->providers()->getQuery(),
-            $fund->id
+            $fund->id,
         )->get();
 
         foreach ($fundProviders as $fundProvider) {
@@ -139,7 +139,7 @@ class FundSubscriber
         /** @var FundProvider[] $fundProviders */
         $fundProviders = FundProviderQuery::whereApprovedForFundsFilter(
             $fund->providers()->getQuery(),
-            $fund->id
+            $fund->id,
         )->get();
 
         foreach ($fundProviders as $fundProvider) {

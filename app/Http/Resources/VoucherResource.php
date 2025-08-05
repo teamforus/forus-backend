@@ -82,7 +82,7 @@ class VoucherResource extends BaseJsonResource
         return [
             ...$voucher->only([
                 'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
-                'expired', 'deactivated', 'type', 'state', 'state_locale', 'is_external',
+                'expired', 'deactivated', 'type', 'state', 'state_locale', 'external',
             ]),
             ...$this->getBaseFields($voucher),
             ...$this->getOptionalFields($voucher),
@@ -133,29 +133,24 @@ class VoucherResource extends BaseJsonResource
         }
 
         $expire_at = $voucher->calcExpireDateForProduct($product);
-        $reservable_count = $product['limit_available'] ?? null;
-        $reservable_count = is_numeric($reservable_count) ? (int) $reservable_count : null;
         $reservable_expire_at = $expire_at?->format('Y-m-d');
         $allow_reservations = $voucher->fund->fund_config->allow_reservations;
-        $reservable_enabled = $allow_reservations && $product->reservationsEnabled($voucher->fund);
-        $reservable = $reservable_count === null;
+        $reservable_enabled = $allow_reservations && $product->reservationsEnabled();
 
-        if ($voucher->isBudgetType() && $reservable_count !== null) {
-            $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
-                Fund::whereId($voucher->fund_id),
-                $product
-            )->exists() && $reservable_count > 0;
-        }
+        $has_amount = $voucher->amount_available >= $product->fundPrice($voucher->fund);
+        $extra_payment_possible = $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available);
 
-        if (!$voucher->fund->isTypeSubsidy()) {
-            $reservable = $reservable && (
-                $voucher->amount_available >= $product->price ||
-                $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available)
-            );
-        }
+        $reservable_count = isset($product['limit_available']) && is_numeric($product['limit_available'])
+            ? (int) $product['limit_available']
+            : null;
+
+        $reservable = (
+            $reservable_count === null ||
+            (FundQuery::whereProductsAreApprovedAndActiveFilter($voucher->fund, $product)->exists() && $reservable_count > 0)
+        );
 
         return [
-            'reservable' => $reservable_enabled && $reservable,
+            'reservable' => $reservable_enabled && $reservable && ($has_amount || $extra_payment_possible),
             'reservable_count' => $reservable_count,
             'reservable_enabled' => $reservable_enabled,
             'reservable_expire_at' => $reservable_expire_at,
@@ -213,8 +208,8 @@ class VoucherResource extends BaseJsonResource
     protected function getBaseFields(Voucher $voucher): array
     {
         if ($voucher->isBudgetType()) {
-            $amount = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
-            $used = $voucher->fund->isTypeBudget() ? $amount == 0 : null;
+            $amount = $voucher->amount_available_cached;
+            $used = $amount == 0;
             $productResource = null;
         } elseif ($voucher->type === 'product') {
             $used = $voucher->transactions_count > 0;
@@ -314,9 +309,8 @@ class VoucherResource extends BaseJsonResource
                 'id', 'name', 'description', 'total_amount',
                 'sold_amount', 'product_category_id', 'organization_id',
             ]),
-            ...$product_voucher->fund->isTypeBudget() ? [
-                'price' => currency_format($product_voucher->product->price),
-            ] : [],
+            'price' => currency_format($product_voucher->product->price),
+            'price_locale' => $product_voucher->product->price_locale,
         ];
     }
 

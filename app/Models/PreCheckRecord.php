@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\RecordType|null $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PreCheckRecordSetting[] $settings
  * @property-read int|null $settings_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
+ * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord query()

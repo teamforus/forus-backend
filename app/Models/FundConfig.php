@@ -35,6 +35,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string|null $csv_primary_key
  * @property int $reservation_approve_offset
  * @property int $reimbursement_approve_offset
+ * @property bool $show_subsidies
+ * @property bool $show_qr_limits
+ * @property bool $show_requester_limits
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
@@ -50,6 +53,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_custom_amounts_validator
  * @property bool $allow_preset_amounts
  * @property bool $allow_preset_amounts_validator
+ * @property bool $allow_provider_sign_up
  * @property string|null $custom_amount_min
  * @property string|null $custom_amount_max
  * @property bool $employee_can_see_product_vouchers
@@ -123,6 +127,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmounts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmountsValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowProviderSignUp($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
@@ -203,6 +208,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReimbursementApproveOffset($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReservationApproveOffset($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowQrLimits($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowRequesterLimits($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowSubsidies($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVoucherAmountVisible($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVouchersType($value)
@@ -257,7 +265,7 @@ class FundConfig extends BaseModel
         'help_description', 'help_show_email', 'help_show_phone', 'help_show_website',
         'provider_products_required', 'criteria_label_requirement_show',
         'pre_check_excluded', 'pre_check_note',
-        'reservation_approve_offset', 'reimbursement_approve_offset',
+        'reservation_approve_offset', 'reimbursement_approve_offset', 'allow_provider_sign_up',
     ];
 
     /**
@@ -278,6 +286,7 @@ class FundConfig extends BaseModel
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
+        'allow_provider_sign_up',
     ];
 
     /**
@@ -297,6 +306,9 @@ class FundConfig extends BaseModel
         'allow_direct_payments' => 'boolean',
         'allow_voucher_top_ups' => 'boolean',
         'allow_voucher_records' => 'boolean',
+        'show_subsidies' => 'boolean',
+        'show_qr_limits' => 'boolean',
+        'show_requester_limits' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'record_validity_start_date' => 'date',
         'employee_can_see_product_vouchers' => 'boolean',
@@ -328,6 +340,7 @@ class FundConfig extends BaseModel
         'help_show_phone' => 'boolean',
         'help_show_website' => 'boolean',
         'help_show_chat' => 'boolean',
+        'allow_provider_sign_up' => 'boolean',
     ];
 
     /**

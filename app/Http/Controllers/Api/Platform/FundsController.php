@@ -36,7 +36,7 @@ class FundsController extends Controller
     {
         $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
-            'with_external', 'has_products', 'has_subsidies', 'has_providers', 'order_by', 'order_dir',
+            'with_external', 'has_products', 'has_providers', 'order_by', 'order_dir',
         ]), Implementation::queryFundsByState(Fund::STATE_ACTIVE)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
@@ -109,7 +109,7 @@ class FundsController extends Controller
             throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
         }
 
-        $voucher = $fund->makeVoucher($request->identity());
+        $voucher = $fund->makeVoucher(identity: $request->identity());
         $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
 
         $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([

@@ -18,7 +18,6 @@ return [
     'providers' => [
         'fund' => 'Fondsnaam',
         'implementation' => 'Website',
-        'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
         'provider_last_activity' => 'Laatst actief',
         'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',
@@ -108,6 +107,9 @@ return [
         'product_vouchers_active_amount' => 'Totaal aanbiedingsvouchers actief €',
         'product_vouchers_inactive_amount' => 'Totaal aanbiedingsvouchers inactief €',
         'product_vouchers_deactivated_amount' => 'Totaal aanbiedingsvouchers gedeactiveerd €',
+
+        // Payout vouchers
+        'payout_vouchers_amount' => 'Totaal uitbetalingen €',
     ],
 
     'employees' => [

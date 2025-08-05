@@ -15,6 +15,7 @@ use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestVouchers;
 use Tests\Traits\TestsReservations;
 use Throwable;
 
@@ -22,6 +23,7 @@ class AuthRedirectTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use TestsReservations;
     use HasFrontendActions;
     use RollbackModelsTrait;
@@ -108,7 +110,7 @@ class AuthRedirectTest extends DuskTestCase
 
                 // assert requester was redirected to funds page when several funds exist
                 // where requester does not have voucher
-                $browser->waitFor('@fundsList');
+                $browser->waitFor('@listFundsContent');
 
                 $this->logout($browser);
             });
@@ -137,7 +139,7 @@ class AuthRedirectTest extends DuskTestCase
                 ->each(fn (Fund $fund) => $fund->update(['state' => Fund::STATE_CLOSED]));
 
             $requester = $this->makeIdentity($this->makeUniqueEmail());
-            $fund->makeVoucher($requester);
+            $this->makeTestVoucher($fund, $requester);
 
             $this->browse(function (Browser $browser) use ($implementation, $requester, $fund) {
                 $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
@@ -177,7 +179,7 @@ class AuthRedirectTest extends DuskTestCase
                 ->each(fn (Fund $fund) => $fund->update(['state' => Fund::STATE_CLOSED]));
 
             $requester = $this->makeIdentity($this->makeUniqueEmail());
-            $funds->each(fn (Fund $fund) => $fund->makeVoucher($requester));
+            $funds->each(fn (Fund $fund) => $this->makeTestVoucher($fund, $requester));
 
             $this->browse(function (Browser $browser) use ($implementation, $requester) {
                 $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
@@ -286,7 +288,7 @@ class AuthRedirectTest extends DuskTestCase
 
         $this->rollbackModels([], function () use ($implementation, $fund) {
             $requester = $this->makeIdentity($this->makeUniqueEmail());
-            $voucher = $fund->makeVoucher($requester);
+            $voucher = $this->makeTestVoucher($fund, $requester);
 
             $this->browse(function (Browser $browser) use ($implementation, $requester, $fund, $voucher) {
                 $browser->visit($implementation->urlWebshop())->waitFor('@headerTitle');
@@ -350,7 +352,7 @@ class AuthRedirectTest extends DuskTestCase
         $fundProvider = $this->makeTestFundProvider($provider, $fund);
         $this->assertNotNull($fundProvider);
 
-        $voucher = $fund->makeVoucher($identity);
+        $voucher = $this->makeTestVoucher($fund, $identity);
         $product = $this->makeTestProductForReservation($fundProvider->organization);
 
         $response = $this->makeReservationStoreRequest($voucher, $product);

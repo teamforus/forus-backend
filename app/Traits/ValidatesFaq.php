@@ -15,7 +15,7 @@ trait ValidatesFaq
             'faq' => 'nullable|array',
             'faq.*' => 'required|array',
             'faq.*.title' => 'required|string|max:200',
-            'faq.*.description' => 'required|string|max:5000',
+            'faq.*.description' => ['required', ...$this->markdownRules(0, 500)],
         ], $allowedIds !== null ? [
             'faq.*.id' => [
                 'nullable',

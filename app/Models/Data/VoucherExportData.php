@@ -48,7 +48,7 @@ class VoucherExportData
     public function toArray(): array
     {
         $sponsor = $this->voucher->fund->organization;
-        $assigned = $this->voucher->identity_id && $this->voucher->is_granted;
+        $assigned = $this->voucher->identity_id && $this->voucher->granted;
         $identity = $this->voucher->identity;
         $firstUseDate = $this->voucher->first_use_date;
         $allowRecords = $this->voucher->fund?->fund_config?->allow_voucher_records;

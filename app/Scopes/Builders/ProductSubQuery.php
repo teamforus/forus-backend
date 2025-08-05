@@ -30,20 +30,15 @@ class ProductSubQuery
             throw new Exception('At least one filter is required.');
         }
 
-        $builder = $builder ?: Product::query();
-
         $baseQuery = $builder->addSelect([
             'limit_multiplier' => self::limitMultiplierQuery($options),
             'limit_total' => self::limitTotalSubQuery($options),
             'limit_total_used' => self::limitTotalUsedSubQuery($options, true),
             'limit_per_identity' => self::limitPerIdentitySubQuery($options),
             'limit_per_identity_used' => self::limitTotalUsedSubQuery($options),
-            'reservations_subsidy_enabled' => Organization::whereColumn('id', 'organization_id')->select([
-                'reservations_subsidy_enabled',
-            ]),
-            'reservations_budget_enabled' => Organization::whereColumn('id', 'organization_id')->select([
-                'reservations_budget_enabled',
-            ]),
+            'reservations_enabled' => Organization::query()
+                ->whereColumn('id', 'organization_id')
+                ->select('reservations_enabled'),
         ])->getQuery();
 
         $query = Product::query()->fromSub($baseQuery, 'products');
@@ -124,7 +119,7 @@ class ProductSubQuery
         $builder = self::queryFundProviderProduct($options)
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
             ->select([])
-            ->selectRaw('CAST(`limit_per_identity` * `limit_multiplier` AS SIGNED) as `limit`')
+            ->selectRaw('CAST(if(`limit_per_identity_unlimited`, null, `limit_per_identity` * `limit_multiplier`) AS SIGNED) as `limit`')
             ->getQuery()
             ->whereNull('deleted_at');
 

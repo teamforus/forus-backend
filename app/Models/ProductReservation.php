@@ -33,6 +33,7 @@ use Throwable;
  * @property int|null $voucher_transaction_id
  * @property int|null $fund_provider_product_id
  * @property string $amount
+ * @property string|null $amount_voucher
  * @property string $amount_extra
  * @property string $price
  * @property string $price_discount
@@ -51,6 +52,8 @@ use Throwable;
  * @property Carbon|null $birth_date
  * @property string|null $user_note
  * @property string|null $note
+ * @property string|null $cancellation_note
+ * @property string|null $rejection_note
  * @property bool $archived
  * @property Carbon|null $accepted_at
  * @property Carbon|null $canceled_at
@@ -63,6 +66,7 @@ use Throwable;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\ReservationExtraPayment|null $extra_payment
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read \App\Models\FundProviderProduct|null $fund_provider_product_with_trashed
  * @property-read Carbon $expire_at
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -79,9 +83,11 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountExtra($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountVoucher($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereArchived($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereBirthDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCanceledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCancellationNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCity($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereCreatedAt($value)
@@ -101,6 +107,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePriceType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereRejectedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereRejectionNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereStreet($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereUpdatedAt($value)
@@ -194,10 +201,11 @@ class ProductReservation extends BaseModel
      */
     protected $fillable = [
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
-        'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at',
+        'amount', 'amount_voucher', 'state', 'accepted_at', 'rejected_at', 'canceled_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
         'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
+        'cancellation_note', 'rejection_note',
     ];
 
     /**
@@ -295,6 +303,15 @@ class ProductReservation extends BaseModel
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_provider_product_with_trashed(): BelongsTo
+    {
+        return $this->belongsTo(FundProviderProduct::class, 'fund_provider_product_id')->withTrashed();
     }
 
     /**
@@ -440,6 +457,7 @@ class ProductReservation extends BaseModel
 
         $transaction = $this->product_voucher->makeTransaction(array_merge([
             'amount' => $this->amount,
+            'amount_voucher' => $this->amount_voucher,
             'product_id' => $this->product_id,
             'transfer_at' => $transfer_at,
             'employee_id' => $employee?->id,
@@ -489,22 +507,29 @@ class ProductReservation extends BaseModel
 
     /**
      * @param Employee|null $employee
-     * @throws Throwable
+     * @param string|null $note
+     * @param bool $addNoteToRequesterNotification
      * @return $this
+     * @throws Throwable
      */
-    public function rejectOrCancelProvider(?Employee $employee = null): self
-    {
-        DB::transaction(function () use ($employee) {
+    public function rejectOrCancelProvider(
+        ?Employee $employee = null,
+        ?string $note = null,
+        bool $addNoteToRequesterNotification = false,
+    ): self {
+        DB::transaction(function () use ($employee, $note, $addNoteToRequesterNotification) {
             $isRefund = $this->isAccepted();
 
             $this->update($isRefund ? [
                 'state' => self::STATE_CANCELED_BY_PROVIDER,
                 'canceled_at' => now(),
                 'employee_id' => $employee?->id,
+                'cancellation_note' => $note,
             ] : [
                 'state' => self::STATE_REJECTED,
                 'rejected_at' => now(),
                 'employee_id' => $employee?->id,
+                'rejection_note' => $note,
             ]);
 
             if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
@@ -512,9 +537,9 @@ class ProductReservation extends BaseModel
             }
 
             if ($isRefund) {
-                Event::dispatch(new ProductReservationCanceled($this));
+                Event::dispatch(new ProductReservationCanceled($this, $addNoteToRequesterNotification));
             } else {
-                Event::dispatch(new ProductReservationRejected($this));
+                Event::dispatch(new ProductReservationRejected($this, $addNoteToRequesterNotification));
             }
         });
 
@@ -716,7 +741,7 @@ class ProductReservation extends BaseModel
         if ($this->created_at && $this->isWaiting()) {
             $timeOffset = Config::get('forus.reservations.extra_payment_waiting_time');
             $expireAt = $this->created_at->clone()->addMinutes($timeOffset);
-            $expiresIn = now()->diffInSeconds($expireAt, false);
+            $expiresIn = now()->diffInSeconds($expireAt);
 
             return max(min($expiresIn, $this->extra_payment->expiresIn() ?: 0), 0) ?: null;
         }

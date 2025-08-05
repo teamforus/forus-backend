@@ -14,10 +14,13 @@ use InvalidArgumentException;
 use Laravel\Dusk\Browser;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 trait ExportTrait
 {
+    use MakesTestVouchers;
+
     public const array FORMATS = ['csv', 'xls'];
 
     /**
@@ -165,13 +168,13 @@ trait ExportTrait
     protected function makeProductVouchers(Fund $fund, int $count, int $childrenCount): Collection
     {
         $vouchers = collect();
-        $products = $this->makeProductsFundFund($count, 5);
+        $products = $this->makeTestProviderWithProducts($count, 5);
 
         for ($i = 1; $i <= $count; $i++) {
             $product = $products[$i - 1];
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
 
-            $voucher = $fund->makeProductVoucher($this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $voucher->appendRecord('children_nth', $childrenCount);
             $vouchers->push($voucher);
         }

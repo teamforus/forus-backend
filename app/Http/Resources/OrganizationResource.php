@@ -88,7 +88,7 @@ class OrganizationResource extends BaseJsonResource
         return array_filter([
             ...$organization->only([
                 'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
-                'website_public', 'description', 'reservation_phone', 'reservation_address',
+                'website_public', 'description', 'reservation_phone', 'reservation_address', 'reservation_user_note',
                 'reservation_birth_date', 'description_html', 'reservation_note', 'reservation_note_text',
             ]),
             ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
@@ -145,10 +145,8 @@ class OrganizationResource extends BaseJsonResource
             'has_bank_connection' => !empty($organization->bank_connection_active),
             ...$organization->only([
                 'manage_provider_products', 'backoffice_available',
-                'reservations_auto_accept', 'allow_custom_fund_notifications',
-                'reservations_budget_enabled', 'reservations_subsidy_enabled',
-                'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled',
-                'allow_batch_reservations', 'allow_budget_fund_limits',
+                'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',
+                'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled', 'allow_batch_reservations',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
                 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_profiles',

@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool|null $is_dark
- * @property-read Model|Eloquent|null $mediable
+ * @property-read Model|\Eloquent|null $mediable
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
  * @property-read int|null $presets_count
  * @property-read \App\Services\MediaService\Models\MediaPreset|null $size_original
@@ -45,7 +45,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static Builder<static>|Media whereType($value)
  * @method static Builder<static>|Media whereUid($value)
  * @method static Builder<static>|Media whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class Media extends Model
 {

@@ -11,18 +11,18 @@ use App\Models\Organization;
 use App\Models\OrganizationReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
-use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
@@ -30,12 +30,14 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class ProductReservationTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use AssertsSentEmails;
     use MakesTestProducts;
     use HasFrontendActions;
@@ -43,6 +45,7 @@ class ProductReservationTest extends DuskTestCase
     use MakesTestOrganizations;
     use MakesTestFundProviders;
     use MakesProductReservations;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
@@ -57,7 +60,7 @@ class ProductReservationTest extends DuskTestCase
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -83,7 +86,7 @@ class ProductReservationTest extends DuskTestCase
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -201,7 +204,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -299,7 +302,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -365,6 +368,57 @@ class ProductReservationTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
+    public function testProductReservationUserNoteField(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_OPTIONAL,
+            ])->save();
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            // Test reservation with optional user note field
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], noteDisabled: true);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testProductReservationRequiredAddress(): void
     {
         $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
@@ -379,7 +433,7 @@ class ProductReservationTest extends DuskTestCase
                 'reservation_fields' => true,
             ])->save();
 
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
             $this->makeTestFundProvider($provider, $fund);
             $this->assertFundHasApprovedProviders($fund);
 
@@ -678,6 +732,7 @@ class ProductReservationTest extends DuskTestCase
      * @param array|null $addressData
      * @param array|null $otherFields
      * @param bool $cancelReservation
+     * @param bool $noteDisabled
      * @throws Throwable
      * @return void
      */
@@ -689,6 +744,7 @@ class ProductReservationTest extends DuskTestCase
         array $addressData = null,
         array $otherFields = null,
         bool $cancelReservation = true,
+        bool $noteDisabled = false,
     ): void {
         Cache::clear();
         $implementation = $fund->getImplementation();
@@ -701,12 +757,13 @@ class ProductReservationTest extends DuskTestCase
             $addressData,
             $product,
             $otherFields,
-            $cancelReservation
+            $cancelReservation,
+            $noteDisabled
         ) {
             $browser->visit($implementation->urlWebshop());
 
             $this->loginAndGoToFundVoucher($browser, $identity, $fund);
-            $this->openFirstProductAvailableForVoucher($browser, $fund);
+            $this->openProductFromAvailableVoucherProductsBlock($browser, $fund, $product);
 
             $browser->waitFor('@productName');
             $browser->assertSeeIn('@productName', $product->name);
@@ -729,7 +786,9 @@ class ProductReservationTest extends DuskTestCase
                 $this->fillReservationModalAddress($browser, $addressData);
             }
 
-            $this->fillReservationModalNote($browser);
+            if (!$noteDisabled) {
+                $this->fillReservationModalNote($browser);
+            }
 
             $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], $addressData, $otherFields);
             $this->submitReservationModal($browser);
@@ -750,14 +809,14 @@ class ProductReservationTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
+     * @param Product $product
      * @throws TimeoutException
      * @return void
      */
-    private function openFirstProductAvailableForVoucher(Browser $browser, Fund $fund): void
+    private function openProductFromAvailableVoucherProductsBlock(Browser $browser, Fund $fund, Product $product): void
     {
-        // Find available product and open it
-        $browser->waitFor('@productItem')->press('@productItem');
-        $browser->waitFor("@fundItem$fund->id");
+        $browser->waitFor("@listProductsRow$product->id")->press("@listProductsRow$product->id");
+        $browser->waitFor("@listFundsRow$fund->id");
     }
 
     /**
@@ -771,7 +830,7 @@ class ProductReservationTest extends DuskTestCase
     private function openReservationModal(Browser $browser, Fund $fund): void
     {
         // Find available fund and reserve product
-        $browser->click("@fundItem$fund->id @reserveProduct");
+        $browser->click("@listFundsRow$fund->id @reserveProduct");
 
         // Wait for the reservation modal and submit with no data
         $browser->waitFor('@modalProductReserve');
@@ -792,7 +851,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitFor('@headerTitle');
 
         $this->goToVouchersPage($browser, $identity);
-        $this->goToVoucherPage($browser, $fund);
+        $this->goToVoucherPage($browser, $fund->vouchers()->where('identity_id', $identity->id)->first());
     }
 
     /**
@@ -881,8 +940,7 @@ class ProductReservationTest extends DuskTestCase
                 if (!empty($field['value'])) {
                     switch ($field['type']) {
                         case 'boolean':
-                            $browser->click("{$field['dusk']} .select-control-search");
-                            $this->findOptionElement($browser, $field['dusk'], $field['value'])->click();
+                            $this->changeSelectControl($browser, $field['dusk'], $field['value']);
                             break;
                         case 'number':
                         case 'text':
@@ -1121,39 +1179,16 @@ class ProductReservationTest extends DuskTestCase
         $this->assertReservationElementExists($browser, $reservation);
 
         // cancel reservation
-        $browser->within("@reservationItem$reservation->id", fn (Browser $el) => $el->press('@btnCancelReservation'));
+        $browser->within("@listReservationsRow$reservation->id", fn (Browser $el) => $el->press('@btnCancelReservation'));
 
         $browser->waitFor('@modalProductReserveCancel');
         $browser->within('@modalProductReserveCancel', fn (Browser $el) => $el->press('@btnSubmit'));
 
         $browser->waitUntilMissingText($reservation->code);
-        $browser->assertMissing("@reservationItem$reservation->id");
+        $browser->assertMissing("@listReservationsRow$reservation->id");
 
         $reservation->refresh();
         $this->assertTrue($reservation->isCanceledByClient(), 'Reservation not canceled.');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $voucherTitle
-     * @throws TimeOutException
-     * @return RemoteWebElement|null
-     */
-    private function findVoucherElement(Browser $browser, string $voucherTitle): ?RemoteWebElement
-    {
-        $selector = '@voucherItem';
-
-        $browser->waitFor($selector);
-
-        foreach ($browser->elements($selector) as $element) {
-            $text = $element->findElement(WebDriverBy::xpath(".//*[@data-dusk='voucherName']"))->getText();
-
-            if (trim($text) === $voucherTitle) {
-                return $element;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -1166,7 +1201,7 @@ class ProductReservationTest extends DuskTestCase
         Browser $browser,
         ProductReservation $reservation,
     ): void {
-        $selector = "@reservationItem$reservation->id";
+        $selector = "@listReservationsRow$reservation->id";
         $browser->waitFor($selector);
 
         $browser->within($selector, function (Browser $browser) use ($reservation) {
@@ -1199,19 +1234,16 @@ class ProductReservationTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param Fund $fund
-     * @throws TimeOutException
+     * @param Voucher $voucher
+     * @throws TimeoutException
      * @return void
      */
-    private function goToVoucherPage(Browser $browser, Fund $fund): void
+    private function goToVoucherPage(Browser $browser, Voucher $voucher): void
     {
-        // find voucher and open it
-        $voucherElement = $this->findVoucherElement($browser, $fund->name);
-        $this->assertNotNull($voucherElement, "Voucher for '$fund->name' not found!");
-
-        $voucherElement->click();
+        $browser->waitFor("@listVouchersRow$voucher->id");
+        $browser->element("@listVouchersRow$voucher->id")->click();
 
         $browser->waitFor('@voucherTitle');
-        $browser->assertSeeIn('@voucherTitle', $fund->name);
+        $browser->assertSeeIn('@voucherTitle', $voucher->fund->name);
     }
 }

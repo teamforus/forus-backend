@@ -56,13 +56,10 @@ class ProductReservationsController extends Controller
 
         $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+            'order_by', 'order_dir',
         ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
-        return ProductReservationResource::collection($search->query()->with(
-            ProductReservationResource::load()
-        )->orderByDesc('product_reservations.created_at')->paginate(
-            $request->input('per_page')
-        ));
+        return ProductReservationResource::queryCollection($search->query());
     }
 
     /**
@@ -84,7 +81,10 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
         $employee = $organization->findEmployee($request->auth_address());
 
-        $reservation = $voucher->reserveProduct($product, $employee, $request->only('note'));
+        $reservation = $voucher->reserveProduct($product, $employee, extraData: $request->only([
+            'note',
+        ]));
+
         $reservation->acceptProvider();
 
         return new ProductReservationResource($reservation->load(
@@ -122,7 +122,10 @@ class ProductReservationsController extends Controller
             if ($validator->passes()) {
                 $product = Product::find(array_get($item, 'product_id'));
                 $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
-                $reservation = $voucher->reserveProduct($product, $employee, array_only($item, 'note'));
+
+                $reservation = $voucher->reserveProduct($product, $employee, extraData: array_only($item, [
+                    'note',
+                ]));
 
                 $createdItems[] = $reservation->acceptProvider($employee)->id;
             } else {
@@ -199,9 +202,11 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('rejectProvider', [$productReservation, $organization]);
 
-        $productReservation->rejectOrCancelProvider($organization->findEmployee(
-            $request->auth_address()
-        ));
+        $productReservation->rejectOrCancelProvider(
+            $organization->findEmployee($request->auth_address()),
+            $request->post('note'),
+            $request->post('share_note_by_email', false),
+        );
 
         return new ProductReservationResource($productReservation);
     }

@@ -777,8 +777,7 @@ class Implementation extends BaseModel
         return [
             ...$config,
             'media' => self::getPlatformMediaConfig(),
-            'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
-            'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+            'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
             'has_payouts' => $implementation->hasPayouts(),
             'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
@@ -853,12 +852,11 @@ class Implementation extends BaseModel
     }
 
     /**
-     * @param string $type
      * @return bool
      */
-    public static function hasFundsOfType(string $type): bool
+    public static function hasInternalFunds(): bool
     {
-        return self::activeFundsQuery()->where('type', $type)->exists();
+        return FundQuery::whereIsInternal(self::activeFundsQuery())->exists();
     }
 
     /**
@@ -957,8 +955,8 @@ class Implementation extends BaseModel
 
             $query->whereHas('offices', static function (Builder $builder) use ($location, $options) {
                 OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : 0,
-                    'lng' => $location ? $location['lng'] : 0,
+                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
+                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);
             });
         }
@@ -1029,7 +1027,7 @@ class Implementation extends BaseModel
                 return $vouchers;
             }
 
-            if ($voucher = $fund->makeVoucher($identity)) {
+            if ($voucher = $fund->makeVoucher(identity: $identity)) {
                 $vouchers[] = $voucher;
             }
 

@@ -153,7 +153,6 @@ class StoreTransactionBatchRequest extends BaseFormRequest
             $builder->whereRelation('fund_config', 'allow_direct_payments', true);
 
             FundQuery::whereIsInternalConfiguredAndActive($builder->where([
-                'type' => Fund::TYPE_BUDGET,
                 'organization_id' => $this->organization->id,
             ]));
         });

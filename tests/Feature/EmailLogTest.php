@@ -20,9 +20,7 @@ use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
-use App\Mail\Vouchers\VoucherAssignedSubsidyMail;
 use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
-use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Organization;
@@ -41,12 +39,14 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestReimbursements;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class EmailLogTest extends TestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use MakesTestIdentities;
     use DatabaseTransactions;
     use MakesTestFundRequests;
@@ -68,8 +68,8 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity2);
 
-        $this->makeTestFund($organization1)->makeVoucher($identity);
-        $this->makeTestFund($organization2)->makeVoucher($identity);
+        $this->makeTestVoucher($this->makeTestFund($organization1), $identity);
+        $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
@@ -93,14 +93,14 @@ class EmailLogTest extends TestCase
         $fund1 = $this->makeTestFund($organization1);
         $fund2 = $this->makeTestFund($organization2);
 
-        $product1 = $this->makeProductsFundFund(1)[0];
-        $product2 = $this->makeProductsFundFund(1)[0];
+        $product1 = $this->makeTestProviderWithProducts(1)[0];
+        $product2 = $this->makeTestProviderWithProducts(1)[0];
 
-        $this->addProductFundToFund($fund1, $product1, false);
-        $this->addProductFundToFund($fund2, $product2, false);
+        $this->addProductToFund($fund1, $product1, false);
+        $this->addProductToFund($fund2, $product2, false);
 
-        $fund1->makeVoucher($identity)->buyProductVoucher($product1);
-        $fund2->makeVoucher($identity)->buyProductVoucher($product2);
+        $this->makeTestVoucher($fund1, $identity)->buyProductVoucher($product1);
+        $this->makeTestVoucher($fund2, $identity)->buyProductVoucher($product2);
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
@@ -108,28 +108,6 @@ class EmailLogTest extends TestCase
             organization1: $organization1,
             organization2: $organization2,
             mailable: VoucherAssignedProductMail::class,
-        );
-    }
-
-    /**
-     * @return void
-     */
-    public function testVoucherAssignedSubsidyMailLog(): void
-    {
-        $startTime = now();
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $organization1 = $this->makeTestOrganization($identity);
-        $organization2 = $this->makeTestOrganization($identity);
-
-        $this->makeTestSubsidyFund($organization1)->makeVoucher($identity);
-        $this->makeTestSubsidyFund($organization2)->makeVoucher($identity);
-
-        $this->assertIdentityEmailLogVisibilityForOrganizations(
-            startTime: $startTime,
-            identity: $identity,
-            organization1: $organization1,
-            organization2: $organization2,
-            mailable: VoucherAssignedSubsidyMail::class,
         );
     }
 
@@ -144,8 +122,8 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $this->makeTestFund($organization1)->makeVoucher($identity)->deactivate(notifyByEmail: true);
-        $this->makeTestFund($organization2)->makeVoucher($identity)->deactivate(notifyByEmail: true);
+        $this->makeTestVoucher($this->makeTestFund($organization1), $identity)->deactivate(notifyByEmail: true);
+        $this->makeTestVoucher($this->makeTestFund($organization2), $identity)->deactivate(notifyByEmail: true);
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
@@ -167,8 +145,8 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1)->makeVoucher($identity);
-        $voucher2 = $this->makeTestFund($organization2)->makeVoucher($identity);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), $identity);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
         VoucherExpireSoon::dispatch($voucher1);
         VoucherExpireSoon::dispatch($voucher2);
@@ -193,8 +171,8 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1)->makeVoucher($identity);
-        $voucher2 = $this->makeTestFund($organization2)->makeVoucher($identity);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), $identity);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
         $voucher1->makePhysicalCardRequest([
             'address' => $this->faker->streetAddress,
@@ -232,17 +210,17 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1)->makeVoucher($identity);
-        $voucher2 = $this->makeTestFund($organization2)->makeVoucher($identity);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), $identity);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
-        $product1 = $this->makeProductsFundFund(1)[0];
-        $product2 = $this->makeProductsFundFund(1)[0];
+        $product1 = $this->makeTestProviderWithProducts(1)[0];
+        $product2 = $this->makeTestProviderWithProducts(1)[0];
 
         $employee1 = $organization1->employees[0];
         $employee2 = $organization2->employees[0];
 
-        $this->addProductFundToFund($voucher1->fund, $product1, false);
-        $this->addProductFundToFund($voucher2->fund, $product2, false);
+        $this->addProductToFund($voucher1->fund, $product1, false);
+        $this->addProductToFund($voucher2->fund, $product2, false);
 
         $transaction1 = $voucher1->makeTransaction([
             'amount' => $voucher1->amount,
@@ -289,14 +267,13 @@ class EmailLogTest extends TestCase
     {
         $startTime = now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity2 = $this->makeIdentity($this->makeUniqueEmail());
+
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $this->makeTestFund($organization1);
-        $this->makeTestFund($organization2);
-
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), identity: $identity2);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), identity: $identity2);
 
         $product1 = $this->findProductForReservation($voucher1);
         $product2 = $this->findProductForReservation($voucher2);
@@ -306,7 +283,7 @@ class EmailLogTest extends TestCase
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
-            identity: $identity,
+            identity: $identity2,
             organization1: $organization1,
             organization2: $organization2,
             mailable: ProductReservationAcceptedMail::class,
@@ -321,14 +298,13 @@ class EmailLogTest extends TestCase
     {
         $startTime = now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity2 = $this->makeIdentity($this->makeUniqueEmail());
+
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $this->makeTestFund($organization1);
-        $this->makeTestFund($organization2);
-
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), identity: $identity2);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), identity: $identity2);
 
         $product1 = $this->findProductForReservation($voucher1);
         $product2 = $this->findProductForReservation($voucher2);
@@ -338,7 +314,7 @@ class EmailLogTest extends TestCase
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
-            identity: $identity,
+            identity: $identity2,
             organization1: $organization1,
             organization2: $organization2,
             mailable: ProductReservationCanceledMail::class,
@@ -353,21 +329,20 @@ class EmailLogTest extends TestCase
     {
         $startTime = now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity2 = $this->makeIdentity($this->makeUniqueEmail());
+
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $this->makeTestFund($organization1);
-        $this->makeTestFund($organization2);
-
-        $voucher1 = $this->findVoucherForReservation($organization1, Fund::TYPE_BUDGET);
-        $voucher2 = $this->findVoucherForReservation($organization2, Fund::TYPE_BUDGET);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), identity: $identity2);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), identity: $identity2);
 
         $this->makeReservation($voucher1, $this->findProductForReservation($voucher1))->rejectOrCancelProvider();
         $this->makeReservation($voucher2, $this->findProductForReservation($voucher2))->rejectOrCancelProvider();
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(
             startTime: $startTime,
-            identity: $identity,
+            identity: $identity2,
             organization1: $organization1,
             organization2: $organization2,
             mailable: ProductReservationRejectedMail::class,
@@ -385,13 +360,13 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1, [], [
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1, [], [
             'allow_reimbursements' => true,
-        ])->makeVoucher($identity);
+        ]), $identity);
 
-        $voucher2 = $this->makeTestFund($organization2, [], [
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2, [], [
             'allow_reimbursements' => true,
-        ])->makeVoucher($identity);
+        ]), $identity);
 
         $this->makeReimbursement($voucher1, true);
         $this->makeReimbursement($voucher2, true);
@@ -416,13 +391,13 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1, [], [
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1, [], [
             'allow_reimbursements' => true,
-        ])->makeVoucher($identity);
+        ]), $identity);
 
-        $voucher2 = $this->makeTestFund($organization2, [], [
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2, [], [
             'allow_reimbursements' => true,
-        ])->makeVoucher($identity);
+        ]), $identity);
 
         $reimbursement1 = $this->makeReimbursement($voucher1, true);
         $reimbursement2 = $this->makeReimbursement($voucher2, true);
@@ -456,8 +431,8 @@ class EmailLogTest extends TestCase
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
 
-        $voucher1 = $this->makeTestFund($organization1, [], ['allow_reimbursements' => true])->makeVoucher($identity);
-        $voucher2 = $this->makeTestFund($organization2, [], ['allow_reimbursements' => true])->makeVoucher($identity);
+        $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1, [], ['allow_reimbursements' => true]), $identity);
+        $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2, [], ['allow_reimbursements' => true]), $identity);
 
         $reimbursement1 = $this->makeReimbursement($voucher1, true);
         $reimbursement2 = $this->makeReimbursement($voucher2, true);

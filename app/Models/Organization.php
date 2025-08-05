@@ -57,8 +57,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $is_sponsor
  * @property bool $is_provider
  * @property bool $is_validator
- * @property bool $reservations_budget_enabled
- * @property bool $reservations_subsidy_enabled
+ * @property bool $reservations_enabled
  * @property bool $translations_enabled
  * @property int $translations_daily_limit
  * @property int $translations_weekly_limit
@@ -69,11 +68,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_birth_date
  * @property bool $reservation_note
  * @property string|null $reservation_note_text
+ * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $allow_custom_fund_notifications
- * @property bool $allow_budget_fund_limits
  * @property bool $allow_manual_bulk_processing
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
@@ -191,7 +190,6 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllow2faRestrictions($value)
  * @method static EloquentBuilder<static>|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder<static>|Organization whereAllowBiConnection($value)
- * @method static EloquentBuilder<static>|Organization whereAllowBudgetFundLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
@@ -251,9 +249,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereReservationNote($value)
  * @method static EloquentBuilder<static>|Organization whereReservationNoteText($value)
  * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationUserNote($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
- * @method static EloquentBuilder<static>|Organization whereReservationsBudgetEnabled($value)
- * @method static EloquentBuilder<static>|Organization whereReservationsSubsidyEnabled($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationsEnabled($value)
  * @method static EloquentBuilder<static>|Organization whereShowProviderTransactions($value)
  * @method static EloquentBuilder<static>|Organization whereTranslationsDailyLimit($value)
  * @method static EloquentBuilder<static>|Organization whereTranslationsEnabled($value)
@@ -311,10 +309,10 @@ class Organization extends BaseModel
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'manage_provider_products', 'description', 'description_text',
-        'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
+        'backoffice_available', 'reservations_enabled',
         'reservations_auto_accept', 'bsn_enabled', 'allow_custom_fund_notifications',
-        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'allow_bi_connection',
-        'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+        'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
+        'allow_bi_connection', 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
         'auth_2fa_funds_policy', 'auth_2fa_funds_remember_ip', 'auth_2fa_funds_restrict_emails',
         'auth_2fa_funds_restrict_auth_sessions', 'auth_2fa_funds_restrict_reimbursements',
         'reservation_allow_extra_payments', 'allow_provider_extra_payments',
@@ -340,13 +338,11 @@ class Organization extends BaseModel
         'is_validator' => 'boolean',
         'backoffice_available' => 'boolean',
         'manage_provider_products' => 'boolean',
-        'reservations_budget_enabled' => 'boolean',
-        'reservations_subsidy_enabled' => 'boolean',
+        'reservations_enabled' => 'boolean',
         'translations_enabled' => 'boolean',
         'reservations_auto_accept' => 'boolean',
         'allow_batch_reservations' => 'boolean',
         'allow_custom_fund_notifications' => 'boolean',
-        'allow_budget_fund_limits' => 'boolean',
         'allow_manual_bulk_processing' => 'boolean',
         'allow_2fa_restrictions' => 'boolean',
         'allow_fund_request_record_edit' => 'boolean',
@@ -389,12 +385,12 @@ class Organization extends BaseModel
     }
 
     /**
-     * @param string|null $type
+     * @param bool $external
      * @return string
      */
-    public function initialFundState(?string $type = 'budget'): string
+    public function initialFundState(bool $external): string
     {
-        if ($type === Fund::TYPE_EXTERNAL && $this->pre_approve_external_funds) {
+        if ($external && $this->pre_approve_external_funds) {
             return Fund::STATE_PAUSED;
         }
 
@@ -776,9 +772,8 @@ class Organization extends BaseModel
     public function providerProductsQuery(mixed $fund_id = []): EloquentBuilder
     {
         $productsQuery = ProductQuery::whereNotExpired($this->products()->getQuery());
-        $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
 
-        return $productsQuery->whereNull('sponsor_organization_id');
+        return ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
     }
 
     /**
@@ -1095,5 +1090,16 @@ class Organization extends BaseModel
                 'order' => $order,
             ]);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPayoutFunds(): bool
+    {
+        $payoutFundsQuery = FundQuery::whereIsInternal($this->funds())
+            ->whereRelation('fund_config', 'outcome_type', FundConfig::OUTCOME_TYPE_PAYOUT);
+
+        return $this->allow_payouts && $payoutFundsQuery->exists();
     }
 }

@@ -26,16 +26,16 @@ trait MakesTestFundProviders
      */
     protected function makeProviderAndProducts(Fund $fund, int $countProducts = 5): array
     {
-        $approvedProducts = $this->makeProductsFundFund($countProducts);
-        $emptyStockProducts = $this->makeProductsFundFund($countProducts);
-        $unapprovedProducts = $this->makeProductsFundFund($countProducts);
+        $approvedProducts = $this->makeTestProviderWithProducts($countProducts);
+        $emptyStockProducts = $this->makeTestProviderWithProducts($countProducts);
+        $unapprovedProducts = $this->makeTestProviderWithProducts($countProducts);
 
         foreach ($approvedProducts as $product) {
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
         }
 
         foreach ($emptyStockProducts as $product) {
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
             $product->update([ 'total_amount' => 0 ]);
             $product->updateSoldOutState();
         }
@@ -72,7 +72,7 @@ trait MakesTestFundProviders
      * @param float $price
      * @return Product[]
      */
-    protected function makeProductsFundFund(int $count, float $price = 10): array
+    protected function makeTestProviderWithProducts(int $count, float $price = 10): array
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail('provider_'));
         $provider = $this->makeTestProviderOrganization($identity);
@@ -87,28 +87,31 @@ trait MakesTestFundProviders
      * @param Fund $fund
      * @param Product $product
      * @param bool $approveGlobal
+     * @param bool|null $subsidyProduct
      * @return void
      */
-    protected function addProductFundToFund(
+    protected function addProductToFund(
         Fund $fund,
         Product $product,
         bool $approveGlobal,
+        bool $subsidyProduct = false,
     ): void {
         /** @var FundProvider $fundProvider */
         $fundProvider = $fund->providers()->firstOrCreate([
             'state' => FundProvider::STATE_ACCEPTED,
-            'allow_budget' => $fund->isTypeBudget(),
+            'allow_budget' => true,
             'allow_products' => $approveGlobal,
             'organization_id' => $product->organization_id,
         ]);
 
-        if (!$approveGlobal || $fund->isTypeSubsidy()) {
+        if (!$approveGlobal) {
             $this->updateProductsRequest($fund, $fundProvider, [
                 'enable_products' => [[
                     'id' => $product->id,
                     'limit_total' => $product->stock_amount,
                     'limit_per_identity' => 1,
-                    ...($fund->isTypeSubsidy() ? ['amount' => $product->price] : []),
+                    'payment_type' => $subsidyProduct ? 'subsidy' : 'budget',
+                    ...($subsidyProduct ? ['amount' => $product->price] : []),
                 ]],
             ]);
         }

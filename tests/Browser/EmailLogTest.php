@@ -17,21 +17,25 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class EmailLogTest extends DuskTestCase
 {
     use MakesTestFunds;
     use AssertsSentEmails;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use MakesTestIdentities;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
+    use NavigatesFrontendDashboard;
 
     protected ?Carbon $startTime = null;
 
@@ -48,7 +52,7 @@ class EmailLogTest extends DuskTestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($implementation->organization);
 
-        $fund->makeVoucher($identity);
+        $this->makeTestVoucher($fund, $identity);
 
         $this->rollbackModels([], function () use ($implementation, $fund, $identity) {
             $this->browse(function (Browser $browser) use ($implementation, $fund, $identity) {
@@ -171,7 +175,7 @@ class EmailLogTest extends DuskTestCase
             $browser->click("@tableFundRequestRow$otherFundRequest->id");
         } else {
             // assert that employee doesn't see log for other identity (related to organization)
-            $fund->makeVoucher($identity);
+            $this->makeTestVoucher($fund, $identity);
 
             $this->goSponsorProfilesPage($browser);
             $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);

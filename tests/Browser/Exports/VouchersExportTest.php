@@ -14,9 +14,11 @@ use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 use ZipArchive;
 
@@ -24,8 +26,10 @@ class VouchersExportTest extends DuskTestCase
 {
     use ExportTrait;
     use MakesTestFunds;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
+    use NavigatesFrontendDashboard;
 
     protected const array QR_CODE_FORMATS = ['null', 'pdf', 'png'];
 
@@ -45,7 +49,7 @@ class VouchersExportTest extends DuskTestCase
         $organization = $implementation->organization;
 
         $fund = $this->makeTestFund($organization, fundConfigsData: ['allow_voucher_records' => false]);
-        $voucher = $fund->makeVoucher($this->makeIdentity($this->makeUniqueEmail()));
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()));
 
         $this->rollbackModels([], function () use ($implementation, $organization, $voucher) {
             $this->browse(function (Browser $browser) use ($implementation, $organization, $voucher) {

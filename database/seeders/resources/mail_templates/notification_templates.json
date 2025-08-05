@@ -374,14 +374,6 @@
             "content": "Het budget voor \":fund_name\" is opgehoogd met :fund_top_up_amount_locale."
         }
     },
-    "notifications_funds.product_subsidy_removed": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": ":provider_name heeft de prijs veranderd voor \":product_name\"",
-            "content": ":provider_name heeft de prijs veranderd voor :product_name\" en de actie is verwijderd uit de webshop. Als u dit aanbod weer wilt toevoegen aan de webshop, start opnieuw een actie op uw dashboard."
-        }
-    },
     "notifications_fund_providers.fund_started": {
         "mail": {},
         "push": {},
@@ -474,6 +466,17 @@
             "content": "Aanbod :product_name is gereserveerd."
         }
     },
+    "notifications_products.reserved_by_sponsor": {
+        "mail": {
+            "title": "Uw aanbod :product_name is gereserveerd",
+            "template": "notifications_products/reserved_by_sponsor.md"
+        },
+        "push": {},
+        "database": {
+            "title": ":product_name is aangemaakt namens u door :sponsor_name.",
+            "content": ":product_name is aangemaakt namens u door :sponsor_name en de klant kan bij u terecht om gebruik te maken van het aanbod."
+        }
+    },
     "notifications_products.reservation_canceled": {
         "mail": {},
         "push": {},
@@ -529,23 +532,6 @@
             "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
         }
     },
-    "notifications_identities.identity_voucher_assigned_subsidy": {
-        "mail": {
-            "title": "Hierbij ontvangt u uw :fund_name",
-            "title_informal": "Hierbij ontvang je :fund_name",
-            "template": "notifications_identities/identity_voucher_assigned_subsidy.md",
-            "template_informal": "notifications_identities/identity_voucher_assigned_subsidy_informal.md"
-        },
-        "push": {
-            "title": ":fund_name",
-            "content": "Gefeliciteerd! De activatie van :fund_name is gelukt!."
-        },
-        "database": {
-            "title": ":fund_name is aan u toegekend.",
-            "title_informal": "Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
-            "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
-        }
-    },
     "notifications_identities.identity_voucher_assigned_product": {
         "mail": {
             "title": "Hierbij ontvangt u uw :product_name",
@@ -584,15 +570,6 @@
             "title_informal": "Je hebt een :product_name gereserveerd.",
             "content": "U heeft :product_name gereserveerd bij :provider_name.",
             "content_informal": "Je hebt :product_name gereserveerd bij :provider_name."
-        }
-    },
-    "notifications_identities.voucher_added_subsidy": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": "Er is een :fund_name aan u toegekend.",
-            "title_informal": "Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
-            "content": "De QR-code is geldig tot en met :voucher_expire_date_locale."
         }
     },
     "notifications_identities.voucher_added_budget": {
@@ -685,20 +662,6 @@
             "title_informal": "Er is een bedrag van je :fund_name afgeschreven.",
             "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is :voucher_amount_locale.",
             "content_informal": "Er is met je tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van je :fund_name is :voucher_amount_locale."
-        }
-    },
-    "notifications_identities.voucher_subsidy_transaction": {
-        "mail": {
-            "title": "Aanbieding van :fund_name gebruikt!",
-            "template": "notifications_identities/voucher_subsidy_transaction.md"
-        },
-        "push": {
-            "title": ":fund_name",
-            "content": "Het resterende tegoed voor :product_name is :subsidy_new_limit"
-        },
-        "database": {
-            "title": "Aanbieding van :fund_name gebruikt!",
-            "content": "Er is gebruikgemaakt van een :fund_name aanbieding.\n Het resterende tegoed voor :product_name is :subsidy_new_limit"
         }
     },
     "notifications_identities.product_voucher_transaction": {

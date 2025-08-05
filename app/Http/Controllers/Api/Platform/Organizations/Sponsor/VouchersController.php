@@ -30,6 +30,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Event;
 use Throwable;
 
 class VouchersController extends Controller
@@ -39,8 +40,8 @@ class VouchersController extends Controller
      *
      * @param IndexVouchersRequest $request
      * @param Organization $organization
+     * @throws Throwable
      * @throws AuthorizationException
-     * @throws Exception
      * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
@@ -63,8 +64,8 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @return SponsorVoucherResource
      */
     public function store(
         StoreVoucherRequest $request,
@@ -77,27 +78,47 @@ class VouchersController extends Controller
 
         $note = $request->input('note');
         $email = $request->input('email', false);
-        $amount = currency_format($fund->isTypeBudget() ? $request->input('amount', 0) : 0);
+        $amount = currency_format($request->input('amount', 0));
         $expire_at = $request->input('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $identity = $email ? Identity::findOrMake($email) : null;
         $multiplier = $request->input('limit_multiplier');
         $records = $request->input('records', []);
+        $notifyProvider = $request->input('notify_provider', false);
 
         $bsn = $request->input('bsn', false);
         $report_type = $request->input('report_type', VoucherRelation::REPORT_TYPE_USER);
 
         $employee_id = $organization->findEmployee($request->auth_address())->id;
-        $extraFields = compact('note', 'employee_id');
+        $voucherFields = compact('note', 'employee_id');
         $productVouchers = [];
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
         if ($product_id) {
-            $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+            $mainVoucher = $fund
+                ->makeProductVoucher(
+                    identity: $identity,
+                    voucherFields: $voucherFields,
+                    productId: $product_id,
+                    expireAt: $expire_at,
+                    dispatchCreated: false,
+                )
+                ->dispatchCreated(
+                    notifyRequesterReserved: false,
+                    notifyProviderReserved: false,
+                    notifyProviderReservedBySponsor: $notifyProvider,
+                );
         } else {
-            $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
-            $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
+            $mainVoucher = $fund->makeVoucher(
+                identity: $identity,
+                voucherFields: $voucherFields,
+                amount: $amount,
+                expireAt: $expire_at,
+                limitMultiplier: $multiplier,
+            );
+
+            $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
         }
 
         /** @var Voucher[] $vouchers */
@@ -109,7 +130,7 @@ class VouchersController extends Controller
                 $voucher->setBsnRelation($bsn, $report_type)->assignByBsnIfExists();
             }
 
-            if (!$voucher->is_granted) {
+            if (!$voucher->granted) {
                 if (!$request->input('activate')) {
                     $voucher->setPending();
                 }
@@ -179,24 +200,44 @@ class VouchersController extends Controller
         ) {
             $note = $voucher['note'] ?? null;
             $email = $voucher['email'] ?? false;
-            $amount = currency_format($fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0);
+            $amount = currency_format($voucher['amount'] ?? 0);
             $records = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
             $identity = $email ? Identity::findOrMake($email) : null;
             $expire_at = $voucher['expire_at'] ?? false;
             $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
+            $notifyProvider = $voucher['notify_provider'] ?? false;
 
             $employee_id = $employee->id;
-            $extraFields = compact('note', 'employee_id');
+            $voucherFields = compact('note', 'employee_id');
             $payment_iban = $voucher['direct_payment_iban'] ?? null;
             $payment_name = $voucher['direct_payment_name'] ?? null;
 
             if ($product_id) {
-                $mainVoucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
+                $mainVoucher = $fund
+                    ->makeProductVoucher(
+                        identity: $identity,
+                        voucherFields: $voucherFields,
+                        productId: $product_id,
+                        expireAt: $expire_at,
+                        dispatchCreated: false,
+                    )
+                    ->dispatchCreated(
+                        notifyRequesterReserved: false,
+                        notifyProviderReserved: false,
+                        notifyProviderReservedBySponsor: $notifyProvider,
+                    );
             } else {
-                $mainVoucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
-                $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $extraFields, $expire_at);
+                $mainVoucher = $fund->makeVoucher(
+                    identity: $identity,
+                    voucherFields: $voucherFields,
+                    amount: $amount,
+                    expireAt: $expire_at,
+                    limitMultiplier: $multiplier,
+                );
+
+                $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
             }
 
             /** @var Voucher[] $vouchers */
@@ -210,7 +251,7 @@ class VouchersController extends Controller
                         ->assignByBsnIfExists();
                 }
 
-                if (!$voucherModel->is_granted) {
+                if (!$voucherModel->granted) {
                     if (!($voucher['activate'] ?? false)) {
                         $voucherModel->setPending();
                     }
@@ -317,15 +358,14 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$voucher, $organization]);
 
-        if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
-            $currentLimitMultiplier = $voucher->limit_multiplier;
+        $currentLimitMultiplier = $voucher->limit_multiplier;
 
-            if ($request->input('limit_multiplier') != $currentLimitMultiplier) {
-                VoucherLimitUpdated::dispatch(
-                    $voucher->updateModel($request->only('limit_multiplier')),
-                    $currentLimitMultiplier,
-                );
-            }
+        if ($request->post('limit_multiplier') != $currentLimitMultiplier) {
+            $voucher->update([
+                'limit_multiplier' => $request->post('limit_multiplier'),
+            ]);
+
+            Event::dispatch(new VoucherLimitUpdated($voucher, $currentLimitMultiplier));
         }
 
         return SponsorVoucherResource::create($voucher);
@@ -445,7 +485,7 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @throws AuthorizationException|Exception
+     * @throws Throwable
      * @return VoucherExportArrResource
      */
     public function export(

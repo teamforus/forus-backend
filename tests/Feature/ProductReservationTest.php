@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ProductReservations\ProductReservationCanceledMail;
+use App\Mail\ProductReservations\ProductReservationRejectedMail;
 use App\Mail\ProductReservations\ProductReservationAcceptedMail;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -16,6 +18,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestVouchers;
@@ -25,6 +28,7 @@ use Throwable;
 class ProductReservationTest extends TestCase
 {
     use MakesTestFunds;
+    use MakesApiRequests;
     use MakesTestVouchers;
     use TestsReservations;
     use AssertsSentEmails;
@@ -38,28 +42,11 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucher(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->checkValidReservation($voucher, $product);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithSubsidyVoucherAsUser(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkValidReservation($voucher, $product);
@@ -72,88 +59,14 @@ class ProductReservationTest extends TestCase
     public function testReservationWithBudgetVoucherAsGuest(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->makeReservationStoreRequest($voucher, $product, [], false)->assertUnauthorized();
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithSubsidyVoucherAsGuest(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->makeReservationStoreRequest($voucher, $product, [], false)->assertUnauthorized();
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithInvalidVoucher(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        Organization::query()
-            ->where('reservations_subsidy_enabled', true)
-            ->update(['reservations_subsidy_enabled' => false]);
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $voucherBudget = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucherBudget);
-
-        $this
-            ->makeReservationStoreRequest($voucher, $product)
-            ->assertJsonValidationErrorFor('product_id');
-
-        Organization::query()
-            ->where('reservations_subsidy_enabled', false)
-            ->update(['reservations_subsidy_enabled' => true]);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationWithInvalidProduct(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        Organization::query()
-            ->where('reservations_budget_enabled', true)
-            ->update(['reservations_budget_enabled' => false]);
-
-        $voucherSubsidy = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucherSubsidy);
-
-        $this
-            ->makeReservationStoreRequest($voucher, $product)
-            ->assertJsonValidationErrorFor('product_id');
-
-        Organization::where('reservations_budget_enabled', false)
-            ->update(['reservations_budget_enabled' => true]);
     }
 
     /**
@@ -163,28 +76,11 @@ class ProductReservationTest extends TestCase
     public function testReservationProviderWithBudgetVoucher(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
-        $product = $this->findProductForReservation($voucher);
-
-        $this->checkAcceptAndRejectByProvider($voucher, $product);
-    }
-
-    /**
-     * @throws Exception
-     * @return void
-     */
-    public function testReservationProviderWithSubsidyVoucher(): void
-    {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestSubsidyFund($organization));
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_SUBSIDIES);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkAcceptAndRejectByProvider($voucher, $product);
@@ -197,11 +93,11 @@ class ProductReservationTest extends TestCase
     public function testReservationArchiving(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $this->checkReservationArchiving($voucher, $product);
@@ -214,11 +110,11 @@ class ProductReservationTest extends TestCase
     public function testReservationExpireOffset(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
 
-        $this->assertNotNull($organization);
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $product = $this->findProductForReservation($voucher);
 
         $originalAmount = (float) $voucher->amount_available;
@@ -237,6 +133,42 @@ class ProductReservationTest extends TestCase
         ]);
 
         $this->acceptReservation($originalAmount, $reservation, true);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationCancellationMailLog(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $voucher = $this->makeTestVoucher($this->makeTestFund($organization), $organization->identity);
+        $product = $this->findProductForReservation($voucher);
+        $reservation = $this->makeReservation($voucher, $product);
+        $note = 'Test reservation note from provider';
+
+        // assert reservation rejection note is present in the user email when share_note_by_email is true
+        DB::beginTransaction();
+        $this->assertRejectedReservationProviderNote($reservation, $note, true);
+        DB::rollBack();
+
+        // assert reservation rejection note is not present in the user email when share_note_by_email is false
+        DB::beginTransaction();
+        $this->assertRejectedReservationProviderNote($reservation, $note, false);
+        DB::rollBack();
+
+        // accept reservation and assert cancel reservation
+        $reservation->acceptProvider();
+
+        // assert reservation cancellation note is present in the user email when share_note_by_email is true
+        DB::beginTransaction();
+        $this->assertCanceledReservationProviderNote($reservation, $note, true);
+        DB::rollBack();
+
+        // assert reservation cancellation note is not present in the user email when share_note_by_email is false
+        DB::beginTransaction();
+        $this->assertCanceledReservationProviderNote($reservation, $note, false);
+        DB::rollBack();
     }
 
     /**
@@ -407,6 +339,73 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @param ProductReservation $reservation
+     * @param string $note
+     * @param bool $exists
+     * @return void
+     */
+    protected function assertRejectedReservationProviderNote(
+        ProductReservation $reservation,
+        string $note,
+        bool $exists,
+    ): void {
+        $email = $reservation->voucher->identity->email;
+        $from = now();
+
+        $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
+            'note' => $note,
+            'share_note_by_email' => $exists,
+        ]);
+
+        $this->assertReservationCancelNoteInMail($email, ProductReservationRejectedMail::class, $from, $note, $exists);
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param string $note
+     * @param bool $exists
+     * @return void
+     */
+    protected function assertCanceledReservationProviderNote(
+        ProductReservation $reservation,
+        string $note,
+        bool $exists,
+    ): void {
+        $email = $reservation->voucher->identity->email;
+        $from = now();
+
+        $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
+            'note' => $note,
+            'share_note_by_email' => $exists,
+        ]);
+
+        $this->assertReservationCancelNoteInMail($email, ProductReservationCanceledMail::class, $from, $note, $exists);
+    }
+
+    /**
+     * @param string $email
+     * @param string $mailable
+     * @param Carbon $from
+     * @param string $note
+     * @param bool $exists
+     * @return void
+     */
+    protected function assertReservationCancelNoteInMail(
+        string $email,
+        string $mailable,
+        Carbon $from,
+        string $note,
+        bool $exists
+    ): void {
+        $this->assertMailableSent($email, $mailable, $from);
+        $email = $this->getEmailOfTypeQuery($email, $mailable, $from)->first();
+
+        $exists
+            ? $this->assertStringContainsString($note, $email->content)
+            : $this->assertStringNotContainsString($note, $email->content);
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @return void
@@ -467,22 +466,10 @@ class ProductReservationTest extends TestCase
             $this->acceptReservation($originalAmount, $reservation, true);
         }
 
-        $headers = $this->makeApiHeaders($this->makeIdentityProxy(
-            $product->organization->employees->first()->identity,
-        ));
+        $reservation = $this->apiCancelReservationByProvider($reservation, $product->organization->employees->first()->identity);
 
-        // reject reservation
-        $this->post(
-            "/api/v1/platform/organizations/$product->organization_id/product-reservations/$reservation->id/reject",
-            [],
-            $headers
-        )->assertJsonFragment([
-            'state' => ProductReservation::STATE_CANCELED_BY_PROVIDER,
-        ]);
-
+        $this->assertSame($reservation->state, ProductReservation::STATE_CANCELED_BY_PROVIDER);
         $this->assertSame((float) $voucher->amount_available, $originalAmount);
-
-        $reservation = ProductReservation::find($reservation->id);
         $this->assertTrue($reservation->isCanceledByProvider());
     }
 }

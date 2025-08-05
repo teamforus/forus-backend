@@ -12,8 +12,8 @@ use Illuminate\Queue\SerializesModels;
 abstract class BaseVoucherEvent
 {
     use Dispatchable;
-    use InteractsWithSockets;
     use SerializesModels;
+    use InteractsWithSockets;
 
     protected Voucher $voucher;
 
