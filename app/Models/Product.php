@@ -76,6 +76,7 @@ use Illuminate\Support\Arr;
  * @property-read bool $reservation_address_is_required
  * @property-read bool $reservation_birth_date_is_required
  * @property-read bool $reservation_phone_is_required
+ * @property-read bool $reservation_user_note_is_required
  * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
@@ -428,6 +429,15 @@ class Product extends BaseModel
     }
 
     /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationUserNoteIsRequiredAttribute(): bool
+    {
+        return $this->organization->reservation_user_note === self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
      * @param Fund $fund
      * @param string|bool $voucherBalance
      * @return bool
@@ -626,8 +636,8 @@ class Product extends BaseModel
 
             $query->whereHas('organization.offices', static function (Builder $builder) use ($location, $options) {
                 OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : 0,
-                    'lng' => $location ? $location['lng'] : 0,
+                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
+                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);
             });
         }

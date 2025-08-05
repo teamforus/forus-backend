@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Translations\TagTranslationsTrait;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 class Tag extends BaseModel
 {
     use Translatable;
+    use TagTranslationsTrait;
     use HasTranslationCaches;
 
     /**

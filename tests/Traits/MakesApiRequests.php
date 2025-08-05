@@ -435,6 +435,42 @@ trait MakesApiRequests
     }
 
     /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiCancelProductReservationByProviderRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/{$reservation->product->organization->id}/product-reservations/$reservation->id/reject",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @param array $data
+     * @return ProductReservation
+     */
+    public function apiCancelReservationByProvider(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data = [],
+    ): ProductReservation {
+        $response = $this
+            ->apiCancelProductReservationByProviderRequest($reservation, $identity, $data)
+            ->assertSuccessful();
+
+        return ProductReservation::findOrFail($response->json('data.id'));
+    }
+
+    /**
      * @param Identity $identity
      * @param Fund $fund
      * @param array $data

@@ -10,6 +10,7 @@ use App\Models\VoucherTransaction;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
@@ -21,6 +22,7 @@ class VoucherTransactionsSponsorExportTest extends DuskTestCase
     use MakesTestFunds;
     use HasFrontendActions;
     use RollbackModelsTrait;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
