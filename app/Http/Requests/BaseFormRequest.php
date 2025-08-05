@@ -362,7 +362,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @param int $max
      * @return array
      */
-    protected function markdownRules(int $minLength, int $maxLength, int $max = 10000): array
+    protected function markdownRules(int $minLength, int $maxLength, int $max = 25000): array
     {
         return ['string', "max:$max", new MarkdownTextLengthRule(minLength: $minLength, maxLength: $maxLength)];
     }

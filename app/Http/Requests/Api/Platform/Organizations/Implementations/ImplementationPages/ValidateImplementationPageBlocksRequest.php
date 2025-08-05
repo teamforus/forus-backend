@@ -28,7 +28,7 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*' => 'nullable|array',
             'blocks.*.label' => 'nullable|string|max:30',
             'blocks.*.title' => 'required|string|max:100',
-            'blocks.*.description' => ['required', $this->markdownRules(0, 500)],
+            'blocks.*.description' => ['required', ...$this->markdownRules(0, 500)],
             'blocks.*.button_enabled' => 'nullable|boolean',
             'blocks.*.button_text' => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
             'blocks.*.button_link' => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',

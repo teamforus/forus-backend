@@ -92,7 +92,7 @@ class UpdateImplementationCmsRequest extends BaseFormRequest
             'announcement' => 'nullable|array',
             'announcement.type' => 'nullable|in:warning,danger,success,primary,default',
             'announcement.title' => 'nullable|string|max:2000',
-            'announcement.description' => $this->markdownRules(0, 8000),
+            'announcement.description' => ['nullable', ...$this->markdownRules(0, 8000)],
             'announcement.expire_at' => 'nullable|date_format:Y-m-d',
             'announcement.active' => 'nullable|boolean',
             'announcement.replace' => 'nullable|boolean',

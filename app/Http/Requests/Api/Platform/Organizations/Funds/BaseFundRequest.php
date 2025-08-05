@@ -11,7 +11,6 @@ use App\Rules\FundCriteria\FundCriteriaMaxRule;
 use App\Rules\FundCriteria\FundCriteriaMinRule;
 use App\Rules\FundCriteria\FundCriteriaOperatorRule;
 use App\Rules\FundCriteria\FundCriteriaValueRule;
-use App\Rules\MaxStringRule;
 use App\Rules\MediaUidRule;
 use App\Traits\ValidatesFaq;
 use Illuminate\Support\Facades\Config;
@@ -55,7 +54,7 @@ abstract class BaseFundRequest extends BaseFormRequest
         return [
             'name' => [$updating ? 'sometimes' : 'required', 'between:2,200'],
             'media_uid' => ['sometimes', new MediaUidRule('fund_logo')],
-            'description' => ['nullable', 'string', new MaxStringRule(15000)],
+            'description' => ['nullable', ...$this->markdownRules(0, 15000)],
             'description_short' => 'sometimes|string|max:500',
             'description_position' => ['sometimes', 'in:' . $descriptionPositions],
 

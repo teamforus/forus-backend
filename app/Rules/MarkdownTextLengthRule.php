@@ -30,10 +30,14 @@ class MarkdownTextLengthRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        $attributeSanitized = preg_replace('/[^a-z0-9_.]/i', '', $attribute);
+
         try {
             $text = resolve(MarkdownParser::class)->toText((string) $value);
         } catch (Throwable) {
-            $fail(__('validation.in', ['attribute' => $attribute]));
+            $fail(__('validation.in', [
+                'attribute' => trans_fb("validation.attributes.$attributeSanitized", $attributeSanitized),
+            ]));
 
             return;
         }
@@ -42,7 +46,7 @@ class MarkdownTextLengthRule implements ValidationRule
 
         if (!is_null($this->minLength) && $length < $this->minLength) {
             $fail(__('validation.min.string', [
-                'attribute' => $attribute,
+                'attribute' => trans_fb("validation.attributes.$attributeSanitized", $attributeSanitized),
                 'min' => $this->minLength,
             ]));
 
@@ -50,9 +54,10 @@ class MarkdownTextLengthRule implements ValidationRule
         }
 
         if (!is_null($this->maxLength) && $length > $this->maxLength) {
-            $fail(__('validation.max.string', [
-                'attribute' => $attribute,
+            $fail(__('validation.rules.max.string', [
+                'attribute' => trans_fb("validation.attributes.$attributeSanitized", $attributeSanitized),
                 'max' => $this->maxLength,
+                'actual' => $length,
             ]));
         }
     }
