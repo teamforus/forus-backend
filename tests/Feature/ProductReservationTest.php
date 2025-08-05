@@ -6,7 +6,6 @@ use App\Mail\ProductReservations\ProductReservationCanceledMail;
 use App\Mail\ProductReservations\ProductReservationRejectedMail;
 use App\Mail\ProductReservations\ProductReservationAcceptedMail;
 use App\Models\Fund;
-use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -179,10 +178,10 @@ class ProductReservationTest extends TestCase
     {
         $startTime = now();
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($organization);
+        $this->makeProviderAndProducts($fund, 1);
 
-        $this->makeProviderAndProducts($this->makeTestFund($organization), 1);
-
-        $voucher = $this->findVoucherForReservation($organization, Fund::TYPE_BUDGET);
+        $voucher = $this->makeTestVoucher($fund, $organization->identity);
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product);
