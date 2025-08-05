@@ -12,7 +12,9 @@ use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Laravel\Dusk\Browser;
+use RuntimeException;
 use Tests\Traits\MakesTestIdentities;
+use Throwable;
 
 trait HasFrontendActions
 {
@@ -89,15 +91,30 @@ trait HasFrontendActions
      * @param Browser $browser
      * @param string $selector
      * @return void
+     * @throws TimeoutException
      */
     protected function clearField(Browser $browser, string $selector): void
     {
-        /** @var string $value */
-        $value = $browser->value($selector);
+        $browser->waitFor($selector);
 
-        do {
-            $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
-        } while (!empty($browser->value($selector)));
+        try {
+            $browser->click($selector)
+                ->keys($selector, [PHP_OS_FAMILY === 'Darwin' ? '{command}' : '{control}', 'a'])
+                ->keys($selector, '{delete}')
+                ->pause(100);
+
+            $value = $browser->value($selector);
+
+            if (!is_string($value)) {
+                throw new RuntimeException("Expected string from value([$selector]), got " . gettype($value));
+            }
+
+            if (!empty($value)) {
+                throw new RuntimeException("Failed to clear field [$selector]; value is still: '$value'");
+            }
+        } catch (Throwable $e) {
+            throw new RuntimeException("Unable to clear field [$selector]: " . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
