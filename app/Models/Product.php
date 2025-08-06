@@ -1006,6 +1006,17 @@ class Product extends BaseModel
     }
 
     /**
+     * @param Fund $fund
+     * @return string
+     */
+    public function fundPrice(Fund $fund): string
+    {
+        $providerProduct = $this->getFundProviderProduct($fund);
+
+        return $providerProduct ? $providerProduct->user_price : $this->price;
+    }
+
+    /**
      * @param array $prevMonitoredValues
      * @return void
      */
@@ -1025,16 +1036,5 @@ class Product extends BaseModel
         if (count($changedMonitoredFields) > 0) {
             ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
-    }
-
-    /**
-     * @param Fund $fund
-     * @return string
-     */
-    public function fundPrice(Fund $fund): string
-    {
-        $providerProduct = $this->getFundProviderProduct($fund);
-
-        return $providerProduct ? $providerProduct->user_price : $this->price;
     }
 }
