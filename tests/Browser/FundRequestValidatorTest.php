@@ -18,6 +18,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesApiRequests;
@@ -33,6 +34,7 @@ class FundRequestValidatorTest extends DuskTestCase
     use HasFrontendActions;
     use RollbackModelsTrait;
     use MakesTestFundRequests;
+    use NavigatesFrontendDashboard;
 
     /**
      * Tests the assignment of a partner BSN to a fund request.
@@ -654,14 +656,9 @@ class FundRequestValidatorTest extends DuskTestCase
         $browser->click('@fundRequestAssignAsSupervisorBtn');
 
         $browser->waitFor('@modalAssignValidator');
-
-        $browser->waitFor('@employeeSelect');
-        $browser->click('@employeeSelect .select-control-search');
-
-        $this->findOptionElement($browser, '@employeeSelect', $employee->identity->email)->click();
+        $this->changeSelectControl($browser, '@employeeSelect', $employee->identity->email);
 
         $browser->click('@submitBtn');
-
         $this->assertAndCloseSuccessNotification($browser);
     }
 
@@ -759,15 +756,11 @@ class FundRequestValidatorTest extends DuskTestCase
                         'custom' => 'Vrij bedrag',
                     };
 
-                    $browser->waitFor('@amountOptionsSelect');
-                    $browser->click('@amountOptionsSelect .select-control-search');
-                    $this->findOptionElement($browser, '@amountOptionsSelect', $option)->click();
+                    $this->changeSelectControl($browser, '@amountOptionsSelect', $option);
                 }
 
                 if ($type === 'predefined') {
-                    $browser->waitFor('@amountValueOptionsSelect');
-                    $browser->click('@amountValueOptionsSelect .select-control-search');
-                    $this->findOptionElement($browser, '@amountValueOptionsSelect', $value)->click();
+                    $this->changeSelectControl($browser, '@amountValueOptionsSelect', $value);
                 } else {
                     $browser->waitFor('@amountCustomInput');
                     $browser->type('@amountCustomInput', $value);

@@ -957,8 +957,8 @@ class Implementation extends BaseModel
 
             $query->whereHas('offices', static function (Builder $builder) use ($location, $options) {
                 OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : 0,
-                    'lng' => $location ? $location['lng'] : 0,
+                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
+                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);
             });
         }

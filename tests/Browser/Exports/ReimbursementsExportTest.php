@@ -9,6 +9,7 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
@@ -23,8 +24,9 @@ class ReimbursementsExportTest extends DuskTestCase
     use AssertsSentEmails;
     use MakesTestVouchers;
     use HasFrontendActions;
-    use MakesTestReimbursements;
     use RollbackModelsTrait;
+    use MakesTestReimbursements;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable

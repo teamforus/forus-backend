@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Language;
-use App\Rules\MaxStringRule;
 use App\Rules\MediaUidRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateImplementationCmsRequest extends FormRequest
+class UpdateImplementationCmsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,13 +26,9 @@ class UpdateImplementationCmsRequest extends FormRequest
      */
     public function rules(): array
     {
-        return array_merge([
+        return [
             'title' => 'nullable|string|max:50',
-            'description' => [
-                'nullable',
-                'string',
-                new MaxStringRule(400),
-            ],
+            'description' => ['nullable', ...$this->markdownRules(0, 400)],
             'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
@@ -67,7 +62,9 @@ class UpdateImplementationCmsRequest extends FormRequest
                     'randomized',
                 ]),
             ],
-        ], $this->announcementsRules(), $this->showBlockFlags());
+            ...$this->announcementsRules(),
+            ...$this->showBlockFlags(),
+        ];
     }
 
     /**
@@ -109,7 +106,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'announcement' => 'nullable|array',
             'announcement.type' => 'nullable|in:warning,danger,success,primary,default',
             'announcement.title' => 'nullable|string|max:2000',
-            'announcement.description' => 'nullable|string|max:8000',
+            'announcement.description' => ['nullable', ...$this->markdownRules(0, 8000)],
             'announcement.expire_at' => 'nullable|date_format:Y-m-d',
             'announcement.active' => 'nullable|boolean',
             'announcement.replace' => 'nullable|boolean',

@@ -10,6 +10,7 @@ use Exception;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesProductReservations;
@@ -23,6 +24,7 @@ class ProductReservationsExportTest extends DuskTestCase
     use HasFrontendActions;
     use RollbackModelsTrait;
     use MakesProductReservations;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
