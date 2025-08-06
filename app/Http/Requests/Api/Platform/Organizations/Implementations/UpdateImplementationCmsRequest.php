@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Language;
 use App\Rules\MediaUidRule;
+use Illuminate\Validation\Rule;
 
 class UpdateImplementationCmsRequest extends BaseFormRequest
 {
@@ -48,6 +49,19 @@ class UpdateImplementationCmsRequest extends BaseFormRequest
             'page_title_suffix' => 'nullable|string|max:60',
             'languages' => 'array',
             'languages.*' => 'required|in:' . Language::getAllLanguages()->pluck('id')->join(','),
+            'products_default_sorting' => [
+                'nullable',
+                Rule::in([
+                    'name_asc',
+                    'name_desc',
+                    'created_at_asc',
+                    'created_at_desc',
+                    'price_asc',
+                    'price_desc',
+                    'most_popular_desc',
+                    'randomized',
+                ]),
+            ],
             ...$this->announcementsRules(),
             ...$this->showBlockFlags(),
         ];

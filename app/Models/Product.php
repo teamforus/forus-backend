@@ -689,12 +689,17 @@ class Product extends BaseModel
             });
         }
 
+        $query->withCount('voucher_transactions');
+
         $orderBy = Arr::get($options, 'order_by', 'created_at');
         $orderBy = $orderBy === 'most_popular' ? 'voucher_transactions_count' : $orderBy;
         $orderDir = Arr::get($options, 'order_dir', 'desc');
 
+        if ($orderBy === 'randomized') {
+            return $query->inRandomOrder();
+        }
+
         return $query
-            ->withCount('voucher_transactions')
             ->orderBy($orderBy, $orderDir)
             ->orderBy('price_type')
             ->orderBy('price_discount')
