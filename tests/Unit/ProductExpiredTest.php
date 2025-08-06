@@ -16,7 +16,7 @@ class ProductExpiredTest extends TestCase
      */
     public function testProductExpired(): void
     {
-        $product = $this->makeProductsFundFund(1)[0];
+        $product = $this->makeTestProviderWithProducts(1)[0];
         $this->assertFalse($product->expired);
 
         $product->update(['expire_at' => now()]);

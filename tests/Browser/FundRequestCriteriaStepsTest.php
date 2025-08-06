@@ -987,8 +987,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
         switch ($control) {
             case 'select':
                 $browser->waitFor($selector);
-                $browser->click("$selector .select-control-search");
-                $this->findOptionElement($browser, '@selectControl', $value)->click();
+                $this->changeSelectControl($browser, $selector, $value);
                 break;
             case 'number':
             case 'currency':

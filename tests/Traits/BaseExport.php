@@ -35,11 +35,11 @@ trait BaseExport
     private function makeProductVouchers(Fund $fund, int $count, int $childrenCount): Collection
     {
         $vouchers = collect();
-        $products = $this->makeProductsFundFund($count, 5);
+        $products = $this->makeTestProviderWithProducts($count, 5);
 
         for ($i = 1; $i <= $count; $i++) {
             $product = $products[$i - 1];
-            $this->addProductFundToFund($fund, $product, false);
+            $this->addProductToFund($fund, $product, false);
 
             $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
             $voucher->appendRecord('children_nth', $childrenCount);

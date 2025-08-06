@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\Filters;
+namespace Tests\Browser\Filters\Dashboards;
 
 use App\Models\Employee;
 use App\Models\Fund;
@@ -22,7 +22,7 @@ use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
-class VoucherTransactionsSearchFilterTest extends DuskTestCase
+class VoucherTransactionsProviderDashboardSearchFilterTest extends DuskTestCase
 {
     use MakesTestFunds;
     use MakesTestVouchers;
@@ -34,13 +34,11 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
-    public function testVoucherTransactionsProviderSearch(): void
+    public function testVoucherTransactionsDashboardSearch(): void
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-
         $transactionCount = 2;
-        $fund = $this->makeTestFund($organization);
+        $implementation = Implementation::byKey('nijmegen');
+        $fund = $this->makeTestFund($implementation->organization, implementation: $implementation);
         $transaction = $this->prepareTestingData($fund, $transactionCount);
         $this->removePossibleDuplicateByIds($transaction, 'provider');
 
@@ -74,60 +72,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
                 $this->logout($browser);
             });
         }, function () use ($fund) {
-            $fund->organization
-                ->employees()
-                ->whereNotIn('identity_address', [$fund->organization->identity_address])
-                ->delete();
-
-            $fund && $this->deleteFund($fund);
-        });
-    }
-
-    /**
-     * @throws Throwable
-     * @return void
-     */
-    public function testVoucherTransactionsSponsorSearch(): void
-    {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-
-        $transactionCount = 2;
-        $fund = $this->makeTestFund($organization);
-        $transaction = $this->prepareTestingData($fund, $transactionCount);
-        $this->removePossibleDuplicateByIds($transaction);
-
-        $this->rollbackModels([], function () use (
-            $implementation,
-            $transaction,
-            $transactionCount
-        ) {
-            $this->browse(function (Browser $browser) use (
-                $implementation,
-                $transaction,
-                $transactionCount
-            ) {
-                $organization = $implementation->organization;
-                $browser->visit($implementation->urlSponsorDashboard());
-
-                // Authorize identity
-                $this->loginIdentity($browser, $organization->identity);
-                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
-                $this->selectDashboardOrganization($browser, $organization);
-
-                // Go to list and assert search
-                $this->goToTransactionsPage($browser);
-                $this->assertTransactionsSearchIsWorking($browser, $transaction, $transactionCount, 'sponsor');
-
-                // Logout
-                $this->logout($browser);
-            });
-        }, function () use ($fund) {
-            $fund->organization
-                ->employees()
-                ->whereNotIn('identity_address', [$fund->organization->identity_address])
-                ->delete();
-
+            $fund->organization->employees()->where('identity_address', '!=', $fund->organization->identity_address)->delete();
             $fund && $this->deleteFund($fund);
         });
     }
@@ -171,10 +116,10 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
 
         $vouchers = array_map(
             fn (Product $product) => $this->makeTestProductVoucher($otherFund, $this->makeIdentity(), [], $product->id),
-            $this->makeProductsFundFund(2)
+            $this->makeTestProviderWithProducts(2)
         );
 
-        array_map(fn ($voucher) => $this->makeTransactionWithProviderNotes($voucher), $vouchers);
+        array_walk($vouchers, fn ($voucher) => $this->makeTransactionWithProviderNotes($voucher));
 
         // make two vouchers on a new fund under a different organization with provider notes for the provider dashboard
         $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
@@ -185,7 +130,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
             $this->makeTestProducts($provider, 2)
         );
 
-        array_map(fn ($voucher) => $this->makeTransactionWithProviderNotes($voucher), $vouchers);
+        array_walk($vouchers, fn ($voucher) => $this->makeTransactionWithProviderNotes($voucher));
     }
 
     /**
@@ -221,11 +166,8 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
      */
     protected function makeEmployeesAndOffices(Organization $organization, int $count): Collection|array
     {
-        // clear all not needed employees
-        $organization
-            ->employees()
-            ->whereNotIn('identity_address', [$organization->identity_address])
-            ->delete();
+        // delete all unnecessary employees
+        $organization->employees()->where('identity_address', '!=', $organization->identity_address)->delete();
 
         for ($i = 0; $i < $count; $i++) {
             $employee = $organization->addEmployee($this->makeIdentity(), Role::pluck('id')->toArray());
@@ -239,10 +181,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
             $employee->update(['office_id' => $office->id]);
         }
 
-        return $organization
-            ->employees()
-            ->whereNotIn('identity_address', [$organization->identity_address])
-            ->get();
+        return $organization->employees()->where('identity_address', '!=', $organization->identity_address)->get();
     }
 
     /**
@@ -263,7 +202,7 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
      * @param VoucherTransaction $transaction
      * @param int $count
      * @param string $dashboard
-     *@throws TimeOutException
+     * @throws TimeOutException
      * @return void
      */
     protected function assertTransactionsSearchIsWorking(
@@ -274,28 +213,28 @@ class VoucherTransactionsSearchFilterTest extends DuskTestCase
     ): void {
         // searching by fund name should result in all transactions from the target fund being shown
         $this->searchTable($browser, '@tableTransaction', $transaction->voucher->fund->name, $transaction->id, $count);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', '########', null, 0);
 
         // unique transaction values should result in a single transaction being shown
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_id, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', '########', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_name, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', '########', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->branch_number, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', '########', null, 0);
         $this->searchTable($browser, '@tableTransaction', $transaction->product->name, $transaction->id);
-        $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+        $this->searchTable($browser, '@tableTransaction', '########', null, 0);
 
         // searching by provider name should show only the transactions from the target provider
         if ($dashboard === 'sponsor') {
             $this->searchTable($browser, '@tableTransaction', $transaction->product->organization->name, $transaction->id, $count);
-            $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+            $this->searchTable($browser, '@tableTransaction', '########', null, 0);
         }
 
         // searching by provider note should only show the target transaction (give the note is unique)
         if ($dashboard === 'provider') {
             $this->searchTable($browser, '@tableTransaction', $transaction->notes_provider[0]->message, $transaction->id);
-            $this->searchTable($browser, '@tableTransaction', '###############', null, 0);
+            $this->searchTable($browser, '@tableTransaction', '########', null, 0);
         }
     }
 

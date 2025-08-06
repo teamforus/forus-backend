@@ -93,11 +93,11 @@ class EmailLogTest extends TestCase
         $fund1 = $this->makeTestFund($organization1);
         $fund2 = $this->makeTestFund($organization2);
 
-        $product1 = $this->makeProductsFundFund(1)[0];
-        $product2 = $this->makeProductsFundFund(1)[0];
+        $product1 = $this->makeTestProviderWithProducts(1)[0];
+        $product2 = $this->makeTestProviderWithProducts(1)[0];
 
-        $this->addProductFundToFund($fund1, $product1, false);
-        $this->addProductFundToFund($fund2, $product2, false);
+        $this->addProductToFund($fund1, $product1, false);
+        $this->addProductToFund($fund2, $product2, false);
 
         $this->makeTestVoucher($fund1, $identity)->buyProductVoucher($product1);
         $this->makeTestVoucher($fund2, $identity)->buyProductVoucher($product2);
@@ -213,14 +213,14 @@ class EmailLogTest extends TestCase
         $voucher1 = $this->makeTestVoucher($this->makeTestFund($organization1), $identity);
         $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
-        $product1 = $this->makeProductsFundFund(1)[0];
-        $product2 = $this->makeProductsFundFund(1)[0];
+        $product1 = $this->makeTestProviderWithProducts(1)[0];
+        $product2 = $this->makeTestProviderWithProducts(1)[0];
 
         $employee1 = $organization1->employees[0];
         $employee2 = $organization2->employees[0];
 
-        $this->addProductFundToFund($voucher1->fund, $product1, false);
-        $this->addProductFundToFund($voucher2->fund, $product2, false);
+        $this->addProductToFund($voucher1->fund, $product1, false);
+        $this->addProductToFund($voucher2->fund, $product2, false);
 
         $transaction1 = $voucher1->makeTransaction([
             'amount' => $voucher1->amount,
