@@ -24,7 +24,7 @@ class FormatRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'markdown' => 'nullable|string|max:10000',
+            'markdown' => 'nullable|string|max:25000',
         ];
     }
 }
