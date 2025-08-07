@@ -30,8 +30,8 @@ abstract class BasePolicy
         $titleKey = sprintf('%s.title', $policyError);
         $messageKey = sprintf('%s.message', $policyError);
 
-        $title = trans($titleKey);
-        $message = trans($messageKey);
+        $title = __($titleKey);
+        $message = __($messageKey);
 
         $title = $title === $titleKey ? null : $title;
         $message = $message === $messageKey ? null : $message;

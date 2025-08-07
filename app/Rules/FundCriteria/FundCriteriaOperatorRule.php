@@ -18,7 +18,7 @@ class FundCriteriaOperatorRule extends BaseFundCriteriaRule
         $operators = $recordType?->getOperators() ?: [];
 
         if (!$criterion || !$recordType || (!empty($operators) && !in_array($value, $operators))) {
-            return $this->reject(trans('validation.in', ['attribute' => $attribute]));
+            return $this->reject(__('validation.in', ['attribute' => $attribute]));
         }
 
         return true;
