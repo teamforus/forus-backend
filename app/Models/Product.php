@@ -676,24 +676,18 @@ class Product extends BaseModel
             ProductQuery::whereReservationEnabled($query);
         }
 
-        if (Arr::get($options, 'regular')) {
-            $query->where('price_type', self::PRICE_TYPE_REGULAR);
-        }
+        $includeMap = [
+            'free' => self::PRICE_TYPE_FREE,
+            'regular' => self::PRICE_TYPE_REGULAR,
+            'informational' => self::PRICE_TYPE_INFORMATIONAL,
+            'discount_fixed' => self::PRICE_TYPE_DISCOUNT_FIXED,
+            'discount_percentage' => self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
+        ];
 
-        if (Arr::get($options, 'discount_fixed')) {
-            $query->where('price_type', self::PRICE_TYPE_DISCOUNT_FIXED);
-        }
+        $includeTypes = array_values(array_filter($includeMap, fn ($type, $key) => !empty($options[$key]), ARRAY_FILTER_USE_BOTH));
 
-        if (Arr::get($options, 'discount_percentage')) {
-            $query->where('price_type', self::PRICE_TYPE_DISCOUNT_PERCENTAGE);
-        }
-
-        if (Arr::get($options, 'free')) {
-            $query->where('price_type', self::PRICE_TYPE_FREE);
-        }
-
-        if (Arr::get($options, 'informational')) {
-            $query->where('price_type', self::PRICE_TYPE_INFORMATIONAL);
+        if ($includeTypes) {
+            $query->whereIn('price_type', $includeTypes);
         }
 
         if (Arr::get($options, 'extra_payment')) {
