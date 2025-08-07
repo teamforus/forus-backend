@@ -13,9 +13,11 @@ use App\Models\Prevalidation;
 use App\Models\ProductReservation;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\Tag;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Throwable;
 
@@ -64,12 +66,14 @@ trait MakesTestFunds
      * @param Organization $organization
      * @param array $fundData
      * @param array $fundConfigsData
+     * @param Implementation|null $implementation
      * @return Fund
      */
     protected function makeTestFund(
         Organization $organization,
         array $fundData = [],
         array $fundConfigsData = [],
+        Implementation $implementation = null,
     ): Fund {
         /** @var Fund $fund */
         $fund = $organization->funds()->create([
@@ -78,15 +82,20 @@ trait MakesTestFunds
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
             'external' => false,
+            'description_text' => $this->faker->sentence,
+            'description_short' => $this->faker->sentence,
             ...$fundData,
         ]);
 
         $fund->changeState($fund::STATE_ACTIVE);
-        $implementations = $organization->implementations()->get();
 
-        $implementation = $implementations->isNotEmpty() ?
-            $implementations[0] :
-            $this->makeTestImplementation($organization);
+        if (!$implementation) {
+            $implementations = $organization->implementations()->get();
+
+            $implementation = $implementations->isNotEmpty() ?
+                $implementations[0] :
+                $this->makeTestImplementation($organization);
+        }
 
         $fund->fund_config()->forceCreate([
             'key' => str_slug(token_generator()->generate(4, 4)),
@@ -381,6 +390,7 @@ trait MakesTestFunds
         $fund->criteria()->forceDelete();
         $fund->criteria_steps()->forceDelete();
 
+        ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->update(['voucher_transaction_id' => null]);
         VoucherTransaction::whereIn('voucher_id', $fund->vouchers()->select('id'))->forceDelete();
         $fund->vouchers()->whereNotNull('product_reservation_id')->forceDelete();
         ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
@@ -400,5 +410,25 @@ trait MakesTestFunds
     {
         $voucher->backoffice_logs()->delete();
         $voucher->delete();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return Tag
+     */
+    protected function makeAndAppendTestFundTag(Fund $fund): Tag
+    {
+        $tagName = $this->faker->name;
+
+        $tag = $fund->tags()->firstOrCreate([
+            'key' => Str::slug($tagName),
+            'scope' => 'webshop',
+        ]);
+
+        $tag->translateOrNew(app()->getLocale())->fill([
+            'name' => $tagName,
+        ])->save();
+
+        return $tag;
     }
 }

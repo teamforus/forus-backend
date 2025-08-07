@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
@@ -28,6 +29,7 @@ class VouchersExportTest extends DuskTestCase
     use MakesTestVouchers;
     use HasFrontendActions;
     use RollbackModelsTrait;
+    use NavigatesFrontendDashboard;
 
     protected const array QR_CODE_FORMATS = ['null', 'pdf', 'png'];
 

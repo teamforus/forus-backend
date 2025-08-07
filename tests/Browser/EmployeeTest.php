@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTest2FA;
 use Tests\Traits\MakesTestIdentities;
@@ -26,6 +27,7 @@ class EmployeeTest extends DuskTestCase
     use AssertsSentEmails;
     use HasFrontendActions;
     use MakesTestIdentities;
+    use NavigatesFrontendDashboard;
 
     /**
      * @throws Throwable
@@ -48,7 +50,7 @@ class EmployeeTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
             $this->selectDashboardOrganization($browser, $implementation->organization);
 
-            // Go to employees list and add a new employee of initial role
+            // Go to employees list and add a new employee of an initial role
             $this->goToEmployeesPage($browser);
             $employee = $this->createEmployee($browser, $implementation->organization, $initialRole);
             $this->assertAndCloseSuccessNotification($browser);
@@ -90,7 +92,7 @@ class EmployeeTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $employee->identity);
             $this->selectDashboardOrganization($browser, $implementation->organization);
 
-            // Go to employees list and add a new employee of initial role
+            // Go to employees list and add a new employee of an initial role
             $this->goToEmployeesPage($browser);
             $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
 
@@ -126,7 +128,7 @@ class EmployeeTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
             $this->selectDashboardOrganization($browser, $implementation->organization);
 
-            // Go to employees list and add a new employee of initial role
+            // Go to employees list and add a new employee of an initial role
             $this->goToEmployeesPage($browser);
             $this->searchTable($browser, '@tableEmployee', $employee->identity->email, $employee->id);
 
@@ -171,7 +173,7 @@ class EmployeeTest extends DuskTestCase
             $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
             $this->selectDashboardOrganization($browser, $organization);
 
-            // Go to employees list and add a new employee of initial role
+            // Go to employees list and add a new employee of an initial role
             $this->goToEmployeesPage($browser);
             $employee = $this->createEmployee($browser, $organization, $role);
             $this->assertAndCloseSuccessNotification($browser);
@@ -335,10 +337,7 @@ class EmployeeTest extends DuskTestCase
         $browser->press("@btnEmployeeTransferOwnership$owner->id");
 
         $browser->waitFor('@modalTransferOrganizationOwnership');
-
-        $browser->waitFor('@employeesSelect');
-        $browser->click('@employeesSelect .select-control-search');
-        $this->findOptionElement($browser, '@employeesSelect', $employee->identity->email)->click();
+        $this->changeSelectControl($browser, '@employeesSelect', $employee->identity->email);
 
         $browser->press('@submitBtn');
         $browser->waitUntilMissing('@modalTransferOrganizationOwnership');
@@ -352,8 +351,8 @@ class EmployeeTest extends DuskTestCase
      * @param Browser $browser
      * @param Employee $owner
      * @param Employee $prevOwner
+     * @throws TimeoutException
      * @return void
-     *@throws TimeoutException
      */
     private function assertOwner(Browser $browser, Employee $owner, Employee $prevOwner): void
     {

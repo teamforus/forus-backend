@@ -76,6 +76,7 @@ use Illuminate\Support\Arr;
  * @property-read bool $reservation_address_is_required
  * @property-read bool $reservation_birth_date_is_required
  * @property-read bool $reservation_phone_is_required
+ * @property-read bool $reservation_user_note_is_required
  * @property-read int|null $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
@@ -428,6 +429,15 @@ class Product extends BaseModel
     }
 
     /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getReservationUserNoteIsRequiredAttribute(): bool
+    {
+        return $this->organization->reservation_user_note === self::RESERVATION_FIELD_REQUIRED;
+    }
+
+    /**
      * @param Fund $fund
      * @param string|bool $voucherBalance
      * @return bool
@@ -626,8 +636,8 @@ class Product extends BaseModel
 
             $query->whereHas('organization.offices', static function (Builder $builder) use ($location, $options) {
                 OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : 0,
-                    'lng' => $location ? $location['lng'] : 0,
+                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
+                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);
             });
         }
@@ -679,12 +689,17 @@ class Product extends BaseModel
             });
         }
 
+        $query->withCount('voucher_transactions');
+
         $orderBy = Arr::get($options, 'order_by', 'created_at');
         $orderBy = $orderBy === 'most_popular' ? 'voucher_transactions_count' : $orderBy;
         $orderDir = Arr::get($options, 'order_dir', 'desc');
 
+        if ($orderBy === 'randomized') {
+            return $query->inRandomOrder();
+        }
+
         return $query
-            ->withCount('voucher_transactions')
             ->orderBy($orderBy, $orderDir)
             ->orderBy('price_type')
             ->orderBy('price_discount')
@@ -991,6 +1006,17 @@ class Product extends BaseModel
     }
 
     /**
+     * @param Fund $fund
+     * @return string
+     */
+    public function fundPrice(Fund $fund): string
+    {
+        $providerProduct = $this->getFundProviderProduct($fund);
+
+        return $providerProduct ? $providerProduct->user_price : $this->price;
+    }
+
+    /**
      * @param array $prevMonitoredValues
      * @return void
      */
@@ -1010,16 +1036,5 @@ class Product extends BaseModel
         if (count($changedMonitoredFields) > 0) {
             ProductMonitoredFieldsUpdated::dispatch($this, $data);
         }
-    }
-
-    /**
-     * @param Fund $fund
-     * @return string
-     */
-    public function fundPrice(Fund $fund): string
-    {
-        $providerProduct = $this->getFundProviderProduct($fund);
-
-        return $providerProduct ? $providerProduct->user_price : $this->price;
     }
 }

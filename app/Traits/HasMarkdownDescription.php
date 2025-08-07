@@ -5,16 +5,13 @@ namespace App\Traits;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Support\MarkdownParser;
 use DOMDocument;
 use DOMElement;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
-use League\CommonMark\Environment\Environment;
 use League\CommonMark\Exception\CommonMarkException;
-use League\CommonMark\MarkdownConverter;
 use Throwable;
 
 /**
@@ -27,6 +24,7 @@ use Throwable;
 trait HasMarkdownDescription
 {
     /**
+     * @throws CommonMarkException
      * @return string
      * @noinspection PhpUnused
      */
@@ -41,16 +39,17 @@ trait HasMarkdownDescription
      */
     public function descriptionToHtml(): string
     {
-        return $this->getMarkdownConverter()->convert($this->description ?: '')->getContent();
+        return resolve(MarkdownParser::class)->toHtml($this->description ?: '');
     }
 
     /**
+     * @throws CommonMarkException
      * @return string
      * @noinspection PhpUnused
      */
     public function descriptionToText(): string
     {
-        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->descriptionToHtml()))));
+        return resolve(MarkdownParser::class)->toText($this->description);
     }
 
     /**
@@ -65,11 +64,11 @@ trait HasMarkdownDescription
 
     /**
      * @param string $mediaType
+     * @throws CommonMarkException
      * @return Builder|Media
      */
-    public function getDescriptionMarkdownMediaPresetsValidQuery(
-        string $mediaType
-    ): Builder|MediaPreset {
+    public function getDescriptionMarkdownMediaPresetsValidQuery(string $mediaType): Builder|MediaPreset
+    {
         $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
 
         return $presets->whereHas('media', function (Builder|Media $builder) use ($mediaType) {
@@ -85,11 +84,11 @@ trait HasMarkdownDescription
 
     /**
      * @param string $mediaType
+     * @throws CommonMarkException
      * @return Builder|Media
      */
-    public function getDescriptionMarkdownMediaPresetsInValidQuery(
-        string $mediaType,
-    ): Builder|MediaPreset {
+    public function getDescriptionMarkdownMediaPresetsInValidQuery(string $mediaType): Builder|MediaPreset
+    {
         $presets = $this->getDescriptionMarkdownMediaPresetsQuery();
         $validPresets = $this->getDescriptionMarkdownMediaPresetsValidQuery($mediaType);
 
@@ -125,29 +124,7 @@ trait HasMarkdownDescription
     }
 
     /**
-     * @return MarkdownConverter
-     */
-    protected function getMarkdownConverter(): MarkdownConverter
-    {
-        $config = $this->getMarkdownConverterConfigs();
-        $environment = new Environment(Arr::except($config, ['extensions', 'views']));
-
-        foreach ((array) Arr::get($config, 'extensions') as $extension) {
-            $environment->addExtension(resolve($extension));
-        }
-
-        return new MarkdownConverter($environment);
-    }
-
-    /**
-     * @return array
-     */
-    protected function getMarkdownConverterConfigs(): array
-    {
-        return Config::get('markdown');
-    }
-
-    /**
+     * @throws CommonMarkException
      * @return array
      */
     protected function getDescriptionMarkdownMediaPaths(): array
@@ -170,7 +147,9 @@ trait HasMarkdownDescription
                 $srcSegments = [];
                 preg_match('/\/media\/.*/', $imageSrc, $srcSegments);
 
-                $linksArray[] = $srcSegments[0];
+                if (!empty($srcSegments[0])) {
+                    $linksArray[] = $srcSegments[0];
+                }
             }
         }
 
@@ -179,6 +158,7 @@ trait HasMarkdownDescription
 
     /**
      * @return Builder|MediaPreset
+     * @throws CommonMarkException
      */
     protected function getDescriptionMarkdownMediaPresetsQuery(): Builder|MediaPreset
     {
