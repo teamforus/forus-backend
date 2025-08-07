@@ -244,7 +244,7 @@ class FundPolicy
      */
     public function check(Identity $identity, Fund $fund): Response|bool
     {
-        if ($fund->identityRequireBsnConfirmation($identity)) {
+        if ($fund->getImplementation()?->digid_required && $fund->identityRequireBsnConfirmation($identity)) {
             return $this->deny('BSN session expired, please sign-in again.');
         }
 
