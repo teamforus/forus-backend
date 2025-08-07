@@ -123,6 +123,6 @@ class FundSearch extends BaseSearch
         return Fund::query()
             ->fromSub($builder, 'funds')
             ->orderBy($orderBy, $orderDir)
-            ->latest('created_at');
+            ->oldest('created_at');
     }
 }
