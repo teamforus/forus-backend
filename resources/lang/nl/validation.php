@@ -311,6 +311,9 @@ return [
 
         'ean' => 'EAN',
         'sku' => 'SKU',
+        'reservation_note' => 'aankoopnotitie',
+        'reservation_note_text' => 'aankoopnotitie tekst',
+        'custom_reservation_note_text' => 'aangepaste aankoopnotitie',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

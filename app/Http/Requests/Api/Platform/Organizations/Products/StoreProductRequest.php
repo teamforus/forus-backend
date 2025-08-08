@@ -37,4 +37,16 @@ class StoreProductRequest extends BaseProductRequest
             ],
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'reservation_note_text.required_if' => trans('validation.required', [
+                'attribute' => trans('validation.attributes.custom_reservation_note_text'),
+            ]),
+        ];
+    }
 }

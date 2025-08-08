@@ -241,6 +241,8 @@ class ProductResource extends BaseJsonResource
             'reservation_fields' => $product->reservation_fields,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
+            'reservation_note' => $product->reservation_note,
+            'reservation_note_text' => $product->reservation_note_text,
         ];
     }
 }
