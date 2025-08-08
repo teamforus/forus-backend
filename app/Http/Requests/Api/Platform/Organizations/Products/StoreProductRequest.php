@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
+use App\Models\Product;
+
 class StoreProductRequest extends BaseProductRequest
 {
     /**
@@ -21,14 +23,18 @@ class StoreProductRequest extends BaseProductRequest
      */
     public function rules(): array
     {
-        $unlimited_stock = $this->input('unlimited_stock', false);
+        $unlimited_stock = $this->post('unlimited_stock', false);
+        $price_type = $this->post('price_type');
 
         return [
-            ...$this->baseProductRules((string) $this->input('price_type')),
+            ...$this->baseProductRules((string) $price_type, null),
             ...$this->reservationRules(),
-
             'unlimited_stock' => 'boolean',
-            'total_amount' => [$unlimited_stock ? null : 'required', 'numeric', 'min:1'],
+            'total_amount' => [
+                $unlimited_stock || ($price_type === Product::PRICE_TYPE_INFORMATIONAL) ? 'nullable' : 'required',
+                'numeric',
+                'min:1',
+            ],
         ];
     }
 

@@ -8,7 +8,6 @@ use App\Scopes\Builders\ProductQuery;
 
 class ProductIdInStockRule extends BaseRule
 {
-    protected string $messageTransPrefix = 'validation.product_voucher.';
     private Fund $fund;
     private ?array $otherReservations;
 
@@ -37,28 +36,32 @@ class ProductIdInStockRule extends BaseRule
         $product = Product::find($product_id);
 
         if (!$product) {
-            return $this->rejectTrans('product_not_found');
+            return $this->reject(__('validation.product_voucher.product_not_found'));
+        }
+
+        if ($product->isInformational()) {
+            return $this->reject(__('validation.product_voucher.product_is_informational'));
         }
 
         if ($product->sold_out) {
-            return $this->rejectTrans('product_sold_out');
+            return $this->reject(__('validation.product_voucher.product_sold_out'));
         }
 
         if ($product->sponsor_organization_id &&
             ($product->sponsor_organization_id !== $this->fund->organization_id)) {
-            return $this->rejectTrans('product_price_type_not_regular');
+            return $this->reject(__('validation.product_voucher.product_price_type_not_regular'));
         }
 
         if (!$product->unlimited_stock &&
             $this->otherReservations &&
             $product->stock_amount < $this->otherReservations[$product_id]) {
-            return $this->reject(trans('validation.in'));
+            return $this->reject(__('validation.in'));
         }
 
         if (ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $this->fund->id)->where([
             'id' => $product->id,
         ])->doesntExist()) {
-            return $this->reject(trans('validation.product_not_approved'));
+            return $this->reject(__('validation.product_not_approved'));
         }
 
         return true;
