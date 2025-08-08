@@ -351,8 +351,8 @@ class EmployeeTest extends DuskTestCase
      * @param Browser $browser
      * @param Employee $owner
      * @param Employee $prevOwner
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function assertOwner(Browser $browser, Employee $owner, Employee $prevOwner): void
     {

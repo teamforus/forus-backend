@@ -32,7 +32,7 @@ class SearchProductsRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|max:1000',
             'fund_id' => 'nullable|exists:funds,id',
             'product_category_id' => 'nullable|exists:product_categories,id',
-            'order_by' => 'nullable|in:name,created_at,price_min,price_max,price,most_popular',
+            'order_by' => 'nullable|in:name,created_at,price_min,price_max,price,most_popular,randomized',
             'order_dir' => 'nullable|in:asc,desc',
             'simplified' => 'nullable|bool',
             'postcode' => 'nullable|string|max:100',
