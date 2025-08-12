@@ -103,6 +103,8 @@ trait MakesTestFundRequests
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/clarifications",
             [
                 'fund_request_record_id' => $fundRequestRecord->id,
+                'files_requirement' => 'required',
+                'text_requirement' => 'required',
                 'question' => $questionToken,
             ],
             $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
