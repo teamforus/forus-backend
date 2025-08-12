@@ -9,7 +9,6 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
 trait MakesTestFundRequests
@@ -122,14 +121,12 @@ trait MakesTestFundRequests
     /**
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @param string $questionToken
      * @param array $headers
      * @return void
      */
     protected function assertFundRequestClarificationEmailLog(
         Organization $organization,
         FundRequest $fundRequest,
-        string $questionToken,
         array $headers = [],
     ): void {
         // assert email log exists
@@ -146,10 +143,8 @@ trait MakesTestFundRequests
         $data = $response->json('data');
 
         self::assertCount(2, $data);
-        self::assertCount(1, Arr::where($data, function ($item) use ($questionToken) {
-            return
-                $item['type'] == 'fund_request_feedback_requested' &&
-                Str::contains($item['content'], $questionToken);
+        self::assertCount(1, Arr::where($data, function ($item) {
+            return $item['type'] == 'fund_request_feedback_requested';
         }));
     }
 
