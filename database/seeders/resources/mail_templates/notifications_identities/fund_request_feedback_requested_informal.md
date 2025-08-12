@@ -1,6 +1,3 @@
-:icon
-&nbsp;
-
 # Extra informatie nodig voor aanvraag :fund_name
 
 Beste aanvrager,
