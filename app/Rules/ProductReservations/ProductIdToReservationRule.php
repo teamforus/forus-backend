@@ -10,7 +10,6 @@ use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use Exception;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
 
 class ProductIdToReservationRule extends BaseRule

@@ -47,7 +47,7 @@ abstract class BaseProductRequest extends BaseFormRequest
     {
         return [
             'name' => 'required|between:2,200',
-            'description' => 'required|between:5,2500',
+            'description' => ['required', ...$this->markdownRules(5, 2500)],
             'alternative_text' => 'nullable|between:2,500',
             'price' => 'required_if:price_type,regular|numeric|min:.2',
             'media_uid' => ['nullable', new MediaUidRule('product_photo')],

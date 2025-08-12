@@ -34,10 +34,11 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
         $descriptionPositions = implode(',', ImplementationPage::DESCRIPTION_POSITIONS);
         $faqRules = $this->faqRules($this->implementationPage->faq()->pluck('id')->toArray());
 
-        return array_merge(parent::rules(), [
+        return [
+            ...parent::rules(),
             'title' => 'nullable|string|max:200',
             'state' => "nullable|in:$states",
-            'description' => 'nullable|string|max:10000',
+            'description' => ['nullable', ...$this->markdownRules(0, 10000)],
             'description_position' => "nullable|in:$descriptionPositions",
             'description_alignment' => 'nullable|in:left,center,right',
             'external' => 'present|boolean',
@@ -45,7 +46,8 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
             'media_uid' => 'nullable|array',
             'media_uid.*' => $this->mediaRule(),
             'blocks_per_row' => 'nullable|integer|min:1|max:3',
-        ], $faqRules);
+            ...$faqRules,
+        ];
     }
 
     /**
