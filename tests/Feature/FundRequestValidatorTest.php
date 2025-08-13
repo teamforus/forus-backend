@@ -330,7 +330,13 @@ class FundRequestValidatorTest extends TestCase
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $employee = $fund->organization->findEmployee($fund->organization->identity);
 
-        $questionData = ['question' => $this->faker()->text(), 'fund_request_record_id' => $fundRequest->records[0]->id];
+        $questionData = [
+            'question' => $this->faker()->text(),
+            'text_requirement' => 'required',
+            'files_requirement' => 'required',
+            'fund_request_record_id' => $fundRequest->records[0]->id,
+        ];
+
         $answerData = ['answer' => $this->faker()->text()];
         $answerFileData = ['file' => UploadedFile::fake()->image('doc.jpg'), 'type' => 'fund_request_clarification_proof'];
 

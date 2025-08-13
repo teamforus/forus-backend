@@ -346,11 +346,12 @@ class ImplementationMail extends Mailable implements ShouldQueue
 
     /**
      * @param string $url
+     * @param int $width
      * @return string
      */
-    protected function headerIconImage(string $url): string
+    protected function headerIconImage(string $url, int $width = 300): string
     {
-        return '<img src="' . $url . '" style="width: 300px; display: block; margin: 0 auto;" data-auto-embed>';
+        return '<img src="' . $url . '" style="width: ' . $width . 'px; display: block; margin: 0 auto;" data-auto-embed>';
     }
 
     /**
