@@ -592,7 +592,7 @@ class Product extends BaseModel
      */
     public function updateSoldOutState(): void
     {
-        if (!$this->unlimited_stock) {
+        if (!$this->unlimited_stock && !$this->isInformational()) {
             $totalProducts = $this->countReserved() + $this->countSold();
 
             $sold_out = $totalProducts >= $this->total_amount;
@@ -919,7 +919,7 @@ class Product extends BaseModel
             'price_type' => $price_type,
             'total_amount' => $total_amount,
             'price_discount' => $price_discount,
-            'unlimited_stock' => $unlimited_stock,
+            'unlimited_stock' => $price_type === self::PRICE_TYPE_INFORMATIONAL ? true : $unlimited_stock,
         ]);
 
         return $product->attachMediaByUid($request->post('media_uid'));
