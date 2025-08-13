@@ -92,7 +92,7 @@ abstract class BaseProductRequest extends BaseFormRequest
             'reservation_birth_date' => "nullable|in:$options",
             'reservation_extra_payments' => ['nullable', ...$extraPaymentRules],
             'reservation_note' => "nullable|in:$noteOptions",
-            'reservation_note_text' => "required_if:reservation_note,$noteCustomOption|string|max:2000",
+            'reservation_note_text' => "nullable|required_if:reservation_note,$noteCustomOption|string|max:2000",
         ];
     }
 }
