@@ -32,7 +32,7 @@ abstract class BaseRecordTypeRule extends BaseRule
     public function passes($attribute, mixed $value): bool
     {
         if (!$this->checkCriterionValidity($this->criterion)) {
-            return $this->reject(trans('validation.in', compact('attribute')));
+            return $this->reject(__('validation.in', compact('attribute')));
         }
 
         $validator = Validation::check($value, array_filter($this->rules()));

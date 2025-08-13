@@ -152,11 +152,14 @@ class ProductPolicy
             return false;
         }
 
+        $builder = Product::query();
+        $builder = ProductQuery::whereCanBeReservedFilter($builder);
+        $builder = ProductQuery::approvedForFundsAndActiveFilter($builder, $voucher->fund_id);
+
         // check validity
-        return ProductQuery::approvedForFundsAndActiveFilter(
-            Product::query(),
-            $voucher->fund_id
-        )->where('id', '=', $product->id)->exists();
+        return $builder
+            ->where('id', '=', $product->id)
+            ->exists();
     }
 
     /**

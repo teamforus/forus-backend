@@ -40,10 +40,11 @@ abstract class BaseProductRequest extends BaseFormRequest
     }
 
     /**
-     * @param string|null $price_type
+     * @param string|null $priceType
+     * @param Product|null $updatedProduct
      * @return array
      */
-    protected function baseProductRules(?string $price_type): array
+    protected function baseProductRules(?string $priceType, ?Product $updatedProduct): array
     {
         return [
             'name' => 'required|between:2,200',
@@ -51,9 +52,9 @@ abstract class BaseProductRequest extends BaseFormRequest
             'alternative_text' => 'nullable|between:2,500',
             'price' => 'required_if:price_type,regular|numeric|min:.2',
             'media_uid' => ['nullable', new MediaUidRule('product_photo')],
-            'price_type' => ['required', Rule::in(Product::PRICE_TYPES)],
+            'price_type' => ['required', Rule::in($updatedProduct ? [$updatedProduct->price_type] : Product::PRICE_TYPES)],
 
-            'price_discount' => match ($price_type) {
+            'price_discount' => match ($priceType) {
                 'discount_fixed' => 'required|numeric|min:.1',
                 'discount_percentage' => 'required|numeric|between:.1,100',
                 default => [],
@@ -63,6 +64,7 @@ abstract class BaseProductRequest extends BaseFormRequest
             'product_category_id' => 'required|exists:product_categories,id',
             'sku' => 'nullable|string|alpha_num|max:200',
             'ean' => ['nullable', 'string', new EanCodeRule()],
+            'qr_enabled' => 'nullable|boolean',
         ];
     }
 

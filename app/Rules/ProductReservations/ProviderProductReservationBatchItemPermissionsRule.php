@@ -119,7 +119,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
      */
     protected function validateProductAccess(Voucher $voucher, Product $product): bool|string
     {
-        // The provider didn't enabled products reservation
+        // The provider didn't enable product reservation
         if (!$product['reservations_enabled']) {
             return 'U mag geen reserveringen plaatsen voor fondsen.';
         }
@@ -139,12 +139,15 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
             return 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.';
         }
 
-        $allowed = false;
-        $productQuery = Product::query()
-            ->whereId($product->id)
-            ->whereOrganizationId($this->organization->id);
+        $builder = Product::query();
+        $builder = ProductQuery::whereCanBeReservedFilter($builder);
+        $builder = ProductQuery::approvedForFundsAndActiveFilter($builder, $voucher->fund_id);
 
-        $allowed = ProductQuery::approvedForFundsFilter($productQuery, $voucher->fund_id)->exists();
+        // check validity
+        $allowed = $builder
+            ->where('organization_id', $this->organization->id)
+            ->where('id', '=', $product->id)
+            ->exists();
 
         // This product was not approved for this found.
         return $allowed ?: 'Dit aanbod is niet geaccepteerd voor dit fonds.';
