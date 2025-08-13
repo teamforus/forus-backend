@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libjpeg-dev \
+    libicu-dev \
     libwebp-dev \
     zip \
     unzip \
