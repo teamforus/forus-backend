@@ -537,11 +537,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
             "Api\Platform\Organizations\FundRequestsController@export"
         );
 
-        $router->get(
-            'organizations/{organization}/fund-requests/{fund_request}/person',
-            "Api\Platform\Organizations\FundRequestsController@person"
-        );
-
         // Fund requests notes
         $router->group(['prefix' => 'organizations/{organization}/fund-requests/{fund_request}'], function () use ($router) {
             $router->get('notes', "Api\Platform\Organizations\FundRequestsController@notes");
@@ -901,6 +896,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->delete(
         'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
         'Api\Platform\Organizations\Sponsor\IdentitiesController@deleteBankAccount',
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/identities/{identity}/person',
+        'Api\Platform\Organizations\Sponsor\IdentitiesController@person',
     );
 
     $router->get(

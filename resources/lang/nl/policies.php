@@ -7,11 +7,9 @@ return [
     'fund_requests' => [
         'pending_request_exists' => 'Er bestaat al een lopend verzoek.',
         'not_pending' => 'Verzoek is niet in behandeling.',
-        'bsn_is_unknown' => 'BSN is onbekend.',
         'bsn_is_required' => 'BSN is verplicht.',
         'bsn_not_enabled' => 'BSN is niet ingeschakeld.',
         'not_assigned' => 'Niet aan jou toegewezen.',
-        'iconnect_not_available' => 'IConnect is niet beschikbaar.',
         'email_is_required' => 'E-mail is verplicht.',
         'invalid_permissions' => 'Deze actie is niet toegestaan.',
         'not_note_author' => 'Alleen de auteur kan notities verwijderen.',
@@ -85,5 +83,11 @@ return [
             'title' => 'Declaratieverzoek reeds toegewezen',
             'message' => 'Het declaratieverzoek is al aan iemand anders toegewezen.',
         ],
+    ],
+    'identities' => [
+        'iconnect_not_available' => 'IConnect is niet beschikbaar.',
+        'bsn_not_enabled' => 'BSN is niet ingeschakeld.',
+        'bsn_is_unknown' => 'BSN is onbekend.',
+        'invalid_permissions' => 'Deze actie is niet toegestaan.',
     ],
 ];

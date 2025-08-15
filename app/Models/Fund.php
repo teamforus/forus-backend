@@ -20,7 +20,6 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
-use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
@@ -1784,29 +1783,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function hasIConnectApiOin(): bool
-    {
-        return
-            $this->fund_config &&
-            !$this->external &&
-            $this->isIconnectApiConfigured() &&
-            $this->organization->bsn_enabled &&
-            !empty($this->fund_config->iconnect_target_binding) &&
-            !empty($this->fund_config->iconnect_api_oin) &&
-            !empty($this->fund_config->iconnect_base_url);
-    }
-
-    /**
-     * @return IConnect|null
-     */
-    public function getIConnect(): ?IConnect
-    {
-        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
-    }
-
-    /**
      * @param Identity $identity
      * @return bool
      */
@@ -1946,18 +1922,5 @@ class Fund extends BaseModel
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
-    }
-
-    /**
-     * @return bool
-     */
-    private function isIconnectApiConfigured(): bool
-    {
-        return
-            $this->fund_config &&
-            !empty($this->fund_config->iconnect_env) &&
-            !empty($this->fund_config->iconnect_key) &&
-            !empty($this->fund_config->iconnect_cert) &&
-            !empty($this->fund_config->iconnect_cert_trust);
     }
 }

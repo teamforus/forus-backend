@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @property-read Person $resource
  */
-class FundRequestPersonArrResource extends JsonResource
+class IdentityPersonArrResource extends JsonResource
 {
     /**
      * @var string[]

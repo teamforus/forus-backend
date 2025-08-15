@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Funds\Requests;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 
 use App\Http\Requests\BaseFormRequest;
 
-class FundRequestPersonRequest extends BaseFormRequest
+class IdentitiesPersonRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
