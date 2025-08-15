@@ -372,41 +372,6 @@ class FundRequestPolicy
     }
 
     /**
-     * @param Identity $identity
-     * @param FundRequest $fundRequest
-     * @param Organization $organization
-     * @return Response|bool
-     * @noinspection PhpUnused
-     */
-    public function viewPersonBSNData(
-        Identity $identity,
-        FundRequest $fundRequest,
-        Organization $organization,
-    ): Response|bool {
-        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny(trans('policies.fund_requests.invalid_endpoint'));
-        }
-
-        if (!$organization->identityCan($identity, 'view_person_bsn_data')) {
-            return $this->deny(trans('policies.fund_requests.invalid_validator'));
-        }
-
-        if (!$fundRequest->identity->bsn) {
-            return $this->deny(trans('policies.fund_requests.bsn_is_unknown'));
-        }
-
-        if (!$organization->bsn_enabled) {
-            return $this->deny(trans('policies.fund_requests.bsn_not_enabled'));
-        }
-
-        if (!$fundRequest->fund->hasIConnectApiOin()) {
-            return $this->deny(trans('policies.fund_requests.iconnect_not_available'));
-        }
-
-        return true;
-    }
-
-    /**
      * Determine whether the user can view reimbursement notes.
      *
      * @param Identity $identity

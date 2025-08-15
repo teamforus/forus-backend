@@ -80,15 +80,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $backoffice_fallback
  * @property string|null $backoffice_ineligible_policy
  * @property string|null $backoffice_ineligible_redirect_url
- * @property string|null $iconnect_target_binding
- * @property string|null $iconnect_api_oin
- * @property string|null $iconnect_base_url
- * @property string $iconnect_env
- * @property string $iconnect_key
- * @property string $iconnect_key_pass
- * @property string $iconnect_cert
- * @property string $iconnect_cert_pass
- * @property string $iconnect_cert_trust
  * @property bool $provider_products_required
  * @property bool $pre_check_excluded
  * @property string|null $pre_check_note
@@ -184,15 +175,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHideMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanNameRecordKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanRecordKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectApiOin($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectBaseUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCert($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCertPass($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectCertTrust($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectEnv($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectKeyPass($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIconnectTargetBinding($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIsConfigured($value)
