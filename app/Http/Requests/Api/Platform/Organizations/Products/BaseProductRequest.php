@@ -76,6 +76,9 @@ abstract class BaseProductRequest extends BaseFormRequest
         $options = implode(',', Product::RESERVATION_FIELDS_PRODUCT);
         $policies = implode(',', Product::RESERVATION_POLICIES);
 
+        $noteOptions = implode(',', Product::RESERVATION_NOTE_PRODUCT_OPTIONS);
+        $noteCustomOption = Product::RESERVATION_FIELD_CUSTOM;
+
         $extraPaymentRules = $this->organization->canReceiveExtraPayments() ? [
             Rule::in(Product::RESERVATION_EXTRA_PAYMENT_OPTIONS),
         ] : [];
@@ -88,6 +91,8 @@ abstract class BaseProductRequest extends BaseFormRequest
             'reservation_address' => "nullable|in:$options",
             'reservation_birth_date' => "nullable|in:$options",
             'reservation_extra_payments' => ['nullable', ...$extraPaymentRules],
+            'reservation_note' => "nullable|in:$noteOptions",
+            'reservation_note_text' => "nullable|required_if:reservation_note,$noteCustomOption|string|max:2000",
         ];
     }
 }
