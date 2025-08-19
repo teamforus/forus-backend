@@ -27,12 +27,15 @@ class FundRequestClarificationsController extends Controller
     ): FundRequestClarificationResource {
         $this->authorize('update', [$requestClarification, $fundRequest]);
 
-        $requestClarification->update(array_merge($request->only('answer'), [
+        $requestClarification->update([
+            'answer' => $requestClarification->text_requirement !== 'no' ? $request->post('answer') : null,
             'answered_at' => now(),
             'state' => FundRequestClarification::STATE_ANSWERED,
-        ]));
+        ]);
 
-        $requestClarification->appendFilesByUid($request->input('files', []));
+        if ($requestClarification->files_requirement !== 'no') {
+            $requestClarification->appendFilesByUid($request->input('files', []));
+        }
 
         FundRequestClarificationReceived::dispatch($requestClarification);
 

@@ -37,11 +37,11 @@ class PrevalidationDataItemRule extends BaseRule
         $records = $this->data[$index] ?? [];
 
         if (!($this->recordTypes[$recordKey] ?? false)) {
-            return $this->rejectTrans('validation.prevalidation_invalid_record_key');
+            return $this->reject(__('validation.prevalidation_invalid_record_key'));
         }
 
         if ($recordKey === 'primary_email') {
-            return $this->rejectTrans('validation.prevalidation_invalid_type_primary_email');
+            return $this->reject(__('validation.prevalidation_invalid_type_primary_email'));
         }
 
         if ($this->fund && !$this->validateRecord($recordKey, $value, $records)) {

@@ -62,7 +62,7 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
             if ($criterion->isExcludedByRules($allRecordValues)) {
                 // Excluded: must not be submitted
                 if (array_key_exists($criterion->id, $submittedCriteriaById)) {
-                    return $this->reject(trans('validation.fund_request.invalid_record', [
+                    return $this->reject(__('validation.fund_request.invalid_record', [
                         'attribute' => $criterion->record_type_key,
                     ]));
                 }
@@ -73,7 +73,7 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
             $expectedCriterionIds[] = $criterion->id;
 
             if (!array_key_exists($criterion->id, $submittedCriteriaById)) {
-                return $this->reject(trans('validation.fund_request.required_record', [
+                return $this->reject(__('validation.fund_request.required_record', [
                     'attribute' => $criterion->record_type_key,
                 ]));
             }
@@ -84,7 +84,7 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
         $unexpectedIds = array_diff($submittedCriterionIds, $expectedCriterionIds);
 
         if (!empty($unexpectedIds)) {
-            return $this->reject(trans('validation.fund_request.extra_records'));
+            return $this->reject(__('validation.fund_request.extra_records'));
         }
 
         return true;

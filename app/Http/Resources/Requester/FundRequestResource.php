@@ -98,7 +98,7 @@ class FundRequestResource extends BaseJsonResource
                     'name' => $record->record_type?->name ?: $record->record_type->key,
                 ],
                 'clarifications' => FundRequestClarificationResource::collection(
-                    $record->fund_request_clarifications->sortByDesc('created_at')
+                    $record->fund_request_clarifications->sortBy(['created_at', 'id'])
                 ),
             ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
         })->toArray();
