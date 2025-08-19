@@ -24,6 +24,8 @@ abstract class BaseOrganizationRequest extends BaseFormRequest
             'reservation_birth_date' => "nullable|in:$options",
             'reservation_user_note' => "nullable|in:$options",
             'reservation_allow_extra_payments' => 'nullable|boolean',
+            'reservation_note' => 'nullable|boolean',
+            'reservation_note_text' => 'required_if_accepted:reservation_note|string|max:2000',
         ];
     }
 }

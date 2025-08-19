@@ -1579,4 +1579,25 @@ return [
             ],
         ],
     ],
+    'Schouwen Duiveland' => [
+        'test_reservations' => false,
+        'implementation_name' => 'Schouwen Duiveland',
+        'organization_name' => 'Schouwen Duiveland',
+        'fund' => [
+            'auto_requests_validation' => true,
+            'criteria_editable_after_start' => true,
+        ],
+        'fund_config' => [
+            'key' => 'schouwen_duiveland',
+            'allow_reimbursements' => true,
+            'allow_physical_cards' => true,
+            'allow_voucher_top_ups' => true,
+            'allow_voucher_records' => true,
+            'allow_direct_payments' => true,
+            'allow_generator_direct_payments' => true,
+            'show_subsidies' => true,
+            'show_qr_limits' => true,
+            'show_requester_limits' => true,
+        ],
+    ],
 ];

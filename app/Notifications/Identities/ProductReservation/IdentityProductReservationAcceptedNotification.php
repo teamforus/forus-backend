@@ -23,6 +23,7 @@ class IdentityProductReservationAcceptedNotification extends BaseProductReservat
 
         $mailable = new ProductReservationAcceptedMail([
             ...$this->eventLog->data,
+            'note' => $productReservation->product->getReservationNoteValue(),
             'webshop_link' => $productReservation->voucher->fund->urlWebshop(),
         ], $productReservation->voucher->fund->getEmailFrom());
 
