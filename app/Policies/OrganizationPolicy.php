@@ -209,33 +209,37 @@ class OrganizationPolicy
     }
 
     /**
-     * @param Identity $authIdentity
-     * @param Organization $organization
      * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
      * @return Response|bool
      */
     public function viewPersonBSNData(
-        Identity $authIdentity,
-        Organization $organization,
         Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
     ): Response|bool {
-        if (!$organization->identityCan($authIdentity, 'view_person_bsn_data')) {
-            return $this->deny(trans('policies.identities.invalid_permissions'));
+        if (!$organization->identityCan($identity, [
+            Permission::VIEW_IDENTITIES,
+            Permission::MANAGE_IDENTITIES,
+            Permission::VIEW_PERSON_BSN_DATA,
+        ], false)) {
+            return $this->deny(__('policies.identities.invalid_permissions'));
         }
 
-        if (!$identity->bsn) {
-            return $this->deny(trans('policies.identities.bsn_is_unknown'));
+        if (!$sponsorIdentity->bsn) {
+            return $this->deny(__('policies.identities.bsn_is_unknown'));
         }
 
         if (!$organization->bsn_enabled) {
-            return $this->deny(trans('policies.identities.bsn_not_enabled'));
+            return $this->deny(__('policies.identities.bsn_not_enabled'));
         }
 
         if (!$organization->hasIConnectApiOin()) {
-            return $this->deny(trans('policies.identities.iconnect_not_available'));
+            return $this->deny(__('policies.identities.iconnect_not_available'));
         }
 
-        return true;
+        return $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity);
     }
 
     /**
