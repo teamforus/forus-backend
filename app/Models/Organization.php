@@ -396,6 +396,15 @@ class Organization extends BaseModel
     ];
 
     /**
+     * @var string[]
+     */
+    protected $hidden = [
+        'iconnect_api_oin', 'iconnect_target_binding', 'iconnect_base_url', 'iconnect_env',
+        'iconnect_key', 'iconnect_key_pass', 'iconnect_cert', 'iconnect_cert_pass',
+        'iconnect_cert_trust',
+    ];
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function identity(): BelongsTo
