@@ -174,8 +174,8 @@ return [
     */
     'prevalidation_missing_required_keys' => 'Het bestand bevat niet alle verplichte velden.',
     'prevalidation_invalid_record_key' => 'Een veldtype dat is opgenomen in het bestand bestaat niet.',
-    'validation.prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
-    'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
+    'prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
+    'prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
     'fund_request_request_field_incomplete' => 'Dit veld mag niet leeg zijn.',
     'fund_request_request_eligible_field_incomplete' => 'Ga akkoord met de voorwaarden.',
     'email_already_used' => 'De e-mail is verstuurd naar het opgegeven e-mailadres. Let op: als het e-mailadres al in het systeem staat, kan het niet opnieuw worden toegevoegd en wordt er geen e-mail verstuurd.',
@@ -202,12 +202,14 @@ return [
     ],
     'product_voucher' => [
         'product_not_found' => 'Aanbod niet gevonden.',
+        'product_is_informational' => 'Aanbod niet gevonden.',
         'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_used' => 'De reservering is al gebruikt',
         'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
     ],
     'product_reservation' => [
         'product_not_found' => 'Aanbod niet gevonden.',
+        'product_is_informational' => 'Aanbod niet gevonden.',
         'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
         'no_identity_stock' => 'Het aanbod heeft het limiet bereikt!',
@@ -309,6 +311,9 @@ return [
 
         'ean' => 'EAN',
         'sku' => 'SKU',
+        'reservation_note' => 'aankoopnotitie',
+        'reservation_note_text' => 'aankoopnotitie tekst',
+        'custom_reservation_note_text' => 'aangepaste aankoopnotitie',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

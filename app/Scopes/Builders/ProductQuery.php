@@ -232,10 +232,13 @@ class ProductQuery
      * @return Builder|Relation|Product
      */
     public static function inStockAndActiveFilter(
-        Builder|Relation|Product $query
+        Builder|Relation|Product $query,
     ): Builder|Relation|Product {
         return $query->where(static function (Builder $builder) {
-            self::whereNotExpired($builder->where('sold_out', false));
+            self::whereNotExpired($builder->where(function (Builder $builder) {
+                $builder->where('sold_out', false);
+                $builder->orWhere('price_type', Product::PRICE_TYPE_INFORMATIONAL);
+            }));
         });
     }
 
@@ -262,6 +265,16 @@ class ProductQuery
         int|array $fund_id,
     ): Builder|Relation|Product {
         return self::approvedForFundsFilter(self::inStockAndActiveFilter($query), $fund_id);
+    }
+
+    /**
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
+     */
+    public static function whereCanBeReservedFilter(
+        Builder|Relation|Product $query,
+    ): Builder|Relation|Product {
+        return $query->where('price_type', '!=', Product::PRICE_TYPE_INFORMATIONAL);
     }
 
     /**
@@ -355,6 +368,7 @@ class ProductQuery
 
         if ($checkReservationFlags) {
             self::whereReservationEnabled($builder);
+            self::whereCanBeReservedFilter($builder);
 
             if (!$voucher->fund->fund_config->allow_reservations) {
                 $builder->whereIn('id', []);

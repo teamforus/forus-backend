@@ -53,7 +53,7 @@ class SponsorProductResource extends BaseJsonResource
 
         return [
             ...$product->only([
-                'id', 'name', 'description', 'product_category_id', 'sold_out',
+                'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
                 'reservation_enabled', 'reservation_policy', 'alternative_text', 'ean',
             ]),
@@ -224,6 +224,8 @@ class SponsorProductResource extends BaseJsonResource
             'reservation_phone' => $product->reservation_phone,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
+            'reservation_note' => $product->reservation_note,
+            'reservation_note_text' => $product->reservation_note_text,
         ];
     }
 }

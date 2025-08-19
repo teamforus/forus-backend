@@ -30,7 +30,7 @@ class UpdateProductRequest extends BaseProductRequest
         $minAmount = $product->countReserved() + $product->countSold();
 
         return [
-            ...$this->baseProductRules((string) $this->input('price_type')),
+            ...$this->baseProductRules((string) $this->input('price_type'), $product),
             ...$this->reservationRules(),
 
             'total_amount' => [
@@ -38,6 +38,18 @@ class UpdateProductRequest extends BaseProductRequest
                 'numeric',
                 $product->unlimited_stock ? null : 'min:' . $minAmount,
             ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'reservation_note_text.required_if' => trans('validation.required', [
+                'attribute' => trans('validation.attributes.custom_reservation_note_text'),
+            ]),
         ];
     }
 }
