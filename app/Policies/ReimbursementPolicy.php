@@ -365,7 +365,7 @@ class ReimbursementPolicy
         bool $auth2FAConfirmed = false,
     ): Response|bool {
         if (!$reimbursement->isDraft()) {
-            return $this->deny(trans('policies.reimbursements.not_draft'));
+            return $this->deny(__('policies.reimbursements.not_draft'));
         }
 
         if ($reimbursement->voucher->identity_id !== $identity->id) {

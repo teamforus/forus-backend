@@ -77,7 +77,7 @@ class ProductResource extends BaseJsonResource
     {
         return [
             ...$product->only([
-                'id', 'name', 'description', 'product_category_id', 'sold_out',
+                'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
                 'description_html',
             ]),
@@ -141,10 +141,13 @@ class ProductResource extends BaseJsonResource
             $reservationsEnabled = $product->reservationsEnabled();
             $reservationsExtraPaymentEnabled = $reservationsEnabled && $product->reservationExtraPaymentsEnabled($fund);
 
-            $scanningEnabled = $product->organization->fund_providers
-                ->where('allow_budget', true)
-                ->where('fund_id', $fund->id)
-                ->isNotEmpty() && (!$fundProviderProduct || $fundProviderProduct->allow_scanning);
+            $scanningEnabled =
+                $product->qr_enabled &&
+                $product->organization->fund_providers
+                    ->where('allow_budget', true)
+                    ->where('fund_id', $fund->id)
+                    ->isNotEmpty() &&
+                (!$fundProviderProduct || $fundProviderProduct->allow_scanning);
 
             $data = [
                 'id' => $fund->id,
@@ -238,6 +241,8 @@ class ProductResource extends BaseJsonResource
             'reservation_fields' => $product->reservation_fields,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
+            'reservation_note' => $product->reservation_note,
+            'reservation_note_text' => $product->reservation_note_text,
         ];
     }
 }

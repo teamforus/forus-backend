@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Mail\ProductReservations\ProductReservationCanceledMail;
 use App\Mail\ProductReservations\ProductReservationRejectedMail;
+use App\Mail\ProductReservations\ProductReservationAcceptedMail;
+use App\Models\Fund;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Carbon\Carbon;
 use Exception;
@@ -163,6 +166,68 @@ class ProductReservationTest extends TestCase
         DB::beginTransaction();
         $this->assertCanceledReservationProviderNote($reservation, $note, false);
         DB::rollBack();
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testReservationNote(): void
+    {
+        $startTime = now();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($organization);
+        $this->makeProviderAndProducts($fund, 1);
+
+        $voucher = $this->makeTestVoucher($fund, $organization->identity);
+        $product = $this->findProductForReservation($voucher);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $this->makeReservationGetRequest($reservation)->assertSuccessful();
+
+        // set global reservation note
+        $product->organization->update([
+            'reservation_note' => true,
+            'reservation_note_text' => 'global-note',
+        ]);
+
+        // assert global note
+        DB::beginTransaction();
+        $reservation->acceptProvider();
+        $this->assertStringContainsString('global-note', $this->getEmailLog($voucher, $startTime)->content);
+        DB::rollBack();
+
+        // assert custom note
+        DB::beginTransaction();
+        $product->update([
+            'reservation_note' => Product::RESERVATION_FIELD_CUSTOM,
+            'reservation_note_text' => 'custom-local-note',
+        ]);
+
+        $reservation->acceptProvider();
+        $this->assertStringContainsString('custom-local-note', $this->getEmailLog($voucher, $startTime)->content);
+        $this->assertStringNotContainsString('global-note', $this->getEmailLog($voucher, $startTime)->content);
+        DB::rollBack();
+
+        // assert product note settings as 'no'
+        DB::beginTransaction();
+        $product->update([
+            'reservation_note' => Product::RESERVATION_FIELD_NO,
+        ]);
+
+        $reservation->acceptProvider();
+        $this->assertStringNotContainsString('global-note', $this->getEmailLog($voucher, $startTime)->content);
+        DB::rollBack();
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Carbon $startTime
+     * @return EmailLog
+     */
+    protected function getEmailLog(Voucher $voucher, Carbon $startTime): EmailLog
+    {
+        return $this->findEmailLog($voucher->identity, ProductReservationAcceptedMail::class, $startTime);
     }
 
     /**
