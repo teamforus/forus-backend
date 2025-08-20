@@ -12,7 +12,6 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
@@ -23,7 +22,6 @@ class FundRequestValidatorTest extends TestCase
 {
     use WithFaker;
     use MakesTestFunds;
-    use MakesApiRequests;
     use UsesMediaService;
     use MakesTestIdentities;
     use DatabaseTransactions;

@@ -20,8 +20,9 @@ class PrevalidationsTest extends TestCase
     use MakesTestOrganizations;
 
     /**
-     * @throws Throwable
+     * Test creating a prevalidation for test criteria.
      * @return void
+     * @throws Throwable
      */
     public function testPrevalidationCreate(): void
     {
@@ -41,19 +42,22 @@ class PrevalidationsTest extends TestCase
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, fundConfigsData: ['csv_primary_key' => 'uid']);
+        $uid = token_generator()->generate(32);
+
         $this->addTestCriteriaToFund($fund);
 
-        $uid = token_generator()->generate(32);
         // first prevalidation
         $this->makePrevalidationForTestCriteria($organization, $fund, $uid);
-        // second prevalidation with same primary_key
-        $response = $this->makePrevalidationForTestCriteriaRequest($organization, $fund, $uid);
-        $response->assertJsonValidationErrors(['data.uid']);
+
+        // second prevalidation with same primary_key is expected to fail
+        $this
+            ->apiMakePrevalidationForTestCriteriaRequest($organization, $fund, $uid)
+            ->assertJsonValidationErrors('data.uid');
     }
 
     /**
-     * Test batch upload when CSV has 2 records: the first record already exists with identical records and primary key in the database.
-     * The system skips the first one (does nothing) and creates the second one.
+     * Test batch upload when CSV has 2 records: the first record already exists with identical records and primary key
+     * in the database. The system skips the first one (does nothing) and creates the second one.
      * @throws Throwable
      * @return void
      */
@@ -68,9 +72,9 @@ class PrevalidationsTest extends TestCase
         $existingPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund, $uid);
 
         // prepare prevalidation records for upload
-        $existingPrevalidationData = $existingPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $existingPrevalidationData = $existingPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         // prepare new prevalidation with unique primary_key
         $newPrevalidationData = [
@@ -86,9 +90,7 @@ class PrevalidationsTest extends TestCase
             'test_select_number' => 2,
         ];
 
-        $response = $this->makeStorePrevalidationBatchRequest($organization, $fund, [
-            $existingPrevalidationData, $newPrevalidationData,
-        ]);
+        $response = $this->makeStorePrevalidationBatchRequest($organization, $fund, [$existingPrevalidationData, $newPrevalidationData]);
 
         $response->assertSuccessful();
 
@@ -104,8 +106,9 @@ class PrevalidationsTest extends TestCase
     }
 
     /**
-     * Test batch upload when CSV has 2 records: the first record already exists with the same primary key but has different record values.
-     * The system should ask for confirmation before updating the first record and after confirmation update the first one and create the second one.
+     * Test batch upload when CSV has 2 records: the first record already exists with the same primary key but has
+     * different record values. The system should ask for confirmation before updating the first record and after
+     * confirmation update the first one and create the second one.
      * @throws Throwable
      * @return void
      */
@@ -120,9 +123,9 @@ class PrevalidationsTest extends TestCase
         $existingPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund, $uid);
 
         // prepare prevalidation records for upload
-        $existingPrevalidationData = $existingPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $existingPrevalidationData = $existingPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         // change some record values to test that records must be updated
         $existingPrevalidationData['test_number'] = 8;
@@ -150,7 +153,6 @@ class PrevalidationsTest extends TestCase
 
         // assert first prevalidation updated (as we changed $existingPrevalidationData)
         $this->assertRecordsEquals($existingPrevalidation->refresh(), $existingPrevalidationData);
-
         $this->assertCount(2, $response->json('data'));
 
         $newPrevalidationId = Arr::first(
@@ -179,18 +181,16 @@ class PrevalidationsTest extends TestCase
 
         // create one prevalidation for future test prevalidation creation with the same primary key and records
         $firstPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
-
-        // prepare prevalidation records for upload
-        $firstPrevalidationData = $firstPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
-
         $secondPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
 
         // prepare prevalidation records for upload
-        $secondPrevalidationData = $secondPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $firstPrevalidationData = $firstPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
+
+        $secondPrevalidationData = $secondPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         $response = $this->makeStorePrevalidationBatchRequest($organization, $fund, [
             $firstPrevalidationData, $secondPrevalidationData,

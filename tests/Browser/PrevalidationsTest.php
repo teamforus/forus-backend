@@ -148,8 +148,8 @@ class PrevalidationsTest extends DuskTestCase
     }
 
     /**
-     * Test batch upload when CSV has 2 records: the first record already exists with identical records and primary key in the database.
-     * The system skips the first one (does nothing) and creates the second one.
+     * Test batch upload when CSV has 2 records: the first record already exists with identical records and primary key
+     * in the database. The system skips the first one (does nothing) and creates the second one.
      * @throws Throwable
      * @return void
      */
@@ -164,9 +164,9 @@ class PrevalidationsTest extends DuskTestCase
         $existingPrevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
 
         // prepare prevalidation records for upload
-        $existingPrevalidationData = $existingPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $existingPrevalidationData = $existingPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         // prepare new prevalidation with unique primary_key
         $newPrevalidationData = [
@@ -225,8 +225,9 @@ class PrevalidationsTest extends DuskTestCase
     }
 
     /**
-     * Test batch upload when CSV has 2 records: the first record already exists with the same primary key but has different record values.
-     * The system should ask for confirmation before updating the first record and after confirmation update the first one and create the second one.
+     * Test batch upload when CSV has 2 records: the first record already exists with the same primary key but has
+     * different record values. The system should ask for confirmation before updating the first record and after
+     * confirmation update the first one and create the second one.
      * @throws Throwable
      * @return void
      */
@@ -241,9 +242,9 @@ class PrevalidationsTest extends DuskTestCase
         $existingPrevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
 
         // prepare prevalidation records for upload
-        $existingPrevalidationData = $existingPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $existingPrevalidationData = $existingPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         // change some record values to test that records must be updated
         $existingPrevalidationData['test_number'] = 8;
@@ -320,18 +321,17 @@ class PrevalidationsTest extends DuskTestCase
         $this->addTestCriteriaToFund($fund);
 
         $firstPrevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
-
-        // prepare prevalidation records for upload
-        $firstPrevalidationData = $firstPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
-
         $secondPrevalidation = $this->makePrevalidationForTestCriteria($implementation->organization, $fund);
 
         // prepare prevalidation records for upload
-        $secondPrevalidationData = $secondPrevalidation->prevalidation_records->reduce(fn (array $records, PrevalidationRecord $record) => [
-            ...$records, $record->record_type->key => $record->value,
-        ], []);
+        $firstPrevalidationData = $firstPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
+
+        // prepare prevalidation records for upload
+        $secondPrevalidationData = $secondPrevalidation->prevalidation_records
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
 
         // sort records for same key order
         ksort($firstPrevalidationData);
@@ -392,7 +392,7 @@ class PrevalidationsTest extends DuskTestCase
         ?string $primaryKey = null,
     ): Prevalidation {
         // create prevalidation
-        $response = $this->makeStorePrevalidationRequest($organization, $fund, [
+        $response = $this->apiMakeStorePrevalidationRequest($organization, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
             $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
