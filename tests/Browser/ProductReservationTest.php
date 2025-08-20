@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Mail\ProductReservations\ProductReservationAcceptedMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
@@ -545,6 +546,127 @@ class ProductReservationTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testGeneralReservationNote(): void
+    {
+        $startTime = now();
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $provider->update([
+                'reservation_note' => true,
+                'reservation_note_text' => 'global-note',
+            ]);
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], cancelReservation: false);
+
+            $product->product_reservations()->first()->acceptProvider();
+
+            $log = $this->findEmailLog($identity, ProductReservationAcceptedMail::class, $startTime);
+            $this->assertStringContainsString('global-note', $log->content);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testGeneralReservationNoteOverrideInProduct(): void
+    {
+        $startTime = now();
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $provider->update([
+                'reservation_note' => true,
+                'reservation_note_text' => 'global-note',
+            ]);
+
+            $product->update([
+                'reservation_note' => Product::RESERVATION_FIELD_NO,
+            ]);
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], cancelReservation: false);
+
+            $product->product_reservations()->first()->acceptProvider();
+
+            $log = $this->findEmailLog($identity, ProductReservationAcceptedMail::class, $startTime);
+            $this->assertStringNotContainsString('global-note', $log->content);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductCustomReservationNote(): void
+    {
+        $startTime = now();
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $fund->makeVoucher($identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $provider->update([
+                'reservation_note' => true,
+                'reservation_note_text' => 'global-note',
+            ]);
+
+            $product->update([
+                'reservation_note' => Product::RESERVATION_FIELD_CUSTOM,
+                'reservation_note_text' => 'custom-local-note',
+            ]);
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], cancelReservation: false);
+
+            $product->product_reservations()->first()->acceptProvider();
+
+            $log = $this->findEmailLog($identity, ProductReservationAcceptedMail::class, $startTime);
+            $this->assertStringContainsString('custom-local-note', $log->content);
+            $this->assertStringNotContainsString('global-note', $log->content);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
      * @param Fund $fund
      * @return void
      */
@@ -609,6 +731,7 @@ class ProductReservationTest extends DuskTestCase
      * @param array|null $userData
      * @param array|null $addressData
      * @param array|null $otherFields
+     * @param bool $cancelReservation
      * @param bool $noteDisabled
      * @throws Throwable
      * @return void
@@ -620,6 +743,7 @@ class ProductReservationTest extends DuskTestCase
         array $userData = null,
         array $addressData = null,
         array $otherFields = null,
+        bool $cancelReservation = true,
         bool $noteDisabled = false,
     ): void {
         Cache::clear();
@@ -633,6 +757,7 @@ class ProductReservationTest extends DuskTestCase
             $addressData,
             $product,
             $otherFields,
+            $cancelReservation,
             $noteDisabled
         ) {
             $browser->visit($implementation->urlWebshop());
@@ -671,7 +796,10 @@ class ProductReservationTest extends DuskTestCase
             $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
 
             $this->assertReservationCreatedWithProperAcceptanceStatus($reservation);
-            $this->cancelReservation($browser, $reservation);
+
+            if ($cancelReservation) {
+                $this->cancelReservation($browser, $reservation);
+            }
 
             // Logout user
             $this->logout($browser);

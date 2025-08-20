@@ -544,7 +544,12 @@ class FundRequestValidatorTest extends DuskTestCase
     protected function requestClarification(
         FundRequest $fundRequest
     ): FundRequestClarification {
-        $questionData = ['question' => $this->faker()->text(), 'fund_request_record_id' => $fundRequest->records[0]->id];
+        $questionData = [
+            'question' => $this->faker()->text(),
+            'files_requirement' => 'required',
+            'text_requirement' => 'required',
+            'fund_request_record_id' => $fundRequest->records[0]->id,
+        ];
 
         $response = $this->apiMakeFundRequestClarificationRequest($fundRequest, $fundRequest->employee, $questionData)
             ->assertSuccessful()

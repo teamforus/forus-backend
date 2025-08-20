@@ -2,6 +2,7 @@
 
 namespace App\Services\MailDatabaseLoggerService\Traits;
 
+use App\Models\Identity;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Carbon\Carbon;
 use DOMDocument;
@@ -259,6 +260,26 @@ trait AssertsSentEmails
 
             $builder->where('to_address', $email);
         });
+    }
+
+    /**
+     * @param Identity $identity
+     * @param string $mailable
+     * @param Carbon $startTime
+     * @return EmailLog
+     */
+    protected function findEmailLog(
+        Identity $identity,
+        string $mailable,
+        Carbon $startTime,
+    ): EmailLog {
+        $this->assertMailableSent($identity->email, $mailable, $startTime);
+
+        /** @var EmailLog $log */
+        $log = $this->getEmailOfTypeQuery($identity->email, $mailable, $startTime)->first();
+        $this->assertNotNull($log);
+
+        return $log;
     }
 
     /**

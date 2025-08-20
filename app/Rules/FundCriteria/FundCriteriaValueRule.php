@@ -29,7 +29,7 @@ class FundCriteriaValueRule extends BaseFundCriteriaRule
         $max = Arr::get($criterion, 'max');
 
         if (!$criterion || !$recordType || !$this->validateMinMax($attribute, $min, $min)->passes()) {
-            return $this->reject(trans('validation.in', compact('attribute')));
+            return $this->reject(__('validation.in', compact('attribute')));
         }
 
         $validation = match ($recordType->type) {
