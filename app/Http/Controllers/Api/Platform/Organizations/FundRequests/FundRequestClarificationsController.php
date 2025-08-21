@@ -11,6 +11,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Event;
 
 class FundRequestClarificationsController extends Controller
 {
@@ -58,10 +59,10 @@ class FundRequestClarificationsController extends Controller
         $this->authorize('create', [FundRequestClarification::class, $fundRequest, $organization]);
 
         $clarification = $fundRequest->clarifications()->create($request->only([
-            'question', 'fund_request_record_id',
+            'question', 'text_requirement', 'files_requirement', 'fund_request_record_id',
         ]));
 
-        FundRequestClarificationRequested::dispatch($clarification);
+        Event::dispatch(new FundRequestClarificationRequested($clarification));
 
         return FundRequestClarificationResource::create($clarification);
     }

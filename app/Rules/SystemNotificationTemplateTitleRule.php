@@ -16,14 +16,14 @@ class SystemNotificationTemplateTitleRule extends BaseRule
         $type = request()->input(substr($attribute, 0, strrpos($attribute, '.')) . '.type');
 
         if ($type == 'push' && strlen($value) > 40) {
-            return $this->reject(trans('validation.max.string', [
+            return $this->reject(__('validation.max.string', [
                 'attribute' => 'titel',
                 'max' => 40,
             ]));
         }
 
         if ($type != 'push' && strlen($value) > 140) {
-            return $this->reject(trans('validation.max.string', [
+            return $this->reject(__('validation.max.string', [
                 'attribute' => 'titel',
                 'max' => 140,
             ]));
