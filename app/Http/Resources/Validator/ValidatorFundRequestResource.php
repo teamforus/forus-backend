@@ -97,7 +97,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         FundRequest $fundRequest,
     ): array {
         $employee = $request->employee($organization) or abort(403);
-        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+        $bsnFields = ['bsn', 'partner_bsn'];
 
         return $fundRequest->records->filter(function (FundRequestRecord $record) use ($organization, $bsnFields) {
             return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);

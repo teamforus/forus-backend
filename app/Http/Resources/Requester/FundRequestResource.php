@@ -85,7 +85,7 @@ class FundRequestResource extends BaseJsonResource
      */
     public function getRecordsDetails(FundRequest $fundRequest): array
     {
-        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+        $bsnFields = ['bsn', 'partner_bsn'];
 
         return $fundRequest->records->filter(function (FundRequestRecord $record) use ($bsnFields) {
             return !in_array($record->record_type_key, $bsnFields, true);

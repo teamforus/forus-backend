@@ -95,14 +95,6 @@ class FundRequestRecord extends BaseModel
      */
     public function makeValidation(): self
     {
-        if ($this->record_type_key === 'partner_bsn' &&
-            $hash_bsn_salt = $this->fund_request->fund->fund_config->hash_bsn_salt) {
-            $this->applyRecordAndValidation(
-                'partner_bsn_hash',
-                hash_hmac('sha256', $this->value, $hash_bsn_salt)
-            );
-        }
-
         return $this->applyRecordAndValidation($this->record_type_key, $this->value);
     }
 
