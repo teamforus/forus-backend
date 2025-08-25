@@ -138,10 +138,12 @@ class TestData
     public function makeSponsors(string $identity_address): array
     {
         $organizations = array_unique(Arr::pluck($this->config('funds'), 'organization_name'));
+        $iConnectConfig = $this->getIConnectConfigs();
 
-        $organizations = array_map(function ($implementation) use ($identity_address) {
+        $organizations = array_map(function ($implementation) use ($identity_address, $iConnectConfig) {
             return $this->makeOrganization($implementation, $identity_address, [
                 'is_sponsor' => true,
+                ...$iConnectConfig,
             ]);
         }, $organizations);
 
@@ -632,7 +634,6 @@ class TestData
         $emailRequired = Arr::get($config, 'email_required', true);
 
         $backofficeConfig = $fund->organization->backoffice_available ? $this->getBackofficeConfigs() : [];
-        $iConnectConfig = $this->getIConnectConfigs();
 
         $defaultData = [
             'fund_id' => $fund->id,
@@ -656,7 +657,7 @@ class TestData
         ];
 
         /** @var FundConfig $fundConfig */
-        $data = array_merge($defaultData, $iConnectConfig, $backofficeConfig, $config);
+        $data = array_merge($defaultData, $backofficeConfig, $config);
         $fundConfig = $fund->fund_config()->forceCreate($data);
 
         $this->makeFundCriteriaAndFormula($fund);
