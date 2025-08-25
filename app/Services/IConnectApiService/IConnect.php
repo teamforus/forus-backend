@@ -5,6 +5,7 @@ namespace App\Services\IConnectApiService;
 use App\Models\Organization;
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
+use App\Services\PersonBsnApiService\Interfaces\PersonBsnApiInterface;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Throwable;
 
-class IConnect
+class IConnect implements PersonBsnApiInterface
 {
     private const string METHOD_GET = 'GET';
 

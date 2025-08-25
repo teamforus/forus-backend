@@ -14,15 +14,19 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PersonBsnApiRecordType;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Searches\FundSearch;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
+use Throwable;
 
 class FundsController extends Controller
 {
@@ -148,5 +152,34 @@ class FundsController extends Controller
             'prevalidations',
             'prevalidation_vouchers'
         ));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Fund $fund
+     * @throws Throwable
+     * @return JsonResponse
+     */
+    public function getPersonBsnApiRecords(BaseFormRequest $request, Fund $fund): JsonResponse
+    {
+        $this->authorize('viewPersonBsnApiRecords', $fund);
+
+        $recordTypeKeys = $fund->criteria->pluck('record_type_key')->toArray();
+
+        $criteria = PersonBsnApiRecordType::get()
+            ->filter(fn (PersonBsnApiRecordType $item) => in_array($item->record_type_key, $recordTypeKeys));
+
+        $service = new PersonBsnApiManager($fund->organization);
+        $data = $service->driver()->getPerson($request->identity()->bsn)->getData();
+
+        $criteriaArr = $criteria->map(fn (PersonBsnApiRecordType $item) => [
+            'record_type_key' => $item->record_type_key,
+            'value' => $item->parsePersonValue(
+                Arr::get($data, $item->person_bsn_api_field),
+                $item->record_type->control_type
+            ),
+        ])->toArray();
+
+        return new JsonResponse($criteriaArr);
     }
 }

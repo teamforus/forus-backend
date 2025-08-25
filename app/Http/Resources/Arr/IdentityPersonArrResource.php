@@ -2,12 +2,11 @@
 
 namespace App\Http\Resources\Arr;
 
-use App\Services\IConnectApiService\Objects\BasePerson;
-use App\Services\IConnectApiService\Objects\Person;
+use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read Person $resource
+ * @property-read PersonInterface $resource
  */
 class IdentityPersonArrResource extends JsonResource
 {
@@ -39,10 +38,10 @@ class IdentityPersonArrResource extends JsonResource
     }
 
     /**
-     * @param BasePerson $person
+     * @param PersonInterface $person
      * @return array
      */
-    public function baseFieldsToArray(BasePerson $person): array
+    public function baseFieldsToArray(PersonInterface $person): array
     {
         return [
             'bsn' => $person->getBSN(),
@@ -58,14 +57,14 @@ class IdentityPersonArrResource extends JsonResource
      */
     public function relationToArray(array $relations): array
     {
-        return array_map(fn (BasePerson $person) => $this->baseFieldsToArray($person), $relations);
+        return array_map(fn (PersonInterface $person) => $this->baseFieldsToArray($person), $relations);
     }
 
     /**
-     * @param BasePerson $person
-     * @return mixed
+     * @param PersonInterface $person
+     * @return array
      */
-    public function personToFields(BasePerson $person)
+    public function personToFields(PersonInterface $person): array
     {
         $personData = $person->toArray();
         $baseFields = [];
@@ -77,7 +76,7 @@ class IdentityPersonArrResource extends JsonResource
         }
 
         return array_reduce(array_keys($baseFields), fn ($arr, $key) => array_merge($arr, [[
-            'label' => trans_fb("iconnect.person_fields.$key", $key),
+            'label' => trans_fb("person_bsn_api.person_fields.$key", $key),
             'value' => $baseFields[$key],
         ]]), []);
     }
