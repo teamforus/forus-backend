@@ -15,7 +15,6 @@ use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
-use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestVouchers;
@@ -24,7 +23,6 @@ use Tests\Traits\TestsReservations;
 class FundProviderProductsTest extends TestCase
 {
     use MakesTestFunds;
-    use MakesApiRequests;
     use MakesTestVouchers;
     use TestsReservations;
     use AssertsSentEmails;
@@ -688,10 +686,10 @@ class FundProviderProductsTest extends TestCase
             'state' => 'active',
         ]);
 
-        $fund->fund_config()->update([
+        $fund->fund_config()->first()->forceFill([
             'is_configured' => true,
             'implementation_id' => $implementation->id,
-        ]);
+        ])->save();
 
         $fund->getOrCreateTopUp()->transactions()->create([
             'amount' => '100000',

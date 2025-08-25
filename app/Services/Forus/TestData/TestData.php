@@ -630,7 +630,6 @@ class TestData
         $implementation = $implementation ?: $this->makeImplementation($implementationName, $fund->organization);
 
         $config = $this->config("funds.$fund->name.fund_config", []);
-        $hashBsn = Arr::get($config, 'hash_bsn', false);
         $emailRequired = Arr::get($config, 'email_required', true);
 
         $backofficeConfig = $fund->organization->backoffice_available ? $this->getBackofficeConfigs() : [];
@@ -651,8 +650,6 @@ class TestData
             'email_required' => $emailRequired,
             'contact_info_enabled' => $emailRequired,
             'contact_info_required' => $emailRequired,
-            'hash_bsn' => $hashBsn,
-            'hash_bsn_salt' => $hashBsn ? $fund->name : null,
             'bunq_key' => $this->config('bunq_key'),
         ];
 
@@ -852,25 +849,12 @@ class TestData
         array $records = []
     ): array {
         $out = [];
-        // second prevalidation in list
-        $bsn_prevalidation_index = $count - 2;
-
-        // third prevalidation in list is partner for second prevalidation
-        $bsn_prevalidation_partner_index = $count - 3;
-
         $csvPrimaryKey = $fund->fund_config->csv_primary_key;
-        $envLoremBsn = $this->config('prevalidation_bsn', false);
 
         while ($count-- > 0) {
             do {
                 $primaryKeyValue = random_int(111111, 999999);
             } while (collect($out)->pluck($csvPrimaryKey)->search($primaryKeyValue) !== false);
-
-            $bsnValue = $envLoremBsn && ($count === $bsn_prevalidation_index) ?
-                $envLoremBsn : self::randomFakeBsn();
-
-            $bsnValuePartner = $envLoremBsn && ($count === $bsn_prevalidation_partner_index) ?
-                $envLoremBsn : self::randomFakeBsn();
 
             $prevalidation = array_merge($records, [
                 'gender' => 'vrouwelijk',
@@ -883,10 +867,7 @@ class TestData
                 'civil_status' => 'Ja',
                 'single_parent' => 'Ja',
                 $fund->fund_config->key . '_eligible' => 'Ja',
-            ], $fund->fund_config->hash_bsn ? [
-                'bsn_hash' => $fund->getHashedValue($bsnValue),
-                'partner_bsn_hash' => $fund->getHashedValue($bsnValuePartner),
-            ] : []);
+            ]);
 
             $out[] = array_merge([
                 ...array_only($prevalidation, $fund->criteria->pluck('record_type_key')->toArray()),

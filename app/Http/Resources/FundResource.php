@@ -249,9 +249,9 @@ class FundResource extends BaseJsonResource
     protected function isTakenByPartner(Fund $fund, BaseFormRequest $request): bool
     {
         $identity = $request->identity();
-        $hashPartnerDeny = $fund->fund_config->hash_partner_deny ?? false;
+        $partnerDeny = $fund->fund_config->partner_deny ?? false;
 
-        return $identity && $hashPartnerDeny && $fund->isTakenByPartner($identity);
+        return $identity && $partnerDeny && $fund->isTakenByPartner($identity);
     }
 
     /**

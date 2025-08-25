@@ -26,9 +26,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $auth_2fa_restrict_reimbursements
  * @property int|null $record_validity_days
  * @property \Illuminate\Support\Carbon|null $record_validity_start_date
- * @property bool $hash_bsn
- * @property string|null $hash_bsn_salt
- * @property bool $hash_partner_deny
+ * @property bool $partner_deny
  * @property string $bunq_key
  * @property array $bunq_allowed_ip
  * @property int $bunq_sandbox
@@ -156,9 +154,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereGeneratorIgnoreFundBudget($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashBsn($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashBsnSalt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHashPartnerDeny($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpBlockText($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpButtonText($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpChat($value)
@@ -183,6 +178,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTopUpAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereLimitVoucherTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereOutcomeType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePartnerDeny($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckExcluded($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig wherePreCheckNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereProviderProductsRequired($value)
@@ -257,7 +253,7 @@ class FundConfig extends BaseModel
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
-        'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
+        'implementation_id', 'implementation', 'partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_url', 'backoffice_key', 'backoffice_check_partner',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_client_cert', 'backoffice_client_cert_key',
@@ -275,9 +271,8 @@ class FundConfig extends BaseModel
      * @var array
      */
     protected $casts = [
-        'hash_bsn' => 'boolean',
         'is_configured' => 'boolean',
-        'hash_partner_deny' => 'boolean',
+        'partner_deny' => 'boolean',
         'backoffice_enabled' => 'boolean',
         'backoffice_fallback' => 'boolean',
         'allow_fund_requests' => 'boolean',

@@ -17,7 +17,6 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestVouchers;
@@ -27,7 +26,6 @@ use Throwable;
 class ProductReservationTest extends TestCase
 {
     use MakesTestFunds;
-    use MakesApiRequests;
     use MakesTestVouchers;
     use TestsReservations;
     use AssertsSentEmails;
@@ -467,7 +465,7 @@ class ProductReservationTest extends TestCase
 
         $reservation = $this->apiCancelReservationByProvider($reservation, $product->organization->employees->first()->identity);
 
-        $this->assertSame($reservation->state, ProductReservation::STATE_CANCELED_BY_PROVIDER);
+        $this->assertSame(ProductReservation::STATE_CANCELED_BY_PROVIDER, $reservation->state);
         $this->assertSame((float) $voucher->amount_available, $originalAmount);
         $this->assertTrue($reservation->isCanceledByProvider());
     }
