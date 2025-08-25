@@ -303,12 +303,10 @@ return [
         'fund_config' => [
             'key' => 'stadjerspas',
             'record_validity_days' => null,
-            'hash_bsn' => true,
-            'hash_bsn_salt' => 'JRKAArVhLLG0TWYaREQmwbLF7zMrma9g1HqdwwHq7WCM67BdzvQaDrkKp5AZ1EVs',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => true,
-            'csv_primary_key' => 'bsn_hash',
+            'csv_primary_key' => 'bsn',
             'allow_physical_cards' => true,
             'allow_fund_requests' => false,
             'allow_prevalidations' => false,
@@ -406,13 +404,11 @@ return [
         'fund_config' => [
             'key' => 'stadjerspas',
             'record_validity_days' => null,
-            'hash_bsn' => true,
-            'hash_bsn_salt' => 'pUVje8fCMl8OzOqMYAKt5gcIiZ5JvbDD0Mf7jTSByPoUpxTLehbOoIfLvDv5ioh4',
-            'hash_partner_deny' => false,
+            'partner_deny' => false,
             'bunq_key' => '30a71cde0fc533612bd896ebc248133b64bd8dbb6fdcc273725c0cc8f954f81b',
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => true,
-            'csv_primary_key' => 'bsn_hash',
+            'csv_primary_key' => 'bsn',
             'allow_physical_cards' => true,
             'allow_fund_requests' => true,
             'allow_prevalidations' => false,
@@ -497,7 +493,7 @@ return [
         'fund_config' => [
             'key' => 'meedoenpakket_2020',
             'record_validity_days' => '365',
-            'hash_partner_deny' => false,
+            'partner_deny' => false,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'klantnummer',
@@ -694,7 +690,7 @@ return [
         'fund_config' => [
             'key' => 'kindpakket_2020',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -833,7 +829,7 @@ return [
         'fund_config' => [
             'key' => 'gtb_2020',
             'record_validity_days' => '365',
-            'hash_partner_deny' => false,
+            'partner_deny' => false,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1124,7 +1120,7 @@ return [
         'fund_config' => [
             'key' => 'paswijzer',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1221,7 +1217,7 @@ return [
         'fund_config' => [
             'key' => 'paswijzer',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1282,7 +1278,7 @@ return [
         'fund_config' => [
             'key' => 'eemsdelta',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1399,7 +1395,7 @@ return [
         'fund_config' => [
             'key' => 'eemsdelta',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1455,7 +1451,7 @@ return [
         'fund_config' => [
             'key' => 'eemsdelta',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
@@ -1514,7 +1510,7 @@ return [
         'fund_config' => [
             'key' => 'eemsdelta',
             'record_validity_days' => '365',
-            'hash_partner_deny' => true,
+            'partner_deny' => true,
             'bunq_allowed_ip' => '',
             'bunq_sandbox' => false,
             'csv_primary_key' => 'bsn',
