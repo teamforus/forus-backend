@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\RecordType;
 use App\Rules\BaseRule;
+use App\Rules\FundRequests\RecordTypes\BaseRecordTypeRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeBoolRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeDateRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeEmailRule;
@@ -93,5 +94,26 @@ abstract class BaseFundRequestRule extends BaseRule
 
             return $list;
         }, []);
+    }
+    /**
+     * @param FundCriterion $criterion
+     * @param ?string $label
+     * @return BaseRecordTypeRule
+     */
+    public static function recordTypeRuleFor(FundCriterion $criterion, string $label = null): BaseRecordTypeRule
+    {
+        $recordType = RecordType::where('key', Arr::get($criterion, 'record_type_key'))->first();
+
+        return match ($recordType->type) {
+            $recordType::TYPE_STRING => new RecordTypeStringRule($criterion, $label),
+            $recordType::TYPE_NUMBER => new RecordTypeNumericRule($criterion, $label),
+            $recordType::TYPE_SELECT => new RecordTypeSelectRule($criterion, $label),
+            $recordType::TYPE_SELECT_NUMBER => new RecordTypeSelectNumberRule($criterion, $label),
+            $recordType::TYPE_EMAIL => new RecordTypeEmailRule($criterion, $label),
+            $recordType::TYPE_IBAN => new RecordTypeIbanRule($criterion, $label),
+            $recordType::TYPE_BOOL => new RecordTypeBoolRule($criterion, $label),
+            $recordType::TYPE_DATE => new RecordTypeDateRule($criterion, $label),
+            default => null,
+        };
     }
 }

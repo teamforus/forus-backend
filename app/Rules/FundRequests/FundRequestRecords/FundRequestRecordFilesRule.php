@@ -21,15 +21,16 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
     public function passes($attribute, mixed $value): bool
     {
         $criterion = $this->findCriterion($attribute);
+        $label = trans('validation.attributes.file');
 
         if (!$criterion) {
-            return $this->reject(trans('validation.in', compact('attribute')));
+            return $this->reject(trans('validation.in', [$attribute => $label]));
         }
 
         // when attachments are not requested the files must not be submitted
         if (!$criterion->show_attachment) {
             if (!empty($value)) {
-                return $this->reject(trans('validation.in', compact('attribute')));
+                return $this->reject(trans('validation.in', [$attribute => $label]));
             }
 
             return true;
@@ -37,12 +38,16 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
 
         // value is an array
         if (!is_array($value)) {
-            return $this->reject(trans('validation.array', compact('attribute')));
+            return $this->reject(trans('validation.array', [$attribute => $label]));
         }
 
         // files must be an array (if criterion not optional - not empty array)
-        if (($validation = Validation::check($value, $this->filesRules($criterion)))->fails()) {
-            return $this->reject($validation->errors()->first('value'));
+        if (($validation = Validation::checkWithLabels(
+            $attribute,
+            $value,
+            $this->filesRules($criterion),
+            attributes: [$attribute => $label]))->fails()) {
+            return $this->reject($validation->errors()->first($attribute));
         }
 
         // validate each file

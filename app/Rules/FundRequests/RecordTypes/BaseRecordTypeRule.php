@@ -18,7 +18,7 @@ abstract class BaseRecordTypeRule extends BaseRule
     /**
      * @param FundCriterion $criterion
      */
-    public function __construct(protected FundCriterion $criterion)
+    public function __construct(protected FundCriterion $criterion, protected ?string $labelOverride = null)
     {
     }
 
@@ -31,13 +31,20 @@ abstract class BaseRecordTypeRule extends BaseRule
      */
     public function passes($attribute, mixed $value): bool
     {
+        $label = $this->attributeLabel();
+
         if (!$this->checkCriterionValidity($this->criterion)) {
-            return $this->reject(trans('validation.in', compact('attribute')));
+            return $this->reject(trans('validation.in', [$attribute => $label]));
         }
 
-        $validator = Validation::check($value, array_filter($this->rules()));
+        $validator = Validation::checkWithLabels(
+            $attribute,
+            $value,
+            array_filter($this->rules()),
+            attributes: [$attribute => $label],
+        );
 
-        return $validator->passes() || $this->reject($validator->errors()->first('value'));
+        return $validator->passes() || $this->reject($validator->errors()->first($attribute));
     }
 
     abstract public function rules(): array;
@@ -138,5 +145,14 @@ abstract class BaseRecordTypeRule extends BaseRule
     protected function isValidDate(mixed $value): bool
     {
         return Validation::check($value, "required|date|date_format:$this->dateFormat")->passes();
+    }
+
+    /**
+     * @return string
+     */
+    protected function attributeLabel(): string {
+        return $this->labelOverride
+            ?? $this->criterion->recordType->translation->name
+            ?? trans('validation.attributes.value');
     }
 }

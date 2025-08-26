@@ -49,13 +49,13 @@ return [
     'file' => ':attribute moet een bestand zijn',
     'filled' => ':attribute veld moet een waarde bevatten.',
     'gt' => [
-        'numeric' => 'De :attribute moet groter zijn dan :value.',
+        'numeric' => 'Het :attribute moet groter zijn dan :value.',
         'file' => 'De :attribute moet groter zijn dan :value kilobytes.',
         'string' => 'De :attribute moet meer dan :value tekens bevatten.',
         'array' => 'De :attribute moet meer dan :value waardes bevatten.',
     ],
     'gte' => [
-        'numeric' => 'De :attribute moet groter of gelijk zijn aan :value.',
+        'numeric' => 'Het :attribute moet groter of gelijk zijn aan :value.',
         'file' => 'De :attribute moet groter of gelijk zijn aan :value kilobytes.',
         'string' => 'De :attribute moet minimaal :value tekens bevatten.',
         'array' => 'De :attribute moet :value waardes of meer bevatten.',
@@ -69,13 +69,13 @@ return [
     'ipv6' => ':attribute dient een geldig IPv6 adres te zijn.',
     'json' => ':attribute dient een geldig JSON string te zijn.',
     'lt' => [
-        'numeric' => 'De :attribute moet kleiner zijn dan :value.',
+        'numeric' => 'Het :attribute moet kleiner zijn dan :value.',
         'file' => 'De :attribute moet kleiner zijn dan :value kilobytes.',
         'string' => 'De :attribute moet minder dan :value tekens bevatten.',
         'array' => 'De :attribute moet minder dan :value waardes bevatten.',
     ],
     'lte' => [
-        'numeric' => 'De :attribute moet kleiner of gelijk zijn aan :value.',
+        'numeric' => 'Het :attribute moet kleiner of gelijk zijn aan :value.',
         'file' => 'De :attribute moet kleiner of gelijk zijn aan :value kilobytes.',
         'string' => 'De :attribute moet maximaal :value tekens bevatten.',
         'array' => 'De :attribute moet :value waardes of minder bevatten.',
