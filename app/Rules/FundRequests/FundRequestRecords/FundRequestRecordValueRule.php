@@ -36,7 +36,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         $submittedRecordValues = $this->mapRecordValues($this->submittedRecords);
 
         if (!$criterion) {
-            return $this->reject(trans('validation.in', compact('attribute')));
+            return $this->reject(__('validation.in', compact('attribute')));
         }
 
         $requiredRecordTypes = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
@@ -44,7 +44,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
 
         if ($criterion->isExcludedByRules($allRecordValues)) {
-            return $this->reject(trans('validation.fund_request.invalid_record', compact('attribute')));
+            return $this->reject(__('validation.fund_request.invalid_record', compact('attribute')));
         }
 
         $label = $criterion->record_type->translation->name

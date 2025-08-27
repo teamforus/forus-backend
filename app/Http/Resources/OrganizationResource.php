@@ -84,12 +84,13 @@ class OrganizationResource extends BaseJsonResource
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
+        $iConnect = $baseRequest->isDashboard() ? $this->getHasIConnectApiOin($organization) : [];
 
         return array_filter([
             ...$organization->only([
                 'id', 'name', 'identity_address', 'business_type_id', 'email_public', 'phone_public',
                 'website_public', 'description', 'reservation_phone', 'reservation_address', 'reservation_user_note',
-                'reservation_birth_date', 'description_html',
+                'reservation_birth_date', 'description_html', 'reservation_note', 'reservation_note_text',
             ]),
             ...$this->isCollection() ? [] : $organization->translateColumns($organization->only([
                 'description_html',
@@ -100,6 +101,7 @@ class OrganizationResource extends BaseJsonResource
             ...$employeeOnlyData,
             ...$funds2FAOnlyData,
             ...$extraPaymentsData,
+            ...$iConnect,
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -220,6 +222,17 @@ class OrganizationResource extends BaseJsonResource
         return $organization->allow_bi_connection ? [
             'bi_connection_url' => route('biConnection'),
         ] : [];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    protected function getHasIConnectApiOin(Organization $organization): array
+    {
+        return [
+            'has_person_bsn_api' => $organization->hasIConnectApiOin(),
+        ];
     }
 
     /**

@@ -34,7 +34,7 @@ abstract class BaseRecordTypeRule extends BaseRule
         $label = $this->attributeLabel();
 
         if (!$this->checkCriterionValidity($this->criterion)) {
-            return $this->reject(trans('validation.in', [$attribute => $label]));
+            return $this->reject(__('validation.in', [$attribute => $label]));
         }
 
         $validator = Validation::checkWithLabels(

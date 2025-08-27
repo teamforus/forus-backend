@@ -38,6 +38,8 @@ class Permission extends BaseModel
 
     public const string MANAGE_ORGANIZATION = 'manage_organization';
 
+    public const string VIEW_PERSON_BSN_DATA = 'view_person_bsn_data';
+
     public $timestamps = false;
     protected static Collection|null $memCache = null;
 

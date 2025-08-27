@@ -24,13 +24,13 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
         $label = trans('validation.attributes.file');
 
         if (!$criterion) {
-            return $this->reject(trans('validation.in', [$attribute => $label]));
+            return $this->reject(__('validation.in', [$attribute => $label]));
         }
 
         // when attachments are not requested the files must not be submitted
         if (!$criterion->show_attachment) {
             if (!empty($value)) {
-                return $this->reject(trans('validation.in', [$attribute => $label]));
+                return $this->reject(__('validation.in', [$attribute => $label]));
             }
 
             return true;
@@ -38,7 +38,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
 
         // value is an array
         if (!is_array($value)) {
-            return $this->reject(trans('validation.array', [$attribute => $label]));
+            return $this->reject(__('validation.array', [$attribute => $label]));
         }
 
         // files must be an array (if criterion not optional - not empty array)

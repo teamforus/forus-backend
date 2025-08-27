@@ -6,9 +6,11 @@ use App\Exports\IdentityProfilesExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts\StoreProfileBankAccountRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts\UpdateProfileBankAccountRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IdentitiesPersonRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\UpdateIdentityRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\Arr\IdentityPersonArrResource;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Identity;
 use App\Models\Organization;
@@ -17,7 +19,9 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class IdentitiesController extends Controller
 {
@@ -182,5 +186,48 @@ class IdentitiesController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
+    }
+
+    /**
+     * @param IdentitiesPersonRequest $request
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return IdentityPersonArrResource
+     * @throws Throwable
+     */
+    public function person(
+        IdentitiesPersonRequest $request,
+        Organization $organization,
+        Identity $identity
+    ) {
+        $this->authorize('viewPersonBSNData', [$organization, $identity]);
+
+        $iConnect = $organization->getIConnect();
+        $bsn = $identity->bsn;
+        $person = $iConnect->getPerson($bsn, ['parents', 'children', 'partners']);
+
+        $scope = $request->input('scope');
+        $scope_id = $request->input('scope_id');
+
+        if ($person && $person->response()->success() && $scope && $scope_id) {
+            if (!$relation = $person->getRelatedByIndex($scope, $scope_id)) {
+                abort(404, 'Relation not found.');
+            }
+
+            $person = $relation->getBSN() ? $iConnect->getPerson($relation->getBSN()) : $relation;
+        }
+
+        if (!$person || $person->response() && $person->response()->error()) {
+            if ($person && $person->response()->getCode() === 404) {
+                abort(404, 'iConnect error, person not found.');
+            }
+
+            $errorMessage = $person ? 'iConnect, unknown error.' : 'iConnect, connection error.';
+
+            Log::channel('iconnect')->debug($errorMessage);
+            abort(400, $errorMessage);
+        }
+
+        return new IdentityPersonArrResource($person);
     }
 }

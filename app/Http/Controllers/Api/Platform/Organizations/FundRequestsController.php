@@ -8,13 +8,11 @@ use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\FundRequestPersonRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
-use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Http\Resources\NoteResource;
 use App\Http\Resources\Validator\ValidatorFundRequestResource;
 use App\Models\Employee;
@@ -26,7 +24,6 @@ use App\Searches\FundRequestSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -313,51 +310,6 @@ class FundRequestsController extends Controller
             $fundRequest->employee,
             $request->employee($organization),
         ));
-    }
-
-    /**
-     * @param FundRequestPersonRequest $request
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws Throwable
-     * @return FundRequestPersonArrResource
-     * @noinspection PhpUnused
-     */
-    public function person(
-        FundRequestPersonRequest $request,
-        Organization $organization,
-        FundRequest $fundRequest
-    ): FundRequestPersonArrResource {
-        $this->authorize('viewPersonBSNData', [$fundRequest, $organization]);
-
-        $iConnect = $fundRequest->fund->getIConnect();
-        $bsn = $fundRequest->identity->bsn;
-        $person = $iConnect->getPerson($bsn, ['parents', 'children', 'partners']);
-
-        $scope = $request->input('scope');
-        $scope_id = $request->input('scope_id');
-
-        if ($person && $person->response()->success() && $scope && $scope_id) {
-            if (!$relation = $person->getRelatedByIndex($scope, $scope_id)) {
-                abort(404, 'Relation not found.');
-            }
-
-            $person = $relation->getBSN() ? $iConnect->getPerson($relation->getBSN()) : $relation;
-        }
-
-        if (!$person || $person->response() && $person->response()->error()) {
-            if ($person && $person->response()->getCode() === 404) {
-                abort(404, 'iConnect error, person not found.');
-            }
-
-            $errorMessage = $person ? 'iConnect, unknown error.' : 'iConnect, connection error.';
-
-            Log::channel('iconnect')->debug($errorMessage);
-            abort(400, $errorMessage);
-        }
-
-        return new FundRequestPersonArrResource($person);
     }
 
     /**

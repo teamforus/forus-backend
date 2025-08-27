@@ -13,6 +13,7 @@ use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
@@ -66,6 +67,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property bool $reservation_note
+ * @property string|null $reservation_note_text
  * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
@@ -108,6 +111,15 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_fund_name
  * @property bool $bank_note
  * @property string $bank_separator
+ * @property string|null $iconnect_target_binding
+ * @property string|null $iconnect_api_oin
+ * @property string|null $iconnect_base_url
+ * @property string $iconnect_env
+ * @property string $iconnect_key
+ * @property string $iconnect_key_pass
+ * @property string $iconnect_cert
+ * @property string $iconnect_cert_pass
+ * @property string $iconnect_cert_trust
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -229,6 +241,15 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereEmailPublic($value)
  * @method static EloquentBuilder<static>|Organization whereFundRequestResolvePolicy($value)
  * @method static EloquentBuilder<static>|Organization whereIban($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectApiOin($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectBaseUrl($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectCert($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectCertPass($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectCertTrust($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectEnv($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectKey($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectKeyPass($value)
+ * @method static EloquentBuilder<static>|Organization whereIconnectTargetBinding($value)
  * @method static EloquentBuilder<static>|Organization whereId($value)
  * @method static EloquentBuilder<static>|Organization whereIdentityAddress($value)
  * @method static EloquentBuilder<static>|Organization whereIsProvider($value)
@@ -244,6 +265,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereReservationAddress($value)
  * @method static EloquentBuilder<static>|Organization whereReservationAllowExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereReservationBirthDate($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationNote($value)
+ * @method static EloquentBuilder<static>|Organization whereReservationNoteText($value)
  * @method static EloquentBuilder<static>|Organization whereReservationPhone($value)
  * @method static EloquentBuilder<static>|Organization whereReservationUserNote($value)
  * @method static EloquentBuilder<static>|Organization whereReservationsAutoAccept($value)
@@ -317,7 +340,8 @@ class Organization extends BaseModel
         'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
-        'bank_reservation_first_name', 'bank_reservation_last_name',
+        'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_note',
+        'reservation_note_text',
     ];
 
     /**
@@ -368,6 +392,16 @@ class Organization extends BaseModel
         'bank_branch_name' => 'boolean',
         'bank_fund_name' => 'boolean',
         'bank_note' => 'boolean',
+        'reservation_note' => 'boolean',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $hidden = [
+        'iconnect_api_oin', 'iconnect_target_binding', 'iconnect_base_url', 'iconnect_env',
+        'iconnect_key', 'iconnect_key_pass', 'iconnect_cert', 'iconnect_cert_pass',
+        'iconnect_cert_trust',
     ];
 
     /**
@@ -1095,5 +1129,38 @@ class Organization extends BaseModel
             ->whereRelation('fund_config', 'outcome_type', FundConfig::OUTCOME_TYPE_PAYOUT);
 
         return $this->allow_payouts && $payoutFundsQuery->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasIConnectApiOin(): bool
+    {
+        return
+            $this->isIconnectApiConfigured() &&
+            $this->bsn_enabled &&
+            !empty($this->iconnect_target_binding) &&
+            !empty($this->iconnect_api_oin) &&
+            !empty($this->iconnect_base_url);
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return
+            !empty($this->iconnect_env) &&
+            !empty($this->iconnect_key) &&
+            !empty($this->iconnect_cert) &&
+            !empty($this->iconnect_cert_trust);
     }
 }

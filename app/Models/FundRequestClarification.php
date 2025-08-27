@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $fund_request_record_id
  * @property string $question
+ * @property string $text_requirement
+ * @property string $files_requirement
  * @property string $answer
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $answered_at
@@ -25,10 +27,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereAnswer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereAnsweredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereFilesRequirement($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereFundRequestRecordId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereQuestion($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereTextRequirement($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -46,6 +50,7 @@ class FundRequestClarification extends BaseModel
 
     protected $fillable = [
         'fund_request_record_id', 'state', 'question', 'answer', 'answered_at',
+        'text_requirement', 'files_requirement',
     ];
 
     protected $casts = [

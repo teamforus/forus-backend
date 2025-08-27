@@ -85,7 +85,7 @@ class FundRequestResource extends BaseJsonResource
      */
     public function getRecordsDetails(FundRequest $fundRequest): array
     {
-        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+        $bsnFields = ['bsn', 'partner_bsn'];
 
         return $fundRequest->records->filter(function (FundRequestRecord $record) use ($bsnFields) {
             return !in_array($record->record_type_key, $bsnFields, true);
@@ -98,7 +98,7 @@ class FundRequestResource extends BaseJsonResource
                     'name' => $record->record_type?->name ?: $record->record_type->key,
                 ],
                 'clarifications' => FundRequestClarificationResource::collection(
-                    $record->fund_request_clarifications->sortByDesc('created_at')
+                    $record->fund_request_clarifications->sortBy(['created_at', 'id'])
                 ),
             ], $this->timestamps($this->resource, 'created_at', 'updated_at'));
         })->toArray();

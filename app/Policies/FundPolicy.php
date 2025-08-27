@@ -261,15 +261,15 @@ class FundPolicy
     public function apply(Identity $identity, Fund $fund, ?string $logScope): Response|bool
     {
         if (!$fund->isActive()) {
-            return $this->deny(trans('fund.state_' . $fund->state));
+            return $this->deny(__('fund.state_' . $fund->state));
         }
 
         if ($fund->external) {
-            return $this->deny(trans('fund.type_external'));
+            return $this->deny(__('fund.type_external'));
         }
 
         if (!$fund->isConfigured()) {
-            return $this->deny(trans('fund.not_configured'));
+            return $this->deny(__('fund.not_configured'));
         }
 
         if ($fund->isBackofficeApiAvailable() && $fund->fund_config->backoffice_check_partner && $identity->bsn) {
@@ -287,22 +287,22 @@ class FundPolicy
                 $partner = $partnerBsn ? Identity::findByBsn($partnerBsn) : false;
 
                 if ($partner && $fund->identityHasActiveVoucher($partner)) {
-                    return $this->deny(trans('fund.taken_by_partner'));
+                    return $this->deny(__('fund.taken_by_partner'));
                 }
             } catch (Throwable $e) {
                 logger()->error('FundPolicy@apply: ' . $e->getMessage());
 
-                return $this->deny(trans('fund.backoffice_error'));
+                return $this->deny(__('fund.backoffice_error'));
             }
         }
 
-        if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity)) {
-            return $this->deny(trans('fund.taken_by_partner'));
+        if ($fund->fund_config->partner_deny && $fund->isTakenByPartner($identity)) {
+            return $this->deny(__('fund.taken_by_partner'));
         }
 
         // The same identity can't apply twice to the same fund
         if ($fund->identityHasActiveVoucher($identity)) {
-            return $this->deny(trans('fund.already_received'));
+            return $this->deny(__('fund.already_received'));
         }
 
         // Check criteria
@@ -311,7 +311,7 @@ class FundPolicy
             ->isNotEmpty();
 
         if ($hasInvalidCriteria) {
-            return $this->deny(trans('fund.unmet_criteria'));
+            return $this->deny(__('fund.unmet_criteria'));
         }
 
         return true;

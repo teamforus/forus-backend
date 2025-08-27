@@ -1,7 +1,13 @@
-# Uw aanvraag voor :fund_name aanvullen
+# Extra informatie nodig voor aanvraag :fund_name
 
-:fund_request_clarification_question
+Beste aanvrager,
 &nbsp;  
-&nbsp;
+
+We hebben uw aanvraag gecontroleerd. De aanvraag is nog niet compleet.  Er is extra informatie nodig om de aanvraag goed te kunnen beoordelen.
+
+&nbsp;  
+Klik op de knop ‘Bekijk de aanvraag’ om de extra vraag te zien en informatie toe te voegen.
+
+&nbsp;  
 
 :webshop_clarification_button

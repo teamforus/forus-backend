@@ -79,17 +79,9 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'system' => true,
         'criteria' => true,
     ], [
-        'key' => 'bsn_hash',
-        'name' => 'BSN Hash',
-        'system' => true,
-    ], [
         'key' => 'partner_bsn',
         'name' => 'Partner BSN',
         'type' => 'number',
-        'system' => true,
-    ], [
-        'key' => 'partner_bsn_hash',
-        'name' => 'Partner BSN Hash',
         'system' => true,
     ], [
         'key' => 'mobile',

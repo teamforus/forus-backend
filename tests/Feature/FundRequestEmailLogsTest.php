@@ -56,8 +56,8 @@ class FundRequestEmailLogsTest extends TestCase
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));
 
         DB::beginTransaction();
-        $questionToken = $this->requestFundRequestClarification($organization, $fundRequest);
-        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest, $questionToken);
+        $this->requestFundRequestClarification($organization, $fundRequest);
+        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest);
         DB::rollBack();
 
         DB::beginTransaction();

@@ -3,8 +3,12 @@
 namespace App\Http\Requests\Api\Platform\FundRequests\FundRequestClarifications;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequestClarification;
 use Illuminate\Validation\Rule;
 
+/**
+ * @property FundRequestClarification $fund_request_clarification
+ */
 class UpdateFundRequestClarificationRequest extends BaseFormRequest
 {
     /**
@@ -25,8 +29,14 @@ class UpdateFundRequestClarificationRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'answer' => 'required|between:0,2000',
-            'files' => 'required|array',
+            'answer' => [
+                $this->fund_request_clarification->text_requirement === 'required' ? 'required' : 'nullable',
+                'between:0,2000',
+            ],
+            'files' => [
+                $this->fund_request_clarification->files_requirement === 'required' ? 'required' : 'nullable',
+                'array',
+            ],
             'files.*' => [
                 'required',
                 Rule::exists('files', 'uid')
