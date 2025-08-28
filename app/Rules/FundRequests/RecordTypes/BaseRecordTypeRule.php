@@ -17,9 +17,12 @@ abstract class BaseRecordTypeRule extends BaseRule
 
     /**
      * @param FundCriterion $criterion
+     * @param string|null $label
      */
-    public function __construct(protected FundCriterion $criterion, protected ?string $labelOverride = null)
-    {
+    public function __construct(
+        protected FundCriterion $criterion,
+        protected ?string $label = null,
+    ) {
     }
 
     /**
@@ -37,14 +40,9 @@ abstract class BaseRecordTypeRule extends BaseRule
             return $this->reject(__('validation.in', [$attribute => $label]));
         }
 
-        $validator = Validation::checkWithLabels(
-            $attribute,
-            $value,
-            array_filter($this->rules()),
-            attributes: [$attribute => $label],
-        );
+        $validator = Validation::check($value, array_filter($this->rules()), $label);
 
-        return $validator->passes() || $this->reject($validator->errors()->first($attribute));
+        return $validator->passes() || $this->reject($validator->errors()->first('value'));
     }
 
     abstract public function rules(): array;
@@ -150,9 +148,10 @@ abstract class BaseRecordTypeRule extends BaseRule
     /**
      * @return string
      */
-    protected function attributeLabel(): string {
-        return $this->labelOverride
-            ?? $this->criterion->recordType->translation->name
+    protected function attributeLabel(): string
+    {
+        return $this->label
+            ?? $this->criterion?->record_type?->name
             ?? trans('validation.attributes.value');
     }
 }

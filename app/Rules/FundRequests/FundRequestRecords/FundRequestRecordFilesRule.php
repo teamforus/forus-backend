@@ -41,13 +41,11 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
             return $this->reject(__('validation.array', [$attribute => $label]));
         }
 
+        $validator = Validation::check($value, $this->filesRules($criterion), $label);
+
         // files must be an array (if criterion not optional - not empty array)
-        if (($validation = Validation::checkWithLabels(
-            $attribute,
-            $value,
-            $this->filesRules($criterion),
-            attributes: [$attribute => $label]))->fails()) {
-            return $this->reject($validation->errors()->first($attribute));
+        if ($validator->fails()) {
+            return $this->reject($validator->errors()->first('value'));
         }
 
         // validate each file

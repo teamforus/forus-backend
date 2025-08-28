@@ -48,11 +48,12 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         }
 
         $label = $criterion->record_type->translation->name
-                ?? $criterion->label
-                ?? $criterion->title
-                ?? trans('validation.attributes.value');
+            ?? $criterion->label
+            ?? $criterion->title
+            ?? trans('validation.attributes.value');
 
         $rule = static::recordTypeRuleFor($criterion, $label);
+
         if (!$rule->passes($attribute, $value)) {
             return $this->reject(trans($rule->message()));
         }
