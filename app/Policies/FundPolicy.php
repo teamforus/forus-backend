@@ -297,7 +297,7 @@ class FundPolicy
             }
         }
 
-        if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity)) {
+        if ($fund->fund_config->partner_deny && $fund->isTakenByPartner($identity)) {
             return $this->deny(__('fund.taken_by_partner'));
         }
 

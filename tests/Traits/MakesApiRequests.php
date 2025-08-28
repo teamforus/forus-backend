@@ -843,4 +843,78 @@ trait MakesApiRequests
             $this->makeApiHeaders($organization->identity),
         );
     }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param array $records
+     * @param array $extraData
+     * @return TestResponse
+     */
+    protected function apiMakeStorePrevalidationRequest(
+        Organization $organization,
+        Fund $fund,
+        array $records,
+        array $extraData = [],
+    ): TestResponse {
+        $proxy = $this->makeIdentityProxy($organization->identity);
+        $criteria = $fund->criteria()->pluck('record_type_key', 'id')->toArray();
+
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations", [
+            'fund_id' => $fund->id,
+            'data' => [
+                ...array_reduce($records, fn ($list, $record) => [
+                    ...$list,
+                    $criteria[$record['fund_criterion_id']] => $record['value'],
+                ], []),
+                ...$extraData,
+            ],
+        ], $this->makeApiHeaders($proxy));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param string|null $primaryKey
+     * @return TestResponse
+     */
+    public function apiMakePrevalidationForTestCriteriaRequest(
+        Organization $organization,
+        Fund $fund,
+        ?string $primaryKey = null,
+    ): TestResponse {
+        return $this->apiMakeStorePrevalidationRequest($organization, $fund, [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
+        ], [
+            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param array $data
+     * @param array $overwrite
+     * @return TestResponse
+     */
+    protected function makeStorePrevalidationBatchRequest(
+        Organization $organization,
+        Fund $fund,
+        array $data,
+        array $overwrite = [],
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
+            'fund_id' => $fund->id,
+            'data' => $data,
+            'overwrite' => $overwrite,
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
 }

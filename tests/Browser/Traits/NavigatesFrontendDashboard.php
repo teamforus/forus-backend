@@ -147,8 +147,8 @@ trait NavigatesFrontendDashboard
         $browser->waitFor('@csvValidationPage');
         $browser->element('@csvValidationPage')->click();
 
-        $browser->waitFor('@prevalidationSelectFund');
-        $browser->within('@prevalidationSelectFund', function (Browser $browser) use ($fund) {
+        $browser->waitFor('@prevalidationsSelectFund');
+        $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
             $browser->element('@selectControlFunds')->click();
 
             $browser->waitFor("@selectControlFundItem$fund->id");
