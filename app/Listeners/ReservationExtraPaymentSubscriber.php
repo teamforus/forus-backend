@@ -49,9 +49,14 @@ class ReservationExtraPaymentSubscriber
      */
     public function onReservationExtraPaymentRefunded(ReservationExtraPaymentRefunded $event): void
     {
-        $this->makeEvent($event, $event->getReservationExtraPayment()::EVENT_REFUNDED);
+        $extraPayment = $event->getReservationExtraPayment();
 
-        $event->getReservationExtraPayment()->product_reservation->rejectOrCancelProvider();
+        $this->makeEvent($event, $extraPayment::EVENT_REFUNDED);
+
+        $event->getReservationExtraPayment()->product_reservation->rejectOrCancelProvider(
+            note: $extraPayment->cancellation_note,
+            addNoteToRequesterNotification: $extraPayment->cancellation_note_add_to_notification
+        );
     }
 
     /**
