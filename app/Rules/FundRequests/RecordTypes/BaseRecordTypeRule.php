@@ -17,9 +17,12 @@ abstract class BaseRecordTypeRule extends BaseRule
 
     /**
      * @param FundCriterion $criterion
+     * @param string|null $label
      */
-    public function __construct(protected FundCriterion $criterion)
-    {
+    public function __construct(
+        protected FundCriterion $criterion,
+        protected ?string $label = null,
+    ) {
     }
 
     /**
@@ -31,11 +34,13 @@ abstract class BaseRecordTypeRule extends BaseRule
      */
     public function passes($attribute, mixed $value): bool
     {
+        $label = $this->attributeLabel();
+
         if (!$this->checkCriterionValidity($this->criterion)) {
-            return $this->reject(__('validation.in', compact('attribute')));
+            return $this->reject(__('validation.in', [$attribute => $label]));
         }
 
-        $validator = Validation::check($value, array_filter($this->rules()));
+        $validator = Validation::check($value, array_filter($this->rules()), $label);
 
         return $validator->passes() || $this->reject($validator->errors()->first('value'));
     }
@@ -138,5 +143,15 @@ abstract class BaseRecordTypeRule extends BaseRule
     protected function isValidDate(mixed $value): bool
     {
         return Validation::check($value, "required|date|date_format:$this->dateFormat")->passes();
+    }
+
+    /**
+     * @return string
+     */
+    protected function attributeLabel(): string
+    {
+        return $this->label
+            ?? $this->criterion?->record_type?->name
+            ?? trans('validation.attributes.value');
     }
 }
