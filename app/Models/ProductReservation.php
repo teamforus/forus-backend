@@ -721,21 +721,21 @@ class ProductReservation extends BaseModel
 
     /**
      * @param Employee|null $employee
-     * @param string|null $note
-     * @param bool $addNoteToRequesterNotification
-     * @throws MollieException
+     * @param string|null $cancellationNote
+     * @param bool $cancellationNoteShare
      * @throws Throwable
+     * @throws MollieException
      * @return ReservationExtraPaymentRefund|null
      */
     public function refundExtraPayment(
         ?Employee $employee,
-        ?string $note = null,
-        bool $addNoteToRequesterNotification = false,
+        ?string $cancellationNote = null,
+        bool $cancellationNoteShare = false,
     ): ?ReservationExtraPaymentRefund {
         if ($this->extra_payment?->payment_id && $this->extra_payment->isMollieType()) {
             $this->extra_payment->update([
-                'cancellation_note' => $note,
-                'cancellation_note_add_to_notification' => $addNoteToRequesterNotification,
+                'cancellation_note' => $cancellationNote,
+                'cancellation_note_share' => $cancellationNoteShare,
             ]);
 
             return $this->extra_payment->createMollieRefund($employee);

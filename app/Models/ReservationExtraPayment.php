@@ -36,7 +36,7 @@ use Throwable;
  * @property string|null $amount_remaining
  * @property string $currency
  * @property string|null $cancellation_note
- * @property int $cancellation_note_add_to_notification
+ * @property bool $cancellation_note_share
  * @property \Illuminate\Support\Carbon|null $paid_at
  * @property \Illuminate\Support\Carbon|null $expires_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
@@ -67,7 +67,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereAmountRemaining($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCanceledAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCancellationNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCancellationNoteAddToNotification($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCancellationNoteShare($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereCurrency($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationExtraPayment whereDeletedAt($value)
@@ -120,7 +120,7 @@ class ReservationExtraPayment extends Model
         'payment_id', 'type', 'state', 'method',
         'amount', 'amount_refunded', 'amount_captured', 'amount_remaining',
         'product_reservation_id', 'paid_at', 'expires_at', 'canceled_at', 'currency',
-        'cancellation_note', 'cancellation_note_add_to_notification',
+        'cancellation_note', 'cancellation_note_share',
     ];
 
     /**
@@ -130,6 +130,7 @@ class ReservationExtraPayment extends Model
         'paid_at' => 'datetime',
         'expires_at' => 'datetime',
         'canceled_at' => 'datetime',
+        'cancellation_note_share' => 'boolean',
     ];
 
     /**

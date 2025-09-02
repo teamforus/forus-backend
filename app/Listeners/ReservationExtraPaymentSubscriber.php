@@ -55,7 +55,7 @@ class ReservationExtraPaymentSubscriber
 
         $event->getReservationExtraPayment()->product_reservation->rejectOrCancelProvider(
             note: $extraPayment->cancellation_note,
-            addNoteToRequesterNotification: $extraPayment->cancellation_note_add_to_notification
+            addNoteToRequesterNotification: $extraPayment->cancellation_note_share
         );
     }
 

@@ -12,10 +12,7 @@ return new class () extends Migration {
     {
         Schema::table('reservation_extra_payments', function (Blueprint $table) {
             $table->string('cancellation_note', 255)->nullable()->after('currency');
-
-            $table->boolean('cancellation_note_add_to_notification')
-                ->default(false)
-                ->after('cancellation_note');
+            $table->boolean('cancellation_note_share')->default(false)->after('cancellation_note');
         });
     }
 
@@ -25,7 +22,7 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::table('reservation_extra_payments', function (Blueprint $table) {
-            $table->dropColumn('cancellation_note', 'cancellation_note_add_to_notification');
+            $table->dropColumn('cancellation_note', 'cancellation_note_share');
         });
     }
 };
