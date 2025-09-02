@@ -47,10 +47,18 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
             return $this->reject(__('validation.fund_request.invalid_record', compact('attribute')));
         }
 
-        if (($validator = static::validateRecordValue($criterion, $value))->fails()) {
-            return $this->reject($validator->errors()->first('value'));
+        $label = $criterion->record_type->translation->name
+            ?? $criterion->label
+            ?? $criterion->title
+            ?? trans('validation.attributes.value');
+
+        $rule = static::recordTypeRuleFor($criterion, $label);
+
+        if (!$rule->passes($attribute, $value)) {
+            return $this->reject(trans($rule->message()));
         }
 
         return true;
     }
+
 }
