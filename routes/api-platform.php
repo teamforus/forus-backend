@@ -70,9 +70,22 @@ $router->group([], static function () use ($router) {
         ],
     );
 
+    // Precheck Microservice chatbot
+    $router->group([
+        'prefix' => 'pre-checks',
+        'middleware' =>  ['forward_headers', 'throttle:120,1'],
+    ], static function () use ($router) {
+        $router->get('start', 'Api\Platform\Precheck\PrecheckProxyController@start');
+        $router->get('chat/stream', 'Api\Platform\Precheck\PrecheckProxyController@stream');
+        $router->post('chat/answer', 'Api\Platform\Precheck\PrecheckProxyController@answer');
+        $router->post('end', 'Api\Platform\Precheck\PrecheckProxyController@end');
+        $router->post('chat/history', 'Api\Platform\Precheck\PrecheckProxyController@history');
+        $router->post('advice', 'Api\Platform\Precheck\PrecheckProxyController@advice');
+    });
+
+    // todo: deprecated, precheck endpoint is now connected to microservice
     $router->post('pre-checks/calculate', 'Api\Platform\PreCheckController@calculateTotals');
     $router->post('pre-checks/download-pdf', 'Api\Platform\PreCheckController@downloadPDF')->name('pre-check.download-pdf');
-
     $router->resource('pre-checks', "Api\Platform\PreCheckController")
         ->only('index');
 
