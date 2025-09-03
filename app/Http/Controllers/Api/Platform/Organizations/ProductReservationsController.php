@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\FetchExtraPaymentProductReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RefundExtraPaymentProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
@@ -319,14 +320,14 @@ class ProductReservationsController extends Controller
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param RefundExtraPaymentProductReservationRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @throws Throwable
      * @return ProductReservationResource|JsonResponse
      */
     public function refundExtraPayment(
-        BaseFormRequest $request,
+        RefundExtraPaymentProductReservationRequest $request,
         Organization $organization,
         ProductReservation $productReservation
     ): ProductReservationResource|JsonResponse {
@@ -338,7 +339,12 @@ class ProductReservationsController extends Controller
             $productReservation->fetchExtraPayment($request->employee($organization));
 
             $this->authorize('refundExtraPayment', [$productReservation, $organization]);
-            $productReservation->refundExtraPayment($request->employee($organization));
+
+            $productReservation->refundExtraPayment(
+                $request->employee($organization),
+                $request->post('note'),
+                $request->post('share_note_by_email', false),
+            );
         } catch (MollieException $e) {
             abort(503, $e->getMessage());
         }

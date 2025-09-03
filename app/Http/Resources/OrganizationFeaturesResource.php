@@ -88,9 +88,7 @@ class OrganizationFeaturesResource extends BaseJsonResource
      */
     protected function isIConnectApiOinEnabled(Organization $organization): bool
     {
-        return $organization->funds
-            ->filter(fn (Fund $fund) => $fund->hasIConnectApiOin())
-            ->isNotEmpty();
+        return $organization->hasIConnectApiOin();
     }
 
     /**

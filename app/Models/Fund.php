@@ -20,7 +20,6 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
-use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
@@ -1547,69 +1546,35 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function isHashingBsn(): bool
-    {
-        return $this->fund_config->hash_bsn;
-    }
-
-    /**
-     * @param $value
-     * @return string|null
-     */
-    public function getHashedValue($value): ?string
-    {
-        if (!$this->isHashingBsn()) {
-            return null;
-        }
-
-        return hash_hmac('sha256', $value, $this->fund_config->hash_bsn_salt);
-    }
-
-    /**
      * @param Identity $identity
      * @return bool
      */
     public function isTakenByPartner(Identity $identity): bool
     {
-        return Identity::whereHas('vouchers', function (Builder $builder) {
-            return VoucherQuery::whereNotExpired($builder->where('fund_id', $this->id));
-        })->whereHas('records', function (Builder $builder) use ($identity) {
-            $builder->where(function (Builder $builder) use ($identity) {
-                $identityBsn = $identity->bsn;
+        return Identity::query()
+            ->whereHas('vouchers', fn (Builder $q) => VoucherQuery::whereNotExpired($q->where('fund_id', $this->id)))
+            ->whereHas('records', function (Builder $builder) use ($identity) {
+                $builder->where(function (Builder $builder) use ($identity) {
+                    $builder->whereRelation('record_type', 'record_types.key', '=', 'partner_bsn');
+                    $builder->whereIn('value', array_filter([$identity?->bsn]));
 
-                $builder->where(function (Builder $builder) use ($identity, $identityBsn) {
-                    $builder->whereRelation('record_type', [
-                        'record_types.key' => $this->isHashingBsn() ? 'partner_bsn_hash' : 'partner_bsn',
-                    ]);
+                    $builder->whereHas('validations', function (Builder $query) {
+                        $startDate = $this->fund_config?->record_validity_start_date;
+                        $trustedDays = $this->getTrustedDays('partner_bsn');
 
-                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity, 'bsn_hash')?->value ?: null,
-                        $identityBsn ? $this->getHashedValue($identityBsn) : null,
-                    ]) : [$identityBsn ?: null]);
+                        RecordValidationQuery::whereStillTrustedQuery($query, $trustedDays, $startDate);
+                        RecordValidationQuery::whereTrustedByQuery($query, $this);
+                    });
                 });
 
-                $builder->orWhere(function (Builder $builder) use ($identity, $identityBsn) {
-                    $builder->whereRelation('record_type', [
-                        'record_types.key' => $this->isHashingBsn() ? 'bsn_hash' : 'bsn',
-                    ]);
-
-                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        $this->getTrustedRecordOfType($identity, 'partner_bsn_hash')?->value ?: null,
-                        $identityBsn ? $this->getHashedValue($identityBsn) : null,
-                    ]) : [$identityBsn ?: null]);
+                $builder->orWhere(function (Builder $builder) use ($identity) {
+                    $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
+                    $builder->whereIn('value', array_filter([
+                        $this->getTrustedRecordOfType($identity, 'partner_bsn')?->value,
+                    ]));
                 });
-            });
-
-            $daysTrusted = $this->getTrustedDays($this->isHashingBsn() ? 'bsn_hash' : 'bsn');
-            $startDate = $this->fund_config?->record_validity_start_date;
-
-            $builder->whereHas('validations', function (Builder $query) use ($daysTrusted, $startDate) {
-                RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
-                RecordValidationQuery::whereTrustedByQuery($query, $this);
-            });
-        })->exists();
+            })
+            ->exists();
     }
 
     /**
@@ -1784,29 +1749,6 @@ class Fund extends BaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function hasIConnectApiOin(): bool
-    {
-        return
-            $this->fund_config &&
-            !$this->external &&
-            $this->isIconnectApiConfigured() &&
-            $this->organization->bsn_enabled &&
-            !empty($this->fund_config->iconnect_target_binding) &&
-            !empty($this->fund_config->iconnect_api_oin) &&
-            !empty($this->fund_config->iconnect_base_url);
-    }
-
-    /**
-     * @return IConnect|null
-     */
-    public function getIConnect(): ?IConnect
-    {
-        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
-    }
-
-    /**
      * @param Identity $identity
      * @return bool
      */
@@ -1946,18 +1888,5 @@ class Fund extends BaseModel
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
-    }
-
-    /**
-     * @return bool
-     */
-    private function isIconnectApiConfigured(): bool
-    {
-        return
-            $this->fund_config &&
-            !empty($this->fund_config->iconnect_env) &&
-            !empty($this->fund_config->iconnect_key) &&
-            !empty($this->fund_config->iconnect_cert) &&
-            !empty($this->fund_config->iconnect_cert_trust);
     }
 }
