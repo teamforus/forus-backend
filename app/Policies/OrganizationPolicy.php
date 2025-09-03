@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\ProfileBankAccount;
 use App\Scopes\Builders\IdentityQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy
@@ -205,6 +206,40 @@ class OrganizationPolicy
             $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
             $organization->identityCan($identity, [Permission::MANAGE_IDENTITIES]) &&
             $profileBankAccount->profile->identity_id === $sponsorIdentity->id;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return Response|bool
+     */
+    public function viewPersonBSNData(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): Response|bool {
+        if (!$organization->identityCan($identity, [
+            Permission::VIEW_IDENTITIES,
+            Permission::MANAGE_IDENTITIES,
+            Permission::VIEW_PERSON_BSN_DATA,
+        ], false)) {
+            return $this->deny(__('policies.identities.invalid_permissions'));
+        }
+
+        if (!$sponsorIdentity->bsn) {
+            return $this->deny(__('policies.identities.bsn_is_unknown'));
+        }
+
+        if (!$organization->bsn_enabled) {
+            return $this->deny(__('policies.identities.bsn_not_enabled'));
+        }
+
+        if (!$organization->hasIConnectApiOin()) {
+            return $this->deny(__('policies.identities.iconnect_not_available'));
+        }
+
+        return $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity);
     }
 
     /**

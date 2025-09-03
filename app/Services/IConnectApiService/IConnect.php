@@ -2,7 +2,7 @@
 
 namespace App\Services\IConnectApiService;
 
-use App\Models\Fund;
+use App\Models\Organization;
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use GuzzleHttp\Client;
@@ -26,7 +26,6 @@ class IConnect
     ];
 
     private const string URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
-    protected Fund $fund;
 
     private array $with = [
         'parents' => 'ouders',
@@ -38,11 +37,11 @@ class IConnect
     private array $configs;
 
     /**
-     * @param Fund $fund
+     * @param Organization $organization
      */
-    public function __construct(Fund $fund)
+    public function __construct(Organization $organization)
     {
-        $configs = $this->fundToConfigs($fund);
+        $configs = $this->organizationToConfigs($organization);
 
         if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS, true)) {
             throw new RuntimeException('Invalid iConnection "env" type.');
@@ -154,21 +153,21 @@ class IConnect
     }
 
     /**
-     * @param Fund $fund
+     * @param Organization $organization
      * @return array
      */
-    private function fundToConfigs(Fund $fund): array
+    private function organizationToConfigs(Organization $organization): array
     {
         return [
-            'env' => $fund->fund_config->iconnect_env,
-            'api_oin' => $fund->fund_config->iconnect_api_oin,
-            'cert' => $fund->fund_config->iconnect_cert,
-            'cert_pass' => $fund->fund_config->iconnect_cert_pass,
-            'cert_trust' => $fund->fund_config->iconnect_cert_trust,
-            'key' => $fund->fund_config->iconnect_key,
-            'key_pass' => $fund->fund_config->iconnect_key_pass,
-            'base_url' => $fund->fund_config->iconnect_base_url,
-            'target_binding' => $fund->fund_config->iconnect_target_binding,
+            'env' => $organization->iconnect_env,
+            'api_oin' => $organization->iconnect_api_oin,
+            'cert' => $organization->iconnect_cert,
+            'cert_pass' => $organization->iconnect_cert_pass,
+            'cert_trust' => $organization->iconnect_cert_trust,
+            'key' => $organization->iconnect_key,
+            'key_pass' => $organization->iconnect_key_pass,
+            'base_url' => $organization->iconnect_base_url,
+            'target_binding' => $organization->iconnect_target_binding,
         ];
     }
 }

@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
+use Tests\Traits\MakesApiRequests;
 
 abstract class DuskTestCase extends BaseTestCase
 {
-    use CreatesApplication;
     use DoesTesting;
+    use MakesApiRequests;
+    use CreatesApplication;
 
     protected ?string $testStartDateTime;
 
