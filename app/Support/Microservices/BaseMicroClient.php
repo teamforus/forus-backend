@@ -80,7 +80,6 @@ class BaseMicroClient
         return $this->base($extraHeaders)->asMultipart();
     }
 
-    /** Haal forward headers uit middleware */
     public static function forwardHeadersFromRequest(?Request $request = null): array
     {
         $request ??= request();

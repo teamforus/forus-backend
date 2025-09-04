@@ -13,49 +13,49 @@ class PrecheckMicroClient extends BaseMicroClient
     /**
      * Shortcut for start_session
      */
-    public function startSession(array $payload = [], array $headers = [])
+    public function createSession(array $payload = [], array $headers = [])
     {
-        return $this->json($headers)->post('/start_session', $payload);
+        return $this->json($headers)->post('/v1/sessions', $payload);
     }
 
     /**
      * Shortcut to end session
      */
-    public function endSession(array $payload = [], array $headers = [])
+    public function endSession(string $id, array $headers = [])
     {
-        return $this->json($headers)->post('/end_session', $payload);
+        return $this->json($headers)->delete("/v1/sessions/{$id}");
     }
 
     /**
      * Shortcut to retrieve advice
      */
-    public function advice(array $payload = [], array $headers = [])
+    public function advice(string $id, array $headers = [])
     {
-        return $this->json($headers)->post('/advice', $payload);
+        return $this->json($headers)->get("/v1/sessions/{$id}/advice");
     }
 
     /**
      * Shortcut for stream (SSE)
      */
-    public function streamChat(array $query = [], array $headers = [])
+    public function streamChat(string $id, array $query = [], array $headers = [])
     {
-        return $this->stream($headers)->get('/chat/stream', $query);
+        return $this->stream(array_merge($headers, ['Accept'=> 'text/event-stream',]))->get("/v1/sessions/{$id}/events", $query);
     }
 
     /**
      * Shortcut for sending answer
      */
-    public function sendAnswer(array $payload, array $headers = [])
+    public function sendAnswer(string $id, array $payload, array $headers = [])
     {
-        return $this->json($headers)->post('/chat/answer', $payload);
+        return $this->json($headers)->post("/v1/sessions/{$id}/messages", $payload);
     }
 
     /**
      * Shortcut to retrieve history
      */
-    public function history(array $payload = [], array $headers = [])
+    public function history(string $id, array $headers = [])
     {
-        return $this->json($headers)->post('/chat/history', $payload);
+        return $this->json($headers)->get("/v1/sessions/{$id}/messages");
     }
 
 }
