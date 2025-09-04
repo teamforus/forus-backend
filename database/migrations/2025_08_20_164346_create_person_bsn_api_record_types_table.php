@@ -19,7 +19,7 @@ return new class () extends Migration {
             $table->foreign('record_type_key')
                 ->references('key')
                 ->on('record_types')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
     }
 

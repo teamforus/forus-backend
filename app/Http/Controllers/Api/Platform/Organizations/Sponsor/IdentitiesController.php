@@ -204,7 +204,7 @@ class IdentitiesController extends Controller
         $this->authorize('viewPersonBSNData', [$organization, $identity]);
 
         $bsn = $identity->bsn;
-        $bsnService = (new PersonBsnApiManager($organization))->driver();
+        $bsnService = PersonBsnApiManager::make($organization)->driver();
         $person = $bsnService->getPerson($bsn, ['parents', 'children', 'partners']);
 
         $scope = $request->input('scope');

@@ -236,7 +236,7 @@ class OrganizationPolicy
             return $this->deny(__('policies.identities.bsn_not_enabled'));
         }
 
-        if (!(new PersonBsnApiManager($organization))->hasConnection()) {
+        if (!PersonBsnApiManager::make($organization)->hasConnection()) {
             return $this->deny(__('policies.identities.person_bsn_api_not_available'));
         }
 

@@ -232,7 +232,9 @@ class OrganizationResource extends BaseJsonResource
     protected function getPersonBsnApiConfigured(Organization $organization): array
     {
         return [
-            'has_person_bsn_api' => (new PersonBsnApiManager($organization))->hasConnection(),
+            'has_person_bsn_api' =>
+                $organization->bsn_enabled &&
+                PersonBsnApiManager::make($organization)->hasConnection(),
         ];
     }
 

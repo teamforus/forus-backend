@@ -2,10 +2,8 @@
 
 namespace App\Services\IConnectApiService;
 
-use App\Models\Organization;
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
-use App\Services\PersonBsnApiService\Interfaces\PersonBsnApiInterface;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Throwable;
 
-class IConnect implements PersonBsnApiInterface
+class IConnect
 {
     private const string METHOD_GET = 'GET';
 
@@ -38,12 +36,10 @@ class IConnect implements PersonBsnApiInterface
     private array $configs;
 
     /**
-     * @param Organization $organization
+     * @param array $configs
      */
-    public function __construct(Organization $organization)
+    public function __construct(array $configs)
     {
-        $configs = $this->organizationToConfigs($organization);
-
         if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS, true)) {
             throw new RuntimeException('Invalid iConnection "env" type.');
         }
@@ -151,24 +147,5 @@ class IConnect implements PersonBsnApiInterface
             'expand' => implode(',', count($with) ? $with : []),
             'fields' => implode(',', count($fields) ? $fields : []),
         ]);
-    }
-
-    /**
-     * @param Organization $organization
-     * @return array
-     */
-    private function organizationToConfigs(Organization $organization): array
-    {
-        return [
-            'env' => $organization->iconnect_env,
-            'api_oin' => $organization->iconnect_api_oin,
-            'cert' => $organization->iconnect_cert,
-            'cert_pass' => $organization->iconnect_cert_pass,
-            'cert_trust' => $organization->iconnect_cert_trust,
-            'key' => $organization->iconnect_key,
-            'key_pass' => $organization->iconnect_key_pass,
-            'base_url' => $organization->iconnect_base_url,
-            'target_binding' => $organization->iconnect_target_binding,
-        ];
     }
 }

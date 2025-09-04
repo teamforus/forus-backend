@@ -394,11 +394,10 @@ class FundPolicy
      */
     public function viewPersonBsnApiRecords(Identity $identity, Fund $fund): ?string
     {
-        $personService = new PersonBsnApiManager($fund->organization);
-
         return
             $identity->bsn &&
             $fund->isConfigured() &&
-            $personService->hasConnection();
+            $fund->organization->bsn_enabled &&
+            PersonBsnApiManager::make($fund->organization)->hasConnection();
     }
 }

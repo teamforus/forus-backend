@@ -2,6 +2,8 @@
 
 namespace App\Services\PersonBsnApiService\Interfaces;
 
+use App\Services\IConnectApiService\Responses\ResponseData;
+
 interface PersonInterface
 {
     /**
@@ -41,4 +43,9 @@ interface PersonInterface
      * @return array
      */
     public function toArray(): array;
+
+    /**
+     * @return ResponseData|null
+     */
+    public function response(): ?ResponseData;
 }

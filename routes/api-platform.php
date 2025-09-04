@@ -200,7 +200,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
-    $router->get('funds/{fund}/person/records', "Api\Platform\FundsController@getPersonBsnApiRecords");
+    $router->get('funds/{fund}/prefills', "Api\Platform\FundsController@getPrefills");
 
     $router
         ->resource('vouchers/{voucher_number_or_address}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
