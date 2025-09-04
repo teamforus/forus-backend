@@ -398,6 +398,7 @@ class FundPolicy
             $identity->bsn &&
             $fund->isConfigured() &&
             $fund->organization->bsn_enabled &&
+            $fund->fund_config->allow_fund_request_prefill &&
             PersonBsnApiManager::make($fund->organization)->hasConnection();
     }
 }
