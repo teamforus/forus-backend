@@ -75,12 +75,12 @@ $router->group([], static function () use ($router) {
         'prefix' => 'pre-checks',
         'middleware' =>  ['forward_headers', 'throttle:120,1'],
     ], static function () use ($router) {
-        $router->get('start', 'Api\Platform\Precheck\PrecheckProxyController@start');
-        $router->get('chat/stream', 'Api\Platform\Precheck\PrecheckProxyController@stream');
-        $router->post('chat/answer', 'Api\Platform\Precheck\PrecheckProxyController@answer');
-        $router->post('end', 'Api\Platform\Precheck\PrecheckProxyController@end');
-        $router->post('chat/history', 'Api\Platform\Precheck\PrecheckProxyController@history');
-        $router->post('advice', 'Api\Platform\Precheck\PrecheckProxyController@advice');
+        $router->post('sessions', 'Api\Platform\Precheck\PrecheckProxyController@sessions');
+        $router->get('sessions/{id}/events', 'Api\Platform\Precheck\PrecheckProxyController@events');
+        $router->post('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@answer');
+        $router->delete('sessions/{id}', 'Api\Platform\Precheck\PrecheckProxyController@end');
+        $router->get('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@messages');
+        $router->get('sessions/{id}/advice', 'Api\Platform\Precheck\PrecheckProxyController@advice');
     });
 
     // todo: deprecated, precheck endpoint is now connected to microservice
