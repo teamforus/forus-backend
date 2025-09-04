@@ -1,5 +1,5 @@
 <?php
-namespace Api\Platform\Precheck\PrecheckProxy;
+namespace App\Http\Controllers\Api\Platform\Precheck;
 
 use App\Http\Controllers\Controller;
 use App\Support\Microservices\BaseMicroClient;
@@ -11,49 +11,70 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PrecheckProxyController extends Controller
 {
-    /** GET /api/v1/pre-checks/session -> GET /start_session */
-    public function start(Request $request)
+    /** POST /api/v1/pre-checks/session -> POST /v1/sessions/ */
+    public function sessions(Request $request)
     {
         $client =  new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
-        $res = $client->startSession($request->all(), $headers);
-        return $this->toLaravelResponse($res);
+        $res = $client->createSession($request->all(), $headers);
+        $response = $this->toLaravelResponse($res);
+        if ($res->successful()) {
+            // Try common shapes for id
+            $payload = $res->json() ?? [];
+            $id = data_get($payload, 'session_id') ?? data_get($payload, 'data.session_id') ?? null;
+
+            // Prefer 201 for a created session
+            $response->setStatusCode(201);
+
+            // Set Location if we have the id
+            if ($id) {
+                $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
+            }
+        }
+
+        return $response;
     }
 
-    /** POST /api/v1/pre-checks/end -> POST /end_session */
-    public function end(Request $request)
+    /** DELETE /api/v1/pre-checks/sessions/{id} -> DELETE /v1/sessions/{id} */
+    public function end(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
 
-        $res = $client->endSession($request->all(), $headers);
+        $res = $client->endSession($id, $headers);
+
+        if ($res->successful()) {
+            // Uniformly return 204 No Content on success
+            return response()->noContent();
+        }
 
         return $this->toLaravelResponse($res);
     }
 
-    /** POST /api/v1/pre-checks/advice -> POST /advice */
-    public function advice(Request $request)
+    /** GET /api/v1/pre-checks/sessions/{id}/advice -> GET /v1/sessions/{id}/advice */
+    public function advice(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
 
-        $res = $client->advice($request->all(), $headers);
+        $res = $client->advice($id, $headers);
 
         return $this->toLaravelResponse($res);
     }
 
-    /** GET /api/v1/pre-checks/chat/stream -> GET /chat/stream */
-    public function stream(Request $request)
+    /** GET /api/v1/pre-checks/sessions/{id}/events -> GET /v1/sessions/{id}/events */
+    public function events(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
-        $res = $client->streamChat($request->query(), $headers);
+
+        $res = $client->streamChat($id, $request->query(), $headers);
 
         if($res->failed()) {
             return new StreamedResponse(function () use ($res) {
                 echo "event: error\n";
                 echo 'data: ' . json_encode([
-                    'error' => $res->json('detail') ?? $res->json('error' ?? 'Upstream error'),
+                        'error' => $res->json('detail') ?? $res->json('error' ?? 'Upstream error'),
                         'status' => $res->status(),
                     ], JSON_UNESCAPED_UNICODE) . "\n\n";
                 @ob_flush(); flush();
@@ -76,25 +97,27 @@ class PrecheckProxyController extends Controller
         ]);
     }
 
-    /** POST /api/v1/pre-checks/chat/answer -> POST /chat/answer */
-    public function answer(Request $request)
+    /** POST /api/v1/pre-checks/sessions/{id}/messages -> POST /v1/sessions/{id}/messages */
+    public function answer(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
 
-        $res = $client->sendAnswer($request->all(), $headers);
+        if ($request->headers->has('Idempotency-Key')) {
+            $headers['Idempotency-Key'] = $request->headers->get('Idempotency-Key');
+        }
+
+        $res = $client->sendAnswer($id, $request->all(), $headers);
 
         return $this->toLaravelResponse($res);
     }
 
-    /** POST /api/v1/pre-checks/chat/history -> POST /chat/history */
-    public function history(Request $request)
+    /** GET /api/v1/pre-checks/sessions/{id}/messages -> GET /v1/sessions/{id}/messages */
+    public function messages(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
-
-        $res = $client->history($request->all(), $headers);
-
+        $res = $client->history($id, $headers);
         return $this->toLaravelResponse($res);
     }
 
@@ -110,7 +133,6 @@ class PrecheckProxyController extends Controller
             ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
             : response($payload, $status);
 
-        // Set-Cookie headers doorgeven (kan array of string zijn)
         $setCookie = $res->headers->get('Set-Cookie');
         if ($setCookie) {
             if (is_array($setCookie)) {
@@ -138,7 +160,7 @@ class PrecheckProxyController extends Controller
         return $status;
     }
 
-    public function looksLikeJson(string $contentType)
+    public function looksLikeJson(?string $contentType)
     {
         if (!$contentType) return true;
         return str_contains(strtolower($contentType), 'application/json')
