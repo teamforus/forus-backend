@@ -85,7 +85,7 @@ return [
         ],
     ],
     'identities' => [
-        'iconnect_not_available' => 'IConnect is niet beschikbaar.',
+        'person_bsn_api_not_available' => 'IConnect is niet beschikbaar.',
         'bsn_not_enabled' => 'BSN is niet ingeschakeld.',
         'bsn_is_unknown' => 'BSN is onbekend.',
         'invalid_permissions' => 'Deze actie is niet toegestaan.',

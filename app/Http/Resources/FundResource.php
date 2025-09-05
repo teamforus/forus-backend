@@ -200,8 +200,8 @@ class FundResource extends BaseJsonResource
         return [
             ...$fund->fund_config ? [
                 ...$fund->fund_config->only([
-                    'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-                    'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
+                    'key', 'allow_fund_requests', 'allow_fund_request_prefill', 'allow_prevalidations',
+                    'allow_direct_requests', 'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
                     'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
                     'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
                     'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',

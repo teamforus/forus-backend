@@ -7,6 +7,7 @@ use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Exception;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -384,5 +385,20 @@ class FundPolicy
     public function idealRequest(Identity $identity, Fund $fund): bool
     {
         return $identity->exists && $fund->public;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return string|null
+     */
+    public function viewPersonBsnApiRecords(Identity $identity, Fund $fund): ?string
+    {
+        return
+            $identity->bsn &&
+            $fund->isConfigured() &&
+            $fund->organization->bsn_enabled &&
+            $fund->fund_config->allow_fund_request_prefill &&
+            PersonBsnApiManager::make($fund->organization)->hasConnection();
     }
 }
