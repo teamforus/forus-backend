@@ -123,7 +123,7 @@ class PrecheckProxyController extends Controller
 
     public function toLaravelResponse($res)
     {
-        $isJson = $this->looksLikeJson($res->headers->get('Content-Type'));
+        $isJson = $this->looksLikeJson($res->header('Content-Type'));
         $payload = $isJson ? ($res->json() ?? []) : $res->body();
 
         $status = $res->status();
@@ -132,8 +132,8 @@ class PrecheckProxyController extends Controller
         $response = $isJson
             ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
             : response($payload, $status);
-
-        $setCookie = $res->headers->get('Set-Cookie');
+        $setCookie = $res->header('Set-Cookie');
+        //TODO: fix cookie pass through
         if ($setCookie) {
             if (is_array($setCookie)) {
                 foreach ($setCookie as $cookieLine) {
@@ -144,7 +144,7 @@ class PrecheckProxyController extends Controller
             }
         }
 
-        if(!$isJson && ($ct = $res->headers->get('Content-Type'))) {
+        if(!$isJson && ($ct = $res->header('Content-Type'))) {
             $response->headers->set('Content-Type', $ct, false);
         }
 
