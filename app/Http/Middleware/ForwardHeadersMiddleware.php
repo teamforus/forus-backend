@@ -19,6 +19,7 @@ class ForwardHeadersMiddleware
 
             // Traceability
             'X-Forwarded-For' => $request->ip(),
+            'Cookie' => $request->header('Cookie'),
         ], fn ($value) => !is_null($value) && $value !== '');
 
         $request->attributes->set('forward_headers', $forward);

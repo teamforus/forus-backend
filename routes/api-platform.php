@@ -76,7 +76,7 @@ $router->group([], static function () use ($router) {
         'middleware' =>  ['forward_headers', 'throttle:120,1'],
     ], static function () use ($router) {
         $router->post('sessions', 'Api\Platform\Precheck\PrecheckProxyController@sessions');
-        $router->get('sessions/{id}/events', 'Api\Platform\Precheck\PrecheckProxyController@events');
+        $router->get('sessions/{id}/events', 'Api\Platform\Precheck\PrecheckProxyController@events')->name('precheck.events');
         $router->post('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@answer');
         $router->delete('sessions/{id}', 'Api\Platform\Precheck\PrecheckProxyController@end');
         $router->get('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@messages');
