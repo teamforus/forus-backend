@@ -49,6 +49,9 @@ class Permission extends BaseModel
     public const string VIEW_VOUCHERS = 'view_vouchers';
     public const string MANAGE_VOUCHERS = 'manage_vouchers';
 
+    // profiles
+    public const string VIEW_PERSON_BSN_DATA = 'view_person_bsn_data';
+
     public $timestamps = false;
     protected static Collection|null $memCache = null;
 

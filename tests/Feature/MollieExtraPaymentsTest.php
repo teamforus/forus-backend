@@ -262,9 +262,9 @@ class MollieExtraPaymentsTest extends TestCase
         $proxy = $this->makeIdentityProxy($provider->identity);
         $headers = $this->makeApiHeaders($proxy);
 
-        $response = $this->getJson(
+        $response = $this->postJson(
             "/api/v1/platform/organizations/$provider->id/product-reservations/$reservation->id/extra-payments/refund",
-            $headers,
+            headers: $headers,
         );
 
         $response->assertSuccessful();

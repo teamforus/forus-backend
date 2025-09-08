@@ -9,10 +9,12 @@ use Illuminate\Validation\Validator;
 class Validation
 {
     /**
-     * @param mixed $value
-     * @param string|array|Rule $rule
-     * @param string|null $attribute
-     * @return Validator
+     * Creates a validator instance to check a single value against one or more rules.
+     *
+     * @param mixed $value The value to be validated.
+     * @param string|array|Rule $rule The validation rule(s) to apply.
+     * @param string|null $attribute The attribute name for error messages.
+     * @return Validator The validator instance.
      */
     public static function check(mixed $value, string|array|Rule $rule, string $attribute = null): Validator
     {

@@ -126,19 +126,6 @@ class Prevalidation extends BaseModel
             $query->whereHas('prevalidation_records', fn (Builder $builder) => $builder->where([
                 'value' => $identity->bsn,
             ])->whereRelation('record_type', 'key', '=', 'bsn'));
-
-            // Or BSN hashed record match
-            foreach (Fund::whereRelation('fund_config', 'hash_bsn', true)->get() as $fund) {
-                $query->orWhere(static function (Builder $builder) use ($fund, $identity) {
-                    $builder->where([
-                        'fund_id' => $fund->id,
-                    ])->whereHas('prevalidation_records', function (Builder $builder) use ($fund, $identity) {
-                        $builder->where([
-                            'value' => $fund->getHashedValue($identity->bsn),
-                        ])->whereRelation('record_type', 'key', '=', 'bsn_hash');
-                    });
-                });
-            }
         })->get();
 
         return $prevalidations->each(static function (Prevalidation $prevalidation) use ($identity) {

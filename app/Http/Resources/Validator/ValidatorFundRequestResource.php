@@ -68,7 +68,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
-            'contact_information', 'state_locale', 'employee_id',
+            'contact_information', 'state_locale', 'employee_id', 'identity_id',
         ]), [
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest->fund),
@@ -97,7 +97,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         FundRequest $fundRequest,
     ): array {
         $employee = $request->employee($organization) or abort(403);
-        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+        $bsnFields = ['bsn', 'partner_bsn'];
 
         return $fundRequest->records->filter(function (FundRequestRecord $record) use ($organization, $bsnFields) {
             return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
@@ -200,7 +200,6 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'amount_presets' => FundAmountPresetResource::collection(
                 $fund->fund_config?->allow_preset_amounts_validator ? $fund->amount_presets : [],
             ),
-            'has_person_bsn_api' => $fund->hasIConnectApiOin(),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
         ];
