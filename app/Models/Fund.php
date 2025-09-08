@@ -60,6 +60,7 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $type
  * @property bool $external
  * @property string $state
+ * @property int $order
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -71,7 +72,6 @@ use Illuminate\Support\Facades\Log;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property int $order
  * @property-read Collection|\App\Models\FundAmountPreset[] $amount_presets
  * @property-read int|null $amount_presets_count
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -131,6 +131,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read Fund|null $parent
  * @property-read Collection|\App\Models\Voucher[] $payout_vouchers
  * @property-read int|null $payout_vouchers_count
+ * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
+ * @property-read int|null $physical_card_types_count
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -299,6 +301,19 @@ class Fund extends BaseModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_products');
+    }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function physical_card_types(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PhysicalCardType::class,
+            'fund_physical_card_types',
+            'fund_id',
+            'physical_card_type_id'
+        );
     }
 
     /**
@@ -534,6 +549,9 @@ class Fund extends BaseModel
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
             'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
+            'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
+            'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
+            'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
         ]);
 
         $replaceValues = $this->external ? array_fill_keys([

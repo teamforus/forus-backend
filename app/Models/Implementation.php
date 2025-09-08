@@ -199,7 +199,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation wherePreCheckDescription($value)
  * @method static Builder<static>|Implementation wherePreCheckEnabled($value)
  * @method static Builder<static>|Implementation wherePreCheckTitle($value)
- * @method static Builder<static>|Implementation whereProductsDefaultSort($value)
+ * @method static Builder<static>|Implementation whereProductsDefaultSorting($value)
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)
@@ -782,6 +782,10 @@ class Implementation extends BaseModel
             'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
             'has_payouts' => $implementation->hasPayouts(),
+            'has_physical_cards' => $implementation->organization()
+                ->where('allow_physical_cards', true)
+                ->whereRelation('funds.fund_config', 'allow_physical_cards', true)
+                ->exists(),
             'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,

@@ -37,6 +37,7 @@ class VoucherResource extends BaseJsonResource
         'product_vouchers.product_reservation',
         'reimbursements_pending',
         'fund.fund_config.implementation',
+        'fund.physical_card_types.photo.presets',
         'physical_cards',
         'last_deactivation_log',
         'top_up_transactions',
@@ -271,6 +272,9 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
+            'allow_physical_card_linking' => $fund->fund_config->allow_physical_card_linking,
+            'allow_physical_card_deactivation' => $fund->fund_config->allow_physical_card_deactivation,
+            'physical_card_types' => PhysicalCardTypeResource::collection($fund->physical_card_types),
             ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key']),
         ];
     }

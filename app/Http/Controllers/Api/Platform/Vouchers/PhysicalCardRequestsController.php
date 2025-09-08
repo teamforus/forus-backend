@@ -51,7 +51,7 @@ class PhysicalCardRequestsController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
         $cardRequest = $voucher->makePhysicalCardRequest($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city',
+            'address', 'house', 'house_addition', 'postcode', 'city', 'physical_card_type_id',
         ]), true);
 
         return new PhysicalCardRequestResource($cardRequest);

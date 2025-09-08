@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestAssigned;
+use App\Events\FundRequests\FundRequestPhysicalCardRequestEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Event;
 use Throwable;
 
 /**
@@ -49,6 +51,8 @@ use Throwable;
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
+ * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
+ * @property-read int|null $physical_card_requests_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -212,6 +216,15 @@ class FundRequest extends BaseModel
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function physical_card_requests(): HasMany
+    {
+        return $this->hasMany(PhysicalCardRequest::class);
     }
 
     /**
@@ -466,6 +479,22 @@ class FundRequest extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @param array $address
+     * @return PhysicalCardRequest
+     */
+    public function makePhysicalCardRequest(array $address): PhysicalCardRequest
+    {
+        /** @var PhysicalCardRequest $cardRequest */
+        $cardRequest = $this->physical_card_requests()->create(Arr::only($address, [
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id', 'physical_card_type_id',
+        ]));
+
+        Event::dispatch(new FundRequestPhysicalCardRequestEvent($this, $cardRequest));
+
+        return $cardRequest;
     }
 
     /**

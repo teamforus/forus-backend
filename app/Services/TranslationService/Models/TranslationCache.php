@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- *
+ * 
  *
  * @property int $id
  * @property string $translatable_type
@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string $locale
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|Eloquent $translatable
+ * @property-read Model|\Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationCache newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationCache newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationCache query()

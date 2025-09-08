@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
+use App\Http\Resources\PhysicalCardTypeResource;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 
@@ -24,8 +25,9 @@ class SponsorVoucherResource extends BaseJsonResource
         'transactions.product.photo.presets',
         'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
-        'fund.fund_config.implementation',
         'fund.organization',
+        'fund.fund_config.implementation',
+        'fund.physical_card_types.photo.presets',
         'physical_cards',
         'voucher_records.record_type',
         'voucher_relation',
@@ -101,8 +103,9 @@ class SponsorVoucherResource extends BaseJsonResource
                 'implementation' => $voucher->fund->fund_config->implementation?->only([
                     'id', 'name',
                 ]),
+                'physical_card_types' => PhysicalCardTypeResource::collection($voucher->fund->physical_card_types),
             ]),
-            'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
+            'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code', 'code_locale']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
             'has_payouts' => $voucher->has_payouts,
             'first_use_date' => $first_use_date?->format('Y-m-d'),

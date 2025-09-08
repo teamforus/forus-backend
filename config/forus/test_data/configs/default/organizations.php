@@ -20,6 +20,7 @@ return [
             'allow_pre_checks' => true,
             'allow_translations' => true,
             'allow_bi_connection' => true,
+            'allow_physical_cards' => true,
             'allow_product_updates' => true,
             'allow_2fa_restrictions' => true,
             'allow_manual_bulk_processing' => true,

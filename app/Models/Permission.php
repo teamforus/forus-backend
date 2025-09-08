@@ -23,20 +23,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Permission extends BaseModel
 {
+    // validations
     public const string VALIDATE_RECORDS = 'validate_records';
     public const string MANAGE_VALIDATORS = 'manage_validators';
 
+    // funds
     public const string MANAGE_FUNDS = 'manage_funds';
     public const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
 
+    // payouts
     public const string MANAGE_PAYOUTS = 'manage_payouts';
 
+    // implementations
     public const string MANAGE_IMPLEMENTATION_NOTIFICATIONS = 'manage_implementation_notifications';
 
-    public const string MANAGE_IDENTITIES = 'manage_identities';
+    // identities
     public const string VIEW_IDENTITIES = 'view_identities';
+    public const string MANAGE_IDENTITIES = 'manage_identities';
 
+    // organizations
     public const string MANAGE_ORGANIZATION = 'manage_organization';
+
+    // vouchers
+    public const string SCAN_VOUCHERS = 'scan_vouchers';
+    public const string VIEW_VOUCHERS = 'view_vouchers';
+    public const string MANAGE_VOUCHERS = 'manage_vouchers';
 
     public $timestamps = false;
     protected static Collection|null $memCache = null;

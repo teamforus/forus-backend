@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\PhysicalCard;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -42,7 +43,7 @@ class VoucherPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
+        return $organization->identityCan($identity, [Permission::MANAGE_VOUCHERS, Permission::VIEW_VOUCHERS], false);
     }
 
     /**
@@ -53,7 +54,7 @@ class VoucherPolicy
      */
     public function export(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_vouchers');
+        return $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**
@@ -69,7 +70,7 @@ class VoucherPolicy
         Fund $fund
     ): Response|bool {
         if (($fund->organization_id !== $organization->id) ||
-            !$organization->identityCan($identity, 'manage_vouchers')) {
+            !$organization->identityCan($identity, Permission::MANAGE_VOUCHERS)) {
             return $this->deny('no_permission_to_make_vouchers');
         }
 
@@ -103,7 +104,7 @@ class VoucherPolicy
         return
             ($isBudgetType || $isProductTypeMadeByEmployee || $employeeCanSeeProductVouchers) &&
             ($voucher->fund->organization_id === $organization->id) &&
-            $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
+            $organization->identityCan($identity, [Permission::MANAGE_VOUCHERS, Permission::VIEW_VOUCHERS], false);
     }
 
     /**
@@ -119,7 +120,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return
-            $organization->identityCan($identity, 'manage_vouchers') &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
@@ -140,7 +141,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return
-            $organization->identityCan($identity, 'manage_vouchers') &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
             $voucher->fund->organization_id === $organization->id &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
@@ -161,7 +162,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return
-            $organization->identityCan($identity, 'manage_vouchers') &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
             $voucher->fund->organization_id === $organization->id &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -177,7 +178,7 @@ class VoucherPolicy
     public function update(Identity $identity, Voucher $voucher, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, 'manage_vouchers') &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
             $voucher->fund->organization_id === $organization->id;
     }
 
@@ -333,7 +334,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return
-            $organization->identityCan($identity, 'manage_vouchers') &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
             $voucher->fund->fund_config->allow_physical_cards &&
@@ -456,7 +457,7 @@ class VoucherPolicy
 
         // Identity is allowed to make transactions with at least one product
         $products = Product::whereHas('organization', function (Builder $builder) use ($identity) {
-            OrganizationQuery::whereHasPermissions($builder, $identity->address, 'scan_vouchers');
+            OrganizationQuery::whereHasPermissions($builder, $identity->address, Permission::SCAN_VOUCHERS);
         });
 
         if (ProductQuery::whereAvailableForVoucher($products, $voucher, null, false)->doesntExist()) {
@@ -498,7 +499,7 @@ class VoucherPolicy
         }
 
         $applied = $voucher->fund->providers()->pluck('organization_id');
-        $providers = Organization::queryByIdentityPermissions($identity->address, 'scan_vouchers');
+        $providers = Organization::queryByIdentityPermissions($identity->address, Permission::SCAN_VOUCHERS);
         $providers = $providers->pluck('id');
         extract($this->getVoucherProvidersLists($voucher, $product_id));
 
@@ -531,7 +532,7 @@ class VoucherPolicy
             }
 
             // The identity should be allowed to scan voucher for the provider organization
-            return $voucher->product->organization->identityCan($identity, 'scan_vouchers');
+            return $voucher->product->organization->identityCan($identity, Permission::SCAN_VOUCHERS);
         }
 
         return false;

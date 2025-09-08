@@ -212,6 +212,7 @@ class FundResource extends BaseJsonResource
                     'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
                     'help_description_html', 'criteria_label_requirement_show',
                     'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
+                    'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
                 ]),
                 ...$fund->fund_config->translateColumns($fund->fund_config->only([
                     'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
@@ -221,6 +222,8 @@ class FundResource extends BaseJsonResource
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
                 'custom_amount_min', 'custom_amount_max',
+                'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
+                'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
             ]) : [],
         ];
     }

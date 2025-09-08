@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -12,6 +13,16 @@ use Illuminate\Auth\Access\Response;
 class PhysicalCardPolicy
 {
     use HandlesAuthorization;
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAny(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [Permission::VIEW_VOUCHERS, Permission::MANAGE_VOUCHERS], false);
+    }
 
     /**
      * Determine whether the user can create physical cards.
@@ -50,7 +61,7 @@ class PhysicalCardPolicy
 
         return
             $voucher->fund->organization_id == $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**
@@ -65,6 +76,7 @@ class PhysicalCardPolicy
     public function delete(Identity $identity, PhysicalCard $physicalCard, Voucher $voucher): bool
     {
         return
+            $voucher->fund?->fund_config?->allow_physical_card_deactivation &&
             $physicalCard->voucher_id === $voucher->id &&
             $voucher->identity_id === $identity->id;
     }
@@ -88,7 +100,7 @@ class PhysicalCardPolicy
         return
             $physicalCard->voucher_id === $voucher->id &&
             $voucher->fund->organization_id === $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**

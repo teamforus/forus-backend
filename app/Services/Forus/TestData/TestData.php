@@ -1179,9 +1179,47 @@ class TestData
             $builder->where('allow_physical_cards', true);
         })->get();
 
+        $nth = 1;
+
+        $organizations = Organization::query()
+            ->whereIn('id', $funds->pluck('organization_id')->toArray())
+            ->whereDoesntHave('physical_card_types')
+            ->get();
+
+        foreach ($organizations as $organization) {
+            $physicalCardType = $organization->physical_card_types()->create([
+                'name' => 'Physical card type ' . $this->integerToRoman($nth++),
+                'description' => $this->faker->paragraph(),
+                'code_prefix' => '100',
+                'code_blocks' => 4,
+                'code_block_size' => 4,
+            ]);
+
+            $fundConfigs = FundConfig::query()
+                ->whereRelation('fund', 'organization_id', $organization->id)
+                ->where('allow_physical_cards', true)
+                ->get();
+
+            foreach ($fundConfigs as $fundConfig) {
+                $fundConfig->fund->physical_card_types()->attach($physicalCardType->id);
+
+                if ($fundConfig->allow_physical_cards_on_application) {
+                    $fundConfig->forceFill([
+                        'fund_request_physical_card_enable' => true,
+                        'fund_request_physical_card_type_id' => $physicalCardType->id,
+                    ])->save();
+                }
+            }
+        }
+
+        $funds->load('organization.physical_card_types');
+
         foreach ($funds as $fund) {
-            foreach ($fund->vouchers as $voucher) {
-                $voucher->addPhysicalCard((string) random_int(11111111, 99999999));
+            foreach ($fund->vouchers->filter(fn ($voucher) => $voucher->isBudgetType()) as $voucher) {
+                $voucher->addPhysicalCard(
+                    (string) random_int(1111111111111111, 9999999999999999),
+                    $fund->organization->physical_card_types[0],
+                );
             }
         }
     }

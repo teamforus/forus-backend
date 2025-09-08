@@ -148,7 +148,7 @@ class OrganizationResource extends BaseJsonResource
                 'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled', 'allow_batch_reservations',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
-                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_physical_cards',
                 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_profiles',
                 'allow_product_updates',
             ]),

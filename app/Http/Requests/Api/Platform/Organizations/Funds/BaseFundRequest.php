@@ -18,6 +18,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * @property Organization|null $organization
+ * @property Fund|null $fund
  */
 abstract class BaseFundRequest extends BaseFormRequest
 {
@@ -82,7 +83,7 @@ abstract class BaseFundRequest extends BaseFormRequest
     /**
      * @return array
      */
-    protected function fundFormulaProductsRule(): array
+    protected function fundFormulaProductsRules(): array
     {
         $formulaProductsEditable = Config::get('forus.features.dashboard.organizations.funds.formula_products');
 
@@ -95,6 +96,38 @@ abstract class BaseFundRequest extends BaseFormRequest
             ],
             'formula_products.*.record_type_key_multiplier' => 'nullable|exists:record_types,key',
         ] : [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function physicalCardTypeRules(): array
+    {
+        return [
+            'fund_request_physical_card_enable' => 'sometimes|boolean',
+            'fund_request_physical_card_type_id' => [
+                'nullable',
+                'sometimes',
+                Rule::exists('physical_card_types', 'id')
+                    ->whereIn(
+                        'physical_card_types.id',
+                        $this->fund?->physical_card_types()?->pluck('physical_card_types.id')?->toArray() ?: [],
+                    ),
+            ],
+            'enable_physical_card_types' => 'sometimes|array',
+            'enable_physical_card_types.*' => [
+                'sometimes',
+                Rule::exists('physical_card_types', 'id')
+                    ->where('organization_id', $this->organization->id),
+            ],
+            'disable_physical_card_types' => 'sometimes|array',
+            'disable_physical_card_types.*' => [
+                'nullable',
+                'sometimes',
+                Rule::exists('physical_card_types', 'physical_card_types.id')
+                    ->where('organization_id', $this->organization->id),
+            ],
+        ];
     }
 
     /**
@@ -126,6 +159,12 @@ abstract class BaseFundRequest extends BaseFormRequest
             'provider_products_required' => 'nullable|boolean',
 
             'allow_provider_sign_up' => 'nullable|boolean',
+
+            'allow_physical_cards' => 'nullable|boolean',
+            'allow_physical_card_requests' => 'nullable|boolean',
+            'allow_physical_card_linking' => 'nullable|boolean',
+            'allow_physical_card_deactivation' => 'nullable|boolean',
+            'allow_physical_cards_on_application' => 'nullable|boolean',
 
             // help columns
             ...$this->fundConfigHelpRules(),
