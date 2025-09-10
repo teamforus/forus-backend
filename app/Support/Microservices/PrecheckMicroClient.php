@@ -34,13 +34,6 @@ class PrecheckMicroClient extends BaseMicroClient
         return $this->json($headers)->get("/v1/sessions/{$id}/advice");
     }
 
-    /**
-     * Shortcut for stream (SSE)
-     */
-    public function streamChat(string $id, array $query = [], array $headers = [])
-    {
-        return $this->stream(array_merge($headers, ['Accept'=> 'text/event-stream',]))->get("/v1/sessions/{$id}/events", $query);
-    }
 
     /**
      * Shortcut for sending answer
