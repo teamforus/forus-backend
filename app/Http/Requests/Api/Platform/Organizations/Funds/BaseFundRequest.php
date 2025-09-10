@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Organization;
+use App\Models\PhysicalCardType;
 use App\Rules\FundCriteria\FundCriteriaKeyRule;
 use App\Rules\FundCriteria\FundCriteriaMaxRule;
 use App\Rules\FundCriteria\FundCriteriaMinRule;
@@ -111,21 +112,10 @@ abstract class BaseFundRequest extends BaseFormRequest
                 Rule::exists('physical_card_types', 'id')
                     ->whereIn(
                         'physical_card_types.id',
-                        $this->fund?->physical_card_types()?->pluck('physical_card_types.id')?->toArray() ?: [],
+                        PhysicalCardType::query()
+                            ->whereRelation('funds', 'organization_id', $this->organization->id)
+                            ->select('id'),
                     ),
-            ],
-            'enable_physical_card_types' => 'sometimes|array',
-            'enable_physical_card_types.*' => [
-                'sometimes',
-                Rule::exists('physical_card_types', 'id')
-                    ->where('organization_id', $this->organization->id),
-            ],
-            'disable_physical_card_types' => 'sometimes|array',
-            'disable_physical_card_types.*' => [
-                'nullable',
-                'sometimes',
-                Rule::exists('physical_card_types', 'physical_card_types.id')
-                    ->where('organization_id', $this->organization->id),
             ],
         ];
     }
@@ -159,12 +149,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'provider_products_required' => 'nullable|boolean',
 
             'allow_provider_sign_up' => 'nullable|boolean',
-
             'allow_physical_cards' => 'nullable|boolean',
-            'allow_physical_card_requests' => 'nullable|boolean',
-            'allow_physical_card_linking' => 'nullable|boolean',
-            'allow_physical_card_deactivation' => 'nullable|boolean',
-            'allow_physical_cards_on_application' => 'nullable|boolean',
 
             // help columns
             ...$this->fundConfigHelpRules(),

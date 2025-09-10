@@ -28,6 +28,7 @@ class Permission extends BaseModel
     public const string MANAGE_VALIDATORS = 'manage_validators';
 
     // funds
+    public const string VIEW_FUNDS = 'view_funds';
     public const string MANAGE_FUNDS = 'manage_funds';
     public const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
 

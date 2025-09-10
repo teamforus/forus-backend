@@ -1850,6 +1850,18 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param PhysicalCardType $physicalCardType
+     * @return FundPhysicalCardType
+     */
+    public function findFundPhysicalCardTypeForType(PhysicalCardType $physicalCardType): FundPhysicalCardType
+    {
+        return $this->fund->fund_physical_card_types
+            ->where('fund_id', $this->fund_id)
+            ->where('physical_card_type_id', $physicalCardType->id)
+            ->first();
+    }
+
+    /**
      * @param int|null $seconds
      * @return Relation|null
      */

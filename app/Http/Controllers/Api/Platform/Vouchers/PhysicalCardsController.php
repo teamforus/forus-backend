@@ -27,13 +27,14 @@ class PhysicalCardsController extends Controller
      */
     public function store(StorePhysicalCardRequest $request, Voucher $voucher): PhysicalCardResource
     {
-        $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
-        $this->authorize('create', [PhysicalCard::class, $voucher]);
+        $physicalCardType = $voucher->fund->physical_card_types
+            ->where('id', $request->post('physical_card_type_id'))
+            ->firstOrFail();
 
-        return new PhysicalCardResource($voucher->addPhysicalCard(
-            $request->post('code'),
-            $voucher->fund->physical_card_types->where('id', $request->post('physical_card_type_id'))->firstOrFail(),
-        ));
+        $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
+        $this->authorize('create', [PhysicalCard::class, $physicalCardType, $voucher]);
+
+        return new PhysicalCardResource($voucher->addPhysicalCard($request->post('code'), $physicalCardType));
     }
 
     /**

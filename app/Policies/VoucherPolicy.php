@@ -9,6 +9,7 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\PhysicalCard;
+use App\Models\PhysicalCardType;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
@@ -306,14 +307,15 @@ class VoucherPolicy
     /**
      * @param Identity $identity
      * @param Voucher $voucher
+     * @param PhysicalCardType $physicalCardType
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function requestPhysicalCard(Identity $identity, Voucher $voucher): bool
+    public function requestPhysicalCard(Identity $identity, Voucher $voucher, PhysicalCardType $physicalCardType): bool
     {
         return
             $this->show($identity, $voucher) &&
-            Gate::allows('create', [PhysicalCard::class, $voucher]) &&
+            $voucher->findFundPhysicalCardTypeForType($physicalCardType)?->allow_physical_card_requests &&
+            Gate::allows('create', [PhysicalCard::class, $physicalCardType, $voucher]) &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
             $voucher->isInternal() &&

@@ -6,6 +6,7 @@ use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundForm;
+use App\Models\FundPhysicalCardType;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -35,6 +36,7 @@ use App\Policies\BIConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
 use App\Policies\FundFormPolicy;
+use App\Policies\FundPhysicalCardTypePolicy;
 use App\Policies\FundPolicy;
 use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
@@ -108,6 +110,7 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransaction::class => VoucherTransactionPolicy::class,
         ProductReservation::class => ProductReservationPolicy::class,
         PhysicalCardRequest::class => PhysicalCardRequestPolicy::class,
+        FundPhysicalCardType::class => FundPhysicalCardTypePolicy::class,
         ReimbursementCategory::class => ReimbursementCategoryPolicy::class,
         VoucherTransactionBulk::class => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class => FundProviderInvitationPolicy::class,

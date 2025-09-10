@@ -108,6 +108,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $fund_limit_multipliers_count
  * @property-read Collection|\App\Models\FundPeriod[] $fund_periods
  * @property-read int|null $fund_periods_count
+ * @property-read Collection|\App\Models\FundPhysicalCardType[] $fund_physical_card_types
+ * @property-read int|null $fund_physical_card_types_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
@@ -313,6 +315,15 @@ class Fund extends BaseModel
             'fund_id',
             'physical_card_type_id'
         );
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_physical_card_types(): HasMany
+    {
+        return $this->hasMany(FundPhysicalCardType::class);
     }
 
     /**
@@ -548,9 +559,7 @@ class Fund extends BaseModel
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
             'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
-            'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
-            'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
-            'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
+            'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
         ]);
 
         $replaceValues = $this->external ? array_fill_keys([

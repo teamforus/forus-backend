@@ -18,7 +18,7 @@ return new class () extends Migration {
             $table->string('code_prefix')->nullable()->default('');
             $table->integer('code_blocks');
             $table->integer('code_block_size');
-
+            $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('organization_id')

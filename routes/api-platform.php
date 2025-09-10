@@ -443,6 +443,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
+    $router->resource(
+        'organizations.fund-physical-card-types',
+        "Api\Platform\Organizations\FundPhysicalCardTypesController"
+    )->only('index', 'store', 'update', 'destroy');
+
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
         "Api\Platform\Organizations\Funds\IdentitiesController@export",

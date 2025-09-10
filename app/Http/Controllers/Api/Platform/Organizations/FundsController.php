@@ -228,9 +228,7 @@ class FundsController extends Controller
                     'criteria_label_requirement_show', 'allow_provider_sign_up',
                 ]),
                 ...($organization->allow_physical_cards ? $request->only([
-                    'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
-                    'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
-                    'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
+                    'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
                 ]) : []),
                 ...($organization->allow_2fa_restrictions ? $request->only([
                     'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_emails',
@@ -248,16 +246,6 @@ class FundsController extends Controller
 
             if ($fund->organization->allow_payouts && is_array($request->input('amount_presets'))) {
                 $fund->syncAmountPresets($request->input('amount_presets'));
-            }
-
-            if ($organization->allow_physical_cards) {
-                if ($request->post('enable_physical_card_types')) {
-                    $fund->physical_card_types()->attach($request->post('enable_physical_card_types'));
-                }
-
-                if ($request->post('disable_physical_card_types')) {
-                    $fund->physical_card_types()->detach($request->post('disable_physical_card_types'));
-                }
             }
         }
 

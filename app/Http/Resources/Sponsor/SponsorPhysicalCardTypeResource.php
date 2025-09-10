@@ -21,6 +21,7 @@ class SponsorPhysicalCardTypeResource extends BaseJsonResource
 
     public const array LOAD_COUNT = [
         'funds',
+        'fund_configs',
         'physical_cards',
     ];
 
@@ -39,7 +40,9 @@ class SponsorPhysicalCardTypeResource extends BaseJsonResource
                 'physical_cards_count', 'funds_count',
             ]),
             'photo' => new MediaResource($cardType->photo),
-            'in_use' => $cardType->physical_cards_count > 0 || $cardType->funds_count > 0,
+            'in_use' =>
+                $cardType->funds_count > 0 ||
+                $cardType->physical_cards_count > 0,
             ...$this->makeTimestamps($cardType->only([
                 'created_at', 'updated_at',
             ])),

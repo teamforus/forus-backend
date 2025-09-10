@@ -14,6 +14,9 @@ return new class () extends Migration {
             $table->id();
             $table->unsignedInteger('fund_id');
             $table->unsignedBigInteger('physical_card_type_id');
+            $table->boolean('allow_physical_card_linking')->default(false);
+            $table->boolean('allow_physical_card_requests')->default(false);
+            $table->boolean('allow_physical_card_deactivation')->default(false);
             $table->timestamps();
 
             $table->foreign('fund_id')

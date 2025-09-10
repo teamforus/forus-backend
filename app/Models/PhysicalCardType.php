@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
+ * App\Models\PhysicalCardType.
  *
  * @property int $id
  * @property string $name
@@ -22,6 +23,10 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $code_block_size
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
+ * @property-read int|null $fund_configs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundPhysicalCardType[] $fund_physical_card_types
+ * @property-read int|null $fund_physical_card_types_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
@@ -47,6 +52,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class PhysicalCardType extends Model
 {
     use HasMedia;
+    use SoftDeletes;
 
     protected $fillable = [
         'name', 'description', 'organization_id', 'code_blocks', 'code_block_size', 'code_prefix',
@@ -91,5 +97,22 @@ class PhysicalCardType extends Model
             'physical_card_type_id',
             'fund_id'
         );
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function fund_configs(): HasMany
+    {
+        return $this->hasMany(FundConfig::class, 'fund_request_physical_card_type_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_physical_card_types(): HasMany
+    {
+        return $this->hasMany(FundPhysicalCardType::class);
     }
 }

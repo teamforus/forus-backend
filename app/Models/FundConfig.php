@@ -37,10 +37,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $show_qr_limits
  * @property bool $show_requester_limits
  * @property bool $allow_physical_cards
- * @property bool $allow_physical_card_requests
- * @property bool $allow_physical_card_linking
- * @property bool $allow_physical_card_deactivation
- * @property bool $allow_physical_cards_on_application
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
@@ -118,11 +114,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowGeneratorDirectPayments($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCardDeactivation($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCardLinking($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCardRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCards($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPhysicalCardsOnApplication($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmounts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPresetAmountsValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowPrevalidations($value)
@@ -163,7 +155,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmployeeCanSeeProductVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundRequestPhysicalCardRequestEnable($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundRequestPhysicalCardEnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundRequestPhysicalCardTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereGeneratorIgnoreFundBudget($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpBlockText($value)
@@ -258,9 +250,7 @@ class FundConfig extends BaseModel
         'reservation_approve_offset', 'reimbursement_approve_offset', 'allow_provider_sign_up',
 
         // physical cards
-        'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
-        'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
-        'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
+        'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
     ];
 
     /**
@@ -268,8 +258,7 @@ class FundConfig extends BaseModel
      */
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
-        'formula_multiplier', 'is_configured', 'allow_physical_cards', 'allow_physical_card_requests',
-        'allow_physical_card_linking', 'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
+        'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
         'implementation_id', 'implementation', 'partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_url', 'backoffice_key', 'backoffice_check_partner',
@@ -296,10 +285,6 @@ class FundConfig extends BaseModel
         'allow_fund_requests' => 'boolean',
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
-        'allow_physical_card_requests' => 'boolean',
-        'allow_physical_card_linking' => 'boolean',
-        'allow_physical_card_deactivation' => 'boolean',
-        'allow_physical_cards_on_application' => 'boolean',
         'allow_direct_requests' => 'boolean',
         'allow_blocking_vouchers' => 'boolean',
         'allow_direct_payments' => 'boolean',

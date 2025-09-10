@@ -221,9 +221,7 @@ class FundResource extends BaseJsonResource
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
-                'custom_amount_min', 'custom_amount_max',
-                'allow_physical_cards', 'allow_physical_card_requests', 'allow_physical_card_linking',
-                'allow_physical_card_deactivation', 'allow_physical_cards_on_application',
+                'custom_amount_min', 'custom_amount_max', 'allow_physical_cards',
             ]) : [],
         ];
     }

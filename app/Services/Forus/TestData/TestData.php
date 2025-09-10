@@ -583,7 +583,7 @@ class TestData
         }
 
         foreach ($pageModels as $pageModel) {
-            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+            $type = (array) collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
 
             if (Arr::get($type, 'faq', false)) {
                 for ($i = rand(5, 10); $i > 0; $i--) {
@@ -596,7 +596,7 @@ class TestData
         }
 
         foreach ($pageModels as $pageModel) {
-            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+            $type = (array) collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
 
             if (Arr::get($type, 'blocks', false)) {
                 for ($i = 3; $i > 0; $i--) {
@@ -854,7 +854,7 @@ class TestData
         while ($count-- > 0) {
             do {
                 $primaryKeyValue = random_int(111111, 999999);
-            } while (collect($out)->pluck($csvPrimaryKey)->search($primaryKeyValue) !== false);
+            } while (in_array($primaryKeyValue, Arr::pluck($out, $csvPrimaryKey)));
 
             $prevalidation = array_merge($records, [
                 'gender' => 'vrouwelijk',
@@ -1183,11 +1183,13 @@ class TestData
                 ->get();
 
             foreach ($fundConfigs as $fundConfig) {
-                $fundConfig->fund->physical_card_types()->attach($physicalCardType->id);
+                $fundConfig->fund->physical_card_types()->attach($physicalCardType->id, [
+                    'allow_physical_card_linking' => true,
+                    'allow_physical_card_deactivation' => true,
+                ]);
 
-                if ($fundConfig->allow_physical_cards_on_application) {
+                if ($fundConfig->fund_request_physical_card_enable) {
                     $fundConfig->forceFill([
-                        'fund_request_physical_card_enable' => true,
                         'fund_request_physical_card_type_id' => $physicalCardType->id,
                     ])->save();
                 }
@@ -1198,8 +1200,14 @@ class TestData
 
         foreach ($funds as $fund) {
             foreach ($fund->vouchers->filter(fn ($voucher) => $voucher->isBudgetType()) as $voucher) {
+                $type = $fund->organization->physical_card_types[0];
+                $typeSize = $type->code_blocks * $type->code_block_size - strlen($type->code_prefix);
+
                 $voucher->addPhysicalCard(
-                    (string) random_int(1111111111111111, 9999999999999999),
+                    (string) random_int(
+                        $type->code_prefix . str_repeat('1', $typeSize),
+                        $type->code_prefix . str_repeat('9', $typeSize),
+                    ),
                     $fund->organization->physical_card_types[0],
                 );
             }
@@ -1374,7 +1382,7 @@ class TestData
             if ($fund->fund_config->allow_prevalidations) {
                 $validator = $fund->organization->identity;
 
-                $records = $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
+                $records = (array) $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
                     return array_merge($list, [
                         $criterion->record_type_key => match($criterion->operator) {
                             '=' => intval($criterion->value),

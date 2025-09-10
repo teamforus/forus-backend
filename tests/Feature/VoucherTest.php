@@ -670,19 +670,6 @@ class VoucherTest extends TestCase
      */
     protected function assertAbilityAssignPhysicalCard(Voucher $voucher): void
     {
-        $type = $voucher->fund->organization->physical_card_types()->create([
-            'code_prefix' => '100',
-            'code_block_size' => 4,
-            'code_blocks' => 4,
-        ]);
-
-        $voucher->fund->physical_card_types()->attach($type->id);
-
-        $voucher->fund->fund_config()->update([
-            'allow_physical_card_linking' => true,
-            'allow_physical_card_deactivation' => true,
-        ]);
-
         $voucher->fund->fund_config()->update(['allow_physical_cards' => false]);
         $this->assignPhysicalCard($voucher, 'sponsor', false);
 
@@ -709,7 +696,7 @@ class VoucherTest extends TestCase
             ? $this->getSponsorApiUrlPhysicalCards($voucher)
             : $this->getIdentityApiUrl($voucher, '/physical-cards');
 
-        $type = $voucher->fund->physical_card_types[0];
+        $type = $this->makePhysicalCardType($voucher->fund);
         $code = $this->getPhysicalCardCode($type);
 
         $response = $this->post($url, [
@@ -771,7 +758,7 @@ class VoucherTest extends TestCase
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
             'house_addition' => $this->faker()->word,
-            'physical_card_type_id' => $voucher->fund->physical_card_types[0]->id,
+            'physical_card_type_id' => $this->makePhysicalCardType($voucher->fund)->id,
         ], $headers);
 
         $response->assertSuccessful();
@@ -781,6 +768,28 @@ class VoucherTest extends TestCase
             ->first();
 
         $this->assertNotNull($request, 'Voucher physical request creation failed');
+    }
+
+    /**
+     * @param Fund $fund
+     * @return PhysicalCardType
+     */
+    protected function makePhysicalCardType(Fund $fund): PhysicalCardType
+    {
+        $type = $fund->organization->physical_card_types()->create([
+            'code_prefix' => '100',
+            'code_block_size' => 4,
+            'code_blocks' => 4,
+        ]);
+
+        $fund->fund_physical_card_types()->create([
+            'physical_card_type_id' => $type->id,
+            'allow_physical_card_linking' => true,
+            'allow_physical_card_requests' => true,
+            'allow_physical_card_deactivation' => true,
+        ]);
+
+        return $type;
     }
 
     /**
@@ -896,7 +905,7 @@ class VoucherTest extends TestCase
             'house_addition' => $this->faker()->word,
             'postcode' => $this->faker()->postcode,
             'city' => Str::limit($this->faker()->city, 0, 15),
-            'physical_card_type_id' => $voucher->fund->physical_card_types[0]->id,
+            'physical_card_type_id' => $this->makePhysicalCardType($voucher->fund)->id,
         ], $headers);
 
         $response->assertSuccessful();

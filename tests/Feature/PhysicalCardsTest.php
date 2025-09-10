@@ -5,8 +5,10 @@ namespace Feature;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\PhysicalCard;
 use App\Models\PhysicalCardType;
 use App\Models\RecordType;
+use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -82,6 +84,7 @@ class PhysicalCardsTest extends TestCase
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization);
+        $data = $this->makePhysicalCardRequestData();
 
         $organization->forceFill([
             'allow_physical_cards' => true,
@@ -93,16 +96,17 @@ class PhysicalCardsTest extends TestCase
             ->assertJsonCount(0, 'data');
 
         // assert types created
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $this->makePhysicalCardRequestData());
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $this->makePhysicalCardRequestData());
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $this->makePhysicalCardRequestData());
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $this->makePhysicalCardRequestData());
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $this->makePhysicalCardRequestData());
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
         // assert types visible
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'enable_physical_card_types' => [$organization->physical_card_types[0]->id],
-        ]);
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+        ])->assertSuccessful();
 
         // assert types filtered by fund
         $this->apiGetPhysicalCardTypesRequest($organization, $organization->identity, ['fund_id' => $fund->id])
@@ -178,19 +182,20 @@ class PhysicalCardsTest extends TestCase
         $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
         // assert enable type in fund
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'fund_request_physical_card_enable' => true,
-            'enable_physical_card_types' => [$organization->physical_card_types[0]->id],
-        ]);
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+        ])->assertSuccessful();
 
         // assert type can't be deleted when enabled in funds
         $this->apiDeletePhysicalCardTypeRequest($organization, $organization->physical_card_types[0], $organization->identity)
             ->assertForbidden();
 
         // assert disable type in fund
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'disable_physical_card_types' => [$organization->physical_card_types[0]->id],
-        ]);
+        $this->apiDeleteFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types->where('fund_id', $fund->id)[0]->id,
+        );
 
         // assert type can be deleted when disabled in funds
         $this->apiDeletePhysicalCardTypeRequest($organization, $organization->physical_card_types[0], $organization->identity)
@@ -213,10 +218,10 @@ class PhysicalCardsTest extends TestCase
         // assert type created
         $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'fund_request_physical_card_enable' => true,
-            'enable_physical_card_types' => [$organization->physical_card_types[0]->id],
-        ]);
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+        ])->assertSuccessful();
 
         // assert types filtered by fund
         $this->apiGetPhysicalCardTypesRequest($organization, $organization->identity, ['fund_id' => $fund->id])
@@ -230,10 +235,10 @@ class PhysicalCardsTest extends TestCase
             ->assertJsonPath('data.0.id', $fund->id)
             ->assertJsonCount(1, 'data');
 
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'fund_request_physical_card_enable' => true,
-            'disable_physical_card_types' => [$organization->physical_card_types[0]->id],
-        ]);
+        $this->apiDeleteFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types->where('fund_id', $fund->id)[0]->id,
+        )->assertSuccessful();
 
         // assert types filtered by fund
         $this->apiGetPhysicalCardTypesRequest($organization, $organization->identity, ['fund_id' => $fund->id])
@@ -269,7 +274,7 @@ class PhysicalCardsTest extends TestCase
             ->assertJsonCount(0, 'data');
 
         // assert type created
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data);
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
         // assign physical cards to vouchers
         $voucher->addPhysicalCard('1001111111111111', $organization->physical_card_types[0]);
@@ -307,16 +312,16 @@ class PhysicalCardsTest extends TestCase
             'allow_physical_cards' => true,
         ])->save();
 
-        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data);
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
         $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
             'fund_request_physical_card_enable' => true,
             'fund_request_physical_card_type_id' => $organization->physical_card_types[0]->id,
         ])->assertJsonValidationErrorFor('fund_request_physical_card_type_id');
 
-        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
-            'fund_request_physical_card_enable' => true,
-            'enable_physical_card_types' => [$organization->physical_card_types[0]->id],
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
         ])->assertSuccessful();
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -383,6 +388,149 @@ class PhysicalCardsTest extends TestCase
             $identity2->fund_requests[0]->id,
             $identity2->fund_requests[0]->physical_card_requests[0]->fund_request_id,
         );
+    }
+
+    /**
+     * @return void
+     */
+    public function testCantRemovePhysicalCardTypeFromFundWhileUsedInFundApplication()
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $data = $this->makePhysicalCardRequestData();
+
+        // enable physical cards in organization and fund
+        $organization->forceFill([
+            'allow_physical_cards' => true,
+        ])->save();
+
+        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
+            'fund_request_physical_card_enable' => true,
+        ])->assertSuccessful();
+
+        // make physical card type
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+        ])->assertSuccessful();
+
+        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
+            'fund_request_physical_card_type_id' => $organization->physical_card_types[0]->id,
+        ])->assertSuccessful();
+
+        $this->apiDeleteFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types->where('fund_id', $fund->id)[0]->id,
+        )->assertForbidden();
+
+        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
+            'fund_request_physical_card_type_id' => null,
+        ])->assertSuccessful();
+
+        $this->apiDeleteFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types->where('fund_id', $fund->id)[0]->id,
+        )->assertSuccessful();
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundPhysicalCardTypeFlags()
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $data = $this->makePhysicalCardRequestData();
+
+        // enable physical cards in organization and fund
+        $organization->forceFill([
+            'allow_physical_cards' => true,
+        ])->save();
+
+        $this->apiUpdateFundRequest($organization, $fund, $organization->identity, [
+            'allow_physical_cards' => true,
+        ])->assertSuccessful();
+
+        // make physical card type
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
+
+        $this->apiMakeFundPhysicalCardTypeRequest($organization, $organization->identity, [
+            'fund_id' => $fund->id,
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'allow_physical_card_linking' => false,
+            'allow_physical_card_deactivation' => false,
+            'allow_physical_card_requests' => false,
+        ])->assertSuccessful();
+
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()), amount: 100);
+
+        // assert error when doesn't start with code prefix (100 in this case)
+        $organization->physical_card_types[0]->update(['code_prefix' => 100]);
+
+        $this->apiMakeVoucherPhysicalCardRequest($voucher, [
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'code' => '1234567890123456',
+        ])->assertJsonValidationErrorFor('code');
+
+        // assert forbidden when allow_physical_card_linking is false
+        $this->apiMakeVoucherPhysicalCardRequest($voucher, [
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'code' => '1004567890123456',
+        ])->assertForbidden();
+
+        // assert successful when allow_physical_card_linking is true
+        $this->apiUpdateFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types[0]->id,
+            [ 'allow_physical_card_linking' => true ],
+        )->assertSuccessful();
+
+        $this->apiMakeVoucherPhysicalCardRequest($voucher, [
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'code' => '1004567890123456',
+        ])->assertSuccessful();
+
+        // assert forbidden when allow_physical_card_deactivation is false
+        $this->apiDeleteVoucherPhysicalCardRequest($voucher, $voucher->physical_cards[0])
+            ->assertForbidden();
+
+        // assert successful when allow_physical_card_deactivation is true
+        $this->apiUpdateFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types[0]->id,
+            [ 'allow_physical_card_deactivation' => true ],
+        )->assertSuccessful();
+
+        $this->apiDeleteVoucherPhysicalCardRequest($voucher, $voucher->physical_cards[0])
+            ->assertSuccessful();
+
+        // assert forbidden when allow_physical_card_requests is false
+        $address = [
+            'address' => 'Test address',
+            'house' => '123',
+            'house_addition' => 'B',
+            'postcode' => '1234 AB',
+            'city' => 'Test city',
+        ];
+
+        $this->apiMakeVoucherPhysicalCardRequestRequest($voucher, [
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            ...$address,
+        ])->assertForbidden();
+
+        // assert successful when allow_physical_card_requests is true
+        $this->apiUpdateFundPhysicalCardTypeRequest(
+            $organization,
+            $organization->physical_card_types[0]->fund_physical_card_types[0]->id,
+            [ 'allow_physical_card_requests' => true ],
+        )->assertSuccessful();
+
+        $this->apiMakeVoucherPhysicalCardRequestRequest($voucher, [
+            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            ...$address,
+        ])->assertSuccessful();
     }
 
     /**
@@ -547,6 +695,118 @@ class PhysicalCardsTest extends TestCase
         return $this->getJson(
             "/api/v1/platform/organizations/$organization->id/physical-cards?" . http_build_query($data),
             $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiMakeFundPhysicalCardTypeRequest(
+        Organization $organization,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/fund-physical-card-types",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param int $physicalCardTypeId
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiUpdateFundPhysicalCardTypeRequest(
+        Organization $organization,
+        int $physicalCardTypeId,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-physical-card-types/$physicalCardTypeId",
+            $data,
+            $this->makeApiHeaders($identity ?: $organization->identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param int $physicalCardTypeId
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiDeleteFundPhysicalCardTypeRequest(
+        Organization $organization,
+        int $physicalCardTypeId,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/fund-physical-card-types/$physicalCardTypeId",
+            $data,
+            $this->makeApiHeaders($identity ?: $organization->identity),
+        );
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherPhysicalCardRequest(
+        Voucher $voucher,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/vouchers/$voucher->number/physical-cards",
+            $data,
+            $this->makeApiHeaders($identity ?: $voucher->identity),
+        );
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param PhysicalCard $physicalCard
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiDeleteVoucherPhysicalCardRequest(
+        Voucher $voucher,
+        PhysicalCard $physicalCard,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/vouchers/$voucher->number/physical-cards/$physicalCard->id",
+            [],
+            $this->makeApiHeaders($identity ?: $voucher->identity),
+        );
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherPhysicalCardRequestRequest(
+        Voucher $voucher,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/vouchers/$voucher->number/physical-card-requests",
+            $data,
+            $this->makeApiHeaders($identity ?: $voucher->identity),
         );
     }
 }
