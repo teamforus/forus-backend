@@ -4,12 +4,11 @@ namespace App\Policies;
 
 use App\Http\Responses\AuthorizationJsonResponse;
 use App\Models\Fund;
+use App\Models\FundPhysicalCardType;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
-use App\Models\PhysicalCard;
-use App\Models\PhysicalCardType;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
@@ -20,7 +19,6 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Gate;
 
 class VoucherPolicy
 {
@@ -307,19 +305,20 @@ class VoucherPolicy
     /**
      * @param Identity $identity
      * @param Voucher $voucher
-     * @param PhysicalCardType $physicalCardType
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @return bool
      */
-    public function requestPhysicalCard(Identity $identity, Voucher $voucher, PhysicalCardType $physicalCardType): bool
+    public function requestPhysicalCard(Identity $identity, Voucher $voucher, FundPhysicalCardType $fundPhysicalCardType): bool
     {
         return
             $this->show($identity, $voucher) &&
-            $voucher->findFundPhysicalCardTypeForType($physicalCardType)?->allow_physical_card_requests &&
-            Gate::allows('create', [PhysicalCard::class, $physicalCardType, $voucher]) &&
+            $voucher->fund?->fund_config?->allow_physical_cards &&
+            $fundPhysicalCardType?->allow_physical_card_requests &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
+            $voucher->isBudgetType() &&
+            $voucher->isActivated() &&
             $voucher->isInternal() &&
-            !$voucher->deactivated &&
             !$voucher->expired;
     }
 

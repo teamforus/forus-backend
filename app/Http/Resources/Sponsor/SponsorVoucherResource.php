@@ -4,9 +4,9 @@ namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\FundPhysicalCardTypeResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\PhysicalCardTypeResource;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 
@@ -47,6 +47,7 @@ class SponsorVoucherResource extends BaseJsonResource
         return [
             ...parent::load($append),
             ...EmployeeResource::load("{$prepend}employee"),
+            ...FundPhysicalCardTypeResource::load("{$prepend}fund.fund_physical_card_types"),
         ];
     }
 
@@ -103,7 +104,7 @@ class SponsorVoucherResource extends BaseJsonResource
                 'implementation' => $voucher->fund->fund_config->implementation?->only([
                     'id', 'name',
                 ]),
-                'physical_card_types' => PhysicalCardTypeResource::collection($voucher->fund->physical_card_types),
+                'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($voucher->fund->fund_physical_card_types),
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code', 'code_locale']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,

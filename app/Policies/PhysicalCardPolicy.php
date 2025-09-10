@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\FundPhysicalCardType;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\PhysicalCard;
-use App\Models\PhysicalCardType;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -30,12 +30,12 @@ class PhysicalCardPolicy
      *
      * @param Identity $identity
      * @param Voucher $voucher
-     * @param PhysicalCardType $physicalCardType
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @return Response|bool
      */
-    public function create(Identity $identity, PhysicalCardType $physicalCardType, Voucher $voucher): Response|bool
+    public function create(Identity $identity, FundPhysicalCardType $fundPhysicalCardType, Voucher $voucher): Response|bool
     {
-        if (($result = $this->baseCreatePolicy($physicalCardType, $voucher)) !== true) {
+        if (($result = $this->baseCreatePolicy($fundPhysicalCardType, $voucher)) !== true) {
             return $result;
         }
 
@@ -46,18 +46,18 @@ class PhysicalCardPolicy
      * Determine whether the user can create physical cards.
      *
      * @param Identity $identity
-     * @param PhysicalCardType $physicalCardType
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @param Voucher $voucher
      * @param Organization $organization
      * @return Response|bool
      */
     public function createSponsor(
         Identity $identity,
-        PhysicalCardType $physicalCardType,
+        FundPhysicalCardType $fundPhysicalCardType,
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        if (($result = $this->baseCreatePolicy($physicalCardType, $voucher)) !== true) {
+        if (($result = $this->baseCreatePolicy($fundPhysicalCardType, $voucher)) !== true) {
             return $result;
         }
 
@@ -111,11 +111,11 @@ class PhysicalCardPolicy
     }
 
     /**
-     * @param PhysicalCardType $physicalCardType
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @param Voucher $voucher
      * @return Response|bool
      */
-    protected function baseCreatePolicy(PhysicalCardType $physicalCardType, Voucher $voucher): Response|bool
+    protected function baseCreatePolicy(FundPhysicalCardType $fundPhysicalCardType, Voucher $voucher): Response|bool
     {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
             return $this->deny(__('policies.physical_cards.not_allowed'));
@@ -129,7 +129,7 @@ class PhysicalCardPolicy
             return $this->deny(__('policies.physical_cards.only_budget_vouchers'));
         }
 
-        if (!$voucher->findFundPhysicalCardTypeForType($physicalCardType)?->allow_physical_card_linking) {
+        if (!$fundPhysicalCardType->allow_physical_card_linking) {
             return $this->deny(__('policies.physical_cards.linking_not_allowed'));
         }
 

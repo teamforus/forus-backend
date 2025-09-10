@@ -32,6 +32,19 @@ class FundPhysicalCardTypesController extends Controller
         $query = FundPhysicalCardType::query()
             ->whereRelation('fund', 'organization_id', $organization->id);
 
+        if ($request->has('q')) {
+            $query->where(function ($query) use ($request) {
+                $query->whereHas('fund', function ($query) use ($request) {
+                    $query->where('name', 'like', "%{$request->validated('q')}%");
+                });
+
+                $query->orWhereHas('physical_card_type', function ($query) use ($request) {
+                    $query->where('name', 'like', "%{$request->validated('q')}%");
+                    $query->orWhere('description', 'like', "%{$request->validated('q')}%");
+                });
+            });
+        }
+
         if ($request->has('fund_id')) {
             $query->where('fund_id', $request->validated('fund_id'));
         }

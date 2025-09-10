@@ -25,15 +25,18 @@ class PhysicalCardsController extends Controller
         Organization $organization,
         Voucher $voucher
     ): SponsorPhysicalCardResource {
-        $physicalCardType = $voucher->fund->physical_card_types
-            ->where('id', $request->post('physical_card_type_id'))
-            ->firstOrFail();
+        $fundPhysicalCardType = $voucher->fund
+            ->fund_physical_card_types()
+            ->findOrFail($request->post('fund_physical_card_type_id'));
 
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
-        $this->authorize('createSponsor', [PhysicalCard::class, $physicalCardType, $voucher, $organization]);
+        $this->authorize('createSponsor', [PhysicalCard::class, $fundPhysicalCardType, $voucher, $organization]);
 
-        return new SponsorPhysicalCardResource($voucher->addPhysicalCard($request->post('code'), $physicalCardType));
+        return new SponsorPhysicalCardResource($voucher->addPhysicalCard(
+            $request->post('code'),
+            $fundPhysicalCardType->physical_card_type,
+        ));
     }
 
     /**

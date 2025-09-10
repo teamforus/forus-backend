@@ -11,6 +11,7 @@ use App\Models\RecordType;
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
+use Random\RandomException;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesProductReservations;
@@ -253,6 +254,7 @@ class PhysicalCardsTest extends TestCase
 
     /**
      * @return void
+     * @throws RandomException
      */
     public function testPhysicalCardsList()
     {
@@ -277,8 +279,8 @@ class PhysicalCardsTest extends TestCase
         $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, $data)->assertSuccessful();
 
         // assign physical cards to vouchers
-        $voucher->addPhysicalCard('1001111111111111', $organization->physical_card_types[0]);
-        $voucher2->addPhysicalCard('1009999999999999', $organization->physical_card_types[0]);
+        $voucher->addPhysicalCard(random_int(1000000000000000, 9999999999999999), $organization->physical_card_types[0]);
+        $voucher2->addPhysicalCard(random_int(1000000000000000, 9999999999999999), $organization->physical_card_types[0]);
 
         // assert physical cards created
         $this->apiGetPhysicalCardsRequest($organization, $organization->identity)
@@ -470,13 +472,13 @@ class PhysicalCardsTest extends TestCase
         $organization->physical_card_types[0]->update(['code_prefix' => 100]);
 
         $this->apiMakeVoucherPhysicalCardRequest($voucher, [
-            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'fund_physical_card_type_id' => $fund->fund_physical_card_types[0]->id,
             'code' => '1234567890123456',
         ])->assertJsonValidationErrorFor('code');
 
         // assert forbidden when allow_physical_card_linking is false
         $this->apiMakeVoucherPhysicalCardRequest($voucher, [
-            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'fund_physical_card_type_id' => $fund->fund_physical_card_types[0]->id,
             'code' => '1004567890123456',
         ])->assertForbidden();
 
@@ -488,7 +490,7 @@ class PhysicalCardsTest extends TestCase
         )->assertSuccessful();
 
         $this->apiMakeVoucherPhysicalCardRequest($voucher, [
-            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'fund_physical_card_type_id' => $fund->fund_physical_card_types[0]->id,
             'code' => '1004567890123456',
         ])->assertSuccessful();
 
@@ -516,7 +518,7 @@ class PhysicalCardsTest extends TestCase
         ];
 
         $this->apiMakeVoucherPhysicalCardRequestRequest($voucher, [
-            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'fund_physical_card_type_id' => $fund->fund_physical_card_types[0]->id,
             ...$address,
         ])->assertForbidden();
 
@@ -528,7 +530,7 @@ class PhysicalCardsTest extends TestCase
         )->assertSuccessful();
 
         $this->apiMakeVoucherPhysicalCardRequestRequest($voucher, [
-            'physical_card_type_id' => $organization->physical_card_types[0]->id,
+            'fund_physical_card_type_id' => $fund->fund_physical_card_types[0]->id,
             ...$address,
         ])->assertSuccessful();
     }

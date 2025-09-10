@@ -30,15 +30,13 @@ class StorePhysicalCardRequest extends FormRequest
     public function rules(): array
     {
         $voucher = $this->voucher ?? $this->voucher_number_or_address;
+        $fundPhysicalCardType = $voucher?->fund?->fund_physical_card_types()->find($this->post('fund_physical_card_type_id'));
+        $physicalCardType = $fundPhysicalCardType?->physical_card_type;
 
-        $physicalCardType = $voucher?->fund?->physical_card_types()
-            ->where('physical_card_types.id', $this->post('physical_card_type_id'))
-            ->first();
-
-        if (!$physicalCardType) {
+        if (!$fundPhysicalCardType || !$physicalCardType) {
             return [
                 'code' => 'required|in:',
-                'physical_card_type_id' => 'required|in:',
+                'fund_physical_card_type_id' => 'required|in:',
             ];
         }
 
@@ -51,10 +49,9 @@ class StorePhysicalCardRequest extends FormRequest
                 Rule::unique('physical_cards', 'code')
                     ->where('physical_card_type_id', $physicalCardType->id),
             ]),
-            'physical_card_type_id' => [
+            'fund_physical_card_type_id' => [
                 'required',
-                Rule::exists('physical_card_types', 'id')
-                    ->whereIn('physical_card_types.id', $voucher->fund->physical_card_types->pluck('id')->toArray()),
+                Rule::exists('fund_physical_card_types', 'id')->where('fund_id', $voucher->fund_id),
             ],
         ];
     }
