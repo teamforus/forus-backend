@@ -15,7 +15,6 @@ class ImplementationKeyMiddleware
      */
     private array $except = [
         'status',
-        'precheck.events',
     ];
 
     /**

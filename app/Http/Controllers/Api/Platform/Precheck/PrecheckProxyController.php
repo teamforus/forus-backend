@@ -62,41 +62,6 @@ class PrecheckProxyController extends Controller
         return $this->toLaravelResponse($res);
     }
 
-    /** GET /api/v1/pre-checks/sessions/{id}/events -> GET /v1/sessions/{id}/events */
-    public function events(Request $request, string $id)
-    {
-        $client = new PrecheckMicroClient();
-        $headers = BaseMicroClient::forwardHeadersFromRequest($request);
-
-        $res = $client->streamChat($id, $request->query(), $headers);
-
-        if($res->failed()) {
-            return new StreamedResponse(function () use ($res) {
-                echo "event: error\n";
-                echo 'data: ' . json_encode([
-                        'error' => $res->json('detail') ?? $res->json('error' ?? 'Upstream error'),
-                        'status' => $res->status(),
-                    ], JSON_UNESCAPED_UNICODE) . "\n\n";
-                @ob_flush(); flush();
-            }, $this->mapStatus($res->status()), [
-                'Content-Type' => 'text/event-stream',
-                'Cache-Control' => 'no-cache',
-                'Connection' => 'keep-alive',
-            ]);
-        }
-        return response()->stream(function () use ($res) {
-            $body = $res->toPsrResponse()->getBody();
-            while(!$body->eof()) {
-                echo $body->read(8192);
-                @ob_flush(); flush();
-            }
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'Connection' => 'keep-alive',
-        ]);
-    }
-
     /** POST /api/v1/pre-checks/sessions/{id}/messages -> POST /v1/sessions/{id}/messages */
     public function answer(Request $request, string $id)
     {
@@ -132,17 +97,6 @@ class PrecheckProxyController extends Controller
         $response = $isJson
             ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
             : response($payload, $status);
-        $setCookie = $res->header('Set-Cookie');
-        //TODO: fix cookie pass through
-        if ($setCookie) {
-            if (is_array($setCookie)) {
-                foreach ($setCookie as $cookieLine) {
-                    $response->headers->set('Set-Cookie', $cookieLine, false);
-                }
-            } else {
-                $response->headers->set('Set-Cookie', $setCookie, false);
-            }
-        }
 
         if(!$isJson && ($ct = $res->header('Content-Type'))) {
             $response->headers->set('Content-Type', $ct, false);
