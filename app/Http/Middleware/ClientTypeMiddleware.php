@@ -19,7 +19,6 @@ class ClientTypeMiddleware
         'emailSignInRedirect',
         'bankOauthRedirect',
         'biConnection',
-        'precheck.events',
     ];
 
     /**

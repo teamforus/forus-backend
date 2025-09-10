@@ -70,11 +70,6 @@ class BaseMicroClient
         return $this->base($extraHeaders)->asJson();
     }
 
-    public function stream(array $extraHeaders = []): PendingRequest
-    {
-        return $this->base($extraHeaders)->withOptions(['stream' => true]);
-    }
-
     public function multipart(array $extraHeaders = []): PendingRequest
     {
         return $this->base($extraHeaders)->asMultipart();
