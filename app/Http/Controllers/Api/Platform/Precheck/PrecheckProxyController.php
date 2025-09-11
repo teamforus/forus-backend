@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Precheck;
 use App\Http\Controllers\Controller;
 use App\Support\Microservices\BaseMicroClient;
 use App\Support\Microservices\PrecheckMicroClient;
+use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -29,6 +30,21 @@ class PrecheckProxyController extends Controller
             // Set Location if we have the id
             if ($id) {
                 $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
+
+                $now = time();
+                $exp = $now + 900; // 15 min
+
+                $jwtPayload = [
+                    'sub' => $id,                  // session id
+                    'org' => $headers['X-Client-Key'], // organization
+                    'iat' => $now,
+                    'exp' => $exp,
+                ];
+
+                $privateKey = file_get_contents(config('jwt.private'));
+                $token = JWT::encode($jwtPayload, $privateKey, 'RS256');
+                $payload['stream_token'] = $token;
+                $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
             }
         }
 
