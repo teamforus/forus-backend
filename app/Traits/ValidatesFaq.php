@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\Faq;
 use Illuminate\Validation\Rule;
 
 trait ValidatesFaq
@@ -14,8 +15,23 @@ trait ValidatesFaq
         return array_merge([
             'faq' => 'nullable|array',
             'faq.*' => 'required|array',
+            'faq.*.type' => [
+                'required',
+                'string',
+                Rule::in([Faq::TYPE_QUESTION, Faq::TYPE_TITLE]),
+            ],
             'faq.*.title' => 'required|string|max:200',
-            'faq.*.description' => ['required', ...$this->markdownRules(0, 500)],
+            'faq.*.subtitle' => [
+                'nullable',
+                'required_if:faq.*.type,' . Faq::TYPE_TITLE,
+                'string',
+                'max:500',
+            ],
+            'faq.*.description' => [
+                'nullable',
+                'required_if:faq.*.type,' . Faq::TYPE_QUESTION,
+                ...$this->markdownRules(0, 5000),
+            ],
         ], $allowedIds !== null ? [
             'faq.*.id' => [
                 'nullable',
