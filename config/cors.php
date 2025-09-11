@@ -33,7 +33,9 @@ return [
     /*
      * Matches the request origin. `[*]` allows all origins.
      */
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', '')),
+    'allowed_origins' => [
+        '*',
+    ],
 
     /*
      * Matches the request origin with, similar to `Request::is()`
@@ -46,7 +48,8 @@ return [
     'allowed_headers' => [
         'Content-Type', 'Access-Control-Allow-Headers', 'Authorization',
         'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type', 'Client-Version', 'Accept',
-        'Access-Token', 'Accept-Language', 'Idempotency-Key', 'Authorization',
+        'Access-Token', 'Accept-Language', 'Idempotency-Key', 'X-Request-Id',
+        'traceparent', 'tracestate', 'X-Forwarded-For',
     ],
 
     /*
