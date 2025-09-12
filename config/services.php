@@ -40,6 +40,7 @@ return [
         'timeout' => env('PRECHECK_MICRO_TIMEOUT', 15),
         'retries' => env('PRECHECK_MICRO_RETRIES', 2),
         'token' => env('PRECHECK_MICRO_BEARER'),
+        'stream_token_ttl' => env('PRECHECK_MICRO_STREAM_TOKEN_TTL', 900), // seconds
     ]
 
 ];

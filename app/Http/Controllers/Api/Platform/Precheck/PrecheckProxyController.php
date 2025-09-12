@@ -29,25 +29,24 @@ class PrecheckProxyController extends Controller
 
             // Set Location if we have the id
             if ($id) {
+                $org = $headers['X-Client-Key'] ?? $request->header('x-client-key');
+                $payload['stream_token'] = $this->mintStreamToken($id, $org);
+
+                $response->setContent(json_encode($payload, JSON_UNESCAPED_UNICODE));
+
                 $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
-
-                $now = time();
-                $exp = $now + 900; // 15 min
-
-                $jwtPayload = [
-                    'sub' => $id,                  // session id
-                    'org' => $headers['X-Client-Key'], // organization
-                    'iat' => $now,
-                    'exp' => $exp,
-                ];
-
-                $privateKey = file_get_contents(config('jwt.private'));
-                $token = JWT::encode($jwtPayload, $privateKey, 'RS256');
-                $payload['stream_token'] = $token;
-                $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
+                $response->headers->set('X-Request-Id', $res->header('x-request-id'));
             }
         }
         return $response;
+    }
+
+    /** GET /api/v1/pre-checks/sessions/{id}/stream-token -> mint stream token */
+    public function stream_token(Request $request, string $id)
+    {
+        $org = $headers['X-Client-Key'] ?? $request->header('x-client-key');
+        $payload['stream_token'] = $this->mintStreamToken($id, $org);
+        return response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
     }
 
     /** DELETE /api/v1/pre-checks/sessions/{id} -> DELETE /v1/sessions/{id} */
@@ -80,6 +79,7 @@ class PrecheckProxyController extends Controller
     /** POST /api/v1/pre-checks/sessions/{id}/messages -> POST /v1/sessions/{id}/messages */
     public function answer(Request $request, string $id)
     {
+        //todo: new jwt token
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
 
@@ -89,7 +89,9 @@ class PrecheckProxyController extends Controller
 
         $res = $client->sendAnswer($id, $request->all(), $headers);
 
-        return $this->toLaravelResponse($res);
+        $response = $this->toLaravelResponse($res);
+        $response->headers->set('X-Request-Id', $res->header('x-request-id'));
+        return $response;
     }
 
     /** GET /api/v1/pre-checks/sessions/{id}/messages -> GET /v1/sessions/{id}/messages */
@@ -103,15 +105,53 @@ class PrecheckProxyController extends Controller
 
     public function toLaravelResponse($res)
     {
-        $isJson = $this->looksLikeJson($res->header('Content-Type'));
+        $contentType = $res->header('Content-Type');
+        $isJson = $this->looksLikeJson($contentType);
         $payload = $isJson ? ($res->json() ?? []) : $res->body();
+
+        $isProblem = $contentType && str_contains(strtolower($contentType), 'application/problem+json');
 
         $status = $res->status();
         $status = $this->mapStatus($status);
 
-        $response = $isJson
-            ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
-            : response($payload, $status);
+        $shouldWrapAsProblem = $status >= 400 && !$isProblem;
+
+        if ($shouldWrapAsProblem) {
+            // Derive title/detail from upstream payload or fallbacks
+            $detail = is_array($payload)
+                ? ($payload['detail'] ?? $payload['message'] ?? null)
+                : (string) $payload;
+
+            $title = is_array($payload)
+                ? ($payload['title'] ?? null)
+                : null;
+
+            $type = is_array($payload)
+                ? ($payload['type'] ?? null)
+                : null;
+
+            $problem = [
+                'type'     => $type ?: 'about:blank',
+                'title'    => $title ?: ($this->statusText($status) ?: 'Error'),
+                'status'   => $status,
+                'instance' => request()->getPathInfo(),
+            ];
+
+            if ($detail !== null && $detail !== '') {
+                $problem['detail'] = is_string($detail) ? $detail : json_encode($detail, JSON_UNESCAPED_UNICODE);
+            }
+
+            if (is_array($payload) && isset($payload['errors'])) {
+                $problem['errors'] = $payload['errors'];
+            }
+
+            $response = response()->json($problem, $status, [], JSON_UNESCAPED_UNICODE);
+            $response->headers->set('Content-Type', 'application/problem+json');
+        } else {
+            $response = $isJson
+                ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
+                : response($payload, $status);
+        }
 
         // headers die je nooit wilt doorgeven
         $skip = [
@@ -130,14 +170,17 @@ class PrecheckProxyController extends Controller
             if (in_array($key, $skip, true)) {
                 continue;
             }
-            if($key === 'x-request-id') {
-                $response->headers->set('X-Request-Id',  implode(', ', (array) $values));
+            if ($shouldWrapAsProblem && $key === 'content-type') {
+                continue;
+            }
+            if ($key === 'x-request-id') {
+                $response->headers->set('X-Request-Id', implode(', ', (array) $values));
+                continue;
             }
             foreach ((array) $values as $value) {
-                $response->headers->set($key, implode(', ', (array) $values));
+                $response->headers->set($key, $value);
             }
         }
-
         \Log::info("headers: " . json_encode($response->headers->all()));
 
         return $response;
@@ -157,5 +200,26 @@ class PrecheckProxyController extends Controller
         return str_contains(strtolower($contentType), 'application/json')
             || str_contains(strtolower($contentType), '+json');
 
+    }
+
+    private function statusText(int $status): ?string
+    {
+        return \Symfony\Component\HttpFoundation\Response::$statusTexts[$status] ?? null;
+    }
+
+    private function mintStreamToken(string $sessionId, string $orgKey, ?int $ttl = null): string
+    {
+        $now = time();
+        $ttl ??= (int) config('services.precheck_micro.stream_token_ttl', 900);
+
+        $payload = [
+            'sub' => $sessionId,    // session id
+            'org' => $orgKey,       // organization
+            'iat' => $now,
+            'exp' => $now + $ttl,
+        ];
+
+        $privateKey = file_get_contents(config('jwt.private'));
+        return JWT::encode($payload, $privateKey, 'RS256');
     }
 }
