@@ -47,7 +47,6 @@ class PrecheckProxyController extends Controller
                 $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
             }
         }
-
         return $response;
     }
 
@@ -114,12 +113,34 @@ class PrecheckProxyController extends Controller
             ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
             : response($payload, $status);
 
-        if(!$isJson && ($ct = $res->header('Content-Type'))) {
-            $response->headers->set('Content-Type', $ct, false);
+        // headers die je nooit wilt doorgeven
+        $skip = [
+            'transfer-encoding',
+            'content-encoding',
+            'connection',
+            'keep-alive',
+            'proxy-authenticate',
+            'proxy-authorization',
+            'te',
+            'trailer',
+            'upgrade',
+        ];
+
+        foreach ($res->headers() as $key => $values) {
+            if (in_array($key, $skip, true)) {
+                continue;
+            }
+            if($key === 'x-request-id') {
+                $response->headers->set('X-Request-Id',  implode(', ', (array) $values));
+            }
+            foreach ((array) $values as $value) {
+                $response->headers->set($key, implode(', ', (array) $values));
+            }
         }
 
-        return $response;
+        \Log::info("headers: " . json_encode($response->headers->all()));
 
+        return $response;
     }
 
     private function mapStatus(int $status): int
