@@ -8,7 +8,6 @@ use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PrecheckProxyController extends Controller
 {
@@ -29,11 +28,20 @@ class PrecheckProxyController extends Controller
 
             // Set Location if we have the id
             if ($id) {
-                $org = $headers['X-Client-Key'] ?? $request->header('x-client-key');
-                $payload['stream_token'] = $this->mintStreamToken($id, $org);
+                $now = time();
+                $exp = $now + 900; // 15 min
 
-                $response->setContent(json_encode($payload, JSON_UNESCAPED_UNICODE));
+                $jwtPayload = [
+                    'sub' => $id,                  // session id
+                    'org' => $headers['X-Client-Key'], // organization
+                    'iat' => $now,
+                    'exp' => $exp,
+                ];
 
+                $privateKey = file_get_contents(config('jwt.private'));
+                $token = JWT::encode($jwtPayload, $privateKey, 'RS256');
+                $payload['stream_token'] = $token;
+                $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
                 $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
                 $response->headers->set('X-Request-Id', $res->header('x-request-id'));
             }
@@ -79,7 +87,6 @@ class PrecheckProxyController extends Controller
     /** POST /api/v1/pre-checks/sessions/{id}/messages -> POST /v1/sessions/{id}/messages */
     public function answer(Request $request, string $id)
     {
-        //todo: new jwt token
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
 
