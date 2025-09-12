@@ -13,7 +13,7 @@ class ForwardHeadersMiddleware
             'X-Locale'        => app()->getLocale(),
 
             // Observability and correlation
-            'X-Request-Id'    => $request->header('X-Request-Id'),
+            'X-Request-Id'    => $request->header('x-request-id'),
             'traceparent'     => $request->header('traceparent'),
             'tracestate'      => $request->header('tracestate'),
 
