@@ -56,7 +56,7 @@ return [
      * Sets the Access-Control-Expose-Headers response header.
      */
     'exposed_headers' => [
-        'Error-Code',
+        'Error-Code', 'X-Request-Id',
     ],
 
     /*
