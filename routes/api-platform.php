@@ -77,6 +77,7 @@ $router->group([], static function () use ($router) {
     ], static function () use ($router) {
         $router->post('sessions', 'Api\Platform\Precheck\PrecheckProxyController@sessions');
         $router->post('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@answer');
+        $router->post('sessions/{id}/token', 'Api\Platform\Precheck\PrecheckProxyController@stream_token');
         $router->delete('sessions/{id}', 'Api\Platform\Precheck\PrecheckProxyController@end');
         $router->get('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@messages');
         $router->get('sessions/{id}/advice', 'Api\Platform\Precheck\PrecheckProxyController@advice');

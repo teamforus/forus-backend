@@ -19,40 +19,26 @@ class PrecheckProxyController extends Controller
         $res = $client->createSession($request->all(), $headers);
         $response = $this->toLaravelResponse($res);
         if ($res->successful()) {
-            // Try common shapes for id
             $payload = $res->json() ?? [];
             $id = data_get($payload, 'session_id') ?? data_get($payload, 'data.session_id') ?? null;
 
-            // Prefer 201 for a created session
-            $response->setStatusCode(201);
-
-            // Set Location if we have the id
             if ($id) {
-                $now = time();
-                $exp = $now + 900; // 15 min
-
-                $jwtPayload = [
-                    'sub' => $id,                  // session id
-                    'org' => $headers['X-Client-Key'], // organization
-                    'iat' => $now,
-                    'exp' => $exp,
-                ];
-
-                $privateKey = file_get_contents(config('jwt.private'));
-                $token = JWT::encode($jwtPayload, $privateKey, 'RS256');
+                $token = $this->mintStreamToken($id, $headers['X-Client-Key'] ?? '');
                 $payload['stream_token'] = $token;
                 $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
                 $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
                 $response->headers->set('X-Request-Id', $res->header('x-request-id'));
             }
+            $response->setStatusCode(201);
         }
         return $response;
     }
 
-    /** GET /api/v1/pre-checks/sessions/{id}/stream-token -> mint stream token */
+    /** POST /api/v1/pre-checks/sessions/{id}/token -> mint stream token */
     public function stream_token(Request $request, string $id)
     {
-        $org = $headers['X-Client-Key'] ?? $request->header('x-client-key');
+        $headers = BaseMicroClient::forwardHeadersFromRequest($request);
+        $org = $request->header('x-client-key') ?? $headers['X-Client-Key'];
         $payload['stream_token'] = $this->mintStreamToken($id, $org);
         return response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
     }
