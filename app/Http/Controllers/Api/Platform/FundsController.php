@@ -176,14 +176,16 @@ class FundsController extends Controller
 
         /** @var PersonInterface $person */
         $person = Cache::remember($cacheKey, $cacheTime, function () use ($request, $fund) {
-            return PersonBsnApiManager::make($fund->organization)->driver()->getPerson($request->identity()->bsn);
+            return PersonBsnApiManager::make($fund->organization)->driver()->getPerson($request->identity()->bsn, [
+                'parents', 'children', 'partners',
+            ]);
         });
 
         if (!$person->response()->success()) {
             return new JsonResponse([]);
         }
 
-        $data = $person->toArray();
+        $data = $person->getData();
 
         $criteriaArr = $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data) {
             $value = Arr::get($data, $bsnRecordType->person_bsn_api_field);
