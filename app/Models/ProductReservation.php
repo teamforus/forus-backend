@@ -54,6 +54,7 @@ use Throwable;
  * @property string|null $note
  * @property string|null $cancellation_note
  * @property string|null $rejection_note
+ * @property string|null $invoice_number
  * @property bool $archived
  * @property Carbon|null $accepted_at
  * @property Carbon|null $canceled_at
@@ -98,6 +99,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereHouseNr($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereHouseNrAddition($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereInvoiceNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation wherePhone($value)
@@ -205,7 +207,7 @@ class ProductReservation extends BaseModel
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
         'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
-        'cancellation_note', 'rejection_note',
+        'cancellation_note', 'rejection_note', 'invoice_number',
     ];
 
     /**

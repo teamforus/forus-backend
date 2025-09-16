@@ -67,9 +67,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_user_note
  * @property bool $reservation_note
  * @property string|null $reservation_note_text
- * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
@@ -105,6 +105,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_reservation_number
  * @property bool $bank_reservation_first_name
  * @property bool $bank_reservation_last_name
+ * @property bool $bank_reservation_invoice_number
  * @property bool $bank_branch_number
  * @property bool $bank_branch_id
  * @property bool $bank_branch_name
@@ -225,6 +226,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
  * @method static EloquentBuilder<static>|Organization whereBankNote($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationFirstName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationInvoiceNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationLastName($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
@@ -341,7 +343,7 @@ class Organization extends BaseModel
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
         'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_note',
-        'reservation_note_text',
+        'reservation_note_text', 'bank_reservation_invoice_number',
     ];
 
     /**
@@ -393,6 +395,7 @@ class Organization extends BaseModel
         'bank_fund_name' => 'boolean',
         'bank_note' => 'boolean',
         'reservation_note' => 'boolean',
+        'bank_reservation_invoice_number' => 'boolean',
     ];
 
     /**

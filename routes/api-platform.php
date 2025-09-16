@@ -660,7 +660,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource(
         'organizations.product-reservations',
         "Api\Platform\Organizations\ProductReservationsController"
-    )->only('index', 'store', 'show');
+    )->only('index', 'store', 'show', 'update');
 
     // Reimbursements
     $router->group(['prefix' => 'organizations/{organization}/reimbursements/{reimbursement}'], function () use ($router) {
