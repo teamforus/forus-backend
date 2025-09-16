@@ -135,6 +135,7 @@ class ProductSubscriber
             'product' => $product,
             'provider' => $product->organization,
             'implementation' => $voucher->fund->getImplementation(),
+            'product_reservation' => $voucher->product_reservation,
         ], [
             'expiration_date' => format_date_locale($voucher->last_active_day),
         ]));
