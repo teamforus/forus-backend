@@ -23,7 +23,6 @@ trait ValidatesFaq
             'faq.*.title' => 'required|string|max:200',
             'faq.*.subtitle' => [
                 'nullable',
-                'required_if:faq.*.type,' . Faq::TYPE_TITLE,
                 'string',
                 'max:500',
             ],
