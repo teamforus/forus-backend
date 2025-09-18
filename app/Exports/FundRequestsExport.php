@@ -9,6 +9,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Searches\FundRequestSearch;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class FundRequestsExport extends BaseFieldedExport
@@ -37,7 +38,7 @@ class FundRequestsExport extends BaseFieldedExport
      * @param Employee $employee
      * @param array $fields
      */
-    public function __construct(IndexFundRequestsRequest $request, Employee $employee, protected array $fields)
+    public function __construct(IndexFundRequestsRequest|Request $request, Employee $employee, protected array $fields)
     {
         $this->data = $this->export($request, $employee);
     }
@@ -47,7 +48,7 @@ class FundRequestsExport extends BaseFieldedExport
      * @param Employee $employee
      * @return Collection
      */
-    protected function export(IndexFundRequestsRequest $request, Employee $employee): Collection
+    protected function export(IndexFundRequestsRequest|Request $request, Employee $employee): Collection
     {
         $search = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
