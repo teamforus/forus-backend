@@ -215,4 +215,17 @@ trait NavigatesFrontendDashboard
         $browser->element('@vouchersPage')->click();
         $browser->waitFor('@vouchersTitle');
     }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function goToEventLogsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupOrganization');
+        $browser->element('@asideMenuGroupOrganization')->click();
+        $browser->waitFor('@eventLogsPage');
+        $browser->element('@eventLogsPage')->click();
+    }
 }

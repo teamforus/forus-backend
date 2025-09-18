@@ -1043,6 +1043,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     ])->only('index', 'show');
 
     $router->get(
+        'organizations/{organization}/logs/export-fields',
+        "Api\Platform\Organizations\EventLogsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/logs/export',
+        "Api\Platform\Organizations\EventLogsController@export"
+    );
+
+    $router->get(
         'organizations/{organization}/logs',
         'Api\Platform\Organizations\EventLogsController@index',
     );
