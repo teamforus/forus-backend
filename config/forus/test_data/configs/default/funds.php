@@ -31,6 +31,7 @@ return [
             'allow_voucher_records' => true,
             'allow_direct_payments' => true,
             'allow_generator_direct_payments' => true,
+            'allow_fund_request_prefill' => true,
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,
@@ -49,6 +50,7 @@ return [
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,
+            'allow_fund_request_prefill' => true,
         ],
     ],
     'Nijmegen III' => [
@@ -66,6 +68,7 @@ return [
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,
+            'allow_fund_request_prefill' => true,
         ],
         'fund_criteria' => [
             [
@@ -143,6 +146,7 @@ return [
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,
+            'allow_fund_request_prefill' => true,
         ],
         'fund_amount_presets' => [
             [ 'name' => 'Preset #1', 'amount' => '10.00'],

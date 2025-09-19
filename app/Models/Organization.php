@@ -13,7 +13,6 @@ use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
-use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
@@ -1142,14 +1141,6 @@ class Organization extends BaseModel
             !empty($this->iconnect_target_binding) &&
             !empty($this->iconnect_api_oin) &&
             !empty($this->iconnect_base_url);
-    }
-
-    /**
-     * @return IConnect|null
-     */
-    public function getIConnect(): ?IConnect
-    {
-        return $this->hasIConnectApiOin() ? new IConnect($this) : null;
     }
 
     /**
