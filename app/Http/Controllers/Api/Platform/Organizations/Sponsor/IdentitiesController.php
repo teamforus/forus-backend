@@ -8,16 +8,21 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts\UpdateProfileBankAccountRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IdentitiesPersonRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityNoteRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\UpdateIdentityRequest;
+use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Arr\IdentityPersonArrResource;
+use App\Http\Resources\NoteResource;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Identity;
+use App\Models\Note;
 use App\Models\Organization;
 use App\Models\ProfileBankAccount;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -192,8 +197,8 @@ class IdentitiesController extends Controller
      * @param IdentitiesPersonRequest $request
      * @param Organization $organization
      * @param Identity $identity
-     * @return IdentityPersonArrResource
      * @throws Throwable
+     * @return IdentityPersonArrResource
      */
     public function person(
         IdentitiesPersonRequest $request,
@@ -229,5 +234,69 @@ class IdentitiesController extends Controller
         }
 
         return new IdentityPersonArrResource($person);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param BaseIndexFormRequest $request
+     * @param Organization $organization
+     * @param Identity $identity
+     * @throws AuthorizationException
+     * @return AnonymousResourceCollection
+     */
+    public function notes(
+        BaseIndexFormRequest $request,
+        Organization $organization,
+        Identity $identity
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyIdentityNoteAsSponsor', [$organization, $identity]);
+
+        return NoteResource::queryCollection($identity->notes(), $request);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StoreIdentityNoteRequest $request
+     * @param Organization $organization
+     * @param Identity $identity
+     * @throws AuthorizationException
+     * @return NoteResource
+     * @noinspection PhpUnused
+     */
+    public function storeNote(
+        StoreIdentityNoteRequest $request,
+        Organization $organization,
+        Identity $identity
+    ): NoteResource {
+        $this->authorize('storeIdentityNoteAsSponsor', [$organization, $identity]);
+
+        return NoteResource::create($identity->addNote(
+            $request->input('description'),
+            $request->employee($organization),
+        ));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param Organization $organization
+     * @param Identity $identity
+     * @param Note $note
+     * @throws AuthorizationException
+     * @return JsonResponse
+     * @noinspection PhpUnused
+     */
+    public function destroyNote(
+        Organization $organization,
+        Identity $identity,
+        Note $note,
+    ): JsonResponse {
+        $this->authorize('destroyIdentityNoteAsSponsor', [$organization, $identity, $note]);
+
+        $note->delete();
+
+        return new JsonResponse();
     }
 }
