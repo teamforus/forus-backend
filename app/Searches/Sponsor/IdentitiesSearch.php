@@ -15,14 +15,20 @@ use InvalidArgumentException;
 
 class IdentitiesSearch extends BaseSearch
 {
+    /**
+     * @var array
+     */
     public const array SORT_BY_RECORD_TYPE = [
         'given_name', 'family_name', 'client_number', 'birth_date',
         'city', 'street', 'house_number', 'house_number_addition', 'postal_code', 'municipality_name',
         'neighborhood_name',
     ];
 
+    /**
+     * @var array
+     */
     public const array SORT_BY = [
-        'id', 'email', 'bsn',  'last_activity', 'last_login', 'created_at',
+        'id', 'email', 'bsn',  'last_activity', 'last_login', 'created_at', 'type',
         ...self::SORT_BY_RECORD_TYPE,
     ];
 
@@ -51,6 +57,25 @@ class IdentitiesSearch extends BaseSearch
 
         if ($this->getFilter('q')) {
             $builder = $this->querySearchIdentity($builder, $this->getFilter('q'), $organizationId);
+        }
+
+        if ($householdId = $this->getFilter('household_id')) {
+            $builder->whereRelation('households', 'households.id', $householdId);
+        }
+
+        if ($excludeHouseholdId = $this->getFilter('exclude_household_id')) {
+            $builder->whereDoesntHaveRelation('profiles.households', 'households.id', $excludeHouseholdId);
+        }
+
+        if ($excludeRelationId = $this->getFilter('exclude_relation_id')) {
+            $builder->whereDoesntHave('profiles.profile_relations', fn (Builder $builder) => $builder->where([
+                'related_profile_id' => $excludeRelationId,
+                'organization_id' => $organizationId,
+            ]));
+        }
+
+        if ($excludeId = $this->getFilter('exclude_id')) {
+            $builder->where('id', '!=', $excludeId);
         }
 
         if ($this->hasFilter('has_bsn')) {

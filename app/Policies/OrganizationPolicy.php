@@ -158,6 +158,20 @@ class OrganizationPolicy
     /**
      * @param Identity $identity
      * @param Organization $organization
+     * @return bool
+     */
+    public function storeSponsorIdentities(
+        Identity $identity,
+        Organization $organization,
+    ): bool {
+        return
+            $organization->allow_profiles_create &&
+            $organization->identityCan($identity, Permission::MANAGE_IDENTITIES);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
      * @param Identity $sponsorIdentity
      * @return bool
      */
@@ -168,9 +182,7 @@ class OrganizationPolicy
     ): bool {
         return
             $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
-            $organization->identityCan($identity, [
-                Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
-            ], false);
+            $organization->identityCan($identity, [Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES], false);
     }
 
     /**

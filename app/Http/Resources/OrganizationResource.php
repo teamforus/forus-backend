@@ -131,8 +131,8 @@ class OrganizationResource extends BaseJsonResource
 
         $employee = $organization->employees->firstWhere('identity_address', $identity->address);
 
-        return $employee ? array_unique($employee->roles->reduce(function (array $acc, Role $role) {
-            return array_merge($acc, $role->permissions->pluck('key')->toArray());
+        return $employee ? array_unique((array) $employee->roles->reduce(function (array $acc, Role $role) {
+            return [...$acc, ...$role->permissions->pluck('key')->toArray()];
         }, [])) : [];
     }
 
@@ -151,8 +151,8 @@ class OrganizationResource extends BaseJsonResource
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled', 'allow_batch_reservations',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_profiles',
-                'allow_product_updates',
+                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_product_updates',
+                'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),

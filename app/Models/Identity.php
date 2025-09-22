@@ -14,6 +14,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -38,11 +39,15 @@ use Throwable;
  * @property string $private_key
  * @property string|null $passphrase
  * @property string $address
+ * @property int|null $creator_organization_id
+ * @property int|null $creator_employee_id
+ * @property string|null $type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property bool $auth_2fa_remember_ip
  * @property-read Collection|Auth2FAProvider[] $auth_2fa_providers_active
  * @property-read int|null $auth_2fa_providers_active_count
+ * @property-read \App\Models\Employee|null $creator_employee
  * @property-read Collection|\App\Models\IdentityEmail[] $emails
  * @property-read int|null $emails_count
  * @property-read Collection|\App\Models\IdentityEmail[] $emails_verified
@@ -55,6 +60,7 @@ use Throwable;
  * @property-read int|null $funds_count
  * @property-read string|null $bsn
  * @property-read string|null $email
+ * @property-read string|null $type_locale
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa
  * @property-read int|null $identity_2fa_count
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
@@ -94,17 +100,30 @@ use Throwable;
  * @method static Builder<static>|Identity whereAddress($value)
  * @method static Builder<static>|Identity whereAuth2faRememberIp($value)
  * @method static Builder<static>|Identity whereCreatedAt($value)
+ * @method static Builder<static>|Identity whereCreatorEmployeeId($value)
+ * @method static Builder<static>|Identity whereCreatorOrganizationId($value)
  * @method static Builder<static>|Identity whereId($value)
  * @method static Builder<static>|Identity wherePassphrase($value)
  * @method static Builder<static>|Identity wherePinCode($value)
  * @method static Builder<static>|Identity wherePrivateKey($value)
  * @method static Builder<static>|Identity wherePublicKey($value)
+ * @method static Builder<static>|Identity whereType($value)
  * @method static Builder<static>|Identity whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Identity extends Model implements Authenticatable
 {
     use Notifiable;
+
+    public const string TYPE_VOUCHER = 'voucher';
+    public const string TYPE_PROFILE = 'profile';
+    public const string TYPE_EMPLOYEE = 'employee';
+
+    public const array TYPES = [
+        self::TYPE_VOUCHER,
+        self::TYPE_PROFILE,
+        self::TYPE_EMPLOYEE,
+    ];
 
     /**
      * How much time a user has to exchange their exchange_token.
@@ -129,7 +148,8 @@ class Identity extends Model implements Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'pin_code', 'address', 'passphrase', 'private_key', 'public_key', 'auth_2fa_remember_ip',
+        'pin_code', 'address', 'passphrase', 'private_key', 'public_key', 'auth_2fa_remember_ip', 'type',
+        'creator_organization_id', 'creator_employee_id',
     ];
 
     /**
@@ -190,6 +210,15 @@ class Identity extends Model implements Authenticatable
     public function organizations(): HasMany
     {
         return $this->hasMany(Organization::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function creator_employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'creator_employee_id');
     }
 
     /**
@@ -441,15 +470,6 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param string|null $address
-     * @return Identity|BaseModel|null
-     */
-    public static function findByAddress(?string $address): Identity|Model|null
-    {
-        return self::whereAddress($address)->first();
-    }
-
-    /**
      * @param string|null $email
      * @return Identity|BaseModel|null
      */
@@ -513,6 +533,19 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function getTypeLocaleAttribute(): ?string
+    {
+        return match ($this->type) {
+            self::TYPE_EMPLOYEE => 'Employee user',
+            self::TYPE_PROFILE => 'Manually created',
+            default => 'Regular requester',
+        };
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -522,19 +555,30 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param string|null $primaryEmail
+     * @param string|null $email
      * @param array $records
+     * @param string|null $type
+     * @param int|null $organizationId
+     * @param int|null $employeeId
      * @return Identity
      */
-    public static function make(?string $primaryEmail = null, array $records = []): static
-    {
+    public static function build(
+        ?string $email = null,
+        array $records = [],
+        ?string $type = null,
+        ?int $employeeId = null,
+        ?int $organizationId = null,
+    ): static {
         $identity = static::create([
             'address' => resolve('token_generator')->address(),
             'passphrase' => resolve('token_generator')->generate(32),
+            'type' => $type,
+            'creator_employee_id' => $employeeId,
+            'creator_organization_id' => $organizationId,
         ]);
 
-        if (!empty($primaryEmail)) {
-            $identity->addEmail($primaryEmail, false, true, true);
+        if (!empty($email)) {
+            $identity->addEmail($email, false, true, true);
         }
 
         $identity->createRecordCategory('Relaties');
@@ -544,16 +588,24 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
-     * @param string|null $primaryEmail
-     * @param array $records
+     * @param string $email
+     * @param string|null $type
+     * @param int|null $organizationId
+     * @param int|null $employeeId
      * @return Identity
      */
-    public static function findOrMake(string $primaryEmail = null, array $records = []): static
-    {
-        return IdentityEmail::where([
-            'primary' => 1,
-            'email' => $primaryEmail,
-        ])->first()?->identity ?: static::make($primaryEmail, $records);
+    public static function findOrBuild(
+        string $email,
+        ?string $type = null,
+        ?int $employeeId = null,
+        ?int $organizationId = null,
+    ): static {
+        return self::findByEmail($email) ?: static::build(
+            email: $email,
+            type: $type,
+            employeeId: $employeeId,
+            organizationId: $organizationId,
+        );
     }
 
     /**

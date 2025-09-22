@@ -21,6 +21,7 @@ return [
             'allow_translations' => true,
             'allow_bi_connection' => true,
             'allow_product_updates' => true,
+            'allow_profiles_create' => true,
             'allow_2fa_restrictions' => true,
             'allow_manual_bulk_processing' => true,
             'allow_provider_extra_payments' => true,

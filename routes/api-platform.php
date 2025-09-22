@@ -881,7 +881,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/identities',
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
-    )->only('index', 'show', 'update');
+    )->only('store', 'index', 'show', 'update');
 
     $router->post(
         'organizations/{organization}/sponsor/identities/{identity}/bank-accounts',
@@ -897,6 +897,23 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
         'Api\Platform\Organizations\Sponsor\IdentitiesController@deleteBankAccount',
     );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/households',
+        'Api\Platform\Organizations\Sponsor\HouseholdsController'
+    )->only('index', 'show', 'store', 'update', 'destroy');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/households/{household}/household-profiles',
+        'Api\Platform\Organizations\Sponsor\Households\HouseholdProfilesController'
+    )->only('index', 'store', 'destroy');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/identities/{identity}/relations',
+        'Api\Platform\Organizations\Sponsor\Identities\ProfileRelationsController',
+    )
+        ->only('index', 'store', 'update', 'destroy')
+        ->parameter('relations', 'profile_relation');
 
     $router->get(
         'organizations/{organization}/sponsor/identities/{identity}/person',
