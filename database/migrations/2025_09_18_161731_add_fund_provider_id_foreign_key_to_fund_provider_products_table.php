@@ -18,7 +18,7 @@ return new class () extends Migration {
         });
 
         Schema::table('voucher_transaction_bulks', function (Blueprint $table) {
-            $table->enum('state', ['draft', 'error', 'pending', 'accepted', 'rejected'])->change();
+            $table->enum('state', ['draft', 'error', 'pending', 'accepted', 'rejected'])->default('draft')->change();
         });
     }
 
@@ -32,7 +32,7 @@ return new class () extends Migration {
         });
 
         Schema::table('voucher_transaction_bulks', function (Blueprint $table) {
-            $table->string('state')->change();
+            $table->string('state')->default('draft')->change();
         });
     }
 };
