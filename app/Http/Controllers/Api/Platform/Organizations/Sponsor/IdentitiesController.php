@@ -21,6 +21,7 @@ use App\Models\Organization;
 use App\Models\ProfileBankAccount;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -207,9 +208,9 @@ class IdentitiesController extends Controller
     ) {
         $this->authorize('viewPersonBSNData', [$organization, $identity]);
 
-        $iConnect = $organization->getIConnect();
         $bsn = $identity->bsn;
-        $person = $iConnect->getPerson($bsn, ['parents', 'children', 'partners']);
+        $bsnService = PersonBsnApiManager::make($organization)->driver();
+        $person = $bsnService->getPerson($bsn, ['parents', 'children', 'partners']);
 
         $scope = $request->input('scope');
         $scope_id = $request->input('scope_id');
@@ -219,7 +220,7 @@ class IdentitiesController extends Controller
                 abort(404, 'Relation not found.');
             }
 
-            $person = $relation->getBSN() ? $iConnect->getPerson($relation->getBSN()) : $relation;
+            $person = $relation->getBSN() ? $bsnService->getPerson($relation->getBSN()) : $relation;
         }
 
         if (!$person || $person->response() && $person->response()->error()) {
@@ -227,9 +228,9 @@ class IdentitiesController extends Controller
                 abort(404, 'iConnect error, person not found.');
             }
 
-            $errorMessage = $person ? 'iConnect, unknown error.' : 'iConnect, connection error.';
+            $errorMessage = $person ? 'Person bsn service, unknown error.' : 'Person bsn service, connection error.';
 
-            Log::channel('iconnect')->debug($errorMessage);
+            Log::channel('person_bsn_api')->debug($errorMessage);
             abort(400, $errorMessage);
         }
 

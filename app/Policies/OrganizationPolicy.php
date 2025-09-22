@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\ProfileBankAccount;
 use App\Scopes\Builders\IdentityQuery;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
@@ -236,8 +237,8 @@ class OrganizationPolicy
             return $this->deny(__('policies.identities.bsn_not_enabled'));
         }
 
-        if (!$organization->hasIConnectApiOin()) {
-            return $this->deny(__('policies.identities.iconnect_not_available'));
+        if (!PersonBsnApiManager::make($organization)->hasConnection()) {
+            return $this->deny(__('policies.identities.person_bsn_api_not_available'));
         }
 
         return $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity);
