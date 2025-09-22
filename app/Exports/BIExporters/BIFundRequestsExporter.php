@@ -3,7 +3,7 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\FundRequestsExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIFundRequestsExporter extends BaseBIExporter
@@ -16,10 +16,10 @@ class BIFundRequestsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $formRequest = new BaseFormRequest();
+        $request = new IndexFundRequestsRequest();
         $fields = FundRequestsExport::getExportFieldsRaw();
         $employee = $this->organization->findEmployee($this->organization->identity_address);
-        $data = new FundRequestsExport($formRequest, $employee, $fields);
+        $data = new FundRequestsExport($request, $employee, $fields);
 
         return $data->collection()->toArray();
     }

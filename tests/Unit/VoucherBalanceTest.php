@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Voucher;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -40,7 +40,7 @@ class VoucherBalanceTest extends TestCase
         $provider = $this->makeTestOrganization($this->makeIdentity());
         $product = $this->makeTestProduct($provider, price: $productPrice);
 
-        $request = new BaseFormRequest();
+        $request = new IndexVouchersRequest();
         $request->query->add([
             'source' => 'all',
             'type' => 'fund_voucher',
@@ -52,18 +52,18 @@ class VoucherBalanceTest extends TestCase
         // initial voucher amount
         $voucherItem = (clone $query)->first();
         $this->assertNotNull($voucherItem);
-        $this->assertEquals($voucherAmount, $voucherItem->balance);
+        $this->assertEquals($voucherAmount, $voucherItem->getAttribute('balance'));
 
         // pending reservation affects the balance
         $reservation = $voucher->reserveProduct($product, $provider->employees[0]);
         $voucherItem = (clone $query)->first();
         $this->assertNotNull($voucherItem);
-        $this->assertEquals($voucherAmount - $productPrice, $voucherItem->balance);
+        $this->assertEquals($voucherAmount - $productPrice, $voucherItem->getAttribute('balance'));
 
         // rejected reservation doesn't affect the balance
         $reservation->rejectOrCancelProvider($provider->employees[0]);
         $voucherItem = (clone $query)->first();
         $this->assertNotNull($voucherItem);
-        $this->assertEquals($voucherAmount, $voucherItem->balance);
+        $this->assertEquals($voucherAmount, $voucherItem->getAttribute('balance'));
     }
 }
