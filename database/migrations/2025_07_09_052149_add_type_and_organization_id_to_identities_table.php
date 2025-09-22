@@ -44,8 +44,11 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::table('identities', function (Blueprint $table) {
-            $table->dropColumn('organization_id');
-            $table->dropColumn('employee_id');
+            $table->dropForeign('identities_creator_organization_id_foreign');
+            $table->dropForeign('identities_creator_employee_id_foreign');
+
+            $table->dropColumn('creator_organization_id');
+            $table->dropColumn('creator_employee_id');
             $table->dropColumn('type');
         });
     }

@@ -53,6 +53,6 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('identity_relations');
+        Schema::dropIfExists('profile_relations');
     }
 };
