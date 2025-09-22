@@ -14,15 +14,22 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PersonBsnApiRecordType;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Searches\FundSearch;
+use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Throwable;
 
 class FundsController extends Controller
 {
@@ -148,5 +155,50 @@ class FundsController extends Controller
             'prevalidations',
             'prevalidation_vouchers'
         ));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @param Fund $fund
+     * @throws Throwable
+     * @return JsonResponse
+     */
+    public function getPrefills(BaseFormRequest $request, Fund $fund): JsonResponse
+    {
+        $this->authorize('viewPersonBsnApiRecords', $fund);
+
+        $bsnRecordTypes = PersonBsnApiRecordType::query()
+            ->whereIn('record_type_key', $fund->criteria->pluck('record_type_key')->toArray())
+            ->get();
+
+        $cacheKey = 'bsn_prefill_data_' . $fund->id . '_' . $request->identity()->bsn;
+        $cacheTime = Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15);
+
+        /** @var PersonInterface $person */
+        $person = Cache::remember($cacheKey, $cacheTime, function () use ($request, $fund) {
+            return PersonBsnApiManager::make($fund->organization)->driver()->getPerson($request->identity()->bsn, [
+                'parents', 'children', 'partners',
+            ]);
+        });
+
+        if (!$person->response()->success()) {
+            return new JsonResponse([]);
+        }
+
+        $data = $person->getData();
+
+        $criteriaArr = $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data) {
+            $value = Arr::get($data, $bsnRecordType->person_bsn_api_field);
+
+            return [
+                'record_type_key' => $bsnRecordType->record_type_key,
+                'value' => $bsnRecordType->parsePersonValue(
+                    is_numeric($value) || is_string($value) ? $value : '',
+                    $bsnRecordType->record_type->control_type,
+                ),
+            ];
+        })->toArray();
+
+        return new JsonResponse($criteriaArr);
     }
 }
