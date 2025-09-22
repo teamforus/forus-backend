@@ -3,12 +3,12 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\EventLog\IndexEventLogRequest;
 use App\Models\Employee;
 use App\Models\Voucher;
 use App\Searches\EmployeeEventLogSearch;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class EventLogsExport extends BaseFieldedExport
@@ -28,11 +28,11 @@ class EventLogsExport extends BaseFieldedExport
     ];
 
     /**
-     * @param Request $request
+     * @param IndexEventLogRequest $request
      * @param Employee $employee
      * @param array $fields
      */
-    public function __construct(Request $request, Employee $employee, array $fields = [])
+    public function __construct(IndexEventLogRequest $request, Employee $employee, array $fields = [])
     {
         $this->fields = $fields;
         $this->employee = $employee;
@@ -40,10 +40,10 @@ class EventLogsExport extends BaseFieldedExport
     }
 
     /**
-     * @param Request $request
+     * @param IndexEventLogRequest $request
      * @return Collection
      */
-    public function export(Request $request): Collection
+    public function export(IndexEventLogRequest $request): Collection
     {
         $search = new EmployeeEventLogSearch($this->employee, $request->only([
             'q', 'loggable', 'loggable_id',
