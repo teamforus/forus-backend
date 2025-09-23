@@ -3,9 +3,10 @@
 namespace App\Services\IConnectApiService\Objects;
 
 use App\Services\IConnectApiService\Responses\ResponseData;
+use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
 use Illuminate\Support\Arr;
 
-abstract class BasePerson
+abstract class BasePerson implements PersonInterface
 {
     /** @var array|null  */
     protected ?array $data = null;
@@ -124,6 +125,24 @@ abstract class BasePerson
             'bsn' => $this->getBSN(),
             'age' => $this->getAge(),
         ], $this->getCustomDataArray());
+    }
+
+    /**
+     * @return array
+     */
+    public function getData(): array
+    {
+        return $this->data ?? [];
+    }
+
+    /**
+     * @param string $scope
+     * @param int $scopeId
+     * @return BasePerson|null
+     */
+    public function getRelatedByIndex(string $scope, int $scopeId): ?BasePerson
+    {
+        return null;
     }
 
     /**

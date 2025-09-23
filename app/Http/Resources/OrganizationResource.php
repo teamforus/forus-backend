@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -84,7 +85,7 @@ class OrganizationResource extends BaseJsonResource
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
-        $iConnect = $baseRequest->isDashboard() ? $this->getHasIConnectApiOin($organization) : [];
+        $iConnect = $this->getPersonBsnApiConfigured($organization);
 
         return array_filter([
             ...$organization->only([
@@ -229,10 +230,12 @@ class OrganizationResource extends BaseJsonResource
      * @param Organization $organization
      * @return array
      */
-    protected function getHasIConnectApiOin(Organization $organization): array
+    protected function getPersonBsnApiConfigured(Organization $organization): array
     {
         return [
-            'has_person_bsn_api' => $organization->hasIConnectApiOin(),
+            'has_person_bsn_api' =>
+                $organization->bsn_enabled &&
+                PersonBsnApiManager::make($organization)->hasConnection(),
         ];
     }
 
