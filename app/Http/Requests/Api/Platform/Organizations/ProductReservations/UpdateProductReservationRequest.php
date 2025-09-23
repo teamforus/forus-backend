@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\ProductReservation;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Organization $organization
@@ -19,10 +20,7 @@ class UpdateProductReservationRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return
-            $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers') &&
-            $this->organization->id === $this->product_reservation->product->organization_id;
+        return Gate::allows('update', [$this->product_reservation, $this->organization]);
     }
 
     /**
