@@ -539,9 +539,9 @@ class Identity extends Model implements Authenticatable
     public function getTypeLocaleAttribute(): ?string
     {
         return match ($this->type) {
-            self::TYPE_EMPLOYEE => 'Employee user',
-            self::TYPE_PROFILE => 'Manually created',
-            default => 'Regular requester',
+            self::TYPE_EMPLOYEE => 'Medewerker',
+            self::TYPE_PROFILE => 'Handmatig',
+            default => 'Standaard',
         };
     }
 
