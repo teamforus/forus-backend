@@ -37,7 +37,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         foreach ($categories as $category) {
             $model = ProductCategory::create([
                 'id' => $category['id'],
-                'key' => $category['id'],
+                'key' => $category['key'],
                 'parent_id' => $parent?->id,
             ]);
 

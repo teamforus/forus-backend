@@ -100,7 +100,12 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $browser->visit($fund->urlWebshop('aanbod'))->refresh();
                 $browser->waitFor($this->getWebshopRowsSelector());
 
-                $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
+                $browser->waitFor('@productFilterGroupFunds');
+                $this->uncollapseFilterGroup($browser, '@productFilterGroupFunds');
+
+                $browser->waitFor('@productFilterFundItem' . $fund->id);
+                $browser->click('@productFilterFundItem' . $fund->id);
+
                 $this->assertListVisibility($browser, $product->id, true, 2);
                 $this->assertListVisibility($browser, $product2->id, true, 2);
 
@@ -248,6 +253,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function assertProductsFilterByPrice(Browser $browser, Product $product): void
     {
+        $this->uncollapseFilterGroup($browser, '@productFilterGroupPrice');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $product->organization->name);
 
         $this->assertListVisibility($browser, $product->id, true);
@@ -334,6 +340,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function assertProductsFilterByOptions(Browser $browser, Product $product): void
     {
+        $this->uncollapseFilterGroup($browser, '@productFiltersGroupReservationOptions');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $product->organization->name);
 
         $browser->waitFor('@paymentOptionQr');

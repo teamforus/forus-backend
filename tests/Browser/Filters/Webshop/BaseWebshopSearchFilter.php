@@ -75,8 +75,8 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param Browser $browser
      * @param int $totalRows
      * @param string|null $listSelector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function assertListCount(
         Browser $browser,
@@ -112,6 +112,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByOrganization(Browser $browser, Organization $provider, int $id, int $total): void
     {
+        $this->uncollapseFilterGroup($browser, '@productFiltersGroupProviders');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $provider->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
@@ -142,22 +143,40 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param ProductCategory $category
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
-     * @throws TimeOutException
+     * @throws TimeoutException
+     * @return void
      */
     protected function assertListFilterByProductCategory(Browser $browser, int $id, ProductCategory $category): void
     {
-        if ($category->parent) {
-            $this->changeSelectControl($browser, '@selectControlCategories', text: $category->parent->name);
-            $this->changeSelectControl($browser, '@selectControlSubCategories', text: $category->name);
-        } else {
-            $this->changeSelectControl($browser, '@selectControlCategories', text: $category->name);
-        }
+        $this->uncollapseFilterGroup($browser, '@productFilterGroupProductCategories');
+        $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
+
+        $baseCategory = $category->parent ?: $category;
+
+        $this->assertListCount($browser, 0, $this->getListSelector() . 'Content');
+        $browser->waitFor('@productCategoryFilterOption' . $baseCategory->id);
+        $browser->click('@productCategoryFilterOption' . $baseCategory->id);
 
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
 
-        $this->changeSelectControl($browser, '@selectControlCategories', index: 0);
-        $browser->waitUntilMissing('@selectControlSubCategories');
+        $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    protected function clearCategoryFilterItems(Browser $browser, string $selector): void
+    {
+        $browser->within($selector, function (Browser $browser) {
+            if ($browser->elements('.category-filter-item-active')) {
+                $browser->click('.category-filter-item-active');
+            }
+
+            $browser->waitUntilMissing('.category-filter-item-active');
+        });
     }
 
     /**
@@ -171,10 +190,15 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByFund(Browser $browser, Fund $fund, int $id, int $total = null): void
     {
-        $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
+        $this->uncollapseFilterGroup($browser, '@productFilterGroupFunds');
+        $browser->waitFor('@productFilterFundItem' . $fund->id);
+        $browser->click('@productFilterFundItem' . $fund->id);
         $this->assertListVisibility($browser, $id, true, $total);
+
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
-        $this->changeSelectControl($browser, '@selectControlFunds', index: 0);
+
+        $browser->waitFor('@productFilterFundItem' . $fund->id);
+        $browser->click('@productFilterFundItem' . $fund->id);
     }
 
     /**
@@ -189,10 +213,25 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByBusinessType(Browser $browser, BusinessType $businessType, int $id, int $total): void
     {
+        $this->uncollapseFilterGroup($browser, '@productFilterGroupBusinessTypes');
         $this->changeSelectControl($browser, '@selectControlBusinessTypes', text: $businessType->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
         $this->changeSelectControl($browser, '@selectControlBusinessTypes', index: 0);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @return void
+     */
+    protected function uncollapseFilterGroup(Browser $browser, string $selector): void
+    {
+        if (!str_contains($browser->element($selector)?->getAttribute('class') ?: '', 'showcase-aside-group-open')) {
+            $browser->click($selector . ' .showcase-aside-group-title-toggle');
+        }
     }
 
     /**
@@ -223,6 +262,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByDistance(Browser $browser, string $postCode, int $id): void
     {
+        $this->uncollapseFilterGroup($browser, '@productFilterGroupDistance');
         $browser->waitFor('@inputPostcode');
         $browser->typeSlowly('@inputPostcode', $postCode, 0);
 

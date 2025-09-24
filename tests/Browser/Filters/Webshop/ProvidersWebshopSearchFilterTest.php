@@ -83,7 +83,12 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
             $this->browse(function (Browser $browser) use ($fund, $provider, $provider2) {
                 $browser->visit($fund->urlWebshop('aanbieders'))->refresh();
 
-                $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
+                $browser->waitFor('@productFilterGroupFunds');
+                $this->uncollapseFilterGroup($browser, '@productFilterGroupFunds');
+
+                $browser->waitFor('@productFilterFundItem' . $fund->id);
+                $browser->click('@productFilterFundItem' . $fund->id);
+
                 $this->assertListVisibility($browser, $provider->id, true, 2);
                 $this->assertListVisibility($browser, $provider2->id, true, 2);
 
