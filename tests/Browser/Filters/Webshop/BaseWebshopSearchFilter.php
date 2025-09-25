@@ -112,7 +112,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByOrganization(Browser $browser, Organization $provider, int $id, int $total): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFiltersGroupProviders');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFiltersGroupProviders');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $provider->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
@@ -148,7 +148,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByProductCategory(Browser $browser, int $id, ProductCategory $category): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFilterGroupProductCategories');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupProductCategories');
         $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
 
         $baseCategory = $category->parent ?: $category;
@@ -184,21 +184,36 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param Fund $fund
      * @param int $id
      * @param int|null $total
+     * @param bool $listControl
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
      */
-    protected function assertListFilterByFund(Browser $browser, Fund $fund, int $id, int $total = null): void
-    {
-        $this->uncollapseFilterGroup($browser, '@productFilterGroupFunds');
-        $browser->waitFor('@productFilterFundItem' . $fund->id);
-        $browser->click('@productFilterFundItem' . $fund->id);
+    protected function assertListFilterByFund(
+        Browser $browser,
+        Fund $fund,
+        int $id,
+        int $total = null,
+        bool $listControl = false,
+    ): void {
+
+        if ($listControl) {
+            $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupFunds');
+            $browser->waitFor('@productFilterFundItem' . $fund->id);
+            $browser->click('@productFilterFundItem' . $fund->id);
+            $this->assertListVisibility($browser, $id, true, $total);
+
+            $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
+
+            $browser->waitFor('@productFilterFundItem' . $fund->id);
+            $browser->click('@productFilterFundItem' . $fund->id);
+            return;
+        }
+
+        $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
         $this->assertListVisibility($browser, $id, true, $total);
-
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
-
-        $browser->waitFor('@productFilterFundItem' . $fund->id);
-        $browser->click('@productFilterFundItem' . $fund->id);
+        $this->changeSelectControl($browser, '@selectControlFunds', index: 0);
     }
 
     /**
@@ -213,25 +228,11 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByBusinessType(Browser $browser, BusinessType $businessType, int $id, int $total): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFilterGroupBusinessTypes');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupBusinessTypes');
         $this->changeSelectControl($browser, '@selectControlBusinessTypes', text: $businessType->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
         $this->changeSelectControl($browser, '@selectControlBusinessTypes', index: 0);
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $selector
-     * @throws ElementClickInterceptedException
-     * @throws NoSuchElementException
-     * @return void
-     */
-    protected function uncollapseFilterGroup(Browser $browser, string $selector): void
-    {
-        if (!str_contains($browser->element($selector)?->getAttribute('class') ?: '', 'showcase-aside-group-open')) {
-            $browser->click($selector . ' .showcase-aside-group-title-toggle');
-        }
     }
 
     /**
@@ -262,7 +263,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertListFilterByDistance(Browser $browser, string $postCode, int $id): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFilterGroupDistance');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupDistance');
         $browser->waitFor('@inputPostcode');
         $browser->typeSlowly('@inputPostcode', $postCode, 0);
 

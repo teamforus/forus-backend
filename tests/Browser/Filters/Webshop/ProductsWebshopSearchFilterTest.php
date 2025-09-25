@@ -57,7 +57,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $this->assertListFilterByProductCategory($browser, $products[0]->id, $products[0]->product_category);
 
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByFund($browser, $fund, $products[0]->id, count($products));
+                $this->assertListFilterByFund($browser, $fund, $products[0]->id, count($products), true);
 
                 $this->fillListSearchForEmptyResults($browser);
                 $this->assertListFilterByDistance($browser, $provider->offices[0]->postcode, $products[0]->id);
@@ -101,7 +101,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $browser->waitFor($this->getWebshopRowsSelector());
 
                 $browser->waitFor('@productFilterGroupFunds');
-                $this->uncollapseFilterGroup($browser, '@productFilterGroupFunds');
+                $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupFunds');
 
                 $browser->waitFor('@productFilterFundItem' . $fund->id);
                 $browser->click('@productFilterFundItem' . $fund->id);
@@ -253,7 +253,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function assertProductsFilterByPrice(Browser $browser, Product $product): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFilterGroupPrice');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupPrice');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $product->organization->name);
 
         $this->assertListVisibility($browser, $product->id, true);
@@ -340,7 +340,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function assertProductsFilterByOptions(Browser $browser, Product $product): void
     {
-        $this->uncollapseFilterGroup($browser, '@productFiltersGroupReservationOptions');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFiltersGroupReservationOptions');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $product->organization->name);
 
         $browser->waitFor('@paymentOptionQr');
