@@ -6,6 +6,7 @@ use App\Exports\BIExporters\BIEmployeesExporter;
 use App\Exports\BIExporters\BIFundIdentitiesExporter;
 use App\Exports\BIExporters\BIFundProviderFinancesExporter;
 use App\Exports\BIExporters\BIFundProvidersExporter;
+use App\Exports\BIExporters\BIFundRequestsExporter;
 use App\Exports\BIExporters\BIFundsDetailedExporter;
 use App\Exports\BIExporters\BIFundsExporter;
 use App\Exports\BIExporters\BIReimbursementsExporter;
@@ -115,6 +116,7 @@ class BIConnectionService
             new BIFundProviderFinancesExporter($this->organization),
             new BIVoucherTransactionsExporter($this->organization),
             new BIVoucherTransactionBulksExporter($this->organization),
+            new BIFundRequestsExporter($this->organization),
         ];
     }
 }

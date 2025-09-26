@@ -3,7 +3,7 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\FundProvidersExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIFundProvidersExporter extends BaseBIExporter
@@ -16,12 +16,8 @@ class BIFundProvidersExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $formRequest = new BaseFormRequest();
-        $data = new FundProvidersExport(
-            $formRequest,
-            $this->organization,
-            FundProvidersExport::getExportFieldsRaw()
-        );
+        $request = new IndexProvidersRequest();
+        $data = new FundProvidersExport($request, $this->organization, FundProvidersExport::getExportFieldsRaw());
 
         return $data->collection()->toArray();
     }
