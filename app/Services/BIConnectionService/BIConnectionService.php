@@ -3,6 +3,7 @@
 namespace App\Services\BIConnectionService;
 
 use App\Exports\BIExporters\BIEmployeesExporter;
+use App\Exports\BIExporters\BIEventLogsExporter;
 use App\Exports\BIExporters\BIFundIdentitiesExporter;
 use App\Exports\BIExporters\BIFundProviderFinancesExporter;
 use App\Exports\BIExporters\BIFundProvidersExporter;
@@ -116,6 +117,7 @@ class BIConnectionService
             new BIFundProviderFinancesExporter($this->organization),
             new BIVoucherTransactionsExporter($this->organization),
             new BIVoucherTransactionBulksExporter($this->organization),
+            new BIEventLogsExporter($this->organization),
             new BIFundRequestsExporter($this->organization),
         ];
     }
