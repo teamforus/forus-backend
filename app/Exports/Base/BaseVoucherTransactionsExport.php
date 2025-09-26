@@ -2,9 +2,9 @@
 
 namespace App\Exports\Base;
 
+use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
@@ -12,21 +12,24 @@ abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
     protected static string $transKey = 'voucher_transactions';
 
     /**
-     * @param Request $request
+     * @param BaseIndexTransactionsRequest $request
      * @param Organization $organization
      * @param array $fields
      */
-    public function __construct(Request $request, Organization $organization, protected array $fields = [])
-    {
+    public function __construct(
+        BaseIndexTransactionsRequest $request,
+        Organization $organization,
+        protected array $fields = [],
+    ) {
         $this->data = $this->export($request, $organization);
     }
 
     /**
-     * @param Request $request
+     * @param BaseIndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Support\Collection
      */
-    abstract protected function export(Request $request, Organization $organization): Collection;
+    abstract protected function export(BaseIndexTransactionsRequest $request, Organization $organization): Collection;
 
     /**
      * @param Collection $data
