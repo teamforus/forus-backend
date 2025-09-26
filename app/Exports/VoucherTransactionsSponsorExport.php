@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseVoucherTransactionsExport;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
@@ -30,11 +30,11 @@ class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
     ];
 
     /**
-     * @param Request $request
+     * @param BaseIndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Support\Collection
      */
-    protected function export(Request $request, Organization $organization): Collection
+    protected function export(BaseIndexTransactionsRequest $request, Organization $organization): Collection
     {
         $builder = VoucherTransactionQuery::order(
             VoucherTransaction::searchSponsor($request, $organization),
