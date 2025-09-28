@@ -174,7 +174,11 @@ trait MakesTestFunds
      */
     protected function addTestCriteriaToFund(Fund $fund): void
     {
-        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria->each(function (FundCriterion $criterion) {
+            $criterion->fund_criterion_rules()->delete();
+            $criterion->fund_request_record()->delete();
+        });
+
         $fund->criteria()->forceDelete();
 
         RecordType::whereIn('key', [
@@ -352,7 +356,10 @@ trait MakesTestFunds
     {
         $fund->criteria()
             ->get()
-            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->forceDelete());
+            ->each(function (FundCriterion $criterion) {
+                $criterion->fund_criterion_rules()->delete();
+                $criterion->fund_request_record()->delete();
+            });
 
         $fund->criteria()->forceDelete();
         $fund->criteria_steps()->forceDelete();

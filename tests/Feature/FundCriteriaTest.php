@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Models\RecordType;
 use App\Models\Voucher;
@@ -578,7 +579,11 @@ class FundCriteriaTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeTestFund($organization);
 
-        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria->each(function (FundCriterion $criterion) {
+            $criterion->fund_criterion_rules()->delete();
+            $criterion->fund_request_record()->delete();
+        });
+
         $fund->criteria()->forceDelete();
         $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, 'test_date');
 

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class () extends Migration {
     /**
@@ -10,10 +12,11 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement(
-            'ALTER TABLE `fund_request_records` CHANGE `state` `state` ' .
-            "ENUM('pending', 'approved', 'declined', 'disregarded') DEFAULT 'pending';"
-        );
+        Schema::table('fund_request_records', function (Blueprint $table) {
+            $table->enum('state', ['pending', 'approved', 'declined', 'disregarded'])
+                ->default('pending')
+                ->change();
+        });
     }
 
     /**
@@ -23,9 +26,10 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        DB::statement(
-            'ALTER TABLE `fund_request_records` CHANGE `state` `state` ' .
-            "ENUM('pending', 'approved', 'declined') DEFAULT 'pending';"
-        );
+        Schema::table('fund_request_records', function (Blueprint $table) {
+            $table->enum('state', ['pending', 'approved', 'declined'])
+                ->default('pending')
+                ->change();
+        });
     }
 };

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class () extends Migration {
     /**
@@ -10,7 +12,11 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE fund_configs MODIFY COLUMN auth_2fa_policy ENUM('global', 'optional', 'required', 'restrict_features') DEFAULT 'global'");
+        Schema::table('fund_configs', function (Blueprint $table) {
+            $table->enum('auth_2fa_policy', ['global', 'optional', 'required', 'restrict_features'])
+                ->default('global')
+                ->change();
+        });
     }
 
     /**
@@ -20,7 +26,10 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-
-        DB::statement("ALTER TABLE fund_configs MODIFY COLUMN auth_2fa_policy ENUM('optional', 'required', 'restrict_features') DEFAULT 'optional'");
+        Schema::table('fund_configs', function (Blueprint $table) {
+            $table->enum('auth_2fa_policy', ['optional', 'required', 'restrict_features'])
+                ->default('optional')
+                ->change();
+        });
     }
 };

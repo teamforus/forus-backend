@@ -12,10 +12,11 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement(
-            'ALTER TABLE `announcements` CHANGE `scope` `scope` ' .
-            "ENUM('dashboards', 'sponsor', 'provider', 'validator', 'webshop') DEFAULT 'sponsor';"
-        );
+        Schema::table('announcements', function (Blueprint $table) {
+            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator', 'webshop'])
+                ->default('sponsor')
+                ->change();
+        });
 
         Schema::table('announcements', function (Blueprint $table) {
             $table->unsignedInteger('implementation_id')->nullable()->after('active');
@@ -33,10 +34,11 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        DB::statement(
-            'ALTER TABLE `announcements` CHANGE `scope` `scope` ' .
-            "ENUM('dashboards', 'sponsor', 'provider', 'validator') DEFAULT 'sponsor';"
-        );
+        Schema::table('announcements', function (Blueprint $table) {
+            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator'])
+                ->default('sponsor')
+                ->change();
+        });
 
         Schema::table('announcements', function (Blueprint $table) {
             $table->dropForeign('announcements_implementation_id_foreign');
