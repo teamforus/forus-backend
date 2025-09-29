@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
+use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
 use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Searches\ReimbursementsSearch;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class ReimbursementsSponsorExport extends BaseFieldedExport
@@ -40,21 +40,24 @@ class ReimbursementsSponsorExport extends BaseFieldedExport
     ];
 
     /**
-     * @param Request $request
+     * @param IndexReimbursementsRequest $request
      * @param Organization $organization
      * @param array $fields
      */
-    public function __construct(Request $request, Organization $organization, protected array $fields)
-    {
+    public function __construct(
+        IndexReimbursementsRequest $request,
+        Organization $organization,
+        protected array $fields,
+    ) {
         $this->data = $this->export($request, $organization);
     }
 
     /**
-     * @param Request $request
+     * @param IndexReimbursementsRequest $request
      * @param Organization $organization
      * @return Collection
      */
-    protected function export(Request $request, Organization $organization): Collection
+    protected function export(IndexReimbursementsRequest $request, Organization $organization): Collection
     {
         $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
         $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);

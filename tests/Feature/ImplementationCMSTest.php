@@ -237,7 +237,7 @@ class ImplementationCMSTest extends TestCase
         $this->assertImplementationPageSaved($response->json('data.id'), $updateBody);
 
         // Verify if reordering FAQ works
-        $updateBody['faq'] = $implementationPage->faq()->select(['id', 'title', 'description'])->get();
+        $updateBody['faq'] = $implementationPage->faq()->select(['id', 'title', 'type', 'description'])->get();
         $updateBody['faq'] = $updateBody['faq']->shuffle()->toArray();
 
         $response = $this->patchJson($implementationPageUrl, $updateBody, $this->makeApiHeaders($proxy));
@@ -369,6 +369,7 @@ class ImplementationCMSTest extends TestCase
     {
         return [
             'title' => $this->faker->text(100),
+            'type' => Faq::TYPE_QUESTION,
             'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
         ];
     }

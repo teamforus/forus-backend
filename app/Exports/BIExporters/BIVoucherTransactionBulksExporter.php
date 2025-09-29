@@ -3,7 +3,7 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\VoucherTransactionBulksExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIVoucherTransactionBulksExporter extends BaseBIExporter
@@ -16,9 +16,9 @@ class BIVoucherTransactionBulksExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $formRequest = new BaseFormRequest();
+        $request = new IndexTransactionBulksRequest();
         $fields = VoucherTransactionBulksExport::getExportFieldsRaw();
-        $data = new VoucherTransactionBulksExport($formRequest, $this->organization, $fields);
+        $data = new VoucherTransactionBulksExport($request, $this->organization, $fields);
 
         return $data->collection()->toArray();
     }

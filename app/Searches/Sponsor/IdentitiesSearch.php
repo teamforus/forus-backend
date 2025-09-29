@@ -247,6 +247,8 @@ class IdentitiesSearch extends BaseSearch
                     ]));
                 });
             });
+
+            $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
         });
     }
 }
