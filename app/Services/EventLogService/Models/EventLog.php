@@ -213,4 +213,31 @@ class EventLog extends Model
             ->employees_with_trashed->where('identity_address', $this->identity_address)
             ->isNotEmpty();
     }
+
+    /**
+     * @return string|null
+     */
+    public function getNote(): ?string
+    {
+        if ($this->loggable_type === (new Voucher())->getMorphClass()) {
+            $isTransaction = $this->event == 'transaction';
+            $initiator = Arr::get($this->data, 'voucher_transaction_initiator', 'provider');
+            $initiatorIsSponsor = $initiator == 'sponsor';
+
+            $notePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s' : '%s';
+
+            return Arr::get($this->data, sprintf($notePattern, 'note'));
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Employee $employee
+     * @return string|null
+     */
+    public function getIdentityEmail(Employee $employee): ?string
+    {
+        return $this->isSameOrganization($employee) ? $this->identity?->email : null;
+    }
 }

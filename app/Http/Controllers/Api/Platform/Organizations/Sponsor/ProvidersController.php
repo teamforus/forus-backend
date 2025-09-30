@@ -103,7 +103,7 @@ class ProvidersController extends Controller
      */
     public function export(
         IndexProvidersRequest $request,
-        Organization $organization
+        Organization $organization,
     ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
@@ -125,7 +125,7 @@ class ProvidersController extends Controller
      */
     public function finances(
         IndexProvidersRequest $request,
-        Organization $organization
+        Organization $organization,
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);

@@ -3,11 +3,11 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\VoucherExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
-use Exception;
+use Throwable;
 
 class BIVouchersExporter extends BaseBIExporter
 {
@@ -15,15 +15,15 @@ class BIVouchersExporter extends BaseBIExporter
     protected string $name = 'Tegoeden';
 
     /**
-     * @throws Exception
      * @return array
+     * @throws Throwable
      */
     public function toArray(): array
     {
-        $formRequest = new BaseFormRequest(['type' => 'all', 'source' => 'all']);
+        $request = new IndexVouchersRequest(['type' => 'all', 'source' => 'all']);
         $fields = VoucherExport::getExportFieldsRaw();
 
-        $query = Voucher::searchSponsorQuery($formRequest, $this->organization);
+        $query = Voucher::searchSponsorQuery($request, $this->organization);
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([
