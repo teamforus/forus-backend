@@ -14,24 +14,24 @@ return new class () extends Migration {
             $table->foreign('fund_id')
                 ->references('id')
                 ->on('funds')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
 
             $table->foreign('from_fund_id')
                 ->references('id')
                 ->on('funds')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
 
             $table->foreign('organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('digid_sessions', function (Blueprint $table) {
             $table->foreign('implementation_id')
                 ->references('id')
                 ->on('implementations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('fund_provider_products', function (Blueprint $table) {
@@ -52,14 +52,14 @@ return new class () extends Migration {
             $table->foreign('implementation_id')
                 ->references('id')
                 ->on('implementations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('implementations', function (Blueprint $table) {
             $table->foreign('organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('set null');
+                ->onDelete('restrict');
         });
 
         Schema::table('prevalidations', function (Blueprint $table) {
@@ -68,33 +68,33 @@ return new class () extends Migration {
             $table->foreign('fund_id')
                 ->references('id')
                 ->on('funds')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
 
             $table->foreign('organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('products', function (Blueprint $table) {
             $table->foreign('sponsor_organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('set null');
+                ->onDelete('restrict');
         });
 
         Schema::table('profile_bank_accounts', function (Blueprint $table) {
             $table->foreign('profile_id')
                 ->references('id')
                 ->on('profiles')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('record_validations', function (Blueprint $table) {
             $table->foreign('organization_id')
                 ->references('id')
                 ->on('organizations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('sessions', function (Blueprint $table) {
@@ -103,14 +103,14 @@ return new class () extends Migration {
             $table->foreign('identity_proxy_id')
                 ->references('id')
                 ->on('identity_proxies')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('voucher_transactions', function (Blueprint $table) {
             $table->foreign('fund_provider_product_id')
                 ->references('id')
                 ->on('fund_provider_products')
-                ->onDelete('set null');
+                ->onDelete('restrict');
         });
 
         // identity address
@@ -118,35 +118,35 @@ return new class () extends Migration {
             $table->foreign('identity_address')
                 ->references('address')
                 ->on('identities')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('digid_sessions', function (Blueprint $table) {
             $table->foreign('identity_address')
                 ->references('address')
                 ->on('identities')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('event_logs', function (Blueprint $table) {
             $table->foreign('identity_address')
                 ->references('address')
                 ->on('identities')
-                ->onDelete('set null');
+                ->onDelete('restrict');
         });
 
         Schema::table('physical_cards', function (Blueprint $table) {
             $table->foreign('identity_address')
                 ->references('address')
                 ->on('identities')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
 
         Schema::table('sessions', function (Blueprint $table) {
             $table->foreign('identity_address')
                 ->references('address')
                 ->on('identities')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
         });
     }
 

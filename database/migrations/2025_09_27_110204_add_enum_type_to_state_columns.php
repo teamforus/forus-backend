@@ -79,7 +79,7 @@ return new class () extends Migration {
             $table->string('state', 20)->change();
         });
 
-        Schema::table('identity_2fa_codes', function (Blueprint $table) {
+        Schema::table('prevalidations', function (Blueprint $table) {
             $table->string('state')->default('pending')->change();
         });
 
