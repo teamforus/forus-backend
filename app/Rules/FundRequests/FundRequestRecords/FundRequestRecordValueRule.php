@@ -60,5 +60,4 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
 
         return true;
     }
-
 }

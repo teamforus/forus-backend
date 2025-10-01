@@ -45,6 +45,7 @@ use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\MediaService\MediaService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Notifications\Channels\DatabaseChannel as IlluminateDatabaseChannel;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
@@ -131,6 +132,10 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', 'array');
             Config::set('queue.default', 'sync');
         }
+
+        FormRequest::macro('onlyValidated', function (array $keys, mixed $default = []) {
+            return array_intersect_key($this->validated(null, $default), array_flip($keys));
+        });
     }
 
     /**

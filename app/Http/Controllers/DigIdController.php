@@ -113,7 +113,7 @@ class DigIdController extends Controller
                 return $session->makeRedirectErrorResponse('uid_not_found');
             }
 
-            $identity = Identity::make();
+            $identity = Identity::build();
         }
 
         $proxy = Identity::makeAuthorizationShortTokenProxy();

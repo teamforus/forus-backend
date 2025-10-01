@@ -75,8 +75,8 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param Browser $browser
      * @param int $totalRows
      * @param string|null $listSelector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function assertListCount(
         Browser $browser,
