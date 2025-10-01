@@ -497,6 +497,36 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return Employee|null
+     */
+    protected function apiMakeEmployee(Organization $organization, array $data, Identity $identity): ?Employee
+    {
+        $response = $this
+            ->apiMakeEmployeeRequest($organization, $data, $identity)
+            ->assertSuccessful();
+
+        return $organization->employees()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function apiMakeEmployeeRequest(Organization $organization, array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/employees",
+            $data,
+            $this->makeApiHeaders($identity)
+        );
+    }
+
+    /**
      * @param Identity $identity
      * @param Fund $fund
      * @param array $data

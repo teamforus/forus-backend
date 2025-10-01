@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Employee;
 use App\Models\Identity;
+use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\ProfileBankAccount;
@@ -253,6 +254,69 @@ class OrganizationPolicy
         }
 
         return $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity);
+    }
+
+    /**
+     * Determine whether the user can view identity notes.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return bool
+     */
+    public function viewAnyIdentityNoteAsSponsor(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $organization->identityCan($identity, [
+                Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
+            ], false);
+    }
+
+    /**
+     * Determine whether the user can store identity note.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @return bool
+     */
+    public function storeIdentityNoteAsSponsor(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $organization->identityCan($identity, [
+                Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
+            ], false);
+    }
+
+    /**
+     * Determine whether the user can delete identity note.
+     *
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param Identity $sponsorIdentity
+     * @param Note $note
+     * @return bool
+     */
+    public function destroyIdentityNoteAsSponsor(
+        Identity $identity,
+        Organization $organization,
+        Identity $sponsorIdentity,
+        Note $note
+    ): bool {
+        return
+            $this->organizationHasAccessToSponsorIdentity($organization, $sponsorIdentity) &&
+            $note->employee?->identity_address === $identity->address &&
+            $organization->identityCan($identity, [
+                Permission::VIEW_IDENTITIES, Permission::MANAGE_IDENTITIES,
+            ], false);
     }
 
     /**
