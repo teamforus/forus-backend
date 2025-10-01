@@ -81,7 +81,7 @@ class FundRequestsExport extends BaseFieldedExport
                 $fieldLabels[$key] => $row[$key],
             ]), []);
 
-            $records = $recordKeyList->reduce(fn ($records, $key) => [
+            $records = (array) $recordKeyList->reduce(fn ($records, $key) => [
                 ...$records, $key => $request->records->firstWhere('record_type_key', $key),
             ], []);
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Traits\HasNotes;
 use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
@@ -60,6 +61,8 @@ use Throwable;
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
  * @property-read int|null $identity_2fa_active_count
  * @property-read \App\Models\IdentityEmail|null $initial_email
+ * @property-read Collection|\App\Models\Note[] $notes
+ * @property-read int|null $notes_count
  * @property-read Collection|NotificationToken[] $notification_tokens
  * @property-read int|null $notification_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Models\Notification[] $notifications
@@ -104,6 +107,7 @@ use Throwable;
  */
 class Identity extends Model implements Authenticatable
 {
+    use HasNotes;
     use Notifiable;
 
     /**
