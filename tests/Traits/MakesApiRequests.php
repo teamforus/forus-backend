@@ -471,6 +471,62 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param string|null $primaryKey
+     * @return TestResponse
+     */
+    public function apiMakePrevalidationForTestCriteriaRequest(
+        Organization $organization,
+        Fund $fund,
+        ?string $primaryKey = null,
+    ): TestResponse {
+        return $this->apiMakeStorePrevalidationRequest($organization, $fund, [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
+        ], [
+            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return Employee|null
+     */
+    protected function apiMakeEmployee(Organization $organization, array $data, Identity $identity): ?Employee
+    {
+        $response = $this
+            ->apiMakeEmployeeRequest($organization, $data, $identity)
+            ->assertSuccessful();
+
+        return $organization->employees()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function apiMakeEmployeeRequest(Organization $organization, array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/employees",
+            $data,
+            $this->makeApiHeaders($identity)
+        );
+    }
+
+    /**
      * @param Identity $identity
      * @param Fund $fund
      * @param array $data
@@ -870,32 +926,6 @@ trait MakesApiRequests
                 ...$extraData,
             ],
         ], $this->makeApiHeaders($proxy));
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param string|null $primaryKey
-     * @return TestResponse
-     */
-    public function apiMakePrevalidationForTestCriteriaRequest(
-        Organization $organization,
-        Fund $fund,
-        ?string $primaryKey = null,
-    ): TestResponse {
-        return $this->apiMakeStorePrevalidationRequest($organization, $fund, [
-            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
-            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
-            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
-            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, 'test_number', 7),
-            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
-            $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
-        ], [
-            $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
-        ]);
     }
 
     /**

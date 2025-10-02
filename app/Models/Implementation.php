@@ -199,7 +199,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation wherePreCheckDescription($value)
  * @method static Builder<static>|Implementation wherePreCheckEnabled($value)
  * @method static Builder<static>|Implementation wherePreCheckTitle($value)
- * @method static Builder<static>|Implementation whereProductsDefaultSort($value)
+ * @method static Builder<static>|Implementation whereProductsDefaultSorting($value)
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)

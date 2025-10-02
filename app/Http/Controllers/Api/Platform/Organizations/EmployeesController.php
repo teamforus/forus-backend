@@ -70,14 +70,19 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('store', [Employee::class, $organization]);
 
-        $email = $request->input('email');
-        $roles = $request->input('roles');
-        $office_id = $request->input('office_id');
+        $email = $request->post('email');
+        $roles = $request->post('roles');
+        $office_id = $request->post('office_id');
+        $employee = $request->employee($organization);
 
-        $identity = Identity::findByEmail($email) ?: Identity::make($email);
-        $employee = $organization->addEmployee($identity, $roles, $office_id);
+        $identity = Identity::findOrBuild(
+            email: $email,
+            type: Identity::TYPE_EMPLOYEE,
+            employeeId: $employee->id,
+            organizationId: $organization->id,
+        );
 
-        return EmployeeResource::create($employee);
+        return EmployeeResource::create($organization->addEmployee($identity, $roles, $office_id));
     }
 
     /**

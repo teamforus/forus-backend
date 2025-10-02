@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $type
  * @property bool $external
  * @property string $state
+ * @property int $order
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -70,7 +71,6 @@ use Illuminate\Support\Facades\Log;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property int $order
  * @property-read Collection|\App\Models\FundAmountPreset[] $amount_presets
  * @property-read int|null $amount_presets_count
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs

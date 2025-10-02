@@ -21,10 +21,9 @@ class FaqResource extends BaseJsonResource
         $faq = $this->resource;
 
         return [
-            'id' => $faq->id,
-            'description' => $faq->description,
+            ...$faq->only(['id', 'type', 'description']),
             ...$faq->translateColumns($faq->only([
-                'title', 'description_html',
+                'title', 'subtitle', 'description_html',
             ])),
         ];
     }
