@@ -4,8 +4,8 @@ namespace App\Traits;
 
 use App\Models\Identity;
 use App\Models\IdentityProxy;
-use Exception;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 /**
  * @mixin TestCase
@@ -14,16 +14,20 @@ trait DoesTesting
 {
     /**
      * @param string|null $email
-     * @param array $records
      * @param string|null $bsn
+     * @param array $records
+     * @param string|null $type
+     * @param int|null $organizationId
      * @return Identity
      */
     protected function makeIdentity(
         string $email = null,
         string $bsn = null,
         array $records = [],
+        string $type = null,
+        int $organizationId = null
     ): Identity {
-        $identity = Identity::make($email, $records);
+        $identity = Identity::build(email: $email, records: $records, type: $type, organizationId: $organizationId);
 
         if ($bsn) {
             $identity->setBsnRecord($bsn);
@@ -109,7 +113,7 @@ trait DoesTesting
     ): mixed {
         try {
             return $callable();
-        } catch (Exception) {
+        } catch (Throwable) {
             self::fail($message);
         }
     }

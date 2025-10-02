@@ -96,7 +96,7 @@ class IdentityEmailTest extends TestCase
         $identity = $this->makeIdentity();
         $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
-        // Delete as different user
+        // Delete it as a different user
         $this->deleteEmail($this->makeIdentity(), $identityEmail)->assertForbidden();
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 /**
- *
+ * App\Models\FundForm.
  *
  * @property int $id
  * @property string $name

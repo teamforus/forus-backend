@@ -268,4 +268,12 @@ return [
         'postcode' => 'POSTCODE',
         'city' => 'PLAATS',
     ],
+
+    'event_logs' => [
+        'created_at' => 'Tijd & Datum',
+        'loggable' => 'Onderwerp',
+        'event' => 'Activiteit',
+        'identity_email' => 'Door (Medewerker)',
+        'note' => 'Notitie',
+    ],
 ];

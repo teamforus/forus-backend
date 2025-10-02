@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class VoucherTransactionBulksExport extends BaseFieldedExport
@@ -25,21 +25,24 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
     protected static string $transKey = 'voucher_transaction_bulks';
 
     /**
-     * @param Request $request
+     * @param IndexTransactionBulksRequest $request
      * @param Organization $organization
      * @param array $fields
      */
-    public function __construct(Request $request, Organization $organization, protected array $fields)
-    {
+    public function __construct(
+        IndexTransactionBulksRequest $request,
+        Organization $organization,
+        protected array $fields,
+    ) {
         $this->data = $this->export($request, $organization);
     }
 
     /**
-     * @param Request $request
+     * @param IndexTransactionBulksRequest $request
      * @param Organization $organization
      * @return Collection
      */
-    protected function export(Request $request, Organization $organization): Collection
+    protected function export(IndexTransactionBulksRequest $request, Organization $organization): Collection
     {
         $query = VoucherTransactionBulkQuery::order(
             VoucherTransactionBulk::search($request, $organization),

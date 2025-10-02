@@ -14,7 +14,7 @@ use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -849,17 +849,17 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param IndexVouchersRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
      * @throws Throwable
-     * @return Builder
+     * @return Builder|Voucher
      */
     public static function searchSponsorQuery(
-        BaseFormRequest $request,
+        IndexVouchersRequest $request,
         Organization $organization,
         Fund $fund = null
-    ): Builder {
+    ): Builder|Voucher {
         $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');

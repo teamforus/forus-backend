@@ -90,8 +90,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param string $selector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function clearField(Browser $browser, string $selector): void
     {

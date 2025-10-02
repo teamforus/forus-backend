@@ -4,7 +4,9 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 
 use App\Exports\IdentityProfilesExport;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Identity;
 use App\Models\Organization;
+use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -42,6 +44,22 @@ class IndexIdentitiesRequest extends BaseFormRequest
             'last_login_from' => 'nullable|date_format:Y-m-d',
             'last_activity_to' => 'nullable|date_format:Y-m-d',
             'last_activity_from' => 'nullable|date_format:Y-m-d',
+            'household_id' => [
+                'nullable',
+                Rule::exists('households', 'id')->where('organization_id', $this->organization->id),
+            ],
+            'exclude_household_id' => [
+                'nullable',
+                Rule::exists('households', 'id')->where('organization_id', $this->organization->id),
+            ],
+            'exclude_relation_id' => [
+                'nullable',
+                Rule::exists(Identity::class, 'id')
+                    ->whereIn('identities.id', IdentityQuery::relatedToOrganization(
+                        Identity::query(),
+                        $this->organization->id,
+                    )->select('identities.id')),
+            ],
             ...$this->sortableResourceRules(),
             ...$this->exportableResourceRules(
                 Arr::pluck(IdentityProfilesExport::getExportFields($this->organization), 'key')

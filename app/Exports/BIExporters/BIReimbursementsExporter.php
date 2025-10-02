@@ -3,7 +3,7 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\ReimbursementsSponsorExport;
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIReimbursementsExporter extends BaseBIExporter
@@ -16,9 +16,9 @@ class BIReimbursementsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $formRequest = new BaseFormRequest();
+        $request = new IndexReimbursementsRequest();
         $fields = ReimbursementsSponsorExport::getExportFieldsRaw();
-        $data = new ReimbursementsSponsorExport($formRequest, $this->organization, $fields);
+        $data = new ReimbursementsSponsorExport($request, $this->organization, $fields);
 
         return $data->collection()->toArray();
     }

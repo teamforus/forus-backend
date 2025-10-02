@@ -76,7 +76,6 @@ class ProductReservationsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         });
     }
 
-
     /**
      * @param callable $callback
      * @throws Throwable
