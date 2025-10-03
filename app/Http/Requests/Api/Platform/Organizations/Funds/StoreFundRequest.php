@@ -43,7 +43,7 @@ class StoreFundRequest extends BaseFundRequest
             ...$this->faqRules([]),
             ...$this->criteriaRule(),
             ...$this->funConfigsRules(),
-            ...$this->fundFormulaProductsRule(),
+            ...$this->fundFormulaProductsRules(),
         ];
     }
 }

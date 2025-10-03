@@ -2,8 +2,10 @@
 
 namespace App\Policies;
 
+use App\Models\FundPhysicalCardType;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -14,16 +16,26 @@ class PhysicalCardPolicy
     use HandlesAuthorization;
 
     /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAny(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [Permission::VIEW_VOUCHERS, Permission::MANAGE_VOUCHERS], false);
+    }
+
+    /**
      * Determine whether the user can create physical cards.
      *
      * @param Identity $identity
      * @param Voucher $voucher
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @return Response|bool
-     * @noinspection PhpUnused
      */
-    public function create(Identity $identity, Voucher $voucher): Response|bool
+    public function create(Identity $identity, FundPhysicalCardType $fundPhysicalCardType, Voucher $voucher): Response|bool
     {
-        if (($result = $this->baseCreatePolicy($voucher)) !== true) {
+        if (($result = $this->baseCreatePolicy($fundPhysicalCardType, $voucher)) !== true) {
             return $result;
         }
 
@@ -34,23 +46,24 @@ class PhysicalCardPolicy
      * Determine whether the user can create physical cards.
      *
      * @param Identity $identity
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @param Voucher $voucher
      * @param Organization $organization
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     public function createSponsor(
         Identity $identity,
+        FundPhysicalCardType $fundPhysicalCardType,
         Voucher $voucher,
         Organization $organization
     ): Response|bool {
-        if (($result = $this->baseCreatePolicy($voucher)) !== true) {
+        if (($result = $this->baseCreatePolicy($fundPhysicalCardType, $voucher)) !== true) {
             return $result;
         }
 
         return
             $voucher->fund->organization_id == $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**
@@ -64,7 +77,13 @@ class PhysicalCardPolicy
      */
     public function delete(Identity $identity, PhysicalCard $physicalCard, Voucher $voucher): bool
     {
+        $fund_physical_card_type = $voucher->fund->fund_physical_card_types
+            ->where('fund_id', $voucher->fund_id)
+            ->where('physical_card_type_id', $physicalCard->physical_card_type_id)
+            ->first();
+
         return
+            $fund_physical_card_type?->allow_physical_card_deactivation &&
             $physicalCard->voucher_id === $voucher->id &&
             $voucher->identity_id === $identity->id;
     }
@@ -88,14 +107,15 @@ class PhysicalCardPolicy
         return
             $physicalCard->voucher_id === $voucher->id &&
             $voucher->fund->organization_id === $organization->id &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**
+     * @param FundPhysicalCardType $fundPhysicalCardType
      * @param Voucher $voucher
      * @return Response|bool
      */
-    protected function baseCreatePolicy(Voucher $voucher): Response|bool
+    protected function baseCreatePolicy(FundPhysicalCardType $fundPhysicalCardType, Voucher $voucher): Response|bool
     {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
             return $this->deny(__('policies.physical_cards.not_allowed'));
@@ -107,6 +127,10 @@ class PhysicalCardPolicy
 
         if (!$voucher->isBudgetType()) {
             return $this->deny(__('policies.physical_cards.only_budget_vouchers'));
+        }
+
+        if (!$fundPhysicalCardType->allow_physical_card_linking) {
+            return $this->deny(__('policies.physical_cards.linking_not_allowed'));
         }
 
         if (!$voucher->isPending() && !$voucher->activated) {

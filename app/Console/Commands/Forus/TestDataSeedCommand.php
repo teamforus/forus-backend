@@ -88,6 +88,6 @@ class TestDataSeedCommand extends BaseCommand
         $testData->separator();
 
         $testData->enableEmails();
-        $testData->info("\n\TestData - time: " . round(microtime(true) - $startTime, 2) . ' seconds');
+        $testData->info("\nTestData - time: " . round(microtime(true) - $startTime, 2) . ' seconds');
     }
 }

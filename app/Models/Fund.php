@@ -108,6 +108,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read int|null $fund_limit_multipliers_count
  * @property-read Collection|\App\Models\FundPeriod[] $fund_periods
  * @property-read int|null $fund_periods_count
+ * @property-read Collection|\App\Models\FundPhysicalCardType[] $fund_physical_card_types
+ * @property-read int|null $fund_physical_card_types_count
  * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
@@ -130,6 +132,8 @@ use Illuminate\Support\Facades\Log;
  * @property-read Fund|null $parent
  * @property-read Collection|\App\Models\Voucher[] $payout_vouchers
  * @property-read int|null $payout_vouchers_count
+ * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
+ * @property-read int|null $physical_card_types_count
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -298,6 +302,28 @@ class Fund extends BaseModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_products');
+    }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function physical_card_types(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PhysicalCardType::class,
+            'fund_physical_card_types',
+            'fund_id',
+            'physical_card_type_id'
+        );
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_physical_card_types(): HasMany
+    {
+        return $this->hasMany(FundPhysicalCardType::class);
     }
 
     /**
@@ -533,6 +559,7 @@ class Fund extends BaseModel
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
             'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
+            'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
         ]);
 
         $replaceValues = $this->external ? array_fill_keys([

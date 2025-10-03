@@ -21,6 +21,7 @@ trait MakesTestFundRequests
      * @param mixed $records
      * @param bool $validate
      * @param array $headers
+     * @param array $data
      * @return TestResponse
      */
     protected function makeFundRequest(
@@ -28,13 +29,14 @@ trait MakesTestFundRequests
         Fund $fund,
         mixed $records,
         bool $validate,
-        array $headers = []
+        array $headers = [],
+        array $data = [],
     ): TestResponse {
         $url = "/api/v1/platform/funds/$fund->id/requests" . ($validate ? '/validate' : '');
         $proxy = $this->makeIdentityProxy($identity);
         $identity->setBsnRecord('123456789');
 
-        return $this->postJson($url, compact('records'), $this->makeApiHeaders($proxy, $headers));
+        return $this->postJson($url, [...compact('records'), ...$data], $this->makeApiHeaders($proxy, $headers));
     }
 
     /**

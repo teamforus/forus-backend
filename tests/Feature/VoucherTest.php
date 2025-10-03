@@ -6,9 +6,11 @@ use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundPhysicalCardType;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\PhysicalCard;
+use App\Models\PhysicalCardType;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
@@ -52,7 +54,7 @@ class VoucherTest extends TestCase
      * @throws Throwable
      * @return void
      */
-    public function testVoucherCaseBudgetVouchers(): void
+    public function testVoucherCaseBudgetVouchersRegular(): void
     {
         $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchers);
     }
@@ -686,16 +688,22 @@ class VoucherTest extends TestCase
     protected function assignPhysicalCard(
         Voucher $voucher,
         string $as = 'sponsor',
-        bool $assert = true
+        bool $assert = true,
     ): void {
         $identity = $as === 'sponsor' ? $voucher->fund->organization->identity : $voucher->identity;
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($identity));
+
         $url = $as === 'sponsor'
             ? $this->getSponsorApiUrlPhysicalCards($voucher)
             : $this->getIdentityApiUrl($voucher, '/physical-cards');
 
-        $code = $this->getPhysicalCardCode();
-        $response = $this->post($url, compact('code'), $headers);
+        $type = $this->makeFundPhysicalCardType($voucher->fund);
+        $code = $this->getPhysicalCardCode($type->physical_card_type);
+
+        $response = $this->post($url, [
+            'code' => $code,
+            'fund_physical_card_type_id' => $type->id,
+        ], $headers);
 
         $exist = $voucher->physical_cards()->where('code', $code)->exists();
 
@@ -751,6 +759,7 @@ class VoucherTest extends TestCase
             'address' => $this->faker()->address,
             'postcode' => $this->faker()->postcode,
             'house_addition' => $this->faker()->word,
+            'fund_physical_card_type_id' => $this->makeFundPhysicalCardType($voucher->fund)->id,
         ], $headers);
 
         $response->assertSuccessful();
@@ -763,13 +772,38 @@ class VoucherTest extends TestCase
     }
 
     /**
-     * @throws Exception
-     * @return string
+     * @param Fund $fund
+     * @return FundPhysicalCardType
      */
-    protected function getPhysicalCardCode(): string
+    protected function makeFundPhysicalCardType(Fund $fund): FundPhysicalCardType
+    {
+        $type = $fund->organization->physical_card_types()->create([
+            'code_prefix' => '100',
+            'code_block_size' => 4,
+            'code_blocks' => 4,
+        ]);
+
+        return $fund->fund_physical_card_types()->create([
+            'physical_card_type_id' => $type->id,
+            'allow_physical_card_linking' => true,
+            'allow_physical_card_requests' => true,
+            'allow_physical_card_deactivation' => true,
+        ]);
+    }
+
+    /**
+     * @param PhysicalCardType $type
+     * @return string
+     * @throws RandomException
+     */
+    protected function getPhysicalCardCode(PhysicalCardType $type): string
     {
         do {
-            $code = '100' . random_int(111111111, 999999999);
+            $code = $type->code_prefix;
+            $code .= random_int(
+                intval(str_repeat('1', $type->code_block_size * $type->code_blocks - strlen($code))),
+                intval(str_repeat('9', $type->code_block_size * $type->code_blocks - strlen($code))),
+            );
         } while (PhysicalCard::whereCode($code)->exists());
 
         return $code;
@@ -870,6 +904,7 @@ class VoucherTest extends TestCase
             'house_addition' => $this->faker()->word,
             'postcode' => $this->faker()->postcode,
             'city' => Str::limit($this->faker()->city, 0, 15),
+            'fund_physical_card_type_id' => $this->makeFundPhysicalCardType($voucher->fund)->id,
         ], $headers);
 
         $response->assertSuccessful();

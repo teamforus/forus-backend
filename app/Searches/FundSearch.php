@@ -52,6 +52,10 @@ class FundSearch extends BaseSearch
             $builder->where('organization_id', $this->getFilter('organization_id'));
         }
 
+        if ($this->getFilter('physical_card_type_id')) {
+            $builder->whereRelation('physical_card_types', 'physical_card_types.id', $this->getFilter('physical_card_type_id'));
+        }
+
         if ($this->getFilter('fund_id')) {
             $builder->where('id', $this->getFilter('fund_id'));
         }

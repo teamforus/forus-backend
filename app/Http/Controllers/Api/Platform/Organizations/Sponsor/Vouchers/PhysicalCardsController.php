@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCards\StorePhysicalCardRequest;
-use App\Http\Resources\PhysicalCardResource;
+use App\Http\Resources\Sponsor\SponsorPhysicalCardResource;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
@@ -18,18 +18,25 @@ class PhysicalCardsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return PhysicalCardResource
+     * @return SponsorPhysicalCardResource
      */
     public function store(
         StorePhysicalCardRequest $request,
         Organization $organization,
         Voucher $voucher
-    ): PhysicalCardResource {
+    ): SponsorPhysicalCardResource {
+        $fundPhysicalCardType = $voucher->fund
+            ->fund_physical_card_types()
+            ->findOrFail($request->post('fund_physical_card_type_id'));
+
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
-        $this->authorize('createSponsor', [PhysicalCard::class, $voucher, $organization]);
+        $this->authorize('createSponsor', [PhysicalCard::class, $fundPhysicalCardType, $voucher, $organization]);
 
-        return new PhysicalCardResource($voucher->addPhysicalCard($request->input('code')));
+        return new SponsorPhysicalCardResource($voucher->addPhysicalCard(
+            $request->post('code'),
+            $fundPhysicalCardType->physical_card_type,
+        ));
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\OrganizationLogoMediaConfig;
+use App\Media\PhysicalCardTypePhotoMediaConfig;
 use App\Media\PreCheckBannerMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ReimbursementFilePreviewMediaConfig;
@@ -174,6 +175,7 @@ class AppServiceProvider extends ServiceProvider
             new ProductPhotoMediaConfig(),
             new OrganizationLogoMediaConfig(),
             new ImplementationBannerMediaConfig(),
+            new PhysicalCardTypePhotoMediaConfig(),
             new ReimbursementFilePreviewMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),

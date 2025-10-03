@@ -226,6 +226,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post('vouchers/{voucher_number_or_address}/share', "Api\Platform\VouchersController@shareVoucher");
     $router->post('vouchers/{voucher_number_or_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
+    $router->resource('physical-cards', "Api\Platform\PhysicalCardsController")
+        ->only('index');
+
     $router
         ->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
@@ -442,6 +445,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
+    $router->resource(
+        'organizations.fund-physical-card-types',
+        "Api\Platform\Organizations\FundPhysicalCardTypesController"
+    )->only('index', 'store', 'update', 'destroy');
+
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
         "Api\Platform\Organizations\Funds\IdentitiesController@export",
@@ -574,6 +582,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
         'index',
     ]);
+
+    $router->resource(
+        'organizations.physical-card-types',
+        "Api\Platform\Organizations\PhysicalCardTypesController"
+    )->only('index', 'store', 'show', 'update', 'destroy');
+
+    $router->resource(
+        'organizations.physical-cards',
+        "Api\Platform\Organizations\PhysicalCardsController"
+    )->only('index');
 
     $router->resource(
         'organizations.providers',

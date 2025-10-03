@@ -14,9 +14,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class BaseJsonResource extends JsonResource
 {
-    public const LOAD = [];
-    public const LOAD_COUNT = [];
-    public const LOAD_MORPH = [];
+    public const array LOAD = [];
+    public const array LOAD_COUNT = [];
+    public const array LOAD_MORPH = [];
 
     /**
      * @var string
