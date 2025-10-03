@@ -61,7 +61,7 @@ class IdentityController extends Controller
     public function store(IdentityStoreRequest $request): IdentityResource
     {
         // make identity and exchange_token
-        $identity = Identity::make($request->input('email'));
+        $identity = Identity::build(email: $request->input('email'));
         $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
         $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 

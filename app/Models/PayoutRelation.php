@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * 
+ * App\Models\PayoutRelation.
  *
  * @property int $id
  * @property int|null $voucher_transaction_id

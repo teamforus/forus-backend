@@ -98,9 +98,9 @@ return [
             'level' => 'debug',
         ],
 
-        'iconnect' => [
+        'person_bsn_api' => [
             'driver' => 'single',
-            'path' => storage_path('logs/iconnect.log'),
+            'path' => storage_path('logs/person_bsn_api.log'),
             'level' => 'debug',
         ],
 

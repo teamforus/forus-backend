@@ -399,6 +399,7 @@ class FundRequest extends BaseModel
      */
     public function formulaPreview(): array
     {
+        $totalAmount = 0;
         $values = $this->getTrustedAndPendingRecordValues();
 
         $products = $this->fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
@@ -409,18 +410,23 @@ class FundRequest extends BaseModel
             'total' => $formula->product->name,
         ]);
 
-        $formula = $this->fund->fund_formulas->map(fn ($formula) => [
-            'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
-            'type' => $formula->type_locale,
-            'value' => $formula->amount_locale,
-            'count' => $formula->record_type_key ? Arr::get($values, $formula->record_type_key) : 1,
-            'total' => currency_format_locale($formula->amount),
-            'amount' => currency_format($formula->amount),
-        ]);
+        $formula = $this->fund->fund_formulas->map(function ($formula) use ($values, &$totalAmount) {
+            $count = $formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1;
+            $total = (float) $formula->amount * $count;
+            $totalAmount += $total;
+
+            return [
+                'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+                'type' => $formula->type_locale,
+                'value' => $formula->amount_locale,
+                'count' => $count,
+                'total' => currency_format_locale($total),
+            ];
+        });
 
         return [
             'total_products' => $products->sum('count'),
-            'total_amount' => currency_format_locale($formula->sum('amount')),
+            'total_amount' => currency_format_locale($totalAmount),
             'products' => $products->toArray(),
             'items' => $formula,
         ];

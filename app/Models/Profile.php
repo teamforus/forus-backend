@@ -4,22 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * 
+ * App\Models\Profile.
  *
  * @property int $id
  * @property int $identity_id
  * @property int $organization_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Household[] $households
+ * @property-read int|null $households_count
  * @property-read \App\Models\Identity $identity
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProfileBankAccount[] $profile_bank_accounts
  * @property-read int|null $profile_bank_accounts_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProfileRecord[] $profile_records
  * @property-read int|null $profile_records_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProfileRelation[] $profile_relations
+ * @property-read int|null $profile_relations_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Profile newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Profile newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Profile query()
@@ -33,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Profile extends Model
 {
     protected $fillable = [
-        'identity_id', 'organization_id',
+        'identity_id', 'organization_id', 'employee_id',
     ];
 
     /**
@@ -61,6 +66,22 @@ class Profile extends Model
     public function profile_records(): HasMany
     {
         return $this->hasMany(ProfileRecord::class)->latest()->latest('id');
+    }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function households(): BelongsToMany
+    {
+        return $this->belongsToMany(Household::class, HouseholdProfile::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function profile_relations(): HasMany
+    {
+        return $this->hasMany(ProfileRelation::class);
     }
 
     /**

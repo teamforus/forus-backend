@@ -76,24 +76,30 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $note = $request->input('note');
-        $email = $request->input('email', false);
-        $amount = currency_format($request->input('amount', 0));
-        $expire_at = $request->input('expire_at', false);
+        $note = $request->post('note');
+        $email = $request->post('email', false);
+        $amount = currency_format($request->post('amount', 0));
+        $expire_at = $request->post('expire_at', false);
         $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
-        $product_id = $request->input('product_id');
-        $identity = $email ? Identity::findOrMake($email) : null;
-        $multiplier = $request->input('limit_multiplier');
-        $records = $request->input('records', []);
-        $notifyProvider = $request->input('notify_provider', false);
+        $product_id = $request->post('product_id');
+        $multiplier = $request->post('limit_multiplier');
+        $records = $request->post('records', []);
+        $notifyProvider = $request->post('notify_provider', false);
 
-        $bsn = $request->input('bsn', false);
-        $report_type = $request->input('report_type', VoucherRelation::REPORT_TYPE_USER);
+        $bsn = $request->post('bsn', false);
+        $report_type = $request->post('report_type', VoucherRelation::REPORT_TYPE_USER);
 
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $voucherFields = compact('note', 'employee_id');
         $productVouchers = [];
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
+
+        $identity = $email ? Identity::findOrBuild(
+            email: $email,
+            type: Identity::TYPE_VOUCHER,
+            employeeId: $employee_id,
+            organizationId: $organization->id,
+        ) : null;
 
         if ($product_id) {
             $mainVoucher = $fund
@@ -199,10 +205,9 @@ class VouchersController extends Controller
             $allowVoucherRecords,
         ) {
             $note = $voucher['note'] ?? null;
-            $email = $voucher['email'] ?? false;
+            $email = $voucher['email'] ?? null;
             $amount = currency_format($voucher['amount'] ?? 0);
             $records = isset($voucher['records']) && is_array($voucher['records']) ? $voucher['records'] : [];
-            $identity = $email ? Identity::findOrMake($email) : null;
             $expire_at = $voucher['expire_at'] ?? false;
             $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
@@ -213,6 +218,13 @@ class VouchersController extends Controller
             $voucherFields = compact('note', 'employee_id');
             $payment_iban = $voucher['direct_payment_iban'] ?? null;
             $payment_name = $voucher['direct_payment_name'] ?? null;
+
+            $identity = $email ? Identity::findOrBuild(
+                email: $email,
+                type: Identity::TYPE_VOUCHER,
+                employeeId: $employee->id,
+                organizationId: $organization->id,
+            ) : null;
 
             if ($product_id) {
                 $mainVoucher = $fund
@@ -335,7 +347,12 @@ class VouchersController extends Controller
         $email = $request->post('email');
 
         if ($email) {
-            $voucher->assignToIdentity(Identity::findOrMake($email));
+            $voucher->assignToIdentity(Identity::findOrBuild(
+                email: $email,
+                type: Identity::TYPE_VOUCHER,
+                employeeId: $request->employee($organization)?->id,
+                organizationId: $organization->id,
+            ));
         } elseif ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn, VoucherRelation::REPORT_TYPE_USER)->assignByBsnIfExists();
         }

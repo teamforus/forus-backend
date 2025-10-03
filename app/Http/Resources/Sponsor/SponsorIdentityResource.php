@@ -29,6 +29,7 @@ class SponsorIdentityResource extends BaseJsonResource
         'record_bsn',
         'primary_email',
         'reimbursements.voucher.fund',
+        'creator_employee.identity.primary_email',
         'profiles.profile_bank_accounts',
         'profiles.profile_records.record_type.translations',
         'profiles.profile_records.employee.identity.primary_email',
@@ -70,6 +71,15 @@ class SponsorIdentityResource extends BaseJsonResource
                 ->where('verified', true)
                 ->where('primary', false)
                 ->pluck('email'),
+            'profile' => $profile?->only([
+                'id', 'identity_id', 'organization_id',
+            ]),
+            ...((!$identity->creator_organization_id || ($identity->creator_organization_id === $this->organization->id)) ? [
+                'type' => $identity->type,
+                'type_locale' => $identity->type_locale,
+                'employee_id' => $identity->creator_employee_id,
+                'employee_email' => $identity->creator_employee?->identity?->email,
+            ] : []),
             ...$this->getVoucherStats($identity),
             ...$this->detailed ? [
                 'bsn' => $this->organization?->bsn_enabled ? $identity->bsn : null,

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * 
+ * App\Models\ProfileBankAccount.
  *
  * @property int $id
  * @property int $profile_id

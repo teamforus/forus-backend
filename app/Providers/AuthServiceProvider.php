@@ -15,6 +15,8 @@ use App\Models\FundProviderUnsubscribe;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\Household;
+use App\Models\HouseholdProfile;
 use App\Models\IdentityEmail;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
@@ -25,6 +27,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ProfileRelation;
 use App\Models\Reimbursement;
 use App\Models\ReimbursementCategory;
 use App\Models\ReservationExtraPayment;
@@ -46,6 +49,8 @@ use App\Policies\FundProviderUnsubscribePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
+use App\Policies\HouseholdIdentitiesPolicy;
+use App\Policies\HouseholdPolicy;
 use App\Policies\IdentityEmailPolicy;
 use App\Policies\ImplementationPagePolicy;
 use App\Policies\ImplementationPolicy;
@@ -59,6 +64,7 @@ use App\Policies\PhysicalCardRequestPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
+use App\Policies\ProfileRelationPolicy;
 use App\Policies\ReimbursementCategoryPolicy;
 use App\Policies\ReimbursementPolicy;
 use App\Policies\ReservationExtraPaymentPolicy;
@@ -93,6 +99,7 @@ class AuthServiceProvider extends ServiceProvider
         Voucher::class => VoucherPolicy::class,
         Employee::class => EmployeePolicy::class,
         FundForm::class => FundFormPolicy::class,
+        Household::class => HouseholdPolicy::class,
         FundRequest::class => FundRequestPolicy::class,
         Organization::class => OrganizationPolicy::class,
         FundProvider::class => FundProviderPolicy::class,
@@ -103,9 +110,11 @@ class AuthServiceProvider extends ServiceProvider
         IdentityEmail::class => IdentityEmailPolicy::class,
         Implementation::class => ImplementationPolicy::class,
         BankConnection::class => BankConnectionPolicy::class,
+        ProfileRelation::class => ProfileRelationPolicy::class,
         FundProviderChat::class => FundProviderChatPolicy::class,
         MollieConnection::class => MollieConnectionPolicy::class,
         FundRequestRecord::class => FundRequestRecordPolicy::class,
+        HouseholdProfile::class => HouseholdIdentitiesPolicy::class,
         ImplementationPage::class => ImplementationPagePolicy::class,
         VoucherTransaction::class => VoucherTransactionPolicy::class,
         ProductReservation::class => ProductReservationPolicy::class,

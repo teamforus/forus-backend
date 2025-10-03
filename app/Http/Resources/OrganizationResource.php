@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -84,7 +85,7 @@ class OrganizationResource extends BaseJsonResource
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
         $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
-        $iConnect = $baseRequest->isDashboard() ? $this->getHasIConnectApiOin($organization) : [];
+        $iConnect = $this->getPersonBsnApiConfigured($organization);
 
         return array_filter([
             ...$organization->only([
@@ -131,8 +132,8 @@ class OrganizationResource extends BaseJsonResource
 
         $employee = $organization->employees->firstWhere('identity_address', $identity->address);
 
-        return $employee ? array_unique($employee->roles->reduce(function (array $acc, Role $role) {
-            return array_merge($acc, $role->permissions->pluck('key')->toArray());
+        return $employee ? array_unique((array) $employee->roles->reduce(function (array $acc, Role $role) {
+            return [...$acc, ...$role->permissions->pluck('key')->toArray()];
         }, [])) : [];
     }
 
@@ -150,9 +151,9 @@ class OrganizationResource extends BaseJsonResource
                 'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled', 'allow_batch_reservations',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
-                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_physical_cards',
-                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_profiles',
-                'allow_product_updates',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_product_updates',
+                'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
+                'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
@@ -228,10 +229,12 @@ class OrganizationResource extends BaseJsonResource
      * @param Organization $organization
      * @return array
      */
-    protected function getHasIConnectApiOin(Organization $organization): array
+    protected function getPersonBsnApiConfigured(Organization $organization): array
     {
         return [
-            'has_person_bsn_api' => $organization->hasIConnectApiOin(),
+            'has_person_bsn_api' =>
+                $organization->bsn_enabled &&
+                PersonBsnApiManager::make($organization)->hasConnection(),
         ];
     }
 

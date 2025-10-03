@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * 
+ * App\Models\RecordTypeOptionTranslation.
  *
  * @property int $id
  * @property int $record_type_option_id

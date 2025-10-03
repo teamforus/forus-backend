@@ -200,6 +200,8 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post('funds/{fund}/apply', "Api\Platform\FundsController@apply")->name('fund.apply');
     $router->post('funds/{fund}/check', "Api\Platform\FundsController@check")->name('fund.check');
 
+    $router->get('funds/{fund}/prefills', "Api\Platform\FundsController@getPrefills");
+
     $router
         ->resource('vouchers/{voucher_number_or_address}/physical-cards', 'Api\Platform\Vouchers\PhysicalCardsController')
         ->parameter('physical-cards', 'physical_card')
@@ -899,27 +901,31 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/identities',
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
-    )->only('index', 'show', 'update');
+    )->only('store', 'index', 'show', 'update');
 
-    $router->post(
-        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts',
-        'Api\Platform\Organizations\Sponsor\IdentitiesController@storeBankAccount',
-    );
+    $router->resource(
+        'organizations/{organization}/sponsor/households',
+        'Api\Platform\Organizations\Sponsor\HouseholdsController'
+    )->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->patch(
-        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
-        'Api\Platform\Organizations\Sponsor\IdentitiesController@updateBankAccount',
-    );
+    $router->resource(
+        'organizations/{organization}/sponsor/households/{household}/household-profiles',
+        'Api\Platform\Organizations\Sponsor\Households\HouseholdProfilesController'
+    )->only('index', 'store', 'destroy');
 
-    $router->delete(
-        'organizations/{organization}/sponsor/identities/{identity}/bank-accounts/{profileBankAccount}',
-        'Api\Platform\Organizations\Sponsor\IdentitiesController@deleteBankAccount',
-    );
+    $router->group(['prefix' => 'organizations/{organization}/sponsor/identities/{identity}'], function () use ($router) {
+        $router->post('bank-accounts', 'Api\Platform\Organizations\Sponsor\IdentitiesController@storeBankAccount');
+        $router->patch('bank-accounts/{profileBankAccount}', 'Api\Platform\Organizations\Sponsor\IdentitiesController@updateBankAccount');
+        $router->delete('bank-accounts/{profileBankAccount}', 'Api\Platform\Organizations\Sponsor\IdentitiesController@deleteBankAccount');
+        $router->get('person', 'Api\Platform\Organizations\Sponsor\IdentitiesController@person');
+        $router->get('notes', "Api\Platform\Organizations\Sponsor\IdentitiesController@notes");
+        $router->post('notes', "Api\Platform\Organizations\Sponsor\IdentitiesController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\Sponsor\IdentitiesController@destroyNote");
 
-    $router->get(
-        'organizations/{organization}/sponsor/identities/{identity}/person',
-        'Api\Platform\Organizations\Sponsor\IdentitiesController@person',
-    );
+        $router->resource('relations', 'Api\Platform\Organizations\Sponsor\Identities\ProfileRelationsController')
+            ->only('index', 'store', 'update', 'destroy')
+            ->parameter('relations', 'profile_relation');
+    });
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',
@@ -1059,6 +1065,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     )->parameters([
         'reservation-extra-payments' => 'payment',
     ])->only('index', 'show');
+
+    $router->get(
+        'organizations/{organization}/logs/export-fields',
+        "Api\Platform\Organizations\EventLogsController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/logs/export',
+        "Api\Platform\Organizations\EventLogsController@export"
+    );
 
     $router->get(
         'organizations/{organization}/logs',

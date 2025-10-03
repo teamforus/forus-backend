@@ -38,8 +38,8 @@ class ProductIdToReservationRule extends BaseRule
      *
      * @param string $attribute
      * @param mixed $value
-     * @return bool
      * @throws Exception
+     * @return bool
      */
     public function passes($attribute, mixed $value): bool
     {

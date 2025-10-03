@@ -109,6 +109,11 @@ class IdentityQuery
                     $builder->whereIn('id', (array) $fundId);
                 }
             });
+
+            $builder->orWhere(function (Builder $builder) use ($organizationId) {
+                $builder->where('type', Identity::TYPE_PROFILE);
+                $builder->where('creator_organization_id', (array) $organizationId);
+            });
         });
     }
 }
