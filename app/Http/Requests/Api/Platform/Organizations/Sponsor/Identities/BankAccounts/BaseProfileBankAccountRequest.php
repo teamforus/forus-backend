@@ -28,8 +28,8 @@ class BaseProfileBankAccountRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', new IbanNameRule()],
-            'iban' => ['required', new IbanRule()],
+            'name' => ['required', 'string', new IbanNameRule()],
+            'iban' => ['required', 'string', new IbanRule()],
         ];
     }
 }

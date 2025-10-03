@@ -51,6 +51,24 @@ trait MakesTestProducts
     }
 
     /**
+     * @return ProductCategory
+     */
+    protected function makeProductCategory(): ProductCategory
+    {
+        $name = $this->faker->sentence(5);
+
+        $category = ProductCategory::create([
+            'key' => Str::slug($name),
+        ]);
+
+        $category->translateOrNew(app()->getLocale())->fill([
+            'name' => $name,
+        ])->save();
+
+        return $category;
+    }
+
+    /**
      * @param Organization $providerOrganization
      * @param float $price
      * @return Product
@@ -72,23 +90,5 @@ trait MakesTestProducts
             'price' => $price,
             'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         ]);
-    }
-
-    /**
-     * @return ProductCategory
-     */
-    protected function makeProductCategory(): ProductCategory
-    {
-        $name = $this->faker->sentence(5);
-
-        $category = ProductCategory::create([
-            'key' => Str::slug($name),
-        ]);
-
-        $category->translateOrNew(app()->getLocale())->fill([
-            'name' => $name,
-        ])->save();
-
-        return $category;
     }
 }

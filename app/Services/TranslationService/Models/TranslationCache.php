@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- *
+ * App\Services\TranslationService\Models\TranslationCache.
  *
  * @property int $id
  * @property string $translatable_type
