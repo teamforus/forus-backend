@@ -20,8 +20,8 @@ class ProvidersController extends Controller
     public function index(SearchProvidersRequest $request): AnonymousResourceCollection
     {
         return ProviderResource::queryCollection(Implementation::searchProviders($request->only([
-            'q', 'business_type_id', 'product_category_id', 'fund_id', 'postcode', 'distance',
-            'order_by', 'order_dir',
+            'q', 'business_type_id', 'product_category_id', 'product_category_ids', 'fund_id', 'fund_ids',
+            'postcode', 'distance', 'order_by', 'order_dir',
         ])), $request);
     }
 

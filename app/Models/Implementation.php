@@ -907,12 +907,22 @@ class Implementation extends BaseModel
             });
         }
 
+        if ($product_category_ids = array_get($options, 'product_category_ids')) {
+            $query->whereHas('products', function (Builder $builder) use ($product_category_ids) {
+                $builder->whereIn('id', Product::search(compact('product_category_ids'))->select('id'));
+            });
+        }
+
         if ($organization_id = array_get($options, 'organization_id')) {
             $query->where('id', $organization_id);
         }
 
         if ($fund_id = array_get($options, 'fund_id')) {
             $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
+        }
+
+        if ($fund_ids = array_get($options, 'fund_ids')) {
+            $query->whereRelation('supplied_funds', fn (Builder $b) => $b->whereIn('funds.id', $fund_ids));
         }
 
         if ($q = array_get($options, 'q')) {
