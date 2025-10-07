@@ -44,7 +44,7 @@ class SearchResource extends JsonResource
             'description_text' => $model->description_text,
             'price' => $hasPrice ? currency_format($model->price) : null,
             'price_locale' => $hasPrice ? $model->price_locale : null,
-            'media' => new MediaCompactResource($model->logo ?? $model->photo ?? null),
+            'media' => new MediaCompactResource($model->logo ?? $model->photos[0] ?? null),
             'resource' => $this->makeResource($model),
         ]);
     }

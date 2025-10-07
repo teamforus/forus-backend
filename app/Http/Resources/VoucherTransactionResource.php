@@ -19,7 +19,7 @@ class VoucherTransactionResource extends BaseJsonResource
         'provider.logo.presets',
         'voucher.fund.logo.presets',
         'product.organization',
-        'product.photo.presets',
+        'product.photos.presets',
     ];
 
     /**

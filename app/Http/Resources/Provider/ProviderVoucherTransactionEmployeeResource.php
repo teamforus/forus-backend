@@ -15,7 +15,7 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
     public const array LOAD = [
         'voucher.fund.logo',
         'provider.logo',
-        'product.photo',
+        'product.photos.sizes',
         'fund_provider_product',
     ];
 
@@ -54,7 +54,7 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
             'product' => $transaction->product ? array_merge($transaction->product->only([
                 'id', 'name', 'organization_id',
             ]), [
-                'photo' => new MediaResource($transaction->product->photo),
+                'photos' => MediaResource::collection($transaction->product->photos),
             ]) : null,
             'fund' => array_merge($transaction->voucher->fund->only([
                 'id', 'name', 'organization_id',

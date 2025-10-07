@@ -19,7 +19,7 @@ class ProductResource extends BaseJsonResource
     public const LOAD = [
         'voucher_transactions',
         'product_reservations_pending',
-        'photo.presets',
+        'photos.presets',
         'product_category.translations',
         'organization.offices.photo.presets',
         'organization.offices.schedules',
@@ -46,7 +46,7 @@ class ProductResource extends BaseJsonResource
         $product = $this->resource;
 
         return array_merge($this->baseFields($product), [
-            'photo' => new MediaResource($product->photo),
+            'photos' => MediaResource::collection($product->photos),
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
@@ -80,11 +80,15 @@ class ProductResource extends BaseJsonResource
                 'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
                 'description_html',
+                'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$product->translateColumns(
                 $this->isCollection()
                     ? $product->only(['name'])
-                    : $product->only(['name', 'description_html']),
+                    : $product->only([
+                        'name', 'description_html',
+                        'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
+                    ]),
             ),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,

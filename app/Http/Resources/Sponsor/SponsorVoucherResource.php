@@ -21,7 +21,7 @@ class SponsorVoucherResource extends BaseJsonResource
         'token_without_confirmation',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
-        'transactions.product.photo.presets',
+        'transactions.product.photos.presets',
         'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
         'fund.fund_config.implementation',
@@ -128,7 +128,7 @@ class SponsorVoucherResource extends BaseJsonResource
             'product_category' => $voucher->product->product_category,
             'expire_at' => $voucher->product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
-            'photo' => new MediaResource($voucher->product->photo),
+            'photos' => MediaResource::collection($voucher->product->photos),
             'organization' => new OrganizationBasicResource($voucher->product->organization),
         ];
     }

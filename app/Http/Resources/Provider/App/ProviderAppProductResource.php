@@ -20,7 +20,7 @@ class ProviderAppProductResource extends ProductResource
 {
     public const array LOAD = [
         'fund_provider_products.fund_provider.fund.organization',
-        'fund_provider_products.product.photo.presets',
+        'fund_provider_products.product.photos.presets',
         'fund_provider_products.product.product_category.translations',
         'fund_provider_products.product.organization.logo.presets',
         'fund_provider_products.product.organization.business_type.translations',
@@ -43,7 +43,8 @@ class ProviderAppProductResource extends ProductResource
 
         return [
             ...$data,
-            'photo' => new MediaResource($this->resource->photo),
+            'photo' => MediaResource::create($this->resource->photos[0] ?? null),
+            'photos' => MediaResource::collection($this->resource->photos),
             'organization' => new OrganizationBasicResource($this->resource->organization),
             'description_html' => $this->resource->description_html,
             'price_user' => currency_format(0),
@@ -85,7 +86,7 @@ class ProviderAppProductResource extends ProductResource
             'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
 
-            'photo' => new MediaResource($product->photo),
+            'photo' => new MediaResource($product->photos[0] ?? null),
             'sponsor' => new OrganizationBasicResource($fund->organization),
             'organization' => new OrganizationBasicResource($product->organization),
             'product_category' => new ProductCategoryResource($product->product_category),
