@@ -58,7 +58,7 @@ class VoucherResource extends BaseJsonResource
         return [
             ...parent::load($append),
             ...MediaResource::load("{$prepend}fund.logo"),
-            ...MediaResource::load("{$prepend}product.photos.sizes"),
+            ...MediaResource::load("{$prepend}product.photos"),
             ...OfficeResource::load("{$prepend}fund.provider_organizations_approved.offices"),
             ...OrganizationBasicResource::load("{$prepend}product.organization"),
             ...OrganizationBasicResource::load("{$prepend}fund.organization"),
