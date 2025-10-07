@@ -32,7 +32,7 @@ class VoucherResource extends BaseJsonResource
         'last_transaction',
         'transactions',
         'product_vouchers.fund',
-        'product_vouchers.product.photo.presets',
+        'product_vouchers.product.photos.presets',
         'product_vouchers.token_with_confirmation',
         'product_vouchers.product_reservation',
         'reimbursements_pending',
@@ -58,7 +58,7 @@ class VoucherResource extends BaseJsonResource
         return [
             ...parent::load($append),
             ...MediaResource::load("{$prepend}fund.logo"),
-            ...MediaResource::load("{$prepend}product.photo"),
+            ...MediaResource::load("{$prepend}product.photos.sizes"),
             ...OfficeResource::load("{$prepend}fund.provider_organizations_approved.offices"),
             ...OrganizationBasicResource::load("{$prepend}product.organization"),
             ...OrganizationBasicResource::load("{$prepend}fund.organization"),
@@ -226,7 +226,7 @@ class VoucherResource extends BaseJsonResource
                 'price_locale' => $voucher->product->priceLocale(),
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
-                'photo' => new MediaResource($voucher->product->photo),
+                'photos' => MediaResource::collection($voucher->product->photos),
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
             ];
         } else {

@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
  */
 class ProductSmallResource extends ProductResource
 {
-    public const array LOAD = [];
+    public const array LOAD = [
+        'photos.presets',
+    ];
 
     /**
      * Transform the resource into an array.
@@ -26,7 +28,7 @@ class ProductSmallResource extends ProductResource
 
         return [
             ...$this->baseFields($product),
-            'photo' => new MediaResource($product->photo),
+            'photo' => MediaResource::collection($product->photos),
         ];
     }
 }
