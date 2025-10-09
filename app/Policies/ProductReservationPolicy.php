@@ -370,4 +370,20 @@ class ProductReservationPolicy
             $productReservation->extra_payment->isRefundable() &&
             $productReservation->extra_payment->isMollieType();
     }
+
+    /**
+     * Determine whether the user can update the product reservation invoice number.
+     *
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function update(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
+    }
 }

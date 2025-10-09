@@ -645,6 +645,7 @@ class VoucherTransaction extends BaseModel
             $this->provider->bank_fund_name ? $this->voucher?->fund?->name : null,
             $this->provider->bank_reservation_first_name ? $this->product_reservation?->first_name : null,
             $this->provider->bank_reservation_last_name ? $this->product_reservation?->last_name : null,
+            $this->provider->bank_reservation_invoice_number ? $this->product_reservation?->invoice_number : null,
             $this->provider->bank_note ? $this->notes_provider->first()?->message : null,
         ])));
 
