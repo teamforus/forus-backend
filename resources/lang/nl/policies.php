@@ -91,6 +91,6 @@ return [
         'invalid_permissions' => 'Deze actie is niet toegestaan.',
     ],
     'employees' => [
-        'cant_delete_if_default_validator_exists' => 'You can\'t delete an default validator.',
+        'cant_delete_if_default_validator_exists' => 'De Standaard beoordelaar kan niet worden verwijderd. Neem contact op met support',
     ],
 ];
