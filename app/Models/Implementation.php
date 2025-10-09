@@ -51,6 +51,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $description
  * @property string $description_alignment
  * @property string|null $page_title_suffix
+ * @property int|null $root_product_category_id
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property int $overlay_opacity
@@ -200,6 +201,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation wherePreCheckEnabled($value)
  * @method static Builder<static>|Implementation wherePreCheckTitle($value)
  * @method static Builder<static>|Implementation whereProductsDefaultSorting($value)
+ * @method static Builder<static>|Implementation whereRootProductCategoryId($value)
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)
@@ -308,6 +310,7 @@ class Implementation extends BaseModel
         'banner_button' => 'boolean',
         'banner_collapse' => 'boolean',
         'banner_background_mobile' => 'boolean',
+        'root_product_category_id' => 'integer',
     ];
 
     /**
@@ -817,7 +820,7 @@ class Implementation extends BaseModel
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
             'implementation' => $implementation->translateColumns($implementation->only([
-                'name',
+                'name', 'root_product_category_id',
             ])),
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
