@@ -123,7 +123,8 @@ class ProviderFundsAvailableTest extends DuskTestCase
             $this->browse(function (Browser $browser) use ($implementation, $fund) {
                 $browser->visit($implementation->urlWebshop('providers'));
                 // wait for fund loaded as a link depends on it
-                $browser->waitFor('@selectControlFunds');
+                $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupFunds');
+                $browser->waitFor('@productFilterFundItem' . $fund->id);
                 $browser->assertMissing('@providerSignUpLink');
 
                 $fund->fund_config->update(['allow_provider_sign_up' => true]);
