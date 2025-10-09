@@ -106,7 +106,7 @@ class TestData
             $emailSlug . '-' . $this->integerToRoman($this->emailNth++),
         ));
 
-        $identity = Identity::make($email, [
+        $identity = Identity::build(email: $email, records: [
             'primary_email' => $email,
             'given_name' => $this->faker->firstName,
             'family_name' => $this->faker->lastName,

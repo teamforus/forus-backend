@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\ProductQuery;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -37,24 +37,24 @@ class FundProvidersExport extends BaseFieldedExport
     ];
 
     /**
-     * @param Request $request
+     * @param IndexProvidersRequest $request
      * @param Organization $organization
      * @param array $fields
      */
     public function __construct(
-        Request $request,
+        IndexProvidersRequest $request,
         Organization $organization,
-        protected array $fields
+        protected array $fields,
     ) {
         $this->data = $this->export($request, $organization);
     }
 
     /**
-     * @param Request $request
+     * @param IndexProvidersRequest $request
      * @param Organization $organization
      * @return Collection
      */
-    protected function export(Request $request, Organization $organization): Collection
+    protected function export(IndexProvidersRequest $request, Organization $organization): Collection
     {
         $data = FundProvider::search($request, $organization)->with([
             'fund.fund_config.implementation',

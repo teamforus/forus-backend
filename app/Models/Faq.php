@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $id
  * @property int $faq_id
  * @property string $faq_type
+ * @property string $type
  * @property string $title
+ * @property string|null $subtitle
  * @property string $description
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -32,7 +34,9 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder<static>|Faq whereFaqType($value)
  * @method static Builder<static>|Faq whereId($value)
  * @method static Builder<static>|Faq whereOrder($value)
+ * @method static Builder<static>|Faq whereSubtitle($value)
  * @method static Builder<static>|Faq whereTitle($value)
+ * @method static Builder<static>|Faq whereType($value)
  * @method static Builder<static>|Faq whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -42,6 +46,9 @@ class Faq extends BaseModel
     use HasMarkdownDescription;
     use HasOnDemandTranslations;
 
+    public const string TYPE_QUESTION = 'question';
+    public const string TYPE_TITLE = 'title';
+
     protected $table = 'faq';
 
     /**
@@ -50,6 +57,6 @@ class Faq extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'faq_id', 'faq_type', 'title', 'description', 'order',
+        'faq_id', 'faq_type', 'title', 'subtitle', 'description', 'order', 'type',
     ];
 }

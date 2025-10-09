@@ -32,7 +32,7 @@ trait MakesTestOrganizations
      */
     protected function makeTestOrganization(Identity $identity, array $organizationData = []): Organization
     {
-        $organization = Organization::create([
+        $organization = Organization::forceCreate([
             'name' => fake()->text(30),
             'email' => fake()->email,
             'email_public' => false,

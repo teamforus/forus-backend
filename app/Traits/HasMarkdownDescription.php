@@ -157,8 +157,8 @@ trait HasMarkdownDescription
     }
 
     /**
-     * @return Builder|MediaPreset
      * @throws CommonMarkException
+     * @return Builder|MediaPreset
      */
     protected function getDescriptionMarkdownMediaPresetsQuery(): Builder|MediaPreset
     {
