@@ -21,8 +21,8 @@ class PrevalidationsTest extends TestCase
 
     /**
      * Test creating a prevalidation for test criteria.
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testPrevalidationCreate(): void
     {

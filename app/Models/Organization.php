@@ -6,6 +6,7 @@ use App\Events\Employees\EmployeeCreated;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
@@ -81,6 +82,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_profiles_create
+ * @property bool $allow_profiles_relations
+ * @property bool $allow_profiles_households
  * @property bool $allow_translations
  * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
@@ -207,6 +211,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesCreate($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesHouseholds($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesRelations($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereAllowTranslations($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
@@ -368,6 +375,9 @@ class Organization extends BaseModel
         'allow_fund_request_record_edit' => 'boolean',
         'allow_bi_connection' => 'boolean',
         'allow_product_updates' => 'boolean',
+        'allow_profiles_create' => 'boolean',
+        'allow_profiles_relations' => 'boolean',
+        'allow_profiles_households' => 'boolean',
         'bsn_enabled' => 'boolean',
         'auth_2fa_remember_ip' => 'boolean',
         'auth_2fa_funds_remember_ip' => 'boolean',
@@ -429,6 +439,7 @@ class Organization extends BaseModel
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function reimbursement_categories(): HasMany
     {
@@ -957,9 +968,9 @@ class Organization extends BaseModel
 
     /**
      * @param Identity $identity
-     * @return Fund|Model
+     * @return Profile
      */
-    public function findOrMakeProfile(Identity $identity): Profile|Model
+    public function findOrMakeProfile(Identity $identity): Profile
     {
         return $identity->profiles()->where([
             'organization_id' => $this->id,
@@ -1144,6 +1155,15 @@ class Organization extends BaseModel
             !empty($this->iconnect_target_binding) &&
             !empty($this->iconnect_api_oin) &&
             !empty($this->iconnect_base_url);
+    }
+
+    /**
+     * @param int $identityId
+     * @return Identity|null
+     */
+    public function findRelatedIdentityOrFail(int $identityId): ?Identity
+    {
+        return IdentityQuery::relatedToOrganization(Identity::query(), $this->id)->findOrFail($identityId);
     }
 
     /**

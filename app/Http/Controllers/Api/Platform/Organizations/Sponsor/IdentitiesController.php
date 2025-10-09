@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts\UpdateProfileBankAccountRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IdentitiesPersonRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityNoteRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\UpdateIdentityRequest;
 use App\Http\Requests\BaseIndexFormRequest;
@@ -46,12 +47,38 @@ class IdentitiesController extends Controller
             ...$request->only([
                 'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
-                'last_login_to', 'order_by', 'order_dir',
+                'last_login_to', 'order_by', 'order_dir', 'household_id',
+                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
             ]),
             'organization_id' => $organization->id,
         ], $query);
 
         return SponsorIdentityResource::queryCollection($search->query(), $request, [
+            'detailed' => true,
+            'organization' => $organization,
+        ]);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function store(
+        StoreIdentityRequest $request,
+        Organization $organization,
+    ): SponsorIdentityResource {
+        $this->authorize('storeSponsorIdentities', [$organization]);
+
+        $employee = $request->employee($organization);
+        $identity = Identity::build(type: Identity::TYPE_PROFILE, employeeId: $employee->id, organizationId: $organization->id);
+
+        $organization->findOrMakeProfile($identity)->updateRecords(array_only($request->validated(), [
+            'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
+            'street', 'house_number', 'house_number_addition', 'postal_code',
+            'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
+            'living_arrangement', 'marital_status', 'client_number',
+        ]), $request->employee($organization));
+
+        return SponsorIdentityResource::create($identity, [
             'detailed' => true,
             'organization' => $organization,
         ]);
@@ -82,7 +109,7 @@ class IdentitiesController extends Controller
     ): SponsorIdentityResource {
         $this->authorize('updateSponsorIdentities', [$organization, $identity]);
 
-        $organization->findOrMakeProfile($identity)->updateRecords($request->only([
+        $organization->findOrMakeProfile($identity)->updateRecords(array_only($request->validated(), [
             'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
             'street', 'house_number', 'house_number_addition', 'postal_code',
             'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
@@ -106,8 +133,8 @@ class IdentitiesController extends Controller
         $this->authorize('updateSponsorIdentities', [$organization, $identity]);
 
         $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
-            'name' => $request->string('name'),
-            'iban' => $request->string('iban'),
+            'name' => $request->validated('name'),
+            'iban' => $request->validated('iban'),
         ]);
 
         return SponsorIdentityResource::create($identity, [
@@ -128,8 +155,8 @@ class IdentitiesController extends Controller
         $this->authorize('updateSponsorIdentitiesBankAccounts', [$organization, $identity, $profileBankAccount]);
 
         $profileBankAccount->update([
-            'name' => $request->string('name'),
-            'iban' => $request->string('iban'),
+            'name' => $request->validated('name'),
+            'iban' => $request->validated('iban'),
         ]);
 
         return SponsorIdentityResource::create($identity, [

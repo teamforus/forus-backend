@@ -33,8 +33,8 @@ class VoucherTakenByPartnerTest extends TestCase
      * - When Identity2 adds a partner_bsn record matching Identity1’s bsn
      *   and gets it validated, assert that the voucher is recognized as taken.
      *
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testVoucherTakenByPartner(): void
     {
