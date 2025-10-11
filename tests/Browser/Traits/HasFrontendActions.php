@@ -424,4 +424,78 @@ trait HasFrontendActions
 
         $this->assertWebshopRowsCount($browser, $expected, $selector . 'Content');
     }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string|int|null $value
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function clearInputCustom(
+        Browser $browser,
+        string $selector,
+        string|int|null $value = null
+    ): void {
+        if ($selector === '@controlDate') {
+            return;
+        }
+
+        if ($selector === '@controlStep') {
+            $browser->waitFor($selector);
+            $browser->within($selector, function (Browser $browser) use ($value) {
+                for ($i = 0; $i < $value; $i++) {
+                    $browser->click('@decreaseStep');
+                }
+            });
+
+            return;
+        }
+
+        /** @var string $value */
+        $value = $browser->value($selector);
+        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string $control
+     * @param string|int|null $value
+     * @throws TimeoutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @return void
+     */
+    protected function fillInput(Browser $browser, string $selector, string $control, string|int|null $value): void
+    {
+        switch ($control) {
+            case 'select':
+                $browser->waitFor($selector);
+                $this->changeSelectControl($browser, $selector, $value);
+                break;
+            case 'number':
+            case 'currency':
+            case 'text':
+                $browser->waitFor($selector);
+                $browser->type($selector, $value);
+                break;
+            case 'checkbox':
+                $value && $browser->waitFor($selector)->click($selector);
+                break;
+            case 'step':
+                $browser->waitFor($selector);
+                $browser->within($selector, function (Browser $browser) use ($value) {
+                    for ($i = 0; $i < $value; $i++) {
+                        $browser->click('@increaseStep');
+                    }
+                });
+                break;
+            case 'date':
+                $browser->waitFor($selector);
+                $this->clearInputCustom($browser, "$selector input[type='text']");
+                $browser->type("$selector input[type='text']", $value);
+                break;
+        }
+    }
 }
