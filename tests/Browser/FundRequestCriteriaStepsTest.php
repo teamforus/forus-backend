@@ -916,15 +916,15 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
 
                     // assert invalid value if exists
                     if ($field['assert_invalid']) {
-                        $this->fillInput($browser, $field['assert_control'], $field['assert_invalid']);
+                        $this->fillInput($browser, $selector, $field['assert_control'], $field['assert_invalid']);
                         $browser->click('@nextStepButton');
                         $browser->waitFor('.form-error');
                         // clear input
-                        $selector && $this->clearCustom($browser, $selector, $field['assert_invalid']);
+                        $selector && $this->clearInputCustom($browser, $selector, $field['assert_invalid']);
                     }
 
                     // assert valid value
-                    $this->fillInput($browser, $field['assert_control'], $field['assert_valid']);
+                    $this->fillInput($browser, $selector, $field['assert_control'], $field['assert_valid']);
                 }
 
                 $browser->click('@nextStepButton');
@@ -937,81 +937,6 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             $browser->waitFor('@submitButton')->click('@submitButton');
             $browser->waitFor('@fundRequestSuccess');
         });
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $selector
-     * @param string|int|null $value
-     * @throws TimeoutException
-     * @return void
-     */
-    protected function clearCustom(
-        Browser $browser,
-        string $selector,
-        string|int|null $value = null
-    ): void {
-        if ($selector === '@controlDate') {
-            return;
-        }
-
-        if ($selector === '@controlStep') {
-            $browser->waitFor($selector);
-            $browser->within($selector, function (Browser $browser) use ($value) {
-                for ($i = 0; $i < $value; $i++) {
-                    $browser->click('@decreaseStep');
-                }
-            });
-
-            return;
-        }
-
-        /** @var string $value */
-        $value = $browser->value($selector);
-        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $control
-     * @param string|int|null $value
-     * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @return void
-     */
-    protected function fillInput(Browser $browser, string $control, string|int|null $value): void
-    {
-        $selector = $this->getControlSelector($control);
-
-        switch ($control) {
-            case 'select':
-                $browser->waitFor($selector);
-                $this->changeSelectControl($browser, $selector, $value);
-                break;
-            case 'number':
-            case 'currency':
-            case 'text':
-                $browser->waitFor($selector);
-                $browser->type($selector, $value);
-                break;
-            case 'checkbox':
-                $value && $browser->waitFor($selector)->click($selector);
-                break;
-            case 'step':
-                $browser->waitFor($selector);
-                $browser->within($selector, function (Browser $browser) use ($value) {
-                    for ($i = 0; $i < $value; $i++) {
-                        $browser->click('@increaseStep');
-                    }
-                });
-                break;
-            case 'date':
-                $browser->waitFor($selector);
-                $this->clearCustom($browser, "$selector input[type='text']");
-                $browser->type("$selector input[type='text']", $value);
-                break;
-        }
     }
 
     /**
