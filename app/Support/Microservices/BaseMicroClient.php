@@ -5,6 +5,7 @@ namespace App\Support\Microservices;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class BaseMicroClient
 {
@@ -24,14 +25,14 @@ class BaseMicroClient
     /** Returns cfg for service */
     protected function cfg(): array
     {
-        $cfg = config("services.{$this->serviceKey}");
+        $cfg = config("services.$this->serviceKey");
         if (!$cfg || empty($cfg['base_url'])) {
-            throw new \RuntimeException("Missing config for service [{$this->serviceKey}]");
+            throw new RuntimeException("Missing config for service [$this->serviceKey]");
         }
         return $cfg;
     }
 
-    protected function base(array $extraHeaders = []): PendingRequest
+    protected function client(array $extraHeaders = []): PendingRequest
     {
         $cfg = $this->cfg();
 
@@ -65,19 +66,21 @@ class BaseMicroClient
         return $req;
     }
 
-    public function json(array $extraHeaders = []): PendingRequest
-    {
-        return $this->base($extraHeaders)->asJson();
-    }
-
-    public function multipart(array $extraHeaders = []): PendingRequest
-    {
-        return $this->base($extraHeaders)->asMultipart();
-    }
-
     public static function forwardHeadersFromRequest(?Request $request = null): array
     {
         $request ??= request();
-        return $request->attributes->get('forward_headers', []) ?? [];
+        return array_filter([
+            'X-Client-Key'    => $request->header('client-key'),
+            'X-Client-Type'   => $request->header('client-type'),
+            'X-Locale'        => app()->getLocale(),
+
+            // Observability and correlation
+            'X-Request-Id'    => $request->header('x-request-id'),
+            'traceparent'     => $request->header('traceparent'),
+            'tracestate'      => $request->header('tracestate'),
+
+            // Traceability
+            'X-Forwarded-For' => $request->ip(),
+        ], fn ($value) => !is_null($value) && $value !== '');
     }
 }
