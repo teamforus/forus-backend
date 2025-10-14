@@ -92,6 +92,5 @@ class Kernel extends HttpKernel
         'locale' => LocaleMiddleware::class,
         'domain' => DomainMiddleware::class,
         'domain.digid' => DomainDigIdMiddleware::class,
-        'forward_headers' => \App\Http\Middleware\ForwardHeadersMiddleware::class,
     ];
 }
