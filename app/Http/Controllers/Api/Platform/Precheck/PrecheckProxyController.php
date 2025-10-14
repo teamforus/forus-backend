@@ -2,48 +2,63 @@
 namespace App\Http\Controllers\Api\Platform\Precheck;
 
 use App\Http\Controllers\Controller;
+use App\Http\Responses\NoContentResponse;
 use App\Support\Microservices\BaseMicroClient;
-use App\Support\Microservices\PrecheckMicroClient;
+use App\Support\Microservices\Precheck\PrecheckHttpResponse;
+use App\Support\Microservices\Precheck\PrecheckMicroClient;
 use Firebase\JWT\JWT;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class PrecheckProxyController extends Controller
 {
-    /** POST /api/v1/pre-checks/session -> POST /v1/sessions/ */
+//    TODO: define response type and move methods there
+    /**
+     * @param Request $request
+     * @return JsonResponse|ResponseAlias
+     * @throws ConnectionException
+     */
     public function sessions(Request $request)
     {
         $client =  new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
         $res = $client->createSession($request->all(), $headers);
-        $response = $this->toLaravelResponse($res);
+        $response = (new PrecheckHttpResponse($res))->toResponse();
         if ($res->successful()) {
             $payload = $res->json() ?? [];
-            $id = data_get($payload, 'session_id') ?? data_get($payload, 'data.session_id') ?? null;
-
-            if ($id) {
-                $token = $this->mintStreamToken($id, $headers['X-Client-Key'] ?? '');
-                $payload['stream_token'] = $token;
-                $response = response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
-                $response->headers->set('Location', "/api/v1/pre-checks/sessions/{$id}");
-                $response->headers->set('X-Request-Id', $res->header('x-request-id'));
-            }
-            $response->setStatusCode(201);
+            $id = data_get($payload, 'session_id');
+            $token = $this->mintStreamToken($id, $headers['X-Client-Key'] ?? '');
+            $payload['stream_token'] = $token;
+            $response = new JsonResponse(data: $payload, status: 201, headers: [
+                'X-Request-Id' => $res->header('x-request-id'),
+                'Location' => "/api/v1/pre-checks/sessions/$id",
+            ], options: JSON_UNESCAPED_UNICODE);
         }
         return $response;
     }
 
-    /** POST /api/v1/pre-checks/sessions/{id}/token -> mint stream token */
+    /**
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
     public function stream_token(Request $request, string $id)
     {
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
         $org = $request->header('x-client-key') ?? $headers['X-Client-Key'];
         $payload['stream_token'] = $this->mintStreamToken($id, $org);
-        return response()->json($payload, 201, [], JSON_UNESCAPED_UNICODE);
+        return new JsonResponse(data: $payload, status: 200, headers: [], options: JSON_UNESCAPED_UNICODE);
     }
 
-    /** DELETE /api/v1/pre-checks/sessions/{id} -> DELETE /v1/sessions/{id} */
+    /**
+     * @param Request $request
+     * @param string $id
+     * @return NoContentResponse|object|Response
+     * @throws ConnectionException
+     */
     public function end(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
@@ -53,13 +68,18 @@ class PrecheckProxyController extends Controller
 
         if ($res->successful()) {
             // Uniformly return 204 No Content on success
-            return response()->noContent();
+            return new NoContentResponse();
         }
 
-        return $this->toLaravelResponse($res);
+        return (new PrecheckHttpResponse($res))->toResponse();
     }
 
-    /** GET /api/v1/pre-checks/sessions/{id}/advice -> GET /v1/sessions/{id}/advice */
+    /**
+     * @param Request $request
+     * @param string $id
+     * @return ResponseAlias
+     * @throws ConnectionException
+     */
     public function advice(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
@@ -67,10 +87,15 @@ class PrecheckProxyController extends Controller
 
         $res = $client->advice($id, $headers);
 
-        return $this->toLaravelResponse($res);
+        return (new PrecheckHttpResponse($res))->toResponse();
     }
 
-    /** POST /api/v1/pre-checks/sessions/{id}/messages -> POST /v1/sessions/{id}/messages */
+    /**
+     * @param Request $request
+     * @param string $id
+     * @return ResponseAlias
+     * @throws ConnectionException
+     */
     public function answer(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
@@ -82,124 +107,33 @@ class PrecheckProxyController extends Controller
 
         $res = $client->sendAnswer($id, $request->all(), $headers);
 
-        $response = $this->toLaravelResponse($res);
+        $response = (new PrecheckHttpResponse($res))->toResponse();
         $response->headers->set('X-Request-Id', $res->header('x-request-id'));
         return $response;
     }
 
-    /** GET /api/v1/pre-checks/sessions/{id}/messages -> GET /v1/sessions/{id}/messages */
+    /**
+     * @param Request $request
+     * @param string $id
+     * @return ResponseAlias
+     * @throws ConnectionException
+     */
     public function messages(Request $request, string $id)
     {
         $client = new PrecheckMicroClient();
         $headers = BaseMicroClient::forwardHeadersFromRequest($request);
         $res = $client->history($id, $headers);
-        return $this->toLaravelResponse($res);
+        return (new PrecheckHttpResponse($res))->toResponse();
     }
 
-    public function toLaravelResponse($res)
-    {
-        $contentType = $res->header('Content-Type');
-        $isJson = $this->looksLikeJson($contentType);
-        $payload = $isJson ? ($res->json() ?? []) : $res->body();
-
-        $isProblem = $contentType && str_contains(strtolower($contentType), 'application/problem+json');
-
-        $status = $res->status();
-        $status = $this->mapStatus($status);
-
-        $shouldWrapAsProblem = $status >= 400 && !$isProblem;
-
-        if ($shouldWrapAsProblem) {
-            // Derive title/detail from upstream payload or fallbacks
-            $detail = is_array($payload)
-                ? ($payload['detail'] ?? $payload['message'] ?? null)
-                : (string) $payload;
-
-            $title = is_array($payload)
-                ? ($payload['title'] ?? null)
-                : null;
-
-            $type = is_array($payload)
-                ? ($payload['type'] ?? null)
-                : null;
-
-            $problem = [
-                'type'     => $type ?: 'about:blank',
-                'title'    => $title ?: ($this->statusText($status) ?: 'Error'),
-                'status'   => $status,
-                'instance' => request()->getPathInfo(),
-            ];
-
-            if ($detail !== null && $detail !== '') {
-                $problem['detail'] = is_string($detail) ? $detail : json_encode($detail, JSON_UNESCAPED_UNICODE);
-            }
-
-            if (is_array($payload) && isset($payload['errors'])) {
-                $problem['errors'] = $payload['errors'];
-            }
-
-            $response = response()->json($problem, $status, [], JSON_UNESCAPED_UNICODE);
-            $response->headers->set('Content-Type', 'application/problem+json');
-        } else {
-            $response = $isJson
-                ? response()->json($payload, $status, [], JSON_UNESCAPED_UNICODE)
-                : response($payload, $status);
-        }
-
-        // headers die je nooit wilt doorgeven
-        $skip = [
-            'transfer-encoding',
-            'content-encoding',
-            'connection',
-            'keep-alive',
-            'proxy-authenticate',
-            'proxy-authorization',
-            'te',
-            'trailer',
-            'upgrade',
-        ];
-
-        foreach ($res->headers() as $key => $values) {
-            if (in_array($key, $skip, true)) {
-                continue;
-            }
-            if ($shouldWrapAsProblem && $key === 'content-type') {
-                continue;
-            }
-            if ($key === 'x-request-id') {
-                $response->headers->set('X-Request-Id', implode(', ', (array) $values));
-                continue;
-            }
-            foreach ((array) $values as $value) {
-                $response->headers->set($key, $value);
-            }
-        }
-        \Log::info("headers: " . json_encode($response->headers->all()));
-
-        return $response;
-    }
-
-    private function mapStatus(int $status): int
-    {
-        if ($status >= 500) {
-            return ResponseAlias::HTTP_BAD_GATEWAY; // 502
-        }
-        return $status;
-    }
-
-    public function looksLikeJson(?string $contentType)
-    {
-        if (!$contentType) return true;
-        return str_contains(strtolower($contentType), 'application/json')
-            || str_contains(strtolower($contentType), '+json');
-
-    }
-
-    private function statusText(int $status): ?string
-    {
-        return \Symfony\Component\HttpFoundation\Response::$statusTexts[$status] ?? null;
-    }
-
+    /**
+     * Mint a JWT token for streaming access
+     *
+     * @param string $sessionId
+     * @param string $orgKey
+     * @param int|null $ttl
+     * @return string
+     */
     private function mintStreamToken(string $sessionId, string $orgKey, ?int $ttl = null): string
     {
         $now = time();
