@@ -5,6 +5,7 @@ namespace App\Support\Microservices;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class BaseMicroClient
 {
@@ -24,9 +25,9 @@ class BaseMicroClient
     /** Returns cfg for service */
     protected function cfg(): array
     {
-        $cfg = config("services.{$this->serviceKey}");
+        $cfg = config("services.$this->serviceKey");
         if (!$cfg || empty($cfg['base_url'])) {
-            throw new \RuntimeException("Missing config for service [{$this->serviceKey}]");
+            throw new RuntimeException("Missing config for service [$this->serviceKey]");
         }
         return $cfg;
     }
