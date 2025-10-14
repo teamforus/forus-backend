@@ -53,7 +53,7 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $this->assertListFilterByProductCategory($browser, $provider->id, $products[0]->product_category);
 
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByFund($browser, $fund, $provider->id, 1);
+                $this->assertListFilterByFund($browser, $fund, $provider->id, 1, true);
 
                 $this->fillListSearchForEmptyResults($browser);
                 $this->assertListFilterByDistance($browser, $provider->offices[0]->postcode, $provider->id);
@@ -83,7 +83,12 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
             $this->browse(function (Browser $browser) use ($fund, $provider, $provider2) {
                 $browser->visit($fund->urlWebshop('aanbieders'))->refresh();
 
-                $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
+                $browser->waitFor('@productFilterGroupFunds');
+                $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupFunds');
+
+                $browser->waitFor('@productFilterFundItem' . $fund->id);
+                $browser->click('@productFilterFundItem' . $fund->id);
+
                 $this->assertListVisibility($browser, $provider->id, true, 2);
                 $this->assertListVisibility($browser, $provider2->id, true, 2);
 
