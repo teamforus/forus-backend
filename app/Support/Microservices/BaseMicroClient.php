@@ -31,7 +31,7 @@ class BaseMicroClient
         return $cfg;
     }
 
-    protected function base(array $extraHeaders = []): PendingRequest
+    protected function client(array $extraHeaders = []): PendingRequest
     {
         $cfg = $this->cfg();
 
@@ -67,17 +67,29 @@ class BaseMicroClient
 
     public function json(array $extraHeaders = []): PendingRequest
     {
-        return $this->base($extraHeaders)->asJson();
+        return $this->client($extraHeaders)->asJson();
     }
 
     public function multipart(array $extraHeaders = []): PendingRequest
     {
-        return $this->base($extraHeaders)->asMultipart();
+        return $this->client($extraHeaders)->asMultipart();
     }
 
     public static function forwardHeadersFromRequest(?Request $request = null): array
     {
         $request ??= request();
-        return $request->attributes->get('forward_headers', []) ?? [];
+        return array_filter([
+            'X-Client-Key'    => $request->header('client-key'),
+            'X-Client-Type'   => $request->header('client-type'),
+            'X-Locale'        => app()->getLocale(),
+
+            // Observability and correlation
+            'X-Request-Id'    => $request->header('x-request-id'),
+            'traceparent'     => $request->header('traceparent'),
+            'tracestate'      => $request->header('tracestate'),
+
+            // Traceability
+            'X-Forwarded-For' => $request->ip(),
+        ], fn ($value) => !is_null($value) && $value !== '');
     }
 }
