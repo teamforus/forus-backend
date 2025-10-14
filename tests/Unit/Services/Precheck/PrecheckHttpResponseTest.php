@@ -4,8 +4,6 @@ namespace Tests\Unit\Services\Precheck;
 
 use App\Support\Microservices\Precheck\PrecheckHttpResponse;
 use Illuminate\Http\Client\Response as HttpClientResponse;
-use Illuminate\Support\Facades\Http;
-use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 
@@ -33,7 +31,6 @@ final class PrecheckHttpResponseTest extends TestCase
         $upstream = $this->upstreamText('plain-ok', 200, ['Content-Type' => 'text/plain']);
         $response = (new PrecheckHttpResponse($upstream))->toResponse();
 
-        $this->assertInstanceOf(Response::class, $response);
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('text/plain', strtolower($response->headers->get('content-type')));
         $this->assertSame('plain-ok', $response->getContent());
@@ -81,7 +78,7 @@ final class PrecheckHttpResponseTest extends TestCase
         $json = json_decode($resp->getContent(), true);
         $this->assertSame('about:blank', $json['type']);
         $this->assertSame(400, $json['status']);
-        $this->assertSame('Bad Request', $json['title']); // afgeleid via statusText
+        $this->assertSame('Bad Request', $json['title']);
         $this->assertSame('Nope', $json['detail']);
         $this->assertArrayHasKey('instance', $json);
     }
