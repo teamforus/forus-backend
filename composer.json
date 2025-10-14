@@ -44,7 +44,7 @@
         "mollie/mollie-api-php": "^3.0",
         "mollie/oauth2-mollie-php": "^2.7",
         "onelogin/php-saml": "^4.2",
-        "pragmarx/google2fa": "^8.0",
+        "pragmarx/google2fa": "^9.0",
         "predis/predis": "^3.0",
         "ralouphie/getallheaders": "^3.0",
         "simplesamlphp/saml2": "^4.6.3",
