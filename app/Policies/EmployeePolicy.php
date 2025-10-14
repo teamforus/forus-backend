@@ -3,8 +3,10 @@
 namespace App\Policies;
 
 use App\Models\Employee;
+use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -77,6 +79,11 @@ class EmployeePolicy
         // organization owner employee can't be deleted
         if ($employee->identity_address === $organization->identity_address) {
             return $this->deny('employees.cant_delete_owner');
+        }
+
+        // employee can't be deleted if it used as default validator
+        if (FundQuery::whereActiveFilter(Fund::where('default_validator_employee_id', $employee->id))->exists()) {
+            return $this->deny(__('policies.employees.cant_delete_if_default_validator_exists'));
         }
 
         return $this->update($identity, $employee, $organization);
