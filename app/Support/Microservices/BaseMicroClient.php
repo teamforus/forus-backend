@@ -65,16 +65,6 @@ class BaseMicroClient
         return $req;
     }
 
-    public function json(array $extraHeaders = []): PendingRequest
-    {
-        return $this->client($extraHeaders)->asJson();
-    }
-
-    public function multipart(array $extraHeaders = []): PendingRequest
-    {
-        return $this->client($extraHeaders)->asMultipart();
-    }
-
     public static function forwardHeadersFromRequest(?Request $request = null): array
     {
         $request ??= request();
