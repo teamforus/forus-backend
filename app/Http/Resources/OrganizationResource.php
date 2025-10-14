@@ -165,6 +165,7 @@ class OrganizationResource extends BaseJsonResource
                 'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
                 'bank_note', 'bank_reservation_number', 'bank_separator',
                 'bank_reservation_first_name', 'bank_reservation_last_name',
+                'bank_reservation_invoice_number',
             ]),
         ] : [];
     }
