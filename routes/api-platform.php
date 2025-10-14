@@ -73,7 +73,7 @@ $router->group([], static function () use ($router) {
     // Precheck Microservice chatbot
     $router->group([
         'prefix' => 'pre-checks',
-        'middleware' =>  ['forward_headers', 'throttle:120,1'],
+        'middleware' =>  ['throttle:120,1'],
     ], static function () use ($router) {
         $router->post('sessions', 'Api\Platform\Precheck\PrecheckProxyController@sessions');
         $router->post('sessions/{id}/messages', 'Api\Platform\Precheck\PrecheckProxyController@answer');
