@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RefundExtra
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\ProductReservationResource;
@@ -350,5 +351,24 @@ class ProductReservationsController extends Controller
         }
 
         return new ProductReservationResource($productReservation->refresh());
+    }
+
+    /**
+     * @param UpdateProductReservationRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProductReservationResource
+     */
+    public function update(
+        UpdateProductReservationRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$productReservation, $organization]);
+
+        $productReservation->update($request->only('invoice_number'));
+
+        return new ProductReservationResource($productReservation);
     }
 }
