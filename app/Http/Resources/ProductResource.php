@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
  */
 class ProductResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher_transactions',
         'product_reservations_pending',
         'photo.presets',

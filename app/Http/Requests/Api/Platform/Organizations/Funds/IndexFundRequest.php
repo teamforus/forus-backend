@@ -4,7 +4,12 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\Organization;
+use Illuminate\Validation\Rule;
 
+/**
+ * @property Organization $organization
+ */
 class IndexFundRequest extends BaseFormRequest
 {
     /**
@@ -39,6 +44,10 @@ class IndexFundRequest extends BaseFormRequest
             'with_external' => 'nullable|bool',
             'archived' => 'nullable|bool',
             'stats' => 'nullable|string|in:all,budget,product_vouchers,payout_vouchers,min',
+            'physical_card_type_id' => [
+                'nullable',
+                Rule::exists('physical_card_types', 'id')->where('organization_id', $this->organization->id),
+            ],
             'per_page' => $this->perPageRule(),
             'state' => 'nullable|in:' . implode(',', [...Fund::STATES, 'active_paused_and_closed']),
             'year' => 'nullable|integer',

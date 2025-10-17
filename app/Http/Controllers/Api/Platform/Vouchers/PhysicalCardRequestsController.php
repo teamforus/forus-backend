@@ -47,12 +47,19 @@ class PhysicalCardRequestsController extends Controller
         StorePhysicalCardRequestRequest $request,
         Voucher $voucher,
     ): PhysicalCardRequestResource {
-        $this->authorize('requestPhysicalCard', $voucher);
+        $fundPhysicalCardType = $voucher->fund
+            ->fund_physical_card_types()
+            ->findOrFail($request->post('fund_physical_card_type_id'));
+
+        $this->authorize('requestPhysicalCard', [$voucher, $fundPhysicalCardType]);
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
-        $cardRequest = $voucher->makePhysicalCardRequest($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city',
-        ]), true);
+        $cardRequest = $voucher->makePhysicalCardRequest([
+            ...$request->only([
+                'address', 'house', 'house_addition', 'postcode', 'city', 'physical_card_type_id',
+            ]),
+            'physical_card_type_id' => $fundPhysicalCardType->physical_card_type_id,
+        ], true);
 
         return new PhysicalCardRequestResource($cardRequest);
     }
