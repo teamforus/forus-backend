@@ -24,7 +24,7 @@ class IndexVouchersRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return array_merge([
+        return [
             'state' => 'nullable|in:' . implode(',', Voucher::STATES),
             'per_page' => $this->perPageRule(),
             'product_id' => 'nullable|exists:products,id',
@@ -33,6 +33,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'allow_reimbursements' => 'nullable|boolean',
             'implementation_id' => 'nullable|exists:implementations,id',
             'implementation_key' => 'nullable|exists:implementations,key',
-        ], $this->orderByRules('created_at', 'voucher_type'));
+            ...$this->orderByRules('created_at', 'voucher_type'),
+        ];
     }
 }

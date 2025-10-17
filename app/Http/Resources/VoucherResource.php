@@ -63,6 +63,7 @@ class VoucherResource extends BaseJsonResource
             ...OrganizationBasicResource::load("{$prepend}product.organization"),
             ...OrganizationBasicResource::load("{$prepend}fund.organization"),
             ...VoucherTransactionResource::load("{$prepend}all_transactions"),
+            ...FundPhysicalCardTypeResource::load("{$prepend}fund.fund_physical_card_types"),
         ];
     }
 
@@ -271,6 +272,7 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
+            'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
             ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key']),
         ];
     }
