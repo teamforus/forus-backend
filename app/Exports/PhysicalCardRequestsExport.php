@@ -71,13 +71,17 @@ class PhysicalCardRequestsExport extends BaseFieldedExport
     }
 
     /**
-     * @param PhysicalCardRequest $physicalCard
+     * @param PhysicalCardRequest $physicalCardRequest
      * @return array
      */
-    protected function getRow(PhysicalCardRequest $physicalCard): array
+    protected function getRow(PhysicalCardRequest $physicalCardRequest): array
     {
-        return $physicalCard->only([
-            'address', 'house', 'house_addition', 'postcode', 'city',
-        ]);
+        return [
+            ...$physicalCardRequest->only([
+                'address', 'house', 'house_addition', 'postcode', 'city',
+                'physical_card_type_id', 'fund_request_id', 'voucher_id',
+            ]),
+            'physical_card_type_name' => $physicalCardRequest->physical_card_type?->name,
+        ];
     }
 }

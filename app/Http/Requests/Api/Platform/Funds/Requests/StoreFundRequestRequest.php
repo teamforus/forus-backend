@@ -33,6 +33,18 @@ class StoreFundRequestRequest extends BaseFormRequest
             !$this->fund->getResolvingError();
     }
 
+    public function attributes(): array
+    {
+        return [
+            ...parent::attributes(),
+            'physical_card_request_address.city' => trans('validation.attributes.city'),
+            'physical_card_request_address.street' => trans('validation.attributes.street'),
+            'physical_card_request_address.house_nr' => trans('validation.attributes.house_nr'),
+            'physical_card_request_address.house_nr_addition' => trans('validation.attributes.house_nr_addition'),
+            'physical_card_request_address.postal_code' => trans('validation.attributes.postal_code'),
+        ];
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -40,10 +52,12 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return array_merge(
-            $this->contactInformationRule($this->fund),
-            $this->recordsRule($this->fund),
-        );
+        return [
+            'asd' => 'postcode',
+            ...$this->recordsRule($this->fund),
+            ...$this->contactInformationRule($this->fund),
+            ...$this->physicalCardRequestRule($this->fund),
+        ];
     }
 
     /**
@@ -67,6 +81,30 @@ class StoreFundRequestRequest extends BaseFormRequest
         }
 
         return $messages;
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    protected function physicalCardRequestRule(Fund $fund): array
+    {
+        if (!$fund->fund_config->getApplicationPhysicalCardRequestType()) {
+            return [];
+        }
+
+        if ($this->isValidationRequest && !$this->has('physical_card_request_address')) {
+            return [];
+        }
+
+        return [
+            'physical_card_request_address' => ['required', 'array'],
+            'physical_card_request_address.city' => ['required', 'city_name'],
+            'physical_card_request_address.street' => ['required', 'street_name'],
+            'physical_card_request_address.house_nr' => ['required', 'house_number'],
+            'physical_card_request_address.house_nr_addition' => ['nullable', 'house_addition'],
+            'physical_card_request_address.postal_code' => ['required', 'postcode'],
+        ];
     }
 
     /**
@@ -97,6 +135,10 @@ class StoreFundRequestRequest extends BaseFormRequest
     {
         $values = $this->input('records');
         $values = is_array($values) ? Arr::pluck($values, 'value', 'fund_criterion_id') : [];
+
+        if ($this->isValidationRequest && !$this->has('records')) {
+            return [];
+        }
 
         return [
             'records' => [
