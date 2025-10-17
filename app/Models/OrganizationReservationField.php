@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id
  * @property int $organization_id
+ * @property int|null $product_id
  * @property string $label
  * @property string $type
  * @property string|null $description
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Organization $organization
+ * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField newModelQuery()
@@ -33,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereLabel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField whereUpdatedAt($value)
@@ -61,7 +64,7 @@ class OrganizationReservationField extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'label', 'type', 'description', 'required', 'order',
+        'organization_id', 'label', 'type', 'description', 'required', 'order', 'product_id',
     ];
 
     /**
@@ -78,5 +81,14 @@ class OrganizationReservationField extends BaseModel
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

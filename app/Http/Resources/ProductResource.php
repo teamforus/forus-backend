@@ -32,6 +32,7 @@ class ProductResource extends BaseJsonResource
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
         'bookmarks',
+        'reservation_fields',
     ];
 
     /**
@@ -210,11 +211,16 @@ class ProductResource extends BaseJsonResource
         $global = $product::RESERVATION_FIELD_GLOBAL;
         $request = BaseFormRequest::createFromBase(request());
         $organization = $product->organization;
-        $fields = $organization->reservation_fields;
+
+        $fields = match ($product->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $product->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $product->reservation_fields,
+            default => [],
+        };
 
         if ($request->isWebshop()) {
             return [
-                'reservation' => $product->reservation_fields ? [
+                'reservation' => $product->reservation_fields_enabled ? [
                     'phone' => $product->reservation_phone === $global ?
                         $organization->reservation_phone :
                         $product->reservation_phone,
@@ -238,11 +244,13 @@ class ProductResource extends BaseJsonResource
 
         return [
             'reservation_phone' => $product->reservation_phone,
-            'reservation_fields' => $product->reservation_fields,
+            'reservation_fields_enabled' => $product->reservation_fields_enabled,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
             'reservation_note' => $product->reservation_note,
             'reservation_note_text' => $product->reservation_note_text,
+            'reservation_fields_config' => $product->reservation_fields_config,
+            'reservation_fields' => OrganizationReservationFieldResource::collection($product->reservation_fields),
         ];
     }
 }

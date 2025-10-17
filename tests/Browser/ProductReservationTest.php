@@ -94,7 +94,7 @@ class ProductReservationTest extends DuskTestCase
             $this->assertFundHasApprovedProviders($fund);
 
             $product->forceFill([
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $customFields = [[
@@ -157,9 +157,112 @@ class ProductReservationTest extends DuskTestCase
                 'last_name' => $this->faker->lastName,
             ], otherFields: $fields);
 
-            // Assert if reservation_fields is false - no custom fields used
+            // Assert if reservation_fields_enabled is false - no custom fields used
             $product->forceFill([
-                'reservation_fields' => false,
+                'reservation_fields_enabled' => false,
+            ])->save();
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationProductCustomFields(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            // set reservation_fields_config 'yes' to use only product custom fields
+            $product->forceFill([
+                'reservation_fields_enabled' => true,
+                'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_YES,
+            ])->save();
+
+            $organizationCustomFields = [[
+                'label' => 'organization custom field text',
+                'type' => OrganizationReservationField::TYPE_TEXT,
+                'description' => 'organization custom field text description',
+                'required' => true,
+                'value' => 'some text',
+            ]];
+
+            $productCustomFields = [[
+                'label' => 'product custom field text',
+                'type' => OrganizationReservationField::TYPE_TEXT,
+                'description' => 'product custom field text description',
+                'required' => true,
+                'value' => 'some text',
+            ]];
+
+            $organizationFields = [];
+
+            foreach ($organizationCustomFields as $order => $item) {
+                $field = $provider->reservation_fields()->create([
+                    ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                    'order' => $order,
+                ]);
+
+                $organizationFields[] = [
+                    ...$item,
+                    'id' => $field->id,
+                    'field_type' => 'custom',
+                    'dusk' => "@customField$field->id",
+                    'dusk_description_btn' => "@customField{$field->id}InfoBtn",
+                ];
+            }
+
+            $productFields = [];
+
+            foreach ($productCustomFields as $order => $item) {
+                $field = $product->reservation_fields()->create([
+                    ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                    'order' => $order,
+                    'organization_id' => $provider->id,
+                ]);
+
+                $productFields[] = [
+                    ...$item,
+                    'id' => $field->id,
+                    'field_type' => 'custom',
+                    'dusk' => "@customField$field->id",
+                    'dusk_description_btn' => "@customField{$field->id}InfoBtn",
+                ];
+            }
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $productFields);
+
+            // Assert if reservation_fields_config is 'global' - organization fields used
+            $product->forceFill([
+                'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+            ])->save();
+
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+            ], otherFields: $organizationFields);
+
+            // Assert if reservation_fields_config is 'no' - no custom fields used
+            $product->forceFill([
+                'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_NO,
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
@@ -204,7 +307,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_phone' => Product::RESERVATION_FIELD_OPTIONAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $this->makeTestVoucher($fund, $identity);
@@ -219,7 +322,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_phone' => Product::RESERVATION_FIELD_REQUIRED,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             // Test required reservation phone
@@ -231,7 +334,7 @@ class ProductReservationTest extends DuskTestCase
             // Set global configs for phone
             $product->forceFill([
                 'reservation_phone' => Product::RESERVATION_FIELD_GLOBAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $provider->forceFill([
@@ -254,10 +357,10 @@ class ProductReservationTest extends DuskTestCase
                 'last_name' => $this->faker->lastName,
             ], otherFields: $fieldsRequired);
 
-            // Assert if reservation_fields is false - no phone field used
+            // Assert if reservation_fields_enabled is false - no phone field used
             $product->forceFill([
                 'reservation_phone' => Product::RESERVATION_FIELD_REQUIRED,
-                'reservation_fields' => false,
+                'reservation_fields_enabled' => false,
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
@@ -302,7 +405,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_birth_date' => Product::RESERVATION_FIELD_OPTIONAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $this->makeTestVoucher($fund, $identity);
@@ -317,7 +420,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_birth_date' => Product::RESERVATION_FIELD_REQUIRED,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             // Test required reservation birth_date
@@ -329,7 +432,7 @@ class ProductReservationTest extends DuskTestCase
             // Set global configs for birth_date
             $product->forceFill([
                 'reservation_birth_date' => Product::RESERVATION_FIELD_GLOBAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $provider->forceFill([
@@ -352,10 +455,10 @@ class ProductReservationTest extends DuskTestCase
                 'last_name' => $this->faker->lastName,
             ], otherFields: $fieldsRequired);
 
-            // Assert if reservation_fields is false - no birth_date field used
+            // Assert if reservation_fields_enabled is false - no birth_date field used
             $product->forceFill([
                 'reservation_birth_date' => Product::RESERVATION_FIELD_REQUIRED,
-                'reservation_fields' => false,
+                'reservation_fields_enabled' => false,
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
@@ -433,7 +536,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_address' => Product::RESERVATION_FIELD_OPTIONAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             $this->makeTestVoucher($fund, $identity);
@@ -456,7 +559,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_address' => Product::RESERVATION_FIELD_REQUIRED,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             // Test required reservation address without saved address
@@ -479,7 +582,7 @@ class ProductReservationTest extends DuskTestCase
 
             $product->forceFill([
                 'reservation_address' => Product::RESERVATION_FIELD_OPTIONAL,
-                'reservation_fields' => true,
+                'reservation_fields_enabled' => true,
             ])->save();
 
             // Test required reservation address with saved address

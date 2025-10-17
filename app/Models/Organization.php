@@ -700,7 +700,9 @@ class Organization extends BaseModel
      */
     public function reservation_fields(): HasMany
     {
-        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+        return $this->hasMany(OrganizationReservationField::class)
+            ->whereNull('product_id')
+            ->orderBy('order');
     }
 
     /**

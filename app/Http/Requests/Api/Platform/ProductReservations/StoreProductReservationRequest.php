@@ -88,9 +88,15 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $product = Product::find($this->input('product_id'));
 
+        $fields = match ($product?->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $product->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $product->reservation_fields,
+            default => collect(),
+        };
+
         return [
             ...parent::attributes(),
-            ...$product?->organization->reservation_fields->reduce(fn (
+            ...$fields->reduce(fn (
                 array $result,
                 OrganizationReservationField $field,
             ) => [
@@ -155,11 +161,17 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     private function customFieldRules(?Product $product): array
     {
-        if (!$product->reservation_fields) {
+        if (!$product->reservation_fields_enabled) {
             return [];
         }
 
-        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
+        $fields = match ($product?->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $product->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $product->reservation_fields,
+            default => collect(),
+        };
+
+        return $fields->reduce(fn (array $result, $field) => [
             ...$result,
             "custom_fields.$field->id" => array_filter([
                 $field->required ? 'required' : 'nullable',
