@@ -701,8 +701,8 @@ class ProductReservationTest extends DuskTestCase
                 $this->goToReservationsPage($browser);
 
                 $browser
-                    ->waitFor("@tableReservationRow$reservation->id")
-                    ->click("@tableReservationRow$reservation->id");
+                    ->waitFor("@tableReservationRow$reservation->id td:nth-child(2)")
+                    ->click("@tableReservationRow$reservation->id td:nth-child(2)");
 
                 $browser
                     ->waitFor('@editInvoiceNumberBtn')
