@@ -31,7 +31,7 @@ class FundRequestRuleTest extends TestCase
         $fund = $this->prepareFund();
         $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
 
-        $response = $this->makeValidationRequest($identity, $fund);
+        $response = $this->makeValidationRequest($identity, $fund, []);
         $response->assertJsonValidationErrors('records');
     }
 
@@ -233,20 +233,20 @@ class FundRequestRuleTest extends TestCase
     /**
      * @param Identity $identity
      * @param Fund $fund
-     * @param array|null $records
+     * @param array $records
      * @return TestResponse
      */
     protected function makeValidationRequest(
         Identity $identity,
         Fund $fund,
-        ?array $records = null
+        array $records,
     ): TestResponse {
         $apiHeaders = $this->makeApiHeaders($this->makeIdentityProxy($identity));
         $validationEndpoint = "/api/v1/platform/funds/$fund->id/requests/validate";
 
-        return $this->postJson($validationEndpoint, $records ? [
+        return $this->postJson($validationEndpoint, [
             'records' => $records,
-        ] : [], $apiHeaders);
+        ], $apiHeaders);
     }
 
     /**

@@ -20,9 +20,11 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\NavigatesFrontendDashboard;
+use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
@@ -42,6 +44,7 @@ class ProductReservationTest extends DuskTestCase
     use MakesTestProducts;
     use HasFrontendActions;
     use MakesTestIdentities;
+    use RollbackModelsTrait;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
     use MakesProductReservations;
@@ -664,6 +667,75 @@ class ProductReservationTest extends DuskTestCase
         } finally {
             $fund->archive($fund->organization->employees[0]);
         }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProviderProductReservationUpdate(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $fund = $this->makeTestFund($organization);
+
+        $this->rollbackModels([], function () use ($fund, $implementation, $organization) {
+            $this->makeProviderAndProducts($fund, 1);
+
+            $voucher = $this->makeTestVoucher($fund, $organization->identity);
+            $product = $this->findProductForReservation($voucher);
+
+            $reservation = $this->makeReservation($voucher, $product);
+
+            $this->browse(function (Browser $browser) use ($implementation, $reservation) {
+                $provider = $reservation->product->organization;
+                $identity = $provider->identity;
+
+                $browser->visit($implementation->urlProviderDashboard());
+
+                // Authorize identity
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
+                $this->selectDashboardOrganization($browser, $provider);
+
+                $this->goToReservationsPage($browser);
+
+                $browser
+                    ->waitFor("@tableReservationRow$reservation->id td:nth-child(2)")
+                    ->click("@tableReservationRow$reservation->id td:nth-child(2)");
+
+                $browser
+                    ->waitFor('@editInvoiceNumberBtn')
+                    ->click('@editInvoiceNumberBtn');
+
+                $browser
+                    ->waitFor('@modalReservationInvoiceNumberEdit')
+                    ->waitFor('@invoiceNumberInput');
+
+                // assert validation errors
+                $browser
+                    ->typeSlowly('@invoiceNumberInput', Str::random(50), 20)
+                    ->click('@submitBtn')
+                    ->waitFor('.form-error');
+
+                $this->clearField($browser, '@invoiceNumberInput');
+
+                // assert valid value saved
+                $validInvoiceNumber = Str::random(30);
+
+                $browser
+                    ->typeSlowly('@invoiceNumberInput', $validInvoiceNumber, 20)
+                    ->click('@submitBtn')
+                    ->waitUntilMissing('@modalReservationInvoiceNumberEdit')
+                    ->waitForTextIn('@reservationAdditionalDetails', $validInvoiceNumber);
+
+                // Logout
+                $this->logout($browser);
+            });
+
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
     }
 
     /**
