@@ -78,6 +78,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_physical_cards
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
@@ -108,6 +109,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_reservation_number
  * @property bool $bank_reservation_first_name
  * @property bool $bank_reservation_last_name
+ * @property bool $bank_reservation_invoice_number
  * @property bool $bank_branch_number
  * @property bool $bank_branch_id
  * @property bool $bank_branch_name
@@ -169,6 +171,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
+ * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
+ * @property-read int|null $physical_card_types_count
  * @property-read Collection|\App\Models\Prevalidation[] $prevalidations
  * @property-read int|null $prevalidations_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -207,6 +211,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPhysicalCards($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
@@ -231,6 +236,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
  * @method static EloquentBuilder<static>|Organization whereBankNote($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationFirstName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationInvoiceNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationLastName($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
@@ -347,7 +353,7 @@ class Organization extends BaseModel
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
         'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_note',
-        'reservation_note_text',
+        'reservation_note_text', 'bank_reservation_invoice_number',
     ];
 
     /**
@@ -372,6 +378,7 @@ class Organization extends BaseModel
         'allow_2fa_restrictions' => 'boolean',
         'allow_fund_request_record_edit' => 'boolean',
         'allow_bi_connection' => 'boolean',
+        'allow_physical_cards' => 'boolean',
         'allow_product_updates' => 'boolean',
         'allow_profiles_create' => 'boolean',
         'allow_profiles_relations' => 'boolean',
@@ -402,6 +409,7 @@ class Organization extends BaseModel
         'bank_fund_name' => 'boolean',
         'bank_note' => 'boolean',
         'reservation_note' => 'boolean',
+        'bank_reservation_invoice_number' => 'boolean',
     ];
 
     /**
@@ -716,6 +724,14 @@ class Organization extends BaseModel
     public function mollie_connections(): HasMany
     {
         return $this->hasMany(MollieConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function physical_card_types(): HasMany
+    {
+        return $this->hasMany(PhysicalCardType::class);
     }
 
     /**

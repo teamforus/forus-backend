@@ -57,7 +57,7 @@ class FundsController extends Controller
         $query = (new FundSearch([
             ...$request->only([
                 'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
-                'order_dir', 'with_archived', 'with_external', 'configured',
+                'order_dir', 'with_archived', 'with_external', 'configured', 'physical_card_type_id',
             ]),
             'state' => $request->input('state') === 'active_paused_and_closed' ? [
                 Fund::STATE_CLOSED,
@@ -168,6 +168,7 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ): FundResource {
+        $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
         return FundResource::create($fund, $request->only('stats'));
@@ -226,28 +227,25 @@ class FundsController extends Controller
                     'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
                     'criteria_label_requirement_show', 'allow_provider_sign_up',
                 ]),
+                ...($organization->allow_physical_cards ? $request->only([
+                    'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
+                ]) : []),
+                ...($organization->allow_2fa_restrictions ? $request->only([
+                    'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_emails',
+                    'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_reimbursements',
+                ]) : []),
                 ...($fund->organization->allow_payouts ? $request->only([
                     'custom_amount_min', 'custom_amount_max',
                     'allow_preset_amounts', 'allow_preset_amounts_validator',
                     'allow_custom_amounts', 'allow_custom_amounts_validator',
                 ]) : []),
+                ...($fund->isWaiting() ? $request->only([
+                    'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+                ]) : []),
             ]);
 
             if ($fund->organization->allow_payouts && is_array($request->input('amount_presets'))) {
                 $fund->syncAmountPresets($request->input('amount_presets'));
-            }
-
-            if ($fund->isWaiting()) {
-                $fund->updateFundsConfig($request->only([
-                    'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-                ]));
-            }
-
-            if ($organization->allow_2fa_restrictions) {
-                $fund->updateFundsConfig($request->only([
-                    'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_emails',
-                    'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_reimbursements',
-                ]));
             }
         }
 

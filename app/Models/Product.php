@@ -641,8 +641,16 @@ class Product extends BaseModel
             $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
         }
 
+        if ($product_category_ids = Arr::get($options, 'product_category_ids')) {
+            $query = ProductQuery::productCategoriesFilter($query, $product_category_ids);
+        }
+
         if (Arr::get($options, 'fund_id')) {
             $query = ProductQuery::approvedForFundsFilter($query, Arr::get($options, 'fund_id'));
+        }
+
+        if (Arr::get($options, 'fund_ids')) {
+            $query = ProductQuery::approvedForFundsFilter($query, Arr::get($options, 'fund_ids'));
         }
 
         if ($price_type = Arr::get($options, 'price_type')) {

@@ -51,6 +51,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $description
  * @property string $description_alignment
  * @property string|null $page_title_suffix
+ * @property int|null $root_product_category_id
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property int $overlay_opacity
@@ -200,6 +201,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation wherePreCheckEnabled($value)
  * @method static Builder<static>|Implementation wherePreCheckTitle($value)
  * @method static Builder<static>|Implementation whereProductsDefaultSorting($value)
+ * @method static Builder<static>|Implementation whereRootProductCategoryId($value)
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)
@@ -308,6 +310,7 @@ class Implementation extends BaseModel
         'banner_button' => 'boolean',
         'banner_collapse' => 'boolean',
         'banner_background_mobile' => 'boolean',
+        'root_product_category_id' => 'integer',
     ];
 
     /**
@@ -782,6 +785,10 @@ class Implementation extends BaseModel
             'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
             'has_payouts' => $implementation->hasPayouts(),
+            'has_physical_cards' => $implementation->organization()
+                ->where('allow_physical_cards', true)
+                ->whereRelation('funds.fund_config', 'allow_physical_cards', true)
+                ->exists(),
             'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
@@ -817,7 +824,7 @@ class Implementation extends BaseModel
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
             'implementation' => $implementation->translateColumns($implementation->only([
-                'name',
+                'name', 'root_product_category_id',
             ])),
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
@@ -907,12 +914,22 @@ class Implementation extends BaseModel
             });
         }
 
+        if ($product_category_ids = array_get($options, 'product_category_ids')) {
+            $query->whereHas('products', function (Builder $builder) use ($product_category_ids) {
+                $builder->whereIn('id', Product::search(compact('product_category_ids'))->select('id'));
+            });
+        }
+
         if ($organization_id = array_get($options, 'organization_id')) {
             $query->where('id', $organization_id);
         }
 
         if ($fund_id = array_get($options, 'fund_id')) {
             $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
+        }
+
+        if ($fund_ids = array_get($options, 'fund_ids')) {
+            $query->whereRelation('supplied_funds', fn (Builder $b) => $b->whereIn('funds.id', $fund_ids));
         }
 
         if ($q = array_get($options, 'q')) {

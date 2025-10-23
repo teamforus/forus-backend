@@ -41,8 +41,8 @@ class UpdateFundRequest extends BaseFundRequest
             ...$this->faqRules($this->fund->faq()->pluck('id')->toArray()),
             ...$this->criteriaRule($this->fund->criteria()->pluck('id')->toArray()),
             ...$this->funConfigsRules(),
-            ...$this->fundFormulaProductsRule(),
-
+            ...$this->physicalCardTypeRules(),
+            ...$this->fundFormulaProductsRules(),
         ];
     }
 
