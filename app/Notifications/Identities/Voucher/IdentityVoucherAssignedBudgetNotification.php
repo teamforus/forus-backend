@@ -26,9 +26,13 @@ class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotif
             return;
         }
 
+        $qr_token = $voucher->fund->fund_config->show_qr_code
+            ? $voucher->token_without_confirmation->address
+            : null;
+
         $mailable = new VoucherAssignedBudgetMail([
             ...$this->eventLog->data,
-            'qr_token' => $voucher->token_without_confirmation->address,
+            ...compact('qr_token'),
             'webshop_link' => $voucher->fund->urlWebshop(),
         ], $voucher->fund->getEmailFrom());
 
