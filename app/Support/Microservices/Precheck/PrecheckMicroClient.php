@@ -22,7 +22,7 @@ class PrecheckMicroClient extends BaseMicroClient
      */
     public function createSession(array $payload = [], array $headers = []): Response
     {
-        return $this->client($headers)->asJson()->post('/v1/sessions', $payload);
+        return $this->client($headers)->asJson()->post('/v1/precheck-chatbot/sessions', $payload);
     }
 
     /**
@@ -33,7 +33,7 @@ class PrecheckMicroClient extends BaseMicroClient
      */
     public function endSession(string $id, array $headers = []): Response
     {
-        return $this->client($headers)->asJson()->delete("/v1/sessions/$id");
+        return $this->client($headers)->asJson()->delete("/v1/precheck-chatbot/sessions/$id");
     }
 
     /**
@@ -44,7 +44,7 @@ class PrecheckMicroClient extends BaseMicroClient
      */
     public function advice(string $id, array $headers = []): Response
     {
-        return $this->client($headers)->asJson()->get("/v1/sessions/$id/advice");
+        return $this->client($headers)->asJson()->get("/v1/precheck-chatbot/sessions/$id/advice");
     }
 
 
@@ -57,7 +57,7 @@ class PrecheckMicroClient extends BaseMicroClient
      */
     public function sendAnswer(string $id, array $payload, array $headers = []): Response
     {
-        return $this->client($headers)->asJson()->post("/v1/sessions/$id/messages", $payload);
+        return $this->client($headers)->asJson()->post("/v1/precheck-chatbot/sessions/$id/messages", $payload);
     }
 
     /**
@@ -68,7 +68,7 @@ class PrecheckMicroClient extends BaseMicroClient
      */
     public function history(string $id, array $headers = []): Response
     {
-        return $this->client($headers)->asJson()->get("/v1/sessions/$id/messages");
+        return $this->client($headers)->asJson()->get("/v1/precheck-chatbot/sessions/$id/messages");
     }
 
 }
