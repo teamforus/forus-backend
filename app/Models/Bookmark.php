@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $bookmarkable_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $bookmarkable
+ * @property-read Model|Eloquent $bookmarkable
  * @property-read \App\Models\Identity $identity
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Bookmark newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Bookmark newQuery()

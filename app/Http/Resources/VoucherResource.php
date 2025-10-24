@@ -262,7 +262,7 @@ class VoucherResource extends BaseJsonResource
     {
         return  [
             ...$fund->only('id', 'state', 'type'),
-            ...$fund->translateColumns($fund->only(['name'])),
+            ...$fund->translateColumns($fund->only(['name', 'description_short', 'how_it_works_html'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),

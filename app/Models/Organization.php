@@ -19,7 +19,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Statistics\Funds\FinancialStatisticQueries;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -299,7 +299,7 @@ class Organization extends BaseModel
     use HasTags;
     use HasMedia;
     use HasDigests;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string GENERIC_KVK = '00000000';

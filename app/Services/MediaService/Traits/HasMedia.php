@@ -5,6 +5,7 @@ namespace App\Services\MediaService\Traits;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Barryvdh\LaravelIdeHelper\Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Throwable;
@@ -64,9 +65,10 @@ trait HasMedia
     /**
      * @param array|string $uid
      * @param string $mediaConfigType
+     * @param array|null $where
      * @return bool
      */
-    public function syncMedia(array|string $uid, string $mediaConfigType): bool
+    public function syncMedia(array|string $uid, string $mediaConfigType, array $where = null): bool
     {
         $uid = (array) $uid;
         $mediaConfig = MediaService::getMediaConfig($mediaConfigType);
@@ -77,9 +79,14 @@ trait HasMedia
         }
 
         // remove old medias
-        $oldMedia = $this->medias()->where([
-            'type' => $mediaConfig->getName(),
-        ])->whereNotIn('uid', $uid)->pluck('uid')->toArray();
+        $oldMedia = $this->medias()->where(function (Builder $builder) use ($uid, $mediaConfig, $where) {
+            $builder->where('type', $mediaConfig->getName());
+            $builder->whereNotIn('uid', $uid);
+
+            if ($where) {
+                $builder->where($where);
+            }
+        })->pluck('uid')->toArray();
 
         $this->unlinkMedias($oldMedia);
 

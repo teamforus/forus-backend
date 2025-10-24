@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $code_prefix
  * @property int $code_blocks
  * @property int $code_block_size
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
@@ -37,16 +38,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $physical_cards_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereCodeBlockSize($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereCodeBlocks($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereCodePrefix($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCardType withoutTrashed()
  * @mixin \Eloquent
  */
 class PhysicalCardType extends Model
