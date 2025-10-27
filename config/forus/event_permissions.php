@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Permission;
+
 return [
     'bank_connection' => [
         'permissions' => [
-            'manage_bank_connections',
+            Permission::MANAGE_BANK_CONNECTIONS,
         ],
         'events' => array_merge([
             'disabled',
@@ -19,7 +21,7 @@ return [
 
     'voucher' => [
         'permissions' => [
-            'manage_vouchers',
+            Permission::MANAGE_VOUCHERS,
         ],
         'events' => [
             'created_budget',
@@ -42,7 +44,7 @@ return [
 
     'employees' => [
         'permissions' => [
-            'manage_employees',
+            Permission::MANAGE_EMPLOYEES,
         ],
         'events' => [
             'created',
@@ -53,7 +55,7 @@ return [
 
     'fund' => [
         'permissions' => [
-            'view_funds',
+            Permission::VIEW_FUNDS,
         ],
         'events' => [
             'created',

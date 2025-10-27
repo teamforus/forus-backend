@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -31,7 +32,7 @@ class EmployeePolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_employees');
+        return $organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
     }
 
     /**
@@ -57,7 +58,7 @@ class EmployeePolicy
             return false;
         }
 
-        return $employee->organization->identityCan($identity, 'manage_employees');
+        return $employee->organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
     }
 
     /**
