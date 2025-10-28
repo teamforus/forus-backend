@@ -28,7 +28,8 @@ class ProductSmallResource extends ProductResource
 
         return [
             ...$this->baseFields($product),
-            'photo' => MediaResource::collection($product->photos),
+            'photo' => new MediaResource($product->photos[0] ?? null),
+            'photos' => MediaResource::collection($product->photos),
         ];
     }
 }
