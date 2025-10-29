@@ -38,12 +38,12 @@ class ProductCategorySearch extends BaseSearch
 
         if ($this->hasFilter('used') && $this->getFilter('used', false)) {
             $builder->where(function (ProductCategory|Builder $builder) {
-                $builder = ProductQuery::approvedForFundsFilter(
+                $productBuilder = ProductQuery::approvedForFundsFilter(
                     ProductQuery::inStockAndActiveFilter(Product::query()),
                     Implementation::activeFundsQuery()->pluck('id')->toArray()
                 );
 
-                $ids = $builder->distinct()->pluck('product_category_id')->toArray();
+                $ids = $productBuilder->distinct()->pluck('product_category_id')->toArray();
 
                 $builder->whereIn('id', $ids);
                 $builder->orWhereHas('descendants', fn (Builder $b) => $b->whereIn('id', $ids));

@@ -121,7 +121,8 @@ class ProvidersController extends Controller
         $fields = $request->input('fields', FundProvidersExport::getExportFieldsRaw());
 
         $search = new FundProviderSearch($request->only([
-            'fund_ids', 'implementation_id',
+            'fund_ids', 'implementation_id', 'allow_products', 'has_products', 'q', 'fund_id',
+            'state', 'organization_id', 'allow_budget', 'allow_extra_payments',
         ]), FundProvider::query(), $organization);
 
         $exportData = new FundProvidersExport($search->query(), $fields);
