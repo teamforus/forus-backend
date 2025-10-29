@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasDbTokens;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -27,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUp whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundTopUp extends BaseModel
+class FundTopUp extends Model
 {
     use HasDbTokens;
 

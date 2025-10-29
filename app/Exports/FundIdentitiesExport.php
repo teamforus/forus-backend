@@ -2,12 +2,11 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\Identity;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class FundIdentitiesExport extends BaseFieldedExport
+class FundIdentitiesExport extends BaseExport
 {
     protected static string $transKey = 'fund_identities';
 
@@ -23,48 +22,17 @@ class FundIdentitiesExport extends BaseFieldedExport
     ];
 
     /**
-     * FundsExport constructor.
-     * @param EloquentCollection|Identity[] $identities
-     */
-    public function __construct(EloquentCollection|array $identities, protected array $fields)
-    {
-        $this->data = $this->export($identities);
-    }
-
-    /**
-     * @param EloquentCollection|Identity[] $identities
-     * @return Collection
-     */
-    protected function export(EloquentCollection|array $identities): Collection
-    {
-        return $this->exportTransform($identities->load([
-            'primary_email',
-        ]));
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys(
-            $data->map(fn (Identity $identity) => array_only($this->getRow($identity), $this->fields))
-        );
-    }
-
-    /**
-     * @param Identity $identity
+     * @param Model|Identity $model
      * @return array
      */
-    protected function getRow(Identity $identity): array
+    protected function getRow(Model|Identity $model): array
     {
         return [
-            'id' => $identity->id,
-            'email' => $identity->email,
-            'count_vouchers' => $identity->getAttribute('count_vouchers'),
-            'count_vouchers_active' => $identity->getAttribute('count_vouchers_active'),
-            'count_vouchers_active_with_balance' => $identity->getAttribute('count_vouchers_active_with_balance'),
+            'id' => $model->id,
+            'email' => $model->email,
+            'count_vouchers' => $model->getAttribute('count_vouchers'),
+            'count_vouchers_active' => $model->getAttribute('count_vouchers_active'),
+            'count_vouchers_active_with_balance' => $model->getAttribute('count_vouchers_active_with_balance'),
         ];
     }
 }

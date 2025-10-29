@@ -7,7 +7,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
-use App\Searches\VoucherTransactionBulksSearch;
+use App\Searches\VoucherTransactionsSearch;
 use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
@@ -30,9 +30,9 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -95,7 +95,7 @@ use Throwable;
  * @method static Builder<static>|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionBulk extends BaseModel
+class VoucherTransactionBulk extends Model
 {
     use HasLogs;
     use HasDbTokens;
@@ -347,7 +347,7 @@ class VoucherTransactionBulk extends BaseModel
                 $monetaryAccountId = $this->monetary_account_id;
                 $payment = DraftPayment::create($transactions, 1, $monetaryAccountId);
 
-                $this->updateModel([
+                $this->update([
                     'state' => self::STATE_PENDING,
                     'payment_id' => $payment->getValue(),
                 ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
@@ -358,7 +358,7 @@ class VoucherTransactionBulk extends BaseModel
         } catch (Throwable $e) {
             Log::channel('bunq')->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
-            $this->updateModel([
+            $this->update([
                 'state' => self::STATE_ERROR,
             ])->logError([
                 'error_message' => $e->getMessage(),
@@ -391,7 +391,7 @@ class VoucherTransactionBulk extends BaseModel
                 $bulkPayment = $this->createBulkPaymentToBNG($requestedExecutionDate);
                 $response = $bngService->bulkPayment($bulkPayment);
 
-                $this->updateModel([
+                $this->update([
                     'state' => self::STATE_PENDING,
                     'payment_id' => $response->getPaymentId(),
                     'auth_url' => $response->getAuthData()->getUrl(),
@@ -410,7 +410,7 @@ class VoucherTransactionBulk extends BaseModel
         } catch (Throwable $e) {
             $bngService::logError('Submit bulk', $e);
 
-            $this->updateModel([
+            $this->update([
                 'state' => self::STATE_ERROR,
             ])->logError([
                 'error_message' => $e->getMessage(),
@@ -435,7 +435,7 @@ class VoucherTransactionBulk extends BaseModel
      */
     public function setRejected(): self
     {
-        $this->updateModel([
+        $this->update([
             'state' => static::STATE_REJECTED,
         ])->log(static::STATE_REJECTED, $this->getLogModels());
 
@@ -448,9 +448,8 @@ class VoucherTransactionBulk extends BaseModel
      */
     public function setExported(Employee $employee): self
     {
-        $this->updateModel([
-            'is_exported' => true,
-        ])->log(self::EVENT_EXPORTED, $this->getLogModels($employee));
+        $this->update(['is_exported' => true]);
+        $this->log(self::EVENT_EXPORTED, $this->getLogModels($employee));
 
         return $this;
     }
@@ -502,7 +501,15 @@ class VoucherTransactionBulk extends BaseModel
                 'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
             ]);
 
-            $query = VoucherTransaction::searchSponsor($request, $sponsor);
+            $search = new VoucherTransactionsSearch($request->only([
+                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+                'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+                'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+                'identity_address', 'execution_date_from', 'execution_date_to',
+            ]), VoucherTransaction::query());
+
+            $query = $search->searchSponsor($sponsor);
             $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options, $query);
         } else {
             $query = VoucherTransaction::query();
@@ -568,7 +575,7 @@ class VoucherTransactionBulk extends BaseModel
      */
     public function resetBulk(?Employee $employee): self
     {
-        $this->updateModel([
+        $this->update([
             'state' => static::STATE_PENDING,
         ]);
 
@@ -634,24 +641,6 @@ class VoucherTransactionBulk extends BaseModel
             $this->bank_connection->organization_id,
             $this->id
         ), array_filter(compact('success', 'error')));
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Builder
-     */
-    public static function search(Request $request, Organization $organization): Builder
-    {
-        $query = self::whereHas('bank_connection', fn (Builder $q) => $q->where([
-            'bank_connections.organization_id' => $organization->id,
-        ]));
-
-        $builder = new VoucherTransactionBulksSearch($request->only([
-            'state', 'from', 'to', 'amount_min', 'amount_max', 'quantity_min', 'quantity_max',
-        ]), $query);
-
-        return $builder->query();
     }
 
     /**

@@ -172,7 +172,7 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        OrganizationUpdated::dispatch(tap($organization)->update($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
         ])));
 
@@ -192,7 +192,7 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('update', $organization);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        OrganizationUpdated::dispatch(tap($organization)->update($request->only([
             'bank_transaction_id', 'bank_transaction_date', 'bank_transaction_time', 'bank_reservation_number',
             'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name', 'bank_note',
             'bank_separator', 'bank_reservation_first_name', 'bank_reservation_last_name',
@@ -215,7 +215,7 @@ class OrganizationsController extends Controller
     ): OrganizationResource {
         $this->authorize('updateAutoAllowReservations', $organization);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        OrganizationUpdated::dispatch(tap($organization)->update($request->only([
             'reservations_auto_accept',
         ])));
 
@@ -237,7 +237,7 @@ class OrganizationsController extends Controller
 
         $allowExtraPayments = Gate::allows('allowExtraPayments', [MollieConnection::class, $organization]);
 
-        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+        OrganizationUpdated::dispatch(tap($organization)->update($request->only([
             'reservation_phone', 'reservation_address', 'reservation_birth_date', 'reservation_user_note',
             'reservation_note', 'reservation_note_text',
             ...$allowExtraPayments ? ['reservation_allow_extra_payments'] : [],

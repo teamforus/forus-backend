@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrganizationReservationField withoutTrashed()
  * @mixin \Eloquent
  */
-class OrganizationReservationField extends BaseModel
+class OrganizationReservationField extends Model
 {
     use SoftDeletes;
     use HasOnDemandTranslations;

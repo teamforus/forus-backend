@@ -333,9 +333,11 @@ class MigratePhysicalCardsCommand extends BaseCommand
             if (!$dryRun) {
                 $preValue = $card->voucher_id;
 
-                $card->updateModel([
+                $card->update([
                     'voucher_id' => $vouchers[0]->id,
-                ])->log($card::EVENT_MIGRATED, [
+                ]);
+
+                $card->log($card::EVENT_MIGRATED, [
                     'physical_card' => $card,
                 ], [
                     'prev_voucher_id' => $preValue,

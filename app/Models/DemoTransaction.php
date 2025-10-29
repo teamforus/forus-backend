@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\DemoTransaction.
  *
@@ -20,7 +22,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DemoTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class DemoTransaction extends BaseModel
+class DemoTransaction extends Model
 {
     public const string STATE_PENDING = 'pending';
     public const string STATE_ACCEPTED = 'accepted';

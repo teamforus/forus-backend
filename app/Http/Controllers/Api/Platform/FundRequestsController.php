@@ -23,7 +23,7 @@ class FundRequestsController extends Controller
 
         $search = new FundRequestSearch($request->only([
             'archived', 'order_by', 'order_dir', 'fund_id',
-        ]));
+        ]), FundRequest::query());
 
         return FundRequestResource::queryCollection($search->query()->where([
             'identity_id' => $request->auth_id(),

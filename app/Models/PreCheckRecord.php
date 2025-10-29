@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -41,7 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheckRecord whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class PreCheckRecord extends BaseModel
+class PreCheckRecord extends Model
 {
     use HasOnDemandTranslations;
 

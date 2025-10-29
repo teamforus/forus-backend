@@ -3,29 +3,29 @@
 namespace App\Searches;
 
 use App\Models\Fund;
-use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder|null $builder
+     * @param Builder|Relation|Fund $builder
      */
-    public function __construct(array $filters, Builder $builder = null)
+    public function __construct(array $filters, Builder|Relation|Fund $builder)
     {
-        parent::__construct($filters, $builder ?: Fund::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return FundRequest|Builder
+     * @return Builder|Relation|Fund
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|Fund
     {
-        /** @var Fund|Builder $builder */
+        /** @var Builder|Relation|Fund $builder */
         $builder = parent::query();
 
         if (!$this->getFilter('with_archived', false)) {
@@ -88,11 +88,11 @@ class FundSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Fund $builder
+     * @param Builder|Relation|Fund $builder
      * @param bool $approved
      * @return void
      */
-    protected function filterByApproval(Builder|Fund $builder, bool $approved): void
+    protected function filterByApproval(Builder|Relation|Fund $builder, bool $approved): void
     {
         $funds = (clone $builder)->pluck('id')->toArray();
 
@@ -108,10 +108,10 @@ class FundSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|Fund $builder
+     * @return Builder|Relation|Fund
      */
-    protected function order(Builder $builder): Builder
+    protected function order(Builder|Relation|Fund $builder): Builder|Relation|Fund
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'asc');

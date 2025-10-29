@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRecord whereValue($value)
  * @mixin \Eloquent
  */
-class PrevalidationRecord extends BaseModel
+class PrevalidationRecord extends Model
 {
     /**
      * @var array

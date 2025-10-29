@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Helpers\Markdown;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -200,7 +201,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
-class FundConfig extends BaseModel
+class FundConfig extends Model
 {
     use HasOnDemandTranslations;
 

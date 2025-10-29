@@ -9,23 +9,25 @@ use App\Models\ProductReservation;
 use App\Models\ReservationExtraPayment;
 use App\Scopes\Builders\ReservationExtraPaymentQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ReservationExtraPaymentsSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder|null $builder
+     * @param Builder|Relation|ReservationExtraPayment $builder
      */
-    public function __construct(array $filters, Builder $builder = null)
+    public function __construct(array $filters, Builder|Relation|ReservationExtraPayment $builder)
     {
-        parent::__construct($filters, $builder ?: ReservationExtraPayment::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|ReservationExtraPayment
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|ReservationExtraPayment
     {
+        /** @var Builder|Relation|ReservationExtraPayment $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
@@ -42,14 +44,14 @@ class ReservationExtraPaymentsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|ReservationExtraPayment $builder
+     * @param Builder|Relation|ReservationExtraPayment $builder
      * @param string|null $orderBy
-     * @return Builder|ReservationExtraPayment
+     * @return Builder|Relation|ReservationExtraPayment
      */
     public function appendSortableFields(
-        Builder|ReservationExtraPayment $builder,
+        Builder|Relation|ReservationExtraPayment $builder,
         ?string $orderBy,
-    ): Builder|ReservationExtraPayment {
+    ): Builder|Relation|ReservationExtraPayment {
         $subQuery = match($orderBy) {
             'fund_name' => Fund::query()
                 ->whereHas('vouchers.product_reservation', function (Builder $builder) {
@@ -85,10 +87,10 @@ class ReservationExtraPaymentsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|ReservationExtraPayment $builder
-     * @return Builder|ReservationExtraPayment
+     * @param Builder|Relation|ReservationExtraPayment $builder
+     * @return Builder|Relation|ReservationExtraPayment
      */
-    protected function order(Builder|ReservationExtraPayment $builder): Builder|ReservationExtraPayment
+    protected function order(Builder|Relation|ReservationExtraPayment $builder): Builder|Relation|ReservationExtraPayment
     {
         $orderBy = $this->getFilter('order_by', 'paid_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

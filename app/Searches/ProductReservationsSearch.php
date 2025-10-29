@@ -13,20 +13,20 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class ProductReservationsSearch extends BaseSearch
 {
     /**
-     * ProductReservationsSearch constructor.
      * @param array $filters
-     * @param Builder|Relation|null $builder
+     * @param Builder|Relation|ProductReservation $builder
      */
-    public function __construct(array $filters, Builder|Relation $builder = null)
+    public function __construct(array $filters, Builder|Relation|ProductReservation $builder)
     {
-        parent::__construct($filters, $builder ?: ProductReservation::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|ProductReservation
      */
-    public function query(): Builder|Relation
+    public function query(): Builder|Relation|ProductReservation
     {
+        /** @var Builder|Relation|ProductReservation $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
@@ -87,10 +87,10 @@ class ProductReservationsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Relation $builder
-     * @return Builder|Relation
+     * @param Builder|Relation|ProductReservation $builder
+     * @return Builder|Relation|ProductReservation
      */
-    public function order(Builder|Relation $builder): Builder|Relation
+    public function order(Builder|Relation|ProductReservation $builder): Builder|Relation|ProductReservation
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

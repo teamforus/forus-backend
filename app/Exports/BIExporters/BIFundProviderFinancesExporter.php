@@ -3,8 +3,8 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\ProviderFinancesExport;
-use App\Http\Resources\ProviderFinancialResource;
 use App\Models\Organization;
+use App\Searches\OrganizationSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIFundProviderFinancesExporter extends BaseBIExporter
@@ -17,12 +17,10 @@ class BIFundProviderFinancesExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $providers = Organization::searchProviderOrganizations($this->organization, [])
-            ->with(ProviderFinancialResource::$load)
-            ->get();
-
+        $search = new OrganizationSearch([], Organization::query());
+        $builder = $search->searchProviderOrganizations($this->organization);
         $fields = ProviderFinancesExport::getExportFieldsRaw();
-        $data = new ProviderFinancesExport($providers, $fields);
+        $data = new ProviderFinancesExport($builder, $fields);
 
         return $data->collection()->toArray();
     }

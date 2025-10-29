@@ -7,6 +7,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -61,7 +62,7 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ImplementationPage withoutTrashed()
  * @mixin \Eloquent
  */
-class ImplementationPage extends BaseModel
+class ImplementationPage extends Model
 {
     use HasFaq;
     use HasMedia;

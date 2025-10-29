@@ -12,11 +12,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class HouseholdProfilesSearch extends BaseSearch
 {
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|HouseholdProfile
      */
-    public function query(): Builder|Relation
+    public function query(): Builder|Relation|HouseholdProfile
     {
-        /** @var Builder|HouseholdProfile $builder */
+        /** @var Builder|Relation|HouseholdProfile $builder */
         $builder = parent::query();
 
         if ($this->getFilter('q') && $this->getFilter('organization_id')) {

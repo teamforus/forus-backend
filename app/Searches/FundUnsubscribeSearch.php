@@ -13,9 +13,9 @@ use Illuminate\Support\Carbon;
 class FundUnsubscribeSearch extends BaseSearch
 {
     /**
-     * @return Builder|ProductCategory
+     * @return Builder|Relation|ProductCategory
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|ProductCategory
     {
         /** @var Builder|Relation|FundProviderUnsubscribe $query */
         $query = parent::getBuilder();

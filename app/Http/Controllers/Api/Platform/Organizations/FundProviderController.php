@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\IndexFundProviderReque
 use App\Http\Resources\FundProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Searches\FundProviderSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderController extends Controller
@@ -26,6 +27,11 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
-        return FundProviderResource::queryCollection(FundProvider::search($request, $organization), $request);
+        $search = new FundProviderSearch($request->only([
+            'allow_products', 'has_products', 'q', 'fund_id', 'state', 'organization_id',
+            'allow_budget', 'allow_extra_payments',
+        ]), FundProvider::query(), $organization);
+
+        return FundProviderResource::queryCollection($search->query(), $request);
     }
 }

@@ -2,19 +2,18 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\EventLog\IndexEventLogRequest;
+use App\Exports\Base\BaseExport;
 use App\Models\Employee;
 use App\Models\Voucher;
-use App\Searches\EmployeeEventLogSearch;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
-class EventLogsExport extends BaseFieldedExport
+class EventLogsExport extends BaseExport
 {
     protected static string $transKey = 'event_logs';
-    protected Employee $employee;
 
     /**
      * @var array|string[][]
@@ -28,60 +27,41 @@ class EventLogsExport extends BaseFieldedExport
     ];
 
     /**
-     * @param IndexEventLogRequest $request
-     * @param Employee $employee
+     * @param Builder|Relation|EventLog $builder
      * @param array $fields
+     * @param Employee $employee
      */
-    public function __construct(IndexEventLogRequest $request, Employee $employee, array $fields = [])
-    {
-        $this->fields = $fields;
-        $this->employee = $employee;
-        $this->data = $this->export($request);
+    public function __construct(
+        Builder|Relation|EventLog $builder,
+        protected array $fields,
+        protected Employee $employee,
+    ) {
+        parent::__construct($builder, $fields);
     }
 
     /**
-     * @param IndexEventLogRequest $request
-     * @return Collection
-     */
-    public function export(IndexEventLogRequest $request): Collection
-    {
-        $search = new EmployeeEventLogSearch($this->employee, $request->only([
-            'q', 'loggable', 'loggable_id',
-        ]));
-
-        $data = $search
-            ->query()
-            ->with('identity.primary_email')
-            ->with('loggable', fn (MorphTo $morphTo) => $morphTo->morphWith([Voucher::class => ['fund']]))
-            ->get();
-
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (EventLog $eventLog) => array_only(
-            $this->getRow($eventLog),
-            $this->fields,
-        )));
-    }
-
-    /**
-     * @param EventLog $eventLog
      * @return array
      */
-    protected function getRow(EventLog $eventLog): array
+    protected function getBuilderWithArray(): array
     {
         return [
-            'created_at' => format_date_locale($eventLog->created_at),
-            'loggable' => strip_tags($eventLog->loggable_locale_dashboard),
-            'event' => strip_tags($eventLog->eventDescriptionLocaleDashboard($this->employee)),
-            'identity_email' => $eventLog->getIdentityEmail($this->employee),
-            'note' => $eventLog->getNote(),
+            'identity.primary_email',
+            'loggable' => fn (MorphTo $morphTo) => $morphTo->morphWith([Voucher::class => ['fund']]),
+        ];
+    }
+
+    /**
+     * @param Model|EventLog $model
+     * @return array
+     */
+    protected function getRow(Model|EventLog $model): array
+    {
+        return [
+            'created_at' => format_date_locale($model->created_at),
+            'loggable' => strip_tags($model->loggable_locale_dashboard),
+            'event' => strip_tags($model->eventDescriptionLocaleDashboard($this->employee)),
+            'identity_email' => $model->getIdentityEmail($this->employee),
+            'note' => $model->getNote(),
         ];
     }
 }

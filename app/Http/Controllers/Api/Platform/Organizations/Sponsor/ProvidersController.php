@@ -13,6 +13,8 @@ use App\Http\Resources\Sponsor\SponsorProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Searches\FundProviderSearch;
+use App\Searches\OrganizationSearch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -39,7 +41,12 @@ class ProvidersController extends Controller
         $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
 
         $query = $query->whereHas('fund_providers', function (Builder $builder) use ($request, $organization) {
-            FundProvider::search($request, $organization, $builder);
+            $search = new FundProviderSearch($request->only([
+                'fund_ids', 'implementation_id', 'allow_products', 'has_products', 'q', 'fund_id',
+                'state', 'organization_id', 'allow_budget', 'allow_extra_payments',
+            ]), $builder, $organization);
+
+            $builder->whereIn('id', $search->query()->select('id'));
         });
 
         $query = OrganizationQuery::whereGroupState(
@@ -112,7 +119,12 @@ class ProvidersController extends Controller
         $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fields = $request->input('fields', FundProvidersExport::getExportFieldsRaw());
-        $exportData = new FundProvidersExport($request, $organization, $fields);
+
+        $search = new FundProviderSearch($request->only([
+            'fund_ids', 'implementation_id',
+        ]), FundProvider::query(), $organization);
+
+        $exportData = new FundProvidersExport($search->query(), $fields);
 
         return resolve('excel')->download($exportData, $fileName);
     }
@@ -135,12 +147,15 @@ class ProvidersController extends Controller
         $from = $request->input('from');
         $to = $request->input('to');
 
-        $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
-            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
-        ]), [
+        $search = new OrganizationSearch([
+            ...$request->only([
+                'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
+            ]),
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
-        ]))->with(ProviderFinancialResource::$load);
+        ], Organization::query());
+
+        $providers = $search->searchProviderOrganizations($organization)->with(ProviderFinancialResource::$load);
 
         return ProviderFinancialResource::collection($providers->paginate(
             $request->input('per_page')
@@ -182,17 +197,20 @@ class ProvidersController extends Controller
         $from = $request->input('from');
         $to = $request->input('to');
 
-        $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
-            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
-        ]), [
+        $search = new OrganizationSearch([
+            ...$request->only([
+                'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids', 'business_type_ids',
+            ]),
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
-        ]))->with(ProviderFinancialResource::$load)->get();
+        ], Organization::query());
+
+        $builder = $search->searchProviderOrganizations($organization);
 
         $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
         $fields = $request->input('fields', ProviderFinancesExport::getExportFieldsRaw());
-        $fileData = new ProviderFinancesExport($providers, $fields);
+        $fileData = new ProviderFinancesExport($builder, $fields);
 
         return resolve('excel')->download($fileData, $fileName);
     }

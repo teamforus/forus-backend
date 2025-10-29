@@ -13,17 +13,17 @@ class HouseholdSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Builder|Relation|Household $builder
      */
-    public function __construct(array $filters, Builder $builder)
+    public function __construct(array $filters, Builder|Relation|Household $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|Household
      */
-    public function query(): Builder|Relation
+    public function query(): Builder|Relation|Household
     {
         /** @var Builder|Household|Relation $builder */
         $builder = parent::query();

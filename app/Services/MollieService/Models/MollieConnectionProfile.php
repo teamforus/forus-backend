@@ -2,7 +2,7 @@
 
 namespace App\Services\MollieService\Models;
 
-use App\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|MollieConnectionProfile whereWebsite($value)
  * @mixin \Eloquent
  */
-class MollieConnectionProfile extends BaseModel
+class MollieConnectionProfile extends Model
 {
     public const string STATE_ACTIVE = 'active';
     public const string STATE_PENDING = 'pending';

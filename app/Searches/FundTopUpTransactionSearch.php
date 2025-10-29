@@ -6,23 +6,25 @@ use App\Models\BankConnectionAccount;
 use App\Models\FundTopUp;
 use App\Models\FundTopUpTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundTopUpTransactionSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder|null $builder
+     * @param Builder|Relation|FundTopUpTransaction $builder
      */
-    public function __construct(array $filters, Builder $builder = null)
+    public function __construct(array $filters, Builder|Relation|FundTopUpTransaction $builder)
     {
-        parent::__construct($filters, $builder ?: FundTopUpTransaction::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|FundTopUpTransaction
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|FundTopUpTransaction
     {
+        /** @var Builder|Relation|FundTopUpTransaction $builder */
         $builder = parent::query();
 
         if ($q = $this->getFilter('q')) {
@@ -52,14 +54,14 @@ class FundTopUpTransactionSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|FundTopUpTransaction $builder
+     * @param Builder|Relation|FundTopUpTransaction $builder
      * @param string|null $orderBy
-     * @return Builder|FundTopUpTransaction
+     * @return Builder|Relation|FundTopUpTransaction
      */
     public function appendSortableFields(
-        Builder|FundTopUpTransaction $builder,
+        Builder|Relation|FundTopUpTransaction $builder,
         ?string $orderBy
-    ): Builder|FundTopUpTransaction {
+    ): Builder|Relation|FundTopUpTransaction {
         $subQuery = match($orderBy) {
             'code' => FundTopUp::query()
                 ->whereColumn('id', 'fund_top_up_transactions.fund_top_up_id')
@@ -78,10 +80,10 @@ class FundTopUpTransactionSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|FundTopUpTransaction $builder
+     * @return Builder|Relation|FundTopUpTransaction
      */
-    protected function order(Builder $builder): Builder
+    protected function order(Builder|Relation|FundTopUpTransaction $builder): Builder|Relation|FundTopUpTransaction
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

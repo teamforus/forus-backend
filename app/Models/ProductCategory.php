@@ -7,6 +7,7 @@ use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -102,7 +103,7 @@ use Kalnoy\Nestedset\NodeTrait;
  * @method static \Kalnoy\Nestedset\QueryBuilder<static>|ProductCategory withoutRoot()
  * @mixin \Eloquent
  */
-class ProductCategory extends BaseModel
+class ProductCategory extends Model
 {
     use Translatable;
     use NodeTrait;

@@ -7,9 +7,9 @@ use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Arr;
 
 /**
  * App\Models\RecordType.
@@ -63,7 +63,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|RecordType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
-class RecordType extends BaseModel
+class RecordType extends Model
 {
     use Translatable;
     use RecordTranslationsTrait;
@@ -133,46 +133,6 @@ class RecordType extends BaseModel
     public function pre_check_records(): HasMany
     {
         return $this->hasMany(PreCheckRecord::class, 'record_type_key', 'key');
-    }
-
-    /**
-     * @param bool $withSystem
-     * @param array $filters
-     * @return RecordType|Builder
-     */
-    public static function searchQuery(array $filters = [], bool $withSystem = true): RecordType|Builder
-    {
-        /** @var RecordType $query */
-        $query = static::where(fn (Builder $builder) => $builder->where($withSystem ? [] : [
-            'system' => false,
-        ]))->with('translations');
-
-        if (Arr::get($filters, 'vouchers', false)) {
-            $query->where('vouchers', true);
-        }
-
-        if (Arr::get($filters, 'criteria', false)) {
-            $query->where('criteria', true);
-        }
-
-        if (Arr::get($filters, 'organization_id', false)) {
-            $query->where(function (Builder|RecordType $builder) use ($filters) {
-                $builder->whereNull('organization_id');
-                $builder->orWhere('organization_id', Arr::get($filters, 'organization_id'));
-            });
-        }
-
-        return $query;
-    }
-
-    /**
-     * @param bool $withSystem
-     * @param array $filters
-     * @return Collection|RecordType
-     */
-    public static function search(bool $withSystem = true, array $filters = []): Collection|array
-    {
-        return static::searchQuery($filters, $withSystem)->get();
     }
 
     /**

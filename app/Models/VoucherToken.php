@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VoucherToken whereVoucherId($value)
  * @mixin \Eloquent
  */
-class VoucherToken extends BaseModel
+class VoucherToken extends Model
 {
     /**
      * The attributes that are mass assignable.

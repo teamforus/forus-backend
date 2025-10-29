@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\Provider\ProviderProductResource;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Searches\ProductSearch;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -33,7 +34,11 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
-        return ProviderProductResource::collection(Product::searchAny($request)->where([
+        $search = new ProductSearch($request->only([
+            'unlimited_stock', 'q', 'source', 'order_by', 'order_dir',
+        ]), Product::query());
+
+        return ProviderProductResource::collection($search->query()->where([
             'organization_id' => $organization->id,
         ])->with(
             ProviderProductResource::load()

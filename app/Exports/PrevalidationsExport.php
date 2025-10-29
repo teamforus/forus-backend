@@ -2,15 +2,14 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class PrevalidationsExport extends BaseFieldedExport
+class PrevalidationsExport extends BaseExport
 {
     protected static string $transKey = 'prevalidations';
 
@@ -24,32 +23,11 @@ class PrevalidationsExport extends BaseFieldedExport
     ];
 
     /**
-     * @param array $fields
-     * @param Builder|Relation $query
+     * @var array|string[]
      */
-    public function __construct(
-        protected array $fields,
-        protected Builder|Relation $query,
-    ) {
-        $this->data = $this->export($query);
-    }
-
-    /**
-     * @param Builder|Relation $query
-     * @return Collection
-     */
-    public function export(Builder|Relation $query): Collection
-    {
-        $query = $query->with([
-            'prevalidation_records.record_type.translations',
-        ]);
-
-        (clone $query)->update([
-            'exported' => true,
-        ]);
-
-        return $this->exportTransform($query->get());
-    }
+    protected array $builderWithArray = [
+        'prevalidation_records.record_type.translations',
+    ];
 
     /**
      * @param Collection $data
@@ -73,14 +51,14 @@ class PrevalidationsExport extends BaseFieldedExport
     }
 
     /**
-     * @param Prevalidation $prevalidation
+     * @param Model|Prevalidation $model
      * @return array
      */
-    protected function getRow(Prevalidation $prevalidation): array
+    protected function getRow(Model|Prevalidation $model): array
     {
         return [
-            'code' => $prevalidation->uid,
-            'used' => trans('export.prevalidations.used_' . ($prevalidation->state === Prevalidation::STATE_USED ? 'yes' : 'no')),
+            'code' => $model->uid,
+            'used' => trans('export.prevalidations.used_' . ($model->state === Prevalidation::STATE_USED ? 'yes' : 'no')),
         ];
     }
 

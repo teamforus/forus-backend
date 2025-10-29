@@ -5,7 +5,6 @@ namespace App\Models\Traits;
 use App\Models\Bookmark;
 use App\Models\Identity;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -23,13 +22,15 @@ trait HasBookmarks
 
     /**
      * @param Identity $identity
-     * @return Bookmark|Model
+     * @return Product|HasBookmarks
      */
-    public function addBookmark(Identity $identity): Bookmark|Model
+    public function addBookmark(Identity $identity): self
     {
-        return $this->bookmarks()->firstOrCreate([
+        $this->bookmarks()->firstOrCreate([
             'identity_address' => $identity->address,
         ]);
+
+        return $this;
     }
 
     /**

@@ -2,12 +2,12 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
+use App\Http\Resources\ProviderFinancialResource;
 use App\Models\Organization;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class ProviderFinancesExport extends BaseFieldedExport
+class ProviderFinancesExport extends BaseExport
 {
     protected static string $transKey = 'finances';
 
@@ -23,47 +23,25 @@ class ProviderFinancesExport extends BaseFieldedExport
     ];
 
     /**
-     * @param EloquentCollection $providers
-     * @param array $fields
-     */
-    public function __construct(EloquentCollection $providers, protected array $fields = [])
-    {
-        $this->data = $this->export($providers);
-    }
-
-    /**
-     * @param EloquentCollection $data
-     * @return Collection
-     */
-    protected function export(EloquentCollection $data): Collection
-    {
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param \Illuminate\Database\Eloquent\Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (Organization $provider) => array_only(
-            $this->getRow($provider),
-            $this->fields,
-        ))->values());
-    }
-
-    /**
-     * @param Organization $provider
+     * @param Model|Organization $model
      * @return array
      */
-    protected function getRow(Organization $provider): array
+    protected function getRow(Model|Organization $model): array
     {
         return [
-            'provider' => $provider->name,
-            'business_type' => $provider->business_type?->name ?: '-',
-            'total_amount' => (string) ($provider->total_spent ?? '0'),
-            'highest_transaction' => (string) ($provider->highest_transaction ?? '0'),
-            'nr_transactions' => (string) ($provider->nr_transactions ?? '0'),
+            'provider' => $model->name,
+            'business_type' => $model->business_type?->name ?: '-',
+            'total_amount' => (string) ($model->total_spent ?? '0'),
+            'highest_transaction' => (string) ($model->highest_transaction ?? '0'),
+            'nr_transactions' => (string) ($model->nr_transactions ?? '0'),
         ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getBuilderWithArray(): array
+    {
+        return ProviderFinancialResource::$load;
     }
 }

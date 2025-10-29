@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
+use App\Searches\NotificationSearch;
 use App\Services\EventLogService\Models\EventLog;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Notifications\DatabaseNotification;
 
 /**
@@ -26,7 +26,7 @@ use Illuminate\Notifications\DatabaseNotification;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EventLog|null $event
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
+ * @property-read \Illuminate\Database\Eloquent\Model|Eloquent $notifiable
  * @property-read \App\Models\SystemNotification|null $system_notification
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] all($columns = ['*'])
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] get($columns = ['*'])
@@ -70,38 +70,17 @@ class Notification extends DatabaseNotification
     }
 
     /**
-     * @param BaseFormRequest $request
-     * @param bool|null $seen
-     * @param null $query
-     * @return Builder|Relation
-     */
-    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder|Relation
-    {
-        $query = $query ?: self::query();
-        $scope = $request->client_type();
-
-        $query->where('scope', $scope);
-
-        if ($request->has('organization_id')) {
-            $query->where('organization_id', $request->get('organization_id'));
-        }
-
-        if ($seen === true) {
-            $query->whereNotNull('read_at');
-        } elseif ($seen === false) {
-            $query->whereNull('read_at');
-        }
-
-        return $query;
-    }
-
-    /**
-     * @param BaseFormRequest $request
+     * @param IndexNotificationsRequest $request
      * @param Identity $identity
      * @return int
      */
-    public static function totalUnseenFromRequest(BaseFormRequest $request, Identity $identity): int
+    public static function totalUnseenFromRequest(IndexNotificationsRequest $request, Identity $identity): int
     {
-        return self::search($request, false, $identity->notifications()->getQuery())->count();
+        $search = new NotificationSearch([
+            $request->only('organization_id'),
+            'seen' => false,
+        ], $identity->notifications()->where('scope', $request->client_type()));
+
+        return $search->query()->count();
     }
 }

@@ -3,7 +3,8 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\VoucherTransactionsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
+use App\Models\VoucherTransaction;
+use App\Searches\VoucherTransactionsSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIVoucherTransactionsExporter extends BaseBIExporter
@@ -16,9 +17,13 @@ class BIVoucherTransactionsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $request = new IndexTransactionsRequest();
         $fields = VoucherTransactionsSponsorExport::getExportFieldsRaw();
-        $data = new VoucherTransactionsSponsorExport($request, $this->organization, $fields);
+        $search = new VoucherTransactionsSearch([], VoucherTransaction::query());
+
+        $data = new VoucherTransactionsSponsorExport(
+            $search->searchSponsor($this->organization),
+            $fields
+        );
 
         return $data->collection()->toArray();
     }

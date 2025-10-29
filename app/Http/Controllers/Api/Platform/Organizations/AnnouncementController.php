@@ -32,7 +32,7 @@ class AnnouncementController extends Controller
             'organization_id' => $organization->id,
             'identity_address' => $request->auth_address(),
             'implementation_id' => $request->implementation()->id,
-        ]);
+        ], Announcement::query());
 
         return AnnouncementResource::queryCollection($search->query());
     }

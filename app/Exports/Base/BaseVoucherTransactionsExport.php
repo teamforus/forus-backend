@@ -2,77 +2,54 @@
 
 namespace App\Exports\Base;
 
-use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
-use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-abstract class BaseVoucherTransactionsExport extends BaseFieldedExport
+class BaseVoucherTransactionsExport extends BaseExport
 {
     protected static string $transKey = 'voucher_transactions';
 
     /**
-     * @param BaseIndexTransactionsRequest $request
-     * @param Organization $organization
-     * @param array $fields
+     * @var array|string[]
      */
-    public function __construct(
-        BaseIndexTransactionsRequest $request,
-        Organization $organization,
-        protected array $fields = [],
-    ) {
-        $this->data = $this->export($request, $organization);
-    }
+    protected array $builderWithArray = [
+        'product',
+        'provider',
+        'voucher.fund',
+        'notes_provider',
+        'product_reservation',
+    ];
 
     /**
-     * @param BaseIndexTransactionsRequest $request
-     * @param Organization $organization
-     * @return \Illuminate\Support\Collection
-     */
-    abstract protected function export(BaseIndexTransactionsRequest $request, Organization $organization): Collection;
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (VoucherTransaction $transaction) => array_only(
-            $this->getRow($transaction),
-            $this->fields
-        )));
-    }
-
-    /**
-     * @param VoucherTransaction $transaction
+     * @param Model|VoucherTransaction $model
      * @return array
      */
-    protected function getRow(VoucherTransaction $transaction): array
+    protected function getRow(Model|VoucherTransaction $model): array
     {
         return [
-            'id' => $transaction->id,
-            'amount' => currency_format($transaction->amount),
-            'amount_extra' => $transaction->product_reservation?->amount_extra > 0 ?
-                currency_format($transaction->product_reservation?->amount_extra)
+            'id' => $model->id,
+            'amount' => currency_format($model->amount),
+            'amount_extra' => $model->product_reservation?->amount_extra > 0 ?
+                currency_format($model->product_reservation?->amount_extra)
                 : '',
-            'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
-            'method' => $transaction->product_reservation?->amount_extra > 0
+            'amount_extra_cash' => currency_format($model->amount_extra_cash),
+            'method' => $model->product_reservation?->amount_extra > 0
                 ? 'iDeal + Tegoed'
                 : 'Tegoed',
-            'branch_id' => $transaction->branch_id,
-            'branch_name' => $transaction->branch_name,
-            'branch_number' => $transaction->branch_number,
-            'date_transaction' => format_datetime_locale($transaction->created_at),
-            'date_payment' => format_datetime_locale($transaction->payment_time),
-            'fund_name' => $transaction->voucher->fund->name,
-            'product_id' => $transaction->product?->id,
-            'product_name' => $transaction->product?->name,
-            'provider' => $transaction->targetIsProvider() ? $transaction->provider->name : '',
-            'date_non_cancelable' => format_date_locale($transaction->non_cancelable_at),
-            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
-            'bulk_status_locale' => $transaction->bulk_status_locale,
-            'notes_provider' => $transaction->notes_provider->pluck('message')->implode("\n"),
-            'reservation_code' => $transaction->product_reservation?->code,
+            'branch_id' => $model->branch_id,
+            'branch_name' => $model->branch_name,
+            'branch_number' => $model->branch_number,
+            'date_transaction' => format_datetime_locale($model->created_at),
+            'date_payment' => format_datetime_locale($model->payment_time),
+            'fund_name' => $model->voucher->fund->name,
+            'product_id' => $model->product?->id,
+            'product_name' => $model->product?->name,
+            'provider' => $model->targetIsProvider() ? $model->provider->name : '',
+            'date_non_cancelable' => format_date_locale($model->non_cancelable_at),
+            'state' => trans("export.voucher_transactions.state-values.$model->state"),
+            'bulk_status_locale' => $model->bulk_status_locale,
+            'notes_provider' => $model->notes_provider->pluck('message')->implode("\n"),
+            'reservation_code' => $model->product_reservation?->code,
         ];
     }
 }

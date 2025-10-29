@@ -17,15 +17,14 @@ class BIFundsDetailedExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $activeFunds = FundQuery::whereActiveFilter($this->organization->funds())
-            ->where('external', false)
-            ->get();
+        $activeFundsBuilder = FundQuery::whereActiveFilter($this->organization->funds())
+            ->where('external', false);
 
         $data = new FundsExportDetailed(
-            $activeFunds,
+            $activeFundsBuilder,
+            FundsExportDetailed::getExportFieldsRaw($this->organization->hasPayoutFunds()),
             Carbon::createFromFormat('Y', 2000),
             now()->endOfYear(),
-            FundsExportDetailed::getExportFieldsRaw($this->organization->hasPayoutFunds()),
         );
 
         return $data->collection()->toArray();

@@ -139,18 +139,6 @@ class DigIdSession extends Model
     }
 
     /**
-     * @param array $attributes
-     * @param array $options
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
-    {
-        $this->update($attributes, $options);
-
-        return $this;
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function implementation(): BelongsTo
@@ -199,7 +187,7 @@ class DigIdSession extends Model
             return $this;
         }
 
-        return $this->updateModel([
+        return tap($this)->update([
             'state' => self::STATE_PENDING_AUTH,
             'digid_rid' => $authRequest->getRequestId(),
             'digid_state' => DigIdSession::STATE_PENDING_AUTH,
@@ -325,7 +313,7 @@ class DigIdSession extends Model
      */
     public function setIdentity(Identity $identity): Model|DigIdSession
     {
-        return $this->updateModel([
+        return tap($this)->update([
             'identity_address' => $identity->address,
         ])->unsetRelation('identity');
     }
@@ -355,7 +343,7 @@ class DigIdSession extends Model
             return $this->setError($exception->getMessage(), $exception->getDigIdCode());
         }
 
-        return $this->updateModel([
+        return tap($this)->update([
             'digid_uid' => $result->getUid(),
             'digid_response_aselect_server' => $result->getMeta('a-select-server'),
             'digid_response_aselect_credentials' => $result->getMeta('resolveParams.aselect_credentials'),
@@ -430,7 +418,7 @@ class DigIdSession extends Model
 
         $canceled = $errorCode == DigIdCgiRepo::DIGID_CANCELLED;
 
-        return $this->updateModel([
+        return tap($this)->update([
             'digid_error_code' => $errorCode,
             'digid_error_message' => DigIdCgiRepo::responseCodeDetails($errorCode),
             'state' => $canceled ? self::STATE_CANCELED : self::STATE_ERROR,

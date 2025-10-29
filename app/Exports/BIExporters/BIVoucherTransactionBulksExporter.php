@@ -3,8 +3,10 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\VoucherTransactionBulksExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
+use App\Models\VoucherTransactionBulk;
+use App\Searches\VoucherTransactionBulksSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
+use Illuminate\Database\Eloquent\Builder;
 
 class BIVoucherTransactionBulksExporter extends BaseBIExporter
 {
@@ -16,9 +18,14 @@ class BIVoucherTransactionBulksExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $request = new IndexTransactionBulksRequest();
         $fields = VoucherTransactionBulksExport::getExportFieldsRaw();
-        $data = new VoucherTransactionBulksExport($request, $this->organization, $fields);
+
+        $query = VoucherTransactionBulk::whereHas('bank_connection', fn (Builder $q) => $q->where([
+            'bank_connections.organization_id' => $this->organization->id,
+        ]));
+
+        $search = new VoucherTransactionBulksSearch([], $query);
+        $data = new VoucherTransactionBulksExport($search->query(), $fields);
 
         return $data->collection()->toArray();
     }

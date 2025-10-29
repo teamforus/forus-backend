@@ -76,7 +76,7 @@ class FundProviderChat extends Model
      * @param string $counterpart
      * @param string $message
      * @param string|null $identity_address
-     * @return FundProviderChatMessage|BaseModel
+     * @return FundProviderChatMessage|Model
      */
     public function addMessage(
         string $counterpart,

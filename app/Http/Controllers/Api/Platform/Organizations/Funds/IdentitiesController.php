@@ -119,7 +119,7 @@ class IdentitiesController extends Controller
         $search = new FundIdentitiesSearch($request->only($filters), $fund);
 
         $exportType = $request->input('data_format', 'csv');
-        $exportData = new FundIdentitiesExport($search->get(), $fields);
+        $exportData = new FundIdentitiesExport($search->query()->with('primary_email'), $fields);
         $exportFileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         return resolve('excel')->download($exportData, $exportFileName);

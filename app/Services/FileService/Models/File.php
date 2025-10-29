@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent|null $fileable
+ * @property-read Model|Eloquent|null $fileable
  * @property-read string $url_public
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
@@ -135,14 +135,6 @@ class File extends Model
     public static function makeUid(): string
     {
         return self::makeUniqueToken('uid', '255');
-    }
-
-    /**
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
-    {
-        return tap($this)->update($attributes, $options);
     }
 
     /**

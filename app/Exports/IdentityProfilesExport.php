@@ -2,17 +2,17 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
+use App\Exports\Base\BaseExport;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Scopes\Builders\IdentityQuery;
-use App\Searches\Sponsor\IdentitiesSearch;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-class IdentityProfilesExport extends BaseFieldedExport
+class IdentityProfilesExport extends BaseExport
 {
     protected static string $transKey = 'identity_profiles';
 
@@ -38,16 +38,16 @@ class IdentityProfilesExport extends BaseFieldedExport
     ];
 
     /**
-     * @param IndexIdentitiesRequest $request
-     * @param Organization $organization
+     * @param Builder|Relation|Model $builder
      * @param array $fields
+     * @param Organization $organization
      */
     public function __construct(
-        IndexIdentitiesRequest $request,
-        Organization $organization,
-        protected array $fields
+        Builder|Relation|Model $builder,
+        protected array $fields,
+        protected Organization $organization,
     ) {
-        $this->data = $this->export($request, $organization);
+        parent::__construct($builder, $fields);
     }
 
     /**
@@ -69,35 +69,12 @@ class IdentityProfilesExport extends BaseFieldedExport
     }
 
     /**
-     * @param IndexIdentitiesRequest $request
-     * @param Organization $organization
-     * @return Collection
-     */
-    public function export(IndexIdentitiesRequest $request, Organization $organization): Collection
-    {
-        $search = new IdentitiesSearch([
-            ...$request->only([
-                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
-                'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
-                'last_login_to', 'order_by', 'order_dir', 'household_id',
-                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
-            ]),
-            'organization_id' => $organization->id,
-        ], IdentityQuery::relatedToOrganization(Identity::query(), $organization->id));
-
-        $data = $search->query()->with(SponsorIdentityResource::LOAD)->get();
-
-        return $this->exportTransform($data, $organization);
-    }
-
-    /**
      * @param Collection $data
-     * @param Organization $organization
      * @return Collection
      */
-    protected function transformKeysByOrganization(Collection $data, Organization $organization): Collection
+    protected function transformKeys(Collection $data): Collection
     {
-        $fieldLabels = array_pluck(static::getExportFields($organization), 'name', 'key');
+        $fieldLabels = array_pluck(static::getExportFields($this->organization), 'name', 'key');
 
         return $data->map(function ($item) use ($fieldLabels) {
             return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
@@ -107,24 +84,23 @@ class IdentityProfilesExport extends BaseFieldedExport
     }
 
     /**
-     * @param Identity $identity
-     * @param Organization $organization
+     * @param Model|Identity $model
      * @return array
      */
-    protected function getRow(Identity $identity, Organization $organization): array
+    protected function getRow(Model|Identity $model): array
     {
-        $profile = $identity->profiles?->firstWhere('organization_id', $organization->id);
+        $profile = $model->profiles?->firstWhere('organization_id', $this->organization->id);
         $records = SponsorIdentityResource::getProfileRecords($profile, true);
 
         return [
-            'id' => $identity->id ?: '',
+            'id' => $model->id ?: '',
             'given_name' => Arr::get($records, 'given_name.0.value_locale', '-'),
             'family_name' => Arr::get($records, 'family_name.0.value_locale', '-'),
-            'email' => $identity->email,
-            'bsn' => $organization->bsn_enabled ? $identity->bsn ?: '-' : '-',
+            'email' => $model->email,
+            'bsn' => $this->organization->bsn_enabled ? $model->bsn ?: '-' : '-',
             'client_number' => Arr::get($records, 'client_number.0.value_locale', '-'),
             'birth_date' => Arr::get($records, 'birth_date.0.value_locale', '-'),
-            'last_activity' => format_datetime_locale(array_first($identity->sessions)?->last_activity_at),
+            'last_activity' => format_datetime_locale(array_first($model->sessions)?->last_activity_at),
             'city' => Arr::get($records, 'city.0.value_locale', '-'),
             'street' => Arr::get($records, 'street.0.value_locale', '-'),
             'house_number' => Arr::get($records, 'house_number.0.value_locale', '-'),
@@ -137,17 +113,10 @@ class IdentityProfilesExport extends BaseFieldedExport
     }
 
     /**
-     * @param Collection $data
-     * @param Organization $organization
-     * @return Collection
+     * @return array
      */
-    private function exportTransform(Collection $data, Organization $organization): Collection
+    protected function getBuilderWithArray(): array
     {
-        $data = $data->map(fn (Identity $identity) => array_only(
-            $this->getRow($identity, $organization),
-            $this->fields
-        ));
-
-        return $this->transformKeysByOrganization($data, $organization);
+        return SponsorIdentityResource::LOAD;
     }
 }

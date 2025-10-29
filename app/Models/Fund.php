@@ -12,6 +12,7 @@ use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\RecordValidationQuery;
 use App\Scopes\Builders\VoucherQuery;
+use App\Searches\RecordSearch;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
@@ -198,7 +199,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Fund extends BaseModel
+class Fund extends Model
 {
     use HasFaq;
     use HasLogs;
@@ -497,7 +498,7 @@ class Fund extends BaseModel
      */
     public function archive(Employee $employee): self
     {
-        FundArchivedEvent::dispatch($this->updateModel([
+        FundArchivedEvent::dispatch(tap($this)->update([
             'archived' => true,
         ]), $employee);
 
@@ -509,7 +510,7 @@ class Fund extends BaseModel
      */
     public function unArchive(Employee $employee): self
     {
-        FundUnArchivedEvent::dispatch($this->updateModel([
+        FundUnArchivedEvent::dispatch(tap($this)->update([
             'archived' => false,
         ]), $employee);
 
@@ -966,9 +967,9 @@ class Fund extends BaseModel
         $daysTrusted = $this->getTrustedDays($record_type);
         $startDate = $this->fund_config?->record_validity_start_date;
 
-        $builder = Record::search($identity->records(), [
-            'type' => $record_type,
-        ])->whereHas('validations', function (Builder $query) use ($daysTrusted, $fund, $startDate) {
+        $search = new RecordSearch(['type' => $record_type], $identity->records());
+
+        $builder = $search->query()->whereHas('validations', function (Builder $query) use ($daysTrusted, $fund, $startDate) {
             RecordValidationQuery::whereStillTrustedQuery($query, $daysTrusted, $startDate);
             RecordValidationQuery::whereTrustedByQuery($query, $fund);
         });

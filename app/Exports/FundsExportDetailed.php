@@ -2,17 +2,19 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\Fund;
 use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class FundsExportDetailed extends BaseFieldedExport
+class FundsExportDetailed extends BaseExport
 {
     protected static string $transKey = 'funds';
 
@@ -89,19 +91,18 @@ class FundsExportDetailed extends BaseFieldedExport
     ];
 
     /**
-     * FundsExport constructor.
-     * @param EloquentCollection $funds
+     * @param Builder|Relation|Fund $builder
+     * @param array $fields
      * @param Carbon $from
      * @param Carbon $to
-     * @param array $fields
      */
     public function __construct(
-        EloquentCollection $funds,
+        Builder|Relation|Fund $builder,
+        protected array $fields,
         protected Carbon $from,
         protected Carbon $to,
-        protected array $fields
     ) {
-        $this->data = $this->export($funds);
+        parent::__construct($builder, $fields);
     }
 
     /**
@@ -131,15 +132,6 @@ class FundsExportDetailed extends BaseFieldedExport
      * @param Collection $data
      * @return Collection
      */
-    protected function export(Collection $data): Collection
-    {
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
     protected function exportTransform(Collection $data): Collection
     {
         $data = $data->map(fn (Fund $fund) => array_only($this->getRow($fund), $this->fields));
@@ -156,36 +148,36 @@ class FundsExportDetailed extends BaseFieldedExport
     }
 
     /**
-     * @param Fund $fund
+     * @param Model|Fund $model
      * @return array
      */
-    protected function getRow(Fund $fund): array
+    protected function getRow(Model|Fund $model): array
     {
         $detailsByType = [
-            'budget' => FinancialOverviewStatistic::getFundDetails($fund->budget_vouchers()->getQuery(), $this->from, $this->to),
-            'product' => FinancialOverviewStatistic::getFundDetails($fund->product_vouchers()->getQuery(), $this->from, $this->to),
-            'payout' => FinancialOverviewStatistic::getFundPayoutDetails($fund->payout_vouchers()->getQuery(), $this->from, $this->to),
+            'budget' => FinancialOverviewStatistic::getFundDetails($model->budget_vouchers()->getQuery(), $this->from, $this->to),
+            'product' => FinancialOverviewStatistic::getFundDetails($model->product_vouchers()->getQuery(), $this->from, $this->to),
+            'payout' => FinancialOverviewStatistic::getFundPayoutDetails($model->payout_vouchers()->getQuery(), $this->from, $this->to),
         ];
 
-        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($fund, $this->from, $this->to);
+        $usedActiveVouchers = FinancialOverviewStatisticQueries::getBudgetFundUsedActiveVouchers($model, $this->from, $this->to);
 
         $voucherData = [
-            'name' => $fund->name,
+            'name' => $model->name,
         ];
 
         foreach ($detailsByType as $type => $details) {
             if ($type == 'budget') {
                 $budgetUsedPercentage = (float) $details['vouchers_amount'] ? (
-                    $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100
+                    $model->budget_used_active_vouchers / $details['vouchers_amount'] * 100
                 ) : 0;
 
                 $averagePerVoucher = $details['vouchers_count'] ?
                     $details['vouchers_amount'] / $details['vouchers_count'] : 0;
 
-                $budgetLeftAmount = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
+                $budgetLeftAmount = $details['vouchers_amount'] - $model->budget_used_active_vouchers;
 
                 $budgetLeftPercentage = (float) $details['vouchers_amount'] ?
-                    (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
+                    (($details['vouchers_amount'] - $model->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
 
                 $inactiveVouchersPercentage = (float) $details['vouchers_amount'] ?
                     ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
@@ -194,7 +186,7 @@ class FundsExportDetailed extends BaseFieldedExport
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
                 $voucherData = array_merge($voucherData, [
-                    'budget_amount_per_voucher' => currency_format($fund->fund_formulas->sum('amount')),
+                    'budget_amount_per_voucher' => currency_format($model->fund_formulas->sum('amount')),
                     'budget_average_per_voucher' => currency_format($averagePerVoucher),
                     'budget_total_spent_amount' => currency_format($usedActiveVouchers),
                     'budget_total_left_amount' => currency_format($budgetLeftAmount),

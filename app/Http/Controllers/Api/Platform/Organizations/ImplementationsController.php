@@ -154,7 +154,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateEmail', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return new ImplementationPrivateResource(tap($implementation)->update($request->only([
             'email_from_address', 'email_from_name',
         ])));
     }
@@ -177,7 +177,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateEmailBranding', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return new ImplementationPrivateResource(tap($implementation)->update($request->only([
             'email_color', 'email_signature',
         ]))->attachMediaByUid($request->input('email_logo_uid')));
     }
@@ -200,7 +200,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updatePreChecks', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return new ImplementationPrivateResource(tap($implementation)->update($request->only([
             'pre_check_banner_state', 'pre_check_banner_title',
             'pre_check_banner_description', 'pre_check_banner_label',
         ]))->attachMediaByUid($request->input('pre_check_media_uid')));
