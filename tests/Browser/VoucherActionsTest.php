@@ -57,8 +57,8 @@ class VoucherActionsTest extends DuskTestCase
 
         $provider = $this->makeTestProviderOrganization($this->makeIdentity());
         $product = $this->makeTestProductForReservation($provider);
-        $this->makeTestFundProvider($provider, $fund);
 
+        $this->makeTestFundProvider($provider, $fund);
         $this->assertVoucherQrCodeVisibility($implementation, $identity, $voucher->buyProductVoucher($product));
     }
 
@@ -90,14 +90,16 @@ class VoucherActionsTest extends DuskTestCase
                     ->waitFor("@listVouchersRow$voucher->id")
                     ->click("@listVouchersRow$voucher->id");
 
-                $browser->waitFor('@voucherTitle');
-
                 // Assert qr code and buttons visible with default "show_qr_code" value
-                $browser
-                    ->assertVisible('@voucherQrCode')
-                    ->assertVisible('@sendVoucherEmail')
-                    ->assertVisible('@openVoucherInMeModal')
-                    ->assertVisible('@printVoucherQrCodeModal');
+                $browser->waitFor('@voucherTitle');
+                $browser->assertVisible('@voucherQrCode');
+
+                $browser->waitFor('@openVoucherShareModal');
+                $browser->click('@openVoucherShareModal');
+
+                $browser->waitFor('@sendVoucherEmail');
+                $browser->waitFor('@openVoucherInMeModal');
+                $browser->waitFor('@printVoucherQrCodeModal');
 
                 if ($voucher->isProductType()) {
                     $browser->assertVisible('@shareVoucher');
@@ -108,15 +110,10 @@ class VoucherActionsTest extends DuskTestCase
                 ])->save();
 
                 $browser->refresh();
-
                 $browser->waitFor('@voucherTitle');
 
                 // Assert qr code and buttons not visible when "show_qr_code" is false
-                $browser
-                    ->assertMissing('@voucherQrCode')
-                    ->assertMissing('@sendVoucherEmail')
-                    ->assertMissing('@openVoucherInMeModal')
-                    ->assertMissing('@printVoucherQrCodeModal');
+                $browser->assertMissing('@voucherQrCode');
 
                 if ($voucher->isProductType()) {
                     $browser->assertMissing('@shareVoucher');
