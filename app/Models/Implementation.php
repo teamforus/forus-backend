@@ -823,9 +823,12 @@ class Implementation extends BaseModel
                 'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
-            'implementation' => $implementation->translateColumns($implementation->only([
-                'name', 'root_product_category_id',
-            ])),
+            'implementation' => [
+                ...$implementation->translateColumns($implementation->only([
+                    'name',
+                ])),
+                'root_product_category_id' => $implementation->root_product_category_id,
+            ],
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
             // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
