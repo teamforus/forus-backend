@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Fund;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -8,31 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->text('description_text')->nullable()->default('')->after('description');
+            $table->text('how_it_works')->nullable()->after('description_position');
+            $table->text('how_it_works_text')->nullable()->after('how_it_works');
         });
-
-        foreach (Fund::get() as $fund) {
-            $fund->update([
-                'description_text' => $fund->markdownToText('description'),
-            ]);
-        }
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->dropColumn('description_text');
+            $table->dropColumn('how_it_works', 'how_it_works_text');
         });
     }
 };

@@ -15,8 +15,8 @@ class BIVouchersExporter extends BaseBIExporter
     protected string $name = 'Tegoeden';
 
     /**
-     * @return array
      * @throws Throwable
+     * @return array
      */
     public function toArray(): array
     {

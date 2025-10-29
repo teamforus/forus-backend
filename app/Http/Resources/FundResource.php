@@ -78,14 +78,17 @@ class FundResource extends BaseJsonResource
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
 
         $data = array_merge($fund->only([
-            'id', 'description', 'description_position', 'organization_id', 'state',
+            'id', 'description', 'description_position', 'how_it_works', 'organization_id', 'state',
             'notification_amount', 'type', 'type_locale', 'archived', 'external_link_url',
-            'external', 'external_page', 'external_page_url', 'description_html',
+            'external', 'external_page', 'external_page_url', 'description_html', 'how_it_works_html',
         ]), [
             ...$fund->translateColumns(
                 $this->isCollection()
                     ? $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title'])
-                    : $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title', 'description_html']),
+                    : $fund->only([
+                        'name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title',
+                        'description_html', 'how_it_works_html',
+                    ]),
             ),
             'fund_form_id' => $fund->fund_form?->id,
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,

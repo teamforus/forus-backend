@@ -923,6 +923,9 @@ class TestData
             $price_discount = random_int(1, 9) * 10;
         }
 
+        $startDate = format_date_locale(now()->subWeek());
+        $endDate = format_date_locale(now()->addMonth());
+
         $product = Product::forceCreate(array_merge(compact(
             'name',
             'price',
@@ -936,6 +939,11 @@ class TestData
             'price_discount'
         ), [
             'organization_id' => $organization->id,
+            'info_duration' => "This offer is valid from $startDate, to $endDate",
+            'info_when' => "$endDate, at 14:00",
+            'info_where' => $this->faker->address(),
+            'info_more_info' => 'Only for children aged 1 and up',
+            'info_attention' => 'Children up to 12 years old must bring swimwear. Voucher code available once per day.',
         ], array_only($fields, [
             'name', 'total_amount', 'sold_out', 'expire_at',
         ])));

@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $translatable
+ * @property-read Model|Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue query()
