@@ -284,7 +284,9 @@ class VoucherSubscriber
             'sponsor' => $voucher->fund->organization,
             'implementation' => $voucher->fund->getImplementation(),
         ], [
-            'qr_token' => $voucher->token_without_confirmation->address,
+            'qr_token' => $voucher->fund->fund_config->show_qr_code
+                ? $voucher->token_without_confirmation->address
+                : null,
             'voucher_product_or_fund_name' => $voucher->product->name ?? $voucher->fund->name,
         ]);
 
