@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\FundProvider|null $fund_provider
+ * @property-read \App\Models\FundProvider $fund_provider
  * @property-read bool $active
  * @property-read string $amount_locale
  * @property-read string $payment_type_locale

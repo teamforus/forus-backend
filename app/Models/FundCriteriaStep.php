@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FundCriteriaStep extends Model
 {
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     /**

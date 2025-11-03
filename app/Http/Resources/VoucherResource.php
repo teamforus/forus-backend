@@ -262,7 +262,7 @@ class VoucherResource extends BaseJsonResource
     {
         return  [
             ...$fund->only('id', 'state', 'type'),
-            ...$fund->translateColumns($fund->only(['name'])),
+            ...$fund->translateColumns($fund->only(['name', 'description_short', 'how_it_works_html'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
@@ -273,7 +273,7 @@ class VoucherResource extends BaseJsonResource
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
             'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
-            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key']),
+            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code']),
         ];
     }
 

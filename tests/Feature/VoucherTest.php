@@ -793,8 +793,8 @@ class VoucherTest extends TestCase
 
     /**
      * @param PhysicalCardType $type
-     * @return string
      * @throws RandomException
+     * @return string
      */
     protected function getPhysicalCardCode(PhysicalCardType $type): string
     {

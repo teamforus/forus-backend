@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -59,7 +59,7 @@ use Illuminate\Support\Facades\Config;
 class ImplementationBlock extends Model
 {
     use HasMedia;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     protected $casts = [

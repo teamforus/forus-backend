@@ -60,6 +60,8 @@ abstract class BaseFundRequest extends BaseFormRequest
             'description_short' => 'sometimes|string|max:500',
             'description_position' => ['sometimes', 'in:' . $descriptionPositions],
 
+            'how_it_works' => ['nullable', ...$this->markdownRules(0, 15000)],
+
             'notification_amount' => 'nullable|numeric|min:0|max:1000000',
             'faq_title' => 'nullable|string|max:200',
             'tag_ids' => 'sometimes|array',

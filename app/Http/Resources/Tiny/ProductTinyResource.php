@@ -4,8 +4,8 @@ namespace App\Http\Resources\Tiny;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
-use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Product $resource
