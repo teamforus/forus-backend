@@ -5,6 +5,7 @@ namespace App\Searches;
 use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\Permission;
 use App\Models\Voucher;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Services\EventLogService\Models\EventLog;
@@ -85,7 +86,7 @@ class EmployeeEventLogSearch extends BaseSearch
             $builder->whereHasMorph('loggable', Fund::class, function (Builder $builder) {
                 $builder->whereHas('organization', function (Builder $builder) {
                     OrganizationQuery::whereHasPermissions($builder, $this->employee->identity_address, [
-                        'manage_vouchers',
+                        Permission::MANAGE_VOUCHERS,
                     ]);
                 });
             });

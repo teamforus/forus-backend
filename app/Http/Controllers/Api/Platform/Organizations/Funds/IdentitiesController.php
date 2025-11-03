@@ -13,6 +13,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Notifications\Identities\Fund\IdentityRequesterSponsorCustomNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Searches\Sponsor\FundIdentitiesSearch;
@@ -40,7 +41,7 @@ class IdentitiesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('viewIdentitiesSponsor', [$fund, $organization]);
 
-        $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
+        $isManager = $organization->identityCan($request->identity(), Permission::MANAGE_VOUCHERS);
         $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
         $search = new FundIdentitiesSearch($request->only(array_filter($filters)), $fund);
@@ -143,7 +144,7 @@ class IdentitiesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('sendIdentityNotifications', [$fund, $organization]);
 
-        $isManager = $organization->identityCan($request->identity(), 'manage_vouchers');
+        $isManager = $organization->identityCan($request->identity(), Permission::MANAGE_VOUCHERS);
         $filters = ['target', 'has_email', 'order_by', 'order_dir', 'with_reservations', $isManager ? 'q' : null];
 
         if ($request->input('target') === 'self') {

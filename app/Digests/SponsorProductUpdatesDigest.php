@@ -7,6 +7,7 @@ use App\Mail\Digest\DigestSponsorProductUpdatesMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\Forus\Notification\NotificationService;
@@ -21,7 +22,7 @@ class SponsorProductUpdatesDigest extends BaseOrganizationDigest
     protected string $digestKey = 'sponsor_product_updates';
 
     protected array $employeePermissions = [
-        'manage_providers',
+        Permission::MANAGE_PROVIDERS,
     ];
 
     /**
