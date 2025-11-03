@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
@@ -22,7 +23,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
     protected string $requiredRelation = 'fund_providers';
     protected string $digestKey = 'provider_funds';
     protected array $employeePermissions = [
-        'manage_provider_funds',
+        Permission::MANAGE_PROVIDER_FUNDS,
     ];
 
     /**

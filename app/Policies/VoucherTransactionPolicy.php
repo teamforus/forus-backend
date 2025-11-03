@@ -31,7 +31,7 @@ class VoucherTransactionPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'view_finances');
+        return $organization->identityCan($identity, Permission::VIEW_FINANCES);
     }
 
     /**
@@ -42,7 +42,7 @@ class VoucherTransactionPolicy
      */
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'view_finances');
+        return $organization->identityCan($identity, Permission::VIEW_FINANCES);
     }
 
     /**
@@ -83,7 +83,7 @@ class VoucherTransactionPolicy
             }
         }
 
-        return $transaction->voucher->fund->organization->identityCan($identity, 'view_finances');
+        return $transaction->voucher->fund->organization->identityCan($identity, Permission::VIEW_FINANCES);
     }
 
     /**
@@ -102,7 +102,7 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        return $transaction->provider->identityCan($identity, 'view_finances');
+        return $transaction->provider->identityCan($identity, Permission::VIEW_FINANCES);
     }
 
     /**
@@ -135,7 +135,7 @@ class VoucherTransactionPolicy
         Identity $identity,
         Organization $organization,
     ): bool {
-        return $organization->identityCan($identity, 'make_direct_payments');
+        return $organization->identityCan($identity, Permission::MAKE_DIRECT_PAYMENTS);
     }
 
     /**
