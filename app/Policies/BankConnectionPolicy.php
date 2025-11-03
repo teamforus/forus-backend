@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\BankConnection;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BankConnectionPolicy
@@ -20,7 +21,7 @@ class BankConnectionPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_bank_connections');
+        return $organization->identityCan($identity, Permission::MANAGE_BANK_CONNECTIONS);
     }
 
     /**
@@ -32,7 +33,7 @@ class BankConnectionPolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_bank_connections');
+        return $organization->identityCan($identity, Permission::MANAGE_BANK_CONNECTIONS);
     }
 
     /**
@@ -52,7 +53,7 @@ class BankConnectionPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, 'manage_bank_connections');
+        return $organization->identityCan($identity, Permission::MANAGE_BANK_CONNECTIONS);
     }
 
     /**

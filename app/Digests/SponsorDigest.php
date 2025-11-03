@@ -10,6 +10,7 @@ use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -27,7 +28,7 @@ class SponsorDigest extends BaseOrganizationDigest
     protected string $requiredRelation = 'funds';
     protected string $digestKey = 'sponsor';
     protected array $employeePermissions = [
-        'manage_providers',
+        Permission::MANAGE_PROVIDERS,
     ];
 
     /**

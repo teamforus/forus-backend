@@ -28,7 +28,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', Permission::MANAGE_FUNDS,
+            Permission::MANAGE_PROVIDERS, Permission::MANAGE_FUNDS,
         ]);
     }
 
@@ -55,7 +55,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', Permission::MANAGE_FUNDS,
+            Permission::MANAGE_PROVIDERS, Permission::MANAGE_FUNDS,
         ]);
     }
 
@@ -82,7 +82,7 @@ class FundProviderInvitationPolicy
         }
 
         return $organization->identityCan($identity, [
-            'manage_providers', Permission::MANAGE_FUNDS,
+            Permission::MANAGE_PROVIDERS, Permission::MANAGE_FUNDS,
         ]);
     }
 
@@ -94,7 +94,7 @@ class FundProviderInvitationPolicy
      */
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -128,7 +128,7 @@ class FundProviderInvitationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
