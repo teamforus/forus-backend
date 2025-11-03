@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Voucher;
 use App\Rules\BsnRule;
 
@@ -22,7 +21,7 @@ class AssignVoucherRequest extends BaseFormRequest
     public function authorize(): bool
     {
         return
-            $this->organization->identityCan($this->identity(), Permission::MANAGE_VOUCHERS) &&
+            $this->organization->identityCan($this->identity(), 'manage_vouchers') &&
             $this->voucher->fund->organization_id === $this->organization->id &&
             !$this->voucher->granted;
     }

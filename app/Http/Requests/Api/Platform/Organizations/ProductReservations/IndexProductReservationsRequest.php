@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 use App\Exports\ProductReservationsExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\ProductReservation;
 use App\Scopes\Builders\TrashedQuery;
 
@@ -23,7 +22,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
     {
         return
             $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), Permission::SCAN_VOUCHERS);
+            $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 
     /**

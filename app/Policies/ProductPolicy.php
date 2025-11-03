@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
@@ -24,7 +23,7 @@ class ProductPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_PRODUCTS);
+        return $organization->identityCan($identity, 'manage_products');
     }
 
     /**
@@ -49,7 +48,7 @@ class ProductPolicy
         $count_products = $organization->products()->whereDoesntHave('sponsor_organization')->count();
 
         return $organization->identityCan($identity, [
-            Permission::MANAGE_PRODUCTS,
+            'manage_products',
         ]) && $count_products < $hard_limit;
     }
 
@@ -69,7 +68,7 @@ class ProductPolicy
             return false;
         }
 
-        return $product->organization->identityCan($identity, Permission::MANAGE_PRODUCTS);
+        return $product->organization->identityCan($identity, 'manage_products');
     }
 
     /**
@@ -188,7 +187,7 @@ class ProductPolicy
         Identity $identity,
         Organization $sponsor,
     ): bool {
-        return $sponsor->identityCan($identity, Permission::MANAGE_PROVIDERS);
+        return $sponsor->identityCan($identity, 'manage_providers');
     }
 
     /**
@@ -206,7 +205,7 @@ class ProductPolicy
         $builder = ProductQuery::hasPendingOrAcceptedProviderForFund(Product::query(), $fundsQuery->toArray());
 
         return
-            $sponsor->identityCan($identity, Permission::MANAGE_PROVIDERS) &&
+            $sponsor->identityCan($identity, 'manage_providers') &&
             $builder->where('id', $product->id)->exists();
     }
 
@@ -305,7 +304,7 @@ class ProductPolicy
         ?Product $product = null
     ): bool {
         $sponsorManagesProviderProducts = $sponsor->manage_provider_products;
-        $identityIsManagingSponsorProviders = $sponsor->identityCan($identity, Permission::MANAGE_PROVIDERS);
+        $identityIsManagingSponsorProviders = $sponsor->identityCan($identity, 'manage_providers');
         $sponsorIsActiveProviderSponsor = OrganizationQuery::whereIsProviderOrganization(
             Organization::query(),
             $sponsor

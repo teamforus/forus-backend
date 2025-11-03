@@ -405,7 +405,7 @@ class VoucherPolicy
         Voucher $voucher,
         ?Organization $provider = null
     ): Response|bool {
-        $hasPermission = $voucher->fund->organization->identityCan($identity, Permission::MAKE_DIRECT_PAYMENTS);
+        $hasPermission = $voucher->fund->organization->identityCan($identity, 'make_direct_payments');
 
         if (!$hasPermission) {
             return false;

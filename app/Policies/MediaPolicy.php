@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
@@ -60,7 +59,7 @@ class MediaPolicy
                     return FundQuery::whereIsConfiguredByForus($builder);
                 }),
                 $identity->address,
-                Permission::MANAGE_PROVIDERS
+                'manage_providers'
             )->get();
 
             // At least one of the organizations must be able to clone products from the product provider
@@ -89,7 +88,7 @@ class MediaPolicy
             $implementation = $media->mediable instanceof Implementation ? $media->mediable : null;
 
             return $implementation?->organization->identityCan($identity, [
-                Permission::MANAGE_IMPLEMENTATION_CMS,
+                'manage_implementation_cms',
             ]);
         }
 

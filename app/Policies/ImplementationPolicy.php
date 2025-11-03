@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ImplementationPolicy
@@ -23,9 +22,7 @@ class ImplementationPolicy
     public function viewAnyPublic(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            Permission::MANAGE_IMPLEMENTATION,
-            Permission::MANAGE_IMPLEMENTATION_CMS,
-            Permission::VIEW_IMPLEMENTATIONS,
+            'manage_implementation', 'manage_implementation_cms', 'view_implementations',
         ], false);
     }
 
@@ -40,7 +37,7 @@ class ImplementationPolicy
     public function viewAny(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            Permission::MANAGE_IMPLEMENTATION, Permission::MANAGE_IMPLEMENTATION_CMS,
+            'manage_implementation', 'manage_implementation_cms',
         ], false);
     }
 
@@ -63,7 +60,7 @@ class ImplementationPolicy
         }
 
         return $organization->identityCan($identity, [
-            Permission::MANAGE_IMPLEMENTATION, Permission::MANAGE_IMPLEMENTATION_CMS,
+            'manage_implementation', 'manage_implementation_cms',
         ], false);
     }
 
@@ -85,7 +82,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
+        return $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
@@ -106,7 +103,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION);
+        return $organization->identityCan($identity, 'manage_implementation');
     }
 
     /**
@@ -127,7 +124,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
+        return $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
@@ -148,7 +145,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION);
+        return $organization->identityCan($identity, 'manage_implementation');
     }
 
     /**
@@ -167,7 +164,7 @@ class ImplementationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION) && $organization->allow_pre_checks;
+        return $organization->identityCan($identity, 'manage_implementation') && $organization->allow_pre_checks;
     }
 
     /**

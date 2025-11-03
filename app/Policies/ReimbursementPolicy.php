@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Reimbursement;
 use App\Scopes\Builders\VoucherQuery;
 use App\Traits\Policies\DeniesWithMeta;
@@ -40,7 +39,7 @@ class ReimbursementPolicy
      */
     public function viewAnyAsSponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS);
+        return $organization->identityCan($identity, 'manage_reimbursements');
     }
 
     /**
@@ -78,7 +77,7 @@ class ReimbursementPolicy
     ): bool {
         return
             !$reimbursement->isDraft() &&
-            $organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS) &&
+            $organization->identityCan($identity, 'manage_reimbursements') &&
             $reimbursement->voucher->fund->organization_id === $organization->id;
     }
 
@@ -144,7 +143,7 @@ class ReimbursementPolicy
             return $this->deny('Ongeldig eindpunt');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -173,7 +172,7 @@ class ReimbursementPolicy
             return $this->deny('Ongeldig eindpunt');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -214,7 +213,7 @@ class ReimbursementPolicy
             return $this->denyWithMeta('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -250,7 +249,7 @@ class ReimbursementPolicy
             return $this->denyWithMeta('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -286,7 +285,7 @@ class ReimbursementPolicy
             return $this->denyWithMeta('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -311,7 +310,7 @@ class ReimbursementPolicy
             return $this->denyWithMeta('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 
@@ -341,7 +340,7 @@ class ReimbursementPolicy
             return $this->denyWithMeta('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS)) {
+        if (!$organization->identityCan($identity, 'manage_reimbursements')) {
             return false;
         }
 

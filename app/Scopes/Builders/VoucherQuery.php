@@ -2,7 +2,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Permission;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
@@ -46,7 +45,7 @@ class VoucherQuery
                     }
                 }
 
-                OrganizationQuery::whereHasPermissions($builder, $identity_address, Permission::SCAN_VOUCHERS);
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
 
                 $builder->whereHas('fund_providers', static function (Builder $builder) use ($fund_id) {
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'allow_products');

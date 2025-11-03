@@ -8,7 +8,6 @@ use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Product;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -100,7 +99,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_PROVIDERS)) {
+        if (!$organization->identityCan($identity, 'manage_providers')) {
             return $this->deny();
         }
 
@@ -136,7 +135,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS)) {
+        if (!$organization->identityCan($identity, 'manage_provider_funds')) {
             return $this->deny();
         }
 
@@ -172,7 +171,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_PROVIDERS)) {
+        if (!$organization->identityCan($identity, 'manage_providers')) {
             return $this->deny();
         }
 
@@ -205,7 +204,7 @@ class FundProviderChatMessagePolicy
             return $this->deny('integrity');
         }
 
-        if (!$organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS)) {
+        if (!$organization->identityCan($identity, 'manage_provider_funds')) {
             return $this->deny();
         }
 

@@ -6,7 +6,6 @@ use App\Exports\FundsExport;
 use App\Exports\FundsExportDetailed;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 
 /**
  * @property Organization $organization
@@ -20,7 +19,7 @@ class FinanceOverviewRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->identity(), Permission::VIEW_FINANCES);
+        return $this->organization->identityCan($this->identity(), 'view_finances');
     }
 
     /**

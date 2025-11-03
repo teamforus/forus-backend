@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\ReimbursementCategory;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -21,7 +20,7 @@ class ReimbursementCategoryPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS);
+        return $organization->identityCan($identity, 'manage_reimbursements');
     }
 
     /**
@@ -33,7 +32,7 @@ class ReimbursementCategoryPolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS);
+        return $organization->identityCan($identity, 'manage_reimbursements');
     }
 
     /**
@@ -53,7 +52,7 @@ class ReimbursementCategoryPolicy
             return false;
         }
 
-        return $organization->identityCan($identity, Permission::MANAGE_REIMBURSEMENTS);
+        return $organization->identityCan($identity, 'manage_reimbursements');
     }
 
     /**

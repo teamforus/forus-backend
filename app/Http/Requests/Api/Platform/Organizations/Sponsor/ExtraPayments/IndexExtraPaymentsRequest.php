@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\ExtraPayments;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 
 /**
  * @property Organization $organization
@@ -20,7 +19,7 @@ class IndexExtraPaymentsRequest extends BaseFormRequest
     {
         return
             $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), Permission::VIEW_FUNDS_EXTRA_PAYMENTS);
+            $this->organization->identityCan($this->identity(), 'view_funds_extra_payments');
     }
 
     /**

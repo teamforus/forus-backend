@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Services\MollieService\Models\MollieConnectionProfile;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -46,7 +45,7 @@ class MollieConnectionProfilePolicy
     public function allowExtraPayments(Identity $identity, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, Permission::MANAGE_PAYMENT_METHODS) &&
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->mollie_connection()->exists() &&
             $organization->canUseExtraPaymentsAsProvider();
     }

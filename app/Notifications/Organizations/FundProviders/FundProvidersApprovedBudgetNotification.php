@@ -5,7 +5,6 @@ namespace App\Notifications\Organizations\FundProviders;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Models\FundProvider;
 use App\Models\Identity;
-use App\Models\Permission;
 
 /**
  * Notify fund provider that they can scan budget vouchers now.
@@ -18,7 +17,7 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
     /**
      * @var string[]
      */
-    protected static string|array $permissions = Permission::MANAGE_PROVIDER_FUNDS;
+    protected static string|array $permissions = 'manage_provider_funds';
 
     /**
      * @param Identity $identity

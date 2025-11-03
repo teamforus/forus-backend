@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Platform\Provider\Vouchers\Products;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Scopes\Builders\OrganizationQuery;
 
 class IndexProductsRequest extends BaseFormRequest
@@ -29,7 +28,7 @@ class IndexProductsRequest extends BaseFormRequest
         $organizationsQuery = OrganizationQuery::whereHasPermissions(
             Organization::query(),
             $this->auth_address(),
-            Permission::SCAN_VOUCHERS
+            'scan_vouchers'
         );
 
         return [

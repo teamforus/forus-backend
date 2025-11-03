@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Searches\OfficeSearch;
 use App\Services\MediaService\Models\Media;
 use Exception;
@@ -35,7 +34,7 @@ class OfficesController extends Controller
         $search = new OfficeSearch(
             $request->only('q'),
             $organization->offices(),
-            $organization->identityCan($request->identity(), Permission::MANAGE_OFFICES),
+            $organization->identityCan($request->identity(), 'manage_offices'),
         );
 
         return OfficeResource::queryCollection($search->query(), $request);

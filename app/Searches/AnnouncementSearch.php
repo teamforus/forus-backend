@@ -5,7 +5,6 @@ namespace App\Searches;
 use App\Models\Announcement;
 use App\Models\BankConnection;
 use App\Models\Implementation;
-use App\Models\Permission;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -16,7 +15,7 @@ class AnnouncementSearch extends BaseSearch
      */
     protected array $entityPermissionsMap = [
         'bank_connection' => [
-            Permission::VIEW_FINANCES, Permission::MANAGE_BANK_CONNECTIONS,
+            'view_finances', 'manage_bank_connections',
         ],
     ];
 

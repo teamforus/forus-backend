@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -37,7 +36,7 @@ class ProductReservationPolicy
      */
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
+        return $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
@@ -50,10 +49,7 @@ class ProductReservationPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, [
-            Permission::MANAGE_VOUCHERS,
-            Permission::VIEW_VOUCHERS,
-        ], false);
+        return $organization->identityCan($identity, ['view_vouchers', 'manage_vouchers'], false);
     }
 
     /**
@@ -104,7 +100,7 @@ class ProductReservationPolicy
      */
     public function createProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
+        return $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
@@ -117,7 +113,7 @@ class ProductReservationPolicy
     {
         return
             $organization->allow_batch_reservations &&
-            $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
+            $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**
@@ -173,7 +169,7 @@ class ProductReservationPolicy
     ): bool {
         return
             $productReservation->product->organization_id === $organization->id &&
-            $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
+            $organization->identityCan($identity, 'scan_vouchers');
     }
 
     /**

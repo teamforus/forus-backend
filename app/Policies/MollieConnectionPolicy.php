@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class MollieConnectionPolicy
@@ -19,7 +18,7 @@ class MollieConnectionPolicy
     public function viewAny(Identity $identity, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, Permission::MANAGE_PAYMENT_METHODS) &&
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->canViewExtraPaymentsAsProvider();
     }
 
@@ -65,7 +64,7 @@ class MollieConnectionPolicy
     public function fetchMollieAccount(Identity $identity, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, Permission::MANAGE_PAYMENT_METHODS) &&
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->mollie_connection()->exists();
     }
 
@@ -77,7 +76,7 @@ class MollieConnectionPolicy
     public function destroy(Identity $identity, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, Permission::MANAGE_PAYMENT_METHODS) &&
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->mollie_connection()->exists();
     }
 
@@ -89,7 +88,7 @@ class MollieConnectionPolicy
     public function allowExtraPayments(Identity $identity, Organization $organization): bool
     {
         return
-            $organization->identityCan($identity, Permission::MANAGE_PAYMENT_METHODS) &&
+            $organization->identityCan($identity, 'manage_payment_methods') &&
             $organization->canUseExtraPaymentsAsProvider();
     }
 }

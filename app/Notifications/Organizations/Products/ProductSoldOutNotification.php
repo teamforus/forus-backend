@@ -5,7 +5,6 @@ namespace App\Notifications\Organizations\Products;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Models\Identity;
 use App\Models\Implementation;
-use App\Models\Permission;
 
 /**
  * The product was sold out.
@@ -13,7 +12,7 @@ use App\Models\Permission;
 class ProductSoldOutNotification extends BaseProductsNotification
 {
     protected static ?string $key = 'notifications_products.sold_out';
-    protected static string|array $permissions = Permission::MANAGE_PRODUCTS;
+    protected static string|array $permissions = 'manage_products';
 
     /**
      * @param Identity $identity

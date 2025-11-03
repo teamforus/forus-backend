@@ -45,7 +45,7 @@ class OrganizationPolicy
      */
     public function showFinances(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::VIEW_FINANCES);
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
@@ -97,7 +97,7 @@ class OrganizationPolicy
     public function listSponsorProviders(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            Permission::MANAGE_PROVIDERS, Permission::VIEW_FINANCES,
+            'manage_providers', 'view_finances',
         ], false);
     }
 

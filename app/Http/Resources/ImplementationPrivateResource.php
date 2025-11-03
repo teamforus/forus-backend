@@ -7,7 +7,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Announcement;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
-use App\Models\Permission;
 use Illuminate\Http\Request;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -86,7 +85,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         Implementation $implementation
     ): array {
         if ($implementation->organization->identityCan($request->identity(), [
-            Permission::MANAGE_IMPLEMENTATION,
+            'manage_implementation',
         ])) {
             return $implementation->only([
                 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
@@ -109,7 +108,7 @@ class ImplementationPrivateResource extends BaseJsonResource
     ): array {
         $generalImplementation = $implementation::general();
 
-        if ($implementation->organization->identityCan($request->identity(), Permission::MANAGE_IMPLEMENTATION_CMS)) {
+        if ($implementation->organization->identityCan($request->identity(), 'manage_implementation_cms')) {
             return [
                 'email_logo' => new MediaCompactResource($implementation->email_logo),
                 'email_logo_default' => new MediaCompactResource($generalImplementation->email_logo),

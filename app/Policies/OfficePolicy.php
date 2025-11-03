@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Identity;
 use App\Models\Office;
 use App\Models\Organization;
-use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -21,7 +20,7 @@ class OfficePolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_OFFICES);
+        return $organization->identityCan($identity, 'manage_offices');
     }
 
     /**
@@ -42,7 +41,7 @@ class OfficePolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_OFFICES);
+        return $organization->identityCan($identity, 'manage_offices');
     }
 
     /**
@@ -70,7 +69,7 @@ class OfficePolicy
             return false;
         }
 
-        return $office->organization->identityCan($identity, Permission::MANAGE_OFFICES);
+        return $office->organization->identityCan($identity, 'manage_offices');
     }
 
     /**
@@ -93,6 +92,6 @@ class OfficePolicy
             return $this->deny('Cannot delete office with employees.');
         }
 
-        return $office->organization->identityCan($identity, Permission::MANAGE_OFFICES);
+        return $office->organization->identityCan($identity, 'manage_offices');
     }
 }

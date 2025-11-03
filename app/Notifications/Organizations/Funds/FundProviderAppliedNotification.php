@@ -5,7 +5,6 @@ namespace App\Notifications\Organizations\Funds;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Models\Fund;
 use App\Models\Identity;
-use App\Models\Permission;
 
 /**
  * Notify sponsor that a new provider applied to the fund.
@@ -13,7 +12,7 @@ use App\Models\Permission;
 class FundProviderAppliedNotification extends BaseFundsNotification
 {
     protected static ?string $key = 'notifications_funds.provider_applied';
-    protected static string|array $permissions = Permission::MANAGE_PROVIDERS;
+    protected static string|array $permissions = 'manage_providers';
 
     /**
      * Get the mail representation of the notification.

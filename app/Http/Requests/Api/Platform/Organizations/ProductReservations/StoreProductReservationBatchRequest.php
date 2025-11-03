@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Rules\ProductReservations\ProviderProductReservationBatchItemPermissionsRule;
 use App\Rules\ProductReservations\ProviderProductReservationBatchItemStockRule;
 use App\Rules\ProductReservations\ProviderProductReservationBatchRule;
@@ -24,7 +23,7 @@ class StoreProductReservationBatchRequest extends BaseFormRequest
     {
         return
             $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), Permission::SCAN_VOUCHERS);
+            $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 
     /**

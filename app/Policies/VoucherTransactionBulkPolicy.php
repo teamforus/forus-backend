@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -23,7 +22,7 @@ class VoucherTransactionBulkPolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, Permission::VIEW_FINANCES);
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
@@ -41,7 +40,7 @@ class VoucherTransactionBulkPolicy
     ): bool {
         return
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity, Permission::VIEW_FINANCES);
+            $organization->identityCan($identity, 'view_finances');
     }
 
     /**
@@ -53,7 +52,7 @@ class VoucherTransactionBulkPolicy
      */
     public function store(Identity $identity, Organization $organization): Response|bool
     {
-        $hasPermission = $organization->identityCan($identity, Permission::MANAGE_TRANSACTION_BULKS);
+        $hasPermission = $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if ($hasPermission) {
             if (VoucherTransactionBulk::getNextBulkTransactionsForSponsor(
@@ -87,7 +86,7 @@ class VoucherTransactionBulkPolicy
         Organization $organization
     ): Response|bool {
         $integrityIsValid = $this->checkIntegrity($bulk, $organization);
-        $hasPermission = $organization->identityCan($identity, Permission::MANAGE_TRANSACTION_BULKS);
+        $hasPermission = $organization->identityCan($identity, 'manage_transaction_bulks');
         $bank = $bulk->bank_connection->bank;
 
         if ($bank->isBunq() && !$bulk->isRejected()) {
@@ -117,7 +116,7 @@ class VoucherTransactionBulkPolicy
     ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity, Permission::MANAGE_TRANSACTION_BULKS) &&
+            $organization->identityCan($identity, 'manage_transaction_bulks') &&
             $voucherTransactionBulk->is_exported;
 
         if (!$voucherTransactionBulk->isDraft()) {
@@ -147,7 +146,7 @@ class VoucherTransactionBulkPolicy
     ): Response|bool {
         $hasPermission =
             $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity, Permission::MANAGE_TRANSACTION_BULKS);
+            $organization->identityCan($identity, 'manage_transaction_bulks');
 
         if (!$voucherTransactionBulk->isDraft()) {
             return $this->deny('Alleen concept bulk lijsten kunnen worden geëxporteerd.');

@@ -25,12 +25,12 @@ class FundPolicy
     public function viewAny(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            Permission::VIEW_FUNDS,
+            'view_funds',
             Permission::MANAGE_FUNDS,
             Permission::MANAGE_PAYOUTS,
             Permission::VIEW_IDENTITIES,
             Permission::MANAGE_IDENTITIES,
-            Permission::VIEW_FINANCES,
+            'view_finances',
         ], false);
     }
 
@@ -57,7 +57,7 @@ class FundPolicy
         }
 
         return $fund->public || $fund->organization->identityCan($identity, [
-            Permission::MANAGE_FUNDS, Permission::VIEW_FINANCES, Permission::VIEW_FUNDS,
+            Permission::MANAGE_FUNDS, 'view_finances', 'view_funds',
         ], false);
     }
 
@@ -74,7 +74,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
+        return $fund->organization->identityCan($identity, 'manage_vouchers');
     }
 
     /**
@@ -336,7 +336,7 @@ class FundPolicy
         }
 
         return $fund->public ||
-            $fund->organization->identityCan($identity, Permission::VIEW_FINANCES);
+            $fund->organization->identityCan($identity, 'view_finances');
     }
 
     /**
@@ -356,7 +356,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
+        return $fund->organization->identityCan($identity, 'manage_vouchers');
     }
 
     /**
