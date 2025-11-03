@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
+use App\Models\Permission;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
@@ -82,7 +83,7 @@ class ProductReservationResource extends BaseProductReservationResource
     {
         $physicalCard = $voucher->physical_cards[0] ?? null;
 
-        return $reservation->product->organization->identityCan(Identity::auth(), 'scan_vouchers') ? [
+        return $reservation->product->organization->identityCan(Identity::auth(), Permission::SCAN_VOUCHERS) ? [
             'identity_email' => $voucher->identity?->email,
             'identity_physical_card' => $physicalCard->code ?? null,
         ] : [];

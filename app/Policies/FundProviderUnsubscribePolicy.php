@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\FundProviderUnsubscribe;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FundProviderUnsubscribePolicy
@@ -19,7 +20,7 @@ class FundProviderUnsubscribePolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_providers');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDERS);
     }
 
     /**
@@ -30,7 +31,7 @@ class FundProviderUnsubscribePolicy
      */
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -41,7 +42,7 @@ class FundProviderUnsubscribePolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -60,7 +61,7 @@ class FundProviderUnsubscribePolicy
             return false;
         }
 
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -80,7 +81,7 @@ class FundProviderUnsubscribePolicy
         }
 
         return $fundProviderUnsubscribe->isPending() && $organization->identityCan($identity, [
-            'manage_provider_funds',
+            Permission::MANAGE_PROVIDER_FUNDS,
         ]);
     }
 }

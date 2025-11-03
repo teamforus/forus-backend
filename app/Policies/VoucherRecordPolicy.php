@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Voucher;
 use App\Models\VoucherRecord;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -28,7 +29,10 @@ class VoucherRecordPolicy
     ): Response|bool {
         return
             $this->validateEndpoint($voucher, $organization) &&
-            $organization->identityCan($identity, ['manage_vouchers', 'view_vouchers'], false);
+            $organization->identityCan($identity, [
+                Permission::MANAGE_VOUCHERS,
+                Permission::VIEW_VOUCHERS,
+            ], false);
     }
 
     /**
@@ -64,7 +68,7 @@ class VoucherRecordPolicy
     ): Response|bool {
         return
             $this->validateEndpoint($voucher, $organization) &&
-            $organization->identityCan($identity, 'manage_vouchers');
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
     }
 
     /**
@@ -86,7 +90,7 @@ class VoucherRecordPolicy
             return false;
         }
 
-        if (!$organization->identityCan($identity, 'manage_vouchers')) {
+        if (!$organization->identityCan($identity, Permission::MANAGE_VOUCHERS)) {
             return $this->deny('no_permission');
         }
 

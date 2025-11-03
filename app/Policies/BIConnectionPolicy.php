@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -68,7 +69,7 @@ class BIConnectionPolicy
         Organization $organization,
         bool $auth2FAConfirmed = false,
     ): Response|bool {
-        if (!$organization->identityCan($identity, 'manage_bi_connection')) {
+        if (!$organization->identityCan($identity, Permission::MANAGE_BI_CONNECTION)) {
             return false;
         }
 
