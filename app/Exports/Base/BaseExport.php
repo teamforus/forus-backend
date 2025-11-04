@@ -22,22 +22,22 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     protected array $builderWithArray = [];
     protected array $builderWithCountArray = [];
 
-    protected array $totals = [];
-
     /**
      * @param Builder|Relation|Model $builder
      * @param array $fields
      */
     public function __construct(Builder|Relation|Model $builder, protected array $fields = [])
     {
-        $this->data = $this->export($builder);
-        $this->appendTotals();
+        $data = $this->export($builder);
+        $totals = $this->getTotals();
+
+        $this->data = !empty($totals) ? $data->push($totals) : $data;
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection|Model[]
      */
-    public function collection(): Collection
+    public function collection(): Collection|array
     {
         return $this->data;
     }
@@ -147,30 +147,10 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     }
 
     /**
-     * @return array|array[]
+     * @return array|null
      */
-    protected function getTotals(): array
+    protected function getTotals(): ?array
     {
-        return [];
-    }
-
-    /**
-     * @return void
-     */
-    protected function appendTotals(): void
-    {
-        if (count($this->totals)) {
-            $this->data->push($this->getTotals());
-        }
-    }
-
-    /**
-     * @param Model $model
-     * @param array $attributes
-     * @return void
-     */
-    protected function accumulateTotals(Model $model, array $attributes = [])
-    {
-
+        return null;
     }
 }

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class FundIdentitiesExport extends BaseExport
 {
+    protected array $builderWithArray = [
+        'primary_email',
+    ];
+
     protected static string $transKey = 'fund_identities';
 
     /**

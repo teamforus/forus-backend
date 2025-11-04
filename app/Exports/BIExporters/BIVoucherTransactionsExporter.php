@@ -17,14 +17,13 @@ class BIVoucherTransactionsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $fields = VoucherTransactionsSponsorExport::getExportFieldsRaw();
         $search = new VoucherTransactionsSearch([], VoucherTransaction::query());
 
-        $data = new VoucherTransactionsSponsorExport(
+        $export = new VoucherTransactionsSponsorExport(
             $search->searchSponsor($this->organization),
-            $fields
+            VoucherTransactionsSponsorExport::getExportFieldsRaw(),
         );
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

@@ -25,8 +25,8 @@ class BIVoucherTransactionBulksExporter extends BaseBIExporter
         ]));
 
         $search = new VoucherTransactionBulksSearch([], $query);
-        $data = new VoucherTransactionBulksExport($search->query(), $fields);
+        $export = new VoucherTransactionBulksExport($search->query(), $fields);
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

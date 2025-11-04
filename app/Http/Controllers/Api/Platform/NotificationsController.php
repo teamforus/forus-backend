@@ -17,17 +17,16 @@ class NotificationsController extends Controller
      */
     public function index(IndexNotificationsRequest $request): AnonymousResourceCollection
     {
-        $seen = $request->input('seen');
         $page = $request->input('page', 1);
         $per_page = $request->input('per_page', 15);
         $mark_read = $request->input('mark_read', false);
 
         $identity = $request->identity();
 
-        $search = new NotificationSearch([
-            $request->only('organization_id'),
-            ...compact('seen'),
-        ], $identity->notifications()->where('scope', $request->client_type()));
+        $search = new NotificationSearch(
+            $request->only('organization_id', 'seen'),
+            $identity->notifications()->where('scope', $request->client_type()),
+        );
 
         $notificationsQuery = $search->query();
 

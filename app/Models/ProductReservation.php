@@ -12,7 +12,6 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use App\Services\MollieService\Objects\Payment;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -223,7 +222,7 @@ class ProductReservation extends Model
     ];
 
     /**
-     * @throws Exception
+     * @throws Throwable
      */
     public static function makeCode(): int
     {

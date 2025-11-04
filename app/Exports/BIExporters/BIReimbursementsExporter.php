@@ -17,14 +17,15 @@ class BIReimbursementsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $fields = ReimbursementsSponsorExport::getExportFieldsRaw();
-
         $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
         $query = $query->whereRelation('voucher.fund', 'organization_id', $this->organization->id);
         $search = new ReimbursementsSearch([], $query);
 
-        $data = new ReimbursementsSponsorExport($search->query()->latest(), $fields);
+        $export = new ReimbursementsSponsorExport(
+            $search->query()->latest(),
+            ReimbursementsSponsorExport::getExportFieldsRaw(),
+        );
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

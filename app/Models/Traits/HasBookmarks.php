@@ -22,9 +22,9 @@ trait HasBookmarks
 
     /**
      * @param Identity $identity
-     * @return Product|HasBookmarks
+     * @return static
      */
-    public function addBookmark(Identity $identity): self
+    public function addBookmark(Identity $identity): static
     {
         $this->bookmarks()->firstOrCreate([
             'identity_address' => $identity->address,

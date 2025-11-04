@@ -17,11 +17,10 @@ class BIFundRequestsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $fields = FundRequestsExport::getExportFieldsRaw();
         $employee = $this->organization->findEmployee($this->organization->identity_address);
         $search = (new FundRequestSearch([], FundRequest::query()))->setEmployee($employee);
-        $data = new FundRequestsExport($search->query(), $fields);
+        $export = new FundRequestsExport($search->query(), FundRequestsExport::getExportFieldsRaw());
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

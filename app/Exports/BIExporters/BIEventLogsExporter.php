@@ -17,15 +17,14 @@ class BIEventLogsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $fields = EventLogsExport::getExportFieldsRaw();
         $employee = $this->organization->findEmployee($this->organization->identity_address);
 
         $search = new EmployeeEventLogSearch($employee, [
             'loggable' => ['fund', 'bank_connection', 'employees'],
         ], EventLog::query());
 
-        $data = new EventLogsExport($search->query(), $fields, $employee);
+        $export = new EventLogsExport($search->query(), EventLogsExport::getExportFieldsRaw(), $employee);
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

@@ -77,7 +77,7 @@ class Notification extends DatabaseNotification
     public static function totalUnseenFromRequest(IndexNotificationsRequest $request, Identity $identity): int
     {
         $search = new NotificationSearch([
-            $request->only('organization_id'),
+            ...$request->only('organization_id'),
             'seen' => false,
         ], $identity->notifications()->where('scope', $request->client_type()));
 

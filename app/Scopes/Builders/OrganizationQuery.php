@@ -326,11 +326,7 @@ class OrganizationQuery
                 Builder $builder
             ) use ($like) {
                 $builder->where(static function (Builder $query) use ($like) {
-                    $query->where(
-                        'address',
-                        'LIKE',
-                        $like
-                    );
+                    $query->where('address', 'LIKE', $like);
                 });
             });
         });

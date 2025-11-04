@@ -73,7 +73,7 @@ class FundsExport extends BaseExport
         $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($model, $this->from, $this->to);
         $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($model, $this->from, $this->to);
 
-        $this->accumulateTotals($model, compact('total', 'used', 'costs'));
+        $this->accumulateTotals($total, $used, $costs);
 
         return [
             'name' => $model->name,
@@ -85,16 +85,17 @@ class FundsExport extends BaseExport
     }
 
     /**
-     * @param Model|Fund $model
-     * @param array $attributes
+     * @param float $total
+     * @param float $used
+     * @param float $costs
      * @return void
      */
-    protected function accumulateTotals(Model|Fund $model, array $attributes = []): void
+    protected function accumulateTotals(float $total, float $used, float $costs): void
     {
-        $this->totals['balance'] += ($attributes['total'] - $attributes['used']);
-        $this->totals['expenses'] += $attributes['used'];
-        $this->totals['transactions'] += $attributes['costs'];
-        $this->totals['total_top_up'] += $attributes['total'];
+        $this->totals['balance'] += ($total - $used);
+        $this->totals['expenses'] += $used;
+        $this->totals['transactions'] += $costs;
+        $this->totals['total_top_up'] += $total;
     }
 
     /**

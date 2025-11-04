@@ -45,7 +45,7 @@ class VouchersSearch extends BaseSearch
             VoucherQuery::whereAllowReimbursements($builder);
         }
 
-        $this->whereImplementation($builder);
+        $this->filterByImplementation($builder);
 
         if ($this->getFilter('state')) {
             $builder->where('state', $this->getFilter('state'));
@@ -88,17 +88,17 @@ class VouchersSearch extends BaseSearch
             $builder = VoucherQuery::whereSearchSponsorQuery($builder, $q);
         }
 
-        $this->whereImplementation($builder);
-        $this->whereGranted($builder);
-        $this->whereDates($builder);
-        $this->whereAmount($builder);
-        $this->whereUnassigned($builder);
-        $this->whereTypeAndSource($builder);
-        $this->whereInUse($builder);
-        $this->whereHasPayouts($builder);
-        $this->whereCountPerIdentity($builder);
-        $this->whereStateAndExpired($builder);
-        $this->whereIdentity($builder);
+        $this->filterByImplementation($builder);
+        $this->filterByGranted($builder);
+        $this->filterByDates($builder);
+        $this->filterByAmount($builder);
+        $this->filterByUnassigned($builder);
+        $this->filterByTypeAndSource($builder);
+        $this->filterByInUse($builder);
+        $this->filterByHasPayouts($builder);
+        $this->filterByCountPerIdentity($builder);
+        $this->filterByStateAndExpired($builder);
+        $this->filterByIdentity($builder);
 
         return $builder->orderBy(
             $this->getFilter('order_by', 'created_at'),
@@ -110,7 +110,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereAmount(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByAmount(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->hasFilter('amount_min')) {
             $builder->where('amount', '>=', $this->getFilter('amount_min'));
@@ -140,7 +140,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereDates(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByDates(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->hasFilter('from')) {
             $builder->where('created_at', '>=', Carbon::parse($this->getFilter('from'))->startOfDay());
@@ -157,7 +157,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereGranted(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByGranted(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         $granted = $this->getFilter('granted');
 
@@ -174,7 +174,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereInUse(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByInUse(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         $in_use_from = $this->getFilter('in_use_from');
         $in_use_to = $this->getFilter('in_use_to');
@@ -204,7 +204,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereUnassigned(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByUnassigned(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->getFilter('unassigned')) {
             $builder->whereNull('identity_id');
@@ -219,7 +219,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereCountPerIdentity(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByCountPerIdentity(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         $count_per_identity_min = $this->getFilter('count_per_identity_min');
         $count_per_identity_max = $this->getFilter('count_per_identity_max');
@@ -243,7 +243,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereHasPayouts(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByHasPayouts(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->hasFilter('has_payouts')) {
             $builder->where(function (Builder $builder) {
@@ -262,7 +262,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereTypeAndSource(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByTypeAndSource(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         match ($this->getFilter('type')) {
             'all' => $builder,
@@ -285,7 +285,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Voucher|Builder|Relation
      */
-    protected function whereStateAndExpired(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByStateAndExpired(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->getFilter('state') === 'expired') {
             VoucherQuery::whereExpired($builder);
@@ -302,7 +302,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Relation|Builder|Voucher
      */
-    protected function whereImplementation(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByImplementation(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->getFilter('implementation_id')) {
             $builder->whereRelation('fund.fund_config', [
@@ -323,7 +323,7 @@ class VouchersSearch extends BaseSearch
      * @param Relation|Builder|Voucher $builder
      * @return Voucher|Builder|Relation
      */
-    protected function whereIdentity(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    protected function filterByIdentity(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
     {
         if ($this->hasFilter('email') && $email = $this->getFilter('email')) {
             $builder->where('identity_id', Identity::findByEmail($email)?->id ?: '_');
