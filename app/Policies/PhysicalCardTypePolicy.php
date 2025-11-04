@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Models\Identity;
-use App\Models\Permission;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\PhysicalCardType;
 use Illuminate\Auth\Access\HandlesAuthorization;
 

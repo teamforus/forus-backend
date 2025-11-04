@@ -15,7 +15,7 @@ class SponsorProductReservationResource extends BaseProductReservationResource
         'voucher.fund.fund_config',
         'voucher.identity.primary_email',
         'product.organization',
-        'product.photo.presets',
+        'product.photos.presets',
         'voucher_transaction',
         'extra_payment.refunds',
         'extra_payment.refunds_active',

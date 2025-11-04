@@ -55,7 +55,7 @@ class BaseProductReservationResource extends BaseJsonResource
                 'id' => $reservation->product->organization->id,
                 'name' => $reservation->product->organization->name,
             ],
-            'photo' => new MediaResource($reservation->product->photo),
+            'photos' => MediaResource::collection($reservation->product->photos),
         ];
     }
 

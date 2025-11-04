@@ -43,14 +43,14 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
         // Add first media and assert that it's linked to the fund
         $fund->description = $description1;
         $fund->save();
-        $fund->syncDescriptionMarkdownMedia('cms_media');
+        $fund->syncMarkdownMedia('cms_media');
         $this->assertEquals($fund->id, $media1->refresh()->mediable_id);
         $this->assertEquals($fund->getMorphClass(), $media1->refresh()->mediable_type);
 
         // Add second media and assert that both media are linked
         $fund->description = "$description1  \n$description2";
         $fund->save();
-        $fund->syncDescriptionMarkdownMedia('cms_media');
+        $fund->syncMarkdownMedia('cms_media');
         $this->assertEquals($fund->id, $media1->refresh()->mediable_id);
         $this->assertEquals($fund->getMorphClass(), $media1->refresh()->mediable_type);
         $this->assertEquals($fund->id, $media2->refresh()->mediable_id);
@@ -59,7 +59,7 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
         // Remove the second media and assert that the first one is linked and the second one removed.
         $fund->description = $description1;
         $fund->save();
-        $fund->syncDescriptionMarkdownMedia('cms_media');
+        $fund->syncMarkdownMedia('cms_media');
 
         $this->assertEquals($fund->id, $media1->refresh()->mediable_id);
         $this->assertEquals($fund->getMorphClass(), $media1->refresh()->mediable_type);
@@ -131,17 +131,17 @@ class SyncMarkdownDescriptionMediaTest extends TestCase
         // Add first media and assert that it's linked to the fund
         $model1->description = $description;
         $model1->save();
-        $model1->syncDescriptionMarkdownMedia($mediaType1);
+        $model1->syncMarkdownMedia($mediaType1);
         $this->updateAndAssertMediaLinked($model1, $media1);
 
         // copy the description to a new entity and assert that the media is still
         // liked to the initial fund
         $model2->description = $description;
         $model2->save();
-        $model2->syncDescriptionMarkdownMedia($mediaType2);
+        $model2->syncMarkdownMedia($mediaType2);
         $this->updateAndAssertMediaLinked($model1, $media1);
 
-        $fund2Medias = $model2->getDescriptionMarkdownMediaQuery()->where('type', $mediaType2);
+        $fund2Medias = $model2->getMarkdownMediaQuery('description')->where('type', $mediaType2);
 
         // assert there is exactly one media in the description
         $this->assertTrue($fund2Medias->count() == 1, 'Media not found in the description.');

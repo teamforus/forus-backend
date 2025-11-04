@@ -24,7 +24,7 @@ use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use League\CommonMark\Exception\CommonMarkException;
 
 /**
  * App\Models\Fund.
@@ -50,6 +51,8 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $description_text
  * @property string|null $description_short
  * @property string $description_position
+ * @property string|null $how_it_works
+ * @property string|null $how_it_works_text
  * @property int|null $parent_id
  * @property string|null $faq_title
  * @property string $request_btn_text
@@ -124,6 +127,7 @@ use Illuminate\Support\Facades\Log;
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read string $description_html
+ * @property-read string $how_it_works_html
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -184,6 +188,8 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|Fund whereExternalPage($value)
  * @method static Builder<static>|Fund whereExternalPageUrl($value)
  * @method static Builder<static>|Fund whereFaqTitle($value)
+ * @method static Builder<static>|Fund whereHowItWorks($value)
+ * @method static Builder<static>|Fund whereHowItWorksText($value)
  * @method static Builder<static>|Fund whereId($value)
  * @method static Builder<static>|Fund whereName($value)
  * @method static Builder<static>|Fund whereNotificationAmount($value)
@@ -206,7 +212,7 @@ class Fund extends Model
     use HasTags;
     use HasMedia;
     use HasDigests;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string EVENT_CREATED = 'created';
@@ -267,7 +273,7 @@ class Fund extends Model
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public', 'external',
-        'default_validator_employee_id', 'auto_requests_validation',
+        'default_validator_employee_id', 'auto_requests_validation', 'how_it_works', 'how_it_works_text',
         'criteria_editable_after_start', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
         'description_position', 'external_page', 'external_page_url', 'pre_check_note',
@@ -290,7 +296,19 @@ class Fund extends Model
     ];
 
     /**
+     * @return array
+     */
+    public static function getMarkdownKeys(): array
+    {
+        return [
+            'description',
+            'how_it_works',
+        ];
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function organization(): BelongsTo
     {
@@ -299,6 +317,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
     public function products(): BelongsToMany
     {
@@ -307,6 +326,7 @@ class Fund extends Model
 
     /**
      * @return BelongsToMany
+     * @noinspection PhpUnused
      */
     public function physical_card_types(): BelongsToMany
     {
@@ -366,6 +386,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
+     * @noinspection PhpUnused
      */
     public function parent(): BelongsTo
     {
@@ -374,6 +395,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function criteria(): HasMany
     {
@@ -381,8 +403,8 @@ class Fund extends Model
     }
 
     /**
-     * Get fund logo.
      * @return MorphOne
+     * @noinspection PhpUnused
      */
     public function logo(): MorphOne
     {
@@ -393,6 +415,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function vouchers(): HasMany
     {
@@ -401,6 +424,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function budget_vouchers(): HasMany
     {
@@ -412,6 +436,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function product_vouchers(): HasMany
     {
@@ -423,6 +448,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function payout_vouchers(): HasMany
     {
@@ -433,6 +459,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
     public function voucher_transactions(): HasManyThrough
     {
@@ -442,6 +469,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function providers(): HasMany
     {
@@ -450,6 +478,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function provider_invitations(): HasMany
     {
@@ -469,6 +498,7 @@ class Fund extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function backoffice_logs(): HasMany
     {
@@ -491,6 +521,16 @@ class Fund extends Model
     public function tags_provider(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable')->where('scope', 'provider');
+    }
+
+    /**
+     * @throws CommonMarkException
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getHowItWorksHtmlAttribute(): string
+    {
+        return $this->markdownToHtml('how_it_works');
     }
 
     /**

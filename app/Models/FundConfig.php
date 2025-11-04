@@ -36,6 +36,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property int $reimbursement_approve_offset
  * @property bool $show_subsidies
  * @property bool $show_qr_limits
+ * @property bool $show_qr_code
  * @property bool $show_requester_limits
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
@@ -193,6 +194,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereRecordValidityStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReimbursementApproveOffset($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereReservationApproveOffset($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowQrCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowQrLimits($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowRequesterLimits($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereShowSubsidies($value)
@@ -296,6 +298,7 @@ class FundConfig extends Model
         'allow_voucher_records' => 'boolean',
         'show_subsidies' => 'boolean',
         'show_qr_limits' => 'boolean',
+        'show_qr_code' => 'boolean',
         'show_requester_limits' => 'boolean',
         'backoffice_check_partner' => 'boolean',
         'record_validity_start_date' => 'date',
