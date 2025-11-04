@@ -20,8 +20,8 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType whereIconnectField($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType wherePersonBsnApiField($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType whereRecordTypeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PersonBsnApiRecordType whereUpdatedAt($value)
  * @mixin \Eloquent

@@ -89,7 +89,7 @@ class TransactionsController extends Controller
                 $organization = $product->organization;
                 $fundProviderProduct = $product?->getFundProviderProduct($voucher->fund);
 
-                if ($fundProviderProduct->isPaymentTypeSubsidy()) {
+                if ($fundProviderProduct?->isPaymentTypeSubsidy()) {
                     $amount = $fundProviderProduct->amount;
 
                     if ($amount === 0) {

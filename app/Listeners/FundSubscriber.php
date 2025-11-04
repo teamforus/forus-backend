@@ -42,6 +42,7 @@ use App\Notifications\Organizations\Funds\FundUnArchivedNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Config;
+use League\CommonMark\Exception\CommonMarkException;
 
 class FundSubscriber
 {
@@ -58,14 +59,13 @@ class FundSubscriber
     /**
      * @param FundCreatedEvent $event
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function onFundCreated(FundCreatedEvent $event): void
     {
         $fund = $event->getFund();
 
-        $fund->update([
-            'description_text' => $fund->descriptionToText(),
-        ]);
+        $fund->syncMarkdownTexts();
 
         FundCreatedNotification::send($fund->log(
             $fund::EVENT_CREATED,
@@ -83,15 +83,13 @@ class FundSubscriber
     /**
      * @param FundUpdatedEvent $event
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function onFundUpdated(FundUpdatedEvent $event): void
     {
         $fund = $event->getFund();
 
-        $fund->update([
-            'description_text' => $fund->descriptionToText(),
-        ]);
-
+        $fund->syncMarkdownTexts();
         $fund->log($fund::EVENT_UPDATED, $this->getFundLogModels($fund));
     }
 

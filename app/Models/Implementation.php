@@ -25,7 +25,7 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -223,7 +223,7 @@ use Illuminate\Support\Facades\Gate;
 class Implementation extends BaseModel
 {
     use HasMedia;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use ValidatesValues;
     use HasOnDemandTranslations;
 

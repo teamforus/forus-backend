@@ -59,7 +59,7 @@ trait HasFaq
         /** @var Faq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
         $faq->updateModel(array_only($question, ['title', 'subtitle', 'description', 'order', 'type']));
-        $faq->syncDescriptionMarkdownMedia('cms_media');
+        $faq->syncMarkdownMedia('cms_media');
 
         return $faq;
     }
