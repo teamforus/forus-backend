@@ -19,7 +19,7 @@ return new class () extends Migration {
 
         foreach (Organization::get() as $organization) {
             $organization->update([
-                'description_text' => $organization->descriptionToText(),
+                'description_text' => $organization->markdownToText('description'),
             ]);
         }
     }

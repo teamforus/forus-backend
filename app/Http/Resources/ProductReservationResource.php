@@ -21,7 +21,7 @@ class ProductReservationResource extends BaseProductReservationResource
         'voucher.physical_cards',
         'voucher.voucher_records',
         'product.organization',
-        'product.photo.presets',
+        'product.photos.presets',
         'voucher_transaction',
         'extra_payment.refunds',
         'extra_payment.refunds_active',

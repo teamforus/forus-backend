@@ -36,6 +36,11 @@ abstract class BaseProductRequest extends BaseFormRequest
             'price_type.free' => 'gratis',
             'price_type.discount_fixed' => 'korting',
             'price_type.discount_percentage' => 'korting',
+            'info_duration' => 'duur van de aanbieding',
+            'info_when' => 'wanneer',
+            'info_where' => 'waar',
+            'info_more_info' => 'meer informatie',
+            'info_attention' => 'let op',
         ];
     }
 
@@ -51,7 +56,8 @@ abstract class BaseProductRequest extends BaseFormRequest
             'description' => ['required', ...$this->markdownRules(5, 2500)],
             'alternative_text' => 'nullable|between:2,500',
             'price' => 'required_if:price_type,regular|numeric|min:.2',
-            'media_uid' => ['nullable', new MediaUidRule('product_photo')],
+            'media_uids' => 'nullable|array|max:5',
+            'media_uids.*' => ['nullable', new MediaUidRule('product_photo', $updatedProduct?->id)],
             'price_type' => ['required', Rule::in($updatedProduct ? [$updatedProduct->price_type] : Product::PRICE_TYPES)],
 
             'price_discount' => match ($priceType) {
@@ -65,6 +71,11 @@ abstract class BaseProductRequest extends BaseFormRequest
             'sku' => 'nullable|string|alpha_num|max:200',
             'ean' => ['nullable', 'string', new EanCodeRule()],
             'qr_enabled' => 'nullable|boolean',
+            'info_duration' => 'nullable|string|max:200',
+            'info_when' => 'nullable|string|max:200',
+            'info_where' => 'nullable|string|max:200',
+            'info_more_info' => 'nullable|string|max:200',
+            'info_attention' => 'nullable|string|max:200',
         ];
     }
 

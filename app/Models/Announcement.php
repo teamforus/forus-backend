@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent|null $announceable
+ * @property-read Model|Eloquent|null $announceable
  * @property-read string $description_html
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\Role|null $role
@@ -67,7 +67,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Announcement extends Model
 {
     use SoftDeletes;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     /**

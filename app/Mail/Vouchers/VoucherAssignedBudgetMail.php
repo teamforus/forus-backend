@@ -26,7 +26,7 @@ class VoucherAssignedBudgetMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
-            'qr_token' => $this->makeQrCode($data['qr_token']),
+            ...$data['qr_token'] ? ['qr_token' => $this->makeQrCode($data['qr_token'])] : [],
             'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
             'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
         ];

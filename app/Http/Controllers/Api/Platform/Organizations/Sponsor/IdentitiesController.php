@@ -8,8 +8,8 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\BankAccounts\UpdateProfileBankAccountRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IdentitiesPersonRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\IndexIdentitiesRequest;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityNoteRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\StoreIdentityRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities\UpdateIdentityRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;

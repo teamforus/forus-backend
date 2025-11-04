@@ -27,7 +27,7 @@ use Illuminate\Support\Arr;
 class SponsorProductResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'photo.presets',
+        'photos.presets',
         'product_reservations_pending',
         'product_category.translations',
         'organization.logo.presets',
@@ -56,6 +56,7 @@ class SponsorProductResource extends BaseJsonResource
                 'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id',
                 'reservation_enabled', 'reservation_policy', 'alternative_text', 'ean',
+                'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
@@ -71,7 +72,7 @@ class SponsorProductResource extends BaseJsonResource
             'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
             'expired' => $product->expired,
             'deleted' => !is_null($product->deleted_at),
-            'photo' => new MediaResource($product->photo),
+            'photos' => MediaResource::collection($product->photos),
             'product_category' => new ProductCategoryResource($product->product_category),
             'is_available' => $this->isAvailable($product, $fundProvider),
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
