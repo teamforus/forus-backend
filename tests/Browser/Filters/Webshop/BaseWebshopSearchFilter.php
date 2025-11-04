@@ -207,6 +207,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
 
             $browser->waitFor('@productFilterFundItem' . $fund->id);
             $browser->click('@productFilterFundItem' . $fund->id);
+
             return;
         }
 

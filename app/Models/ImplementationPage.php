@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,7 +66,7 @@ class ImplementationPage extends BaseModel
     use HasFaq;
     use HasMedia;
     use SoftDeletes;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string TYPE_HOME = 'home';

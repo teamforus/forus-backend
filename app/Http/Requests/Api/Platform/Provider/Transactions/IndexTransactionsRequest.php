@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Provider\Transactions;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class IndexTransactionsRequest extends BaseFormRequest
             'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
                 Organization::query(),
                 $this->auth_address(),
-                'scan_vouchers'
+                Permission::SCAN_VOUCHERS
             )->pluck('id')->toArray())],
             'q' => 'nullable|string',
             'state' => Rule::in(VoucherTransaction::STATES),

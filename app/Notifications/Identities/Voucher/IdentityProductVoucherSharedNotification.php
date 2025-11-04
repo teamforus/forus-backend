@@ -24,8 +24,10 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
         if ($this->eventLog->data['voucher_share_send_copy'] ?? false) {
             $mailable = new ShareProductVoucherMail([
                 ...$this->eventLog->data,
+                'qr_token' => $voucher->fund->fund_config->show_qr_code
+                    ? $voucher->token_without_confirmation->address
+                    : null,
                 'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
-                'qr_token' => $voucher->token_without_confirmation->address,
                 'requester_email' => $identity->email,
             ], $voucher->fund->fund_config->implementation->getEmailFrom());
 
@@ -34,8 +36,10 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
 
         $mailable = new ShareProductVoucherMail([
             ...$this->eventLog->data,
+            'qr_token' => $voucher->fund->fund_config->show_qr_code
+                ? $voucher->token_without_confirmation->address
+                : null,
             'reason' => $this->eventLog->data['voucher_share_message'] ?? '',
-            'qr_token' => $voucher->token_without_confirmation->address,
             'requester_email' => $identity->email,
         ], $voucher->fund->fund_config->implementation->getEmailFrom());
 

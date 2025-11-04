@@ -253,8 +253,8 @@ class PhysicalCardsTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws RandomException
+     * @return void
      */
     public function testPhysicalCardsList()
     {
