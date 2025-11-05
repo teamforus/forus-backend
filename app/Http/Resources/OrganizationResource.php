@@ -210,7 +210,7 @@ class OrganizationResource extends BaseJsonResource
             'phone_public', 'website_public',
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
-            'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
+            'reservation_fields' => ReservationFieldResource::collection($organization->reservation_fields),
             ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],
         ]) : [];
     }

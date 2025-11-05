@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use App\Models\Product;
 use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
@@ -123,7 +123,7 @@ abstract class BaseProductRequest extends BaseFormRequest
             'fields.*' => 'required|array',
             'fields.*.type' => [
                 'required',
-                Rule::in(OrganizationReservationField::TYPES),
+                Rule::in(ReservationField::TYPES),
             ],
             'fields.*.label' => 'required|string|max:200',
             'fields.*.required' => 'nullable|boolean',

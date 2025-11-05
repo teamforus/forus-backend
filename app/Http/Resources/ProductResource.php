@@ -216,12 +216,6 @@ class ProductResource extends BaseJsonResource
         $request = BaseFormRequest::createFromBase(request());
         $organization = $product->organization;
 
-        $fields = match ($product->reservation_fields_config) {
-            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $product->organization->reservation_fields,
-            Product::CUSTOM_RESERVATION_FIELDS_YES => $product->reservation_fields,
-            default => [],
-        };
-
         if ($request->isWebshop()) {
             return [
                 'reservation' => $product->reservation_fields_enabled ? [
@@ -235,7 +229,7 @@ class ProductResource extends BaseJsonResource
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
                     'note' => $organization->reservation_user_note,
-                    'fields' => OrganizationReservationFieldResource::collection($fields),
+                    'fields' => ReservationFieldResource::collection($product->getReservationFields()),
                 ] : [
                     'phone' => $product::RESERVATION_FIELD_NO,
                     'address' => $product::RESERVATION_FIELD_NO,
@@ -254,7 +248,7 @@ class ProductResource extends BaseJsonResource
             'reservation_note' => $product->reservation_note,
             'reservation_note_text' => $product->reservation_note_text,
             'reservation_fields_config' => $product->reservation_fields_config,
-            'reservation_fields' => OrganizationReservationFieldResource::collection($product->reservation_fields),
+            'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
         ];
     }
 }

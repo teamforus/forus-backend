@@ -2,13 +2,13 @@
 
 namespace App\Http\Resources;
 
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use Illuminate\Http\Request;
 
 /**
- * @property-read OrganizationReservationField $resource
+ * @property-read ReservationField $resource
  */
-class OrganizationReservationFieldResource extends BaseJsonResource
+class ReservationFieldResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.

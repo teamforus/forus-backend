@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 
 /**
@@ -105,7 +106,7 @@ use Illuminate\Support\Facades\Event;
  * @property-read int|null $product_reservations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
  * @property-read int|null $product_reservations_pending_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationField[] $reservation_fields
  * @property-read int|null $reservation_fields_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
@@ -427,7 +428,7 @@ class Product extends BaseModel
      */
     public function reservation_fields(): HasMany
     {
-        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+        return $this->hasMany(ReservationField::class)->orderBy('order');
     }
 
     /**
@@ -1123,6 +1124,18 @@ class Product extends BaseModel
         $providerProduct = $this->getFundProviderProduct($fund);
 
         return $providerProduct ? $providerProduct->user_price : $this->price;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getReservationFields(): Collection
+    {
+        return match ($this->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_NO => collect(),
+        };
     }
 
     /**

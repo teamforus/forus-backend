@@ -8,7 +8,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -99,37 +99,37 @@ class ProductReservationTest extends DuskTestCase
 
             $customFields = [[
                 'label' => 'custom field text 1',
-                'type' => OrganizationReservationField::TYPE_TEXT,
+                'type' => ReservationField::TYPE_TEXT,
                 'description' => 'custom field text description 1',
                 'required' => true,
                 'value' => 'some text',
             ], [
                 'label' => 'custom field text 2',
-                'type' => OrganizationReservationField::TYPE_TEXT,
+                'type' => ReservationField::TYPE_TEXT,
                 'description' => null,
                 'required' => false,
                 'value' => null,
             ], [
                 'label' => 'custom field number 1',
-                'type' => OrganizationReservationField::TYPE_NUMBER,
+                'type' => ReservationField::TYPE_NUMBER,
                 'description' => 'custom field number description 1',
                 'required' => true,
                 'value' => 100,
             ], [
                 'label' => 'custom field number 2',
-                'type' => OrganizationReservationField::TYPE_NUMBER,
+                'type' => ReservationField::TYPE_NUMBER,
                 'description' => null,
                 'required' => false,
                 'value' => null,
             ], [
                 'label' => 'custom field bool 1',
-                'type' => OrganizationReservationField::TYPE_BOOLEAN,
+                'type' => ReservationField::TYPE_BOOLEAN,
                 'description' => 'custom field bool description 1',
                 'required' => true,
                 'value' => 'Ja',
             ], [
                 'label' => 'custom field bool 2',
-                'type' => OrganizationReservationField::TYPE_BOOLEAN,
+                'type' => ReservationField::TYPE_BOOLEAN,
                 'description' => null,
                 'required' => false,
                 'value' => null,
@@ -196,7 +196,7 @@ class ProductReservationTest extends DuskTestCase
 
             $organizationCustomFields = [[
                 'label' => 'organization custom field text',
-                'type' => OrganizationReservationField::TYPE_TEXT,
+                'type' => ReservationField::TYPE_TEXT,
                 'description' => 'organization custom field text description',
                 'required' => true,
                 'value' => 'some text',
@@ -204,7 +204,7 @@ class ProductReservationTest extends DuskTestCase
 
             $productCustomFields = [[
                 'label' => 'product custom field text',
-                'type' => OrganizationReservationField::TYPE_TEXT,
+                'type' => ReservationField::TYPE_TEXT,
                 'description' => 'product custom field text description',
                 'required' => true,
                 'value' => 'some text',

@@ -20,7 +20,7 @@ return new class () extends Migration {
 
         Schema::table('organization_reservation_fields', function (Blueprint $table) {
             $table->unsignedInteger('product_id')->nullable()->after('organization_id');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('restrict');
         });
     }
 

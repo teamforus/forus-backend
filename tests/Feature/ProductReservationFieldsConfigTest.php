@@ -3,7 +3,7 @@
 namespace Feature;
 
 use App\Models\Organization;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
@@ -44,7 +44,7 @@ class ProductReservationFieldsConfigTest extends TestCase
         // Create organization custom fields
         $organizationCustomFields = [[
             'label' => 'organization custom field text',
-            'type' => OrganizationReservationField::TYPE_TEXT,
+            'type' => ReservationField::TYPE_TEXT,
             'description' => 'organization custom field text description',
             'required' => true,
             'value' => 'some text',
@@ -59,7 +59,7 @@ class ProductReservationFieldsConfigTest extends TestCase
 
         $productCustomFields = [[
             'label' => 'product custom field text',
-            'type' => OrganizationReservationField::TYPE_TEXT,
+            'type' => ReservationField::TYPE_TEXT,
             'description' => 'product custom field text description',
             'required' => true,
             'value' => 'some text',

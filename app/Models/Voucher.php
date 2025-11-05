@@ -1207,15 +1207,11 @@ class Voucher extends BaseModel
             ]),
         ]);
 
-        $fields = match ($product->reservation_fields_config) {
-            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $product->organization->reservation_fields,
-            Product::CUSTOM_RESERVATION_FIELDS_YES => $product->reservation_fields,
-            default => collect(),
-        };
+        $fields = $product->getReservationFields();
 
         // store custom fields
-        $reservation->custom_fields()->createMany($fields->map(fn (OrganizationReservationField $field) => [
-            'organization_reservation_field_id' => $field->id,
+        $reservation->custom_fields()->createMany($fields->map(fn (ReservationField $field) => [
+            'reservation_field_id' => $field->id,
             'value' => Arr::get($extraData, "custom_fields.$field->id"),
         ]));
 
