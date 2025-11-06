@@ -19,9 +19,9 @@ class BIFundIdentitiesExporter extends BaseBIExporter
     {
         return $this->organization->funds->reduce(function (array $list, Fund $fund) {
             $search = new FundIdentitiesSearch([], $fund);
-            $data = new FundIdentitiesExport($search->get(), FundIdentitiesExport::getExportFieldsRaw());
+            $export = new FundIdentitiesExport($search->query(), FundIdentitiesExport::getExportFieldsRaw());
 
-            return array_merge($list, $data->collection()->toArray());
+            return array_merge($list, $export->collection()->toArray());
         }, []);
     }
 }

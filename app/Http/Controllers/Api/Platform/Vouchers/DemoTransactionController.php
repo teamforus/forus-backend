@@ -46,7 +46,7 @@ class DemoTransactionController extends Controller
         UpdateTransactionRequest $request,
         DemoTransaction $transaction
     ): DemoTransactionResource {
-        return DemoTransactionResource::create($transaction->updateModel([
+        return DemoTransactionResource::create(tap($transaction)->update([
             'state' => $request->get('state'),
         ]));
     }

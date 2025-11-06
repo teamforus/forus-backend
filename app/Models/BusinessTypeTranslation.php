@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\BusinessTypeTranslation.
  *
@@ -18,7 +20,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BusinessTypeTranslation whereName($value)
  * @mixin \Eloquent
  */
-class BusinessTypeTranslation extends BaseModel
+class BusinessTypeTranslation extends Model
 {
     public $timestamps = false;
 

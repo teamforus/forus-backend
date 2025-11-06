@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\RolePermission.
  *
@@ -18,7 +20,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RolePermission whereRoleId($value)
  * @mixin \Eloquent
  */
-class RolePermission extends BaseModel
+class RolePermission extends Model
 {
     public $timestamps = false;
     protected $fillable = [

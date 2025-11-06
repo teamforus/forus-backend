@@ -603,10 +603,10 @@ class PrevalidationsTest extends DuskTestCase
         $browser->waitFor('@uploadPrevalidationsBatchButton');
         $browser->element('@uploadPrevalidationsBatchButton')->click();
 
+        $browser->waitFor('@modalPrevalidationUpload');
+
         $browser->waitFor('@modalFundSelectSubmit');
         $browser->element('@modalFundSelectSubmit')->click();
-
-        $browser->waitFor('@modalPrevalidationUpload');
 
         $browser->waitFor('@selectFileButton');
         $browser->element('@selectFileButton')->click();

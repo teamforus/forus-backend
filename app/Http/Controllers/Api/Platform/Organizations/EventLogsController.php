@@ -35,7 +35,7 @@ class EventLogsController extends Controller
 
         $search = new EmployeeEventLogSearch($request->employee($organization), $request->only([
             'q', 'loggable', 'loggable_id',
-        ]));
+        ]), EventLog::query());
 
         return EventLogResource::queryCollection($search->query(), $request, [
             'employee' => $request->employee($organization),
@@ -75,7 +75,12 @@ class EventLogsController extends Controller
         $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
         $fields = $request->input('fields', EventLogsExport::getExportFieldsRaw());
-        $exportData = new EventLogsExport($request, $request->employee($organization), $fields);
+
+        $search = new EmployeeEventLogSearch($request->employee($organization), $request->only([
+            'q', 'loggable', 'loggable_id',
+        ]), EventLog::query());
+
+        $exportData = new EventLogsExport($search->query(), $fields, $request->employee($organization));
 
         return resolve('excel')->download($exportData, $fileName);
     }

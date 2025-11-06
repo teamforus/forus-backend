@@ -3,9 +3,11 @@
 namespace App\Searches;
 
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Models\Product;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class WebshopGenericSearch
 {
@@ -41,9 +43,9 @@ class WebshopGenericSearch
     /**
      * @param array|string $types
      * @throws Exception
-     * @return Builder|null
+     * @return Builder|Relation
      */
-    public function query(array|string $types): ?Builder
+    public function query(array|string $types): Builder|Relation
     {
         $types = is_array($types) ? $types : func_get_args();
         $query = null;
@@ -78,31 +80,36 @@ class WebshopGenericSearch
      */
     protected function queryProducts(array $options): Builder
     {
-        return Product::search($options)->where('show_on_webshop', true)->withoutTrashed();
+        $search = new ProductSearch($options, Product::query());
+
+        return $search->queryWebshopSearch()->where('show_on_webshop', true)->withoutTrashed();
     }
 
     /**
      * @param array $options
-     * @return Builder
+     * @return Builder|Relation
      */
-    protected function queryProviders(array $options): Builder
+    protected function queryProviders(array $options): Builder|Relation
     {
-        return Implementation::searchProviders($options);
+        return (new OrganizationSearch($options, Organization::query()))->queryProviders();
     }
 
     /**
      * @param array $options
-     * @return Builder
+     * @return Builder|Relation
      */
-    protected function queryFunds(array $options): Builder
+    protected function queryFunds(array $options): Builder|Relation
     {
         return (new FundSearch($options, Implementation::activeFundsQuery()))->query();
     }
 
     /**
+     * @param Builder|Relation $query
+     * @param string $type
      * @throws Exception
+     * @return Builder|Relation
      */
-    private function selectByType(Builder $query, string $type): Builder
+    private function selectByType(Builder|Relation $query, string $type): Builder|Relation
     {
         $columns = ['id', 'name', 'created_at'];
 

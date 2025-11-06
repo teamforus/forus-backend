@@ -25,11 +25,11 @@ class OfficeSearch extends BaseSearch
     }
 
     /**
-     * @return Relation|Builder
+     * @return Relation|Builder|Office
      */
-    public function query(): Relation|Builder
+    public function query(): Relation|Builder|Office
     {
-        /** @var Office|Builder $builder */
+        /** @var Relation|Builder|Office $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('organization_id')) {

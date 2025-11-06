@@ -2,7 +2,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\BaseModel;
 use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
@@ -13,6 +12,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Facades\DB;
 
 class ProductSubQuery
 {
@@ -94,9 +94,9 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @return Builder
+     * @return QBuilder
      */
-    protected static function limitTotalSubQuery(array $options = []): Builder
+    protected static function limitTotalSubQuery(array $options = []): QBuilder
     {
         $builder = self::queryFundProviderProduct($options)
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
@@ -105,16 +105,16 @@ class ProductSubQuery
             ->getQuery()
             ->whereNull('deleted_at');
 
-        return BaseModel::query()
+        return DB::query()
             ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit_total`) as signed) as `limit_total`');
     }
 
     /**
      * @param array $options
-     * @return Builder
+     * @return QBuilder
      */
-    protected static function limitPerIdentitySubQuery(array $options = []): Builder
+    protected static function limitPerIdentitySubQuery(array $options = []): QBuilder
     {
         $builder = self::queryFundProviderProduct($options)
             ->whereColumn('fund_provider_products.product_id', '=', 'products.id')
@@ -123,7 +123,7 @@ class ProductSubQuery
             ->getQuery()
             ->whereNull('deleted_at');
 
-        return BaseModel::query()
+        return DB::query()
             ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(`limit`) as signed) as `limit`');
     }
@@ -165,9 +165,9 @@ class ProductSubQuery
     /**
      * @param array $options
      * @param bool $total
-     * @return Builder
+     * @return QBuilder
      */
-    protected static function limitTotalUsedSubQuery(array $options = [], bool $total = false): Builder
+    protected static function limitTotalUsedSubQuery(array $options = [], bool $total = false): QBuilder
     {
         if ($total) {
             $options['fund_voucher_id'] = $options['voucher_id'] ?? null;
@@ -243,7 +243,7 @@ class ProductSubQuery
             $builder->selectRaw('CAST((`count_transactions` + `count_vouchers` + `count_reservations`) as SIGNED) as `used_total`');
         }, 'count_reservations');
 
-        return BaseModel::query()
+        return DB::query()
             ->fromSub($builder, 'reservations')
             ->selectRaw('cast(sum(count_reservations) as signed) as count_reservations');
     }

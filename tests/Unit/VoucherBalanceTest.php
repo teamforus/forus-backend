@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Voucher;
+use App\Searches\VouchersSearch;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesApplication;
@@ -40,14 +40,13 @@ class VoucherBalanceTest extends TestCase
         $provider = $this->makeTestOrganization($this->makeIdentity());
         $product = $this->makeTestProduct($provider, price: $productPrice);
 
-        $request = new IndexVouchersRequest();
-        $request->query->add([
+        $search = new VouchersSearch([
             'source' => 'all',
             'type' => 'fund_voucher',
             'amount_available_min' => 10,
-        ]);
+        ], Voucher::query());
 
-        $query = Voucher::searchSponsorQuery($request, $organization, $fund)->where('id', $voucher->id);
+        $query = $search->searchSponsor($organization, $fund)->where('id', $voucher->id);
 
         // initial voucher amount
         $voucherItem = (clone $query)->first();

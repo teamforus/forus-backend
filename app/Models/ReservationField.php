@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField withoutTrashed()
  * @mixin \Eloquent
  */
-class ReservationField extends BaseModel
+class ReservationField extends Model
 {
     use SoftDeletes;
     use HasOnDemandTranslations;

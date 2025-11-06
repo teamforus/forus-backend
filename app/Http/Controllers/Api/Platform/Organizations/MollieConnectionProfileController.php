@@ -51,7 +51,7 @@ class MollieConnectionProfileController extends Controller
         $this->authorize('update', [$profile, $organization]);
 
         try {
-            $organization->mollie_connection->syncProfile($profile->updateModel($request->only([
+            $organization->mollie_connection->syncProfile(tap($profile)->update($request->only([
                 'name', 'email', 'phone', 'website',
             ])));
 

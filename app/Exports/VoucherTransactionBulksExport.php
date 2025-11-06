@@ -2,19 +2,18 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
-use App\Models\Organization;
+use App\Exports\Base\BaseExport;
 use App\Models\VoucherTransactionBulk;
-use App\Scopes\Builders\VoucherTransactionBulkQuery;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class VoucherTransactionBulksExport extends BaseFieldedExport
+class VoucherTransactionBulksExport extends BaseExport
 {
+    protected static string $transKey = 'voucher_transaction_bulks';
+
     /**
      * @var array|string[]
      */
-    public static array $exportFields = [
+    protected static array $exportFields = [
         'id',
         'quantity',
         'amount',
@@ -22,69 +21,35 @@ class VoucherTransactionBulksExport extends BaseFieldedExport
         'date_transaction',
         'state',
     ];
-    protected static string $transKey = 'voucher_transaction_bulks';
 
     /**
-     * @param IndexTransactionBulksRequest $request
-     * @param Organization $organization
-     * @param array $fields
+     * @var array|string[]
      */
-    public function __construct(
-        IndexTransactionBulksRequest $request,
-        Organization $organization,
-        protected array $fields,
-    ) {
-        $this->data = $this->export($request, $organization);
-    }
+    protected array $builderWithArray = [
+        'voucher_transactions',
+        'bank_connection.bank',
+    ];
 
     /**
-     * @param IndexTransactionBulksRequest $request
-     * @param Organization $organization
-     * @return Collection
+     * @var array|string[]
      */
-    protected function export(IndexTransactionBulksRequest $request, Organization $organization): Collection
-    {
-        $query = VoucherTransactionBulkQuery::order(
-            VoucherTransactionBulk::search($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        );
-
-        $data = $query->with([
-            'voucher_transactions',
-            'bank_connection.bank',
-        ])->withCount([
-            'voucher_transactions',
-        ])->get();
-
-        return $this->exportTransform($data);
-    }
+    protected array $builderWithCountArray = [
+        'voucher_transactions',
+    ];
 
     /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (VoucherTransactionBulk $transactionBulk) => array_only(
-            $this->getRow($transactionBulk),
-            $this->fields,
-        )));
-    }
-
-    /**
-     * @param VoucherTransactionBulk $transactionBulk
+     * @param Model|VoucherTransactionBulk $model
      * @return array
      */
-    protected function getRow(VoucherTransactionBulk $transactionBulk): array
+    protected function getRow(Model|VoucherTransactionBulk $model): array
     {
         return [
-            'id' => $transactionBulk->id,
-            'quantity' => $transactionBulk->voucher_transactions_count,
-            'amount' => currency_format($transactionBulk->voucher_transactions->sum('amount')),
-            'bank_name' => $transactionBulk->bank_connection->bank->name,
-            'date_transaction' => format_datetime_locale($transactionBulk->created_at),
-            'state' => trans("export.voucher_transaction_bulks.state-values.$transactionBulk->state"),
+            'id' => $model->id,
+            'quantity' => $model->voucher_transactions_count,
+            'amount' => currency_format($model->voucher_transactions->sum('amount')),
+            'bank_name' => $model->bank_connection->bank->name,
+            'date_transaction' => format_datetime_locale($model->created_at),
+            'state' => trans("export.voucher_transaction_bulks.state-values.$model->state"),
         ];
     }
 }

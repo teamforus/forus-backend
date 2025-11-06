@@ -3,7 +3,8 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\ReimbursementsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Reimbursements\IndexReimbursementsRequest;
+use App\Models\Reimbursement;
+use App\Searches\ReimbursementsSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIReimbursementsExporter extends BaseBIExporter
@@ -16,10 +17,15 @@ class BIReimbursementsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $request = new IndexReimbursementsRequest();
-        $fields = ReimbursementsSponsorExport::getExportFieldsRaw();
-        $data = new ReimbursementsSponsorExport($request, $this->organization, $fields);
+        $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
+        $query = $query->whereRelation('voucher.fund', 'organization_id', $this->organization->id);
+        $search = new ReimbursementsSearch([], $query);
 
-        return $data->collection()->toArray();
+        $export = new ReimbursementsSponsorExport(
+            $search->query()->latest(),
+            ReimbursementsSponsorExport::getExportFieldsRaw(),
+        );
+
+        return $export->collection()->toArray();
     }
 }

@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\MediaResource;
 use App\Rules\FundRequests\BaseFundRequestRule;
+use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\FundSearch;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
@@ -45,7 +47,7 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PreCheck whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class PreCheck extends BaseModel
+class PreCheck extends Model
 {
     use HasOnDemandTranslations;
 
@@ -83,7 +85,7 @@ class PreCheck extends BaseModel
         Identity $identity = null,
         array $filters = [],
     ): Collection {
-        $fundsQuery = Implementation::queryFundsByState('active');
+        $fundsQuery = ImplementationQuery::queryFundsByState('active');
 
         $fundsQuery->whereDoesntHave('fund_config', function (Builder $builder) {
             $builder->where('pre_check_excluded', true);

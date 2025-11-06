@@ -28,6 +28,7 @@ use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Pointer;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
@@ -86,7 +87,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BankConnection whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class BankConnection extends BaseModel
+class BankConnection extends Model
 {
     use HasLogs;
     use HasDbTokens;
@@ -225,14 +226,14 @@ class BankConnection extends BaseModel
      * @param Employee $employee
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return BankConnection|BaseModel
+     * @return BankConnection|Model
      */
     public static function addConnection(
         Bank $bank,
         Employee $employee,
         Organization $organization,
         Implementation $implementation
-    ): BankConnection|BaseModel {
+    ): BankConnection|Model {
         $bankConnection = static::create([
             'bank_id' => $bank->id,
             'organization_id' => $organization->id,
@@ -345,12 +346,12 @@ class BankConnection extends BaseModel
         ])->get();
 
         foreach ($activeConnections as $bankConnection) {
-            BankConnectionReplaced::dispatch($bankConnection->updateModel([
+            BankConnectionReplaced::dispatch(tap($bankConnection)->update([
                 'state' => static::STATE_REPLACED,
             ]));
         }
 
-        BankConnectionActivated::dispatch($this->updateModel([
+        BankConnectionActivated::dispatch(tap($this)->update([
             'state' => static::STATE_ACTIVE,
         ]));
 
@@ -362,7 +363,7 @@ class BankConnection extends BaseModel
      */
     public function setRejected(): self
     {
-        BankConnectionReplaced::dispatch($this->updateModel([
+        BankConnectionReplaced::dispatch(tap($this)->update([
             'state' => static::STATE_REJECTED,
         ]));
 
@@ -423,7 +424,7 @@ class BankConnection extends BaseModel
      */
     public function disable(Employee $employee): self
     {
-        BankConnectionDisabled::dispatch($this->updateModel([
+        BankConnectionDisabled::dispatch(tap($this)->update([
             'state' => static::STATE_DISABLED,
         ]), $employee);
 
@@ -435,7 +436,7 @@ class BankConnection extends BaseModel
      */
     public function disableAsInvalid(string $errorMessage): self
     {
-        BankConnectionDisabledInvalid::dispatch($this->updateModel([
+        BankConnectionDisabledInvalid::dispatch(tap($this)->update([
             'state' => static::STATE_INVALID,
         ]), null, [
             'bank_connection_error_message' => $errorMessage,
@@ -513,7 +514,7 @@ class BankConnection extends BaseModel
         Employee $employee,
     ): void {
         if ($bank_connection_account_id != $this->bank_connection_account_id) {
-            BankConnectionMonetaryAccountChanged::dispatch($this->updateModel(
+            BankConnectionMonetaryAccountChanged::dispatch(tap($this)->update(
                 compact('bank_connection_account_id')
             ), $employee);
         }

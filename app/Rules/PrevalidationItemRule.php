@@ -7,8 +7,9 @@ use App\Models\FundCriterion;
 use App\Models\PrevalidationRecord;
 use App\Models\RecordType;
 use App\Rules\FundRequests\BaseFundRequestRule;
+use App\Searches\RecordTypeSearch;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class PrevalidationItemRule extends BaseRule
@@ -28,7 +29,8 @@ class PrevalidationItemRule extends BaseRule
         public string $prefix
     ) {
         $this->csv_primary_key = $fund->fund_config->csv_primary_key ?? null;
-        $this->record_types = RecordType::search()->keyBy('key');
+        $search = new RecordTypeSearch([], RecordType::query());
+        $this->record_types = $search->query()->get()->keyBy('key');
     }
 
     /**

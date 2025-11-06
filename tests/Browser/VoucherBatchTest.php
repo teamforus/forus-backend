@@ -184,7 +184,8 @@ class VoucherBatchTest extends DuskTestCase
         };
 
         $browser->waitFor('@tableVoucherSearch');
-        $browser->value('@tableVoucherSearch', $search);
+        $this->clearField($browser, '@tableVoucherSearch');
+        $browser->typeSlowly('@tableVoucherSearch', $search, 50);
 
         $browser->waitFor("@tableVoucherRow$voucher->id");
         $browser->assertSeeIn("@tableVoucherRow$voucher->id", $search);
@@ -206,10 +207,10 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadVouchersBatchButton');
         $browser->element('@uploadVouchersBatchButton')->click();
 
+        $browser->waitFor('@modalVoucherUpload');
+
         $browser->waitFor('@modalFundSelectSubmit');
         $browser->element('@modalFundSelectSubmit')->click();
-
-        $browser->waitFor('@modalVoucherUpload');
 
         $browser->waitFor('@selectFileButton');
         $browser->element('@selectFileButton')->click();

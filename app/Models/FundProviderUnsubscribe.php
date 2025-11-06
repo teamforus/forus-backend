@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProviderUnsubscribe whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProviderUnsubscribe extends BaseModel
+class FundProviderUnsubscribe extends Model
 {
     public const string STATE_PENDING = 'pending';
     public const string STATE_APPROVED = 'approved';

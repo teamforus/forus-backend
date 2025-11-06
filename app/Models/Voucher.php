@@ -14,7 +14,6 @@ use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
-use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -37,7 +36,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
@@ -175,7 +173,7 @@ use ZipArchive;
  * @method static Builder<static>|Voucher whereVoucherType($value)
  * @mixin \Eloquent
  */
-class Voucher extends BaseModel
+class Voucher extends Model
 {
     use HasLogs;
     use HasDbTokens;
@@ -801,196 +799,6 @@ class Voucher extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @return Builder|Voucher
-     */
-    public static function search(Request $request): Builder|Voucher
-    {
-        /** @var Builder|Voucher $query */
-        $query = self::query();
-        $granted = $request->input('granted');
-
-        if ($granted) {
-            $query->whereNotNull('identity_id');
-        } elseif ($granted !== null) {
-            $query->whereNull('identity_id');
-        }
-
-        if ($request->has('amount_min')) {
-            $query->where('amount', '>=', $request->input('amount_min'));
-        }
-
-        if ($request->has('amount_max')) {
-            $query->where('amount', '<=', $request->input('amount_max'));
-        }
-
-        if ($request->has('from')) {
-            $query->where('created_at', '>=', Carbon::parse($request->input('from'))->startOfDay());
-        }
-
-        if ($request->has('to')) {
-            $query->where('created_at', '<=', Carbon::parse($request->input('to'))->endOfDay());
-        }
-
-        if ($request->has('amount_available_min') || $request->has('amount_available_max')) {
-            $query = VoucherQuery::addBalanceFields($query);
-            $query = Voucher::query()->fromSub($query, 'vouchers');
-        }
-
-        if ($request->has('amount_available_min')) {
-            $query->where('balance', '>=', $request->input('amount_available_min'));
-        }
-
-        if ($request->has('amount_available_max')) {
-            $query->where('balance', '<=', $request->input('amount_available_max'));
-        }
-
-        return $query;
-    }
-
-    /**
-     * @param IndexVouchersRequest $request
-     * @param Organization $organization
-     * @param Fund|null $fund
-     * @throws Throwable
-     * @return Builder|Voucher
-     */
-    public static function searchSponsorQuery(
-        IndexVouchersRequest $request,
-        Organization $organization,
-        Fund $fund = null
-    ): Builder|Voucher {
-        $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
-        $unassignedOnly = $request->input('unassigned');
-        $in_use = $request->input('in_use');
-        $has_payouts = $request->input('has_payouts');
-        $expired = $request->input('expired');
-        $count_per_identity_min = $request->input('count_per_identity_min');
-        $count_per_identity_max = $request->input('count_per_identity_max');
-        $state = $request->input('state');
-        $in_use_from = $request->input('in_use_from');
-        $in_use_to = $request->input('in_use_to');
-
-        $query->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
-
-        $query->whereHas('fund', static function (Builder $query) use ($organization, $fund) {
-            $query->where('organization_id', $organization->id);
-
-            if ($fund) {
-                $query->where('id', $fund->id);
-            }
-        });
-
-        if ($state === 'expired') {
-            VoucherQuery::whereExpired($query);
-        }
-
-        if ($state && $state !== 'expired') {
-            VoucherQuery::whereNotExpired($query->where('state', $state));
-        }
-
-        if ($unassignedOnly) {
-            $query->whereNull('identity_id');
-        } elseif ($unassignedOnly !== null) {
-            $query->whereNotNull('identity_id');
-        }
-
-        switch ($request->input('type')) {
-            case 'all': break;
-            case 'fund_voucher': $query->whereNull('product_id');
-                break;
-            case 'product_voucher': $query->whereNotNull('product_id');
-                break;
-            default: abort(403);
-        }
-
-        switch ($request->input('source', 'employee')) {
-            case 'all': break;
-            case 'user': $query->whereNull('employee_id');
-                break;
-            case 'employee': $query->whereNotNull('employee_id');
-                break;
-            default: abort(403);
-        }
-
-        if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_id', Identity::findByEmail($email)?->id ?: '_');
-        }
-
-        if ($request->input('identity_id', false)) {
-            $query->where('identity_id', $request->input('identity_id'));
-        }
-
-        if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where(static function (Builder $builder) use ($bsn) {
-                $builder->where('identity_id', Identity::findByBsn($bsn)?->id ?: '-');
-                $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
-                    $builder->where(compact('bsn'));
-                });
-            });
-        }
-
-        if ($request->has('implementation_id') && $request->input('implementation_id')) {
-            $query->whereRelation('fund.fund_config', [
-                'implementation_id' => $request->input('implementation_id'),
-            ]);
-        }
-
-        if ($expired !== null) {
-            $query = $expired ? VoucherQuery::whereExpired($query) : VoucherQuery::whereNotExpired($query);
-        }
-
-        if ($q = $request->input('q')) {
-            $query = VoucherQuery::whereSearchSponsorQuery($query, $q);
-        }
-
-        if ($request->has('in_use')) {
-            $query->where(function (Builder $builder) use ($in_use) {
-                if ($in_use) {
-                    VoucherQuery::whereInUseQuery($builder);
-                } else {
-                    VoucherQuery::whereNotInUseQuery($builder);
-                }
-            });
-        }
-
-        if ($request->has('has_payouts')) {
-            $query->where(function (Builder $builder) use ($has_payouts) {
-                if ($has_payouts) {
-                    $builder->whereHas('paid_out_transactions');
-                } else {
-                    $builder->whereDoesntHave('paid_out_transactions');
-                }
-            });
-        }
-
-        if ($count_per_identity_min) {
-            $query->whereHas('identity.vouchers', function (Builder $builder) use ($query) {
-                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
-            }, '>=', $count_per_identity_min);
-        }
-
-        if ($count_per_identity_max) {
-            $query->whereHas('identity.vouchers', function (Builder $builder) use ($query) {
-                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
-            }, '<=', $count_per_identity_max);
-        }
-
-        if ($in_use_from || $in_use_to) {
-            $query = VoucherQuery::whereInUseDateQuery(
-                VoucherSubQuery::appendFirstUseFields($query),
-                $in_use_from ? Carbon::parse($in_use_from)->startOfDay() : null,
-                $in_use_to ? Carbon::parse($in_use_to)->endOfDay() : null,
-            );
-        }
-
-        return $query->orderBy(
-            $request->input('order_by', 'created_at'),
-            $request->input('order_dir', 'asc')
-        );
-    }
-
-    /**
      * @return bool
      * @noinspection PhpUnused
      */
@@ -1491,7 +1299,7 @@ class Voucher extends BaseModel
             $this->assignToIdentity($oldVoucher->identity);
         }
 
-        return $this->updateModel([
+        return tap($this)->update([
             'activation_code' => $activation_code,
             'client_uid' => $client_uid,
         ]);
@@ -1500,7 +1308,7 @@ class Voucher extends BaseModel
     /**
      * @param string $code
      * @param PhysicalCardType|null $type
-     * @return PhysicalCard|BaseModel
+     * @return PhysicalCard|Model
      */
     public function addPhysicalCard(string $code, ?PhysicalCardType $type = null): PhysicalCard|Model
     {

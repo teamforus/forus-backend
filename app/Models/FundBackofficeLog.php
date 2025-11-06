@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\BackofficeApiService\BackofficeApi;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -50,7 +51,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereVoucherRelationId($value)
  * @mixin \Eloquent
  */
-class FundBackofficeLog extends BaseModel
+class FundBackofficeLog extends Model
 {
     protected $fillable = [
         'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
@@ -87,11 +88,11 @@ class FundBackofficeLog extends BaseModel
     }
 
     /**
-     * @return FundBackofficeLog
+     * @return void
      */
-    public function increaseAttempts(): FundBackofficeLog
+    public function increaseAttempts(): void
     {
-        return $this->updateModel([
+        $this->update([
             'attempts' => ++$this->attempts,
             'last_attempt_at' => now(),
         ]);

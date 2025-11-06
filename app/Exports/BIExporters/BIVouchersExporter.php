@@ -3,9 +3,9 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\VoucherExport;
-use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherSubQuery;
+use App\Searches\VouchersSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 use Throwable;
 
@@ -20,10 +20,14 @@ class BIVouchersExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $request = new IndexVouchersRequest(['type' => 'all', 'source' => 'all']);
         $fields = VoucherExport::getExportFieldsRaw();
 
-        $query = Voucher::searchSponsorQuery($request, $this->organization);
+        $search = new VouchersSearch([
+            'type' => 'all',
+            'source' => 'all',
+        ], Voucher::query());
+
+        $query = $search->searchSponsor($this->organization);
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([

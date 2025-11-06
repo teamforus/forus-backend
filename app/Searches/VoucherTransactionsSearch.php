@@ -10,25 +10,26 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 
 class VoucherTransactionsSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Builder|Relation|VoucherTransaction $builder
      */
-    public function __construct(array $filters, Builder $builder)
+    public function __construct(array $filters, Builder|Relation|VoucherTransaction $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return VoucherTransaction|Builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|VoucherTransaction
     {
-        /** @var Builder|VoucherTransaction $builder */
+        /** @var Builder|Relation|VoucherTransaction $builder */
         $builder = parent::query();
 
         $targets = $this->getFilter('targets', VoucherTransaction::TARGETS_OUTGOING);
@@ -143,9 +144,9 @@ class VoucherTransactionsSearch extends BaseSearch
 
     /**
      * @param Organization $organization
-     * @return Builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public function searchSponsor(Organization $organization): Builder
+    public function searchSponsor(Organization $organization): Builder|Relation|VoucherTransaction
     {
         $builder = $this->query();
 
@@ -195,9 +196,9 @@ class VoucherTransactionsSearch extends BaseSearch
     }
 
     /**
-     * @return Builder
+     * @return Builder|Relation|VoucherTransaction
      */
-    public function searchProvider(): Builder
+    public function searchProvider(): Builder|Relation|VoucherTransaction
     {
         $builder = $this->query();
 
@@ -209,11 +210,12 @@ class VoucherTransactionsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|QBuilder|Relation|VoucherTransaction $builder
+     * @return Builder|QBuilder|Relation|VoucherTransaction
      */
-    public static function appendSelectPaymentType(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    public static function appendSelectPaymentType(
+        Builder|QBuilder|Relation|VoucherTransaction $builder
+    ): Builder|QBuilder|Relation|VoucherTransaction {
         $builder = self::appendFundRequestId($builder);
         $builder = self::appendReservationField($builder);
 
@@ -245,11 +247,12 @@ class VoucherTransactionsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|QBuilder|Relation|VoucherTransaction $builder
+     * @return Builder|QBuilder|Relation|VoucherTransaction
      */
-    private static function appendSelectRelation(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    private static function appendSelectRelation(
+        Builder|QBuilder|Relation|VoucherTransaction $builder
+    ): Builder|QBuilder|Relation|VoucherTransaction {
         $builder->addSelect([
             'relation' => PayoutRelation::query()
                 ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
@@ -262,11 +265,12 @@ class VoucherTransactionsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|QBuilder|Relation|VoucherTransaction $builder
+     * @return Builder|QBuilder|Relation|VoucherTransaction
      */
-    private static function appendReservationField(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    private static function appendReservationField(
+        Builder|QBuilder|Relation|VoucherTransaction $builder
+    ): Builder|QBuilder|Relation|VoucherTransaction {
         $builder->addSelect([
             'product_reservation_id' => ProductReservation::query()
                 ->whereColumn('voucher_transactions.id', 'voucher_transaction_id')
@@ -277,11 +281,12 @@ class VoucherTransactionsSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|QBuilder $builder
-     * @return Builder|QBuilder
+     * @param Builder|QBuilder|Relation|VoucherTransaction $builder
+     * @return Builder|QBuilder|Relation|VoucherTransaction
      */
-    private static function appendFundRequestId(Builder|QBuilder $builder): Builder|QBuilder
-    {
+    private static function appendFundRequestId(
+        Builder|QBuilder|Relation|VoucherTransaction $builder
+    ): Builder|QBuilder|Relation|VoucherTransaction {
         $builder->addSelect([
             'fund_request_id' => Voucher::query()
                 ->whereColumn('id', 'voucher_id')

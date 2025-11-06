@@ -12,11 +12,11 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PersonBsnApiRecordType;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Scopes\Builders\ImplementationQuery;
 use App\Searches\FundSearch;
 use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
 use App\Services\PersonBsnApiService\PersonBsnApiManager;
@@ -44,7 +44,7 @@ class FundsController extends Controller
         $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
             'with_external', 'has_products', 'has_providers', 'order_by', 'order_dir',
-        ]), Implementation::queryFundsByState(Fund::STATE_ACTIVE)))->query();
+        ]), ImplementationQuery::queryFundsByState(Fund::STATE_ACTIVE)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn (Organization $item) => $item->only('id', 'name'));

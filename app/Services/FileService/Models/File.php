@@ -138,14 +138,6 @@ class File extends Model
     }
 
     /**
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
-    {
-        return tap($this)->update($attributes, $options);
-    }
-
-    /**
      * @param UploadedFile $uploadedFile
      * @param string $type
      * @throws Exception

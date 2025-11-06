@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereName($value)
  * @mixin \Eloquent
  */
-class Permission extends BaseModel
+class Permission extends Model
 {
     // validations
     public const string VALIDATE_RECORDS = 'validate_records';

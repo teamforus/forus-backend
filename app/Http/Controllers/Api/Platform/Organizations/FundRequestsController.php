@@ -46,7 +46,7 @@ class FundRequestsController extends Controller
         $search = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
             'identity_id',
-        ])))->setEmployee($request->employee($organization));
+        ]), FundRequest::query()))->setEmployee($request->employee($organization));
 
         $stateGroup = $request->get('state_group');
         $builder = $search->query();
@@ -261,7 +261,12 @@ class FundRequestsController extends Controller
         $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
 
         $fields = $request->input('fields', FundRequestsExport::getExportFieldsRaw());
-        $fileData = new FundRequestsExport($request, $request->employee($organization), $fields);
+
+        $search = (new FundRequestSearch($request->only([
+            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
+        ]), FundRequest::query()))->setEmployee($request->employee($organization));
+
+        $fileData = new FundRequestsExport($search->query(), $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

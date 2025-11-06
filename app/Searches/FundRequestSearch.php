@@ -10,6 +10,7 @@ use App\Models\Identity;
 use App\Models\IdentityEmail;
 use App\Scopes\Builders\FundRequestQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundRequestSearch extends BaseSearch
 {
@@ -17,19 +18,19 @@ class FundRequestSearch extends BaseSearch
 
     /**
      * @param array $filters
-     * @param Builder|null $builder
+     * @param Builder|Relation|FundRequest $builder
      */
-    public function __construct(array $filters, Builder $builder = null)
+    public function __construct(array $filters, Builder|Relation|FundRequest $builder)
     {
-        parent::__construct($filters, $builder ?: FundRequest::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return FundRequest|Builder
+     * @return Builder|Relation|FundRequest
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|FundRequest
     {
-        /** @var FundRequest|Builder $builder */
+        /** @var Builder|Relation|FundRequest $builder */
         $builder = parent::query();
 
         if ($this->employee) {
@@ -82,14 +83,14 @@ class FundRequestSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|FundRequest $builder
+     * @param Builder|Relation|FundRequest $builder
      * @param string|null $orderBy
-     * @return Builder|FundRequest
+     * @return Builder|Relation|FundRequest
      */
     public function appendSortableFields(
-        Builder|FundRequest $builder,
+        Builder|Relation|FundRequest $builder,
         ?string $orderBy
-    ): Builder|FundRequest {
+    ): Builder|Relation|FundRequest {
         $subQuery = match($orderBy) {
             'fund_name' => Fund::query()
                 ->whereColumn('id', 'fund_requests.fund_id')
@@ -137,10 +138,10 @@ class FundRequestSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
-     * @return Builder
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
      */
-    protected function order(Builder $builder): Builder
+    protected function order(Builder|Relation|FundRequest $builder): Builder|Relation|FundRequest
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');

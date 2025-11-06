@@ -78,6 +78,9 @@ abstract class DuskTestCase extends BaseTestCase
                     '--headless',
                     '--disable-images',
                     '--disable-dev-shm-usage',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding',
                 ]);
             })->all());
 

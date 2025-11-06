@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\BankHoliday.
  *
@@ -18,7 +20,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BankHoliday whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class BankHoliday extends BaseModel
+class BankHoliday extends Model
 {
     /**
      * @var string[]

@@ -13,7 +13,9 @@ use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
+use App\Searches\VoucherTransactionBulksSearch;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -36,10 +38,16 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $query = VoucherTransactionBulk::search($request, $organization);
+        $query = VoucherTransactionBulk::whereHas('bank_connection', fn (Builder $q) => $q->where([
+            'bank_connections.organization_id' => $organization->id,
+        ]));
+
+        $search = new VoucherTransactionBulksSearch($request->only([
+            'state', 'from', 'to', 'amount_min', 'amount_max', 'quantity_min', 'quantity_max',
+        ]), $query);
 
         return VoucherTransactionBulkResource::queryCollection(VoucherTransactionBulkQuery::order(
-            $query,
+            $search->query(),
             $request->input('order_by'),
             $request->input('order_dir')
         ), $request);
@@ -189,7 +197,16 @@ class TransactionBulksController extends Controller
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
         $fields = $request->input('fields', VoucherTransactionBulksExport::getExportFieldsRaw());
-        $fileData = new VoucherTransactionBulksExport($request, $organization, $fields);
+
+        $query = VoucherTransactionBulk::whereHas('bank_connection', fn (Builder $q) => $q->where([
+            'bank_connections.organization_id' => $organization->id,
+        ]));
+
+        $search = new VoucherTransactionBulksSearch($request->only([
+            'state', 'from', 'to', 'amount_min', 'amount_max', 'quantity_min', 'quantity_max',
+        ]), $query);
+
+        $fileData = new VoucherTransactionBulksExport(VoucherTransactionBulkQuery::order($search->query()), $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Helpers\Arr;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,7 +46,7 @@ use Illuminate\Http\UploadedFile;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee withoutTrashed()
  * @mixin \Eloquent
  */
-class Employee extends BaseModel
+class Employee extends Model
 {
     use HasLogs;
     use SoftDeletes;

@@ -7,17 +7,17 @@ use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\ProductQuery;
+use App\Scopes\Builders\ImplementationQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
 
@@ -72,7 +72,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProvider extends BaseModel
+class FundProvider extends Model
 {
     use HasLogs;
 
@@ -196,7 +196,7 @@ class FundProvider extends BaseModel
      */
     public static function queryAvailableFunds(Organization $organization): Builder
     {
-        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED)
+        $query = ImplementationQuery::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED)
             ->where('external', false)
             ->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'))
             ->whereRelation('fund_config', 'allow_provider_sign_up', true);
@@ -342,114 +342,6 @@ class FundProvider extends BaseModel
     public function isRejected(): bool
     {
         return $this->state === self::STATE_REJECTED;
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @param Builder|null $query
-     * @return Builder
-     */
-    public static function search(
-        Request $request,
-        Organization $organization,
-        Builder $query = null
-    ): Builder {
-        $allow_products = $request->input('allow_products');
-        $allow_budget = $request->input('allow_budget');
-        $allow_extra_payments = $request->input('allow_extra_payments');
-        $has_products = $request->input('has_products');
-
-        $fundsQuery = $organization->funds()->where('archived', false);
-        $query = $query ?: self::query();
-        $query = $query->whereIn('fund_id', $fundsQuery->select('id')->getQuery());
-
-        if ($q = $request->input('q')) {
-            $query->where(static function (Builder $builder) use ($q) {
-                $builder->whereHas('organization', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%$q%");
-                    $query->orWhere('kvk', 'like', "%$q%");
-                    $query->orWhere('email', 'like', "%$q%");
-                    $query->orWhere('phone', 'like', "%$q%");
-                });
-
-                $builder->orWhereHas('fund', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%$q%");
-                });
-            });
-        }
-
-        if ($request->has('fund_id')) {
-            $query->where('fund_id', $request->input('fund_id'));
-        }
-
-        if ($request->has('fund_ids')) {
-            $query->whereIn('fund_id', $request->input('fund_ids'));
-        }
-
-        if ($request->has('implementation_id') && $implementation_id = $request->get('implementation_id')) {
-            $query->whereRelation('fund.fund_config', 'implementation_id', $implementation_id);
-        }
-
-        if ($request->has('state')) {
-            $query->where('state', $request->input('state'));
-        }
-
-        if ($request->has('organization_id')) {
-            $query->where('organization_id', $request->input('organization_id'));
-        }
-
-        if ($allow_budget !== null) {
-            $query
-                ->whereHas('fund', fn (Builder $builder) => FundQuery::whereIsInternal($builder))
-                ->where('allow_budget', (bool) $allow_budget);
-        }
-
-        if ($has_products) {
-            $query->whereHas('organization.products', function (Builder $builder) use ($fundsQuery) {
-                ProductQuery::whereNotExpired($builder);
-                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
-            });
-        }
-
-        if (!$has_products && $has_products !== null) {
-            $query->whereDoesntHave('organization.products', function (Builder $builder) use ($fundsQuery) {
-                ProductQuery::whereNotExpired($builder);
-                ProductQuery::whereFundNotExcluded($builder, $fundsQuery->pluck('id')->toArray());
-            });
-        }
-
-        if ($allow_products !== null) {
-            if ($allow_products === 'some') {
-                $query->where(function (Builder $builder) {
-                    $builder->where(function (Builder $builder) {
-                        FundQuery::whereIsInternal($builder)->whereHas('products');
-                    });
-
-                    $builder->orWhereHas('fund_provider_products.product');
-                });
-            } else {
-                $query->where(function (Builder $builder) use ($allow_products) {
-                    $builder->where(function (Builder $builder) use ($allow_products) {
-                        FundQuery::whereIsInternal($builder)->where('allow_products', (bool) $allow_products);
-                    });
-
-                    $builder->orWhere(function (Builder $builder) use ($allow_products) {
-                        if ($allow_products) {
-                            $builder->whereHas('fund_provider_products.product');
-                        } else {
-                            $builder->whereDoesntHave('fund_provider_products.product');
-                        }
-                    });
-                });
-            }
-        }
-
-        if ($allow_extra_payments !== null) {
-            $query->where('allow_extra_payments', (bool) $allow_extra_payments);
-        }
-
-        return $query->orderBy('created_at');
     }
 
     /**
@@ -665,6 +557,6 @@ class FundProvider extends BaseModel
             $fundProviderProduct = $this->findFundProviderProductByIdOrCreate($data);
         }
 
-        return $fundProviderProduct->updateModel(array_merge($hasConfigs ? $data : []));
+        return tap($fundProviderProduct)->update(array_merge($hasConfigs ? $data : []));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\FileService\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -36,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundRequestClarification extends BaseModel
+class FundRequestClarification extends Model
 {
     use HasFiles;
 

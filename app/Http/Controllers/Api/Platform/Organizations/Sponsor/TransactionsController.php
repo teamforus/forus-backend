@@ -14,6 +14,7 @@ use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionsSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -63,7 +64,15 @@ class TransactionsController extends Controller
             $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
         }
 
-        $query = VoucherTransaction::searchSponsor($request, $organization);
+        $search = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address', 'execution_date_from', 'execution_date_to',
+        ]), VoucherTransaction::query());
+
+        $query = $search->searchSponsor($organization);
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
 
         $total_amount = currency_format((clone $query)->sum('amount'));
@@ -233,7 +242,22 @@ class TransactionsController extends Controller
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFieldsRaw());
-        $fileData = new VoucherTransactionsSponsorExport($request, $organization, $fields);
+
+        $search = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address', 'execution_date_from', 'execution_date_to',
+        ]), VoucherTransaction::query());
+
+        $builder = VoucherTransactionQuery::order(
+            $search->searchSponsor($organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        );
+
+        $fileData = new VoucherTransactionsSponsorExport($builder, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

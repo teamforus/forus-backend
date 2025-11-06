@@ -215,7 +215,7 @@ class TestData
                     'organization_id' => $providers->random(),
                 ]);
 
-                FundProviderApplied::dispatch($fund, $provider->updateModel([
+                FundProviderApplied::dispatch($fund, tap($provider)->update([
                     'allow_products' => true,
                     'allow_budget' => true,
                     'state' => FundProvider::STATE_ACCEPTED,

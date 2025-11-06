@@ -2,14 +2,19 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Employee;
+use App\Models\EmployeeRole;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\Role;
+use App\Models\RolePermission;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
+use Illuminate\Database\Query\Builder as QBuilder;
 
 class OrganizationQuery
 {
@@ -284,6 +289,97 @@ class OrganizationQuery
                 $builder->where('website_public', true);
                 $builder->where('website', 'LIKE', "%$q%");
             });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param string|null $q
+     * @return Builder|Relation|Organization
+     */
+    public static function queryFilterProviders(
+        Builder|Relation|Organization $builder,
+        string $q = null,
+    ): Builder|Relation|Organization {
+        return $builder->where(static function (Builder $builder) use ($q) {
+            $like = '%' . $q . '%';
+            $builder->where('name', 'LIKE', $like);
+
+            $builder->orWhere(static function (Builder $builder) use ($like) {
+                $builder->where('email_public', true);
+                $builder->where('email', 'LIKE', $like);
+            })->orWhere(static function (Builder $builder) use ($like) {
+                $builder->where('phone_public', true);
+                $builder->where('phone', 'LIKE', $like);
+            })->orWhere(static function (Builder $builder) use ($like) {
+                $builder->where('website_public', true);
+                $builder->where('website', 'LIKE', $like);
+            });
+
+            $builder->orWhereHas('business_type.translations', static function (
+                Builder $builder
+            ) use ($like) {
+                $builder->where('business_type_translations.name', 'LIKE', $like);
+            });
+
+            $builder->orWhereHas('offices', static function (
+                Builder $builder
+            ) use ($like) {
+                $builder->where(static function (Builder $query) use ($like) {
+                    $query->where('address', 'LIKE', $like);
+                });
+            });
+        });
+    }
+
+    /**
+     * @param $identityAddress string
+     * @param string|array|bool $permissions
+     * @return Builder
+     */
+    public static function queryByIdentityPermissions(
+        string $identityAddress,
+        string|array|bool $permissions = false
+    ): Builder {
+        $permissions = $permissions === false ? false : (array) $permissions;
+
+        /**
+         * Query all the organizations where identity_address has permissions
+         * or is the creator.
+         */
+        return Organization::where(static function (Builder $builder) use (
+            $identityAddress,
+            $permissions
+        ) {
+            return $builder->whereIn('id', function (QBuilder $query) use (
+                $identityAddress,
+                $permissions
+            ) {
+                $query->select(['organization_id'])->from((new Employee())->getTable())->where([
+                    'identity_address' => $identityAddress,
+                ])->whereNull('deleted_at')->whereIn('id', function (QBuilder $query) use ($permissions) {
+                    $query->select('employee_id')->from(
+                        (new EmployeeRole())->getTable()
+                    )->whereIn('role_id', function (QBuilder $query) use ($permissions) {
+                        $query->select(['id'])->from((new Role())->getTable())->whereIn('id', function (
+                            QBuilder $query
+                        ) use ($permissions) {
+                            return $query->select(['role_id'])->from(
+                                (new RolePermission())->getTable()
+                            )->whereIn('permission_id', function (QBuilder $query) use ($permissions) {
+                                $query->select('id')->from((new Permission())->getTable());
+
+                                // allow any permission
+                                if ($permissions !== false) {
+                                    $query->whereIn('key', $permissions);
+                                }
+
+                                return $query;
+                            });
+                        })->get();
+                    });
+                });
+            })->orWhere('identity_address', $identityAddress);
         });
     }
 }

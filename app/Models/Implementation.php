@@ -7,9 +7,8 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
-use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\OfficeQuery;
+use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\AnnouncementSearch;
 use App\Services\DigIdService\DigIdException;
@@ -29,6 +28,7 @@ use App\Traits\HasMarkdownFields;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -220,7 +220,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
  */
-class Implementation extends BaseModel
+class Implementation extends Model
 {
     use HasMedia;
     use HasMarkdownFields;
@@ -594,30 +594,7 @@ class Implementation extends BaseModel
      */
     public static function activeFundsQuery(): Builder
     {
-        return self::queryFundsByState('active');
-    }
-
-    /**
-     * @param ...$states
-     * @return Builder|Fund
-     */
-    public static function queryFundsByState(...$states): Builder|Fund
-    {
-        return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
-    }
-
-    /**
-     * @return Builder|Fund
-     */
-    public static function queryFunds(): Builder|Fund
-    {
-        $query = FundQuery::whereIsConfiguredByForus(Fund::query());
-
-        if (self::activeKey() !== self::KEY_GENERAL) {
-            $query->whereRelation('fund_config.implementation', 'key', self::activeKey());
-        }
-
-        return $query;
+        return ImplementationQuery::queryFundsByState('active');
     }
 
     /**
@@ -792,7 +769,7 @@ class Implementation extends BaseModel
             'announcements' => AnnouncementResource::collection((new AnnouncementSearch([
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
-            ]))->query()->get())->toArray($request),
+            ], Announcement::query()))->query()->get())->toArray($request),
             'digid' => $implementation->digidEnabled(),
             'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
             'digid_mandatory' => $implementation->digid_required ?? true,
@@ -876,7 +853,7 @@ class Implementation extends BaseModel
      */
     public function hasReimbursements(): bool
     {
-        return self::queryFunds()->whereRelation('fund_config', [
+        return ImplementationQuery::queryFunds()->whereRelation('fund_config', [
             'allow_reimbursements' => true,
         ])->exists();
     }
@@ -886,107 +863,11 @@ class Implementation extends BaseModel
      */
     public function hasPayouts(): bool
     {
-        $payoutFunds = self::queryFunds()->whereRelation('fund_config', [
+        $payoutFunds = ImplementationQuery::queryFunds()->whereRelation('fund_config', [
             'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
         ]);
 
         return $this->organization?->allow_payouts && $payoutFunds->exists();
-    }
-
-    /**
-     * @param array $options
-     * @param Builder|null $query
-     * @return Builder
-     */
-    public static function searchProviders(array $options, Builder $query = null): Builder
-    {
-        $query = $query ?: Organization::query();
-
-        $query->whereHas('fund_providers', static function (Builder $builder) {
-            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
-            FundProviderQuery::whereApproved($builder);
-        });
-
-        if ($business_type_id = array_get($options, 'business_type_id')) {
-            $query->where('business_type_id', $business_type_id);
-        }
-
-        if ($product_category_id = array_get($options, 'product_category_id')) {
-            $query->whereHas('products', function (Builder $builder) use ($product_category_id) {
-                $builder->whereIn('id', Product::search(compact('product_category_id'))->select('id'));
-            });
-        }
-
-        if ($product_category_ids = array_get($options, 'product_category_ids')) {
-            $query->whereHas('products', function (Builder $builder) use ($product_category_ids) {
-                $builder->whereIn('id', Product::search(compact('product_category_ids'))->select('id'));
-            });
-        }
-
-        if ($organization_id = array_get($options, 'organization_id')) {
-            $query->where('id', $organization_id);
-        }
-
-        if ($fund_id = array_get($options, 'fund_id')) {
-            $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
-        }
-
-        if ($fund_ids = array_get($options, 'fund_ids')) {
-            $query->whereRelation('supplied_funds', fn (Builder $b) => $b->whereIn('funds.id', $fund_ids));
-        }
-
-        if ($q = array_get($options, 'q')) {
-            $query->where(static function (Builder $builder) use ($q) {
-                $like = '%' . $q . '%';
-                $builder->where('name', 'LIKE', $like);
-
-                $builder->orWhere(static function (Builder $builder) use ($like) {
-                    $builder->where('email_public', true);
-                    $builder->where('email', 'LIKE', $like);
-                })->orWhere(static function (Builder $builder) use ($like) {
-                    $builder->where('phone_public', true);
-                    $builder->where('phone', 'LIKE', $like);
-                })->orWhere(static function (Builder $builder) use ($like) {
-                    $builder->where('website_public', true);
-                    $builder->where('website', 'LIKE', $like);
-                });
-
-                $builder->orWhereHas('business_type.translations', static function (
-                    Builder $builder
-                ) use ($like) {
-                    $builder->where('business_type_translations.name', 'LIKE', $like);
-                });
-
-                $builder->orWhereHas('offices', static function (
-                    Builder $builder
-                ) use ($like) {
-                    $builder->where(static function (Builder $query) use ($like) {
-                        $query->where(
-                            'address',
-                            'LIKE',
-                            $like
-                        );
-                    });
-                });
-            });
-        }
-
-        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
-            $geocodeService = resolve('geocode_api');
-            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
-
-            $query->whereHas('offices', static function (Builder $builder) use ($location, $options) {
-                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
-                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
-                ]);
-            });
-        }
-
-        return $query->orderBy(
-            array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_dir', 'desc'),
-        );
     }
 
     /**

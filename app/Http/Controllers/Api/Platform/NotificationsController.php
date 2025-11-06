@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
 use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
+use App\Searches\NotificationSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationsController extends Controller
@@ -16,13 +17,18 @@ class NotificationsController extends Controller
      */
     public function index(IndexNotificationsRequest $request): AnonymousResourceCollection
     {
-        $seen = $request->input('seen');
         $page = $request->input('page', 1);
         $per_page = $request->input('per_page', 15);
         $mark_read = $request->input('mark_read', false);
 
         $identity = $request->identity();
-        $notificationsQuery = Notification::search($request, $seen, $identity->notifications());
+
+        $search = new NotificationSearch(
+            $request->only('organization_id', 'seen'),
+            $identity->notifications()->where('scope', $request->client_type()),
+        );
+
+        $notificationsQuery = $search->query();
 
         if ($mark_read) {
             $listUnreadFetched = $notificationsQuery->clone()

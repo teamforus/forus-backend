@@ -7,7 +7,6 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\IdentityQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
@@ -18,9 +17,7 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Statistics\Funds\FinancialStatisticQueries;
 use App\Traits\HasMarkdownFields;
-use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,7 +30,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -293,7 +289,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
-class Organization extends BaseModel
+class Organization extends Model
 {
     use HasLogs;
     use HasTags;
@@ -913,57 +909,6 @@ class Organization extends BaseModel
     }
 
     /**
-     * @param $identityAddress string
-     * @param string|array|bool $permissions
-     * @return EloquentBuilder
-     */
-    public static function queryByIdentityPermissions(
-        string $identityAddress,
-        string|array|bool $permissions = false
-    ): EloquentBuilder {
-        $permissions = $permissions === false ? false : (array) $permissions;
-
-        /**
-         * Query all the organizations where identity_address has permissions
-         * or is the creator.
-         */
-        return self::query()->where(static function (EloquentBuilder $builder) use (
-            $identityAddress,
-            $permissions
-        ) {
-            return $builder->whereIn('id', function (Builder $query) use (
-                $identityAddress,
-                $permissions
-            ) {
-                $query->select(['organization_id'])->from((new Employee())->getTable())->where([
-                    'identity_address' => $identityAddress,
-                ])->whereNull('deleted_at')->whereIn('id', function (Builder $query) use ($permissions) {
-                    $query->select('employee_id')->from(
-                        (new EmployeeRole())->getTable()
-                    )->whereIn('role_id', function (Builder $query) use ($permissions) {
-                        $query->select(['id'])->from((new Role())->getTable())->whereIn('id', function (
-                            Builder $query
-                        ) use ($permissions) {
-                            return $query->select(['role_id'])->from(
-                                (new RolePermission())->getTable()
-                            )->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                                $query->select('id')->from((new Permission())->getTable());
-
-                                // allow any permission
-                                if ($permissions !== false) {
-                                    $query->whereIn('key', $permissions);
-                                }
-
-                                return $query;
-                            });
-                        })->get();
-                    });
-                });
-            })->orWhere('identity_address', $identityAddress);
-        });
-    }
-
-    /**
      * @param string $identity_address
      * @return Employee|Model|null
      */
@@ -992,59 +937,6 @@ class Organization extends BaseModel
         ])->firstOrCreate([
             'organization_id' => $this->id,
         ]);
-    }
-
-    /**
-     * @param Organization $sponsor
-     * @param array $options
-     * @return EloquentBuilder
-     */
-    public static function searchProviderOrganizations(
-        Organization $sponsor,
-        array $options
-    ): EloquentBuilder {
-        $postcodes = array_get($options, 'postcodes');
-        $providerIds = array_get($options, 'provider_ids');
-        $businessTypeIds = array_get($options, 'business_type_ids');
-
-        /** @var Carbon|null $dateFrom */
-        $dateFrom = array_get($options, 'date_from');
-        /** @var Carbon|null $dateTo */
-        $dateTo = array_get($options, 'date_to');
-
-        $query = OrganizationQuery::whereIsProviderOrganization(self::query(), $sponsor);
-
-        if ($providerIds) {
-            $query->whereIn('id', $providerIds);
-        }
-
-        if ($postcodes) {
-            $query->whereHas('offices', static function (EloquentBuilder $builder) use ($postcodes) {
-                $builder->whereIn('postcode_number', (array) $postcodes);
-            });
-        }
-
-        if ($businessTypeIds) {
-            $query->whereIn('business_type_id', $businessTypeIds);
-        }
-
-        if ($dateFrom && $dateTo) {
-            $query->whereHas('voucher_transactions', function (EloquentBuilder $builder) use ($dateFrom, $dateTo) {
-                $builder->where('created_at', '>=', $dateFrom->clone()->startOfDay());
-                $builder->where('created_at', '<=', $dateTo->clone()->endOfDay());
-            });
-        }
-
-        $queryTransactions = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options);
-        $queryTransactions->whereColumn('organization_id', 'organizations.id');
-
-        $query->addSelect([
-            'total_spent' => (clone $queryTransactions)->selectRaw('sum(`amount`)'),
-            'highest_transaction' => (clone $queryTransactions)->selectRaw('max(`amount`)'),
-            'nr_transactions' => (clone $queryTransactions)->selectRaw('count(`id`)'),
-        ])->orderByDesc('total_spent');
-
-        return $query;
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Scopes\Builders\OrganizationQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
@@ -33,19 +34,20 @@ class EmployeeEventLogSearch extends BaseSearch
     /**
      * @param Employee $employee
      * @param array $filters
+     * @param Builder|Relation|EventLog $builder
      */
-    public function __construct(Employee $employee, array $filters)
+    public function __construct(Employee $employee, array $filters, Builder|Relation|EventLog $builder)
     {
-        parent::__construct($filters, EventLog::query());
+        parent::__construct($filters, $builder);
 
         $this->employee = $employee;
         $this->permissions = Config::get('forus.event_permissions', []);
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|EventLog
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|EventLog
     {
         $builder = parent::query();
 
@@ -69,10 +71,10 @@ class EmployeeEventLogSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|EventLog $builder
      * @return void
      */
-    public function whereVoucherExported(Builder $builder): void
+    public function whereVoucherExported(Builder|Relation|EventLog $builder): void
     {
         if (!$this->hasFilter('loggable_id') || $this->hasFilter('loggable' !== 'voucher')) {
             return;
@@ -97,11 +99,11 @@ class EmployeeEventLogSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|EventLog $builder
      * @param string $morphClass
      * @return void
      */
-    protected function whereEvents(Builder $builder, string $morphClass): void
+    protected function whereEvents(Builder|Relation|EventLog $builder, string $morphClass): void
     {
         /** @var Model $morphModel */
         $morphModel = new $morphClass();
@@ -115,11 +117,11 @@ class EmployeeEventLogSearch extends BaseSearch
     }
 
     /**
-     * @param Builder $builder
+     * @param Builder|Relation|EventLog $builder
      * @param Model $morphModel
      * @return void
      */
-    protected function whereLoggable(Builder $builder, Model $morphModel): void
+    protected function whereLoggable(Builder|Relation|EventLog $builder, Model $morphModel): void
     {
         $morphKey = $morphModel->getMorphClass();
         $builder->whereIn('event', Arr::get($this->permissions, "$morphKey.events", []));
@@ -132,11 +134,11 @@ class EmployeeEventLogSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|QBuilder $builder
+     * @param Builder|Relation|EventLog|QBuilder $builder
      * @param int|null $loggable_id
      * @return void
      */
-    protected function whereLoggableId(Builder|QBuilder $builder, ?int $loggable_id = null): void
+    protected function whereLoggableId(Builder|Relation|EventLog|QBuilder $builder, ?int $loggable_id = null): void
     {
         if ($loggable_id) {
             $builder->whereIn('loggable_id', (array) $loggable_id);
@@ -145,9 +147,9 @@ class EmployeeEventLogSearch extends BaseSearch
 
     /**
      * @param Model $model
-     * @return Builder|QBuilder
+     * @return Builder|Relation|QBuilder
      */
-    protected function makeMorphQuery(Model $model): Builder|QBuilder
+    protected function makeMorphQuery(Model $model): Builder|Relation|QBuilder
     {
         $morphKey = $model->getMorphClass();
         $relation = Arr::get($this->organizationRelationMap, $morphKey, '');

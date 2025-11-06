@@ -7,17 +7,15 @@ use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasBookmarks;
-use App\Scopes\Builders\OfficeQuery;
 use App\Scopes\Builders\ProductQuery;
-use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -160,7 +158,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|Product withoutTrashed()
  * @mixin \Eloquent
  */
-class Product extends BaseModel
+class Product extends Model
 {
     use HasLogs;
     use HasMedia;
@@ -642,204 +640,16 @@ class Product extends BaseModel
     }
 
     /**
-     * @param array $activeFunds
-     * @return Builder|Product
-     */
-    public static function searchQuery(array $activeFunds = []): Builder|Product
-    {
-        $query = self::query();
-
-        // only in stock and not expired
-        $query = ProductQuery::inStockAndActiveFilter($query);
-
-        // only approved by at least one sponsor
-        return ProductQuery::approvedForFundsFilter($query, $activeFunds);
-    }
-
-    /**
      * @return Builder
      */
     public static function implementationSample(): Builder
     {
-        return self::searchQuery(Implementation::activeFundsQuery()->pluck('id')->toArray())->inRandomOrder();
-    }
+        $builder = ProductQuery::approvedForFundsFilter(
+            ProductQuery::inStockAndActiveFilter(Product::query()),
+            Implementation::activeFundsQuery()->pluck('id')->toArray()
+        );
 
-    /**
-     * @param array $options
-     * @param Builder|Product|null $builder
-     * @return Builder|Product
-     */
-    public static function search(array $options, Builder|Product $builder = null): Builder|Product
-    {
-        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
-        $query = $builder ?: self::searchQuery($activeFunds);
-
-        if ($product_category_id = Arr::get($options, 'product_category_id')) {
-            $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
-        }
-
-        if ($product_category_ids = Arr::get($options, 'product_category_ids')) {
-            $query = ProductQuery::productCategoriesFilter($query, $product_category_ids);
-        }
-
-        if (Arr::get($options, 'fund_id')) {
-            $query = ProductQuery::approvedForFundsFilter($query, Arr::get($options, 'fund_id'));
-        }
-
-        if (Arr::get($options, 'fund_ids')) {
-            $query = ProductQuery::approvedForFundsFilter($query, Arr::get($options, 'fund_ids'));
-        }
-
-        if ($price_type = Arr::get($options, 'price_type')) {
-            $query = $query->where('price_type', $price_type);
-        }
-
-        if (filter_bool(Arr::get($options, 'unlimited_stock'))) {
-            return ProductQuery::unlimitedStockFilter($query, Arr::get($options, 'unlimited_stock'));
-        }
-
-        if ($organization_id = Arr::get($options, 'organization_id')) {
-            $query = $query->where('organization_id', $organization_id);
-        }
-
-        $query = ProductQuery::addPriceMinAndMaxColumn($query);
-
-        if ($q = Arr::get($options, 'q')) {
-            ProductQuery::queryDeepFilter($query, $q);
-        }
-
-        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
-            $geocodeService = resolve('geocode_api');
-            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
-
-            $query->whereHas('organization.offices', static function (Builder $builder) use ($location, $options) {
-                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
-                    'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
-                    'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
-                ]);
-            });
-        }
-
-        if (Arr::get($options, 'qr')) {
-            $query->where(function (Builder $builder) use ($activeFunds) {
-                $builder->where('qr_enabled', true);
-
-                $builder->where(function (Builder $builder) use ($activeFunds) {
-                    $builder->where(function (Builder $builder) use ($activeFunds) {
-                        $builder->whereHas('organization.fund_providers', function (Builder $builder) use ($activeFunds) {
-                            $builder->whereIn('fund_id', $activeFunds);
-                            $builder->where('allow_budget', true);
-                        });
-
-                        $builder->whereDoesntHave('fund_provider_products.fund_provider', function (Builder $builder) use ($activeFunds) {
-                            $builder->whereIn('fund_id', $activeFunds);
-                        });
-                    });
-
-                    $builder->orWhereHas('fund_provider_products', function (Builder $builder) use ($activeFunds) {
-                        $builder->whereHas('fund_provider', fn (Builder $b) => $b->whereIn('fund_id', $activeFunds));
-                        $builder->where('allow_scanning', true);
-                    });
-                });
-            });
-        }
-
-        if (Arr::get($options, 'reservation')) {
-            ProductQuery::whereReservationEnabled($query);
-        }
-
-        $includeMap = [
-            'free' => self::PRICE_TYPE_FREE,
-            'regular' => self::PRICE_TYPE_REGULAR,
-            'informational' => self::PRICE_TYPE_INFORMATIONAL,
-            'discount_fixed' => self::PRICE_TYPE_DISCOUNT_FIXED,
-            'discount_percentage' => self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
-        ];
-
-        $includeTypes = array_values(array_filter($includeMap, fn ($type, $key) => !empty($options[$key]), ARRAY_FILTER_USE_BOTH));
-
-        if ($includeTypes) {
-            $query->whereIn('price_type', $includeTypes);
-        }
-
-        if (Arr::get($options, 'extra_payment')) {
-            $query->where(function (Builder $builder) use ($activeFunds) {
-                ProductQuery::whereReservationEnabled($builder);
-
-                $builder->where(function (Builder $builder) {
-                    $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_YES);
-
-                    $builder->orWhere(function (Builder $builder) {
-                        $builder->where('reservation_extra_payments', self::RESERVATION_EXTRA_PAYMENT_GLOBAL);
-                        $builder->whereRelation('organization', 'reservation_allow_extra_payments', true);
-                    });
-                });
-
-                $builder->whereHas('organization.fund_providers_allowed_extra_payments', function (Builder $builder) use ($activeFunds) {
-                    $builder->whereIn('fund_id', $activeFunds);
-                });
-
-                $builder->whereHas('organization.mollie_connection', function (Builder $builder) use ($activeFunds) {
-                    $builder->where('onboarding_state', MollieConnection::ONBOARDING_STATE_COMPLETED);
-                });
-            });
-        }
-
-        $query->withCount('voucher_transactions');
-
-        $orderBy = Arr::get($options, 'order_by', 'created_at');
-        $orderBy = $orderBy === 'most_popular' ? 'voucher_transactions_count' : $orderBy;
-        $orderDir = Arr::get($options, 'order_dir', 'desc');
-
-        if ($orderBy === 'randomized') {
-            return $query->inRandomOrder();
-        }
-
-        return $query
-            ->orderBy($orderBy, $orderDir)
-            ->orderBy('price_type')
-            ->orderBy('price_discount')
-            ->orderBy('created_at', 'desc');
-    }
-
-    /**
-     * @param Request $request
-     * @param Builder|null $query
-     * @return Builder
-     */
-    public static function searchAny(Request $request, Builder $query = null): Builder
-    {
-        $query = $query ?: self::query();
-
-        // filter by unlimited stock
-        if ($request->has('unlimited_stock')) {
-            ProductQuery::unlimitedStockFilter($query, filter_bool($request->input('unlimited_stock')));
-        }
-
-        // filter by string query
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
-            ProductQuery::queryFilter($query, $q);
-        }
-
-        // filter by string query
-        if ($request->has('source') && !empty($source = $request->input('source'))) {
-            if ($source === 'sponsor') {
-                $query->whereNotNull('sponsor_organization_id');
-            } elseif ($source === 'provider') {
-                $query->whereNull('sponsor_organization_id');
-            } elseif ($source === 'archive') {
-                $query = TrashedQuery::onlyTrashed($query);
-            }
-        }
-
-        $orderBy = $request->get('order_by', 'created_at');
-        $orderDir = $request->get('order_dir', 'desc');
-
-        if ($orderBy === 'stock_amount') {
-            $query = ProductQuery::stockAmountSubQuery($query);
-        }
-
-        return $query->orderBy($orderBy, $orderDir);
+        return $builder->inRandomOrder();
     }
 
     /**

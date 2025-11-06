@@ -2,18 +2,18 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Models\Employee;
+use App\Exports\Base\BaseExport;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
-use App\Searches\FundRequestSearch;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
-class FundRequestsExport extends BaseFieldedExport
+class FundRequestsExport extends BaseExport
 {
     protected static string $transKey = 'fund_requests';
+    protected Collection $recordKeyList;
 
     /**
      * @var array|string[]
@@ -31,57 +31,43 @@ class FundRequestsExport extends BaseFieldedExport
     ];
 
     /**
-     * FundRequestsExport constructor.
-     *
-     * @param IndexFundRequestsRequest $request
-     * @param Employee $employee
+     * @var array|string[]
+     */
+    protected array $builderWithArray = [
+        'identity.record_bsn',
+        'records',
+        'fund',
+    ];
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
      * @param array $fields
      */
-    public function __construct(IndexFundRequestsRequest $request, Employee $employee, protected array $fields)
+    public function __construct(Builder|Relation|FundRequest $builder, protected array $fields)
     {
-        $this->data = $this->export($request, $employee);
-    }
-
-    /**
-     * @param IndexFundRequestsRequest $request
-     * @param Employee $employee
-     * @return Collection
-     */
-    protected function export(IndexFundRequestsRequest $request, Employee $employee): Collection
-    {
-        $search = (new FundRequestSearch($request->only([
-            'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
-        ])))->setEmployee($employee);
-
-        return $this->exportTransform($search->query());
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Collection
-     */
-    protected function exportTransform(Builder $builder): Collection
-    {
-        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
-
-        $fundRequests = (clone $builder)->with([
-            'identity.record_bsn',
-            'records',
-            'fund',
-        ])->get();
-
-        $recordKeyList = FundRequestRecord::query()
+        $this->recordKeyList = FundRequestRecord::query()
             ->whereIn('fund_request_id', (clone $builder)->select('id'))
             ->pluck('record_type_key');
 
-        return $fundRequests->map(function (FundRequest $request) use ($recordKeyList, $fieldLabels) {
+        parent::__construct($builder, $fields);
+    }
+
+    /**
+     * @param Collection $data
+     * @return Collection
+     */
+    protected function exportTransform(Collection $data): Collection
+    {
+        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
+
+        return $data->map(function (FundRequest $request) use ($fieldLabels) {
             $row = array_only($this->getRow($request), $this->fields);
 
             $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
                 $fieldLabels[$key] => $row[$key],
             ]), []);
 
-            $records = (array) $recordKeyList->reduce(fn ($records, $key) => [
+            $records = (array) $this->recordKeyList->reduce(fn ($records, $key) => [
                 ...$records, $key => $request->records->firstWhere('record_type_key', $key),
             ], []);
 
@@ -92,20 +78,20 @@ class FundRequestsExport extends BaseFieldedExport
     }
 
     /**
-     * @param FundRequest $request
+     * @param Model|FundRequest $model
      * @return array
      */
-    protected function getRow(FundRequest $request): array
+    protected function getRow(Model|FundRequest $model): array
     {
         return [
-            'bsn' => $request->identity?->record_bsn?->value ?: '-',
-            'fund_name' => $request->fund->name,
-            'status' => trans("export.fund_requests.state-values.$request->state"),
-            'validator' => $request->employee?->identity?->email ?: '-',
-            'created_at' => $request->created_at,
-            'resolved_at' => $request->resolved_at,
-            'lead_time_days' => (string) $request->lead_time_days,
-            'lead_time_locale' => $request->lead_time_locale,
+            'bsn' => $model->identity?->record_bsn?->value ?: '-',
+            'fund_name' => $model->fund->name,
+            'status' => trans("export.fund_requests.state-values.$model->state"),
+            'validator' => $model->employee?->identity?->email ?: '-',
+            'created_at' => $model->created_at,
+            'resolved_at' => $model->resolved_at,
+            'lead_time_days' => (string) $model->lead_time_days,
+            'lead_time_locale' => $model->lead_time_locale,
         ];
     }
 

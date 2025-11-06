@@ -10,6 +10,7 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Searches\BaseSearch;
 use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -33,11 +34,11 @@ class IdentitiesSearch extends BaseSearch
     ];
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|Identity
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|Identity
     {
-        /** @var Builder|Identity $builder */
+        /** @var Builder|Relation|Identity $builder */
         $builder = parent::query();
 
         $orderBy = $this->getFilter('order_by', 'created_at');
@@ -172,12 +173,19 @@ class IdentitiesSearch extends BaseSearch
         return $this->order($builder, $organizationId, $orderBy, $orderDir);
     }
 
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param int $organizationId
+     * @param string $orderBy
+     * @param string $orderDir
+     * @return Builder|Relation|Identity
+     */
     public function order(
-        Builder $builder,
+        Builder|Relation|Identity $builder,
         int $organizationId,
         string $orderBy = 'created_at',
         string $orderDir = 'desc',
-    ): Builder {
+    ): Builder|Relation|Identity {
         if (in_array($orderBy, self::SORT_BY_RECORD_TYPE)) {
             $builder->addSelect([
                 '__sort' => ProfileRecord::query()
@@ -249,13 +257,16 @@ class IdentitiesSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Identity $builder
+     * @param Builder|Relation|Identity $builder
      * @param string $q
      * @param int $organizationId
-     * @return Builder|Identity
+     * @return Builder|Relation|Identity
      */
-    public function querySearchIdentity(Builder|Identity $builder, string $q, int $organizationId): Builder|Identity
-    {
+    public function querySearchIdentity(
+        Builder|Relation|Identity $builder,
+        string $q,
+        int $organizationId
+    ): Builder|Relation|Identity {
         return $builder->where(function (Builder $builder) use ($q, $organizationId) {
             $builder->whereRelation('primary_email', 'email', 'like', "%$q%");
             $builder->orWhereRelation('emails_verified', 'email', 'like', "%$q%");

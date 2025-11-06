@@ -13,6 +13,7 @@ use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectNumberRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeSelectRule;
 use App\Rules\FundRequests\CriterionRules\CriteriaRuleTypeStringRule;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -71,7 +72,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereValue($value)
  * @mixin \Eloquent
  */
-class FundCriterion extends BaseModel
+class FundCriterion extends Model
 {
     use HasOnDemandTranslations;
 

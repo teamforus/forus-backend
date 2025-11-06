@@ -2,15 +2,14 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\Employee;
 use App\Models\Role;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
-class EmployeesExport extends BaseFieldedExport
+class EmployeesExport extends BaseExport
 {
     protected static string $transKey = 'employees';
 
@@ -31,22 +30,11 @@ class EmployeesExport extends BaseFieldedExport
     ];
 
     /**
-     * FundsExport constructor.
-     * @param Builder|Relation|Employee $builder
-     * @param array $fields
+     * @return array
      */
-    public function __construct(Builder|Relation|Employee $builder, protected array $fields)
+    protected function getBuilderWithArray(): array
     {
-        $this->data = $this->export($builder);
-    }
-
-    /**
-     * @param Builder|Relation|Employee $builder
-     * @return Collection
-     */
-    protected function export(Builder|Relation|Employee $builder): Collection
-    {
-        $search = $builder->with([
+        return [
             'identity.emails',
             'identity.session_last_activity',
             'identity.primary_email',
@@ -56,9 +44,7 @@ class EmployeesExport extends BaseFieldedExport
             'logs' => fn (MorphMany $builder) => $builder->where([
                 'event' => Employee::EVENT_UPDATED,
             ])->take(1)->latest(),
-        ])->get();
-
-        return $this->exportTransform($search);
+        ];
     }
 
     /**
@@ -84,24 +70,24 @@ class EmployeesExport extends BaseFieldedExport
     }
 
     /**
-     * @param Employee $employee
+     * @param Model|Employee $model
      * @return array
      */
-    protected function getRow(Employee $employee): array
+    protected function getRow(Model|Employee $model): array
     {
-        $employeeIsOwner = $employee->identity_address == $employee->organization->identity_address;
-        $employeeLastUpdate = $employee->logs[0]?->created_at ?? $employee->updated_at;
+        $employeeIsOwner = $model->identity_address == $model->organization->identity_address;
+        $employeeLastUpdate = $model->logs[0]?->created_at ?? $model->updated_at;
 
         return array_merge([
-            'email' => $employee->identity->email,
+            'email' => $model->identity->email,
             'owner' => $employeeIsOwner ? 'ja' : 'nee',
-            'branch_number' => $employee->office?->branch_number ?: '-',
-            'branch_name' => $employee->office?->branch_name ?: '-',
-            'branch_id' => $employee->office?->branch_id ?: '-',
-            'is_2fa_configured' => $employee->identity->is2FAConfigured() ? 'ja' : 'nee',
-            'created_at' => $employee->created_at?->format('Y-m-d H:i:s'),
+            'branch_number' => $model->office?->branch_number ?: '-',
+            'branch_name' => $model->office?->branch_name ?: '-',
+            'branch_id' => $model->office?->branch_id ?: '-',
+            'is_2fa_configured' => $model->identity->is2FAConfigured() ? 'ja' : 'nee',
+            'created_at' => $model->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $employeeLastUpdate?->format('Y-m-d H:i:s'),
-            'last_activity' => $employee->identity->session_last_activity?->last_activity_at,
+            'last_activity' => $model->identity->session_last_activity?->last_activity_at,
         ]);
     }
 

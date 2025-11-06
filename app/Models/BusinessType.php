@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\BusinessTypeTranslationTrait;
-use App\Scopes\Builders\FundProviderQuery;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\BusinessType.
@@ -45,7 +44,7 @@ use Illuminate\Http\Request;
  * @method static Builder<static>|BusinessType withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
-class BusinessType extends BaseModel
+class BusinessType extends Model
 {
     use Translatable;
     use BusinessTypeTranslationTrait;
@@ -76,21 +75,5 @@ class BusinessType extends BaseModel
     public function organizations(): HasMany
     {
         return $this->hasMany(Organization::class);
-    }
-
-    /**
-     * @param Request $request
-     * @return Builder|BusinessType
-     */
-    public static function search(Request $request): Builder|BusinessType
-    {
-        if ($request->input('used', false)) {
-            return self::whereHas('organizations.fund_providers', function (Builder $builder) {
-                $builder->whereIn('fund_id', Implementation::activeFundsQuery()->select('id'));
-                FundProviderQuery::whereApproved($builder);
-            });
-        }
-
-        return self::query();
     }
 }

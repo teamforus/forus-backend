@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\ProductCategoryTranslation.
  *
@@ -19,7 +21,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductCategoryTranslation whereProductCategoryId($value)
  * @mixin \Eloquent
  */
-class ProductCategoryTranslation extends BaseModel
+class ProductCategoryTranslation extends Model
 {
     public $timestamps = false;
 
