@@ -183,6 +183,11 @@ class ImplementationPagesController extends Controller
                 ?->where('page_type', ImplementationPage::TYPE_BLOCK_HOME_PRODUCTS)
                 ?->first()
                 ?->delete();
+
+            $implementationPage->implementation->pages
+                ?->where('page_type', ImplementationPage::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES)
+                ?->first()
+                ?->delete();
         }
 
         $implementationPage->delete();
