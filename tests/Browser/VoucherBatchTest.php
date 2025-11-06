@@ -184,6 +184,7 @@ class VoucherBatchTest extends DuskTestCase
         };
 
         $browser->waitFor('@tableVoucherSearch');
+        $this->clearField($browser, '@tableVoucherSearch');
         $browser->typeSlowly('@tableVoucherSearch', $search, 50);
 
         $browser->waitFor("@tableVoucherRow$voucher->id");
