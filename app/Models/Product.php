@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 
 /**
@@ -52,7 +54,8 @@ use Illuminate\Support\Facades\Event;
  * @property bool $qr_enabled
  * @property bool $reservation_enabled
  * @property string $reservation_policy
- * @property bool $reservation_fields
+ * @property bool $reservation_fields_enabled
+ * @property string $reservation_fields_config
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
@@ -101,6 +104,8 @@ use Illuminate\Support\Facades\Event;
  * @property-read int|null $product_reservations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
  * @property-read int|null $product_reservations_pending_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationField[] $reservation_fields
+ * @property-read int|null $reservation_fields_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
@@ -136,7 +141,8 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|Product whereReservationBirthDate($value)
  * @method static Builder<static>|Product whereReservationEnabled($value)
  * @method static Builder<static>|Product whereReservationExtraPayments($value)
- * @method static Builder<static>|Product whereReservationFields($value)
+ * @method static Builder<static>|Product whereReservationFieldsConfig($value)
+ * @method static Builder<static>|Product whereReservationFieldsEnabled($value)
  * @method static Builder<static>|Product whereReservationNote($value)
  * @method static Builder<static>|Product whereReservationNoteText($value)
  * @method static Builder<static>|Product whereReservationPhone($value)
@@ -191,11 +197,21 @@ class Product extends Model
     public const string RESERVATION_EXTRA_PAYMENT_YES = 'yes';
     public const string RESERVATION_EXTRA_PAYMENT_NO = 'no';
 
+    public const string CUSTOM_RESERVATION_FIELDS_GLOBAL = 'global';
+    public const string CUSTOM_RESERVATION_FIELDS_YES = 'yes';
+    public const string CUSTOM_RESERVATION_FIELDS_NO = 'no';
+
     public const array RESERVATION_FIELDS_PRODUCT = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_GLOBAL,
         self::RESERVATION_FIELD_NO,
+    ];
+
+    public const array CUSTOM_RESERVATION_FIELDS = [
+        self::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        self::CUSTOM_RESERVATION_FIELDS_YES,
+        self::CUSTOM_RESERVATION_FIELDS_NO,
     ];
 
     public const array RESERVATION_NOTE_PRODUCT_OPTIONS = [
@@ -251,8 +267,8 @@ class Product extends Model
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id', 'qr_enabled',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
-        'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
-        'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
+        'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+        'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
     ];
 
     /**
@@ -261,8 +277,8 @@ class Product extends Model
     protected $casts = [
         'qr_enabled' => 'boolean',
         'unlimited_stock' => 'boolean',
-        'reservation_fields' => 'boolean',
         'reservation_enabled' => 'boolean',
+        'reservation_fields_enabled' => 'boolean',
         'expire_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
@@ -405,12 +421,21 @@ class Product extends Model
     }
 
     /**
+     * @noinspection PhpUnused
+     * @return HasMany
+     */
+    public function reservation_fields(): HasMany
+    {
+        return $this->hasMany(ReservationField::class)->orderBy('order');
+    }
+
+    /**
      * @return bool
      * @noinspection PhpUnused
      */
     public function getReservationPhoneIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -427,7 +452,7 @@ class Product extends Model
      */
     public function getReservationAddressIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -444,7 +469,7 @@ class Product extends Model
      */
     public function getReservationBirthDateIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -740,8 +765,8 @@ class Product extends Model
                 'name', 'description', 'price', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
-                'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
+                'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+                'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -752,6 +777,10 @@ class Product extends Model
             'price_discount' => $price_discount,
             'unlimited_stock' => $price_type === self::PRICE_TYPE_INFORMATIONAL ? true : $unlimited_stock,
         ]);
+
+        if ($product->reservation_fields_config === static::CUSTOM_RESERVATION_FIELDS_YES) {
+            $product->syncReservationFields($request->get('fields', []));
+        }
 
         if ($request->post('media_uids')) {
             $product->syncMedia($request->post('media_uids'), 'product_photo');
@@ -785,8 +814,8 @@ class Product extends Model
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
-                'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
+                'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+                'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -802,7 +831,32 @@ class Product extends Model
             $this->logChangedMonitoredFields($prevMonitoredValues);
         }
 
+        if (!$bySponsor && $this->reservation_fields_config === static::CUSTOM_RESERVATION_FIELDS_YES) {
+            $this->syncReservationFields($request->get('fields', []));
+        }
+
         return $this;
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function syncReservationFields(array $fields): void
+    {
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
+
+        foreach ($fields as $order => $item) {
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+                'organization_id' => $this->organization_id,
+            ]);
+        }
     }
 
     /**
@@ -880,6 +934,18 @@ class Product extends Model
         $providerProduct = $this->getFundProviderProduct($fund);
 
         return $providerProduct ? $providerProduct->user_price : $this->price;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getReservationFields(): Collection
+    {
+        return match ($this->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_NO => collect(),
+        };
     }
 
     /**

@@ -168,7 +168,7 @@ class PaymentDescriptionTest extends TestCase
             "Payment description doesn't match the expectation."
         );
 
-        //- Check if payment description is limited to 140 characters
+        //- Check if the payment description is limited to 140 characters
         $note->update([ 'message' => $testData['bank_note_long']]);
         $transaction->notes_provider[0]->refresh();
 

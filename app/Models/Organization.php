@@ -183,7 +183,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
- * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read Collection|\App\Models\ReservationField[] $reservation_fields
  * @property-read int|null $reservation_fields_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
@@ -701,7 +701,9 @@ class Organization extends Model
      */
     public function reservation_fields(): HasMany
     {
-        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+        return $this->hasMany(ReservationField::class)
+            ->whereNull('product_id')
+            ->orderBy('order');
     }
 
     /**

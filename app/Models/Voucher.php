@@ -1015,11 +1015,11 @@ class Voucher extends Model
             ]),
         ]);
 
+        $fields = $product->getReservationFields();
+
         // store custom fields
-        $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
-            OrganizationReservationField $field
-        ) => [
-            'organization_reservation_field_id' => $field->id,
+        $reservation->custom_fields()->createMany($fields->map(fn (ReservationField $field) => [
+            'reservation_field_id' => $field->id,
             'value' => Arr::get($extraData, "custom_fields.$field->id"),
         ]));
 

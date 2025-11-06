@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
+use App\Models\ReservationField;
 use App\Models\Product;
 use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
@@ -21,8 +22,8 @@ abstract class BaseProductRequest extends BaseFormRequest
     {
         return [
             'price_discount.required_if' => 'Het kortingsveld is verplicht.',
-            'expire_at.after' => trans('validation.after', [
-                'date' => trans('validation.attributes.today'),
+            'expire_at.after' => __('validation.after', [
+                'date' => __('validation.attributes.today'),
             ]),
         ];
     }
@@ -33,6 +34,9 @@ abstract class BaseProductRequest extends BaseFormRequest
     public function attributes(): array
     {
         return [
+            'fields.*.type' => __('validation.attributes.type'),
+            'fields.*.label' => __('validation.attributes.label'),
+            'fields.*.description' => __('validation.attributes.description'),
             'price_type.free' => 'gratis',
             'price_type.discount_fixed' => 'korting',
             'price_type.discount_percentage' => 'korting',
@@ -86,6 +90,7 @@ abstract class BaseProductRequest extends BaseFormRequest
     {
         $options = implode(',', Product::RESERVATION_FIELDS_PRODUCT);
         $policies = implode(',', Product::RESERVATION_POLICIES);
+        $fieldsConfigs = implode(',', Product::CUSTOM_RESERVATION_FIELDS);
 
         $noteOptions = implode(',', Product::RESERVATION_NOTE_PRODUCT_OPTIONS);
         $noteCustomOption = Product::RESERVATION_FIELD_CUSTOM;
@@ -96,7 +101,7 @@ abstract class BaseProductRequest extends BaseFormRequest
 
         return [
             'reservation_enabled' => 'nullable|boolean',
-            'reservation_fields' => 'nullable|boolean',
+            'reservation_fields_enabled' => 'nullable|boolean',
             'reservation_policy' => "nullable|in:$policies",
             'reservation_phone' => "nullable|in:$options",
             'reservation_address' => "nullable|in:$options",
@@ -104,6 +109,25 @@ abstract class BaseProductRequest extends BaseFormRequest
             'reservation_extra_payments' => ['nullable', ...$extraPaymentRules],
             'reservation_note' => "nullable|in:$noteOptions",
             'reservation_note_text' => "nullable|required_if:reservation_note,$noteCustomOption|string|max:2000",
+            'reservation_fields_config' => "nullable|in:$fieldsConfigs",
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function reservationCustomFieldRules(): array
+    {
+        return [
+            'fields' => 'nullable|array|max:10',
+            'fields.*' => 'required|array',
+            'fields.*.type' => [
+                'required',
+                Rule::in(ReservationField::TYPES),
+            ],
+            'fields.*.label' => 'required|string|max:200',
+            'fields.*.required' => 'nullable|boolean',
+            'fields.*.description' => 'nullable|string|max:1000',
         ];
     }
 }
