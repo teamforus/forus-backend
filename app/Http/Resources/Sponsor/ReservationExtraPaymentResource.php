@@ -19,7 +19,7 @@ class ReservationExtraPaymentResource extends BaseJsonResource
         'product_reservation.product.photos.presets',
         'product_reservation.voucher_transaction',
         'product_reservation.extra_payment.refunds',
-        'product_reservation.custom_fields.organization_reservation_field',
+        'product_reservation.custom_fields.reservation_field',
     ];
 
     /**

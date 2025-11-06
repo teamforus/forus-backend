@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * App\Models\ProductReservationFieldValue.
  *
  * @property int $id
- * @property int $organization_reservation_field_id
+ * @property int $reservation_field_id
  * @property int $product_reservation_id
  * @property string|null $value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\OrganizationReservationField $organization_reservation_field
+ * @property-read \App\Models\ReservationField $reservation_field
  * @property-read \App\Models\ProductReservation $product_reservation
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservationFieldValue newQuery()
@@ -34,17 +34,17 @@ class ProductReservationFieldValue extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'organization_reservation_field_id', 'product_reservation_id', 'value',
+        'reservation_field_id', 'product_reservation_id', 'value',
     ];
 
     /**
      * @return BelongsTo
      * @noinspection PhpUnused
      */
-    public function organization_reservation_field(): BelongsTo
+    public function reservation_field(): BelongsTo
     {
-        /** @var BelongsTo|OrganizationReservationField $relation */
-        $relation = $this->belongsTo(OrganizationReservationField::class);
+        /** @var BelongsTo|ReservationField $relation */
+        $relation = $this->belongsTo(ReservationField::class);
 
         return $relation->withTrashed();
     }
