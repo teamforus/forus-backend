@@ -24,6 +24,7 @@ class ImplementationPageResource extends BaseJsonResource
     public function toArray($request): array
     {
         $page = $this->resource;
+        $translateDescription = $page->page_type === ImplementationPage::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES;
 
         return [
             ...$page->only([
@@ -32,8 +33,11 @@ class ImplementationPageResource extends BaseJsonResource
             ]),
             ...$page->translateColumns(
                 $page->external
-                    ? $page->only(['name'])
-                    : $page->only(['name', 'description_html']),
+                    ? $page->only(['title'])
+                    : [
+                        ...$page->only(['title', 'description_html']),
+                        ...$translateDescription ? $page->only('description') : [],
+                    ],
             ),
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
