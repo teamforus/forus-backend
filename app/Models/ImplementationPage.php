@@ -83,6 +83,7 @@ class ImplementationPage extends Model
     public const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
     public const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
     public const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
+    public const string TYPE_BLOCK_HOME_PRODUCT_CATEGORIES = 'block_home_product_categories';
 
     public const string STATE_DRAFT = 'draft';
     public const string STATE_PUBLIC = 'public';
@@ -176,6 +177,12 @@ class ImplementationPage extends Model
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_BLOCK_HOME_PRODUCTS,
+        'type' => 'block',
+        'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
+    ], [
+        'key' => self::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES,
         'type' => 'block',
         'blocks' => false,
         'faq' => false,
