@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\OrganizationReservationFi
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -19,7 +19,7 @@ class IndexOrganizationReservationFieldsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('viewAny', [OrganizationReservationField::class, $this->organization]);
+        return Gate::allows('viewAny', [ReservationField::class, $this->organization]);
     }
 
     /**

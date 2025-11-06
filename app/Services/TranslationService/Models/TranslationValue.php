@@ -7,7 +7,7 @@ use App\Models\FundConfig;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\Language;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
 use Carbon\Carbon;
@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $translatable
+ * @property-read Model|Eloquent $translatable
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TranslationValue query()
@@ -303,7 +303,7 @@ class TranslationValue extends Model
                 'faq', 'fund', 'implementation', 'implementation_block', 'implementation_page', Announcement::class,
             ],
             'providers_content' => [
-                'organization', OrganizationReservationField::class, 'product', PreCheck::class, PreCheckRecord::class,
+                'organization', ReservationField::class, 'product', PreCheck::class, PreCheckRecord::class,
             ],
         ];
     }

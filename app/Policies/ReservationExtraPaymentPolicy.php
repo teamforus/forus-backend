@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\ReservationExtraPayment;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -22,7 +23,7 @@ class ReservationExtraPaymentPolicy
     {
         return
             $organization->isEmployee($identity) &&
-            $organization->identityCan($identity, 'view_funds_extra_payments');
+            $organization->identityCan($identity, Permission::VIEW_FUNDS_EXTRA_PAYMENTS);
     }
 
     /**
@@ -38,7 +39,7 @@ class ReservationExtraPaymentPolicy
     ): bool {
         return
             $organization->isEmployee($identity) &&
-            $organization->identityCan($identity, 'view_funds_extra_payments') &&
+            $organization->identityCan($identity, Permission::VIEW_FUNDS_EXTRA_PAYMENTS) &&
             $payment->product_reservation?->voucher?->fund?->organization_id === $organization->id;
     }
 }

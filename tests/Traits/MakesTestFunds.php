@@ -99,7 +99,7 @@ trait MakesTestFunds
         ]);
 
         try {
-            $fund->syncDescriptionMarkdownMedia('cms_media');
+            $fund->syncMarkdownMedia('cms_media');
         } catch (Throwable) {
             $this->assertTrue(false, 'Could not syncDescriptionMarkdownMedia.');
         }

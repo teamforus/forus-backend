@@ -7,6 +7,7 @@ use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
@@ -20,7 +21,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
     protected string $requiredRelation = 'fund_providers';
     protected string $digestKey = 'provider_products';
     protected array $employeePermissions = [
-        'manage_provider_funds',
+        Permission::MANAGE_PROVIDER_FUNDS,
     ];
 
     /**

@@ -19,7 +19,7 @@ return new class () extends Migration {
 
         foreach (Product::get() as $product) {
             $product->update([
-                'description_text' => $product->descriptionToText(),
+                'description_text' => $product->markdownToText('description'),
             ]);
         }
     }
