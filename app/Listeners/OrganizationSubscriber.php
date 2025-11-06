@@ -8,12 +8,14 @@ use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
+use League\CommonMark\Exception\CommonMarkException;
 use Throwable;
 
 class OrganizationSubscriber
 {
     /**
      * @param OrganizationCreated $organizationCreated
+     * @throws CommonMarkException
      * @return void
      * @noinspection PhpUnused
      */
@@ -24,10 +26,7 @@ class OrganizationSubscriber
         $employee = $organization->employees()->firstOrCreate($organization->only('identity_address'));
 
         $employee->roles()->sync(Role::pluck('id'));
-
-        $organization->update([
-            'description_text' => $organization->descriptionToText(),
-        ]);
+        $organization->syncMarkdownTexts();
 
         try {
             if ($organization->kvk != Organization::GENERIC_KVK) {
@@ -42,18 +41,15 @@ class OrganizationSubscriber
     /**
      * @param OrganizationUpdated $organizationUpdated
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated): void
     {
-        $organization = $organizationUpdated->getOrganization();
-
-        $organization->update([
-            'description_text' => $organization->descriptionToText(),
-        ]);
+        $organizationUpdated->getOrganization()->syncMarkdownTexts();
     }
 
     /**
-     * The events dispatcher.
+     * The events' dispatcher.
      *
      * @param Dispatcher $events
      * @noinspection PhpUnused

@@ -36,7 +36,7 @@ trait MakesTestProducts
             'price_type' => Product::PRICE_TYPE_REGULAR,
             'price_discount' => 0,
             'reservation_enabled' => 1,
-        ]);
+        ])->fresh();
     }
 
     /**

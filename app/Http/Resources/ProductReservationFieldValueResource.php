@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\ProductReservationFieldValue;
+use Illuminate\Http\Request;
 
 /**
  * @property-read ProductReservationFieldValue $resource
@@ -10,19 +11,22 @@ use App\Models\ProductReservationFieldValue;
 class ProductReservationFieldValueResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'organization_reservation_field',
+        'reservation_field',
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
-        return array_merge($this->resource->only('id', 'value'), [
-            'label' => $this->resource->organization_reservation_field?->label,
-        ]);
+        return [
+            ...$this->resource->only([
+                'id', 'value',
+            ]),
+            'label' => $this->resource->reservation_field?->label,
+        ];
     }
 }

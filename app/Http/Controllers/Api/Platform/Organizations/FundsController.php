@@ -102,7 +102,7 @@ class FundsController extends Controller
             $request->input('auto_requests_validation');
 
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'description_short', 'description_position', 'start_date', 'end_date',
+            'name', 'description', 'description_short', 'description_position', 'how_it_works', 'start_date', 'end_date',
             'external', 'notification_amount', 'default_validator_employee_id',
             'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
             'external_page', 'external_page_url',
@@ -120,7 +120,7 @@ class FundsController extends Controller
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
-        $fund->syncDescriptionMarkdownMedia('cms_media');
+        $fund->syncMarkdownMedia('cms_media');
         $fund->syncTagsOptional($request->input('tag_ids'));
         $fund->syncFaqOptional($request->input('faq'));
 
@@ -195,7 +195,7 @@ class FundsController extends Controller
 
         if ($manageFundTexts && !$manageFund) {
             $fund->update($request->only([
-                'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                'name', 'description', 'description_short', 'description_position', 'how_it_works', 'request_btn_text',
                 'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
             ]));
         }
@@ -203,7 +203,7 @@ class FundsController extends Controller
         if ($manageFund) {
             $fund->update([
                 ...$request->only([
-                    'name', 'description', 'description_short', 'description_position', 'request_btn_text',
+                    'name', 'description', 'description_short', 'description_position', 'how_it_works', 'request_btn_text',
                     'external_link_text', 'external_link_url', 'faq_title', 'external_page', 'external_page_url',
                     'notification_amount', 'default_validator_employee_id',
                     'auto_requests_validation', 'request_btn_text',
@@ -251,7 +251,7 @@ class FundsController extends Controller
 
         if ($manageFund || $manageFundTexts) {
             $fund->attachMediaByUid($request->input('media_uid'));
-            $fund->syncDescriptionMarkdownMedia('cms_media');
+            $fund->syncMarkdownMedia('cms_media');
             $fund->syncTagsOptional($request->input('tag_ids'));
             $fund->syncFaqOptional($request->input('faq'));
         }

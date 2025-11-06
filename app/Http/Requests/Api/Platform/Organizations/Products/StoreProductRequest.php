@@ -29,6 +29,7 @@ class StoreProductRequest extends BaseProductRequest
         return [
             ...$this->baseProductRules((string) $price_type, null),
             ...$this->reservationRules(),
+            ...$this->reservationCustomFieldRules(),
             'unlimited_stock' => 'boolean',
             'total_amount' => [
                 $unlimited_stock || ($price_type === Product::PRICE_TYPE_INFORMATIONAL) ? 'nullable' : 'required',

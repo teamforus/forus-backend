@@ -32,6 +32,7 @@ class UpdateProductRequest extends BaseProductRequest
         return [
             ...$this->baseProductRules((string) $this->input('price_type'), $product),
             ...$this->reservationRules(),
+            ...$this->reservationCustomFieldRules(),
 
             'total_amount' => [
                 $product->unlimited_stock ? null : 'required',

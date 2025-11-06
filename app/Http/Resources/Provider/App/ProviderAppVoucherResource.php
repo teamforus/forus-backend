@@ -8,6 +8,7 @@ use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Fund;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\OrganizationQuery;
@@ -166,7 +167,7 @@ class ProviderAppVoucherResource extends BaseJsonResource
         $builder = Organization::where(static function (Builder $builder) use ($voucher, $identityAddress) {
             // Has products available for purchase
             $builder->where(function (Builder $builder) use ($voucher, $identityAddress) {
-                OrganizationQuery::whereHasPermissions($builder, $identityAddress, 'scan_vouchers');
+                OrganizationQuery::whereHasPermissions($builder, $identityAddress, Permission::SCAN_VOUCHERS);
 
                 // Product approved to be bought by target voucher
                 $builder->whereHas('products', function (Builder $builder) use ($voucher) {

@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Models\Traits\HasFaq;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,7 +66,7 @@ class ImplementationPage extends BaseModel
     use HasFaq;
     use HasMedia;
     use SoftDeletes;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string TYPE_HOME = 'home';
@@ -82,6 +82,7 @@ class ImplementationPage extends BaseModel
     public const string TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
     public const string TYPE_FOOTER_APP_INFO = 'footer_app_info';
     public const string TYPE_BLOCK_HOME_PRODUCTS = 'block_home_products';
+    public const string TYPE_BLOCK_HOME_PRODUCT_CATEGORIES = 'block_home_product_categories';
 
     public const string STATE_DRAFT = 'draft';
     public const string STATE_PUBLIC = 'public';
@@ -175,6 +176,12 @@ class ImplementationPage extends BaseModel
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_BLOCK_HOME_PRODUCTS,
+        'type' => 'block',
+        'blocks' => false,
+        'faq' => false,
+        'description_position_configurable' => false,
+    ], [
+        'key' => self::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES,
         'type' => 'block',
         'blocks' => false,
         'faq' => false,

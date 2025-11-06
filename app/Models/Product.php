@@ -16,7 +16,7 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 
 /**
@@ -47,10 +48,16 @@ use Illuminate\Support\Facades\Event;
  * @property string $price_type
  * @property string|null $price_discount
  * @property int $show_on_webshop
+ * @property string|null $info_duration
+ * @property string|null $info_when
+ * @property string|null $info_where
+ * @property string|null $info_more_info
+ * @property string|null $info_attention
  * @property bool $qr_enabled
  * @property bool $reservation_enabled
  * @property string $reservation_policy
- * @property bool $reservation_fields
+ * @property bool $reservation_fields_enabled
+ * @property string $reservation_fields_config
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
@@ -90,7 +97,8 @@ use Illuminate\Support\Facades\Event;
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read Media|null $photo
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $photos
+ * @property-read int|null $photos_count
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
  * @property-read int|null $product_exclusions_count
@@ -98,6 +106,8 @@ use Illuminate\Support\Facades\Event;
  * @property-read int|null $product_reservations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations_pending
  * @property-read int|null $product_reservations_pending_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationField[] $reservation_fields
+ * @property-read int|null $reservation_fields_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
@@ -117,6 +127,11 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|Product whereEan($value)
  * @method static Builder<static>|Product whereExpireAt($value)
  * @method static Builder<static>|Product whereId($value)
+ * @method static Builder<static>|Product whereInfoAttention($value)
+ * @method static Builder<static>|Product whereInfoDuration($value)
+ * @method static Builder<static>|Product whereInfoMoreInfo($value)
+ * @method static Builder<static>|Product whereInfoWhen($value)
+ * @method static Builder<static>|Product whereInfoWhere($value)
  * @method static Builder<static>|Product whereName($value)
  * @method static Builder<static>|Product whereOrganizationId($value)
  * @method static Builder<static>|Product wherePrice($value)
@@ -128,7 +143,8 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|Product whereReservationBirthDate($value)
  * @method static Builder<static>|Product whereReservationEnabled($value)
  * @method static Builder<static>|Product whereReservationExtraPayments($value)
- * @method static Builder<static>|Product whereReservationFields($value)
+ * @method static Builder<static>|Product whereReservationFieldsConfig($value)
+ * @method static Builder<static>|Product whereReservationFieldsEnabled($value)
  * @method static Builder<static>|Product whereReservationNote($value)
  * @method static Builder<static>|Product whereReservationNoteText($value)
  * @method static Builder<static>|Product whereReservationPhone($value)
@@ -150,7 +166,7 @@ class Product extends BaseModel
     use HasMedia;
     use SoftDeletes;
     use HasBookmarks;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string EVENT_CREATED = 'created';
@@ -183,11 +199,21 @@ class Product extends BaseModel
     public const string RESERVATION_EXTRA_PAYMENT_YES = 'yes';
     public const string RESERVATION_EXTRA_PAYMENT_NO = 'no';
 
+    public const string CUSTOM_RESERVATION_FIELDS_GLOBAL = 'global';
+    public const string CUSTOM_RESERVATION_FIELDS_YES = 'yes';
+    public const string CUSTOM_RESERVATION_FIELDS_NO = 'no';
+
     public const array RESERVATION_FIELDS_PRODUCT = [
         self::RESERVATION_FIELD_REQUIRED,
         self::RESERVATION_FIELD_OPTIONAL,
         self::RESERVATION_FIELD_GLOBAL,
         self::RESERVATION_FIELD_NO,
+    ];
+
+    public const array CUSTOM_RESERVATION_FIELDS = [
+        self::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        self::CUSTOM_RESERVATION_FIELDS_YES,
+        self::CUSTOM_RESERVATION_FIELDS_NO,
     ];
 
     public const array RESERVATION_NOTE_PRODUCT_OPTIONS = [
@@ -228,7 +254,8 @@ class Product extends BaseModel
     ];
 
     public const array MONITORED_FIELDS = [
-        'name', 'description', 'price', 'price_type', 'price_discount',
+        'name', 'description', 'price', 'price_type', 'price_discount', 'alternative_text',
+        'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
     ];
 
     /**
@@ -242,7 +269,8 @@ class Product extends BaseModel
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id', 'qr_enabled',
         'reservation_enabled', 'reservation_policy', 'reservation_extra_payments',
         'reservation_phone', 'reservation_address', 'reservation_birth_date', 'alternative_text',
-        'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
+        'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+        'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
     ];
 
     /**
@@ -251,8 +279,8 @@ class Product extends BaseModel
     protected $casts = [
         'qr_enabled' => 'boolean',
         'unlimited_stock' => 'boolean',
-        'reservation_fields' => 'boolean',
         'reservation_enabled' => 'boolean',
+        'reservation_fields_enabled' => 'boolean',
         'expire_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
@@ -354,14 +382,14 @@ class Product extends BaseModel
     }
 
     /**
-     * Get fund logo.
-     * @return MorphOne
+     * @return MorphMany
+     * @noinspection PhpUnused
      */
-    public function photo(): MorphOne
+    public function photos(): MorphMany
     {
-        return $this->morphOne(Media::class, 'mediable')->where([
+        return $this->morphMany(Media::class, 'mediable')->where([
             'type' => 'product_photo',
-        ]);
+        ])->orderBy('order');
     }
 
     /**
@@ -395,12 +423,21 @@ class Product extends BaseModel
     }
 
     /**
+     * @noinspection PhpUnused
+     * @return HasMany
+     */
+    public function reservation_fields(): HasMany
+    {
+        return $this->hasMany(ReservationField::class)->orderBy('order');
+    }
+
+    /**
      * @return bool
      * @noinspection PhpUnused
      */
     public function getReservationPhoneIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -417,7 +454,7 @@ class Product extends BaseModel
      */
     public function getReservationAddressIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -434,7 +471,7 @@ class Product extends BaseModel
      */
     public function getReservationBirthDateIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields) {
+        if (!$this->reservation_fields_enabled) {
             return false;
         }
 
@@ -918,7 +955,8 @@ class Product extends BaseModel
                 'name', 'description', 'price', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
+                'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+                'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -930,7 +968,15 @@ class Product extends BaseModel
             'unlimited_stock' => $price_type === self::PRICE_TYPE_INFORMATIONAL ? true : $unlimited_stock,
         ]);
 
-        return $product->attachMediaByUid($request->post('media_uid'));
+        if ($product->reservation_fields_config === static::CUSTOM_RESERVATION_FIELDS_YES) {
+            $product->syncReservationFields($request->get('fields', []));
+        }
+
+        if ($request->post('media_uids')) {
+            $product->syncMedia($request->post('media_uids'), 'product_photo');
+        }
+
+        return $product;
     }
 
     /**
@@ -949,14 +995,17 @@ class Product extends BaseModel
 
         $prevMonitoredValues = $this->getMonitoredFields();
 
-        $this->attachMediaByUid($request->post('media_uid'));
+        if ($request->post('media_uids')) {
+            $this->syncMedia($request->post('media_uids'), 'product_photo');
+        }
 
         $this->update([
             ...$request->only([
                 'name', 'description', 'sold_amount', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields', 'sku', 'ean', 'reservation_note', 'reservation_note_text',
+                'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+                'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$this->organization->canReceiveExtraPayments() ? $request->only([
                 'reservation_extra_payments',
@@ -972,7 +1021,32 @@ class Product extends BaseModel
             $this->logChangedMonitoredFields($prevMonitoredValues);
         }
 
+        if (!$bySponsor && $this->reservation_fields_config === static::CUSTOM_RESERVATION_FIELDS_YES) {
+            $this->syncReservationFields($request->get('fields', []));
+        }
+
         return $this;
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function syncReservationFields(array $fields): void
+    {
+        $this->reservation_fields()
+            ->whereNotIn('id', array_filter(Arr::pluck($fields, 'id')))
+            ->delete();
+
+        foreach ($fields as $order => $item) {
+            $this->reservation_fields()->updateOrCreate([
+                'id' => Arr::get($item, 'id'),
+            ], [
+                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                'order' => $order,
+                'organization_id' => $this->organization_id,
+            ]);
+        }
     }
 
     /**
@@ -1053,13 +1127,25 @@ class Product extends BaseModel
     }
 
     /**
+     * @return Collection
+     */
+    public function getReservationFields(): Collection
+    {
+        return match ($this->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_NO => collect(),
+        };
+    }
+
+    /**
      * @param array $prevMonitoredValues
      * @return void
      */
     protected function logChangedMonitoredFields(array $prevMonitoredValues): void
     {
         $monitoredFields = $this->getMonitoredFields();
-        $changedMonitoredFields = array_diff($prevMonitoredValues, $monitoredFields);
+        $changedMonitoredFields = array_diff_assoc($prevMonitoredValues, $monitoredFields);
         $changedKeys = array_keys($changedMonitoredFields);
 
         $data = array_reduce($changedKeys, fn ($data, $key) => array_merge($data, [

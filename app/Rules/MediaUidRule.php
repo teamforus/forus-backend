@@ -10,15 +10,18 @@ class MediaUidRule implements Rule
 {
     protected string $type;
     protected string $errorMessage;
+    protected ?int $mediableId;
 
     /**
      * Create a new rule instance.
      *
      * @param string $type
+     * @param int|null $mediableId
      */
-    public function __construct(string $type)
+    public function __construct(string $type, int $mediableId = null)
     {
         $this->type = $type;
+        $this->mediableId = $mediableId;
     }
 
     /**
@@ -54,7 +57,7 @@ class MediaUidRule implements Rule
             return false;
         }
 
-        if ($media->mediable) {
+        if ($media->mediable && $media->mediable->getKey() !== $this->mediableId) {
             $this->errorMessage = trans('validation.in');
 
             return false;

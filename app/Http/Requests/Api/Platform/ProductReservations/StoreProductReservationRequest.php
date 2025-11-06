@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Api\Platform\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\OrganizationReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
@@ -86,18 +86,15 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function attributes(): array
     {
-        $product = Product::find($this->input('product_id'));
+        $fields = Product::find($this->input('product_id'))?->getReservationFields();
 
         return [
             ...parent::attributes(),
-            ...$product?->organization->reservation_fields->reduce(fn (
-                array $result,
-                OrganizationReservationField $field,
-            ) => [
+            ...$fields?->reduce(fn (array $result, ReservationField $field) => [
                 ...$result,
                 "custom_fields.$field->id" => Arr::get($field->translateColumns($field->only([
                     'label',
-                ])), 'label', $field?->label || ''),
+                ])), 'label', $field->label || ''),
             ], []) ?: [],
         ];
     }
@@ -155,11 +152,11 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     private function customFieldRules(?Product $product): array
     {
-        if (!$product->reservation_fields) {
+        if (!$product?->reservation_fields_enabled) {
             return [];
         }
 
-        return $product?->organization->reservation_fields->reduce(fn (array $result, $field) => [
+        return (array) $product->getReservationFields()->reduce(fn (array $result, ReservationField $field) => [
             ...$result,
             "custom_fields.$field->id" => array_filter([
                 $field->required ? 'required' : 'nullable',

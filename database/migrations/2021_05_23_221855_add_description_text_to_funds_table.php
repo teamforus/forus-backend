@@ -19,7 +19,7 @@ return new class () extends Migration {
 
         foreach (Fund::get() as $fund) {
             $fund->update([
-                'description_text' => $fund->descriptionToText(),
+                'description_text' => $fund->markdownToText('description'),
             ]);
         }
     }
