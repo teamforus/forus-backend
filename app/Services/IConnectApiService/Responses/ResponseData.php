@@ -2,16 +2,17 @@
 
 namespace App\Services\IConnectApiService\Responses;
 
-use Psr\Http\Message\ResponseInterface;
+
+use Illuminate\Http\Client\Response;
 
 class ResponseData
 {
-    protected ResponseInterface $response;
+    protected Response $response;
 
     /**
-     * @param ResponseInterface $response
+     * @param Response $response
      */
-    public function __construct(ResponseInterface $response)
+    public function __construct(Response $response)
     {
         $this->response = $response;
     }
