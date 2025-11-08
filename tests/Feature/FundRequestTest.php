@@ -130,46 +130,6 @@ class FundRequestTest extends TestCase
     }
 
     /**
-     * @return void
-     */
-    public function testRestrictionsWhenEditingRecordsUsedInCriteriaRules()
-    {
-        $requester = $this->makeIdentity();
-        $fund = $this->createFundAndAddProviderWithProducts(2);
-
-        $this->setSimpleFundCriteria($fund, [
-            'children_nth' => [ 'value' => 2, 'operator' => '>=' ],
-            'net_worth' => [ 'value' => 100, 'operator' => '>=' ],
-        ]);
-
-        $fund->criteria
-            ->firstWhere('record_type_key', 'net_worth')
-            ->fund_criterion_rules()
-            ->forceCreate([
-                'record_type_key' => 'children_nth',
-                'operator' => '>=',
-                'value' => 5,
-            ]);
-
-        $fund->organization->forceFill([
-            'allow_fund_request_record_edit' => true,
-        ])->update();
-
-        $response = $this->makeFundRequest($requester, $fund, [
-            $this->makeRequestCriterionValue($fund, 'children_nth', 4),
-        ], false);
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $fundRequest->assignEmployee($fundRequest->fund->organization->identity->employees[0]);
-        $record = $fundRequest->records->firstWhere('record_type_key', 'children_nth');
-
-        $this->updateFundRequestRecordRequest($fundRequest, $record, 4)->assertSuccessful();
-        $this->updateFundRequestRecordRequest($fundRequest, $record, 5)->assertJsonValidationErrorFor('value');
-        $this->updateFundRequestRecordRequest($fundRequest, $record, 3)->assertSuccessful();
-    }
-
-    /**
      * @param Identity $requester
      * @param Fund $fund
      * @param array $records

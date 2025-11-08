@@ -5,6 +5,7 @@ namespace App\Notifications\Organizations\Products;
 use App\Mail\Vouchers\ProductBoughtProviderBySponsorMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Permission;
 
 /**
  * The product was reserved by the sponsor.
@@ -12,7 +13,7 @@ use App\Models\Implementation;
 class ProductReservedBySponsorNotification extends BaseProductsNotification
 {
     protected static ?string $key = 'notifications_products.reserved_by_sponsor';
-    protected static string|array $permissions = 'manage_products';
+    protected static string|array $permissions = Permission::MANAGE_PRODUCTS;
 
     /**
      * @param Identity $identity

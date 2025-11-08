@@ -23,22 +23,69 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Permission extends BaseModel
 {
+    // validations
     public const string VALIDATE_RECORDS = 'validate_records';
     public const string MANAGE_VALIDATORS = 'manage_validators';
 
+    // funds
+    public const string VIEW_FUNDS = 'view_funds';
     public const string MANAGE_FUNDS = 'manage_funds';
     public const string MANAGE_FUND_TEXTS = 'manage_fund_texts';
 
+    // payouts
     public const string MANAGE_PAYOUTS = 'manage_payouts';
 
+    // implementations
     public const string MANAGE_IMPLEMENTATION_NOTIFICATIONS = 'manage_implementation_notifications';
+    public const string VIEW_IMPLEMENTATIONS = 'view_implementations';
+    public const string MANAGE_IMPLEMENTATION = 'manage_implementation';
+    public const string MANAGE_IMPLEMENTATION_CMS = 'manage_implementation_cms';
 
-    public const string MANAGE_IDENTITIES = 'manage_identities';
+    // identities
     public const string VIEW_IDENTITIES = 'view_identities';
+    public const string MANAGE_IDENTITIES = 'manage_identities';
 
+    // organizations
     public const string MANAGE_ORGANIZATION = 'manage_organization';
 
+    // vouchers
+    public const string SCAN_VOUCHERS = 'scan_vouchers';
+    public const string VIEW_VOUCHERS = 'view_vouchers';
+    public const string MANAGE_VOUCHERS = 'manage_vouchers';
+
+    // profiles
     public const string VIEW_PERSON_BSN_DATA = 'view_person_bsn_data';
+
+    // offices
+    public const string MANAGE_OFFICES = 'manage_offices';
+
+    // finances
+    public const string VIEW_FINANCES = 'view_finances';
+
+    // providers
+    public const string MANAGE_PROVIDERS = 'manage_providers';
+    public const string MANAGE_PROVIDER_FUNDS = 'manage_provider_funds';
+
+    // products
+    public const string MANAGE_PRODUCTS = 'manage_products';
+
+    // employees
+    public const string MANAGE_EMPLOYEES = 'manage_employees';
+
+    // bank connections
+    public const string MANAGE_BANK_CONNECTIONS = 'manage_bank_connections';
+
+    // reimbursements
+    public const string MANAGE_REIMBURSEMENTS = 'manage_reimbursements';
+
+    // payments
+    public const string MANAGE_PAYMENT_METHODS = 'manage_payment_methods';
+    public const string MAKE_DIRECT_PAYMENTS = 'make_direct_payments';
+    public const string MANAGE_TRANSACTION_BULKS = 'manage_transaction_bulks';
+    public const string VIEW_FUNDS_EXTRA_PAYMENTS = 'view_funds_extra_payments';
+
+    // bi connection
+    public const string MANAGE_BI_CONNECTION = 'manage_bi_connection';
 
     public $timestamps = false;
     protected static Collection|null $memCache = null;

@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -61,7 +62,7 @@ class OrganizationQuery
         string $identity_address,
         Voucher $voucher,
     ): Builder|Relation|Organization {
-        $query = self::whereHasPermissions($query, $identity_address, 'scan_vouchers');
+        $query = self::whereHasPermissions($query, $identity_address, Permission::SCAN_VOUCHERS);
 
         return $query->whereHas('fund_providers', static function (Builder $builder) use ($voucher) {
             if ($voucher->isProductType()) {

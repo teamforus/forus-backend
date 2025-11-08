@@ -146,13 +146,14 @@ class OrganizationResource extends BaseJsonResource
     {
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
+            'implementations' => $organization->implementations()->select('id', 'name')->get()->toArray(),
             ...$organization->only([
                 'manage_provider_products', 'backoffice_available',
                 'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',
                 'is_sponsor', 'is_provider', 'is_validator', 'bsn_enabled', 'allow_batch_reservations',
                 'allow_manual_bulk_processing', 'allow_fund_request_record_edit', 'allow_bi_connection',
-                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions',
-                'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts', 'allow_product_updates',
+                'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_product_updates',
+                'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
             ]),
             ...$request->isProviderDashboard() ? [
@@ -165,6 +166,7 @@ class OrganizationResource extends BaseJsonResource
                 'bank_branch_number', 'bank_branch_id', 'bank_branch_name', 'bank_fund_name',
                 'bank_note', 'bank_reservation_number', 'bank_separator',
                 'bank_reservation_first_name', 'bank_reservation_last_name',
+                'bank_reservation_invoice_number',
             ]),
         ] : [];
     }
@@ -209,7 +211,7 @@ class OrganizationResource extends BaseJsonResource
             'phone_public', 'website_public',
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
-            'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
+            'reservation_fields' => ReservationFieldResource::collection($organization->reservation_fields),
             ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],
         ]) : [];
     }

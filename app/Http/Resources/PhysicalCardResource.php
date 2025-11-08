@@ -4,13 +4,29 @@ namespace App\Http\Resources;
 
 use App\Models\PhysicalCard;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property-read PhysicalCard $resource
+ * @property-read bool $include_voucher_details
  */
-class PhysicalCardResource extends JsonResource
+class PhysicalCardResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'physical_card_type.photo',
+    ];
+
+    /**
+     * @param string|null $append
+     * @return array
+     */
+    public static function load(?string $append = null): array
+    {
+        return [
+            ...parent::load($append),
+            ...VoucherResource::load('voucher'),
+        ];
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -19,8 +35,18 @@ class PhysicalCardResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'code',
-        ]);
+        $physicalCard = $this->resource;
+
+        return [
+            ...$physicalCard->only([
+                'id', 'code', 'code_locale', 'physical_card_type_id',
+            ]),
+            ...$this->include_voucher_details ? [
+                'voucher' => VoucherResource::create($physicalCard->voucher),
+            ] : [],
+            'photo' => $physicalCard->physical_card_type->photo
+                ? new MediaResource($physicalCard->physical_card_type->photo)
+                : null,
+        ];
     }
 }

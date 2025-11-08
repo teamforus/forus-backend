@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
+use App\Models\Permission;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
@@ -19,11 +21,11 @@ class ProductReservationResource extends BaseProductReservationResource
         'voucher.physical_cards',
         'voucher.voucher_records',
         'product.organization',
-        'product.photo.presets',
+        'product.photos.presets',
         'voucher_transaction',
         'extra_payment.refunds',
         'extra_payment.refunds_active',
-        'custom_fields.organization_reservation_field',
+        'custom_fields.reservation_field',
         'fund_provider_product_with_trashed',
     ];
 
@@ -35,6 +37,7 @@ class ProductReservationResource extends BaseProductReservationResource
      */
     public function toArray(Request $request): array
     {
+        $baseRequest = BaseFormRequest::createFrom($request);
         $reservation = $this->resource;
         $voucher = $this->resource->voucher;
         $transaction = $this->resource->voucher_transaction;
@@ -61,6 +64,7 @@ class ProductReservationResource extends BaseProductReservationResource
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
             'records_title' => $voucher->getRecordsTitle(),
+            ...$baseRequest->isProviderDashboard() ? $reservation->only('invoice_number') : [],
             ...$this->getProductPrice($reservation),
             ...$this->identityData($reservation, $voucher),
             ...$this->extraPaymentData($reservation),
@@ -79,7 +83,7 @@ class ProductReservationResource extends BaseProductReservationResource
     {
         $physicalCard = $voucher->physical_cards[0] ?? null;
 
-        return $reservation->product->organization->identityCan(Identity::auth(), 'scan_vouchers') ? [
+        return $reservation->product->organization->identityCan(Identity::auth(), Permission::SCAN_VOUCHERS) ? [
             'identity_email' => $voucher->identity?->email,
             'identity_physical_card' => $physicalCard->code ?? null,
         ] : [];

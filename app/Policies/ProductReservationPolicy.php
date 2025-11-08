@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -36,7 +37,7 @@ class ProductReservationPolicy
      */
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'scan_vouchers');
+        return $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
     }
 
     /**
@@ -49,7 +50,10 @@ class ProductReservationPolicy
      */
     public function viewAnySponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, ['view_vouchers', 'manage_vouchers'], false);
+        return $organization->identityCan($identity, [
+            Permission::MANAGE_VOUCHERS,
+            Permission::VIEW_VOUCHERS,
+        ], false);
     }
 
     /**
@@ -100,7 +104,7 @@ class ProductReservationPolicy
      */
     public function createProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'scan_vouchers');
+        return $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
     }
 
     /**
@@ -113,7 +117,7 @@ class ProductReservationPolicy
     {
         return
             $organization->allow_batch_reservations &&
-            $organization->identityCan($identity, 'scan_vouchers');
+            $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
     }
 
     /**
@@ -169,7 +173,7 @@ class ProductReservationPolicy
     ): bool {
         return
             $productReservation->product->organization_id === $organization->id &&
-            $organization->identityCan($identity, 'scan_vouchers');
+            $organization->identityCan($identity, Permission::SCAN_VOUCHERS);
     }
 
     /**
@@ -369,5 +373,21 @@ class ProductReservationPolicy
             $productReservation->extra_payment->isPaid() &&
             $productReservation->extra_payment->isRefundable() &&
             $productReservation->extra_payment->isMollieType();
+    }
+
+    /**
+     * Determine whether the user can update the product reservation invoice number.
+     *
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function update(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
     }
 }

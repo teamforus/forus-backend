@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MediaService\Traits\UsesMediaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -206,7 +207,7 @@ class FundRequestValidatorTest extends TestCase
         $fund = $this->setupNewFundAndCriteria();
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $otherOrganization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $validatorRoles = Role::whereRelation('permissions', 'key', 'validate_records')->pluck('id')->toArray();
+        $validatorRoles = Role::whereRelation('permissions', 'key', Permission::VALIDATE_RECORDS)->pluck('id')->toArray();
 
         $employee1 = $fund->organization->findEmployee($fund->organization->identity);
         $employee2 = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $validatorRoles);
@@ -251,7 +252,7 @@ class FundRequestValidatorTest extends TestCase
     {
         $fund = $this->setupNewFundAndCriteria();
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
-        $validatorRoles = Role::whereRelation('permissions', 'key', 'validate_records')->pluck('id')->toArray();
+        $validatorRoles = Role::whereRelation('permissions', 'key', Permission::VALIDATE_RECORDS)->pluck('id')->toArray();
 
         $employeeWithPermissions = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), $validatorRoles);
         $employeeWithoutPermissions = $fund->organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()));
@@ -288,7 +289,7 @@ class FundRequestValidatorTest extends TestCase
 
         $rolesManager = Role::where('key', 'supervisor_validator');
         $rolesValidator = Role::where('key', 'validation');
-        $rolesNonValidator = Role::whereDoesntHaveRelation('permissions', 'key', 'validate_records');
+        $rolesNonValidator = Role::whereDoesntHaveRelation('permissions', 'key', Permission::VALIDATE_RECORDS);
 
         $employeeManager = $fund->organization->addEmployee($this->makeIdentity(), $rolesManager->pluck('id')->toArray());
         $employeeValidator = $fund->organization->addEmployee($this->makeIdentity(), $rolesValidator->pluck('id')->toArray());

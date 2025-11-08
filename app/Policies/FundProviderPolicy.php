@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FundProviderPolicy
@@ -33,7 +34,7 @@ class FundProviderPolicy
         }
 
         return $organization->identityCan($identity, [
-            'view_finances', 'manage_providers',
+            Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
         ], false);
     }
 
@@ -46,7 +47,7 @@ class FundProviderPolicy
     public function viewAnyProvider(Identity $identity, Organization $organization): bool
     {
         return $organization->identityCan($identity, [
-            'manage_provider_funds', 'scan_vouchers',
+            Permission::MANAGE_PROVIDER_FUNDS, Permission::SCAN_VOUCHERS,
         ], false);
     }
 
@@ -58,7 +59,7 @@ class FundProviderPolicy
      */
     public function storeSponsor(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_providers');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDERS);
     }
 
     /**
@@ -69,7 +70,7 @@ class FundProviderPolicy
      */
     public function storeProvider(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_provider_funds');
+        return $organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -99,7 +100,7 @@ class FundProviderPolicy
         }
 
         return $organization->identityCan($identity, [
-            'view_finances', 'manage_providers',
+            Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
         ], false);
     }
 
@@ -119,7 +120,7 @@ class FundProviderPolicy
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity, 'manage_provider_funds');
+        return $organizationFund->organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**
@@ -145,7 +146,7 @@ class FundProviderPolicy
         }
 
         return !$fund->isArchived() && $fund->organization->identityCan($identity, [
-            'view_finances', 'manage_providers',
+            Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
         ], false);
     }
 
@@ -165,7 +166,7 @@ class FundProviderPolicy
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity, 'manage_provider_funds');
+        return $organizationFund->organization->identityCan($identity, Permission::MANAGE_PROVIDER_FUNDS);
     }
 
     /**

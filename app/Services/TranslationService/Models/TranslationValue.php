@@ -7,7 +7,7 @@ use App\Models\FundConfig;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\Language;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
 use Carbon\Carbon;
@@ -303,7 +303,7 @@ class TranslationValue extends Model
                 'faq', 'fund', 'implementation', 'implementation_block', 'implementation_page', Announcement::class,
             ],
             'providers_content' => [
-                'organization', OrganizationReservationField::class, 'product', PreCheck::class, PreCheckRecord::class,
+                'organization', ReservationField::class, 'product', PreCheck::class, PreCheckRecord::class,
             ],
         ];
     }

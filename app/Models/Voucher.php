@@ -1207,11 +1207,11 @@ class Voucher extends BaseModel
             ]),
         ]);
 
+        $fields = $product->getReservationFields();
+
         // store custom fields
-        $reservation->custom_fields()->createMany($product->organization->reservation_fields->map(fn (
-            OrganizationReservationField $field
-        ) => [
-            'organization_reservation_field_id' => $field->id,
+        $reservation->custom_fields()->createMany($fields->map(fn (ReservationField $field) => [
+            'reservation_field_id' => $field->id,
             'value' => Arr::get($extraData, "custom_fields.$field->id"),
         ]));
 
@@ -1499,13 +1499,15 @@ class Voucher extends BaseModel
 
     /**
      * @param string $code
+     * @param PhysicalCardType|null $type
      * @return PhysicalCard|BaseModel
      */
-    public function addPhysicalCard(string $code): PhysicalCard|Model
+    public function addPhysicalCard(string $code, ?PhysicalCardType $type = null): PhysicalCard|Model
     {
         return $this->physical_cards()->create([
             'code' => $code,
             'identity_address' => $this->identity->address,
+            'physical_card_type_id' => $type?->id,
         ]);
     }
 
@@ -1519,10 +1521,10 @@ class Voucher extends BaseModel
         bool $shouldNotifyRequester = false
     ): PhysicalCardRequest|Model {
         $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
-            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id', 'physical_card_type_id',
         ]));
 
-        VoucherPhysicalCardRequestedEvent::broadcast($this, $cardRequest, $shouldNotifyRequester);
+        Event::dispatch(new VoucherPhysicalCardRequestedEvent($this, $cardRequest, $shouldNotifyRequester));
 
         return $cardRequest;
     }
@@ -1845,6 +1847,18 @@ class Voucher extends BaseModel
         ));
 
         return $this;
+    }
+
+    /**
+     * @param PhysicalCardType $physicalCardType
+     * @return FundPhysicalCardType
+     */
+    public function findFundPhysicalCardTypeForType(PhysicalCardType $physicalCardType): FundPhysicalCardType
+    {
+        return $this->fund->fund_physical_card_types
+            ->where('fund_id', $this->fund_id)
+            ->where('physical_card_type_id', $physicalCardType->id)
+            ->first();
     }
 
     /**

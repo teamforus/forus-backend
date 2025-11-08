@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Models\Organization;
-use App\Models\OrganizationReservationField;
+use App\Models\ReservationField;
 use Illuminate\Validation\Rule;
 
 /**
@@ -70,7 +70,7 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
             'fields.*' => 'required|array',
             'fields.*.type' => [
                 'required',
-                Rule::in(OrganizationReservationField::TYPES),
+                Rule::in(ReservationField::TYPES),
             ],
             'fields.*.label' => 'required|string|max:200',
             'fields.*.required' => 'nullable|boolean',

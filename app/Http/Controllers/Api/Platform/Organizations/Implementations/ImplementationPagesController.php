@@ -69,7 +69,7 @@ class ImplementationPagesController extends Controller
             'external_url' => null,
         ] : []));
 
-        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
+        $implementationPage->syncMarkdownMedia('cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
 
         if ($implementationPage->supportsFaq()) {
@@ -150,7 +150,7 @@ class ImplementationPagesController extends Controller
         ] : []);
 
         $implementationPage->update($data);
-        $implementationPage->syncDescriptionMarkdownMedia('cms_media');
+        $implementationPage->syncMarkdownMedia('cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
 
         if ($implementationPage->supportsFaq()) {
@@ -181,6 +181,11 @@ class ImplementationPagesController extends Controller
         if ($implementationPage->page_type == 'home') {
             $implementationPage->implementation->pages
                 ?->where('page_type', ImplementationPage::TYPE_BLOCK_HOME_PRODUCTS)
+                ?->first()
+                ?->delete();
+
+            $implementationPage->implementation->pages
+                ?->where('page_type', ImplementationPage::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES)
                 ?->first()
                 ?->delete();
         }

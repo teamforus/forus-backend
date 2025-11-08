@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Database\Eloquent\Collection;
+use League\CommonMark\Exception\CommonMarkException;
 use Throwable;
 
 class SyncAllMarkdownDescriptionMedia extends BaseCommand
@@ -145,7 +146,7 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
             $this->previewModelMedia($model, $mediaType);
 
             if (!$this->dryRun) {
-                $model->syncDescriptionMarkdownMedia($mediaType);
+                $model->syncMarkdownMedia($mediaType);
             }
 
             return $model;
@@ -164,51 +165,61 @@ class SyncAllMarkdownDescriptionMedia extends BaseCommand
     /**
      * @param Faq|Fund|Implementation|ImplementationPage $model
      * @param string $mediaType
+     * @throws CommonMarkException
      * @return void
      */
     protected function previewModelMedia(
         Faq|Fund|Implementation|ImplementationPage $model,
         string $mediaType
     ): void {
-        $mediaSynced = $model->medias->where('type', $mediaType);
-        $mediaSyncedIds = $mediaSynced->pluck('id');
+        $this->printText("[#$model->id] " . get_class($model) . ':');
 
-        $mediaToSync = $model->getDescriptionMarkdownMediaPresetsValidQuery($mediaType)->get();
-        $mediaToSyncIds = $mediaToSync->pluck('media_id');
+        foreach ($model::getMarkdownKeys() as $key) {
+            $mediaSynced = $model->medias
+                ->where('type', $mediaType)
+                ->where('meta.markdown_column', $key);
 
-        $mediaToClone = $model->getDescriptionMarkdownMediaPresetsInValidQuery($mediaType)->get();
-        $mediaToCloneIds = $mediaToClone->pluck('media_id');
+            $mediaSyncedIds = $mediaSynced->pluck('id');
 
-        $this->printText("#$model->id: ");
+            $mediaToSync = $model->getMarkdownMediaPresetsValidQuery($mediaType, $key)->get();
+            $mediaToSyncIds = $mediaToSync->pluck('media_id');
 
-        if ($this->detailed) {
-            $this->printHeader($this->green("Has '" . $mediaSyncedIds . "':\n"));
-            $this->printModels($mediaSynced, 'id', 'uid');
-        } else {
-            $this->printText(sprintf('    - has: %s', $mediaSyncedIds));
-        }
+            $mediaToClone = $model->getMarkdownMediaPresetsInValidQuery($mediaType, $key)->get();
+            $mediaToCloneIds = $mediaToClone->pluck('media_id');
 
-        if ($this->detailed) {
-            $this->printHeader($this->green("Should '" . $mediaToSyncIds . "':\n"));
-            $this->printModels($mediaToSync, 'id', 'uid');
-        } else {
-            $this->printText(sprintf('    - should: %s', $mediaToSyncIds));
-        }
+            $this->printText("    [$key]: ");
 
-        if ($this->detailed) {
-            $this->printHeader($this->green("Should clone '" . $mediaToCloneIds . "':\n"));
-            $this->printModels($mediaToClone, 'id', 'uid');
-        } else {
-            $this->printText(sprintf('    - should clone: %s', $mediaToCloneIds));
-        }
+            if ($this->detailed) {
+                $this->printHeader($this->green("Has '" . $mediaSyncedIds . "':\n"));
+                $this->printModels($mediaSynced, 'id', 'uid');
+            } else {
+                $this->printText(sprintf('        - has: %s', $mediaSyncedIds));
+            }
 
-        $hasMediaToSync =
-            $mediaToCloneIds->isNotEmpty() ||
-            $mediaSyncedIds->diff($mediaToSyncIds)->isNotEmpty() ||
-            $mediaToSyncIds->diff($mediaSyncedIds)->isNotEmpty();
+            if ($this->detailed) {
+                $this->printHeader($this->green("Should '" . $mediaToSyncIds . "':\n"));
+                $this->printModels($mediaToSync, 'id', 'uid');
+            } else {
+                $this->printText(sprintf('        - should: %s', $mediaToSyncIds));
+            }
 
-        if ($hasMediaToSync) {
-            $this->printText($this->yellow('    - not in sync!'));
+            if ($this->detailed) {
+                $this->printHeader($this->green("Should clone '" . $mediaToCloneIds . "':\n"));
+                $this->printModels($mediaToClone, 'id', 'uid');
+            } else {
+                $this->printText(sprintf('        - should clone: %s', $mediaToCloneIds));
+            }
+
+            $hasMediaToSync =
+                $mediaToCloneIds->isNotEmpty() ||
+                $mediaSyncedIds->diff($mediaToSyncIds)->isNotEmpty() ||
+                $mediaToSyncIds->diff($mediaSyncedIds)->isNotEmpty();
+
+            if ($hasMediaToSync) {
+                $this->printText($this->yellow('        - not in sync!'));
+            }
+
+            $this->printText("\n");
         }
     }
 }

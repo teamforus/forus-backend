@@ -498,4 +498,20 @@ trait HasFrontendActions
                 break;
         }
     }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @return void
+     */
+    protected function uncollapseWebshopFilterGroup(Browser $browser, string $selector): void
+    {
+        $element = $browser->element($selector);
+
+        if ($element && !str_contains($element?->getAttribute('class') ?: '', 'showcase-aside-group-open')) {
+            $browser->click($selector . ' .showcase-aside-group-title-toggle');
+        }
+    }
 }

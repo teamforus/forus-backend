@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string $identity_address
  * @property int|null $mediable_id
  * @property string|null $mediable_type
+ * @property array $meta
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool|null $is_dark
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static Builder<static>|Media whereIdentityAddress($value)
  * @method static Builder<static>|Media whereMediableId($value)
  * @method static Builder<static>|Media whereMediableType($value)
+ * @method static Builder<static>|Media whereMeta($value)
  * @method static Builder<static>|Media whereOrder($value)
  * @method static Builder<static>|Media whereOriginalName($value)
  * @method static Builder<static>|Media whereType($value)
@@ -56,7 +58,22 @@ class Media extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid', 'dominant_color', 'order',
+        'type', 'ext', 'uid', 'dominant_color', 'order', 'meta',
+        'meta->markdown_column',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $casts = [
+        'meta' => 'array',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $hidden = [
+        'meta',
     ];
 
     /**

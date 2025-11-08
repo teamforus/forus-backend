@@ -154,6 +154,7 @@ class PaymentDescriptionTest extends TestCase
             $transaction->provider->bank_fund_name ? $transaction->voucher?->fund?->name : null,
             $transaction->provider->bank_reservation_first_name ? $transaction->product_reservation?->first_name : null,
             $transaction->provider->bank_reservation_last_name ? $transaction->product_reservation?->last_name : null,
+            $transaction->provider->bank_reservation_invoice_number ? $transaction->product_reservation?->invoice_number : null,
             $transaction->provider->bank_note ? $transaction->notes_provider->first()?->message : null,
         ])));
 
@@ -167,7 +168,7 @@ class PaymentDescriptionTest extends TestCase
             "Payment description doesn't match the expectation."
         );
 
-        //- Check if payment description is limited to 140 characters
+        //- Check if the payment description is limited to 140 characters
         $note->update([ 'message' => $testData['bank_note_long']]);
         $transaction->notes_provider[0]->refresh();
 

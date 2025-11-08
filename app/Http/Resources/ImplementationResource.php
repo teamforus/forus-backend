@@ -3,17 +3,18 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use Illuminate\Http\Request;
 
 class ImplementationResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @property Implementation $resource
      * @return ?array
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         /** @var Implementation $implementation **/
         if (is_null($implementation = $this->resource)) {
