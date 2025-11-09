@@ -22,6 +22,8 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
@@ -36,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Exception\CommonMarkException;
@@ -1955,5 +1959,44 @@ class Fund extends BaseModel
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
+    }
+
+    /**
+     * @param string $bsn
+     * @return Collection|\Illuminate\Support\Collection
+     */
+    public function getPrefills(string $bsn): Collection|\Illuminate\Support\Collection
+    {
+        $bsnRecordTypes = PersonBsnApiRecordType::query()
+            ->whereIn('record_type_key', $this->criteria->pluck('record_type_key')->toArray())
+            ->get();
+
+        $cacheKey = 'bsn_prefill_data_' . $this->id . '_' . $bsn;
+        $cacheTime = Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15);
+
+        /** @var PersonInterface $person */
+        $person = Cache::remember($cacheKey, $cacheTime, function () use ($bsn) {
+            return PersonBsnApiManager::make($this->organization)->driver()->getPerson($bsn, [
+                'parents', 'children', 'partners',
+            ]);
+        });
+
+        if (!$person || ($person->response() && !$person->response()->success())) {
+            return collect();
+        }
+
+        $data = $person->getData();
+
+        return $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data) {
+            $value = Arr::get($data, $bsnRecordType->person_bsn_api_field);
+
+            return [
+                'record_type_key' => $bsnRecordType->record_type_key,
+                'value' => $bsnRecordType->parsePersonValue(
+                    is_numeric($value) || is_string($value) ? $value : '',
+                    $bsnRecordType->record_type->control_type,
+                ),
+            ];
+        });
     }
 }

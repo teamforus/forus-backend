@@ -233,6 +233,7 @@ return [
         'required_record' => 'Het veld :attribute is verplicht voor de fondaanvraag.',
         'invalid_record' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
         'extra_records' => 'Er zijn extra records ingediend die niet zijn toegestaan.',
+        'invalid_prefill_value' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
     ],
     'attributes' => [
         'pin_code' => 'pincode',
