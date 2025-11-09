@@ -36,6 +36,14 @@ class FundRequestPersonPrefillTest extends DuskTestCase
     public function testWebshopFundRequestPersonPrefills(): void
     {
         // record keys, will be used in iconnect mapping and key naming for criteria
+        // 'age' record type will be editable to assert rules (so excluded from iconnect list)
+        $iconnectRecordKeys = [
+            'name',
+            'salary_if_age_30',
+            'salary_if_age_45',
+            'salary_if_age_50',
+        ];
+
         $recordKeys = [
             'name',
             'age',
@@ -115,7 +123,7 @@ class FundRequestPersonPrefillTest extends DuskTestCase
             'step' => 'Step #1',
             'record_key' => $mapKeys['age'],
             'control_type' => 'number',
-            'assert_filled' => 25,
+            'assert_filled' => '',
             'assert_hidden' => [
                 $mapKeys['salary_if_age_30'],
                 $mapKeys['salary_if_age_45'],
@@ -174,12 +182,13 @@ class FundRequestPersonPrefillTest extends DuskTestCase
             $assertions,
             $recordKeys,
             $mapKeys,
+            $iconnectRecordKeys,
         ) {
             $organization->forceFill([
                 'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
             ])->save();
 
-            $this->prepareIConnect($implementation, $recordKeys, $mapKeys);
+            $this->prepareIConnect($implementation, $iconnectRecordKeys, $mapKeys);
             $assertions = $this->mapAssertionsWithCriterionIds($fund, $assertions);
 
             $this->processFundRequestTestCase($implementation, $fund, $assertions);

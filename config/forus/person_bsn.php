@@ -6,7 +6,6 @@ return [
     'test_response' => [
         'bsn' => 159859037,
         'name' => 'John Doe',
-        'age' => 25,
         'salary_if_age_30' => 700,
         'salary_if_age_45' => 600,
         'salary_if_age_50' => 500,
