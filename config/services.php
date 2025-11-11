@@ -35,4 +35,12 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'precheck_micro' => [
+        'base_url' => env('PRECHECK_MICRO_BASE_URL', 'http://localhost:8010'),
+        'timeout' => env('PRECHECK_MICRO_TIMEOUT', 15),
+        'retries' => env('PRECHECK_MICRO_RETRIES', 2),
+        'token' => env('PRECHECK_MICRO_BEARER'),
+        'stream_token_ttl' => env('PRECHECK_MICRO_STREAM_TOKEN_TTL', 900), // seconds
+    ]
+
 ];

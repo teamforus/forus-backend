@@ -48,14 +48,15 @@ return [
     'allowed_headers' => [
         'Content-Type', 'Access-Control-Allow-Headers', 'Authorization',
         'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type', 'Client-Version', 'Accept',
-        'Access-Token', 'Accept-Language',
+        'Access-Token', 'Accept-Language', 'Idempotency-Key', 'X-Request-Id',
+        'traceparent', 'tracestate', 'X-Forwarded-For',
     ],
 
     /*
      * Sets the Access-Control-Expose-Headers response header.
      */
     'exposed_headers' => [
-        'Error-Code',
+        'Error-Code', 'X-Request-Id',
     ],
 
     /*
@@ -66,5 +67,5 @@ return [
     /*
      * Sets the Access-Control-Allow-Credentials header.
      */
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 ];
