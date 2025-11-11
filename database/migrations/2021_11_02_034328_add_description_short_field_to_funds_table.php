@@ -22,7 +22,7 @@ return new class () extends Migration {
             $fund->update([
                 'description' => null,
                 'description_text' => '',
-                'description_short' => strip_tags($fund->descriptionToHtml()),
+                'description_short' => strip_tags($fund->description_html),
             ]);
         }
     }

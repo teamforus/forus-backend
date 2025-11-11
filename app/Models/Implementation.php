@@ -25,7 +25,7 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -223,7 +223,7 @@ use Illuminate\Support\Facades\Gate;
 class Implementation extends BaseModel
 {
     use HasMedia;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use ValidatesValues;
     use HasOnDemandTranslations;
 
@@ -823,9 +823,12 @@ class Implementation extends BaseModel
                 'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),
-            'implementation' => $implementation->translateColumns($implementation->only([
-                'name', 'root_product_category_id',
-            ])),
+            'implementation' => [
+                ...$implementation->translateColumns($implementation->only([
+                    'name',
+                ])),
+                'root_product_category_id' => $implementation->root_product_category_id,
+            ],
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
             // 'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),

@@ -146,6 +146,7 @@ class OrganizationResource extends BaseJsonResource
     {
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
+            'implementations' => $organization->implementations()->select('id', 'name')->get()->toArray(),
             ...$organization->only([
                 'manage_provider_products', 'backoffice_available',
                 'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',
@@ -210,7 +211,7 @@ class OrganizationResource extends BaseJsonResource
             'phone_public', 'website_public',
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
-            'reservation_fields' => OrganizationReservationFieldResource::collection($organization->reservation_fields),
+            'reservation_fields' => ReservationFieldResource::collection($organization->reservation_fields),
             ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],
         ]) : [];
     }

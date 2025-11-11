@@ -6,6 +6,7 @@ use App\Exceptions\AuthorizationJsonException;
 use App\Helpers\Locker;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\ProductReservation;
 use Illuminate\Support\Facades\Config;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -41,7 +42,7 @@ class AcceptProductReservationRequest extends BaseFormRequest
         }
 
         return $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), 'scan_vouchers') &&
+            $this->organization->identityCan($this->identity(), Permission::SCAN_VOUCHERS) &&
             $this->organization->id === $this->product_reservation->product->organization_id;
     }
 

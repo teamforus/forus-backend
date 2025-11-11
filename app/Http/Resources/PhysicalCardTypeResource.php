@@ -2,8 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Resources\BaseJsonResource;
-use App\Http\Resources\MediaResource;
 use App\Models\PhysicalCardType;
 use Illuminate\Http\Request;
 
