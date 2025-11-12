@@ -457,7 +457,7 @@
     },
     "notifications_products.reserved": {
         "mail": {
-            "title": "Uw aanbod :product_name is aangemaakt namens :sponsor_name.",
+            "title": "Uw aanbod :product_name is gereserveerd",
             "template": "notifications_products/reserved.md"
         },
         "push": {},
@@ -468,7 +468,7 @@
     },
     "notifications_products.reserved_by_sponsor": {
         "mail": {
-            "title": "Uw aanbod :product_name is gereserveerd",
+            "title": "Uw aanbod :product_name is aangemaakt namens :sponsor_name.",
             "template": "notifications_products/reserved_by_sponsor.md"
         },
         "push": {},
