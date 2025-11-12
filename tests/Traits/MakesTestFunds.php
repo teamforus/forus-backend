@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundFormula;
+use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -98,7 +99,7 @@ trait MakesTestFunds
         ]);
 
         try {
-            $fund->syncDescriptionMarkdownMedia('cms_media');
+            $fund->syncMarkdownMedia('cms_media');
         } catch (Throwable) {
             $this->assertTrue(false, 'Could not syncDescriptionMarkdownMedia.');
         }
@@ -371,6 +372,7 @@ trait MakesTestFunds
         $fund->vouchers()->whereNotNull('product_reservation_id')->forceDelete();
         ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
         Record::where('fund_request_id', $fund->fund_requests()->pluck('id')->toArray())->forceDelete();
+        FundProviderProduct::whereIn('fund_provider_id', $fund->providers()->pluck('id')->toArray())->forceDelete();
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();

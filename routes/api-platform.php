@@ -226,6 +226,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post('vouchers/{voucher_number_or_address}/share', "Api\Platform\VouchersController@shareVoucher");
     $router->post('vouchers/{voucher_number_or_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
+    $router->resource('physical-cards', "Api\Platform\PhysicalCardsController")
+        ->only('index');
+
     $router
         ->resource('reimbursements', "Api\Platform\ReimbursementsController")
         ->only('index', 'store', 'show', 'update', 'destroy');
@@ -442,6 +445,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
+    $router->resource(
+        'organizations.fund-physical-card-types',
+        "Api\Platform\Organizations\FundPhysicalCardTypesController"
+    )->only('index', 'store', 'update', 'destroy');
+
     $router->get(
         'organizations/{organization}/funds/{fund}/identities/export',
         "Api\Platform\Organizations\Funds\IdentitiesController@export",
@@ -576,6 +584,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     ]);
 
     $router->resource(
+        'organizations.physical-card-types',
+        "Api\Platform\Organizations\PhysicalCardTypesController"
+    )->only('index', 'store', 'show', 'update', 'destroy');
+
+    $router->resource(
+        'organizations.physical-cards',
+        "Api\Platform\Organizations\PhysicalCardsController"
+    )->only('index');
+
+    $router->resource(
         'organizations.providers',
         "Api\Platform\Organizations\FundProviderController"
     )->parameters([
@@ -662,7 +680,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource(
         'organizations.product-reservations',
         "Api\Platform\Organizations\ProductReservationsController"
-    )->only('index', 'store', 'show');
+    )->only('index', 'store', 'show', 'update');
 
     // Reimbursements
     $router->group(['prefix' => 'organizations/{organization}/reimbursements/{reimbursement}'], function () use ($router) {
@@ -883,7 +901,17 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/identities',
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
-    )->only('index', 'show', 'update');
+    )->only('store', 'index', 'show', 'update');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/households',
+        'Api\Platform\Organizations\Sponsor\HouseholdsController'
+    )->only('index', 'show', 'store', 'update', 'destroy');
+
+    $router->resource(
+        'organizations/{organization}/sponsor/households/{household}/household-profiles',
+        'Api\Platform\Organizations\Sponsor\Households\HouseholdProfilesController'
+    )->only('index', 'store', 'destroy');
 
     $router->group(['prefix' => 'organizations/{organization}/sponsor/identities/{identity}'], function () use ($router) {
         $router->post('bank-accounts', 'Api\Platform\Organizations\Sponsor\IdentitiesController@storeBankAccount');
@@ -893,6 +921,10 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->get('notes', "Api\Platform\Organizations\Sponsor\IdentitiesController@notes");
         $router->post('notes', "Api\Platform\Organizations\Sponsor\IdentitiesController@storeNote");
         $router->delete('notes/{note}', "Api\Platform\Organizations\Sponsor\IdentitiesController@destroyNote");
+
+        $router->resource('relations', 'Api\Platform\Organizations\Sponsor\Identities\ProfileRelationsController')
+            ->only('index', 'store', 'update', 'destroy')
+            ->parameter('relations', 'profile_relation');
     });
 
     $router->get(

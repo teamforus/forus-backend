@@ -50,6 +50,7 @@ return [
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,
+            'allow_physical_cards' => true,
             'allow_fund_request_prefill' => true,
         ],
     ],
@@ -249,6 +250,8 @@ return [
             'allow_preset_amounts_validator' => true,
             'iban_record_key' => 'iban',
             'iban_name_record_key' => 'iban_name',
+            'allow_physical_cards' => true,
+            'fund_request_physical_card_enable' => true,
         ],
         'fund_amount_presets' => [
             [ 'name' => 'Preset #1', 'amount' => '10.00'],

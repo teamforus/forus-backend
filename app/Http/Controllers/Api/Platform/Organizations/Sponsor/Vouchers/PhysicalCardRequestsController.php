@@ -29,8 +29,12 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('requestPhysicalCardAsSponsor', [$voucherToken->voucher, $organization]);
 
         $cardRequest = $voucherToken->voucher->makePhysicalCardRequest(array_merge($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city',
+            'address', 'house', 'house_addition', 'postcode', 'city', 'physical_card_type_id',
         ]), [
+            'physical_card_type_id' => $voucherToken->voucher->fund
+                ->fund_physical_card_types()
+                ->findOrFail($request->post('fund_physical_card_type_id'))
+                ->physical_card_type_id,
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
         ]));
 

@@ -78,14 +78,17 @@ class FundResource extends BaseJsonResource
         $organizationFunds2FAData = $this->organizationFunds2FAData($organization);
 
         $data = array_merge($fund->only([
-            'id', 'description', 'description_position', 'organization_id', 'state',
+            'id', 'description', 'description_position', 'how_it_works', 'organization_id', 'state',
             'notification_amount', 'type', 'type_locale', 'archived', 'external_link_url',
-            'external', 'external_page', 'external_page_url', 'description_html',
+            'external', 'external_page', 'external_page_url', 'description_html', 'how_it_works_html',
         ]), [
             ...$fund->translateColumns(
                 $this->isCollection()
                     ? $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title'])
-                    : $fund->only(['name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title', 'description_html']),
+                    : $fund->only([
+                        'name', 'description_short', 'request_btn_text', 'external_link_text', 'faq_title',
+                        'description_html', 'how_it_works_html',
+                    ]),
             ),
             'fund_form_id' => $fund->fund_form?->id,
             'outcome_type' => $fund->fund_config?->outcome_type ?: FundConfig::OUTCOME_TYPE_VOUCHER,
@@ -212,6 +215,7 @@ class FundResource extends BaseJsonResource
                     'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
                     'help_description_html', 'criteria_label_requirement_show',
                     'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
+                    'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
                 ]),
                 ...$fund->fund_config->translateColumns($fund->fund_config->only([
                     'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
@@ -220,7 +224,7 @@ class FundResource extends BaseJsonResource
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
-                'custom_amount_min', 'custom_amount_max',
+                'custom_amount_min', 'custom_amount_max', 'allow_physical_cards',
             ]) : [],
         ];
     }

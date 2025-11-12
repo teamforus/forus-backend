@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Organization;
+use App\Models\PhysicalCardType;
 use App\Rules\FundCriteria\FundCriteriaKeyRule;
 use App\Rules\FundCriteria\FundCriteriaMaxRule;
 use App\Rules\FundCriteria\FundCriteriaMinRule;
@@ -18,6 +19,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * @property Organization|null $organization
+ * @property Fund|null $fund
  */
 abstract class BaseFundRequest extends BaseFormRequest
 {
@@ -58,6 +60,8 @@ abstract class BaseFundRequest extends BaseFormRequest
             'description_short' => 'sometimes|string|max:500',
             'description_position' => ['sometimes', 'in:' . $descriptionPositions],
 
+            'how_it_works' => ['nullable', ...$this->markdownRules(0, 15000)],
+
             'notification_amount' => 'nullable|numeric|min:0|max:1000000',
             'faq_title' => 'nullable|string|max:200',
             'tag_ids' => 'sometimes|array',
@@ -82,7 +86,7 @@ abstract class BaseFundRequest extends BaseFormRequest
     /**
      * @return array
      */
-    protected function fundFormulaProductsRule(): array
+    protected function fundFormulaProductsRules(): array
     {
         $formulaProductsEditable = Config::get('forus.features.dashboard.organizations.funds.formula_products');
 
@@ -95,6 +99,27 @@ abstract class BaseFundRequest extends BaseFormRequest
             ],
             'formula_products.*.record_type_key_multiplier' => 'nullable|exists:record_types,key',
         ] : [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function physicalCardTypeRules(): array
+    {
+        return [
+            'fund_request_physical_card_enable' => 'sometimes|boolean',
+            'fund_request_physical_card_type_id' => [
+                'nullable',
+                'sometimes',
+                Rule::exists('physical_card_types', 'id')
+                    ->whereIn(
+                        'physical_card_types.id',
+                        PhysicalCardType::query()
+                            ->whereRelation('funds', 'organization_id', $this->organization->id)
+                            ->select('id'),
+                    ),
+            ],
+        ];
     }
 
     /**
@@ -126,6 +151,7 @@ abstract class BaseFundRequest extends BaseFormRequest
             'provider_products_required' => 'nullable|boolean',
 
             'allow_provider_sign_up' => 'nullable|boolean',
+            'allow_physical_cards' => 'nullable|boolean',
 
             // help columns
             ...$this->fundConfigHelpRules(),

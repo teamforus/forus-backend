@@ -48,6 +48,7 @@ return [
         'not_allowed' => 'Fysieke kaarten zijn niet toegestaan in dit fonds.',
         'already_attached' => 'Er is al een fysieke kaart gekoppeld aan deze voucher.',
         'only_budget_vouchers' => 'Deze voucher ondersteunt geen fysieke kaarten.',
+        'linking_not_allowed' => 'Het koppelen van een fysieke kaart aan deze voucher is niet toegestaan.',
     ],
     'reservations' => [
         'timeout_extra_payment' => 'Het is op dit moment niet mogelijk om uw reservering te annuleren. Probeer het om :time.',
@@ -89,5 +90,8 @@ return [
         'bsn_not_enabled' => 'BSN is niet ingeschakeld.',
         'bsn_is_unknown' => 'BSN is onbekend.',
         'invalid_permissions' => 'Deze actie is niet toegestaan.',
+    ],
+    'employees' => [
+        'cant_delete_if_default_validator_exists' => 'De Standaard beoordelaar kan niet worden verwijderd. Neem contact op met support',
     ],
 ];

@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ProductReservations\ProductReservationAcceptedMail;
 use App\Mail\ProductReservations\ProductReservationCanceledMail;
 use App\Mail\ProductReservations\ProductReservationRejectedMail;
-use App\Mail\ProductReservations\ProductReservationAcceptedMail;
-use App\Models\Fund;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;

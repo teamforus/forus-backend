@@ -5,6 +5,7 @@ namespace App\Notifications\Organizations\Products;
 use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Permission;
 use Illuminate\Support\Arr;
 
 /**
@@ -13,7 +14,7 @@ use Illuminate\Support\Arr;
 class ProductReservedNotification extends BaseProductsNotification
 {
     protected static ?string $key = 'notifications_products.reserved';
-    protected static string|array $permissions = 'manage_products';
+    protected static string|array $permissions = Permission::MANAGE_PRODUCTS;
 
     public function toMail(Identity $identity): void
     {

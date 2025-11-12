@@ -6,6 +6,7 @@ use App\Events\Employees\EmployeeCreated;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
@@ -18,7 +19,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Statistics\Funds\FinancialStatisticQueries;
-use App\Traits\HasMarkdownDescription;
+use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -66,9 +67,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $reservation_phone
  * @property string $reservation_address
  * @property string $reservation_birth_date
+ * @property string $reservation_user_note
  * @property bool $reservation_note
  * @property string|null $reservation_note_text
- * @property string $reservation_user_note
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
@@ -77,10 +78,14 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_physical_cards
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_profiles_create
+ * @property bool $allow_profiles_relations
+ * @property bool $allow_profiles_households
  * @property bool $allow_translations
  * @property bool $allow_product_updates
  * @property bool $reservation_allow_extra_payments
@@ -104,6 +109,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $bank_reservation_number
  * @property bool $bank_reservation_first_name
  * @property bool $bank_reservation_last_name
+ * @property bool $bank_reservation_invoice_number
  * @property bool $bank_branch_number
  * @property bool $bank_branch_id
  * @property bool $bank_branch_name
@@ -165,6 +171,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $mollie_connections_count
  * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
+ * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
+ * @property-read int|null $physical_card_types_count
  * @property-read Collection|\App\Models\Prevalidation[] $prevalidations
  * @property-read int|null $prevalidations_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -179,7 +187,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $profiles_count
  * @property-read Collection|\App\Models\ReimbursementCategory[] $reimbursement_categories
  * @property-read int|null $reimbursement_categories_count
- * @property-read Collection|\App\Models\OrganizationReservationField[] $reservation_fields
+ * @property-read Collection|\App\Models\ReservationField[] $reservation_fields
  * @property-read int|null $reservation_fields_count
  * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
@@ -203,9 +211,13 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPhysicalCards($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesCreate($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesHouseholds($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowProfilesRelations($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProviderExtraPayments($value)
  * @method static EloquentBuilder<static>|Organization whereAllowTranslations($value)
  * @method static EloquentBuilder<static>|Organization whereAuth2faFundsPolicy($value)
@@ -224,6 +236,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereBankFundName($value)
  * @method static EloquentBuilder<static>|Organization whereBankNote($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationFirstName($value)
+ * @method static EloquentBuilder<static>|Organization whereBankReservationInvoiceNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationLastName($value)
  * @method static EloquentBuilder<static>|Organization whereBankReservationNumber($value)
  * @method static EloquentBuilder<static>|Organization whereBankSeparator($value)
@@ -286,7 +299,7 @@ class Organization extends BaseModel
     use HasTags;
     use HasMedia;
     use HasDigests;
-    use HasMarkdownDescription;
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string GENERIC_KVK = '00000000';
@@ -340,7 +353,7 @@ class Organization extends BaseModel
         'bank_note', 'bank_reservation_number', 'bank_separator', 'translations_enabled',
         'translations_daily_limit', 'translations_weekly_limit', 'translations_monthly_limit',
         'bank_reservation_first_name', 'bank_reservation_last_name', 'reservation_note',
-        'reservation_note_text',
+        'reservation_note_text', 'bank_reservation_invoice_number',
     ];
 
     /**
@@ -365,7 +378,11 @@ class Organization extends BaseModel
         'allow_2fa_restrictions' => 'boolean',
         'allow_fund_request_record_edit' => 'boolean',
         'allow_bi_connection' => 'boolean',
+        'allow_physical_cards' => 'boolean',
         'allow_product_updates' => 'boolean',
+        'allow_profiles_create' => 'boolean',
+        'allow_profiles_relations' => 'boolean',
+        'allow_profiles_households' => 'boolean',
         'bsn_enabled' => 'boolean',
         'auth_2fa_remember_ip' => 'boolean',
         'auth_2fa_funds_remember_ip' => 'boolean',
@@ -392,6 +409,7 @@ class Organization extends BaseModel
         'bank_fund_name' => 'boolean',
         'bank_note' => 'boolean',
         'reservation_note' => 'boolean',
+        'bank_reservation_invoice_number' => 'boolean',
     ];
 
     /**
@@ -426,6 +444,7 @@ class Organization extends BaseModel
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function reimbursement_categories(): HasMany
     {
@@ -686,7 +705,9 @@ class Organization extends BaseModel
      */
     public function reservation_fields(): HasMany
     {
-        return $this->hasMany(OrganizationReservationField::class)->orderBy('order');
+        return $this->hasMany(ReservationField::class)
+            ->whereNull('product_id')
+            ->orderBy('order');
     }
 
     /**
@@ -705,6 +726,14 @@ class Organization extends BaseModel
     public function mollie_connections(): HasMany
     {
         return $this->hasMany(MollieConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function physical_card_types(): HasMany
+    {
+        return $this->hasMany(PhysicalCardType::class);
     }
 
     /**
@@ -954,9 +983,9 @@ class Organization extends BaseModel
 
     /**
      * @param Identity $identity
-     * @return Fund|Model
+     * @return Profile
      */
-    public function findOrMakeProfile(Identity $identity): Profile|Model
+    public function findOrMakeProfile(Identity $identity): Profile
     {
         return $identity->profiles()->where([
             'organization_id' => $this->id,
@@ -1141,6 +1170,15 @@ class Organization extends BaseModel
             !empty($this->iconnect_target_binding) &&
             !empty($this->iconnect_api_oin) &&
             !empty($this->iconnect_base_url);
+    }
+
+    /**
+     * @param int $identityId
+     * @return Identity|null
+     */
+    public function findRelatedIdentityOrFail(int $identityId): ?Identity
+    {
+        return IdentityQuery::relatedToOrganization(Identity::query(), $this->id)->findOrFail($identityId);
     }
 
     /**

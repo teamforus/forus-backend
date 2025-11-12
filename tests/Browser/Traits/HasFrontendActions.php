@@ -90,8 +90,8 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param string $selector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function clearField(Browser $browser, string $selector): void
     {
@@ -423,5 +423,21 @@ trait HasFrontendActions
         }
 
         $this->assertWebshopRowsCount($browser, $expected, $selector . 'Content');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @return void
+     */
+    protected function uncollapseWebshopFilterGroup(Browser $browser, string $selector): void
+    {
+        $element = $browser->element($selector);
+
+        if ($element && !str_contains($element?->getAttribute('class') ?: '', 'showcase-aside-group-open')) {
+            $browser->click($selector . ' .showcase-aside-group-title-toggle');
+        }
     }
 }

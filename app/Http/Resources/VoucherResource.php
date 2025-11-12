@@ -32,7 +32,7 @@ class VoucherResource extends BaseJsonResource
         'last_transaction',
         'transactions',
         'product_vouchers.fund',
-        'product_vouchers.product.photo.presets',
+        'product_vouchers.product.photos.presets',
         'product_vouchers.token_with_confirmation',
         'product_vouchers.product_reservation',
         'reimbursements_pending',
@@ -58,11 +58,12 @@ class VoucherResource extends BaseJsonResource
         return [
             ...parent::load($append),
             ...MediaResource::load("{$prepend}fund.logo"),
-            ...MediaResource::load("{$prepend}product.photo"),
+            ...MediaResource::load("{$prepend}product.photos"),
             ...OfficeResource::load("{$prepend}fund.provider_organizations_approved.offices"),
             ...OrganizationBasicResource::load("{$prepend}product.organization"),
             ...OrganizationBasicResource::load("{$prepend}fund.organization"),
             ...VoucherTransactionResource::load("{$prepend}all_transactions"),
+            ...FundPhysicalCardTypeResource::load("{$prepend}fund.fund_physical_card_types"),
         ];
     }
 
@@ -226,7 +227,7 @@ class VoucherResource extends BaseJsonResource
                 'price_locale' => $voucher->product->priceLocale(),
                 'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
-                'photo' => new MediaResource($voucher->product->photo),
+                'photos' => MediaResource::collection($voucher->product->photos),
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
             ];
         } else {
@@ -261,7 +262,7 @@ class VoucherResource extends BaseJsonResource
     {
         return  [
             ...$fund->only('id', 'state', 'type'),
-            ...$fund->translateColumns($fund->only(['name'])),
+            ...$fund->translateColumns($fund->only(['name', 'description_short', 'how_it_works_html'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
@@ -271,7 +272,8 @@ class VoucherResource extends BaseJsonResource
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
-            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key']),
+            'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
+            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code']),
         ];
     }
 

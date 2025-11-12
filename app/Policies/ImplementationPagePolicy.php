@@ -6,6 +6,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Organization;
+use App\Models\Permission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ImplementationPagePolicy
@@ -28,7 +29,7 @@ class ImplementationPagePolicy
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation) &&
-            $organization->identityCan($identity, 'manage_implementation_cms');
+            $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
     }
 
     /**
@@ -47,7 +48,7 @@ class ImplementationPagePolicy
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation) &&
-            $organization->identityCan($identity, 'manage_implementation_cms');
+            $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
     }
 
     /**
@@ -68,7 +69,7 @@ class ImplementationPagePolicy
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity, 'manage_implementation_cms');
+            $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
     }
 
     /**
@@ -89,7 +90,7 @@ class ImplementationPagePolicy
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity, 'manage_implementation_cms');
+            $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
     }
 
     /**
@@ -109,7 +110,7 @@ class ImplementationPagePolicy
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity, 'manage_implementation_cms');
+            $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
     }
 
     /**

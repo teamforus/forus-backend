@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestAssigned;
+use App\Events\FundRequests\FundRequestPhysicalCardRequestEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Event;
 use Throwable;
 
 /**
@@ -49,6 +51,8 @@ use Throwable;
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
+ * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
+ * @property-read int|null $physical_card_requests_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -212,6 +216,15 @@ class FundRequest extends BaseModel
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function physical_card_requests(): HasMany
+    {
+        return $this->hasMany(PhysicalCardRequest::class);
     }
 
     /**
@@ -386,6 +399,7 @@ class FundRequest extends BaseModel
      */
     public function formulaPreview(): array
     {
+        $totalAmount = 0;
         $values = $this->getTrustedAndPendingRecordValues();
 
         $products = $this->fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
@@ -396,18 +410,23 @@ class FundRequest extends BaseModel
             'total' => $formula->product->name,
         ]);
 
-        $formula = $this->fund->fund_formulas->map(fn ($formula) => [
-            'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
-            'type' => $formula->type_locale,
-            'value' => $formula->amount_locale,
-            'count' => $formula->record_type_key ? Arr::get($values, $formula->record_type_key) : 1,
-            'total' => currency_format_locale($formula->amount),
-            'amount' => currency_format($formula->amount),
-        ]);
+        $formula = $this->fund->fund_formulas->map(function ($formula) use ($values, &$totalAmount) {
+            $count = $formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1;
+            $total = (float) $formula->amount * $count;
+            $totalAmount += $total;
+
+            return [
+                'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+                'type' => $formula->type_locale,
+                'value' => $formula->amount_locale,
+                'count' => $count,
+                'total' => currency_format_locale($total),
+            ];
+        });
 
         return [
             'total_products' => $products->sum('count'),
-            'total_amount' => currency_format_locale($formula->sum('amount')),
+            'total_amount' => currency_format_locale($totalAmount),
             'products' => $products->toArray(),
             'items' => $formula,
         ];
@@ -466,6 +485,22 @@ class FundRequest extends BaseModel
         }
 
         return null;
+    }
+
+    /**
+     * @param array $address
+     * @return PhysicalCardRequest
+     */
+    public function makePhysicalCardRequest(array $address): PhysicalCardRequest
+    {
+        /** @var PhysicalCardRequest $cardRequest */
+        $cardRequest = $this->physical_card_requests()->create(Arr::only($address, [
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id', 'physical_card_type_id',
+        ]));
+
+        Event::dispatch(new FundRequestPhysicalCardRequestEvent($this, $cardRequest));
+
+        return $cardRequest;
     }
 
     /**

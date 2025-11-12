@@ -36,7 +36,7 @@ trait MakesTestProducts
             'price_type' => Product::PRICE_TYPE_REGULAR,
             'price_discount' => 0,
             'reservation_enabled' => 1,
-        ]);
+        ])->fresh();
     }
 
     /**
@@ -48,6 +48,24 @@ trait MakesTestProducts
     public function makeTestProducts(Organization $organization, int $count = 1, float $price = 10): array
     {
         return array_map(fn () => $this->makeTestProduct($organization, $price), range(1, $count));
+    }
+
+    /**
+     * @return ProductCategory
+     */
+    protected function makeProductCategory(): ProductCategory
+    {
+        $name = $this->faker->sentence(5);
+
+        $category = ProductCategory::create([
+            'key' => Str::slug($name),
+        ]);
+
+        $category->translateOrNew(app()->getLocale())->fill([
+            'name' => $name,
+        ])->save();
+
+        return $category;
     }
 
     /**
@@ -72,23 +90,5 @@ trait MakesTestProducts
             'price' => $price,
             'reservation_extra_payments' => Product::RESERVATION_EXTRA_PAYMENT_GLOBAL,
         ]);
-    }
-
-    /**
-     * @return ProductCategory
-     */
-    protected function makeProductCategory(): ProductCategory
-    {
-        $name = $this->faker->sentence(5);
-
-        $category = ProductCategory::create([
-            'key' => Str::slug($name),
-        ]);
-
-        $category->translateOrNew(app()->getLocale())->fill([
-            'name' => $name,
-        ])->save();
-
-        return $category;
     }
 }

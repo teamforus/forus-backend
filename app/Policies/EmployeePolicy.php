@@ -3,8 +3,11 @@
 namespace App\Policies;
 
 use App\Models\Employee;
+use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\Permission;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -29,7 +32,7 @@ class EmployeePolicy
      */
     public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity, 'manage_employees');
+        return $organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
     }
 
     /**
@@ -55,7 +58,7 @@ class EmployeePolicy
             return false;
         }
 
-        return $employee->organization->identityCan($identity, 'manage_employees');
+        return $employee->organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
     }
 
     /**
@@ -77,6 +80,11 @@ class EmployeePolicy
         // organization owner employee can't be deleted
         if ($employee->identity_address === $organization->identity_address) {
             return $this->deny('employees.cant_delete_owner');
+        }
+
+        // employee can't be deleted if it used as default validator
+        if (FundQuery::whereActiveFilter(Fund::where('default_validator_employee_id', $employee->id))->exists()) {
+            return $this->deny(__('policies.employees.cant_delete_if_default_validator_exists'));
         }
 
         return $this->update($identity, $employee, $organization);

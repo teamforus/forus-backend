@@ -26,7 +26,9 @@ class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNoti
 
         $mailable = new ProductReservedRequesterMail([
             ...$this->eventLog->data,
-            'qr_token' => $voucher->token_without_confirmation->address,
+            'qr_token' => $voucher->fund->fund_config->show_qr_code
+                ? $voucher->token_without_confirmation->address
+                : null,
         ], Implementation::emailFrom($this->eventLog->data['implementation_key']));
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);

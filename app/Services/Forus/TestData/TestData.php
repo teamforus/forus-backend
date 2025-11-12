@@ -106,7 +106,7 @@ class TestData
             $emailSlug . '-' . $this->integerToRoman($this->emailNth++),
         ));
 
-        $identity = Identity::make($email, [
+        $identity = Identity::build(email: $email, records: [
             'primary_email' => $email,
             'given_name' => $this->faker->firstName,
             'family_name' => $this->faker->lastName,
@@ -583,7 +583,7 @@ class TestData
         }
 
         foreach ($pageModels as $pageModel) {
-            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+            $type = (array) collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
 
             if (Arr::get($type, 'faq', false)) {
                 for ($i = rand(5, 10); $i > 0; $i--) {
@@ -596,7 +596,7 @@ class TestData
         }
 
         foreach ($pageModels as $pageModel) {
-            $type = collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
+            $type = (array) collect(ImplementationPage::PAGE_TYPES)->firstWhere('key', $pageModel->page_type);
 
             if (Arr::get($type, 'blocks', false)) {
                 for ($i = 3; $i > 0; $i--) {
@@ -854,7 +854,7 @@ class TestData
         while ($count-- > 0) {
             do {
                 $primaryKeyValue = random_int(111111, 999999);
-            } while (collect($out)->pluck($csvPrimaryKey)->search($primaryKeyValue) !== false);
+            } while (in_array($primaryKeyValue, Arr::pluck($out, $csvPrimaryKey)));
 
             $prevalidation = array_merge($records, [
                 'gender' => 'vrouwelijk',
@@ -923,6 +923,9 @@ class TestData
             $price_discount = random_int(1, 9) * 10;
         }
 
+        $startDate = format_date_locale(now()->subWeek());
+        $endDate = format_date_locale(now()->addMonth());
+
         $product = Product::forceCreate(array_merge(compact(
             'name',
             'price',
@@ -936,6 +939,11 @@ class TestData
             'price_discount'
         ), [
             'organization_id' => $organization->id,
+            'info_duration' => "This offer is valid from $startDate, to $endDate",
+            'info_when' => "$endDate, at 14:00",
+            'info_where' => $this->faker->address(),
+            'info_more_info' => 'Only for children aged 1 and up',
+            'info_attention' => 'Children up to 12 years old must bring swimwear. Voucher code available once per day.',
         ], array_only($fields, [
             'name', 'total_amount', 'sold_out', 'expire_at',
         ])));
@@ -1161,9 +1169,55 @@ class TestData
             $builder->where('allow_physical_cards', true);
         })->get();
 
+        $nth = 1;
+
+        $organizations = Organization::query()
+            ->whereIn('id', $funds->pluck('organization_id')->toArray())
+            ->whereDoesntHave('physical_card_types')
+            ->get();
+
+        foreach ($organizations as $organization) {
+            $physicalCardType = $organization->physical_card_types()->create([
+                'name' => 'Physical card type ' . $this->integerToRoman($nth++),
+                'description' => $this->faker->paragraph(),
+                'code_prefix' => '100',
+                'code_blocks' => 4,
+                'code_block_size' => 4,
+            ]);
+
+            $fundConfigs = FundConfig::query()
+                ->whereRelation('fund', 'organization_id', $organization->id)
+                ->where('allow_physical_cards', true)
+                ->get();
+
+            foreach ($fundConfigs as $fundConfig) {
+                $fundConfig->fund->physical_card_types()->attach($physicalCardType->id, [
+                    'allow_physical_card_linking' => true,
+                    'allow_physical_card_deactivation' => true,
+                ]);
+
+                if ($fundConfig->fund_request_physical_card_enable) {
+                    $fundConfig->forceFill([
+                        'fund_request_physical_card_type_id' => $physicalCardType->id,
+                    ])->save();
+                }
+            }
+        }
+
+        $funds->load('organization.physical_card_types');
+
         foreach ($funds as $fund) {
-            foreach ($fund->vouchers as $voucher) {
-                $voucher->addPhysicalCard((string) random_int(11111111, 99999999));
+            foreach ($fund->vouchers->filter(fn ($voucher) => $voucher->isBudgetType()) as $voucher) {
+                $type = $fund->organization->physical_card_types[0];
+                $typeSize = $type->code_blocks * $type->code_block_size - strlen($type->code_prefix);
+
+                $voucher->addPhysicalCard(
+                    (string) random_int(
+                        $type->code_prefix . str_repeat('1', $typeSize),
+                        $type->code_prefix . str_repeat('9', $typeSize),
+                    ),
+                    $fund->organization->physical_card_types[0],
+                );
             }
         }
     }
@@ -1336,7 +1390,7 @@ class TestData
             if ($fund->fund_config->allow_prevalidations) {
                 $validator = $fund->organization->identity;
 
-                $records = $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
+                $records = (array) $fund->criteria->reduce(function (array $list, FundCriterion $criterion) {
                     return array_merge($list, [
                         $criterion->record_type_key => match($criterion->operator) {
                             '=' => intval($criterion->value),

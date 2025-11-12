@@ -71,7 +71,7 @@ class ProductReservationsController extends Controller
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
             }
 
-            $reservationFields = $product->reservation_fields ? [
+            $reservationFields = $product->reservation_fields_enabled ? [
                 ...$request->only([
                     'phone', 'birth_date', 'custom_fields',
                     'street', 'house_nr', 'house_nr_addition', 'city',

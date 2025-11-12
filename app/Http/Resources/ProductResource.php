@@ -16,10 +16,10 @@ use Illuminate\Support\Collection;
  */
 class ProductResource extends BaseJsonResource
 {
-    public const LOAD = [
+    public const array LOAD = [
         'voucher_transactions',
         'product_reservations_pending',
-        'photo.presets',
+        'photos.presets',
         'product_category.translations',
         'organization.offices.photo.presets',
         'organization.offices.schedules',
@@ -32,6 +32,7 @@ class ProductResource extends BaseJsonResource
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
         'bookmarks',
+        'reservation_fields',
     ];
 
     /**
@@ -46,7 +47,7 @@ class ProductResource extends BaseJsonResource
         $product = $this->resource;
 
         return array_merge($this->baseFields($product), [
-            'photo' => new MediaResource($product->photo),
+            'photos' => MediaResource::collection($product->photos),
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
@@ -80,11 +81,15 @@ class ProductResource extends BaseJsonResource
                 'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
                 'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
                 'description_html',
+                'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$product->translateColumns(
                 $this->isCollection()
                     ? $product->only(['name'])
-                    : $product->only(['name', 'description_html']),
+                    : $product->only([
+                        'name', 'description_html',
+                        'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
+                    ]),
             ),
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
@@ -210,11 +215,10 @@ class ProductResource extends BaseJsonResource
         $global = $product::RESERVATION_FIELD_GLOBAL;
         $request = BaseFormRequest::createFromBase(request());
         $organization = $product->organization;
-        $fields = $organization->reservation_fields;
 
         if ($request->isWebshop()) {
             return [
-                'reservation' => $product->reservation_fields ? [
+                'reservation' => $product->reservation_fields_enabled ? [
                     'phone' => $product->reservation_phone === $global ?
                         $organization->reservation_phone :
                         $product->reservation_phone,
@@ -225,7 +229,7 @@ class ProductResource extends BaseJsonResource
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
                     'note' => $organization->reservation_user_note,
-                    'fields' => OrganizationReservationFieldResource::collection($fields),
+                    'fields' => ReservationFieldResource::collection($product->getReservationFields()),
                 ] : [
                     'phone' => $product::RESERVATION_FIELD_NO,
                     'address' => $product::RESERVATION_FIELD_NO,
@@ -238,11 +242,13 @@ class ProductResource extends BaseJsonResource
 
         return [
             'reservation_phone' => $product->reservation_phone,
-            'reservation_fields' => $product->reservation_fields,
+            'reservation_fields_enabled' => $product->reservation_fields_enabled,
             'reservation_address' => $product->reservation_address,
             'reservation_birth_date' => $product->reservation_birth_date,
             'reservation_note' => $product->reservation_note,
             'reservation_note_text' => $product->reservation_note_text,
+            'reservation_fields_config' => $product->reservation_fields_config,
+            'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
         ];
     }
 }
