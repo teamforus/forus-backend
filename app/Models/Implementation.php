@@ -902,16 +902,17 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
-        $fund_ids = self::activeFundsQuery()->select('id');
+        $query->whereHas('fund_providers', static function (Builder $builder) use ($options) {
+            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
 
-        if (Arr::has($options, 'fund_id') || Arr::has($options, 'fund_ids')) {
-            $fund_ids = Arr::has($options, 'fund_id')
-                ? [Arr::get($options, 'fund_id')]
-                : Arr::get($options, 'fund_ids');
-        }
+            if ($fund_id = array_get($options, 'fund_id')) {
+                $builder->whereIn('fund_id', [$fund_id]);
+            }
 
-        $query->whereHas('fund_providers', static function (Builder $builder) use ($fund_ids) {
-            $builder->whereIn('fund_id', $fund_ids);
+            if ($fund_ids = array_get($options, 'fund_ids')) {
+                $builder->whereIn('fund_id', $fund_ids);
+            }
+
             FundProviderQuery::whereApproved($builder);
         });
 
