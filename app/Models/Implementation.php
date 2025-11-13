@@ -902,8 +902,16 @@ class Implementation extends BaseModel
     {
         $query = $query ?: Organization::query();
 
-        $query->whereHas('fund_providers', static function (Builder $builder) {
-            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
+        $fund_ids = self::activeFundsQuery()->select('id');
+
+        if (Arr::has($options, 'fund_id') || Arr::has($options, 'fund_ids')) {
+            $fund_ids = Arr::has($options, 'fund_id')
+                ? [Arr::get($options, 'fund_id')]
+                : Arr::get($options, 'fund_ids');
+        }
+
+        $query->whereHas('fund_providers', static function (Builder $builder) use ($fund_ids) {
+            $builder->whereIn('fund_id', $fund_ids);
             FundProviderQuery::whereApproved($builder);
         });
 
@@ -925,14 +933,6 @@ class Implementation extends BaseModel
 
         if ($organization_id = array_get($options, 'organization_id')) {
             $query->where('id', $organization_id);
-        }
-
-        if ($fund_id = array_get($options, 'fund_id')) {
-            $query->whereRelation('supplied_funds', 'funds.id', $fund_id);
-        }
-
-        if ($fund_ids = array_get($options, 'fund_ids')) {
-            $query->whereRelation('supplied_funds', fn (Builder $b) => $b->whereIn('funds.id', $fund_ids));
         }
 
         if ($q = array_get($options, 'q')) {
