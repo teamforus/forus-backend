@@ -11,7 +11,6 @@ use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
-use App\Models\FundProviderUnsubscribe;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -45,7 +44,6 @@ use App\Policies\FundProviderChatMessagePolicy;
 use App\Policies\FundProviderChatPolicy;
 use App\Policies\FundProviderInvitationPolicy;
 use App\Policies\FundProviderPolicy;
-use App\Policies\FundProviderUnsubscribePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
@@ -124,7 +122,6 @@ class AuthServiceProvider extends ServiceProvider
         VoucherTransactionBulk::class => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class => FundProviderChatMessagePolicy::class,
-        FundProviderUnsubscribe::class => FundProviderUnsubscribePolicy::class,
         MollieConnectionProfile::class => MollieConnectionProfilePolicy::class,
         ReservationExtraPayment::class => ReservationExtraPaymentPolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,

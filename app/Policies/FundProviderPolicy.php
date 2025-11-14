@@ -7,7 +7,12 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\ProductReservation;
+use App\Models\Voucher;
+use App\Scopes\Builders\ProductReservationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class FundProviderPolicy
 {
@@ -186,5 +191,46 @@ class FundProviderPolicy
         $doesntHaveTransactions = !$fundProvider->hasTransactions();
 
         return $isPending && $hasPermission && $doesntHaveTransactions;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundProvider $fundProvider
+     * @param Organization $organization
+     * @return true|Response
+     */
+    public function unsubscribeProvider(
+        Identity $identity,
+        FundProvider $fundProvider,
+        Organization $organization
+    ): true|Response {
+        if (!$this->updateProvider($identity, $fundProvider, $organization)) {
+            return $this->deny(__('policies.fund_providers.unauthorized_action'));
+        }
+
+        $vouchersQuery = VoucherQuery::whereNotInUseQuery(
+            $fundProvider->fund
+                ->product_vouchers()
+                ->whereIn('product_id', $organization->products()->select('id'))
+                ->whereNull('product_reservation_id')
+                ->where('state', Voucher::STATE_PENDING)
+        );
+
+        if ($vouchersQuery->count()) {
+            return $this->deny(__('policies.fund_providers.not_resolved_vouchers'));
+        }
+
+        $reservationsQuery = ProductReservationQuery::whereNotResolved(
+            ProductReservationQuery::whereProviderFilter(
+                ProductReservation::query()->whereIn('voucher_id', $fundProvider->fund->vouchers()->select('id')),
+                $organization->id
+            )
+        );
+
+        if ($reservationsQuery->count()) {
+            return $this->deny(__('policies.fund_providers.not_resolved_reservations'));
+        }
+
+        return true;
     }
 }
