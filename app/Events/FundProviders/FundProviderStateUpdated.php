@@ -10,6 +10,7 @@ class FundProviderStateUpdated extends BaseFundProviderEvent
     protected mixed $approvedBefore;
     protected mixed $approvedAfter;
     protected mixed $originalState;
+    protected ?string $note;
 
     /**
      * @param FundProvider $fundProvider
@@ -22,6 +23,7 @@ class FundProviderStateUpdated extends BaseFundProviderEvent
         $this->approvedBefore = Arr::get($eventData, 'approvedBefore');
         $this->approvedAfter = Arr::get($eventData, 'approvedAfter');
         $this->originalState = Arr::get($eventData, 'originalState');
+        $this->note = Arr::get($eventData, 'note');
     }
 
     /**
@@ -46,5 +48,13 @@ class FundProviderStateUpdated extends BaseFundProviderEvent
     public function getApprovedAfter(): bool
     {
         return $this->approvedAfter;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getNote(): ?string
+    {
+        return $this->note;
     }
 }

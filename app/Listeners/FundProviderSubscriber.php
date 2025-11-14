@@ -18,6 +18,7 @@ use App\Notifications\Organizations\FundProviders\FundProvidersRevokedBudgetNoti
 use App\Notifications\Organizations\FundProviders\FundProvidersRevokedProductsNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersStateAcceptedNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersStateRejectedNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersStateUnsubscribedNotification;
 use Illuminate\Events\Dispatcher;
 
 class FundProviderSubscriber
@@ -36,6 +37,7 @@ class FundProviderSubscriber
             'fund_provider_approved_before' => $event->getApprovedBefore(),
             'fund_provider_approved_after' => $event->getApprovedAfter(),
             'fund_provider_original_state' => $originalState,
+            'note' => $event->getNote(),
         ];
 
         if ($fundProvider->isAccepted()) {
@@ -52,6 +54,11 @@ class FundProviderSubscriber
             if ($event->getApprovedBefore() || ($originalState == $fundProvider::STATE_PENDING)) {
                 FundProvidersStateRejectedNotification::send($eventLog);
             }
+        }
+
+        if ($fundProvider->isUnsubscribed()) {
+            $eventLog = $fundProvider->log($fundProvider::EVENT_STATE_UNSUBSCRIBED, $models, $raw);
+            FundProvidersStateUnsubscribedNotification::send($eventLog);
         }
     }
 

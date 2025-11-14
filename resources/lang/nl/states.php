@@ -5,6 +5,7 @@ return [
         'pending' => 'Wachtend',
         'accepted' => 'Geaccepteerd',
         'rejected' => 'Geweigerd',
+        'unsubscribed' => 'Afmeldingen',
     ],
     'fund_requests' => [
         'pending' => 'Wachten',

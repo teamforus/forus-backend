@@ -43,10 +43,6 @@ use Illuminate\Support\Facades\Event;
  * @property-read int|null $fund_provider_products_count
  * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products_with_trashed
  * @property-read int|null $fund_provider_products_with_trashed_count
- * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes
- * @property-read int|null $fund_unsubscribes_count
- * @property-read Collection|\App\Models\FundProviderUnsubscribe[] $fund_unsubscribes_active
- * @property-read int|null $fund_unsubscribes_active_count
  * @property-read string $state_locale
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -79,6 +75,7 @@ class FundProvider extends BaseModel
     public const string EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
     public const string EVENT_STATE_ACCEPTED = 'state_accepted';
     public const string EVENT_STATE_REJECTED = 'state_rejected';
+    public const string EVENT_STATE_UNSUBSCRIBED = 'state_unsubscribed';
     public const string EVENT_APPROVED_BUDGET = 'approved_budget';
     public const string EVENT_REVOKED_BUDGET = 'revoked_budget';
     public const string EVENT_APPROVED_PRODUCTS = 'approved_products';
@@ -91,11 +88,13 @@ class FundProvider extends BaseModel
     public const string STATE_PENDING = 'pending';
     public const string STATE_ACCEPTED = 'accepted';
     public const string STATE_REJECTED = 'rejected';
+    public const string STATE_UNSUBSCRIBED = 'unsubscribed';
 
     public const array STATES = [
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
+        self::STATE_UNSUBSCRIBED,
     ];
 
     /**
@@ -151,7 +150,7 @@ class FundProvider extends BaseModel
             'archived' => static::queryArchived($organization)->count(),
             'available' => static::queryAvailableFunds($organization)->count(),
             'invitations' => static::queryInvitationsActive($organization)->count(),
-            'unsubscriptions' => static::queryUnsubscriptions($organization)->count(),
+            'unsubscribed' => static::queryUnsubscribed($organization)->count(),
             'invitations_archived' => static::queryInvitationsArchived($organization)->count(),
         ];
     }
@@ -165,6 +164,7 @@ class FundProvider extends BaseModel
         return $organization
             ->fund_providers()
             ->whereNotIn('id', self::queryActive($organization)->select('id'))
+            ->whereNotIn('id', self::queryUnsubscribed($organization)->select('id'))
             ->whereNotIn('id', self::queryArchived($organization)->select('id'));
     }
 
@@ -192,13 +192,22 @@ class FundProvider extends BaseModel
 
     /**
      * @param Organization $organization
+     * @param bool $withUnsubscribed
      * @return Builder
      */
-    public static function queryAvailableFunds(Organization $organization): Builder
+    public static function queryAvailableFunds(Organization $organization, bool $withUnsubscribed = false): Builder
     {
+        if ($withUnsubscribed) {
+            $fundProviderIds = $organization->fund_providers()
+                ->where('state', '!=', FundProvider::STATE_UNSUBSCRIBED)
+                ->pluck('fund_id');
+        } else {
+            $fundProviderIds = $organization->fund_providers()->pluck('fund_id');
+        }
+
         $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED)
             ->where('external', false)
-            ->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'))
+            ->whereNotIn('id', $fundProviderIds)
             ->whereRelation('fund_config', 'allow_provider_sign_up', true);
 
         FundQuery::whereIsInternal($query);
@@ -237,11 +246,11 @@ class FundProvider extends BaseModel
      * @param Organization $organization
      * @return Builder|Relation
      */
-    public static function queryUnsubscriptions(Organization $organization): Builder|Relation
+    public static function queryUnsubscribed(Organization $organization): Builder|Relation
     {
-        return FundProviderUnsubscribe::whereHas('fund_provider', fn (Builder $q) => $q->where([
-            'organization_id' => $organization->id,
-        ]));
+        return $organization->fund_providers()
+            ->where('state', self::STATE_UNSUBSCRIBED)
+            ->whereNotIn('id', static::queryArchived($organization)->select('id'));
     }
 
     /**
@@ -301,26 +310,6 @@ class FundProvider extends BaseModel
     }
 
     /**
-     * @return HasMany
-     * @noinspection PhpUnused
-     */
-    public function fund_unsubscribes(): HasMany
-    {
-        return $this->hasMany(FundProviderUnsubscribe::class);
-    }
-
-    /**
-     * @return HasMany
-     * @noinspection PhpUnused
-     */
-    public function fund_unsubscribes_active(): HasMany
-    {
-        return $this->hasMany(FundProviderUnsubscribe::class)->where([
-            'canceled' => false,
-        ]);
-    }
-
-    /**
      * @return bool
      */
     public function isPending(): bool
@@ -342,6 +331,14 @@ class FundProvider extends BaseModel
     public function isRejected(): bool
     {
         return $this->state === self::STATE_REJECTED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUnsubscribed(): bool
+    {
+        return $this->state === self::STATE_UNSUBSCRIBED;
     }
 
     /**
@@ -549,9 +546,10 @@ class FundProvider extends BaseModel
 
     /**
      * @param string $state
+     * @param string|null $note
      * @return void
      */
-    public function setState(string $state): void
+    public function setState(string $state, ?string $note = null): void
     {
         $originalState = $this->state;
 
@@ -560,20 +558,8 @@ class FundProvider extends BaseModel
         $approvedAfter = $this->isApproved();
 
         FundProviderStateUpdated::dispatch($this, compact([
-            'originalState', 'approvedBefore', 'approvedAfter',
+            'originalState', 'approvedBefore', 'approvedAfter', 'note',
         ]));
-    }
-
-    /**
-     * @return bool
-     */
-    public function canUnsubscribe(): bool
-    {
-        return
-            $this->isAccepted() &&
-            $this->fund_unsubscribes->where(fn (
-                FundProviderUnsubscribe $unsubscribe
-            ) => $unsubscribe->isPending() && !$unsubscribe->canceled)->isEmpty();
     }
 
     /**

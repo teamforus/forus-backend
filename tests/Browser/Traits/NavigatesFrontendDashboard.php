@@ -38,26 +38,39 @@ trait NavigatesFrontendDashboard
     /**
      * @param Browser $browser
      * @param string|null $tab
-     * @param bool|null $skipPageNavigation
      * @throws TimeoutException
      * @return void
      */
-    protected function goToProviderFundsPage(
-        Browser $browser,
-        ?string $tab = null,
-        ?bool $skipPageNavigation = false,
-    ): void {
-        if (!$skipPageNavigation) {
-            $browser->waitFor('@asideMenuGroupSales');
-            $browser->element('@asideMenuGroupSales')->click();
-            $browser->waitFor('@fundsPage');
-            $browser->element('@fundsPage')->click();
-        }
+    protected function goToProviderFundsPage(Browser $browser, ?string $tab = null): void
+    {
+        $browser->waitFor('@asideMenuGroupSales');
+        $browser->element('@asideMenuGroupSales')->click();
+        $browser->waitFor('@fundsPage');
+        $browser->element('@fundsPage')->click();
 
-        if ($tab === 'funds_available') {
-            $browser->waitFor('@fundsAvailableTab');
-            $browser->element('@fundsAvailableTab')->click();
-            $browser->waitFor('@tableFundsAvailableContent');
+        switch ($tab) {
+            case 'funds_available':
+                $browser->waitFor('@fundsAvailableTab');
+                $browser->element('@fundsAvailableTab')->click();
+                $browser->waitFor('@tableFundsAvailableContent');
+                break;
+            case 'funds_active':
+                $browser->waitFor('@fundsActiveTab');
+                $browser->element('@fundsActiveTab')->click();
+                $browser->waitFor('@activeTableFundsContent');
+                break;
+            case 'funds_pending':
+                $browser->waitFor('@fundsPendingTab');
+                $browser->element('@fundsPendingTab')->click();
+                $browser->waitFor('@pending_rejectedTableFundsContent');
+                break;
+            case 'funds_unsubscribed':
+                $browser->waitFor('@fundsUnsubscribedTab');
+                $browser->element('@fundsUnsubscribedTab')->click();
+                $browser->waitFor('@unsubscribedTableFundsContent');
+                break;
+            default:
+                break;
         }
     }
 

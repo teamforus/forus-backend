@@ -22,6 +22,7 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_fund_providers.state_accepted' => ['database', 'mail'],
         'notifications_fund_providers.state_rejected' => ['database', 'mail'],
+        'notifications_fund_providers.state_unsubscribed' => ['database', 'mail'],
 
         'notifications_identities.requester_provider_approved_budget' => ['database'],
         'notifications_identities.requester_provider_approved_products' => [], // TODO can database notifications be removed

@@ -94,4 +94,9 @@ return [
     'employees' => [
         'cant_delete_if_default_validator_exists' => 'De Standaard beoordelaar kan niet worden verwijderd. Neem contact op met support',
     ],
+    'fund_providers' => [
+        'unauthorized_action' => 'Deze actie is niet toegestaan.',
+        'not_resolved_vouchers' => 'There are some not resolved product vouchers in sponsor',
+        'not_resolved_reservations' => 'There are some not resolved product reservations',
+    ],
 ];

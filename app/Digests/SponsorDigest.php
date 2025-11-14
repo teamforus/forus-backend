@@ -144,12 +144,12 @@ class SponsorDigest extends BaseOrganizationDigest
         $emailBody = new MailBodyBuilder();
 
         $fundProvidersList = $organization->funds_active->map(function (Fund $fund) use ($organization) {
-            $query = FundProvider::query()
+            $query = FundProvider::with('organization')
                 ->where('fund_id', $fund->id)
-                ->where(fn (Builder $builder) => FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id))
-                ->with('organization');
+                ->where('state', FundProvider::STATE_UNSUBSCRIBED);
 
-            $query->whereHas('fund_unsubscribes_active', function (Builder $builder) use ($organization) {
+            $query->whereHas('logs', function (Builder $builder) use ($organization) {
+                $builder->where('event', FundProvider::EVENT_STATE_UNSUBSCRIBED);
                 $builder->where('created_at', '>=', $this->getLastOrganizationDigestTime($organization));
             });
 

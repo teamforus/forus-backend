@@ -106,6 +106,17 @@
             "content": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen."
         }
     },
+    "notifications_fund_providers.state_unsubscribed": {
+      "mail": {
+        "title": "Aanbieder heeft zich afgemeld",
+        "template": "notifications_fund_providers/state_unsubscribed.md"
+      },
+      "push": {},
+      "database": {
+        "title": "Aanbieder heeft zich afgemeld",
+        "content": "Aanbieder heeft zich afgemeld"
+      }
+    },
     "notifications_fund_providers.sponsor_message": {
         "mail": {},
         "push": {},

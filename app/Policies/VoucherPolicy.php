@@ -521,6 +521,12 @@ class VoucherPolicy
             return $this->deny('provider_declined');
         }
 
+        // No approved identity organizations but have unsubscribed
+        if ($providers->intersect($approved)->count() === 0 &&
+            $providers->intersect($unsubscribed)->count() > 0) {
+            return $this->deny('provider_unsubscribed');
+        }
+
         // No approved identity organizations but have pending
         if ($voucher->isBudgetType()) {
             return $providers->intersect($approved)->count() > 0;
@@ -647,6 +653,10 @@ class VoucherPolicy
                     $builder->where('allow_budget', false);
                 });
             })->pluck('organization_id');
+
+            $unsubscribed = $voucher->fund->providers()->where(function (Builder $builder) {
+                $builder->where('state', FundProvider::STATE_UNSUBSCRIBED);
+            })->pluck('organization_id');
         } else {
             if ($voucher->product->expired) {
                 return $this->deny('product_expired');
@@ -675,8 +685,12 @@ class VoucherPolicy
             $pending = $voucher->fund->providers()
                 ->where('state', FundProvider::STATE_PENDING)
                 ->pluck('organization_id')->diff($approved)->values();
+
+            $unsubscribed = $voucher->fund->providers()
+                ->where('state', FundProvider::STATE_UNSUBSCRIBED)
+                ->pluck('organization_id')->diff($approved)->values();
         }
 
-        return compact('approved', 'declined', 'pending');
+        return compact('approved', 'declined', 'pending', 'unsubscribed');
     }
 }

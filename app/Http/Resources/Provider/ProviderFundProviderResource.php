@@ -19,7 +19,6 @@ class ProviderFundProviderResource extends BaseJsonResource
         'fund.fund_config.implementation',
         'organization.logo.presets',
         'fund_provider_products',
-        'fund_unsubscribes',
     ];
 
     /**
@@ -40,7 +39,6 @@ class ProviderFundProviderResource extends BaseJsonResource
             'products' => $fundProvider->fund_provider_products->pluck('product_id'),
             'organization' => new OrganizationTinyResource($fundProvider->organization),
             'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
-            'can_unsubscribe' => $fundProvider->canUnsubscribe(),
         ]);
     }
 }
