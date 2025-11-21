@@ -8,6 +8,7 @@ use App\Events\ProductReservations\ProductReservationPending;
 use App\Events\ProductReservations\ProductReservationRejected;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentCreated;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Models\Traits\HasNotes;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
@@ -123,6 +124,7 @@ use Throwable;
 class ProductReservation extends BaseModel
 {
     use HasLogs;
+    use HasNotes;
     use SoftDeletes;
 
     public const string EVENT_CREATED = 'created';
