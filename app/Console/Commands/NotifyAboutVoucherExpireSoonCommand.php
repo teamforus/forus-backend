@@ -33,41 +33,43 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
     public function handle(): void
     {
         /** @var Voucher[] $vouchers */
-        $vouchers = $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()))->get();
+        $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()))->chunk(100, function ($vouchers) {
+            foreach ($vouchers as $voucher) {
+                $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
 
-        foreach ($vouchers as $voucher) {
-            $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
+                $has6weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
+                    $builder->whereIn('event', [
+                        Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                        Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                    ]);
+                    $builder->whereBetween('created_at', [
+                        $voucher->expire_at->clone()->subWeeks(6)->startOfDay(),
+                        $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                    ]);
+                })->exists();
 
-            $has6weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
-                $builder->whereIn('event', [
-                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
-                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
-                ]);
-                $builder->whereBetween('created_at', [
-                    $voucher->expire_at->clone()->subWeeks(6)->startOfDay(),
-                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
-                ]);
-            })->exists();
+                if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3)) {
+                    VoucherExpireSoon::dispatch($voucher);
+                }
 
-            if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3)) {
-                VoucherExpireSoon::dispatch($voucher);
+                $has3weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
+                    $builder->whereIn('event', [
+                        Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                        Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                    ]);
+                    $builder->whereBetween('created_at', [
+                        $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                        $voucher->expire_at->clone()->endOfDay(),
+                    ]);
+                })->exists();
+
+                if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0)) {
+                    VoucherExpireSoon::dispatch($voucher);
+                }
             }
 
-            $has3weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
-                $builder->whereIn('event', [
-                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
-                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
-                ]);
-                $builder->whereBetween('created_at', [
-                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
-                    $voucher->expire_at->clone()->endOfDay(),
-                ]);
-            })->exists();
-
-            if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0)) {
-                VoucherExpireSoon::dispatch($voucher);
-            }
-        }
+            sleep(10);
+        });
     }
 
     /**
