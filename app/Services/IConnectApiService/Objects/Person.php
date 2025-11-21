@@ -131,7 +131,7 @@ class Person extends BasePerson
      * @param string $scope
      * @return Child[]|ParentPerson[]|Partner[]|array
      */
-    public function geRelated(string $scope): array
+    public function getRelated(string $scope): array
     {
         return match ($scope) {
             'partners' => $this->getPartners(),
@@ -148,7 +148,7 @@ class Person extends BasePerson
      */
     public function getRelatedByIndex(string $scope, int $scopeId): ?BasePerson
     {
-        $persons = $this->geRelated($scope);
+        $persons = $this->getRelated($scope);
 
         return Arr::first($persons, static function (BasePerson $child) use ($scopeId) {
             return $child->getIndex() === $scopeId;

@@ -111,6 +111,14 @@ abstract class BasePerson implements PersonInterface
     }
 
     /**
+     * @return string
+     */
+    public function getAddress(): string
+    {
+        return '';
+    }
+
+    /**
      * @return array|string[]|null[]
      */
     public function toArray(): array
@@ -149,7 +157,7 @@ abstract class BasePerson implements PersonInterface
      * @param string $scope
      * @return array
      */
-    public function geRelated(string $scope): array
+    public function getRelated(string $scope): array
     {
         return [];
     }

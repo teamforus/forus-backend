@@ -245,6 +245,8 @@ class Fund extends BaseModel
     public const string STATE_PAUSED = 'paused';
     public const string STATE_WAITING = 'waiting';
 
+    public const string CHILDREN_SAME_ADDRESS_PREFILL_RECORD_TYPE_KEY = 'children_same_address_nth';
+
     public const array STATES = [
         self::STATE_ACTIVE,
         self::STATE_CLOSED,
@@ -1903,6 +1905,82 @@ class Fund extends BaseModel
     }
 
     /**
+     * @param string $bsn
+     * @return Collection|\Illuminate\Support\Collection
+     */
+    public function getPrefills(string $bsn): Collection|\Illuminate\Support\Collection
+    {
+        $bsnRecordTypes = PersonBsnApiRecordType::query()
+            ->whereIn('record_type_key', $this->criteria->pluck('record_type_key')->toArray())
+            ->get();
+
+        $cacheKey = 'bsn_prefill_data_' . $this->id . '_' . $bsn;
+        $cacheTime = Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15);
+
+        /** @var PersonInterface $person */
+        $person = Cache::remember($cacheKey, $cacheTime, function () use ($bsn) {
+            return PersonBsnApiManager::make($this->organization)->driver()->getPerson($bsn, [
+                'parents', 'children', 'partners',
+            ]);
+        });
+
+        if (!$person || ($person->response() && !$person->response()->success())) {
+            return collect();
+        }
+
+        $data = $person->getData();
+
+        return $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data, $person) {
+            $rawValue = Arr::get($data, $bsnRecordType->person_bsn_api_field);
+
+            $value = match ($bsnRecordType->record_type_key) {
+                static::CHILDREN_SAME_ADDRESS_PREFILL_RECORD_TYPE_KEY => $this->getChildrenSameAddressCountPrefill(
+                    $person
+                ),
+                default => $bsnRecordType->parsePersonValue(
+                    is_numeric($rawValue) || is_string($rawValue) ? $rawValue : '',
+                    $bsnRecordType->record_type->control_type,
+                ),
+            };
+
+            return [
+                'record_type_key' => $bsnRecordType->record_type_key,
+                'value' => $value,
+            ];
+        });
+    }
+
+    /**
+     * @param PersonInterface $person
+     * @return int
+     */
+    public function getChildrenSameAddressCountPrefill(PersonInterface $person): int
+    {
+        $count = 0;
+        $address = $person->getAddress();
+        $cacheTime = Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15);
+        $bsnService = PersonBsnApiManager::make($this->organization)->driver();
+
+        /** @var PersonInterface $child */
+        foreach ($person->getRelated('children') as $child) {
+            if ($bsn = $child->getBSN()) {
+                $cacheKey = 'bsn_prefill_data_' . $this->id . '_' . $bsn;
+
+                /** @var PersonInterface $personChild */
+                $personChild = Cache::remember($cacheKey, $cacheTime, function () use ($bsn, $bsnService) {
+                    return $bsnService->getPerson($bsn);
+                });
+
+                if ($personChild && $personChild->response()->success() && $address === $personChild->getAddress()) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Update existing or create new fund criterion.
      * @param array $criterion
      * @param bool $textsOnly
@@ -1959,44 +2037,5 @@ class Fund extends BaseModel
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
-    }
-
-    /**
-     * @param string $bsn
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    public function getPrefills(string $bsn): Collection|\Illuminate\Support\Collection
-    {
-        $bsnRecordTypes = PersonBsnApiRecordType::query()
-            ->whereIn('record_type_key', $this->criteria->pluck('record_type_key')->toArray())
-            ->get();
-
-        $cacheKey = 'bsn_prefill_data_' . $this->id . '_' . $bsn;
-        $cacheTime = Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15);
-
-        /** @var PersonInterface $person */
-        $person = Cache::remember($cacheKey, $cacheTime, function () use ($bsn) {
-            return PersonBsnApiManager::make($this->organization)->driver()->getPerson($bsn, [
-                'parents', 'children', 'partners',
-            ]);
-        });
-
-        if (!$person || ($person->response() && !$person->response()->success())) {
-            return collect();
-        }
-
-        $data = $person->getData();
-
-        return $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data) {
-            $value = Arr::get($data, $bsnRecordType->person_bsn_api_field);
-
-            return [
-                'record_type_key' => $bsnRecordType->record_type_key,
-                'value' => $bsnRecordType->parsePersonValue(
-                    is_numeric($value) || is_string($value) ? $value : '',
-                    $bsnRecordType->record_type->control_type,
-                ),
-            ];
-        });
     }
 }

@@ -30,9 +30,9 @@ class IdentityPersonArrResource extends JsonResource
 
         return array_merge($this->baseFieldsToArray($person), [
             'relations' => [
-                'parents' => $this->relationToArray($person->geRelated('parents')),
-                'partners' => $this->relationToArray($person->geRelated('partners')),
-                'children' => $this->relationToArray($person->geRelated('children')),
+                'parents' => $this->relationToArray($person->getRelated('parents')),
+                'partners' => $this->relationToArray($person->getRelated('partners')),
+                'children' => $this->relationToArray($person->getRelated('children')),
             ],
         ]);
     }
