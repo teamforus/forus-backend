@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Traits\HasDbTokens;
+use App\Scopes\Builders\PrevalidationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use RuntimeException;
 
 /**
  * App\Models\Prevalidation.
@@ -33,6 +36,7 @@ use Illuminate\Support\Collection;
  * @property-read \App\Models\Fund|null $fund
  * @property-read bool $is_used
  * @property-read \App\Models\Identity $identity
+ * @property-read \App\Models\Identity|null $identity_redeemed
  * @property-read \App\Models\Organization|null $organization
  * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
@@ -102,6 +106,14 @@ class Prevalidation extends BaseModel
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function identity_redeemed(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'redeemed_by_address', 'address');
     }
 
     /**
@@ -227,16 +239,20 @@ class Prevalidation extends BaseModel
      * @param Employee $employee
      * @param Fund $fund
      * @param array $data
+     * @param array $topUps
      * @param array $overwriteKeys
-     * @return EloquentCollection
+     * @return EloquentCollection|Prevalidation[]
      */
     public static function storePrevalidations(
         Employee $employee,
         Fund $fund,
         array $data,
-        array $overwriteKeys = []
-    ): EloquentCollection {
+        array $topUps,
+        array $overwriteKeys,
+    ): EloquentCollection|array {
         $primaryKeyName = $fund->fund_config->csv_primary_key;
+        $topUpKeys = array_pluck($topUps, 'key');
+        $updateKeys = [...$topUpKeys, ...$overwriteKeys];
 
         $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
         $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
@@ -253,16 +269,15 @@ class Prevalidation extends BaseModel
         ])->pluck('value');
 
         // only new pre validations and pre validations that have to be updated
-        $data = array_map(static function ($record) use ($existingPrimaryKeys, $fund, $overwriteKeys, $recordTypes) {
+        $data = array_reduce($data, function (array $list, array $record) use ($existingPrimaryKeys, $fund, $updateKeys, $recordTypes) {
             $primaryKey = $record[$fund->fund_config->csv_primary_key];
 
-            // already exists and not in the replace list
-            if ($existingPrimaryKeys->search($primaryKey) !== false &&
-                !in_array($primaryKey, $overwriteKeys, true)) {
-                return null;
+            // already exists and not in the replacement list
+            if ($existingPrimaryKeys->search($primaryKey) !== false && !in_array($primaryKey, $updateKeys, true)) {
+                return $list;
             }
 
-            return [
+            return [...$list, [
                 'primaryKey' => $primaryKey,
                 'record' => $record,
                 'records' => array_filter(array_map(static function ($key) use ($recordTypes, $record) {
@@ -273,17 +288,14 @@ class Prevalidation extends BaseModel
                 }, array_keys($record)), static function ($value) {
                     return (bool) $value;
                 }),
-            ];
-        }, $data);
+            ]];
+        }, []);
 
-        // filter null rows
-        $data = array_filter($data, fn ($item) => is_array($item));
-
-        $prevalidations = array_map(static function (array $records) use ($fund, $overwriteKeys, $fundPrevalidationPrimaryKey, $employee) {
-            if (in_array($records['primaryKey'], $overwriteKeys, true)) {
+        $prevalidations = array_map(static function (array $records) use ($fund, $updateKeys, $topUpKeys, $topUps, $fundPrevalidationPrimaryKey, $employee) {
+            if (in_array($records['primaryKey'], $updateKeys, true)) {
                 // find existing prevalidation to be updated
                 $prevalidation = Prevalidation::where([
-                    'state' => Prevalidation::STATE_PENDING,
+                    'state' => in_array($records['primaryKey'], $topUpKeys) ? Prevalidation::STATE_USED : Prevalidation::STATE_PENDING,
                     'identity_address' => $employee->identity_address,
                     'organization_id' => $fund->organization_id,
                     'employee_id' => $employee->id,
@@ -309,11 +321,117 @@ class Prevalidation extends BaseModel
 
             // save records
             $prevalidation->prevalidation_records()->createMany($records['records']);
+            $prevalidation->updateHashes();
 
-            return $prevalidation->updateHashes();
+            if (in_array($records['primaryKey'], $topUpKeys, true)) {
+                $voucherId = array_first(array_where($topUps, function (array $topUp) use ($records) {
+                    return $topUp['key'] === $records['primaryKey'];
+                }))['voucher_id'] ?? null;
+
+                if (!$prevalidation->makeVoucherTopUp($employee, $fund, $records['primaryKey'], $voucherId)) {
+                    throw new RuntimeException('Kan geen opwaardeertransactie uitvoeren voor ' . $records['primaryKey']);
+                }
+            }
+
+            return $prevalidation;
         }, $data);
 
         return new EloquentCollection($prevalidations);
+    }
+
+    /**
+     * @param Employee $employee
+     * @param Fund $fund
+     * @param string $primaryKey
+     * @param string|int $voucherId
+     * @return bool
+     */
+    public function makeVoucherTopUp(Employee $employee, Fund $fund, string $primaryKey, string|int $voucherId): bool
+    {
+        $voucher = $this->findVoucherForTopUp($employee, $fund, $primaryKey, $voucherId);
+        $diff = $voucher ? $this->calcVoucherTopUpAmount($fund, $voucher) : null;
+
+        if ($voucher && $diff > 0) {
+            $voucher->makeSponsorTopUpTransaction($employee, $diff, 'Top up-transactie vanwege prevalidatie-update.');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Employee $employee
+     * @param string|array|null $uid
+     * @return array
+     */
+    public static function getDbState(
+        Organization $organization,
+        Fund $fund,
+        Employee $employee,
+        null|string|array $uid = null,
+    ): array {
+        $query = PrevalidationQuery::whereVisibleToIdentity(
+            $organization->prevalidations(),
+            $employee->identity_address,
+        );
+
+        $prevalidations = $query
+            ->where(
+                fn ($query) => $uid
+                ? $query->whereHas('records', fn (Builder|PrevalidationRecord $q) => $q
+                    ->whereRelation('record_type', 'key', $fund->fund_config->csv_primary_key)
+                    ->whereIn('value', (array) $uid))
+                : $query
+            )
+            ->where('fund_id', $fund->id)
+            ->where('employee_id', $employee->id)
+            ->whereIn('state', [Prevalidation::STATE_PENDING, Prevalidation::STATE_USED])
+            ->with(['identity_redeemed'])
+            ->get();
+
+        return $prevalidations->reduce(function (array $list, Prevalidation $prevalidation) use ($fund) {
+            $vouchers = $prevalidation->identity_redeemed
+                ? VoucherQuery::whereActive(Voucher::query())
+                    ->where('identity_id', '=', $prevalidation->identity_redeemed->id)
+                    ->where('fund_id', $fund->id)
+                    ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)
+                    ->whereNull('product_id')
+                    ->get()
+                    ->map(fn ($voucher) => [
+                        'id' => $voucher->id,
+                        'amount' => $voucher->amount_total,
+                    ])->toArray()
+                : [];
+
+            return [...$list, [
+                ...$prevalidation->only([
+                    'id', 'state', 'uid_hash', 'records_hash',
+                ]),
+                'vouchers' => $vouchers,
+            ]];
+        }, []);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @return array
+     */
+    public static function getCollectionState(Fund $fund, array $data): array
+    {
+        return array_map(static function ($row) use ($fund) {
+            ksort($row);
+
+            return [
+                'data' => $row,
+                'uid_hash' => hash('sha256', $row[$fund->fund_config->csv_primary_key]),
+                'records_hash' => hash('sha256', json_encode($row)),
+                'records_amount' => currency_format($fund->amountForIdentity(null, records: $row)),
+            ];
+        }, $data);
     }
 
     /**
@@ -365,5 +483,43 @@ class Prevalidation extends BaseModel
                 Prevalidation::whereUid($value)->doesntExist() &&
                 Voucher::whereActivationCode('activation_code')->doesntExist();
         }, 4, 2);
+    }
+
+    /**
+     * @param Employee $employee
+     * @param Fund $fund
+     * @param string $primaryKey
+     * @param string|int $voucherId
+     * @return Voucher|null
+     */
+    protected function findVoucherForTopUp(Employee $employee, Fund $fund, string $primaryKey, string|int $voucherId): ?Voucher
+    {
+        $state = self::getDbState($employee->organization, $fund, $employee, $primaryKey);
+        $vouchers = array_get($state, '0.vouchers');
+        $targetVoucherId = array_get($state, '0.vouchers.0.id');
+
+        if (count($state) == 1 && count($vouchers) == 1 && $targetVoucherId == $voucherId) {
+            return $fund->vouchers()->find($targetVoucherId);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Voucher $voucher
+     * @return Voucher|null
+     */
+    protected function calcVoucherTopUpAmount(Fund $fund, Voucher $voucher): ?string
+    {
+        $records = $this->records()->get()
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
+            ->toArray();
+
+        $amount = $fund->amountForIdentity(identity: null, records: $records);
+
+        log_debug($amount, $voucher->amount_total);
+
+        return currency_format($amount - $voucher->amount_total);
     }
 }

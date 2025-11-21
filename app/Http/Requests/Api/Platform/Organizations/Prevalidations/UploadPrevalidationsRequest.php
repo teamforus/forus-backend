@@ -62,6 +62,9 @@ class UploadPrevalidationsRequest extends BaseFormRequest
             ],
             'overwrite' => 'nullable|array',
             'overwrite.*' => 'required',
+            'top_up' => 'nullable|array',
+            'top_up.*.key' => 'required',
+            'top_up.*.voucher_id' => 'required',
             ...$this->uploadedCSVFileRules(),
         ];
     }

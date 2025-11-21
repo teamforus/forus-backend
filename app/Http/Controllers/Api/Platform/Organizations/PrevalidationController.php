@@ -16,6 +16,7 @@ use App\Scopes\Builders\PrevalidationQuery;
 use App\Searches\PrevalidationSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PrevalidationController extends Controller
@@ -55,16 +56,19 @@ class PrevalidationController extends Controller
         $this->authorize('create', [Prevalidation::class, $organization]);
 
         return PrevalidationResource::create(Prevalidation::storePrevalidations(
-            $request->employee($organization),
-            Fund::find($request->input('fund_id')),
-            [$request->input('data')]
-        )->first());
+            employee: $request->employee($organization),
+            fund: Fund::find($request->input('fund_id')),
+            data: [$request->input('data')],
+            topUps: [],
+            overwriteKeys: [],
+        )->load(PrevalidationResource::LOAD)->first());
     }
 
     /**
      * @param UploadPrevalidationsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
+     * @throws \Throwable
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request,
@@ -72,26 +76,35 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('create', [Prevalidation::class, $organization]);
 
+        DB::beginTransaction();
+
         $file = $request->post('file');
         $fund = Fund::find($request->input('fund_id'));
         $data = $request->input('data', []);
+        $overwrite = $request->input('overwrite', []);
+        $topUp = $request->input('top_up', []);
 
         $employee = $request->employee($organization);
         $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATIONS, $file, $data);
 
         $prevalidations = Prevalidation::storePrevalidations(
-            $employee,
-            $fund,
-            $data,
-            $request->input('overwrite', [])
-        )->load(PrevalidationResource::LOAD);
+            employee: $employee,
+            fund: $fund,
+            data: $data,
+            topUps: $topUp,
+            overwriteKeys: $overwrite,
+        );
 
         $event?->forceFill([
             'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->top_up' => $topUp,
+            'data->uploaded_file_meta->overwrite' => $overwrite,
             'data->uploaded_file_meta->created_ids' => $prevalidations->pluck('id')->toArray(),
         ])?->update();
 
-        return PrevalidationResource::collection($prevalidations);
+        DB::commit();
+
+        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::LOAD));
     }
 
     /**
@@ -108,28 +121,13 @@ class PrevalidationController extends Controller
         $this->authorize('create', [Prevalidation::class, $organization]);
 
         $fund = Fund::find($request->input('fund_id'));
-        $primaryKey = $fund->fund_config->csv_primary_key;
+        $data = $request->input('data', []);
 
-        $query = PrevalidationQuery::whereVisibleToIdentity(
-            $organization->prevalidations(),
-            $request->auth_address(),
-        );
+        $uids = array_pluck($data, $fund->fund_config->csv_primary_key);
 
         return [
-            'db' => $query->where([
-                'fund_id' => $fund->id,
-                'employee_id' => $request->employee($organization)->id,
-                'state' => Prevalidation::STATE_PENDING,
-            ])->select(['id', 'uid_hash', 'records_hash'])->get()->toArray(),
-            'collection' => array_map(static function ($row) use ($primaryKey) {
-                ksort($row);
-
-                return [
-                    'data' => $row,
-                    'uid_hash' => hash('sha256', $row[$primaryKey]),
-                    'records_hash' => hash('sha256', json_encode($row)),
-                ];
-            }, $request->input('data', [])),
+            'db' => Prevalidation::getDbState($organization, $fund, $request->employee($organization), $uids),
+            'collection' => Prevalidation::getCollectionState($fund, $data),
         ];
     }
 
