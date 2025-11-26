@@ -675,6 +675,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->post('unarchive', "Api\Platform\Organizations\ProductReservationsController@unarchive");
         $router->get('extra-payments/fetch', "Api\Platform\Organizations\ProductReservationsController@fetchExtraPayment");
         $router->post('extra-payments/refund', "Api\Platform\Organizations\ProductReservationsController@refundExtraPayment");
+        $router->get('notes', "Api\Platform\Organizations\ProductReservationsController@notes");
+        $router->post('notes', "Api\Platform\Organizations\ProductReservationsController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\ProductReservationsController@destroyNote");
     });
 
     $router->resource(
