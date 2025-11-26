@@ -60,10 +60,13 @@ class ProductReservationsController extends Controller
             });
         });
 
-        $search = new ProductReservationsSearch($request->only([
-            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
-            'order_by', 'order_dir',
-        ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
+        $search = new ProductReservationsSearch([
+            ...$request->only([
+                'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+                'order_by', 'order_dir',
+            ]),
+            'q_type' => 'provider',
+        ], ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
         return ProductReservationResource::queryCollection($search->query());
     }
