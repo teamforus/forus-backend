@@ -110,6 +110,7 @@ class FilePolicy
         if ($file->fileable && in_array($file->type, [
             'fund_request_record_proof',
             'fund_request_clarification_proof',
+            'product_reservation_custom_field',
         ])) {
             return false;
         }

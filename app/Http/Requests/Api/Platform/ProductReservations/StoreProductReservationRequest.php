@@ -11,6 +11,7 @@ use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class StoreProductReservationRequest extends BaseFormRequest
 {
@@ -156,15 +157,34 @@ class StoreProductReservationRequest extends BaseFormRequest
             return [];
         }
 
-        return (array) $product->getReservationFields()->reduce(fn (array $result, ReservationField $field) => [
-            ...$result,
-            "custom_fields.$field->id" => array_filter([
-                $field->required ? 'required' : 'nullable',
-                $field->type === $field::TYPE_NUMBER ? 'int' : 'string',
-                $field->type === $field::TYPE_TEXT ? 'max:200' : null,
-            ]),
-        ], [
+        $rules = [
             'custom_fields' => 'nullable|array',
-        ]);
+        ];
+
+        foreach ($product->getReservationFields() as $field) {
+            $fieldRules = [$field->required ? 'required' : 'nullable'];
+
+            $fieldRules = [
+                ...$fieldRules,
+                ...match ($field->type) {
+                    ReservationField::TYPE_TEXT => ['string', 'max:200'],
+                    ReservationField::TYPE_NUMBER => ['int'],
+                    ReservationField::TYPE_FILE => [
+                        'string',
+                        'max:255',
+                        Rule::exists('files', 'uid')
+                            ->whereNull('fileable_id')
+                            ->whereNull('fileable_type')
+                            ->where('type', 'product_reservation_custom_field')
+                            ->where('identity_address', $this->auth_address()),
+                    ],
+                    default => ['string'],
+                },
+            ];
+
+            $rules["custom_fields.$field->id"] = array_filter($fieldRules);
+        }
+
+        return $rules;
     }
 }

@@ -68,6 +68,13 @@ class UpdateOrganizationReservationSettingsRequest extends BaseOrganizationReque
         return [
             'fields' => 'nullable|array|max:10',
             'fields.*' => 'required|array',
+            'fields.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('reservation_fields', 'id')
+                    ->where('organization_id', $this->organization->id)
+                    ->whereNull('product_id'),
+            ],
             'fields.*.type' => [
                 'required',
                 Rule::in(ReservationField::TYPES),
