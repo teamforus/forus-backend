@@ -1127,9 +1127,9 @@ class Product extends BaseModel
     }
 
     /**
-     * @return Collection
+     * @return Collection|ReservationField[]
      */
-    public function getReservationFields(): Collection
+    public function getReservationFields(): Collection|array
     {
         return match ($this->reservation_fields_config) {
             Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->reservation_fields,

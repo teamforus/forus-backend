@@ -26,6 +26,7 @@ class ProductReservationResource extends BaseProductReservationResource
         'extra_payment.refunds',
         'extra_payment.refunds_active',
         'custom_fields.reservation_field',
+        'custom_fields.files',
         'fund_provider_product_with_trashed',
     ];
 

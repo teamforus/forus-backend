@@ -49,11 +49,13 @@ class ReservationField extends BaseModel
     use HasOnDemandTranslations;
 
     public const string TYPE_TEXT = 'text';
+    public const string TYPE_FILE = 'file';
     public const string TYPE_NUMBER = 'number';
     public const string TYPE_BOOLEAN = 'boolean';
 
     public const array TYPES = [
         self::TYPE_TEXT,
+        self::TYPE_FILE,
         self::TYPE_NUMBER,
         self::TYPE_BOOLEAN,
     ];

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 class ProductReservationFieldValueResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'files',
         'reservation_field',
     ];
 
@@ -27,6 +28,7 @@ class ProductReservationFieldValueResource extends BaseJsonResource
                 'id', 'value',
             ]),
             'label' => $this->resource->reservation_field?->label,
+            'file' => new FileResource($this->resource->files[0] ?? null),
         ];
     }
 }
