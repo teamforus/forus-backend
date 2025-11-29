@@ -29,6 +29,9 @@ class ProductReservationFieldValueResource extends BaseJsonResource
             ]),
             'label' => $this->resource->reservation_field?->label,
             'file' => new FileResource($this->resource->files[0] ?? null),
+            'reservation_field' => $this->resource->reservation_field->only([
+                'id', 'fillable_by', 'label', 'type', 'description', 'required',
+            ]),
         ];
     }
 }

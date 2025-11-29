@@ -249,6 +249,9 @@ class ProductResource extends BaseJsonResource
             'reservation_note_text' => $product->reservation_note_text,
             'reservation_fields_config' => $product->reservation_fields_config,
             'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
+            'available_reservation_fields_for_provider' => ReservationFieldResource::collection(
+                $product->getAvailableReservationFieldsForProvider()
+            ),
         ];
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -435,5 +436,22 @@ class ProductReservationPolicy
     ): bool {
         return $this->updateProvider($identity, $productReservation, $organization) &&
             $note->employee?->identity_address === $identity->address;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @param ReservationField $field
+     * @return bool
+     */
+    public function updateCustomField(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization,
+        ReservationField $field
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization) &&
+            $field->organization_id === $organization->id && $field->fillable_by === $field::FILLABLE_BY_PROVIDER;
     }
 }

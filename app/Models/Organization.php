@@ -1142,7 +1142,7 @@ class Organization extends BaseModel
             $this->reservation_fields()->updateOrCreate([
                 'id' => Arr::get($item, 'id'),
             ], [
-                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                ...Arr::only($item, ['label', 'type', 'description', 'required', 'fillable_by']),
                 'order' => $order,
             ]);
         }
@@ -1179,6 +1179,22 @@ class Organization extends BaseModel
     public function findRelatedIdentityOrFail(int $identityId): ?Identity
     {
         return IdentityQuery::relatedToOrganization(Identity::query(), $this->id)->findOrFail($identityId);
+    }
+
+    /**
+     * @return ReservationField[]|Collection
+     */
+    public function getReservationFieldsForRequester(): Collection|array
+    {
+        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_REQUESTER);
+    }
+
+    /**
+     * @return ReservationField[]|Collection
+     */
+    public function getReservationFieldsForProvider(): Collection|array
+    {
+        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_PROVIDER);
     }
 
     /**

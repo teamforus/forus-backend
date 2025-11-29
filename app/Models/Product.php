@@ -1042,7 +1042,7 @@ class Product extends BaseModel
             $this->reservation_fields()->updateOrCreate([
                 'id' => Arr::get($item, 'id'),
             ], [
-                ...Arr::only($item, ['label', 'type', 'description', 'required']),
+                ...Arr::only($item, ['label', 'type', 'description', 'required', 'fillable_by']),
                 'order' => $order,
                 'organization_id' => $this->organization_id,
             ]);
@@ -1132,10 +1132,38 @@ class Product extends BaseModel
     public function getReservationFields(): Collection|array
     {
         return match ($this->reservation_fields_config) {
-            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->reservation_fields,
-            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->reservation_fields,
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->getReservationFieldsForRequester(),
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->getReservationFieldsForRequester(),
             Product::CUSTOM_RESERVATION_FIELDS_NO => collect(),
         };
+    }
+
+    /**
+     * @return Collection|ReservationField[]
+     */
+    public function getAvailableReservationFieldsForProvider(): Collection|array
+    {
+        return match ($this->reservation_fields_config) {
+            Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->getReservationFieldsForProvider(),
+            Product::CUSTOM_RESERVATION_FIELDS_YES => $this->getReservationFieldsForProvider(),
+            Product::CUSTOM_RESERVATION_FIELDS_NO => collect(),
+        };
+    }
+
+    /**
+     * @return ReservationField[]|Collection
+     */
+    public function getReservationFieldsForRequester(): Collection|array
+    {
+        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_REQUESTER);
+    }
+
+    /**
+     * @return ReservationField[]|Collection
+     */
+    public function getReservationFieldsForProvider(): Collection|array
+    {
+        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_PROVIDER);
     }
 
     /**

@@ -20,7 +20,7 @@ class ReservationFieldResource extends BaseJsonResource
     {
         return [
             ...$this->resource->only([
-                'id', 'type', 'organization_id', 'required', 'order', 'product_id',
+                'id', 'type', 'organization_id', 'required', 'order', 'product_id', 'fillable_by',
             ]),
             ...$this->resource->translateColumns($this->resource->only([
                 'label', 'description',

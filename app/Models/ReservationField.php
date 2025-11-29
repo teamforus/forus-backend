@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $product_id
  * @property string $label
  * @property string $type
+ * @property string $fillable_by
  * @property string|null $description
  * @property bool $required
  * @property int $order
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereFillableBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereLabel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ReservationField whereOrder($value)
@@ -60,6 +62,14 @@ class ReservationField extends BaseModel
         self::TYPE_BOOLEAN,
     ];
 
+    public const string FILLABLE_BY_PROVIDER = 'provider';
+    public const string FILLABLE_BY_REQUESTER = 'requester';
+
+    public const array FILLABLE_BY_TYPES = [
+        self::FILLABLE_BY_PROVIDER,
+        self::FILLABLE_BY_REQUESTER,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -67,6 +77,7 @@ class ReservationField extends BaseModel
      */
     protected $fillable = [
         'organization_id', 'label', 'type', 'description', 'required', 'order', 'product_id',
+        'fillable_by',
     ];
 
     /**
