@@ -1207,7 +1207,7 @@ class Voucher extends BaseModel
             ]),
         ]);
 
-        $fields = $product->getReservationFields();
+        $fields = $product->getAvailableReservationFieldsForRequester();
 
         // store custom fields
         foreach ($fields as $field) {

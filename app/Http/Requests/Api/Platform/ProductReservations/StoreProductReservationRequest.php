@@ -85,7 +85,7 @@ class StoreProductReservationRequest extends BaseProductReservationFieldRequest
      */
     public function attributes(): array
     {
-        $fields = Product::find($this->input('product_id'))?->getReservationFields();
+        $fields = Product::find($this->input('product_id'))?->getAvailableReservationFieldsForRequester();
 
         return [
             ...parent::attributes(),
@@ -159,8 +159,8 @@ class StoreProductReservationRequest extends BaseProductReservationFieldRequest
             'custom_fields' => 'nullable|array',
         ];
 
-        foreach ($product->getReservationFields() as $field) {
-            $rules["custom_fields.$field->id"] = $this->getCustomFieldRules($field);
+        foreach ($product->getAvailableReservationFieldsForRequester() as $field) {
+            $rules["custom_fields.$field->id"] = $this->getCustomFieldRules($field, true);
         }
 
         return $rules;

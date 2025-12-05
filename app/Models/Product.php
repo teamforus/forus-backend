@@ -1129,7 +1129,7 @@ class Product extends BaseModel
     /**
      * @return Collection|ReservationField[]
      */
-    public function getReservationFields(): Collection|array
+    public function getAvailableReservationFieldsForRequester(): Collection|array
     {
         return match ($this->reservation_fields_config) {
             Product::CUSTOM_RESERVATION_FIELDS_GLOBAL => $this->organization->getReservationFieldsForRequester(),
@@ -1155,7 +1155,7 @@ class Product extends BaseModel
      */
     public function getReservationFieldsForRequester(): Collection|array
     {
-        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_REQUESTER);
+        return $this->reservation_fields->filter(fn (ReservationField $field) => $field->isFillableByRequester())->values();
     }
 
     /**
@@ -1163,7 +1163,7 @@ class Product extends BaseModel
      */
     public function getReservationFieldsForProvider(): Collection|array
     {
-        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_PROVIDER);
+        return $this->reservation_fields->filter(fn (ReservationField $field) => $field->isFillableByProvider())->values();
     }
 
     /**

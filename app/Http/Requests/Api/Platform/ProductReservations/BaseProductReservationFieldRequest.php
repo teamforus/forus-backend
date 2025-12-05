@@ -10,11 +10,12 @@ class BaseProductReservationFieldRequest extends BaseFormRequest
 {
     /**
      * @param ReservationField $field
+     * @param bool $byRequester
      * @return array
      */
-    protected function getCustomFieldRules(ReservationField $field): array
+    protected function getCustomFieldRules(ReservationField $field, bool $byRequester): array
     {
-        $fieldRules = [$field->required ? 'required' : 'nullable'];
+        $fieldRules = [$field->isFillableByRequester() && $field->required ? 'required' : 'nullable'];
 
         $fieldRules = [
             ...$fieldRules,
@@ -32,6 +33,8 @@ class BaseProductReservationFieldRequest extends BaseFormRequest
                 ],
                 default => ['string'],
             },
+            ...[$byRequester && !$field->isFillableByRequester() ? 'in:' : null],
+            ...[!$byRequester && !$field->isFillableByProvider() ? 'in:' : null],
         ];
 
         return array_filter($fieldRules);

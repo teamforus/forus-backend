@@ -1186,7 +1186,7 @@ class Organization extends BaseModel
      */
     public function getReservationFieldsForRequester(): Collection|array
     {
-        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_REQUESTER);
+        return $this->reservation_fields->filter(fn (ReservationField $field) => $field->isFillableByRequester())->values();
     }
 
     /**
@@ -1194,7 +1194,7 @@ class Organization extends BaseModel
      */
     public function getReservationFieldsForProvider(): Collection|array
     {
-        return $this->reservation_fields->where('fillable_by', ReservationField::FILLABLE_BY_PROVIDER);
+        return $this->reservation_fields->filter(fn (ReservationField $field) => $field->isFillableByProvider())->values();
     }
 
     /**

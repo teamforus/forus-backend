@@ -452,6 +452,7 @@ class ProductReservationPolicy
         ReservationField $field
     ): bool {
         return $this->updateProvider($identity, $productReservation, $organization) &&
-            $field->organization_id === $organization->id && $field->fillable_by === $field::FILLABLE_BY_PROVIDER;
+            $field->organization_id === $organization->id &&
+            $field->isFillableByProvider();
     }
 }

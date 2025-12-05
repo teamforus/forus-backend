@@ -104,4 +104,20 @@ class ReservationField extends BaseModel
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * @return bool
+     */
+    public function isFillableByProvider(): bool
+    {
+        return $this->fillable_by === self::FILLABLE_BY_PROVIDER;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFillableByRequester(): bool
+    {
+        return $this->fillable_by === self::FILLABLE_BY_REQUESTER;
+    }
 }

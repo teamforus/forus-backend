@@ -405,12 +405,16 @@ class ProductReservationsController extends Controller
             'value' => $field->type === ReservationField::TYPE_FILE ? null : $value,
         ]);
 
-        if ($field->type === ReservationField::TYPE_FILE && $value) {
-            $fieldValue->appendFilesByUid($value);
+        if ($field->type === ReservationField::TYPE_FILE) {
+            if ($value) {
+                $fieldValue->appendFilesByUid($value);
 
-            $fieldValue->update([
-                'value' => $fieldValue->files[0]?->original_name ?? $value,
-            ]);
+                $fieldValue->update([
+                    'value' => $fieldValue->files[0]?->original_name ?? $value,
+                ]);
+            } else {
+                $fieldValue->files()->delete();
+            }
         }
 
         return new ProductReservationResource($productReservation);

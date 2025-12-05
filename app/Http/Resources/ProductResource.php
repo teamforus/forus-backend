@@ -229,7 +229,9 @@ class ProductResource extends BaseJsonResource
                         $organization->reservation_birth_date :
                         $product->reservation_birth_date,
                     'note' => $organization->reservation_user_note,
-                    'fields' => ReservationFieldResource::collection($product->getReservationFields()),
+                    'fields' => ReservationFieldResource::collection(
+                        $product->getAvailableReservationFieldsForRequester(),
+                    ),
                 ] : [
                     'phone' => $product::RESERVATION_FIELD_NO,
                     'address' => $product::RESERVATION_FIELD_NO,
