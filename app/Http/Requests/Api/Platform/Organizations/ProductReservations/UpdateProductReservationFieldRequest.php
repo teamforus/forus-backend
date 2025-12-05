@@ -32,7 +32,6 @@ class UpdateProductReservationFieldRequest extends BaseProductReservationFieldRe
      */
     public function rules(): array
     {
-        log_debug($this->getCustomFieldRules($this->field, false));
         return [
             'value' => $this->getCustomFieldRules($this->field, false),
         ];
