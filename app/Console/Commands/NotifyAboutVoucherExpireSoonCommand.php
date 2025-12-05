@@ -8,6 +8,7 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Config;
 
 class NotifyAboutVoucherExpireSoonCommand extends Command
 {
@@ -33,7 +34,11 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
     public function handle(): void
     {
         /** @var Voucher[] $vouchers */
-        $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()))->chunk(100, function ($vouchers) {
+        $chunkSize = (int) Config::get('forus.vouchers.expire_soon_notifications.chunk_size', 100);
+        $sleepSeconds = (int) Config::get('forus.vouchers.expire_soon_notifications.sleep_seconds', 10);
+        $vouchersQuery = $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()));
+
+        $vouchersQuery->chunkById($chunkSize, function ($vouchers) use ($sleepSeconds) {
             foreach ($vouchers as $voucher) {
                 $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
 
@@ -68,7 +73,9 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
                 }
             }
 
-            sleep(10);
+            if ($sleepSeconds > 0) {
+                sleep($sleepSeconds);
+            }
         });
     }
 
