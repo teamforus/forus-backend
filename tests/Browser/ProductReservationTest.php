@@ -103,36 +103,42 @@ class ProductReservationTest extends DuskTestCase
                 'description' => 'custom field text description 1',
                 'required' => true,
                 'value' => 'some text',
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ], [
                 'label' => 'custom field text 2',
                 'type' => ReservationField::TYPE_TEXT,
                 'description' => null,
                 'required' => false,
                 'value' => null,
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ], [
                 'label' => 'custom field number 1',
                 'type' => ReservationField::TYPE_NUMBER,
                 'description' => 'custom field number description 1',
                 'required' => true,
                 'value' => 100,
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ], [
                 'label' => 'custom field number 2',
                 'type' => ReservationField::TYPE_NUMBER,
                 'description' => null,
                 'required' => false,
                 'value' => null,
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ], [
                 'label' => 'custom field bool 1',
                 'type' => ReservationField::TYPE_BOOLEAN,
                 'description' => 'custom field bool description 1',
                 'required' => true,
                 'value' => 'Ja',
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ], [
                 'label' => 'custom field bool 2',
                 'type' => ReservationField::TYPE_BOOLEAN,
                 'description' => null,
                 'required' => false,
                 'value' => null,
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ]];
 
             $fields = [];
@@ -200,6 +206,7 @@ class ProductReservationTest extends DuskTestCase
                 'description' => 'organization custom field text description',
                 'required' => true,
                 'value' => 'some text',
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ]];
 
             $productCustomFields = [[
@@ -208,6 +215,7 @@ class ProductReservationTest extends DuskTestCase
                 'description' => 'product custom field text description',
                 'required' => true,
                 'value' => 'some text',
+                'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
             ]];
 
             $organizationFields = [];

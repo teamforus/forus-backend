@@ -143,6 +143,10 @@ abstract class BaseProductRequest extends BaseFormRequest
             'fields.*.label' => 'required|string|max:200',
             'fields.*.required' => 'nullable|boolean',
             'fields.*.description' => 'nullable|string|max:1000',
+            'fields.*.fillable_by' => [
+                'required',
+                Rule::in(ReservationField::FILLABLE_BY_TYPES),
+            ],
         ];
     }
 }

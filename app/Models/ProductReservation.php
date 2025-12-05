@@ -73,6 +73,8 @@ use Throwable;
  * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Note[] $notes
+ * @property-read int|null $notes_count
  * @property-read \App\Models\Product $product
  * @property-read \App\Models\Voucher|null $product_voucher
  * @property-read \App\Models\Voucher $voucher

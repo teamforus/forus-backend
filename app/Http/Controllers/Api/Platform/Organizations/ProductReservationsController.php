@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProdu
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationNoteRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationFieldRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
@@ -22,6 +23,7 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -375,6 +377,45 @@ class ProductReservationsController extends Controller
         $this->authorize('update', [$productReservation, $organization]);
 
         $productReservation->update($request->only('invoice_number'));
+
+        return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param UpdateProductReservationFieldRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @param ReservationField $field
+     * @return ProductReservationResource
+     */
+    public function updateCustomField(
+        UpdateProductReservationFieldRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation,
+        ReservationField $field
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateCustomField', [$productReservation, $organization, $field]);
+
+        $value = $request->get('value');
+
+        $fieldValue = $productReservation->custom_fields()->updateOrCreate([
+            'reservation_field_id' => $field->id,
+        ], [
+            'value' => $field->type === ReservationField::TYPE_FILE ? null : $value,
+        ]);
+
+        if ($field->type === ReservationField::TYPE_FILE) {
+            if ($value) {
+                $fieldValue->appendFilesByUid($value);
+
+                $fieldValue->update([
+                    'value' => $fieldValue->files[0]?->original_name ?? $value,
+                ]);
+            } else {
+                $fieldValue->files()->delete();
+            }
+        }
 
         return new ProductReservationResource($productReservation);
     }

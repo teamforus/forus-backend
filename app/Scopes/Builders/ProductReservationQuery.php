@@ -12,6 +12,7 @@ class ProductReservationQuery
     /**
      * @param Builder|Relation|ProductReservation $query
      * @param string $q
+     * @param string|null $q_type
      * @return Builder|Relation|ProductReservation
      */
     public static function whereQueryFilter(
