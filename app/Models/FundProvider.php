@@ -164,8 +164,8 @@ class FundProvider extends BaseModel
         return $organization
             ->fund_providers()
             ->whereNotIn('id', self::queryActive($organization)->select('id'))
-            ->whereNotIn('id', self::queryUnsubscribed($organization)->select('id'))
-            ->whereNotIn('id', self::queryArchived($organization)->select('id'));
+            ->whereNotIn('id', self::queryArchived($organization)->select('id'))
+            ->whereNotIn('id', self::queryUnsubscribed($organization)->select('id'));
     }
 
     /**

@@ -220,7 +220,7 @@ class FundProviderPolicy
             return $this->deny(__('policies.fund_providers.not_resolved_vouchers'));
         }
 
-        $reservationsQuery = ProductReservationQuery::whereNotResolved(
+        $reservationsQuery = ProductReservationQuery::wherePendingOrExtraPaymentCanBeRefunded(
             ProductReservationQuery::whereProviderFilter(
                 ProductReservation::query()->whereIn('voucher_id', $fundProvider->fund->vouchers()->select('id')),
                 $organization->id

@@ -174,8 +174,9 @@ class ProductReservationQuery
      * @param Builder|Relation|ProductReservation $builder
      * @return ProductReservation|Builder|Relation
      */
-    public static function whereNotResolved(Builder|Relation|ProductReservation $builder): Relation|Builder|ProductReservation
-    {
+    public static function wherePendingOrExtraPaymentCanBeRefunded(
+        Builder|Relation|ProductReservation $builder,
+    ): Relation|Builder|ProductReservation {
         return $builder->where(function (Builder $builder) {
             $builder->where(function (Builder $builder) {
                 $builder->where('state', ProductReservation::STATE_ACCEPTED);

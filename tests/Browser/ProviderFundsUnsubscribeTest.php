@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Mail\Funds\ProviderStateUnsubscribedMail;
 use App\Models\FundProvider;
