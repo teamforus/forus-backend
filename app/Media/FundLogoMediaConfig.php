@@ -21,7 +21,7 @@ class FundLogoMediaConfig extends MediaImageConfig
         $this->use_queue = config('media.use_queue');
         $this->save_dominant_color = config('media.calc_dominant_color');
 
-        $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
+        $this->addPreset(new MediaImagePreset('thumbnail', 200, 200, false, 90));
         $this->addPreset(new MediaImagePreset('large', 500, 500, false));
         $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
