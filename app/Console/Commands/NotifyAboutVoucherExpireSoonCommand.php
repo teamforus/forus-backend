@@ -8,6 +8,7 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Config;
 
 class NotifyAboutVoucherExpireSoonCommand extends Command
 {
@@ -33,41 +34,49 @@ class NotifyAboutVoucherExpireSoonCommand extends Command
     public function handle(): void
     {
         /** @var Voucher[] $vouchers */
-        $vouchers = $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()))->get();
+        $chunkSize = (int) Config::get('forus.vouchers.expire_soon_notifications.chunk_size', 100);
+        $sleepSeconds = (int) Config::get('forus.vouchers.expire_soon_notifications.sleep_seconds', 10);
+        $vouchersQuery = $this->queryVouchers(VoucherQuery::whereNotExpiredAndActive(Voucher::query()));
 
-        foreach ($vouchers as $voucher) {
-            $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
+        $vouchersQuery->chunkById($chunkSize, function ($vouchers) use ($sleepSeconds) {
+            foreach ($vouchers as $voucher) {
+                $expireInWeeks = ceil(now()->diffInWeeks($voucher->expire_at));
 
-            $has6weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
-                $builder->whereIn('event', [
-                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
-                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
-                ]);
-                $builder->whereBetween('created_at', [
-                    $voucher->expire_at->clone()->subWeeks(6)->startOfDay(),
-                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
-                ]);
-            })->exists();
+                $has6weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
+                    $builder->whereIn('event', [
+                        Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                        Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                    ]);
+                    $builder->whereBetween('created_at', [
+                        $voucher->expire_at->clone()->subWeeks(6)->startOfDay(),
+                        $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                    ]);
+                })->exists();
 
-            if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3)) {
-                VoucherExpireSoon::dispatch($voucher);
+                if (!$has6weeksLogs && ($expireInWeeks <= 6 && $expireInWeeks > 3)) {
+                    VoucherExpireSoon::dispatch($voucher);
+                }
+
+                $has3weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
+                    $builder->whereIn('event', [
+                        Voucher::EVENT_EXPIRING_SOON_BUDGET,
+                        Voucher::EVENT_EXPIRING_SOON_PRODUCT,
+                    ]);
+                    $builder->whereBetween('created_at', [
+                        $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
+                        $voucher->expire_at->clone()->endOfDay(),
+                    ]);
+                })->exists();
+
+                if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0)) {
+                    VoucherExpireSoon::dispatch($voucher);
+                }
             }
 
-            $has3weeksLogs = $voucher->logs()->where(function (Builder $builder) use ($voucher) {
-                $builder->whereIn('event', [
-                    Voucher::EVENT_EXPIRING_SOON_BUDGET,
-                    Voucher::EVENT_EXPIRING_SOON_PRODUCT,
-                ]);
-                $builder->whereBetween('created_at', [
-                    $voucher->expire_at->clone()->subWeeks(3)->startOfDay(),
-                    $voucher->expire_at->clone()->endOfDay(),
-                ]);
-            })->exists();
-
-            if (!$has3weeksLogs && ($expireInWeeks <= 3 && $expireInWeeks > 0)) {
-                VoucherExpireSoon::dispatch($voucher);
+            if ($sleepSeconds > 0) {
+                sleep($sleepSeconds);
             }
-        }
+        });
     }
 
     /**

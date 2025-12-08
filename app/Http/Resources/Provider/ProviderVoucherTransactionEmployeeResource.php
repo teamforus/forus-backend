@@ -15,7 +15,7 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
     public const array LOAD = [
         'voucher.fund.logo',
         'provider.logo',
-        'product.photos.sizes',
+        'product.photos.presets',
         'fund_provider_product',
     ];
 
