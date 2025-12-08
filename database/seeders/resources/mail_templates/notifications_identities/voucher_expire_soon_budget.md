@@ -2,7 +2,7 @@
 
 Beste deelnemer,
 
-In :fund_start_year heeft u van :sponsor_name een :fund_name-tegoed ontvangen.
+Eerder heeft u van :sponsor_name een :fund_name-tegoed ontvangen.
 &nbsp;  
 
 Uw :fund_name-tegoed is geldig tot en met :fund_end_date_minus1_locale. Vanaf :fund_end_date_locale is het budget niet meer geldig.
