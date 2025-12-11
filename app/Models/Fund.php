@@ -1336,6 +1336,10 @@ class Fund extends BaseModel
                         productId: $formulaProduct->product->id,
                         expireAt: $voucherExpireAt,
                         price: $formulaProduct->price,
+                        dispatchCreated: false
+                    )->dispatchCreated(
+                        notifyRequesterReserved: false,
+                        notifyProviderReserved: false,
                     ),
                     array_fill(0, $multiplier, null),
                 )
