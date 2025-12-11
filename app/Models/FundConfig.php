@@ -98,6 +98,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $help_show_phone
  * @property bool $help_show_website
  * @property bool $help_show_chat
+ * @property bool $filters_visible_products
  * @property string $criteria_label_requirement_show
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -332,6 +333,7 @@ class FundConfig extends BaseModel
         'help_show_chat' => 'boolean',
         'allow_provider_sign_up' => 'boolean',
         'fund_request_physical_card_enable' => 'boolean',
+        'filters_visible_products' => 'boolean',
     ];
 
     /**
