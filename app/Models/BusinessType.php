@@ -86,8 +86,7 @@ class BusinessType extends BaseModel
     {
         if ($request->input('used', false)) {
             return self::whereHas('organizations.fund_providers', function (Builder $builder) {
-                $builder->whereIn('fund_id', Implementation::activeFundsQuery()->select('id'));
-                FundProviderQuery::whereApproved($builder);
+                FundProviderQuery::whereApproved($builder->whereIn('fund_id', Implementation::activeFundsForWebshop()));
             });
         }
 
