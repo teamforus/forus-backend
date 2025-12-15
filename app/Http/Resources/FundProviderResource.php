@@ -63,7 +63,6 @@ class FundProviderResource extends BaseJsonResource
                 ...$fundProvider->organization->only(['iban', 'allow_provider_extra_payments']),
             ],
             'can_cancel' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
-            'can_unsubscribe' => $fundProvider->canUnsubscribe(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
             'last_activity_locale' => $lastActivity?->diffForHumans(now()),
         ]);

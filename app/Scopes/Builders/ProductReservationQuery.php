@@ -169,4 +169,28 @@ class ProductReservationQuery
             });
         });
     }
+
+    /**
+     * @param Builder|Relation|ProductReservation $builder
+     * @return ProductReservation|Builder|Relation
+     */
+    public static function wherePendingOrExtraPaymentCanBeRefunded(
+        Builder|Relation|ProductReservation $builder,
+    ): Relation|Builder|ProductReservation {
+        return $builder->where(function (Builder $builder) {
+            $builder->where(function (Builder $builder) {
+                $builder->where('state', ProductReservation::STATE_ACCEPTED);
+
+                $builder->whereRelation('extra_payment', 'state', ReservationExtraPayment::STATE_PAID);
+
+                $builder->whereHas('voucher_transaction', function (Builder $query) {
+                    $query->whereNotNull('transfer_at');
+                    $query->whereDate('transfer_at', '>', now()->format('Y-m-d H:i:s'));
+                });
+            });
+
+            $builder->orWhere('state', ProductReservation::STATE_PENDING);
+        });
+
+    }
 }
