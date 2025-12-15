@@ -271,7 +271,7 @@ class Kernel extends ConsoleKernel
          * NotifyAboutVoucherExpireSoonCommand:
          */
         $schedule->command('forus.voucher:check-expire-soon')
-            ->dailyAt('09:00')->withoutOverlapping()->onOneServer();
+            ->dailyAt('19:00')->withoutOverlapping()->onOneServer();
 
         /**
          * NotifyAboutVoucherExpiredCommand:

@@ -124,9 +124,9 @@ class TransactionsController extends Controller
                 ],
                 $request->input('note'),
             ),
-            VoucherTransaction::TARGET_TOP_UP => $voucher->makeTransactionBySponsor(
+            VoucherTransaction::TARGET_TOP_UP => $voucher->makeSponsorTopUpTransaction(
                 $employee,
-                $request->only('target', 'amount'),
+                $request->input('amount'),
                 $request->input('note'),
             ),
         });

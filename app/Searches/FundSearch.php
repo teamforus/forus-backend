@@ -4,6 +4,7 @@ namespace App\Searches;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
@@ -94,15 +95,15 @@ class FundSearch extends BaseSearch
      */
     protected function filterByApproval(Builder|Fund $builder, bool $approved): void
     {
-        $funds = (clone $builder)->pluck('id')->toArray();
+        $fundIds = Implementation::activeFundsForWebshop();
 
         if ($approved) {
-            $builder->whereHas('fund_providers', function (Builder $builder) use ($funds) {
-                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds);
+            $builder->whereHas('fund_providers', function (Builder $builder) use ($fundIds) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $fundIds);
             });
         } else {
-            $builder->whereDoesntHave('fund_providers', function (Builder $builder) use ($funds) {
-                FundProviderQuery::whereApprovedForFundsFilter($builder, $funds);
+            $builder->whereDoesntHave('fund_providers', function (Builder $builder) use ($fundIds) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $fundIds);
             });
         }
     }
