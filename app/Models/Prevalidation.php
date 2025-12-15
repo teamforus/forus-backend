@@ -352,7 +352,7 @@ class Prevalidation extends BaseModel
         $diff = $voucher ? $this->calcVoucherTopUpAmount($fund, $voucher) : null;
 
         if ($voucher && $diff > 0) {
-            $voucher->makeSponsorTopUpTransaction($employee, $diff, 'Top up-transactie vanwege prevalidatie-update.');
+            $voucher->makeSponsorTopUpTransaction($employee, $diff, 'Top up-transactie vanwege gewijzigde gegevens.');
 
             return true;
         }
