@@ -96,7 +96,7 @@ return [
     ],
     'fund_providers' => [
         'unauthorized_action' => 'Deze actie is niet toegestaan.',
-        'not_resolved_vouchers' => 'There are some not resolved product vouchers in sponsor',
-        'not_resolved_reservations' => 'There are some not resolved product reservations',
+        'not_resolved_vouchers' => 'Er staan nog openstaande aanbod tegoeden klaar die namens de gemeente zijn aangemaakt.',
+        'not_resolved_reservations' => 'Er zijn nog openstaande reserveringen die eerst moeten worden afgehandeld.',
     ],
 ];
