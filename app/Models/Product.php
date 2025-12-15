@@ -671,7 +671,7 @@ class Product extends BaseModel
      */
     public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
-        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+        $activeFunds = Implementation::activeFundsForWebshop();
         $query = $builder ?: self::searchQuery($activeFunds);
 
         if ($product_category_id = Arr::get($options, 'product_category_id')) {

@@ -98,12 +98,15 @@ class OrganizationSearch extends BaseSearch
         return $builder->whereHas('products', function (Builder $builder) use ($implementationId) {
             $activeFunds = Implementation::find($implementationId)->funds();
             $activeFunds = FundQuery::whereIsInternalConfiguredAndActive($activeFunds);
+            $fundIds = $activeFunds->pluck('funds.id')->toArray();
+            $fundIdsFiltered = Implementation::getIdentityFilteredProductFunds();
+            $fundIds = !empty($fundIdsFiltered) ? array_intersect($fundIds, $fundIdsFiltered) : $fundIds;
 
             // only in stock and not expired
             $builder = ProductQuery::inStockAndActiveFilter($builder->select('id'));
 
             // only approved by at least one sponsor
-            return ProductQuery::approvedForFundsFilter($builder, $activeFunds->pluck('funds.id')->toArray());
+            return ProductQuery::approvedForFundsFilter($builder, $fundIds);
         });
     }
 }

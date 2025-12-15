@@ -6,6 +6,7 @@ use App\Events\Funds\FundProviderApplied;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\StoreFundProviderRequest;
+use App\Http\Requests\Api\Platform\Organizations\Provider\UnsubscribeFundProviderRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\Provider\ProviderFundProviderResource;
@@ -126,6 +127,10 @@ class FundProviderController extends Controller
             $query->whereIn('id', FundProvider::queryPending($organization)->select('id'));
         }
 
+        if ($request->input('unsubscribed')) {
+            $query->whereIn('id', FundProvider::queryUnsubscribed($organization)->select('id'));
+        }
+
         return ProviderFundProviderResource::queryCollection($query, $request);
     }
 
@@ -151,7 +156,9 @@ class FundProviderController extends Controller
         }
 
         /** @var FundProvider $fundProvider */
-        $fundProvider = $organization->fund_providers()->firstOrCreate(compact('fund_id'));
+        $fundProvider = $organization->fund_providers()->updateOrCreate(compact('fund_id'), [
+            'state' => FundProvider::STATE_PENDING,
+        ]);
 
         FundProviderApplied::dispatch($fundProvider->fund, $fundProvider);
 
@@ -218,5 +225,25 @@ class FundProviderController extends Controller
         $organizationFund->delete();
 
         return new JsonResponse([]);
+    }
+
+    /**
+     * @param UnsubscribeFundProviderRequest $request
+     * @param Organization $organization
+     * @param FundProvider $organizationFund
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ProviderFundProviderResource
+     */
+    public function unsubscribe(
+        UnsubscribeFundProviderRequest $request,
+        Organization $organization,
+        FundProvider $organizationFund
+    ): ProviderFundProviderResource {
+        $this->authorize('show', $organization);
+        $this->authorize('unsubscribeProvider', [$organizationFund, $organization]);
+
+        $organizationFund->setState(FundProvider::STATE_UNSUBSCRIBED, $request->get('note'));
+
+        return ProviderFundProviderResource::create($organizationFund);
     }
 }

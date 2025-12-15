@@ -1786,6 +1786,23 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param Employee $employee
+     * @param string $amount
+     * @param string|null $note
+     * @return VoucherTransaction
+     */
+    public function makeSponsorTopUpTransaction(
+        Employee $employee,
+        string $amount,
+        ?string $note = null,
+    ): VoucherTransaction {
+        return $this->makeTransactionBySponsor($employee, [
+            'target' => VoucherTransaction::TARGET_TOP_UP,
+            'amount' => $amount,
+        ], $note);
+    }
+
+    /**
      * @param int|null $seconds
      * @return bool|null
      */

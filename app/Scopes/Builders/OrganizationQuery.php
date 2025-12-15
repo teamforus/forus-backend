@@ -139,6 +139,7 @@ class OrganizationQuery
             'pending' => self::whereGroupStatePending($builder, $sponsorOrganization),
             'active' => self::whereGroupStateActive($builder, $sponsorOrganization),
             'rejected' => self::whereGroupStateRejected($builder, $sponsorOrganization),
+            'unsubscribed' => self::whereGroupStateUnsubscribed($builder, $sponsorOrganization),
             default => $builder,
         };
     }
@@ -207,6 +208,11 @@ class OrganizationQuery
                 });
 
                 $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_UNSUBSCRIBED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
                     $query->where('state', FundProvider::STATE_ACCEPTED);
                     $query->whereIn('fund_id', $fundsBuilder->select('id'));
                 });
@@ -221,6 +227,42 @@ class OrganizationQuery
                 $fundsBuilder = clone FundQuery::whereNotActiveFilter($sponsorOrganization->funds());
 
                 $query->whereIn('fund_id', $fundsBuilder->select('id'));
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param Organization $sponsorOrganization
+     * @return Organization|Builder|Relation
+     */
+    public static function whereGroupStateUnsubscribed(
+        Builder|Relation|Organization $builder,
+        Organization $sponsorOrganization,
+    ): Relation|Builder|Organization {
+        return $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+            $builder->where(function (Builder $builder) use ($sponsorOrganization) {
+                $fundsBuilder = clone FundQuery::whereActiveFilter($sponsorOrganization->funds());
+
+                $builder->whereHas('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_UNSUBSCRIBED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_REJECTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_ACCEPTED);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
+                    $query->where('state', FundProvider::STATE_PENDING);
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
             });
         });
     }

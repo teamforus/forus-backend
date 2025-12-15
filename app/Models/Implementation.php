@@ -598,6 +598,36 @@ class Implementation extends BaseModel
     }
 
     /**
+     * @return int[]
+     */
+    public static function activeFundsForWebshop(): array
+    {
+        $fundIds = self::activeFundsQuery()->pluck('funds.id')->toArray();
+        $fundIdsFiltered = Implementation::getIdentityFilteredProductFunds();
+
+        return !empty($fundIdsFiltered) ? array_intersect($fundIds, $fundIdsFiltered) : $fundIds;
+    }
+
+    /**
+     * @return int[]|null
+     */
+    public static function getIdentityFilteredProductFunds(): ?array
+    {
+        $request = BaseFormRequest::createFrom(request());
+        $identity = $request->identity();
+
+        if (!$identity) {
+            return null;
+        }
+
+        $vouchersQuery = $identity->vouchers()->whereHas('fund', function ($query) {
+            $query->whereRelation('fund_config', 'filters_visible_products', true);
+        });
+
+        return VoucherQuery::whereNotExpiredAndActive($vouchersQuery)->pluck('fund_id')->unique()->toArray() ?: null;
+    }
+
+    /**
      * @param ...$states
      * @return Builder|Fund
      */
@@ -903,7 +933,7 @@ class Implementation extends BaseModel
         $query = $query ?: Organization::query();
 
         $query->whereHas('fund_providers', static function (Builder $builder) use ($options) {
-            $builder->whereIn('fund_id', self::activeFundsQuery()->select('id'));
+            $builder->whereIn('fund_id', self::activeFundsForWebshop());
 
             if ($fund_id = array_get($options, 'fund_id')) {
                 $builder->whereIn('fund_id', [$fund_id]);
