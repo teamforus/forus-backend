@@ -48,6 +48,7 @@ class ProductReservationFieldsConfigTest extends TestCase
             'description' => 'organization custom field text description',
             'required' => true,
             'value' => 'some text',
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
         ]];
 
         foreach ($organizationCustomFields as $order => $item) {
@@ -63,6 +64,7 @@ class ProductReservationFieldsConfigTest extends TestCase
             'description' => 'product custom field text description',
             'required' => true,
             'value' => 'some text',
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
         ]];
 
         // Assert if reservation_fields_config is 'yes' - product fields used

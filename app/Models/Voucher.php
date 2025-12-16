@@ -1207,13 +1207,25 @@ class Voucher extends BaseModel
             ]),
         ]);
 
-        $fields = $product->getReservationFields();
+        $fields = $product->getAvailableReservationFieldsForRequester();
 
         // store custom fields
-        $reservation->custom_fields()->createMany($fields->map(fn (ReservationField $field) => [
-            'reservation_field_id' => $field->id,
-            'value' => Arr::get($extraData, "custom_fields.$field->id"),
-        ]));
+        foreach ($fields as $field) {
+            $value = Arr::get($extraData, "custom_fields.$field->id");
+
+            $fieldValue = $reservation->custom_fields()->create([
+                'reservation_field_id' => $field->id,
+                'value' => $field->type === ReservationField::TYPE_FILE ? null : $value,
+            ]);
+
+            if ($field->type === ReservationField::TYPE_FILE && $value) {
+                $fieldValue->appendFilesByUid($value);
+
+                $fieldValue->update([
+                    'value' => $fieldValue->files[0]?->original_name ?? $value,
+                ]);
+            }
+        }
 
         $reservation->makeVoucher();
 

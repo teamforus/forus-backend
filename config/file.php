@@ -15,13 +15,16 @@ return [
         'fund_request_record_proof',
         'fund_request_clarification_proof',
         'reimbursement_proof',
+        'product_reservation_custom_field',
     ],
 
     'allowed_extensions_per_type' => [
         'reimbursement_proof' => ['jpg', 'jpeg', 'png', 'pdf'],
+        'product_reservation_custom_field' => ['jpg', 'jpeg', 'png'],
     ],
 
     'allowed_size_per_type' => [
         'reimbursement_proof' => 8000,
+        'product_reservation_custom_field' => 8000,
     ],
 ];

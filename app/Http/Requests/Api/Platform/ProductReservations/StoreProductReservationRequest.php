@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\ProductReservations;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\ReservationField;
@@ -12,7 +11,7 @@ use App\Rules\Vouchers\IdentityVoucherAddressRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
-class StoreProductReservationRequest extends BaseFormRequest
+class StoreProductReservationRequest extends BaseProductReservationFieldRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -86,7 +85,7 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function attributes(): array
     {
-        $fields = Product::find($this->input('product_id'))?->getReservationFields();
+        $fields = Product::find($this->input('product_id'))?->getAvailableReservationFieldsForRequester();
 
         return [
             ...parent::attributes(),
@@ -156,15 +155,14 @@ class StoreProductReservationRequest extends BaseFormRequest
             return [];
         }
 
-        return (array) $product->getReservationFields()->reduce(fn (array $result, ReservationField $field) => [
-            ...$result,
-            "custom_fields.$field->id" => array_filter([
-                $field->required ? 'required' : 'nullable',
-                $field->type === $field::TYPE_NUMBER ? 'int' : 'string',
-                $field->type === $field::TYPE_TEXT ? 'max:200' : null,
-            ]),
-        ], [
+        $rules = [
             'custom_fields' => 'nullable|array',
-        ]);
+        ];
+
+        foreach ($product->getAvailableReservationFieldsForRequester() as $field) {
+            $rules["custom_fields.$field->id"] = $this->getCustomFieldRules($field, true);
+        }
+
+        return $rules;
     }
 }

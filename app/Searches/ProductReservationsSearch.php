@@ -30,7 +30,11 @@ class ProductReservationsSearch extends BaseSearch
         $builder = parent::query();
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
-            $builder = ProductReservationQuery::whereQueryFilter($builder, $this->getFilter('q'));
+            $builder = ProductReservationQuery::whereQueryFilter(
+                $builder,
+                $this->getFilter('q'),
+                $this->getFilter('q_type')
+            );
         }
 
         if ($this->hasFilter('state')) {
