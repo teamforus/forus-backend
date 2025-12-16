@@ -1,6 +1,5 @@
 <?php
 
-use App\Services\FileService\Models\File;
 use Illuminate\Database\Migrations\Migration;
 
 return new class () extends Migration {
@@ -11,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        File::query()
+        DB::table('files')
             ->where('type', 'fund_request_record_proof')
             ->where('fileable_type', 'fund_request_clarification')
             ->update([

@@ -1,7 +1,6 @@
 <?php
 
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\FileService\Models\File;
 use Illuminate\Database\Migrations\Migration;
 
 return new class () extends Migration {
@@ -18,7 +17,9 @@ return new class () extends Migration {
     public function up(): void
     {
         foreach ($this->keysToMigrate as $type => $className) {
-            File::whereFileableType($className)->update([
+            DB::table('files')->where([
+                'fileable_type' => $className,
+            ])->update([
                 'fileable_type' => $type,
             ]);
 
@@ -36,7 +37,9 @@ return new class () extends Migration {
     public function down(): void
     {
         foreach ($this->keysToMigrate as $type => $className) {
-            File::whereFileableType($type)->update([
+            DB::table('files')->where([
+                'fileable_type' => $type,
+            ])->update([
                 'fileable_type' => $className,
             ]);
 

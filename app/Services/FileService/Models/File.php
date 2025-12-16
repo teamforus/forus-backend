@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -28,6 +29,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property string $identity_address
  * @property int|null $fileable_id
  * @property string|null $fileable_type
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Model|Eloquent|null $fileable
@@ -37,8 +39,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property-read Media|null $preview
  * @method static Builder<static>|File newModelQuery()
  * @method static Builder<static>|File newQuery()
+ * @method static Builder<static>|File onlyTrashed()
  * @method static Builder<static>|File query()
  * @method static Builder<static>|File whereCreatedAt($value)
+ * @method static Builder<static>|File whereDeletedAt($value)
  * @method static Builder<static>|File whereExt($value)
  * @method static Builder<static>|File whereFileableId($value)
  * @method static Builder<static>|File whereFileableType($value)
@@ -51,12 +55,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @method static Builder<static>|File whereType($value)
  * @method static Builder<static>|File whereUid($value)
  * @method static Builder<static>|File whereUpdatedAt($value)
+ * @method static Builder<static>|File withTrashed()
+ * @method static Builder<static>|File withoutTrashed()
  * @mixin Eloquent
  */
 class File extends Model
 {
     use HasMedia;
     use HasDbTokens;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

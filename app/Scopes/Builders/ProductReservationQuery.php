@@ -12,13 +12,15 @@ class ProductReservationQuery
     /**
      * @param Builder|Relation|ProductReservation $query
      * @param string $q
+     * @param string|null $q_type
      * @return Builder|Relation|ProductReservation
      */
     public static function whereQueryFilter(
         Builder|Relation|ProductReservation $query,
         string $q = '',
+        ?string $q_type = null,
     ): Builder|Relation|ProductReservation {
-        return $query->where(function (Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q, $q_type) {
             $builder->where('code', 'LIKE', "%$q%");
             $builder->orWhere('first_name', 'LIKE', "%$q%");
             $builder->orWhere('last_name', 'LIKE', "%$q%");
@@ -34,6 +36,12 @@ class ProductReservationQuery
             $builder->orWhereHas('voucher.fund', function (Builder $builder) use ($q) {
                 FundQuery::whereQueryFilter($builder, $q);
             });
+
+            if ($q_type === 'provider') {
+                $builder->orWhere('invoice_number', 'like', "%$q%");
+                $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
+                $builder->orWhereRelation('custom_fields', 'value', 'like', "%$q%");
+            }
         });
     }
 
