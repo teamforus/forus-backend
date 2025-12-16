@@ -17,6 +17,7 @@ use App\Helpers\Arr;
 use App\Models\BusinessType;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundCriteriaGroup;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundForm;
@@ -28,6 +29,7 @@ use App\Models\ImplementationPage;
 use App\Models\Language;
 use App\Models\Office;
 use App\Models\Organization;
+use App\Models\PersonBsnApiRecordType;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductCategory;
@@ -172,6 +174,13 @@ class TestData
                     'name' => $option[1],
                 ])->save();
             }
+        }
+
+        // add record type mapping for person bsn api
+        foreach ($this->config('person_bsn_api_record_types', []) as $type) {
+            PersonBsnApiRecordType::firstOrCreate(Arr::only($type, [
+                'person_bsn_api_field', 'record_type_key',
+            ]), $type);
         }
     }
 
@@ -727,10 +736,24 @@ class TestData
                     ...$stepFields,
                 ])) : null;
 
+            $groupTitle = Arr::get($criterion, 'group', Arr::get($criterion, 'group.title'));
+            $groupFields = is_array(Arr::get($criterion, 'group')) ? Arr::get($criterion, 'group') : [];
+
+            /** @var FundCriteriaGroup $groupModel */
+            $groupModel = $groupTitle ?
+                ($fund->criteria_groups()->firstWhere([
+                    'title' => $groupTitle,
+                    ...$groupFields,
+                ]) ?: $fund->criteria_groups()->forceCreate([
+                    'title' => $groupTitle,
+                    ...$groupFields,
+                ])) : null;
+
             /** @var FundCriterion $criterionModel */
             $criterionModel = $fund->criteria()->create([
                 ...array_except($criterion, ['rules', 'step']),
                 'fund_criteria_step_id' => $stepModel?->id,
+                'fund_criteria_group_id' => $groupModel?->id,
             ]);
 
             foreach ($criterion['rules'] ?? [] as $rule) {

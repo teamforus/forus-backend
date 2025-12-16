@@ -28,6 +28,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string $record_type_key
  * @property int|null $order
  * @property int|null $fund_criteria_step_id
+ * @property int|null $fund_criteria_group_id
+ * @property string $fill_type
  * @property string $operator
  * @property string $value
  * @property bool $optional
@@ -46,6 +48,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read \App\Models\FundRequestRecord|null $fund_request_record
  * @property-read string $description_html
  * @property-read string $extra_description_html
+ * @property-read \App\Models\FundCriteriaGroup|null $group
  * @property-read \App\Models\RecordType|null $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
@@ -55,6 +58,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereExtraDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFillType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFundCriteriaGroupId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFundCriteriaStepId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundCriterion whereId($value)
@@ -83,7 +88,7 @@ class FundCriterion extends BaseModel
     protected $fillable = [
         'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment', 'label',
         'description', 'title', 'optional', 'min', 'max', 'order', 'fund_criteria_step_id',
-        'extra_description',
+        'extra_description', 'fund_criteria_group_id', 'fill_type',
     ];
 
     protected $casts = [
@@ -107,6 +112,24 @@ class FundCriterion extends BaseModel
     public function record_type(): BelongsTo
     {
         return $this->belongsTo(RecordType::class, 'record_type_key', 'key');
+    }
+
+    /**
+     * @noinspection PhpUnused
+     * @return BelongsTo
+     */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(FundCriteriaGroup::class, 'fund_criteria_group_id');
+    }
+
+    /**
+     * @noinspection PhpUnused
+     * @return BelongsTo
+     */
+    public function step(): BelongsTo
+    {
+        return $this->belongsTo(FundCriteriaGroup::class, 'fund_criteria_step_id');
     }
 
     /**
@@ -149,26 +172,39 @@ class FundCriterion extends BaseModel
 
     /**
      * @param array $values
+     * @param bool $validation
      * @return bool
      */
-    public function isExcludedByRules(array $values): bool
+    public function isExcludedByRules(array $values, bool $validation = false): bool
     {
         if ($this->fund_criterion_rules->isEmpty()) {
             return false;
         }
 
-        return $this->fund_criterion_rules->filter(function ($rule) use ($values) {
-            return $this->validateRecordValue($rule, $values)?->fails();
+        return $this->fund_criterion_rules->filter(function ($rule) use ($values, $validation) {
+            return $this->validateRecordValue($rule, $values, $validation)?->fails();
         })->isNotEmpty();
     }
 
     /**
      * @param mixed $rule
      * @param array $values
+     * @param bool $validation
      * @return Validator|null
      */
-    public function validateRecordValue(FundCriterionRule $rule, array $values): ?Validator
+    public function validateRecordValue(FundCriterionRule $rule, array $values, bool $validation): ?Validator
     {
+        $criterion = $this->fund->criteria->firstWhere('record_type_key', $rule->record_type_key);
+
+        if (
+            $validation &&
+            (!$this->fund_criteria_step_id || $this->fund_criteria_step_id !== $criterion?->fund_criteria_step_id)
+        ) {
+            // they are in different steps so don't have value of rule based criterion in validation - skip it.
+            // it will be validated on final step
+            return Validation::check('', []);
+        }
+
         $type = record_types_static()[$rule->record_type_key] ?? null;
         $value = $values[$rule->record_type_key] ?? '';
 

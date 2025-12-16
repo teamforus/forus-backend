@@ -22,6 +22,8 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
+use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
@@ -84,6 +86,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read Collection|\App\Models\FundCriteriaGroup[] $criteria_groups
+ * @property-read int|null $criteria_groups_count
  * @property-read Collection|\App\Models\FundCriteriaStep[] $criteria_steps
  * @property-read int|null $criteria_steps_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -353,6 +357,15 @@ class Fund extends BaseModel
     public function criteria_steps(): HasMany
     {
         return $this->hasMany(FundCriteriaStep::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function criteria_groups(): HasMany
+    {
+        return $this->hasMany(FundCriteriaGroup::class);
     }
 
     /**
@@ -1900,6 +1913,69 @@ class Fund extends BaseModel
             'fund_id' => $this->id,
             ...$data,
         ]));
+    }
+
+    /**
+     * @param string $bsn
+     * @return array
+     */
+    public function getPrefills(string $bsn): array
+    {
+        $person = PersonBsnApiManager::make($this->organization)->driver()->getPerson($bsn, [
+            'parents', 'children', 'partners',
+        ]);
+
+        if (!$person?->response()?->success()) {
+            return [];
+        }
+
+        $bsnRecordTypes = PersonBsnApiRecordType::query()
+            ->whereIn('record_type_key', $this->criteria()->select('record_type_key'))
+            ->get();
+
+        $data = $person->getData();
+
+        return $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data, $person) {
+            $rawValue = Arr::get($data, $bsnRecordType->person_bsn_api_field);
+
+            $value = match ($bsnRecordType->record_type_key) {
+                $bsnRecordType::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS => $this
+                    ->getNumberOfChildrenWithTheSameAddressForPrefill($person),
+                default => $bsnRecordType
+                    ->parsePersonValue(
+                        is_numeric($rawValue) || is_string($rawValue) ? $rawValue : '',
+                        $bsnRecordType->record_type->control_type,
+                    ),
+            };
+
+            return [
+                'record_type_key' => $bsnRecordType->record_type_key,
+                'value' => $value,
+            ];
+        })->toArray();
+    }
+
+    /**
+     * @param PersonInterface $person
+     * @return int
+     */
+    protected function getNumberOfChildrenWithTheSameAddressForPrefill(PersonInterface $person): int
+    {
+        $count = 0;
+        $address = $person->getAddress();
+        $bsnService = PersonBsnApiManager::make($this->organization)->driver();
+
+        foreach ($person->getRelated('children') as $child) {
+            if ($bsn = $child->getBSN()) {
+                $personChild = $bsnService->getPerson($bsn);
+
+                if ($personChild?->response()?->success() && $address === $personChild->getAddress()) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
     }
 
     /**

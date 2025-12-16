@@ -104,6 +104,7 @@ class FundResource extends BaseJsonResource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
+            'criteria_groups' => FundCriteriaGroupResource::collection($fund->criteria_groups->sortBy('order')),
             'faq' => FaqResource::collection($fund->faq),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),

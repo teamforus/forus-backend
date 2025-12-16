@@ -8,6 +8,7 @@ use App\Models\FundRequest;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
+use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredGroupRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
@@ -147,6 +148,14 @@ class StoreFundRequestRequest extends BaseFormRequest
                 'min:1',
                 new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
             ],
+            'criteria_groups' => [
+                'present',
+                'array',
+            ],
+            'criteria_groups.*' => [
+                'required',
+                new FundRequestRequiredGroupRule($fund, $this, $values),
+            ],
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
@@ -162,5 +171,15 @@ class StoreFundRequestRequest extends BaseFormRequest
                 new FundRequestRecordCriterionIdRule($fund, $this),
             ],
         ];
+    }
+
+    /**
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'criteria_groups' => $this->fund->criteria_groups->pluck('id', 'id')->toArray(),
+        ]);
     }
 }

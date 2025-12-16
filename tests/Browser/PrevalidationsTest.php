@@ -539,44 +539,6 @@ class PrevalidationsTest extends DuskTestCase
 
     /**
      * @param Browser $browser
-     * @param string $selector
-     * @param string $control
-     * @param string|int|null $value
-     * @throws NoSuchElementException
-     * @throws TimeoutException
-     * @throws ElementClickInterceptedException
-     * @return void
-     */
-    protected function fillInput(
-        Browser $browser,
-        string $selector,
-        string $control,
-        string|int|null $value
-    ): void {
-        switch ($control) {
-            case 'select':
-                $browser->waitFor($selector);
-                $browser->click("$selector .select-control-search");
-                $this->findOptionElement($browser, $selector, $value)->click();
-                break;
-            case 'number':
-            case 'text':
-                $browser->waitFor($selector);
-                $browser->type($selector, $value);
-                break;
-            case 'checkbox':
-                $value && $browser->waitFor($selector)->click($selector);
-                break;
-            case 'date':
-                $browser->waitFor($selector);
-                $this->clearField($browser, "$selector input[type='text']");
-                $browser->type("$selector input[type='text']", $value);
-                break;
-        }
-    }
-
-    /**
-     * @param Browser $browser
      * @throws \Facebook\WebDriver\Exception\TimeoutException
      * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
      * @throws \Facebook\WebDriver\Exception\NoSuchElementException

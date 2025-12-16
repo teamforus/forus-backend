@@ -20,9 +20,9 @@ interface PersonInterface
 
     /**
      * @param string $scope
-     * @return array
+     * @return PersonInterface[]
      */
-    public function geRelated(string $scope): array;
+    public function getRelated(string $scope): array;
 
     /**
      * @return string|null
@@ -38,6 +38,11 @@ interface PersonInterface
      * @return int
      */
     public function getIndex(): int;
+
+    /**
+     * @return string
+     */
+    public function getAddress(): string;
 
     /**
      * @return array
