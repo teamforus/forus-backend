@@ -159,7 +159,7 @@ class StoreFundRequestRequest extends BaseFormRequest
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
-                new FundRequestRecordValueRule($fund, $this, $values),
+                new FundRequestRecordValueRule($fund, $this, $values, $this->isValidationRequest),
             ],
             'records.*.files' => [
                 'present',

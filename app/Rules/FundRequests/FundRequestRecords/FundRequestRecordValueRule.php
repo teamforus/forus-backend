@@ -21,6 +21,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         protected ?Fund $fund,
         protected ?BaseFormRequest $request,
         protected array $submittedRecords,
+        protected bool $isValidationRequest = false,
     ) {
         parent::__construct($this->fund, $this->request);
     }
@@ -62,7 +63,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         $existingRecordValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $requiredRecordTypes);
         $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
 
-        if ($criterion->isExcludedByRules($allRecordValues, true)) {
+        if ($criterion->isExcludedByRules($allRecordValues, $this->isValidationRequest)) {
             return $this->reject(__('validation.fund_request.invalid_record', compact('attribute')));
         }
 
