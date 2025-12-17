@@ -3,6 +3,8 @@
 use App\Models\ProductReservation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class () extends Migration {
     /**
@@ -12,10 +14,11 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement(
-            'ALTER TABLE `product_reservations` CHANGE `state` `state` ' .
-            "ENUM('pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'complete') DEFAULT 'pending';"
-        );
+        Schema::table('product_reservations', function (Blueprint $table) {
+            $table->enum('state', ['pending', 'accepted', 'rejected', 'canceled', 'canceled_by_client', 'complete'])
+                ->default('pending')
+                ->change();
+        });
 
         $reservations = $this->getPendingReservationsQuery()->onlyTrashed()->where([
             'state' => 'pending',
@@ -49,10 +52,11 @@ return new class () extends Migration {
             ])->update();
         }
 
-        DB::statement(
-            'ALTER TABLE `product_reservations` CHANGE `state` `state` ' .
-            "ENUM('pending', 'accepted', 'rejected', 'canceled', 'complete') DEFAULT 'pending';"
-        );
+        Schema::table('product_reservations', function (Blueprint $table) {
+            $table->enum('state', ['pending', 'accepted', 'rejected', 'canceled', 'complete'])
+                ->default('pending')
+                ->change();
+        });
     }
 
     /**

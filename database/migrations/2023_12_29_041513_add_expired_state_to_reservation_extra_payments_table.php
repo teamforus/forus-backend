@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class () extends Migration {
     /**
@@ -10,12 +12,11 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement(implode(' ', [
-            'ALTER TABLE `reservation_extra_payments`',
-            "CHANGE `state` `state` ENUM('open', 'paid', 'failed', 'pending', 'canceled', 'expired')",
-            "NOT NULL DEFAULT 'pending'",
-            'AFTER `method`',
-        ]));
+        Schema::table('reservation_extra_payments', function (Blueprint $table) {
+            $table->enum('state', ['open', 'paid', 'failed', 'pending', 'canceled', 'expired'])
+                ->default('pending')
+                ->change();
+        });
     }
 
     /**
@@ -23,7 +24,12 @@ return new class () extends Migration {
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
+        Schema::table('reservation_extra_payments', function (Blueprint $table) {
+            $table->enum('state', ['open', 'paid', 'failed', 'pending', 'canceled'])
+                ->default('pending')
+                ->change();
+        });
     }
 };
