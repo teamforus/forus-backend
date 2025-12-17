@@ -3,10 +3,12 @@
 namespace App\Policies;
 
 use App\Models\Identity;
+use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -389,5 +391,68 @@ class ProductReservationPolicy
         Organization $organization
     ): bool {
         return $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAnyNote(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function storeNote(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @param Note $note
+     * @return bool
+     */
+    public function destroyNote(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization,
+        Note $note
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization) &&
+            $note->employee?->identity_address === $identity->address;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @param ReservationField $field
+     * @return bool
+     */
+    public function updateCustomField(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization,
+        ReservationField $field
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization) &&
+            $field->organization_id === $organization->id &&
+            $field->isFillableByProvider();
     }
 }

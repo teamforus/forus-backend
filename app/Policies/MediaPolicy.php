@@ -93,6 +93,17 @@ class MediaPolicy
             ]);
         }
 
+        if ($media->mediable && $media->type === 'product_photo') {
+            $product = $media->mediable instanceof Product ? $media->mediable : null;
+            $managesProduct = Gate::allows('update', [$product, $product->organization]);
+
+            $managesProviderProduct =
+                $product?->sponsor_organization &&
+                Gate::allows('updateSponsorProduct', [$product, $product?->organization, $product?->sponsor_organization]);
+
+            return $managesProduct || $managesProviderProduct;
+        }
+
         return $identity->address == $media->identity_address;
     }
 }
