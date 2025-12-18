@@ -45,7 +45,7 @@ class FundRequestsController extends Controller
 
         $search = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
-            'identity_id',
+            'identity_id', 'fund_id',
         ])))->setEmployee($request->employee($organization));
 
         $stateGroup = $request->get('state_group');
