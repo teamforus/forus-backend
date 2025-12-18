@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1, 2 ]
-        total: [ 2 ]
+        shard: [ 1 ]
+        total: [ 1 ]
     defaults:
       run:
         working-directory: forus-backend

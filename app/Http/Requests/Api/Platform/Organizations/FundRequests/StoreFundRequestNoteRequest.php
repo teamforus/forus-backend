@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Funds\Requests;
+namespace App\Http\Requests\Api\Platform\Organizations\FundRequests;
 
 use App\Http\Requests\Api\Platform\Organizations\StoreNoteRequest;
 
