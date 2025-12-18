@@ -205,4 +205,51 @@ class RequesterVoucherPayoutTest extends DuskTestCase
             $fund && $this->deleteFund($fund);
         });
     }
+
+    /**
+     * @throws Throwable
+     */
+    public function testProductPayoutButtonVisibleForInformationalProduct(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy']);
+
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $products = $this->makeTestProviderWithProducts(1);
+        $product = $products[0];
+        $this->addProductToFund($fund, $product, false);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $iban = $this->faker()->iban('NL');
+        $ibanName = $this->makeIbanName();
+
+        $this->makePayoutVoucherViaApplication($identity, $fund, $iban, $ibanName);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+            [$implementation, $implementation->only(['voucher_payout_informational_product_id'])],
+        ], function () use ($implementation, $identity, $product) {
+            $implementation->forceFill([
+                'voucher_payout_informational_product_id' => $product->id,
+            ])->save();
+
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $product) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $browser->visit($implementation->urlWebshop("products/$product->id"));
+                $browser->waitFor('@productName');
+                $browser->waitFor('@openProductPayoutModal');
+                $browser->assertPresent('@openProductPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
 }

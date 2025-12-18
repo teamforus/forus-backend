@@ -27,8 +27,13 @@ trait MakesRequesterVoucherPayouts
 
         [$ibanKey, $ibanNameKey] = $this->getPayoutIbanRecordKeys();
 
-        $this->makeRecordType($organization, RecordType::TYPE_IBAN, $ibanKey);
-        $this->makeRecordType($organization, RecordType::TYPE_STRING, $ibanNameKey);
+        if (!RecordType::where('type', RecordType::TYPE_IBAN)->where('key', $ibanKey)->exists()) {
+            $this->makeRecordType($organization, RecordType::TYPE_IBAN, $ibanKey);
+        }
+
+        if (!RecordType::where('type', RecordType::TYPE_STRING)->where('key', $ibanNameKey)->exists()) {
+            $this->makeRecordType($organization, RecordType::TYPE_STRING, $ibanNameKey);
+        }
 
         $fund->fund_config->forceFill([
             'allow_voucher_payouts' => true,
