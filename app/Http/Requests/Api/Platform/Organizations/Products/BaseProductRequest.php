@@ -8,7 +8,7 @@ use App\Models\ReservationField;
 use App\Models\Product;
 use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
 /**
