@@ -14,6 +14,11 @@ jobs:
   test_features:
 
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 1, 2 ]
+        total: [ 2 ]
     defaults:
       run:
         working-directory: forus-backend
@@ -59,9 +64,16 @@ jobs:
           else
             echo "DEBUG=" >> $GITHUB_ENV
           fi
-      - name: --- RUN UNIT TESTS ---
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit $DEBUG_FLAG tests/Unit/."
-
-      - name: --- RUN FEATURE TESTS ---
-        working-directory: forus-backend
-        run: docker compose exec -T app bash -c "./vendor/bin/phpunit $DEBUG_FLAG tests/Feature/."
+      - name: --- RUN UNIT + FEATURE TESTS (SHARDED) ---
+        run: |
+          docker compose exec -T app bash -lc "\
+            files=(\$(find tests/Unit tests/Feature -type f -name '*Test.php' | sort)); \
+            total=${{ matrix.total }}; shard=${{ matrix.shard }}; \
+            shard_size=\$(( (\${#files[@]} + total - 1) / total )); \
+            start=\$(( (shard - 1) * shard_size )); \
+            subset=( \"\${files[@]:start:shard_size}\" ); \
+            if [ \${#subset[@]} -gt 0 ]; then \
+              ./vendor/bin/phpunit $DEBUG_FLAG \"\${subset[@]}\"; \
+            else \
+              echo \"No tests for shard \$shard\"; \
+            fi"
