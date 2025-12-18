@@ -8,6 +8,7 @@ use App\Models\ReservationField;
 use App\Models\Product;
 use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
 /**
@@ -114,13 +115,27 @@ abstract class BaseProductRequest extends BaseFormRequest
     }
 
     /**
+     * @param Product|null $product
      * @return array
      */
-    protected function reservationCustomFieldRules(): array
+    protected function reservationCustomFieldRules(?Product $product = null): array
     {
         return [
             'fields' => 'nullable|array|max:10',
             'fields.*' => 'required|array',
+            'fields.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('reservation_fields', 'id')
+                    ->where('organization_id', $this->organization->id)
+                    ->where(function (Builder $query) use ($product) {
+                        if ($product) {
+                            $query->whereNull('product_id')->orWhere('product_id', $product->id);
+                        } else {
+                            $query->whereNull('product_id');
+                        }
+                    }),
+            ],
             'fields.*.type' => [
                 'required',
                 Rule::in(ReservationField::TYPES),
@@ -128,6 +143,10 @@ abstract class BaseProductRequest extends BaseFormRequest
             'fields.*.label' => 'required|string|max:200',
             'fields.*.required' => 'nullable|boolean',
             'fields.*.description' => 'nullable|string|max:1000',
+            'fields.*.fillable_by' => [
+                'required',
+                Rule::in(ReservationField::FILLABLE_BY_TYPES),
+            ],
         ];
     }
 }

@@ -12,13 +12,15 @@ class ProductReservationQuery
     /**
      * @param Builder|Relation|ProductReservation $query
      * @param string $q
+     * @param string|null $q_type
      * @return Builder|Relation|ProductReservation
      */
     public static function whereQueryFilter(
         Builder|Relation|ProductReservation $query,
         string $q = '',
+        ?string $q_type = null,
     ): Builder|Relation|ProductReservation {
-        return $query->where(function (Builder $builder) use ($q) {
+        return $query->where(function (Builder $builder) use ($q, $q_type) {
             $builder->where('code', 'LIKE', "%$q%");
             $builder->orWhere('first_name', 'LIKE', "%$q%");
             $builder->orWhere('last_name', 'LIKE', "%$q%");
@@ -34,6 +36,12 @@ class ProductReservationQuery
             $builder->orWhereHas('voucher.fund', function (Builder $builder) use ($q) {
                 FundQuery::whereQueryFilter($builder, $q);
             });
+
+            if ($q_type === 'provider') {
+                $builder->orWhere('invoice_number', 'like', "%$q%");
+                $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
+                $builder->orWhereRelation('custom_fields', 'value', 'like', "%$q%");
+            }
         });
     }
 
@@ -168,5 +176,29 @@ class ProductReservationQuery
                 });
             });
         });
+    }
+
+    /**
+     * @param Builder|Relation|ProductReservation $builder
+     * @return ProductReservation|Builder|Relation
+     */
+    public static function wherePendingOrExtraPaymentCanBeRefunded(
+        Builder|Relation|ProductReservation $builder,
+    ): Relation|Builder|ProductReservation {
+        return $builder->where(function (Builder $builder) {
+            $builder->where(function (Builder $builder) {
+                $builder->where('state', ProductReservation::STATE_ACCEPTED);
+
+                $builder->whereRelation('extra_payment', 'state', ReservationExtraPayment::STATE_PAID);
+
+                $builder->whereHas('voucher_transaction', function (Builder $query) {
+                    $query->whereNotNull('transfer_at');
+                    $query->whereDate('transfer_at', '>', now()->format('Y-m-d H:i:s'));
+                });
+            });
+
+            $builder->orWhere('state', ProductReservation::STATE_PENDING);
+        });
+
     }
 }

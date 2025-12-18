@@ -32,13 +32,19 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        if ($this->organization->fund_providers()->where('fund_id', $value)->exists()) {
+        $fundProviderExists = $this->organization
+            ->fund_providers()
+            ->where('fund_id', $value)
+            ->where('state', '!=', FundProvider::STATE_UNSUBSCRIBED)
+            ->exists();
+
+        if ($fundProviderExists) {
             $this->message = trans('validation.organization_fund.already_requested');
 
             return false;
         }
 
-        if (!FundProvider::queryAvailableFunds($this->organization)->where('id', $value)->exists()) {
+        if (!FundProvider::queryAvailableFunds($this->organization, true)->where('id', $value)->exists()) {
             $this->message = trans('validation.organization_fund.not_allowed');
 
             return false;

@@ -70,8 +70,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 $fund->fund_config->update(['allow_provider_sign_up' => false]);
 
                 $browser->refresh();
-                // todo: remove when tab will be added to url
-                $this->goToProviderFundsPage($browser, 'funds_available', skipPageNavigation: true);
+                $this->goToProviderFundsPage($browser, 'funds_available');
 
                 // assert missing in list and in filters
                 $this->assertFundAvailability($browser, $fund, available: false);
@@ -84,8 +83,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
                 ]);
 
                 $browser->refresh();
-                // todo: remove when tab will be added to url
-                $this->goToProviderFundsPage($browser, 'funds_available', skipPageNavigation: true);
+                $this->goToProviderFundsPage($browser, 'funds_available');
 
                 $this->assertFundAvailability($browser, $fund, available: false);
                 $this->assertFundAvailability($browser, $fund2, available: true);

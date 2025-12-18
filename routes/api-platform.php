@@ -600,20 +600,6 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'providers' => 'organization_fund',
     ])->only('index');
 
-    $router->resource(
-        'organizations/{organization}/provider/fund-unsubscribes',
-        "Api\Platform\Organizations\Provider\FundUnsubscribeController"
-    )->parameters([
-        'unsubscribe' => 'fund-unsubscribe',
-    ])->only('index', 'store', 'update');
-
-    $router->resource(
-        'organizations/{organization}/sponsor/fund-unsubscribes',
-        "Api\Platform\Organizations\Sponsor\FundUnsubscribeController"
-    )->parameters([
-        'unsubscribe' => 'fund-unsubscribe',
-    ])->only('index');
-
     $router->resource('organizations.funds.providers', "Api\Platform\Organizations\Funds\FundProviderController")
         ->parameter('providers', 'fund_provider')
         ->only('update');
@@ -675,6 +661,10 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->post('unarchive', "Api\Platform\Organizations\ProductReservationsController@unarchive");
         $router->get('extra-payments/fetch', "Api\Platform\Organizations\ProductReservationsController@fetchExtraPayment");
         $router->post('extra-payments/refund', "Api\Platform\Organizations\ProductReservationsController@refundExtraPayment");
+        $router->get('notes', "Api\Platform\Organizations\ProductReservationsController@notes");
+        $router->post('notes', "Api\Platform\Organizations\ProductReservationsController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\ProductReservationsController@destroyNote");
+        $router->patch('fields/{field}', "Api\Platform\Organizations\ProductReservationsController@updateCustomField");
     });
 
     $router->resource(
@@ -765,6 +755,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->get(
         'organizations/{organization}/provider/funds-product-required',
         "Api\Platform\Organizations\Provider\FundProviderController@fundsProductRequired"
+    );
+
+    $router->post(
+        'organizations/{organization}/provider/funds/{organization_fund}/unsubscribe',
+        "Api\Platform\Organizations\Provider\FundProviderController@unsubscribe"
     );
 
     $router->resource(

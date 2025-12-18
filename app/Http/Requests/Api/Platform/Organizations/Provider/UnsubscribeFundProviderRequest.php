@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Provider\FundUnsubscribes;
+namespace App\Http\Requests\Api\Platform\Organizations\Provider;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Searches\FundUnsubscribeSearch;
+use Illuminate\Foundation\Http\FormRequest;
 
-class IndexFundUnsubscribeRequest extends BaseFormRequest
+class UnsubscribeFundProviderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,6 +23,8 @@ class IndexFundUnsubscribeRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return FundUnsubscribeSearch::rules($this);
+        return [
+            'note' => 'nullable|string|max:500',
+        ];
     }
 }

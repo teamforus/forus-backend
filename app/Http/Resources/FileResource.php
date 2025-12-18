@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Services\FileService\Models\File;
+use Illuminate\Http\Request;
 
 /**
  * @property File $resource
@@ -15,7 +16,7 @@ class FileResource extends BaseJsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'identity_address', 'original_name', 'type', 'ext', 'uid', 'order',

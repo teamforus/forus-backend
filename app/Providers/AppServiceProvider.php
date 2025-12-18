@@ -34,6 +34,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
+use App\Models\ProductReservationFieldValue;
 use App\Models\Reimbursement;
 use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
@@ -84,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
         'implementation_page' => ImplementationPage::class,
         'implementation_block' => ImplementationBlock::class,
         'product_reservation' => ProductReservation::class,
+        'product_reservation_field_value' => ProductReservationFieldValue::class,
         'physical_card_request' => PhysicalCardRequest::class,
         'fund_request_record' => FundRequestRecord::class,
         'fund_request_clarification' => FundRequestClarification::class,

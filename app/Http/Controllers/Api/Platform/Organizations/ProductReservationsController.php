@@ -10,14 +10,20 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProduc
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RefundExtraPaymentProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationNoteRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationFieldRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\NoteResource;
 use App\Http\Resources\ProductReservationResource;
+use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -56,10 +62,13 @@ class ProductReservationsController extends Controller
             });
         });
 
-        $search = new ProductReservationsSearch($request->only([
-            'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
-            'order_by', 'order_dir',
-        ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
+        $search = new ProductReservationsSearch([
+            ...$request->only([
+                'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id', 'archived',
+                'order_by', 'order_dir',
+            ]),
+            'q_type' => 'provider',
+        ], ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
         return ProductReservationResource::queryCollection($search->query());
     }
@@ -370,5 +379,100 @@ class ProductReservationsController extends Controller
         $productReservation->update($request->only('invoice_number'));
 
         return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param UpdateProductReservationFieldRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @param ReservationField $field
+     * @return ProductReservationResource
+     */
+    public function updateCustomField(
+        UpdateProductReservationFieldRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation,
+        ReservationField $field
+    ): ProductReservationResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateCustomField', [$productReservation, $organization, $field]);
+
+        $value = $request->get('value');
+
+        $fieldValue = $productReservation->custom_fields()->updateOrCreate([
+            'reservation_field_id' => $field->id,
+        ], [
+            'value' => $field->type === ReservationField::TYPE_FILE ? null : $value,
+        ]);
+
+        if ($field->type === ReservationField::TYPE_FILE) {
+            if ($value) {
+                $fieldValue->appendFilesByUid($value);
+
+                $fieldValue->update([
+                    'value' => $fieldValue->files[0]?->original_name ?? $value,
+                ]);
+            } else {
+                $fieldValue->files()->delete();
+            }
+        }
+
+        return new ProductReservationResource($productReservation);
+    }
+
+    /**
+     * @param BaseIndexFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return AnonymousResourceCollection
+     */
+    public function notes(
+        BaseIndexFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyNote', [$productReservation, $organization]);
+
+        return NoteResource::queryCollection($productReservation->notes(), $request);
+    }
+
+    /**
+     * @param StoreProductReservationNoteRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return NoteResource
+     */
+    public function storeNote(
+        StoreProductReservationNoteRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation
+    ): NoteResource {
+        $this->authorize('show', $organization);
+        $this->authorize('storeNote', [$productReservation, $organization]);
+
+        return NoteResource::create($productReservation->addNote(
+            $request->input('description'),
+            $request->employee($organization),
+        ));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @param Note $note
+     * @return JsonResponse
+     */
+    public function destroyNote(
+        Organization $organization,
+        ProductReservation $productReservation,
+        Note $note,
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('destroyNote', [$productReservation, $organization, $note]);
+
+        $note->delete();
+
+        return new JsonResponse();
     }
 }

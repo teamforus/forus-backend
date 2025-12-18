@@ -199,8 +199,8 @@ return [
             'title' => 'Afmeldingen van aanbieders die uw aandacht vereisen.',
             'header' => ':fund_name',
             'details' => implode('|', [
-                ":providers_count provider heeft verzocht om hun deelname te beëindigen.\n- :providers_list",
-                ":providers_count providers hebben verzocht om hun deelname te beëindigen.\n- :providers_list",
+                ":providers_count provider heeft of hebben zich afgemeld voor uw regeling.\n- :providers_list",
+                ":providers_count providers heeft of hebben zich afgemeld voor uw regeling.\n- :providers_list",
             ]),
         ],
 
