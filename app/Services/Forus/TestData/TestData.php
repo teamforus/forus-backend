@@ -176,7 +176,7 @@ class TestData
             }
         }
 
-        // add record type mapping for person bsn api
+        // add record type mapping for person BSN API
         foreach ($this->config('person_bsn_api_record_types', []) as $type) {
             PersonBsnApiRecordType::firstOrCreate(Arr::only($type, [
                 'person_bsn_api_field', 'record_type_key',

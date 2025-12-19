@@ -16,6 +16,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
      * @param Fund|null $fund
      * @param BaseFormRequest|null $request
      * @param array $submittedRecords
+     * @param bool $isValidationRequest
      */
     public function __construct(
         protected ?Fund $fund,

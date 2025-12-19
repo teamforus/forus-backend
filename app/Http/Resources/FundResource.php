@@ -33,6 +33,8 @@ class FundResource extends BaseJsonResource
         'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
         'criteria.record_type.record_type_options.translations',
+        'criteria_steps',
+        'criteria_groups',
         'organization.tags.translations',
         'organization.offices',
         'organization.contacts',

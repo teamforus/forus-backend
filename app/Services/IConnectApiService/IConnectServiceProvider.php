@@ -2,6 +2,7 @@
 
 namespace App\Services\IConnectApiService;
 
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -15,10 +16,10 @@ class IConnectServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if ($this->app->environment('testing')) {
+        if (Config::get('forus.person_bsn.test_response', false)) {
             Http::fake([
                 Str::finish(IConnect::URL_SANDBOX, '/') . '*' => fn () => Http::response(
-                    config('forus.person_bsn.test_response', [])
+                    Config::get('forus.person_bsn.test_response_data', []),
                 ),
             ]);
         }

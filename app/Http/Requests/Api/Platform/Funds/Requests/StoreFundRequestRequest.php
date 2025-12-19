@@ -179,6 +179,7 @@ class StoreFundRequestRequest extends BaseFormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            // Inject fund groups so rules can attach per-group validation errors.
             'criteria_groups' => $this->fund->criteria_groups->pluck('id', 'id')->toArray(),
         ]);
     }

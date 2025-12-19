@@ -33,30 +33,24 @@ class FundRequestRequiredGroupRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $submittedRecordValues = $this->mapRecordValues($this->submittedRecords);
+        $submittedValuesByKey = $this->mapRecordValues($this->submittedRecords);
 
-        $hasRequiredGroup = $this->fund
-            ->criteria()
-            ->whereIn('record_type_key', array_keys($submittedRecordValues))
-            ->whereHas('group', function (Builder $builder) use ($value) {
-                $builder->where('id', $value);
-                $builder->where('required', true);
+        $requiredGroup = $this->fund->criteria_groups()
+            ->where('id', $value)
+            ->where('required', true)
+            ->whereHas('fund_criteria', function (Builder $builder) use ($submittedValuesByKey) {
+                $builder->whereIn('record_type_key', array_keys($submittedValuesByKey));
             })
-            ->first()
-            ?->group;
+            ->first();
 
-        if ($hasRequiredGroup) {
-            $groupCriteria = $hasRequiredGroup->fund_criteria->pluck('record_type_key')->toArray();
-            $valuesPresents = array_intersect($groupCriteria, array_keys($submittedRecordValues));
+        if ($requiredGroup) {
+            $groupRecordTypeKeys = $requiredGroup->fund_criteria->pluck('record_type_key')->all();
+            $groupSubmittedValues = array_intersect_key($submittedValuesByKey, array_flip($groupRecordTypeKeys));
 
-            $hasFilled = array_filter(
-                $submittedRecordValues,
-                fn ($v, $k) => in_array($k, $valuesPresents) && !empty($v),
-                ARRAY_FILTER_USE_BOTH
-            );
-
-            if (!$hasFilled) {
-                return $this->reject(__('validation.fund_request.group_required', ['attribute' => $hasRequiredGroup->title]));
+            // TODO: double check later
+            // Note: empty() treats 0/'0'/false as empty, adjust if those should count as filled.
+            if (!array_filter($groupSubmittedValues, fn ($value) => !empty($value))) {
+                return $this->reject(__('validation.fund_request.group_required', ['attribute' => $requiredGroup->title]));
             }
         }
 

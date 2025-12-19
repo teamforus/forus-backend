@@ -172,32 +172,32 @@ class FundCriterion extends BaseModel
 
     /**
      * @param array $values
-     * @param bool $validation
+     * @param bool $isStepValidation
      * @return bool
      */
-    public function isExcludedByRules(array $values, bool $validation = false): bool
+    public function isExcludedByRules(array $values, bool $isStepValidation = false): bool
     {
         if ($this->fund_criterion_rules->isEmpty()) {
             return false;
         }
 
-        return $this->fund_criterion_rules->filter(function ($rule) use ($values, $validation) {
-            return $this->validateRecordValue($rule, $values, $validation)?->fails();
+        return $this->fund_criterion_rules->filter(function ($rule) use ($values, $isStepValidation) {
+            return $this->validateRecordValue($rule, $values, $isStepValidation)?->fails();
         })->isNotEmpty();
     }
 
     /**
      * @param mixed $rule
      * @param array $values
-     * @param bool $validation
+     * @param bool $isStepValidation
      * @return Validator|null
      */
-    public function validateRecordValue(FundCriterionRule $rule, array $values, bool $validation): ?Validator
+    public function validateRecordValue(FundCriterionRule $rule, array $values, bool $isStepValidation): ?Validator
     {
         $criterion = $this->fund->criteria->firstWhere('record_type_key', $rule->record_type_key);
 
         if (
-            $validation &&
+            $isStepValidation &&
             (!$this->fund_criteria_step_id || $this->fund_criteria_step_id !== $criterion?->fund_criteria_step_id)
         ) {
             // they are in different steps so don't have value of rule based criterion in validation - skip it.
