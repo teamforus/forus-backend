@@ -924,7 +924,11 @@ class Implementation extends BaseModel
             'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
         ]);
 
-        return $this->organization?->allow_payouts && $payoutFunds->exists();
+        $payoutVoucherFunds = self::queryFunds()->whereRelation('fund_config', [
+            'allow_voucher_payouts' => true,
+        ]);
+
+        return $this->organization?->allow_payouts && ($payoutVoucherFunds->exists() || $payoutFunds->exists());
     }
 
     /**
