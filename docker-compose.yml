@@ -12,6 +12,7 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
+      - vendor_data:/var/www/vendor 
       - ./docker/docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
       - chrome-downloads:/var/www/storage/app/dusk-downloads
     ports:
@@ -81,4 +82,6 @@ networks:
 volumes:
   chrome-downloads:
   mysql_data:
+    driver: local
+  vendor_data:
     driver: local
