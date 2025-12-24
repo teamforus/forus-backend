@@ -52,6 +52,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string $description_alignment
  * @property string|null $page_title_suffix
  * @property int|null $root_product_category_id
+ * @property int|null $voucher_payout_informational_product_id
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property int $overlay_opacity
@@ -218,6 +219,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereUrlSponsor($value)
  * @method static Builder<static>|Implementation whereUrlValidator($value)
  * @method static Builder<static>|Implementation whereUrlWebshop($value)
+ * @method static Builder<static>|Implementation whereVoucherPayoutInformationalProductId($value)
  * @mixin \Eloquent
  */
 class Implementation extends BaseModel
@@ -311,6 +313,7 @@ class Implementation extends BaseModel
         'banner_collapse' => 'boolean',
         'banner_background_mobile' => 'boolean',
         'root_product_category_id' => 'integer',
+        'voucher_payout_informational_product_id' => 'integer',
     ];
 
     /**
@@ -858,6 +861,7 @@ class Implementation extends BaseModel
                     'name',
                 ])),
                 'root_product_category_id' => $implementation->root_product_category_id,
+                'voucher_payout_informational_product_id' => $implementation->voucher_payout_informational_product_id,
             ],
             'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
             'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
@@ -920,7 +924,11 @@ class Implementation extends BaseModel
             'outcome_type' => FundConfig::OUTCOME_TYPE_PAYOUT,
         ]);
 
-        return $this->organization?->allow_payouts && $payoutFunds->exists();
+        $payoutVoucherFunds = self::queryFunds()->whereRelation('fund_config', [
+            'allow_voucher_payouts' => true,
+        ]);
+
+        return $this->organization?->allow_payouts && ($payoutVoucherFunds->exists() || $payoutFunds->exists());
     }
 
     /**

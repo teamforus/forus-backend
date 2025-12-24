@@ -70,6 +70,9 @@ return [
             'show_qr_limits' => true,
             'show_requester_limits' => true,
             'allow_fund_request_prefill' => true,
+            'allow_voucher_payouts' => true,
+            'iban_record_key' => 'iban',
+            'iban_name_record_key' => 'iban_name',
         ],
         'fund_criteria' => [
             [
@@ -115,6 +118,13 @@ return [
                 'title' => 'Bank account (IBAN)',
                 'show_attachment' => false,
                 'optional' => true,
+            ],
+            [
+                'record_type_key' => 'iban_name',
+                'operator' => '*',
+                'value' => '',
+                'optional' => false,
+                'show_attachment' => false,
             ],
             [
                 'record_type_key' => 'email',

@@ -33,6 +33,7 @@ class VoucherCollectionResource extends VoucherResource
         'fund.organization.business_type.translations',
         'physical_cards',
         'last_deactivation_log',
+        'fund_request.records',
     ];
 
     /**

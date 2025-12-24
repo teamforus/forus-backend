@@ -580,7 +580,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     }
 
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
-        'index',
+        'index', 'store',
     ]);
 
     $router->resource(

@@ -232,6 +232,11 @@ class VoucherTransactionsSearch extends BaseSearch
                             WHEN `target` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
                             WHEN `target` = "' . VoucherTransaction::TARGET_IBAN . '" THEN "direct_iban"
                             WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN "direct_top_up"
+        
+                            WHEN `initiator` = "' . VoucherTransaction::INITIATOR_REQUESTER . '" 
+                                AND `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" 
+                                THEN "voucher_payout_requester"
+        
                             WHEN `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" THEN (
                                 CASE WHEN `fund_request_id` IS NULL THEN (
                                     CASE WHEN `upload_batch_id` IS NOT NULL THEN "payout_bulk" ELSE "payout_single" END

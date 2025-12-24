@@ -144,6 +144,8 @@ use ZipArchive;
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $requester_payouts
+ * @property-read int|null $requester_payouts_count
  * @property-read Collection|\App\Models\VoucherRecord[] $voucher_records
  * @property-read int|null $voucher_records_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
@@ -445,6 +447,18 @@ class Voucher extends BaseModel
         return $this
             ->hasMany(VoucherTransaction::class)
             ->whereIn('target', VoucherTransaction::TARGETS_OUTGOING);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function requester_payouts(): HasMany
+    {
+        return $this
+            ->hasMany(VoucherTransaction::class)
+            ->where('target', VoucherTransaction::TARGET_PAYOUT)
+            ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER);
     }
 
     /**

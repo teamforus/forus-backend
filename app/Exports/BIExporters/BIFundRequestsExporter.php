@@ -3,7 +3,7 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\FundRequestsExport;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Organizations\FundRequests\IndexFundRequestsRequest;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
 
 class BIFundRequestsExporter extends BaseBIExporter

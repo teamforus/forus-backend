@@ -671,7 +671,9 @@ class Product extends BaseModel
      */
     public static function search(array $options, Builder|Product $builder = null): Builder|Product
     {
+        $implementation = Implementation::active();
         $activeFunds = Implementation::activeFundsForWebshop();
+
         $query = $builder ?: self::searchQuery($activeFunds);
 
         if ($product_category_id = Arr::get($options, 'product_category_id')) {
@@ -680,6 +682,10 @@ class Product extends BaseModel
 
         if ($product_category_ids = Arr::get($options, 'product_category_ids')) {
             $query = ProductQuery::productCategoriesFilter($query, $product_category_ids);
+        }
+
+        if (Arr::get($options, 'payout')) {
+            $query->where('id', $implementation->voucher_payout_informational_product_id);
         }
 
         if (Arr::get($options, 'fund_id')) {

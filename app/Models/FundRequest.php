@@ -441,25 +441,39 @@ class FundRequest extends BaseModel
     }
 
     /**
+     * @param bool $useTrusted
      * @return string
      */
-    public function getIban(): string
+    public function getIban(bool $useTrusted = true): string
     {
-        return $this->fund->getTrustedRecordOfType(
-            $this->identity,
-            $this->fund->fund_config->iban_record_key,
-        )?->value ?: '';
+        if ($useTrusted) {
+            return $this->fund->getTrustedRecordOfType(
+                $this->identity,
+                $this->fund->fund_config->iban_record_key,
+            )?->value ?: '';
+        }
+
+        return $this->records
+            ?->firstWhere('record_type_key', $this->fund->fund_config->iban_record_key)
+            ?->value ?: '';
     }
 
     /**
+     * @param bool $useTrusted
      * @return string
      */
-    public function getIbanName(): string
+    public function getIbanName(bool $useTrusted = true): string
     {
-        return $this->fund->getTrustedRecordOfType(
-            $this->identity,
-            $this->fund->fund_config->iban_name_record_key,
-        )?->value ?: '';
+        if ($useTrusted) {
+            return $this->fund->getTrustedRecordOfType(
+                $this->identity,
+                $this->fund->fund_config->iban_name_record_key,
+            )?->value ?: '';
+        }
+
+        return $this->records
+            ?->firstWhere('record_type_key', $this->fund->fund_config->iban_name_record_key)
+            ?->value ?: '';
     }
 
     /**

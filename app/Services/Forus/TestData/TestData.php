@@ -995,9 +995,15 @@ class TestData
                     'value' => match($criterion->operator) {
                         '=' => $criterion->value,
                         '>',
-                        '>=' => (int) $criterion->value * 2,
+                        '>=' => match ($criterion->record_type_key) {
+                            'birth_date' => $this->shiftFundCriteriaDate($criterion->value, 1),
+                            default => (int) $criterion->value * 2,
+                        },
                         '<',
-                        '<=' => (int) ((int) $criterion->value / 2),
+                        '<=' => match ($criterion->record_type_key) {
+                            'birth_date' => $this->shiftFundCriteriaDate($criterion->value, -1),
+                            default => (int) ((int) $criterion->value / 2),
+                        },
                         '*' => match ($criterion->record_type_key) {
                             'iban' => 'NL50RABO3741207772',
                             'iban_name' => 'John Doe',
@@ -1358,6 +1364,20 @@ class TestData
             UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
             'fund_request_record_proof',
         );
+    }
+
+    /**
+     * @param string $date
+     * @param int $days
+     * @return string
+     */
+    private function shiftFundCriteriaDate(string $date, int $days): string
+    {
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->addDays($days)->format('d-m-Y');
+        } catch (Exception) {
+            return $date;
+        }
     }
 
     /**

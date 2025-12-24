@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
-use App\Exports\FundRequestsExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
+use App\Models\Organization;
 
 class IndexFundRequestsRequest extends BaseFormRequest
 {
@@ -27,16 +27,6 @@ class IndexFundRequestsRequest extends BaseFormRequest
     {
         return [
             'state' => 'nullable|in:' . implode(',', FundRequest::STATES),
-            'employee_id' => 'nullable|exists:employees,id',
-            'assigned' => 'nullable|boolean',
-            'from' => 'nullable|date:Y-m-d',
-            'to' => 'nullable|date:Y-m-d',
-            'state_group' => 'nullable|in:all,pending,assigned,resolved',
-            'identity_id' => 'nullable|exists:identities,id',
-            ...$this->sortableResourceRules(100, [
-                'id', 'fund_name', 'created_at', 'note', 'state', 'requester_email', 'assignee_email',
-            ]),
-            ...$this->exportableResourceRules(FundRequestsExport::getExportFieldsRaw()),
         ];
     }
 }

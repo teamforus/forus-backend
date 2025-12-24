@@ -8,8 +8,8 @@ use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestNoteRequest;
+use App\Http\Requests\Api\Platform\Organizations\FundRequests\IndexFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Organizations\FundRequests\StoreFundRequestNoteRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
@@ -45,7 +45,7 @@ class FundRequestsController extends Controller
 
         $search = (new FundRequestSearch($request->only([
             'q', 'state', 'employee_id', 'from', 'to', 'order_by', 'order_dir', 'assigned',
-            'identity_id',
+            'identity_id', 'fund_id',
         ])))->setEmployee($request->employee($organization));
 
         $stateGroup = $request->get('state_group');

@@ -29,7 +29,7 @@ class ProductsController extends Controller
             'product_category_id', 'product_category_ids', 'fund_id', 'fund_ids', 'price_type', 'unlimited_stock',
             'organization_id', 'q', 'order_by', 'order_dir', 'postcode', 'distance',
             'qr', 'reservation', 'extra_payment', 'regular', 'discount_fixed', 'discount_percentage',
-            'free', 'informational',
+            'free', 'informational', 'payout',
         ]));
 
         if ($request->input('bookmarked', false)) {
