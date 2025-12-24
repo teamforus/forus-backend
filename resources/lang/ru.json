@@ -365,7 +365,7 @@
     "export.vouchers.reference_bsn": "BSN (по сотрудникам)",
     "export.vouchers.source": "Создано",
     "export.vouchers.state": "Статус",
-    "extra-payments.payment.description": "Описание",
+    "extra-payments.payment.description": "Платформа Forus",
     "extra-payments.refund.description": "Возврат платежа",
     "fund-unsubscribes.states.approved": "Одобрено",
     "fund-unsubscribes.states.canceled": "Отменено",

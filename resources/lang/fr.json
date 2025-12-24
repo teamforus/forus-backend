@@ -365,7 +365,7 @@
     "export.vouchers.reference_bsn": "BSN (par employé)",
     "export.vouchers.source": "Créé par",
     "export.vouchers.state": "Statut",
-    "extra-payments.payment.description": "Description",
+    "extra-payments.payment.description": "Plateforme Forus",
     "extra-payments.refund.description": "Remboursement",
     "fund-unsubscribes.states.approved": "Approuvé",
     "fund-unsubscribes.states.canceled": "Annulé",

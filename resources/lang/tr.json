@@ -365,7 +365,7 @@
     "export.vouchers.reference_bsn": "BSN (çalışan tarafından)",
     "export.vouchers.source": "Tarafından oluşturuldu",
     "export.vouchers.state": "Durum",
-    "extra-payments.payment.description": "Açıklama",
+    "extra-payments.payment.description": "Forus Platformu",
     "extra-payments.refund.description": "Geri ödeme",
     "fund-unsubscribes.states.approved": "Onaylandı",
     "fund-unsubscribes.states.canceled": "İptal Edildi",

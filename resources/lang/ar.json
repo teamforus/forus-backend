@@ -365,7 +365,7 @@
     "export.vouchers.reference_bsn": "BSN (حسب الموظف)",
     "export.vouchers.source": "تم إنشاؤها بواسطة",
     "export.vouchers.state": "الحالة",
-    "extra-payments.payment.description": "الوصف",
+    "extra-payments.payment.description": "منصة Forus",
     "extra-payments.refund.description": "استرداد المبلغ المدفوع",
     "fund-unsubscribes.states.approved": "معتمد",
     "fund-unsubscribes.states.canceled": "تم الإلغاء",

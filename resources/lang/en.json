@@ -380,7 +380,7 @@
     "export.vouchers.reference_bsn": "BSN (by employee)",
     "export.vouchers.source": "Created by",
     "export.vouchers.state": "Status",
-    "extra-payments.payment.description": "Description",
+    "extra-payments.payment.description": "Forus Platform",
     "extra-payments.refund.description": "Refund payment",
     "fund-unsubscribes.states.approved": "Approved",
     "fund-unsubscribes.states.canceled": "Cancelled",

@@ -365,7 +365,7 @@
     "export.vouchers.reference_bsn": "BSN (door medewerker)",
     "export.vouchers.source": "Aangemaakt door",
     "export.vouchers.state": "Status",
-    "extra-payments.payment.description": "Beschrijving",
+    "extra-payments.payment.description": "Platform Forus",
     "extra-payments.refund.description": "Betaling terugbetalen",
     "fund-unsubscribes.states.approved": "Goedgekeurd",
     "fund-unsubscribes.states.canceled": "Geannuleerd",
