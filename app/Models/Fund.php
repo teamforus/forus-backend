@@ -20,6 +20,8 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
+use App\Services\IConnectApiService\IConnectPrefill;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
@@ -37,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -84,6 +87,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read Collection|\App\Models\FundCriteriaGroup[] $criteria_groups
+ * @property-read int|null $criteria_groups_count
  * @property-read Collection|\App\Models\FundCriteriaStep[] $criteria_steps
  * @property-read int|null $criteria_steps_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -264,6 +269,9 @@ class Fund extends BaseModel
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
+    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
+    public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -353,6 +361,15 @@ class Fund extends BaseModel
     public function criteria_steps(): HasMany
     {
         return $this->hasMany(FundCriteriaStep::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function criteria_groups(): HasMany
+    {
+        return $this->hasMany(FundCriteriaGroup::class);
     }
 
     /**
@@ -1444,6 +1461,7 @@ class Fund extends BaseModel
      * @param Identity $identity
      * @param array $records
      * @param string|null $contactInformation
+     * @throws PersonBsnApiException
      * @return FundRequest
      */
     public function makeFundRequest(
@@ -1473,6 +1491,28 @@ class Fund extends BaseModel
             ]));
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
+        }
+
+        if (Gate::forUser($identity)->allows('viewPersonBsnApiRecords', $this)) {
+            $fundPrefills = IConnectPrefill::getBsnApiPrefills($this, $identity->bsn);
+
+            if (is_array($fundPrefills['error'])) {
+                throw new PersonBsnApiException(Arr::get($fundPrefills, 'error.message'));
+            }
+
+            $data = [
+                ...Arr::get($fundPrefills, 'person', []),
+                ...Arr::get($fundPrefills, 'partner', []),
+                ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+                ...Arr::get($fundPrefills, 'children_groups_counts', []),
+            ];
+
+            foreach ($data as $item) {
+                $fundRequest->records()->firstOrCreate([
+                    'record_type_key' => Arr::get($item, 'record_type_key'),
+                    'value' => Arr::get($item, 'value'),
+                ]);
+            }
         }
 
         return $fundRequest;

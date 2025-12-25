@@ -22,7 +22,7 @@ use App\Models\Organization;
 use App\Models\ProfileBankAccount;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\Sponsor\IdentitiesSearch;
-use App\Services\PersonBsnApiService\PersonBsnApiManager;
+use App\Services\IConnectApiService\IConnect;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -236,7 +236,7 @@ class IdentitiesController extends Controller
         $this->authorize('viewPersonBSNData', [$organization, $identity]);
 
         $bsn = $identity->bsn;
-        $bsnService = PersonBsnApiManager::make($organization)->driver();
+        $bsnService = IConnect::make($organization->getIConnectApiConfigs());
         $person = $bsnService->getPerson($bsn, ['parents', 'children', 'partners']);
 
         $scope = $request->input('scope');

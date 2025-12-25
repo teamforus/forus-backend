@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Identity;
 use App\Models\RecordTypeOption;
+use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -23,6 +24,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that a sponsor can list identities associated with their organization.
      *
+     * @throws PersonBsnApiException
      * @return void
      */
     public function testSponsorCanListIdentities(): void
@@ -99,6 +101,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that a sponsor can view a single identity associated with their organization.
      *
+     * @throws PersonBsnApiException
      * @return void
      */
     public function testSponsorCanViewSingleIdentity(): void
@@ -128,6 +131,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that a sponsor can update identities and that profiles and records are created.
      *
+     * @throws PersonBsnApiException
      * @return void
      */
     public function testSponsorCanUpdateIdentity(): void
@@ -253,6 +257,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that a sponsor can export identities.
      *
+     * @throws PersonBsnApiException
      * @return void
      */
     public function testSponsorCanExportIdentities(): void

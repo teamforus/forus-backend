@@ -7,7 +7,6 @@ use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
-use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use Exception;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -399,6 +398,6 @@ class FundPolicy
             $fund->isConfigured() &&
             $fund->organization->bsn_enabled &&
             $fund->fund_config->allow_fund_request_prefill &&
-            PersonBsnApiManager::make($fund->organization)->hasConnection();
+            $fund->organization->hasIConnectApiOin();
     }
 }

@@ -78,6 +78,9 @@ class RecordType extends BaseModel
     public const string TYPE_SELECT = 'select';
     public const string TYPE_SELECT_NUMBER = 'select_number';
 
+    public const string TYPE_BOOL_OPTION_YES = 'Ja';
+    public const string TYPE_BOOL_OPTION_NO = 'Nee';
+
     public const array TYPES = [
         self::TYPE_BOOL,
         self::TYPE_IBAN,
@@ -241,8 +244,8 @@ class RecordType extends BaseModel
     {
         if ($this->type == 'bool') {
             return [
-                ['value' => 'Ja', 'name' => trans('record_types.options.yes')],
-                ['value' => 'Nee', 'name' => trans('record_types.options.no')],
+                ['value' => static::TYPE_BOOL_OPTION_YES, 'name' => trans('record_types.options.yes')],
+                ['value' => static::TYPE_BOOL_OPTION_NO, 'name' => trans('record_types.options.no')],
             ];
         }
 
