@@ -5,6 +5,7 @@ namespace App\Rules\FundRequests\FundRequestRecords;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\FundRequests\BaseFundRequestRule;
+use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
@@ -50,7 +51,13 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
 
         // validate prefills not modified
         if (Gate::allows('viewPersonBsnApiRecords', $criterion->fund)) {
-            $prefills = Arr::keyBy($criterion->fund->getPrefills($this->request->identity()->bsn), 'record_type_key');
+            $fundPrefills = IConnectPrefill::getBsnApiPrefills($criterion->fund, $this->request->identity()->bsn);
+
+            if (is_array($fundPrefills['error'])) {
+                return $this->reject(Arr::get($fundPrefills, 'error.message'));
+            }
+
+            $prefills = Arr::keyBy(Arr::get($fundPrefills, 'person', []), 'record_type_key');
 
             if (
                 Arr::has($prefills, $criterion->record_type_key) &&

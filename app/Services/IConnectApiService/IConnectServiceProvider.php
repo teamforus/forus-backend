@@ -2,6 +2,7 @@
 
 namespace App\Services\IConnectApiService;
 
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
@@ -18,9 +19,13 @@ class IConnectServiceProvider extends ServiceProvider
     {
         if (Config::get('forus.person_bsn.test_response', false)) {
             Http::fake([
-                Str::finish(IConnect::URL_SANDBOX, '/') . '*' => fn () => Http::response(
-                    Config::get('forus.person_bsn.test_response_data', []),
-                ),
+                Str::finish(IConnect::URL_SANDBOX, '/') . '*' => function (Request $request) {
+                    $url = parse_url($request->url());
+                    $segments = explode('/', trim($url['path'], '/'));
+                    $bsn = last($segments);
+
+                    return Http::response(Config::get("forus.person_bsn.test_response_data.$bsn", []));
+                },
             ]);
         }
     }

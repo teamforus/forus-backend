@@ -167,6 +167,10 @@ class TestData
         foreach ($this->config('record_types', []) as $type) {
             $recordType = RecordType::firstOrCreate(Arr::only($type, 'key'), $type);
 
+            $recordType->translateOrNew(app()->getLocale())->fill([
+                'name' => Arr::get($type, 'name', Arr::get($type, 'key')),
+            ])->save();
+
             foreach (Arr::get($type, 'options', []) as $option) {
                 $recordType->record_type_options()->firstOrCreate([
                     'value' => $option[0],

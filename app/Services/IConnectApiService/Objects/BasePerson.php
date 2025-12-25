@@ -3,10 +3,9 @@
 namespace App\Services\IConnectApiService\Objects;
 
 use App\Services\IConnectApiService\Responses\ResponseData;
-use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
 use Illuminate\Support\Arr;
 
-abstract class BasePerson implements PersonInterface
+abstract class BasePerson
 {
     /** @var array|null  */
     protected ?array $data = null;

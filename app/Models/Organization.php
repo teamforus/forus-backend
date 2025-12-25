@@ -1198,6 +1198,24 @@ class Organization extends BaseModel
     }
 
     /**
+     * @return array
+     */
+    public function getIConnectApiConfigs(): array
+    {
+        return [
+            'env' => $this->iconnect_env,
+            'api_oin' => $this->iconnect_api_oin,
+            'cert' => $this->iconnect_cert,
+            'cert_pass' => $this->iconnect_cert_pass,
+            'cert_trust' => $this->iconnect_cert_trust,
+            'key' => $this->iconnect_key,
+            'key_pass' => $this->iconnect_key_pass,
+            'base_url' => $this->iconnect_base_url,
+            'target_binding' => $this->iconnect_target_binding,
+        ];
+    }
+
+    /**
      * @return bool
      */
     private function isIconnectApiConfigured(): bool

@@ -6,6 +6,8 @@ use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -49,19 +51,38 @@ class IConnect
     }
 
     /**
+     * @param array $configs
+     * @return static
+     */
+    public static function make(array $configs): static
+    {
+        return new static($configs);
+    }
+
+    /**
      * @param string $bsn
      * @param array $with can contain parents,children,partners
      * @param array $fields can contain burgerservicenummer,naam.voorletters
-     * @throws Throwable
+     * @param bool $cacheResponse
      * @return Person|null
      */
-    public function getPerson(string $bsn, array $with = [], array $fields = []): ?Person
+    public function getPerson(string $bsn, array $with = [], array $fields = [], bool $cacheResponse = true): ?Person
     {
-        $url = $this->api_url . "ingeschrevenpersonen/$bsn";
-        $query = $this->buildQuery($with, $fields);
-        $response = $this->request($url, $query);
+        $cacheKey = 'bsn_prefill_data_' . $this->getApiOin() . '_' . $bsn;
+        $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
+        $shouldCache = $cacheResponse && $cacheTime > 0;
 
-        return $response ? new Person(new ResponseData($response)) : null;
+        if ($shouldCache && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $person = $this->getPersonResponse($bsn, $with, $fields);
+
+        if ($shouldCache && $person?->response()?->success()) {
+            Cache::put($cacheKey, $person, $cacheTime);
+        }
+
+        return $person;
     }
 
     /**
@@ -70,6 +91,21 @@ class IConnect
     public function getApiOin(): ?string
     {
         return Arr::get($this->configs, 'api_oin', '');
+    }
+
+    /**
+     * @param string $bsn
+     * @param array $with
+     * @param array $fields
+     * @return Person|null
+     */
+    protected function getPersonResponse(string $bsn, array $with = [], array $fields = []): ?Person
+    {
+        $url = $this->api_url . "ingeschrevenpersonen/$bsn";
+        $query = $this->buildQuery($with, $fields);
+        $response = $this->request($url, $query);
+
+        return $response ? new Person(new ResponseData($response)) : null;
     }
 
     /**

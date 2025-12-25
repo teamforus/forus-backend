@@ -20,10 +20,10 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
+use App\Services\IConnectApiService\IConnectPrefill;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
-use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Carbon\Carbon;
@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -267,6 +268,9 @@ class Fund extends BaseModel
         self::DESCRIPTION_POSITION_BEFORE,
         self::DESCRIPTION_POSITION_REPLACE,
     ];
+
+    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
+    public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
 
     /**
      * The attributes that are mass assignable.
@@ -1457,6 +1461,7 @@ class Fund extends BaseModel
      * @param Identity $identity
      * @param array $records
      * @param string|null $contactInformation
+     * @throws PersonBsnApiException
      * @return FundRequest
      */
     public function makeFundRequest(
@@ -1486,6 +1491,28 @@ class Fund extends BaseModel
             ]));
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
+        }
+
+        if (Gate::forUser($identity)->allows('viewPersonBsnApiRecords', $this)) {
+            $fundPrefills = IConnectPrefill::getBsnApiPrefills($this, $identity->bsn);
+
+            if (is_array($fundPrefills['error'])) {
+                throw new PersonBsnApiException(Arr::get($fundPrefills, 'error.message'));
+            }
+
+            $data = [
+                ...Arr::get($fundPrefills, 'person', []),
+                ...Arr::get($fundPrefills, 'partner', []),
+                ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+                ...Arr::get($fundPrefills, 'children_groups_counts', []),
+            ];
+
+            foreach ($data as $item) {
+                $fundRequest->records()->firstOrCreate([
+                    'record_type_key' => Arr::get($item, 'record_type_key'),
+                    'value' => Arr::get($item, 'value'),
+                ]);
+            }
         }
 
         return $fundRequest;
@@ -1913,69 +1940,6 @@ class Fund extends BaseModel
             'fund_id' => $this->id,
             ...$data,
         ]));
-    }
-
-    /**
-     * @param string $bsn
-     * @return array
-     */
-    public function getPrefills(string $bsn): array
-    {
-        $person = PersonBsnApiManager::make($this->organization)->driver()->getPerson($bsn, [
-            'parents', 'children', 'partners',
-        ]);
-
-        if (!$person?->response()?->success()) {
-            return [];
-        }
-
-        $bsnRecordTypes = PersonBsnApiRecordType::query()
-            ->whereIn('record_type_key', $this->criteria()->select('record_type_key'))
-            ->get();
-
-        $data = $person->getData();
-
-        return $bsnRecordTypes->map(function (PersonBsnApiRecordType $bsnRecordType) use ($data, $person) {
-            $rawValue = Arr::get($data, $bsnRecordType->person_bsn_api_field);
-
-            $value = match ($bsnRecordType->record_type_key) {
-                $bsnRecordType::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS => $this
-                    ->getNumberOfChildrenWithTheSameAddressForPrefill($person),
-                default => $bsnRecordType
-                    ->parsePersonValue(
-                        is_numeric($rawValue) || is_string($rawValue) ? $rawValue : '',
-                        $bsnRecordType->record_type->control_type,
-                    ),
-            };
-
-            return [
-                'record_type_key' => $bsnRecordType->record_type_key,
-                'value' => $value,
-            ];
-        })->toArray();
-    }
-
-    /**
-     * @param PersonInterface $person
-     * @return int
-     */
-    protected function getNumberOfChildrenWithTheSameAddressForPrefill(PersonInterface $person): int
-    {
-        $count = 0;
-        $address = $person->getAddress();
-        $bsnService = PersonBsnApiManager::make($this->organization)->driver();
-
-        foreach ($person->getRelated('children') as $child) {
-            if ($bsn = $child->getBSN()) {
-                $personChild = $bsnService->getPerson($bsn);
-
-                if ($personChild?->response()?->success() && $address === $personChild->getAddress()) {
-                    $count++;
-                }
-            }
-        }
-
-        return $count;
     }
 
     /**

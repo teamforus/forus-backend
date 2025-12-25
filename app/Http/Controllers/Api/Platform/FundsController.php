@@ -17,6 +17,7 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Searches\FundSearch;
+use App\Services\IConnectApiService\IConnectPrefill;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -161,6 +162,6 @@ class FundsController extends Controller
     {
         $this->authorize('viewPersonBsnApiRecords', $fund);
 
-        return new JsonResponse($fund->getPrefills($request->identity()->bsn));
+        return new JsonResponse(IConnectPrefill::getBsnApiPrefills($fund, $request->identity()->bsn));
     }
 }

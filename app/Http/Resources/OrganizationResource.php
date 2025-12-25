@@ -10,7 +10,6 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -234,9 +233,7 @@ class OrganizationResource extends BaseJsonResource
     protected function getPersonBsnApiConfigured(Organization $organization): array
     {
         return [
-            'has_person_bsn_api' =>
-                $organization->bsn_enabled &&
-                PersonBsnApiManager::make($organization)->hasConnection(),
+            'has_person_bsn_api' => $organization->bsn_enabled && $organization->hasIConnectApiOin(),
         ];
     }
 

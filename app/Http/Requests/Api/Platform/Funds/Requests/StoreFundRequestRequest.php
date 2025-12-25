@@ -34,6 +34,9 @@ class StoreFundRequestRequest extends BaseFormRequest
             !$this->fund->getResolvingError();
     }
 
+    /**
+     * @return array
+     */
     public function attributes(): array
     {
         return [
@@ -163,7 +166,7 @@ class StoreFundRequestRequest extends BaseFormRequest
             ],
             'records.*.files' => [
                 'present',
-                new FundRequestRecordFilesRule($fund, $this),
+                new FundRequestRecordFilesRule($fund, $this, $values),
             ],
             'records.*.fund_criterion_id' => [
                 'present',

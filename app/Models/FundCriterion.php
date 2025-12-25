@@ -80,6 +80,8 @@ class FundCriterion extends BaseModel
 {
     use HasOnDemandTranslations;
 
+    public const string FILL_TYPE_PREFILL = 'prefill';
+
     /**
      * The attributes that are mass assignable.
      *

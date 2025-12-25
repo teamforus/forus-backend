@@ -28,8 +28,6 @@ use Throwable;
  */
 class PersonBsnApiRecordType extends Model
 {
-    public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
-
     /**
      * @var string[]
      */
