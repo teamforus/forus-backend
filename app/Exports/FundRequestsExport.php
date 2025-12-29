@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Organizations\FundRequests\IndexFundRequestsRequest;
 use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
