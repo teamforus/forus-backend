@@ -47,12 +47,6 @@ class IConnectPrefill
      */
     public function getPrefills(Fund $fund, string $bsn): array
     {
-        return [
-            'error' => [
-                'key' => 'not_found',
-                'message' => trans('person_bsn_api.errors.not_found'),
-            ],
-        ];
         $person = IConnect::make($fund->organization->getIConnectApiConfigs())->getPerson($bsn, [
             'parents', 'children', 'partners',
         ]);
