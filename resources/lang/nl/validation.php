@@ -185,6 +185,11 @@ return [
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'bsn' => 'Het :attribute moet een geldig burgerservicenummer (BSN) zijn.',
     'business_type_id' => 'Organisatie type',
+    'payout' => [
+        'amount_between' => 'Het uitbetalingsbedrag moet tussen :min en :max liggen.',
+        'amount_exact' => 'Het uitbetalingsbedrag moet precies :amount zijn.',
+        'count_reached' => 'Het maximale aantal uitbetalingen voor dit tegoed (:count) is bereikt.',
+    ],
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',

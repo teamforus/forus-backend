@@ -45,6 +45,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_blocking_vouchers
  * @property bool $allow_reservations
  * @property bool $allow_reimbursements
+ * @property bool $allow_voucher_payouts
+ * @property string|null $allow_voucher_payout_amount
+ * @property int|null $allow_voucher_payout_count
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
@@ -85,6 +88,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $provider_products_required
  * @property bool $pre_check_excluded
  * @property string|null $pre_check_note
+ * @property bool $filters_visible_products
  * @property bool $help_enabled
  * @property string|null $help_title
  * @property string|null $help_block_text
@@ -98,7 +102,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $help_show_phone
  * @property bool $help_show_website
  * @property bool $help_show_chat
- * @property bool $filters_visible_products
  * @property string $criteria_label_requirement_show
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -125,6 +128,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowProviderSignUp($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayouts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherTopUps($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAuth2faPolicy($value)
@@ -158,6 +164,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereCustomAmountMin($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmailRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereEmployeeCanSeeProductVouchers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFiltersVisibleProducts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundRequestPhysicalCardEnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereFundRequestPhysicalCardTypeId($value)
@@ -310,6 +317,7 @@ class FundConfig extends BaseModel
         'pre_check_excluded' => 'boolean',
         'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
+        'allow_voucher_payouts' => 'boolean',
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
