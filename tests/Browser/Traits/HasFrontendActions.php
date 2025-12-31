@@ -119,6 +119,39 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @param int $count
+     * @param bool $waitForItems
+     * @param string|null $filePath
+     * @return void
+     * @throws TimeoutException
+     */
+    protected function attachFilesToFileUploader(
+        Browser $browser,
+        int $count = 1,
+        bool $waitForItems = true,
+        ?string $filePath = null,
+    ): void {
+        $filePath ??= base_path('tests/assets/test.png');
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'block')");
+        $browser->waitFor("input[name='file_uploader_input_hidden']");
+
+        $inputs = $browser->elements("input[name='file_uploader_input_hidden']");
+        $this->assertGreaterThanOrEqual($count, count($inputs));
+
+        for ($i = 0; $i < $count; $i++) {
+            $inputs[$i]->sendKeys($filePath);
+        }
+
+        if ($waitForItems) {
+            $browser->waitFor('.file-item');
+            $browser->waitUntilMissing('.file-item-uploading');
+        }
+
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'none')");
+    }
+
+    /**
+     * @param Browser $browser
      * @param Identity $identity
      * @throws TimeOutException
      * @return void

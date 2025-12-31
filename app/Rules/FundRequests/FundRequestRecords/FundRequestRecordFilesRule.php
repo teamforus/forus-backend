@@ -109,7 +109,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
 
         if (
             $criterion->record_type->type === RecordType::TYPE_BOOL &&
-            $criterion->record_type->control_type === 'checkbox' &&
+            $criterion->record_type->control_type === RecordType::CONTROL_TYPE_CHECKBOX &&
             $value === RecordType::TYPE_BOOL_OPTION_YES
         ) {
             return true;

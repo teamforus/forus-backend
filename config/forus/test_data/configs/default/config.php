@@ -79,10 +79,10 @@ return [
     'iconnect_cert_trust' => '',
 
     'person_bsn_api_record_types' => [[
-        'person_bsn_api_field' => 'naam.geslachtsnaam',
+        'person_bsn_api_field' => 'naam.voornamen',
         'record_type_key' => 'given_name',
     ], [
-        'person_bsn_api_field' => 'naam.voornamen',
+        'person_bsn_api_field' => 'naam.geslachtsnaam',
         'record_type_key' => 'family_name',
     ], [
         'person_bsn_api_field' => 'geboorte.datum.datum',
@@ -93,6 +93,9 @@ return [
     ], [
         'person_bsn_api_field' => 'verblijfplaats.huisnummer',
         'record_type_key' => 'house_number',
+    ], [
+        'person_bsn_api_field' => 'verblijfplaats.huisnummertoevoeging',
+        'record_type_key' => 'house_number_addition',
     ], [
         'person_bsn_api_field' => 'verblijfplaats.postcode',
         'record_type_key' => 'postal_code',

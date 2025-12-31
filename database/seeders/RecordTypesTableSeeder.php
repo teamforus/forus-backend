@@ -14,7 +14,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'email',
         'name' => 'E-mail',
-        'type' => 'email',
+        'type' => RecordType::TYPE_EMAIL,
         'vouchers' => true,
         'criteria' => true,
     ], [
@@ -28,8 +28,8 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'children_nth',
         'name' => 'Number of children',
-        'type' => 'number',
-        'control_type' => 'step',
+        'type' => RecordType::TYPE_NUMBER,
+        'control_type' => RecordType::CONTROL_TYPE_STEP,
         'vouchers' => true,
         'criteria' => true,
     ], [
@@ -42,7 +42,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'birth_date',
         'name' => 'Geboortedatum',
-        'type' => 'date',
+        'type' => RecordType::TYPE_DATE,
         'vouchers' => true,
         'criteria' => true,
     ], [
@@ -51,7 +51,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'tax_id',
         'name' => 'Tax ID',
-        'control_type' => 'number',
+        'control_type' => RecordType::CONTROL_TYPE_NUMBER,
     ], [
         'key' => 'telephone',
         'name' => 'Vast telefoonnummer',
@@ -59,19 +59,19 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'net_worth',
         'name' => 'Net worth',
-        'type' => 'number',
-        'control_type' => 'currency',
+        'type' => RecordType::TYPE_NUMBER,
+        'control_type' => RecordType::CONTROL_TYPE_CURRENCY,
         'criteria' => true,
     ], [
         'key' => 'base_salary',
         'name' => 'Base salary',
-        'type' => 'number',
-        'control_type' => 'currency',
+        'type' => RecordType::TYPE_NUMBER,
+        'control_type' => RecordType::CONTROL_TYPE_CURRENCY,
         'criteria' => true,
     ], [
         'key' => 'bsn',
         'name' => 'BSN',
-        'type' => 'number',
+        'type' => RecordType::TYPE_NUMBER,
         'system' => true,
     ], [
         'key' => 'uid',
@@ -81,7 +81,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'partner_bsn',
         'name' => 'Partner BSN',
-        'type' => 'number',
+        'type' => RecordType::TYPE_NUMBER,
         'system' => true,
     ], [
         'key' => 'mobile',
@@ -111,7 +111,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'house_composition',
         'name' => 'Gezinssamenstelling',
         'system' => true,
-        'type' => 'select',
+        'type' => RecordType::TYPE_SELECT,
         'options' => [
             ['value' => 'onbekend', 'name' => 'Onbekend'],
             ['value' => 'alleenstaand', 'name' => 'Alleenstaand'],
@@ -123,7 +123,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'gender',
         'name' => 'Geslacht',
         'system' => true,
-        'type' => 'select',
+        'type' => RecordType::TYPE_SELECT,
         'criteria' => true,
         'options' => [
             ['value' => 'onbekend', 'name' => 'Onbekend'],
@@ -134,7 +134,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'living_arrangement',
         'name' => 'Leefvorm',
-        'type' => 'select',
+        'type' => RecordType::TYPE_SELECT,
         'system' => true,
         'options' => [
             [
@@ -181,7 +181,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     ], [
         'key' => 'marital_status',
         'name' => 'Burgerlijke Staat',
-        'type' => 'select',
+        'type' => RecordType::TYPE_SELECT,
         'system' => true,
         'options' => [
             [
@@ -243,24 +243,24 @@ class RecordTypesTableSeeder extends DatabaseSeeder
     public function run(): void
     {
         $baseTypes = [
-            'bool' => 'checkbox',
-            'date' => 'date',
-            'string' => 'text',
-            'email' => 'text',
-            'bsn' => 'number',
-            'iban' => 'text',
-            'number' => 'number',
-            'select' => 'select',
-            'select_number' => 'select',
+            RecordType::TYPE_BOOL => RecordType::CONTROL_TYPE_CHECKBOX,
+            RecordType::TYPE_DATE => RecordType::CONTROL_TYPE_DATE,
+            RecordType::TYPE_STRING => RecordType::CONTROL_TYPE_TEXT,
+            RecordType::TYPE_EMAIL => RecordType::CONTROL_TYPE_TEXT,
+            'bsn' => RecordType::CONTROL_TYPE_NUMBER,
+            RecordType::TYPE_IBAN => RecordType::CONTROL_TYPE_TEXT,
+            RecordType::TYPE_NUMBER => RecordType::CONTROL_TYPE_NUMBER,
+            RecordType::TYPE_SELECT => RecordType::CONTROL_TYPE_SELECT,
+            RecordType::TYPE_SELECT_NUMBER => RecordType::CONTROL_TYPE_SELECT,
         ];
 
         foreach ($this->recordTypes as $type) {
             $recordType = RecordType::create([
-                'type' => 'string',
+                'type' => RecordType::TYPE_STRING,
                 'system' => false,
                 'vouchers' => false,
                 'criteria' => false,
-                'control_type' => $baseTypes[$type['type'] ?? null] ?? 'text',
+                'control_type' => $baseTypes[$type['type'] ?? null] ?? RecordType::CONTROL_TYPE_TEXT,
                 ...Arr::only($type, [
                     'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers', 'control_type',
                 ]),

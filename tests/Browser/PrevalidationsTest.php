@@ -44,35 +44,35 @@ class PrevalidationsTest extends DuskTestCase
 
         $data = [[
             'record_type_key' => 'uid',
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'assert_valid' => '12345678',
         ], [
             'record_type_key' => 'test_iban',
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'assert_valid' => fake()->iban,
             'assert_invalid' => '123456789',
         ], [
             'record_type_key' => 'test_date',
-            'control_type' => 'date',
+            'control_type' => RecordType::CONTROL_TYPE_DATE,
             'assert_valid' => '01-01-2010',
             'assert_invalid' => '01-01-1980',
         ], [
             'record_type_key' => 'test_email',
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'assert_valid' => fake()->email,
             'assert_invalid' => 'fake_email',
         ], [
             'record_type_key' => 'test_string_any',
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'assert_valid' => 'lorem_ipsum',
         ], [
             'record_type_key' => 'test_number',
-            'control_type' => 'number',
+            'control_type' => RecordType::CONTROL_TYPE_NUMBER,
             'assert_valid' => 7,
             'assert_invalid' => 5,
         ], [
             'record_type_key' => 'test_select',
-            'control_type' => 'select',
+            'control_type' => RecordType::CONTROL_TYPE_SELECT,
             'assert_valid' => 'Foo',
             'assert_invalid' => 'Bar',
         ]];
@@ -135,7 +135,7 @@ class PrevalidationsTest extends DuskTestCase
 
                 $this->fillFormAndSubmit($browser, $fund, [[
                     'record_type_key' => 'uid',
-                    'control_type' => 'text',
+                    'control_type' => RecordType::CONTROL_TYPE_TEXT,
                     'assert_invalid' => $uid,
                 ]], true);
 
@@ -508,7 +508,10 @@ class PrevalidationsTest extends DuskTestCase
                 $browser->waitFor('.form-error');
 
                 // clear input
-                if (!in_array($field['control_type'], ['date', 'select'])) {
+                if (!in_array($field['control_type'], [
+                    RecordType::CONTROL_TYPE_DATE,
+                    RecordType::CONTROL_TYPE_SELECT,
+                ])) {
                     $this->clearField($browser, $selector);
                 }
 
@@ -529,10 +532,10 @@ class PrevalidationsTest extends DuskTestCase
     protected function getControlSelector(string $control): ?string
     {
         return match ($control) {
-            'date' => '@controlDate',
-            'text' => '@controlText',
-            'select' => '@selectControl',
-            'number' => '@controlNumber',
+            RecordType::CONTROL_TYPE_DATE => '@controlDate',
+            RecordType::CONTROL_TYPE_TEXT => '@controlText',
+            RecordType::CONTROL_TYPE_SELECT => '@selectControl',
+            RecordType::CONTROL_TYPE_NUMBER => '@controlNumber',
             default => null
         };
     }
