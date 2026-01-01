@@ -52,5 +52,9 @@ return [
             'title' => 'Beoordelaar',
             'subtitle' => '',
         ],
+        'voucher_payout_requester' => [
+            'title' => 'Tegoed-uitbetaling',
+            'subtitle' => '',
+        ],
     ],
 ];

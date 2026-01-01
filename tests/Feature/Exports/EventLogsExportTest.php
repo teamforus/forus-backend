@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Exports;
+namespace Tests\Feature\Exports;
 
 use App\Exports\EventLogsExport;
 use App\Models\Employee;
