@@ -41,10 +41,12 @@ class VoucherResource extends BaseJsonResource
         'last_deactivation_log',
         'top_up_transactions',
         'voucher_records.record_type.translations',
+        'fund_request.records',
     ];
 
     public const array LOAD_COUNT = [
         'transactions',
+        'requester_payouts',
     ];
 
     /**
@@ -83,7 +85,7 @@ class VoucherResource extends BaseJsonResource
         return [
             ...$voucher->only([
                 'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
-                'expired', 'deactivated', 'type', 'state', 'state_locale', 'external',
+                'requester_payouts_count', 'expired', 'deactivated', 'type', 'state', 'state_locale', 'external',
             ]),
             ...$this->getBaseFields($voucher),
             ...$this->getOptionalFields($voucher),
@@ -111,6 +113,10 @@ class VoucherResource extends BaseJsonResource
             'physical_card' => new PhysicalCardResource($physicalCard),
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
+            'fund_request' => $voucher->fund_request ? [
+                'iban' => $voucher->fund_request->getIban(false),
+                'iban_name' => $voucher->fund_request->getIbanName(false),
+            ] : null,
             ...$this->getRecords($voucher),
             ...$this->timestamps($voucher, 'created_at'),
         ];
@@ -273,7 +279,10 @@ class VoucherResource extends BaseJsonResource
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
             'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
-            ...$fund->fund_config->only(['allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code']),
+            ...$fund->fund_config->only([
+                'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
+                'allow_voucher_payouts', 'allow_voucher_payout_amount', 'allow_voucher_payout_count',
+            ]),
         ];
     }
 

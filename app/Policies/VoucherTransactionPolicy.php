@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -216,5 +217,33 @@ class VoucherTransactionPolicy
         return $transaction->voucher->fund->organization->identityCan($identity, [
             Permission::MANAGE_PAYOUTS,
         ]) && $transaction->isEditablePayout();
+    }
+
+    /**
+     * Requester initiates payout from own voucher.
+     *
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function storePayoutRequester(Identity $identity, Voucher $voucher): bool
+    {
+        if ($voucher->identity_id !== $identity->id) {
+            return false;
+        }
+
+        if ($voucher->expired || $voucher->deactivated || $voucher->external) {
+            return false;
+        }
+
+        if ($voucher->product_id || $voucher->product_reservation_id) {
+            return false;
+        }
+
+        if (!$voucher->fund_request?->getIban(false) || !$voucher?->fund_request->getIbanName(false)) {
+            return false;
+        }
+
+        return $voucher->fund?->fund_config?->allow_voucher_payouts === true;
     }
 }
