@@ -57,7 +57,6 @@ class StoreFundRequestRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'asd' => 'postcode',
             ...$this->recordsRule($this->fund),
             ...$this->contactInformationRule($this->fund),
             ...$this->physicalCardRequestRule($this->fund),

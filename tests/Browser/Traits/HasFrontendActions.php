@@ -7,6 +7,7 @@ use App\Models\Organization;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
+use Facebook\WebDriver\Remote\LocalFileDetector;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
@@ -139,7 +140,7 @@ trait HasFrontendActions
         $this->assertGreaterThanOrEqual($count, count($inputs));
 
         for ($i = 0; $i < $count; $i++) {
-            $inputs[$i]->sendKeys($filePath);
+            $inputs[$i]->setFileDetector(new LocalFileDetector())->sendKeys($filePath);
         }
 
         if ($waitForItems) {
