@@ -21,9 +21,7 @@ class IConnectPrefill
      */
     public static function getBsnApiPrefills(Fund $fund, string $bsn): array
     {
-        $hash = md5($fund->criteria->pluck('record_type_key')->toJson());
-
-        $cacheKey = 'bsn_fund_prefill_data_' . $hash . '_' . $bsn;
+        $cacheKey = static::makeFundPrefillCacheKey($fund, $bsn);
         $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
         $shouldCache = $cacheTime > 0;
 
@@ -38,6 +36,41 @@ class IConnectPrefill
         }
 
         return $prefills;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $bsn
+     * @return void
+     */
+    public static function forgetBsnApiPrefills(Fund $fund, string $bsn): void
+    {
+        Cache::forget(static::makeFundPrefillCacheKey($fund, $bsn));
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $bsn
+     * @return string
+     */
+    public static function makeFundPrefillCacheKey(Fund $fund, string $bsn): string
+    {
+        $hashData = [
+            'fund_config_key' => $fund->fund_config?->key,
+            'criteria' => $fund->criteria
+                ->map(fn (FundCriterion $criterion) => [
+                    'record_type_key' => $criterion->record_type_key,
+                    'fill_type' => $criterion->fill_type,
+                    'optional' => $criterion->optional,
+                ])
+                ->sortBy('record_type_key')
+                ->values()
+                ->toArray(),
+        ];
+
+        $hash = md5(json_encode($hashData));
+
+        return 'bsn_fund_prefill_data_' . $fund->id . '_' . $hash . '_' . $bsn;
     }
 
     /**
@@ -163,9 +196,10 @@ class IConnectPrefill
     }
 
     /**
+     * @param Fund $fund
      * @param Person $person
-     * @throws PersonBsnApiIsTakenByPartnerException
      * @return array
+     * @throws PersonBsnApiIsTakenByPartnerException
      */
     protected function getPartnerPrefills(Fund $fund, Person $person): array
     {
@@ -279,6 +313,7 @@ class IConnectPrefill
     }
 
     /**
+     * @param Fund $fund
      * @param Person $person
      * @return Person|null
      */

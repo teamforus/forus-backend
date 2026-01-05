@@ -692,8 +692,8 @@ class TestData
 
         $recordType = RecordType::firstOrCreate([
             'key' => $eligibility_key,
-            'type' => 'bool',
-            'control_type' => 'checkbox',
+            'type' => RecordType::TYPE_BOOL,
+            'control_type' => RecordType::CONTROL_TYPE_CHECKBOX,
         ], [
             'name' => "$fund->name eligible",
             'system' => false,

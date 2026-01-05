@@ -302,12 +302,11 @@ return [
     'Nijmegen VI' => [
         'implementation_name' => 'Nijmegen',
         'organization_name' => 'Nijmegen',
-        'fund' => [],
+        'fund' => [
+            'auto_requests_validation' => false,
+        ],
         'fund_config' => [
             'key' => 'nijmegen-vi',
-            'auth_2fa_restrict_emails' => true,
-            'auth_2fa_restrict_auth_sessions' => true,
-            'auth_2fa_restrict_reimbursements' => true,
             'show_subsidies' => true,
             'show_qr_limits' => true,
             'show_requester_limits' => true,

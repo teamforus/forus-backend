@@ -129,14 +129,7 @@ class FundRequestClarificationTest extends DuskTestCase
                 $browser->waitFor('@errorFiles1');
 
                 // add a file
-                $browser->within('@fileUploader', function (Browser $browser) {
-                    $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'block'");
-                    $browser->waitFor('[name=file_uploader_input_hidden]');
-                    $browser->assertVisible('[name=file_uploader_input_hidden]');
-                    $browser->element('[name=file_uploader_input_hidden]');
-                    $browser->attach('file_uploader_input_hidden', base_path('tests/assets/test.png'));
-                    $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'none'");
-                });
+                $browser->within('@fileUploader', fn () => $this->attachFilesToFileUploader($browser));
 
                 // fill text
                 $text = $this->faker->sentence();

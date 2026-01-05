@@ -7,6 +7,7 @@ use App\Models\Organization;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
+use Facebook\WebDriver\Remote\LocalFileDetector;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
@@ -115,6 +116,39 @@ trait HasFrontendActions
         } catch (Throwable $e) {
             throw new RuntimeException("Unable to clear field [$selector]: " . $e->getMessage(), 0, $e);
         }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $count
+     * @param bool $waitForItems
+     * @param string|null $filePath
+     * @return void
+     * @throws TimeoutException
+     */
+    protected function attachFilesToFileUploader(
+        Browser $browser,
+        int $count = 1,
+        bool $waitForItems = true,
+        ?string $filePath = null,
+    ): void {
+        $filePath ??= base_path('tests/assets/test.png');
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'block')");
+        $browser->waitFor("input[name='file_uploader_input_hidden']");
+
+        $inputs = $browser->elements("input[name='file_uploader_input_hidden']");
+        $this->assertGreaterThanOrEqual($count, count($inputs));
+
+        for ($i = 0; $i < $count; $i++) {
+            $inputs[$i]->setFileDetector(new LocalFileDetector())->sendKeys($filePath);
+        }
+
+        if ($waitForItems) {
+            $browser->waitFor('.file-item');
+            $browser->waitUntilMissing('.file-item-uploading');
+        }
+
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'none')");
     }
 
     /**

@@ -27,8 +27,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordStringControlTypes(): void
     {
-        $this->checkControlTypes('string', [
-            'text' => [
+        $this->checkControlTypes(RecordType::TYPE_STRING, [
+            RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => 'any',
                     'assert_valid' => 'something',
@@ -43,8 +43,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordBoolControlTypes(): void
     {
-        $this->checkControlTypes('bool', [
-            'checkbox' => [
+        $this->checkControlTypes(RecordType::TYPE_BOOL, [
+            RecordType::CONTROL_TYPE_CHECKBOX => [
                 '*' => [
                     'value' => 'Ja',
                     'assert_valid' => true,
@@ -65,8 +65,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordEmailControlTypes(): void
     {
-        $this->checkControlTypes('email', [
-            'text' => [
+        $this->checkControlTypes(RecordType::TYPE_EMAIL, [
+            RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
                     'assert_valid' => $this->faker->email,
@@ -82,8 +82,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordIbanControlTypes(): void
     {
-        $this->checkControlTypes('iban', [
-            'text' => [
+        $this->checkControlTypes(RecordType::TYPE_IBAN, [
+            RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
                     'assert_valid' => $this->faker->iban,
@@ -99,8 +99,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordNumberControlTypes(): void
     {
-        $this->checkControlTypes('number', [
-            'text' => [
+        $this->checkControlTypes(RecordType::TYPE_NUMBER, [
+            RecordType::CONTROL_TYPE_TEXT => [
                 '<' => [
                     'value' => 10,
                     'assert_valid' => 5,
@@ -131,7 +131,7 @@ class FundRequestCriteriaStepsTest extends TestCase
                     'assert_valid' => 5,
                 ],
             ],
-            'number' => [
+            RecordType::CONTROL_TYPE_NUMBER => [
                 '<' => [
                     'value' => 10,
                     'assert_valid' => 5,
@@ -162,7 +162,7 @@ class FundRequestCriteriaStepsTest extends TestCase
                     'assert_valid' => 5,
                 ],
             ],
-            'currency' => [
+            RecordType::CONTROL_TYPE_CURRENCY => [
                 '<' => [
                     'value' => 10,
                     'assert_valid' => 5,
@@ -193,7 +193,7 @@ class FundRequestCriteriaStepsTest extends TestCase
                     'assert_valid' => 5,
                 ],
             ],
-            'step' => [
+            RecordType::CONTROL_TYPE_STEP => [
                 '<' => [
                     'value' => 10,
                     'assert_valid' => 5,
@@ -233,8 +233,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordSelectControlTypes(): void
     {
-        $this->checkControlTypes('select', [
-            'select' => [
+        $this->checkControlTypes(RecordType::TYPE_SELECT, [
+            RecordType::CONTROL_TYPE_SELECT => [
                 '=' => [
                     'value' => 'option 1',
                     'options' => [[
@@ -268,8 +268,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordSelectNumberControlTypes(): void
     {
-        $this->checkControlTypes('select_number', [
-            'select' => [
+        $this->checkControlTypes(RecordType::TYPE_SELECT_NUMBER, [
+            RecordType::CONTROL_TYPE_SELECT => [
                 '=' => [
                     'value' => 1,
                     'options' => [[
@@ -330,8 +330,8 @@ class FundRequestCriteriaStepsTest extends TestCase
      */
     public function testWebshopFundRequestRecordDateControlTypes(): void
     {
-        $this->checkControlTypes('date', [
-            'text' => [
+        $this->checkControlTypes(RecordType::TYPE_DATE, [
+            RecordType::CONTROL_TYPE_TEXT => [
                 '>' => [
                     'value' => '01-01-2024',
                     'assert_valid' => '01-02-2024',
@@ -343,7 +343,7 @@ class FundRequestCriteriaStepsTest extends TestCase
                     'assert_invalid' => '2023-12-31',
                 ],
             ],
-            'date' => [
+            RecordType::CONTROL_TYPE_DATE => [
                 '>' => [
                     'value' => '01-01-2024',
                     'assert_valid' => '01-02-2024',
@@ -364,34 +364,34 @@ class FundRequestCriteriaStepsTest extends TestCase
     public function testWebshopFundRequestCriteriaSteps(): void
     {
         $configs = [[
-            'record_type' => 'string',
+            'record_type' => RecordType::TYPE_STRING,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => 'any',
             'assert_valid' => 'something',
             'step' => 'Step #1',
         ], [
-            'record_type' => 'number',
+            'record_type' => RecordType::TYPE_NUMBER,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'number',
+            'control_type' => RecordType::CONTROL_TYPE_NUMBER,
             'operator' => '=',
             'value' => 10,
             'assert_valid' => 10,
             'assert_invalid' => 12,
             'step' => 'Step #1',
         ], [
-            'record_type' => 'email',
+            'record_type' => RecordType::TYPE_EMAIL,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
             'assert_valid' => $this->faker->email,
             'step' => 'Step #2',
         ], [
-            'record_type' => 'string',
+            'record_type' => RecordType::TYPE_STRING,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => 'any',
             'assert_valid' => 'another single field without step',
@@ -436,23 +436,367 @@ class FundRequestCriteriaStepsTest extends TestCase
     /**
      * @throws Throwable
      */
+    public function testWebshopFundRequestCriteriaGroupRequiredValidation(): void
+    {
+        // create organization and fund for group validation
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // create required and optional criteria groups
+        $requiredGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Required group',
+            description: 'Required group description',
+            required: true,
+        );
+
+        $optionalGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Optional group',
+            description: 'Optional group description',
+            order: 2,
+        );
+
+        // define record types and criteria mapped to groups
+        $recordTypes = collect([
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+            $this->makeCriteriaRecordType($organization, 'number', RecordType::CONTROL_TYPE_NUMBER),
+        ]);
+
+        $criteria = [[
+            'title' => 'Required group choice A',
+            'label' => 'Required group choice A',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => true,
+            'record_type_key' => $recordTypes[0]->key,
+            'fund_criteria_group_id' => $requiredGroup->id,
+            'show_attachment' => false,
+        ], [
+            'title' => 'Required group choice B',
+            'label' => 'Required group choice B',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => true,
+            'record_type_key' => $recordTypes[1]->key,
+            'fund_criteria_group_id' => $requiredGroup->id,
+            'show_attachment' => false,
+        ], [
+            'title' => 'Optional group choice',
+            'label' => 'Optional group choice',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => true,
+            'record_type_key' => $recordTypes[2]->key,
+            'fund_criteria_group_id' => $optionalGroup->id,
+            'show_attachment' => false,
+        ], [
+            'title' => 'Standalone number',
+            'value' => 1,
+            'operator' => '>=',
+            'record_type_key' => $recordTypes[3]->key,
+            'show_attachment' => false,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        // fetch fund resource and assert groups/links
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $response = $this->getJson(
+            "/api/v1/platform/funds/$fund->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($identity))
+        );
+
+        $response->assertSuccessful();
+
+        // assert group metadata and required flags
+        $groups = collect($response->json('data.criteria_groups'))->keyBy('id');
+        $this->assertArrayHasKey($requiredGroup->id, $groups);
+        $this->assertArrayHasKey($optionalGroup->id, $groups);
+        $this->assertEquals($requiredGroup->title, $groups[$requiredGroup->id]['title']);
+        $this->assertEquals($optionalGroup->title, $groups[$optionalGroup->id]['title']);
+        $this->assertTrue((bool) $groups[$requiredGroup->id]['required']);
+        $this->assertFalse((bool) $groups[$optionalGroup->id]['required']);
+
+        // assert criteria links to groups
+        $fundCriteria = collect($response->json('data.criteria'))->keyBy('record_type_key');
+        $this->assertEquals($requiredGroup->id, $fundCriteria[$recordTypes[0]->key]['fund_criteria_group_id']);
+        $this->assertEquals($requiredGroup->id, $fundCriteria[$recordTypes[1]->key]['fund_criteria_group_id']);
+        $this->assertEquals($optionalGroup->id, $fundCriteria[$recordTypes[2]->key]['fund_criteria_group_id']);
+        $this->assertNull($fundCriteria[$recordTypes[3]->key]['fund_criteria_group_id']);
+
+        // submit with empty required group values to trigger group error
+        $recordsList = [
+            $this->makeRequestCriterionValue($fund, $recordTypes[0]->key, ''),
+            $this->makeRequestCriterionValue($fund, $recordTypes[1]->key, ''),
+            $this->makeRequestCriterionValue($fund, $recordTypes[2]->key, ''),
+            $this->makeRequestCriterionValue($fund, $recordTypes[3]->key, 5),
+        ];
+
+        $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
+        $response->assertJsonValidationErrors([
+            "criteria_groups.$requiredGroup->id",
+        ]);
+
+        // submit with one required value filled to pass group validation
+        $recordsList[0]['value'] = 'yes';
+
+        $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
+        $response->assertSuccessful();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testWebshopFundRequestCriteriaGroupOrdering(): void
+    {
+        // create organization and fund for ordering validation
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // create groups with explicit order
+        $thirdGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Group C',
+            description: 'Group C description',
+            order: 3,
+        );
+
+        $firstGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Group A',
+            description: 'Group A description',
+        );
+
+        $secondGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Group B',
+            description: 'Group B description',
+            order: 2,
+        );
+
+        // fetch fund resource and assert group ordering
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $response = $this->getJson(
+            "/api/v1/platform/funds/$fund->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($identity))
+        );
+
+        $response->assertSuccessful();
+
+        $groupIds = array_column($response->json('data.criteria_groups'), 'id');
+        $this->assertSame([$firstGroup->id, $secondGroup->id, $thirdGroup->id], $groupIds);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testWebshopFundRequestCriteriaGroupsWithSteps(): void
+    {
+        // create organization and fund for step/group mapping
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // create a group to attach criteria to
+        $group = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Grouped criteria',
+            description: 'Grouped criteria description',
+        );
+
+        // define record types for grouped and standalone criteria
+        $recordTypes = collect([
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+            $this->makeCriteriaRecordType($organization, 'number', RecordType::CONTROL_TYPE_NUMBER),
+        ]);
+
+        // create criteria sharing the same step with and without group
+        $criteria = [[
+            'step' => 'Step #1',
+            'title' => 'Grouped criterion',
+            'value' => 'any',
+            'operator' => '*',
+            'record_type_key' => $recordTypes[0]->key,
+            'fund_criteria_group_id' => $group->id,
+            'show_attachment' => false,
+        ], [
+            'step' => 'Step #1',
+            'title' => 'Standalone criterion',
+            'value' => 1,
+            'operator' => '>=',
+            'record_type_key' => $recordTypes[1]->key,
+            'show_attachment' => false,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        // fetch fund resource and assert step/group links
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $response = $this->getJson(
+            "/api/v1/platform/funds/$fund->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($identity))
+        );
+
+        $response->assertSuccessful();
+
+        // assert step exists before checking criterion mapping
+        $steps = collect($response->json('data.criteria_steps'))->keyBy('title');
+        $this->assertArrayHasKey('Step #1', $steps);
+
+        $stepId = $steps['Step #1']['id'];
+        $fundCriteria = collect($response->json('data.criteria'))->keyBy('record_type_key');
+
+        // assert grouped and standalone criteria share the same step
+        $this->assertEquals($group->id, $fundCriteria[$recordTypes[0]->key]['fund_criteria_group_id']);
+        $this->assertEquals($stepId, $fundCriteria[$recordTypes[0]->key]['fund_criteria_step_id']);
+        $this->assertNull($fundCriteria[$recordTypes[1]->key]['fund_criteria_group_id']);
+        $this->assertEquals($stepId, $fundCriteria[$recordTypes[1]->key]['fund_criteria_step_id']);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testWebshopFundRequestCriteriaMultipleRequiredGroups(): void
+    {
+        // create organization and fund for required group validation
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // create multiple required groups
+        $groupA = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Required group A',
+            description: 'Required group A description',
+            required: true,
+        );
+
+        $groupB = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Required group B',
+            description: 'Required group B description',
+            order: 2,
+            required: true,
+        );
+
+        // define record types for each required group
+        $recordTypes = collect([
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+            $this->makeCriteriaRecordType($organization, 'string', RecordType::CONTROL_TYPE_TEXT),
+        ]);
+
+        // create criteria mapped to separate required groups
+        $criteria = [[
+            'title' => 'Group A criterion',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => true,
+            'record_type_key' => $recordTypes[0]->key,
+            'fund_criteria_group_id' => $groupA->id,
+            'show_attachment' => false,
+        ], [
+            'title' => 'Group B criterion',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => true,
+            'record_type_key' => $recordTypes[1]->key,
+            'fund_criteria_group_id' => $groupB->id,
+            'show_attachment' => false,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        // submit empty values and assert both group errors
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $recordsList = [
+            $this->makeRequestCriterionValue($fund, $recordTypes[0]->key, ''),
+            $this->makeRequestCriterionValue($fund, $recordTypes[1]->key, ''),
+        ];
+
+        $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
+        $response->assertJsonValidationErrors([
+            "criteria_groups.$groupA->id",
+            "criteria_groups.$groupB->id",
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testWebshopFundRequestCriteriaGroupRequiredWithBool(): void
+    {
+        // create organization and fund for boolean group validation
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // create a required group
+        $requiredGroup = $this->makeCriteriaGroup(
+            $fund,
+            title: 'Required bool group',
+            description: 'Required bool group description',
+            required: true,
+        );
+
+        // define bool record type and map it to the required group
+        $recordType = $this->makeCriteriaRecordType($organization, 'bool', RecordType::CONTROL_TYPE_CHECKBOX);
+
+        $criteria = [[
+            'title' => 'Required checkbox',
+            'label' => 'Required checkbox',
+            'value' => RecordType::TYPE_BOOL_OPTION_YES,
+            'operator' => '=',
+            'optional' => true,
+            'record_type_key' => $recordType->key,
+            'fund_criteria_group_id' => $requiredGroup->id,
+            'show_attachment' => false,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        // submit empty checkbox and assert group error
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $recordsList = [
+            $this->makeRequestCriterionValue($fund, $recordType->key, null),
+        ];
+
+        $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
+        $response->assertJsonValidationErrors([
+            "criteria_groups.$requiredGroup->id",
+        ]);
+
+        // submit checked value and assert success
+        $recordsList[0]['value'] = RecordType::TYPE_BOOL_OPTION_YES;
+
+        $response = $this->makeFundRequest($identity, $fund, $recordsList, false);
+        $response->assertSuccessful();
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testWebshopFundRequestConditionalSteps(): void
     {
         $textRecordTypeKey = token_generator()->generate(16);
         $numberRecordTypeKey = token_generator()->generate(16);
 
         $configs = [[
-            'record_type' => 'string',
+            'record_type' => RecordType::TYPE_STRING,
             'record_key' => $textRecordTypeKey,
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => 'any',
             'input_value' => 'something',
             'step' => 'Step #1',
         ], [
-            'record_type' => 'number',
+            'record_type' => RecordType::TYPE_NUMBER,
             'record_key' => $numberRecordTypeKey,
-            'control_type' => 'number',
+            'control_type' => RecordType::CONTROL_TYPE_NUMBER,
             'operator' => '=',
             'value' => 10,
             'input_value' => 10,
@@ -463,9 +807,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 'value' => 'something',
             ]],
         ], [
-            'record_type' => 'number',
+            'record_type' => RecordType::TYPE_NUMBER,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'step',
+            'control_type' => RecordType::CONTROL_TYPE_STEP,
             'operator' => '>',
             'value' => 1,
             'input_value' => 5,
@@ -476,9 +820,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 'value' => 10,
             ]],
         ], [
-            'record_type' => 'date',
+            'record_type' => RecordType::TYPE_DATE,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'date',
+            'control_type' => RecordType::CONTROL_TYPE_DATE,
             'operator' => '*',
             'value' => '',
             'input_value' => '01-01-2021',
@@ -490,9 +834,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 'value' => 5,
             ]],
         ], [
-            'record_type' => 'email',
+            'record_type' => RecordType::TYPE_EMAIL,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
             'input_value' => $this->faker->email,
@@ -503,9 +847,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 'value' => 5,
             ]],
         ], [
-            'record_type' => 'email',
+            'record_type' => RecordType::TYPE_EMAIL,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'text',
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
             'input_value' => $this->faker->email,
@@ -517,9 +861,9 @@ class FundRequestCriteriaStepsTest extends TestCase
                 'value' => 15,
             ]],
         ], [
-            'record_type' => 'number',
+            'record_type' => RecordType::TYPE_NUMBER,
             'record_key' => token_generator()->generate(16),
-            'control_type' => 'number',
+            'control_type' => RecordType::CONTROL_TYPE_NUMBER,
             'operator' => '>',
             'value' => 10,
             'input_value' => 12,
