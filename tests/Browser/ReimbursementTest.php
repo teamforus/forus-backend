@@ -561,12 +561,7 @@ class ReimbursementTest extends DuskTestCase
         $browser->waitFor('@reimbursementForm');
         $browser->within('@reimbursementForm', function (Browser $browser) use ($voucher, $formData) {
             $browser->within('@fileUploader', function (Browser $browser) {
-                $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'block'");
-                $browser->waitFor('[name=file_uploader_input_hidden]');
-                $browser->assertVisible('[name=file_uploader_input_hidden]');
-                $browser->element('[name=file_uploader_input_hidden]');
-                $browser->attach('file_uploader_input_hidden', base_path('tests/assets/test.png'));
-                $browser->script("document.querySelector('.droparea-hidden-input').style.display = 'none'");
+                $this->attachFilesToFileUploader($browser, waitForItems: false);
             });
         });
 
