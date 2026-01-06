@@ -20,11 +20,13 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      * @param Fund|null $fund
      * @param BaseFormRequest|null $request
      * @param array $submittedRecords
+     * @param array $submittedRawRecords
      */
     public function __construct(
         protected ?Fund $fund,
         protected ?BaseFormRequest $request = null,
         protected array $submittedRecords,
+        protected array $submittedRawRecords,
     ) {
         parent::__construct($fund, $request);
     }
@@ -38,7 +40,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $criterion = $this->findCriterion($attribute);
+        $criterion = $this->findCriterion($attribute, $this->submittedRawRecords);
         $label = trans('validation.attributes.file');
 
         if (!$criterion) {

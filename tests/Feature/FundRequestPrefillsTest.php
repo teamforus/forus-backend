@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\FundCriterion;
+use App\Models\Identity;
 use App\Models\RecordType;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
@@ -26,6 +27,9 @@ class FundRequestPrefillsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Identity::findByBsn('999994542')?->delete();
+        Identity::findByBsn('999993112')?->delete();
 
         Config::set('forus.person_bsn.fund_prefill_cache_time', 0);
         Cache::flush();
@@ -441,5 +445,4 @@ class FundRequestPrefillsTest extends TestCase
         $this->assertContains('child_1_first_name', $recordKeys);
         $this->assertContains('children_age_group_18_99', $recordKeys);
     }
-
 }

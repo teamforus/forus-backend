@@ -24,6 +24,7 @@ use RuntimeException;
  * @property string|null $redeemed_by_address
  * @property int|null $fund_id
  * @property int|null $organization_id
+ * @property int|null $prevalidation_request_id
  * @property string $state
  * @property string|null $uid_hash
  * @property string|null $records_hash
@@ -40,6 +41,7 @@ use RuntimeException;
  * @property-read \App\Models\Organization|null $organization
  * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
+ * @property-read \App\Models\PrevalidationRequest|null $prevalidation_request
  * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $records
  * @property-read int|null $records_count
  * @method static Builder<static>|Prevalidation newModelQuery()
@@ -54,6 +56,7 @@ use RuntimeException;
  * @method static Builder<static>|Prevalidation whereId($value)
  * @method static Builder<static>|Prevalidation whereIdentityAddress($value)
  * @method static Builder<static>|Prevalidation whereOrganizationId($value)
+ * @method static Builder<static>|Prevalidation wherePrevalidationRequestId($value)
  * @method static Builder<static>|Prevalidation whereRecordsHash($value)
  * @method static Builder<static>|Prevalidation whereRedeemedByAddress($value)
  * @method static Builder<static>|Prevalidation whereState($value)
@@ -97,7 +100,7 @@ class Prevalidation extends BaseModel
      */
     protected $fillable = [
         'uid', 'identity_address', 'redeemed_by_address', 'state', 'fund_id', 'organization_id', 'employee_id',
-        'exported', 'json', 'records_hash', 'uid_hash', 'validated_at',
+        'exported', 'json', 'records_hash', 'uid_hash', 'validated_at', 'prevalidation_request_id',
     ];
 
     /**
@@ -114,6 +117,15 @@ class Prevalidation extends BaseModel
     public function identity_redeemed(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'redeemed_by_address', 'address');
+    }
+
+    /**
+     * @noinspection PhpUnused
+     * @return BelongsTo
+     */
+    public function prevalidation_request(): BelongsTo
+    {
+        return $this->belongsTo(PrevalidationRequest::class);
     }
 
     /**
@@ -518,7 +530,7 @@ class Prevalidation extends BaseModel
 
         $amount = $fund->amountForIdentity(identity: null, records: $records);
 
-        log_debug($amount, $voucher->amount_total);
+        log_debug($amount, $voucher->amount_total); // todo ask
 
         return currency_format($amount - $voucher->amount_total);
     }

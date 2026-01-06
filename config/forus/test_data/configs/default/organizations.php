@@ -26,6 +26,7 @@ return [
             'allow_profiles_relations' => true,
             'allow_profiles_households' => true,
             'allow_2fa_restrictions' => true,
+            'allow_prevalidation_requests' => true,
             'allow_manual_bulk_processing' => true,
             'allow_provider_extra_payments' => true,
             'allow_fund_request_record_edit' => true,

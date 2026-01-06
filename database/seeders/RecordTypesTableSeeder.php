@@ -56,6 +56,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'telephone',
         'name' => 'Vast telefoonnummer',
         'vouchers' => true,
+        'criteria' => true,
     ], [
         'key' => 'net_worth',
         'name' => 'Net worth',

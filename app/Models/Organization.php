@@ -88,6 +88,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_profiles_households
  * @property bool $allow_translations
  * @property bool $allow_product_updates
+ * @property int $allow_prevalidation_requests
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -173,6 +174,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $offices_count
  * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
  * @property-read int|null $physical_card_types_count
+ * @property-read Collection|\App\Models\PrevalidationRequest[] $prevalidation_requests
+ * @property-read int|null $prevalidation_requests_count
  * @property-read Collection|\App\Models\Prevalidation[] $prevalidations
  * @property-read int|null $prevalidations_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -213,6 +216,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPhysicalCards($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPreChecks($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowPrevalidationRequests($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProductUpdates($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfiles($value)
  * @method static EloquentBuilder<static>|Organization whereAllowProfilesCreate($value)
@@ -410,6 +414,7 @@ class Organization extends BaseModel
         'bank_note' => 'boolean',
         'reservation_note' => 'boolean',
         'bank_reservation_invoice_number' => 'boolean',
+        'allow_prevalidation_requests' => 'boolean',
     ];
 
     /**
@@ -507,6 +512,15 @@ class Organization extends BaseModel
     public function prevalidations(): HasMany
     {
         return $this->hasMany(Prevalidation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function prevalidation_requests(): HasMany
+    {
+        return $this->hasMany(PrevalidationRequest::class);
     }
 
     /**

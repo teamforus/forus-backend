@@ -24,6 +24,7 @@ use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
+use App\Models\PrevalidationRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\ProfileRelation;
@@ -60,6 +61,7 @@ use App\Policies\OrganizationPolicy;
 use App\Policies\PhysicalCardPolicy;
 use App\Policies\PhysicalCardRequestPolicy;
 use App\Policies\PrevalidationPolicy;
+use App\Policies\PrevalidationRequestPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
 use App\Policies\ProfileRelationPolicy;
@@ -119,6 +121,7 @@ class AuthServiceProvider extends ServiceProvider
         PhysicalCardRequest::class => PhysicalCardRequestPolicy::class,
         FundPhysicalCardType::class => FundPhysicalCardTypePolicy::class,
         ReimbursementCategory::class => ReimbursementCategoryPolicy::class,
+        PrevalidationRequest::class => PrevalidationRequestPolicy::class,
         VoucherTransactionBulk::class => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class => FundProviderChatMessagePolicy::class,

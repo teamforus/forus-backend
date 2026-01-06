@@ -9,11 +9,15 @@ use App\Models\PersonBsnApiRecordType;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiIsTakenByPartnerException;
 use App\Services\IConnectApiService\Objects\Person;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
 class IConnectPrefill
 {
+    public const string PREFILL_ERROR_NOT_FOUND = 'not_found';
+    public const string PREFILL_ERROR_CONNECTION_ERROR = 'connection_error';
+    public const string PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA = 'not_filled_required_criteria';
+    public const string PREFILL_ERROR_TAKEN_BY_PARTNER = 'taken_by_partner';
+
     /**
      * @param Fund $fund
      * @param string $bsn
@@ -21,56 +25,7 @@ class IConnectPrefill
      */
     public static function getBsnApiPrefills(Fund $fund, string $bsn): array
     {
-        $cacheKey = static::makeFundPrefillCacheKey($fund, $bsn);
-        $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
-        $shouldCache = $cacheTime > 0;
-
-        if ($shouldCache && Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
-
-        $prefills = (new static())->getPrefills($fund, $bsn);
-
-        if ($shouldCache && is_null(Arr::get($prefills, 'error'))) {
-            Cache::put($cacheKey, $prefills, $cacheTime);
-        }
-
-        return $prefills;
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $bsn
-     * @return void
-     */
-    public static function forgetBsnApiPrefills(Fund $fund, string $bsn): void
-    {
-        Cache::forget(static::makeFundPrefillCacheKey($fund, $bsn));
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $bsn
-     * @return string
-     */
-    public static function makeFundPrefillCacheKey(Fund $fund, string $bsn): string
-    {
-        $hashData = [
-            'fund_config_key' => $fund->fund_config?->key,
-            'criteria' => $fund->criteria
-                ->map(fn (FundCriterion $criterion) => [
-                    'record_type_key' => $criterion->record_type_key,
-                    'fill_type' => $criterion->fill_type,
-                    'optional' => $criterion->optional,
-                ])
-                ->sortBy('record_type_key')
-                ->values()
-                ->toArray(),
-        ];
-
-        $hash = md5(json_encode($hashData));
-
-        return 'bsn_fund_prefill_data_' . $fund->id . '_' . $hash . '_' . $bsn;
+        return (new static())->getPrefills($fund, $bsn);
     }
 
     /**
@@ -89,7 +44,7 @@ class IConnectPrefill
             if ($person?->response()->getCode() === 404) {
                 return [
                     'error' => [
-                        'key' => 'not_found',
+                        'key' => static::PREFILL_ERROR_NOT_FOUND,
                         'message' => trans('person_bsn_api.errors.not_found'),
                     ],
                 ];
@@ -97,7 +52,7 @@ class IConnectPrefill
 
             return [
                 'error' => [
-                    'key' => 'connection_error',
+                    'key' => static::PREFILL_ERROR_CONNECTION_ERROR,
                     'message' => trans('person_bsn_api.errors.connection_error'),
                 ],
             ];
@@ -109,7 +64,7 @@ class IConnectPrefill
         if ($this->isRequiredCriteriaFilledWithPrefills($fund, $personPrefills)) {
             return [
                 'error' => [
-                    'key' => 'not_filled_required_criteria',
+                    'key' => static::PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA,
                     'message' => trans('person_bsn_api.errors.not_filled_required_criteria'),
                 ],
             ];
@@ -121,7 +76,7 @@ class IConnectPrefill
         } catch (PersonBsnApiIsTakenByPartnerException) {
             return [
                 'error' => [
-                    'key' => 'taken_by_partner',
+                    'key' => static::PREFILL_ERROR_TAKEN_BY_PARTNER,
                     'message' => trans('person_bsn_api.errors.taken_by_partner'),
                 ],
             ];
@@ -198,8 +153,8 @@ class IConnectPrefill
     /**
      * @param Fund $fund
      * @param Person $person
-     * @return array
      * @throws PersonBsnApiIsTakenByPartnerException
+     * @return array
      */
     protected function getPartnerPrefills(Fund $fund, Person $person): array
     {

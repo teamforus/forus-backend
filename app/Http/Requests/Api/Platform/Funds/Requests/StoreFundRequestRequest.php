@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
 class StoreFundRequestRequest extends BaseFormRequest
 {
     protected bool $isValidationRequest = false;
+    protected bool $isCsvRequest = false;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -57,8 +58,7 @@ class StoreFundRequestRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'asd' => 'postcode',
-            ...$this->recordsRule($this->fund),
+            ...$this->recordsRule($this->fund, $this->input('records')),
             ...$this->contactInformationRule($this->fund),
             ...$this->physicalCardRequestRule($this->fund),
         ];
@@ -133,11 +133,12 @@ class StoreFundRequestRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
+     * @param array|null $rawValues
      * @return array
      */
-    protected function recordsRule(Fund $fund): array
+    protected function recordsRule(Fund $fund, ?array $rawValues): array
     {
-        $values = $this->input('records');
+        $values = $rawValues;
         $values = is_array($values) ? Arr::pluck($values, 'value', 'fund_criterion_id') : [];
 
         if ($this->isValidationRequest && !$this->has('records')) {
@@ -162,11 +163,11 @@ class StoreFundRequestRequest extends BaseFormRequest
             'records.*' => 'required|array',
             'records.*.value' => [
                 'present',
-                new FundRequestRecordValueRule($fund, $this, $values, $this->isValidationRequest),
+                new FundRequestRecordValueRule($fund, $this, $values, $rawValues, $this->isValidationRequest),
             ],
-            'records.*.files' => [
+            'records.*.files' => $this->isCsvRequest ? [] : [
                 'present',
-                new FundRequestRecordFilesRule($fund, $this, $values),
+                new FundRequestRecordFilesRule($fund, $this, $values, $rawValues),
             ],
             'records.*.fund_criterion_id' => [
                 'present',
