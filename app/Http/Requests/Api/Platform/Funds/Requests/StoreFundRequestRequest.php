@@ -133,13 +133,13 @@ class StoreFundRequestRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
-     * @param array|null $rawValues
+     * @param mixed $rawValues
      * @return array
      */
-    protected function recordsRule(Fund $fund, ?array $rawValues): array
+    protected function recordsRule(Fund $fund, mixed $rawValues): array
     {
-        $values = $rawValues;
-        $values = is_array($values) ? Arr::pluck($values, 'value', 'fund_criterion_id') : [];
+        $rawValues = is_array($rawValues) ? $rawValues : [];
+        $values = Arr::pluck($rawValues, 'value', 'fund_criterion_id');
 
         if ($this->isValidationRequest && !$this->has('records')) {
             return [];
