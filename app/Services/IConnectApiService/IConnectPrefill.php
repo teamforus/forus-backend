@@ -174,24 +174,24 @@ class IConnectPrefill
                 if (($partner && $fund->identityHasActiveVoucher($partner)) || ($identity && $fund->isTakenByPartner($identity))) {
                     throw new PersonBsnApiIsTakenByPartnerException();
                 }
-            }
 
-            return [[
-                'record_type_key' => 'partner_bsn',
-                'value' => $partnerApi->getBSN(),
-            ], [
-                'record_type_key' => 'partner_first_name',
-                'value' => $partnerApi->getFirstName(),
-            ], [
-                'record_type_key' => 'partner_last_name',
-                'value' => $partnerApi->getLastName(),
-            ], [
-                'record_type_key' => 'partner_birth_date',
-                'value' => $partnerApi->getBirthDate(),
-            ], [
-                'record_type_key' => 'partner_gender',
-                'value' => $partnerApi->getGender(),
-            ]];
+                return [[
+                    'record_type_key' => 'partner_bsn',
+                    'value' => $partnerApi->getBSN(),
+                ], [
+                    'record_type_key' => 'partner_first_name',
+                    'value' => $partnerApi->getFirstName(),
+                ], [
+                    'record_type_key' => 'partner_last_name',
+                    'value' => $partnerApi->getLastName(),
+                ], [
+                    'record_type_key' => 'partner_birth_date',
+                    'value' => $partnerApi->getBirthDate(),
+                ], [
+                    'record_type_key' => 'partner_gender',
+                    'value' => $partnerApi->getGender(),
+                ]];
+            }
         }
 
         return [];

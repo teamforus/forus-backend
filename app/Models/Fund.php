@@ -144,6 +144,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $payout_vouchers_count
  * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
  * @property-read int|null $physical_card_types_count
+ * @property-read Collection|\App\Models\PrevalidationRequest[] $prevalidation_requests
+ * @property-read int|null $prevalidation_requests_count
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -998,6 +1000,15 @@ class Fund extends BaseModel
     public function formula_products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'fund_formula_products');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function prevalidation_requests(): HasMany
+    {
+        return $this->hasMany(PrevalidationRequest::class);
     }
 
     /**

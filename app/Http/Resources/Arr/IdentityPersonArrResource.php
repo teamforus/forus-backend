@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Arr;
 
+use App\Services\IConnectApiService\Objects\BasePerson;
 use App\Services\IConnectApiService\Objects\Person;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -38,10 +39,10 @@ class IdentityPersonArrResource extends JsonResource
     }
 
     /**
-     * @param Person $person
+     * @param BasePerson $person
      * @return array
      */
-    public function baseFieldsToArray(Person $person): array
+    public function baseFieldsToArray(BasePerson $person): array
     {
         return [
             'bsn' => $person->getBSN(),
@@ -57,14 +58,14 @@ class IdentityPersonArrResource extends JsonResource
      */
     public function relationToArray(array $relations): array
     {
-        return array_map(fn (Person $person) => $this->baseFieldsToArray($person), $relations);
+        return array_map(fn (BasePerson $person) => $this->baseFieldsToArray($person), $relations);
     }
 
     /**
-     * @param Person $person
+     * @param BasePerson $person
      * @return array
      */
-    public function personToFields(Person $person): array
+    public function personToFields(BasePerson $person): array
     {
         $personData = $person->toArray();
         $baseFields = [];

@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Validator;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read string|null $failed_reason
  * @property-read EventLog|null $latest_failed_log
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
@@ -130,6 +131,15 @@ class PrevalidationRequest extends BaseModel
         return $this->morphOne(EventLog::class, 'loggable')
             ->where('event', PrevalidationRequest::EVENT_FAILED)
             ->latestOfMany();
+    }
+
+    /**
+     * @noinspection PhpUnused
+     * @return string|null
+     */
+    public function getFailedReasonAttribute(): ?string
+    {
+        return Arr::get($this->latest_failed_log?->data ?? [], 'prevalidation_request_failed_reason');
     }
 
     /**
