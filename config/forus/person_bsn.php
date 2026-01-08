@@ -148,5 +148,9 @@ return [
                 'adresregel2' => '1014AW Amsterdam',
             ],
         ],
+
+        216506414 => [
+            '_embedded' => [],
+        ],
     ],
 ];

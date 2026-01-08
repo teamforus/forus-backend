@@ -34,9 +34,6 @@ class PrevalidationRequestCsvUploadTest extends TestCase
     {
         parent::setUp();
 
-        Identity::findByBsn('999994542')?->delete();
-        Identity::findByBsn('999993112')?->delete();
-
         Config::set('forus.person_bsn.fund_prefill_cache_time', 0);
         Cache::flush();
     }
@@ -422,5 +419,151 @@ class PrevalidationRequestCsvUploadTest extends TestCase
             $requestData,
             $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
         )->assertJsonValidationErrorFor('data.0.bsn');
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestResubmitAndDelete(): void
+    {
+        // prepare fake responses
+        $this->fakePersonBsnApiResponses([
+            '159786575' => [
+                'status' => 500,
+                'body' => [],
+            ],
+        ]);
+
+        // create organization and fund with prefills enabled
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $this->enablePersonBsnApiForOrganization($organization);
+        $this->enablePrevalidationRequestForOrganization($organization);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+            'key' => 'nijmegen-vi',
+        ]);
+
+        // create record types and person-field mapping for prefills
+        $prefillKey = token_generator()->generate(16);
+        $manualKey = token_generator()->generate(16);
+        $this->makePrefillRecordType($organization, $prefillKey, 'naam.geslachtsnaam');
+
+        $this->makeRecordTypeForKey(
+            $organization,
+            $manualKey,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $this->makeRecordTypeForKey(
+            $organization,
+            Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $this->makeRecordTypeForKey(
+            $organization,
+            Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $criteria = [[
+            'title' => 'Prefill last name',
+            'value' => 'any',
+            'operator' => '*',
+            'optional' => false,
+            'record_type_key' => $prefillKey,
+            'show_attachment' => false,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ], [
+            'title' => 'Partner count',
+            'value' => 1,
+            'operator' => '>=',
+            'optional' => true,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+            'show_attachment' => false,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ], [
+            'title' => 'Children count',
+            'value' => 1,
+            'operator' => '>=',
+            'optional' => true,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            'show_attachment' => false,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ], [
+            'title' => 'Manual number',
+            'value' => 1,
+            'operator' => '>=',
+            'optional' => false,
+            'record_type_key' => $manualKey,
+            'show_attachment' => false,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        $requestDataPrefillFailConnectionError = [
+            'bsn' => '159786575',
+            'uid' => token_generator()->generate(32),
+            $manualKey => 3,
+        ];
+
+        $requestData = [
+            'fund_id' => $fund->id,
+            'data' => [$requestDataPrefillFailConnectionError],
+        ];
+
+        $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
+            $requestData,
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertSuccessful();
+
+        $request = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailConnectionError);
+
+        // assert resubmit
+        $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$request->id/resubmit",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertForbidden();
+
+        $request->makePrevalidation();
+        $request->refresh();
+        $this->assertNull($request->prevalidation);
+        $this->assertEquals(PrevalidationRequest::STATE_FAIL, $request->state);
+        $this->assertEquals(IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR, $request->failed_reason);
+
+        $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$request->id/resubmit",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertSuccessful();
+
+        $request->refresh();
+        $this->assertEquals(PrevalidationRequest::STATE_PENDING, $request->state);
+
+        // assert deletion
+        $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$request->id",
+            headers: $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertForbidden();
+
+        $request->makePrevalidation();
+        $request->refresh();
+        $this->assertNull($request->prevalidation);
+        $this->assertEquals(PrevalidationRequest::STATE_FAIL, $request->state);
+        $this->assertEquals(IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR, $request->failed_reason);
+
+        $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$request->id",
+            headers: $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertSuccessful();
+
+        $this->assertNull(PrevalidationRequest::find($request->id));
     }
 }

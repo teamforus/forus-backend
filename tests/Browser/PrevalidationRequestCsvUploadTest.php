@@ -92,29 +92,8 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
             $this->makeFundCriteria($fund, $defaultData['criteria']);
 
             $this->browse(function (Browser $browser) use ($implementation, $fund, $defaultData) {
-                $this->fakePersonBsnApiResponses([
-                    '159786575' => [
-                        'status' => 500,
-                        'body' => [],
-                    ],
-                    '159835562' => [
-                        'status' => 404,
-                        'body' => [],
-                    ],
-                    '216506414' => [
-                        'status' => 200,
-                        'body' => [],
-                    ],
-                ]);
-
                 $requestDataPrefillSuccess = [
                     'bsn' => '999993112',
-                    'uid' => token_generator()->generate(32),
-                    $defaultData['manualKey'] => 3,
-                ];
-
-                $requestDataPrefillFailConnectionError = [
-                    'bsn' => '159786575',
                     'uid' => token_generator()->generate(32),
                     $defaultData['manualKey'] => 3,
                 ];
@@ -142,7 +121,6 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
 
                 $this->uploadPrevalidationRequestsBatch($browser, [
                     $requestDataPrefillSuccess,
-                    $requestDataPrefillFailConnectionError,
                     $requestDataPrefillFailNotFound,
                     $requestDataPrefillFailNotMetRequiredCriteria,
                 ]);
@@ -152,13 +130,6 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
                 $requestPrefillSuccess->makePrevalidation();
                 $this->assertNotNull($requestPrefillSuccess->prevalidation);
                 $this->assertEquals(PrevalidationRequest::STATE_SUCCESS, $requestPrefillSuccess->state);
-
-                // assert if IConnect gives connection error - request got failed and right reason was stored in logs
-                $requestPrefillFailConnectionError = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailConnectionError);
-                $requestPrefillFailConnectionError->makePrevalidation();
-                $this->assertNull($requestPrefillFailConnectionError->prevalidation);
-                $this->assertEquals(PrevalidationRequest::STATE_FAIL, $requestPrefillFailConnectionError->state);
-                $this->assertEquals(IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR, $requestPrefillFailConnectionError->failed_reason);
 
                 // assert if IConnect gives 404 - request got failed and right reason was stored in logs
                 $requestPrefillFailNotFound = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailNotFound);
@@ -658,15 +629,8 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
             $this->makeFundCriteria($fund, $defaultData['criteria']);
 
             $this->browse(function (Browser $browser) use ($implementation, $fund, $defaultData) {
-                $this->fakePersonBsnApiResponses([
-                    '999993112' => [
-                        'status' => 500,
-                        'body' => [],
-                    ],
-                ]);
-
-                $requestDataPrefillFailConnectionError = [
-                    'bsn' => '999993112',
+                $requestDataPrefillFailNotFound = [
+                    'bsn' => '159835562',
                     'uid' => token_generator()->generate(32),
                     $defaultData['manualKey'] => 3,
                 ];
@@ -679,15 +643,15 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 $this->goToPrevalidationRequestsPage($browser, $fund);
-                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefillFailConnectionError]);
+                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefillFailNotFound]);
                 $this->assertAndCloseSuccessNotification($browser);
 
                 // assert if IConnect gives connection error - request got failed and right reason was stored in logs
-                $request = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailConnectionError);
+                $request = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailNotFound);
                 $request->makePrevalidation();
                 $this->assertNull($request->prevalidation);
                 $this->assertEquals(PrevalidationRequest::STATE_FAIL, $request->state);
-                $this->assertEquals(IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR, $request->failed_reason);
+                $this->assertEquals(IConnectPrefill::PREFILL_ERROR_NOT_FOUND, $request->failed_reason);
 
                 // find request in list and resubmit it
                 $browser->refresh();
@@ -769,15 +733,8 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
             $this->makeFundCriteria($fund, $defaultData['criteria']);
 
             $this->browse(function (Browser $browser) use ($implementation, $fund, $defaultData) {
-                $this->fakePersonBsnApiResponses([
-                    '999993112' => [
-                        'status' => 500,
-                        'body' => [],
-                    ],
-                ]);
-
-                $requestDataPrefillFailConnectionError = [
-                    'bsn' => '999993112',
+                $requestDataPrefillFailNotFound = [
+                    'bsn' => '159835562',
                     'uid' => token_generator()->generate(32),
                     $defaultData['manualKey'] => 3,
                 ];
@@ -790,15 +747,15 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
                 $this->selectDashboardOrganization($browser, $implementation->organization);
 
                 $this->goToPrevalidationRequestsPage($browser, $fund);
-                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefillFailConnectionError]);
+                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefillFailNotFound]);
                 $this->assertAndCloseSuccessNotification($browser);
 
                 // assert if IConnect gives connection error - request got failed and right reason was stored in logs
-                $request = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailConnectionError);
+                $request = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefillFailNotFound);
                 $request->makePrevalidation();
                 $this->assertNull($request->prevalidation);
                 $this->assertEquals(PrevalidationRequest::STATE_FAIL, $request->state);
-                $this->assertEquals(IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR, $request->failed_reason);
+                $this->assertEquals(IConnectPrefill::PREFILL_ERROR_NOT_FOUND, $request->failed_reason);
 
                 // find request in list and delete it
                 $browser->refresh();
