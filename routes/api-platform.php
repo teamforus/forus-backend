@@ -1094,6 +1094,10 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         ->only('index', 'store', 'destroy');
 
     $router->post('organizations/{organization}/prevalidation-requests/collection', 'Api\Platform\Organizations\PrevalidationRequestController@storeCollection');
+    $router->post(
+        'organizations/{organization}/prevalidation-requests/collection/validate',
+        'Api\Platform\Organizations\PrevalidationRequestController@storeCollectionValidate'
+    );
 
     $router->get(
         'organizations/{organization}/prevalidation-requests/resubmit-failed',

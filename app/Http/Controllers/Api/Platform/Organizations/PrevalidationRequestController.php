@@ -74,6 +74,22 @@ class PrevalidationRequestController extends Controller
     }
 
     /**
+     * Validate prevalidation requests CSV upload data.
+     *
+     * @param UploadPrevalidationRequestsRequest $request
+     * @param Organization $organization
+     * @return NoContentResponse
+     */
+    public function storeCollectionValidate(
+        UploadPrevalidationRequestsRequest $request,
+        Organization $organization,
+    ): NoContentResponse {
+        $this->authorize('create', [PrevalidationRequest::class, $organization]);
+
+        return new NoContentResponse();
+    }
+
+    /**
      * Resubmit prevalidation request.
      * @param Organization $organization
      * @param PrevalidationRequest $prevalidationRequest
