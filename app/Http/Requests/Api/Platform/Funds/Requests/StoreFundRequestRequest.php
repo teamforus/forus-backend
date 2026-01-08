@@ -57,8 +57,10 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $records = $this->input('records');
+
         return [
-            ...$this->recordsRule($this->fund, $this->input('records')),
+            ...$this->recordsRule($this->fund, is_array($records) ? $records : []),
             ...$this->contactInformationRule($this->fund),
             ...$this->physicalCardRequestRule($this->fund),
         ];
@@ -85,6 +87,52 @@ class StoreFundRequestRequest extends BaseFormRequest
         }
 
         return $messages;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $records
+     * @param bool $forPrevalidationRequestsCSV
+     * @return array
+     */
+    public function recordsRule(Fund $fund, array $records, bool $forPrevalidationRequestsCSV = false): array
+    {
+        $values = Arr::pluck($records, 'value', 'fund_criterion_id');
+
+        if ($this->isValidationRequest && !$this->has('records')) {
+            return [];
+        }
+
+        return [
+            'records' => [
+                'present',
+                'array',
+                'min:1',
+                new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
+            ],
+            'criteria_groups' => [
+                'present',
+                'array',
+            ],
+            'criteria_groups.*' => [
+                'required',
+                new FundRequestRequiredGroupRule($fund, $this, $values),
+            ],
+            'records.*' => 'required|array',
+            'records.*.value' => [
+                'present',
+                new FundRequestRecordValueRule($fund, $this, $values, $records, $this->isValidationRequest, $forPrevalidationRequestsCSV),
+            ],
+            'records.*.files' => $forPrevalidationRequestsCSV ? [] : [
+                'present',
+                new FundRequestRecordFilesRule($fund, $this, $values, $records),
+            ],
+            'records.*.fund_criterion_id' => [
+                'present',
+                'numeric',
+                new FundRequestRecordCriterionIdRule($fund, $this),
+            ],
+        ];
     }
 
     /**
@@ -128,52 +176,6 @@ class StoreFundRequestRequest extends BaseFormRequest
                 'min:5',
                 'max:2000',
             ] : ['nullable', 'string'],
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @param mixed $rawValues
-     * @return array
-     */
-    protected function recordsRule(Fund $fund, mixed $rawValues): array
-    {
-        $rawValues = is_array($rawValues) ? $rawValues : [];
-        $values = Arr::pluck($rawValues, 'value', 'fund_criterion_id');
-
-        if ($this->isValidationRequest && !$this->has('records')) {
-            return [];
-        }
-
-        return [
-            'records' => [
-                'present',
-                'array',
-                'min:1',
-                new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
-            ],
-            'criteria_groups' => [
-                'present',
-                'array',
-            ],
-            'criteria_groups.*' => [
-                'required',
-                new FundRequestRequiredGroupRule($fund, $this, $values),
-            ],
-            'records.*' => 'required|array',
-            'records.*.value' => [
-                'present',
-                new FundRequestRecordValueRule($fund, $this, $values, $rawValues, $this->isValidationRequest),
-            ],
-            'records.*.files' => $this->isCsvRequest ? [] : [
-                'present',
-                new FundRequestRecordFilesRule($fund, $this, $values, $rawValues),
-            ],
-            'records.*.fund_criterion_id' => [
-                'present',
-                'numeric',
-                new FundRequestRecordCriterionIdRule($fund, $this),
-            ],
         ];
     }
 

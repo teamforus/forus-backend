@@ -1174,7 +1174,7 @@ class Fund extends BaseModel
     public function requiredPrevalidationKeys(
         bool $withOptional,
         array $values,
-        bool $exceptPrefillKeys = false
+        bool $exceptPrefillKeys = false,
     ): array {
         $criteriaKeys = $withOptional ?
             $this->criteria
@@ -1203,7 +1203,7 @@ class Fund extends BaseModel
             // except children_age_groups record type keys
             // except custom record type keys like "partner living same address" and "children same address"
             $prefillRecordTypeKeys = $this->criteria
-                ?->filter(fn (FundCriterion $c) => $c->fill_type === $c::FILL_TYPE_PREFILL)
+                ?->filter(fn (FundCriterion $criterion) => $criterion->fill_type === FundCriterion::FILL_TYPE_PREFILL)
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [];
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser;
+namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundCriterion;
@@ -829,8 +829,6 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
      * @param Browser $browser
      * @param string $error
      * @throws TimeoutException
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
      * @return void
      */
     protected function assertValidationError(Browser $browser, string $error): void

@@ -3,6 +3,7 @@
 namespace App\Events\PrevalidationRequests;
 
 use App\Models\PrevalidationRequest;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -28,7 +29,7 @@ abstract class BasePrevalidationRequestEvent
     }
 
     /**
-     * Get the voucher.
+     * Get the prevalidation request.
      *
      * @return PrevalidationRequest
      */
@@ -40,9 +41,9 @@ abstract class BasePrevalidationRequestEvent
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel
+     * @return Channel
      */
-    public function broadcastOn()
+    public function broadcastOn(): Channel
     {
         return new PrivateChannel('channel-name');
     }

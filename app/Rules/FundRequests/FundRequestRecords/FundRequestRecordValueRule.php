@@ -26,6 +26,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         protected array $submittedRecords,
         protected array $submittedRawRecords,
         protected bool $isValidationRequest = false,
+        protected bool $forPrevalidationRequestsCSV = false
     ) {
         parent::__construct($this->fund, $this->request);
     }
@@ -71,7 +72,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
 
         $requiredRecordTypes = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
 
-        $existingRecordValues = $this->request->identity()
+        $existingRecordValues = !$this->forPrevalidationRequestsCSV
             ? $this->fund->getTrustedRecordOfTypes($this->request->identity(), $requiredRecordTypes)
             : [];
 

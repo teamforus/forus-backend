@@ -35,7 +35,6 @@ class ProcessPrevalidationRequestsCommand extends Command
         PrevalidationRequest::query()
             ->where('state', PrevalidationRequest::STATE_PENDING)
             ->chunkById($chunkSize, function ($requests) use ($sleepSeconds) {
-                /** @var PrevalidationRequest $request */
                 foreach ($requests as $request) {
                     $request->makePrevalidation();
                 }

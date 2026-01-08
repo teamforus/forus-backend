@@ -530,8 +530,6 @@ class Prevalidation extends BaseModel
 
         $amount = $fund->amountForIdentity(identity: null, records: $records);
 
-        log_debug($amount, $voucher->amount_total); // todo ask
-
         return currency_format($amount - $voucher->amount_total);
     }
 }

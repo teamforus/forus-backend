@@ -21,7 +21,7 @@ class PrevalidationRequestFailed extends BasePrevalidationRequestEvent
     /**
      * @return string
      */
-    public function getFailedReason(): string
+    public function getReason(): string
     {
         return $this->reason;
     }

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Events\PrevalidationRequests\PrevalidationRequestCreated;
 use App\Events\PrevalidationRequests\PrevalidationRequestFailed;
-use App\Events\PrevalidationRequests\PrevalidationRequestResubmitted;
-use App\Events\PrevalidationRequests\PrevalidationRequestUpdated;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestCsvRequest;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmitted;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdated;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\IConnectApiService\IConnectPrefill;
@@ -139,7 +139,7 @@ class PrevalidationRequest extends BaseModel
      */
     public function getFailedReasonAttribute(): ?string
     {
-        return Arr::get($this->latest_failed_log?->data ?? [], 'prevalidation_request_failed_reason');
+        return Arr::get($this->latest_failed_log?->data ?? [], 'prevalidation_request_fail_reason');
     }
 
     /**
@@ -175,7 +175,7 @@ class PrevalidationRequest extends BaseModel
         $prevState = $this->state;
         $this->update(['state' => PrevalidationRequest::STATE_PENDING]);
 
-        Event::dispatch(new PrevalidationRequestResubmitted($this, $prevState));
+        Event::dispatch(new PrevalidationRequestStateResubmitted($this, $prevState));
 
         return $this;
     }
@@ -235,7 +235,7 @@ class PrevalidationRequest extends BaseModel
             'prevalidation_id' => $prevalidations[0]->id,
         ]);
 
-        Event::dispatch(new PrevalidationRequestUpdated($this, $prevState));
+        Event::dispatch(new PrevalidationRequestStateUpdated($this, $prevState));
     }
 
     /**
@@ -250,6 +250,7 @@ class PrevalidationRequest extends BaseModel
         // get optional criteria to prefill them for validation
         $optionalCriteria = array_fill_keys(
             $fund->criteria
+                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
                 ->where('optional', true)
                 ->pluck('record_type_key')
                 ->toArray(),
@@ -273,7 +274,7 @@ class PrevalidationRequest extends BaseModel
                 ...compact('records'),
                 'criteria_groups' => $this->fund->criteria_groups->pluck('id', 'id')->toArray(),
             ],
-            (new StoreFundRequestCsvRequest())->csvRules($fund, $records)
+            (new StoreFundRequestRequest())->recordsRule($fund, $records, true)
         );
 
         return $validator->passes();

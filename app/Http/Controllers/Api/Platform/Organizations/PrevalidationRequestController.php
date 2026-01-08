@@ -8,13 +8,12 @@ use App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests\ResubmitF
 use App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests\SearchPrevalidationRequestsRequest;
 use App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests\UploadPrevalidationRequestsRequest;
 use App\Http\Resources\PrevalidationRequestResource;
-use App\Models\Fund;
+use App\Http\Responses\NoContentResponse;
 use App\Models\Organization;
 use App\Models\PrevalidationRequest;
 use App\Scopes\Builders\PrevalidationRequestQuery;
 use App\Searches\PrevalidationRequestSearch;
 use App\Services\IConnectApiService\IConnectPrefill;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PrevalidationRequestController extends Controller
@@ -46,8 +45,8 @@ class PrevalidationRequestController extends Controller
                     ->where('state', PrevalidationRequest::STATE_FAIL)
                     ->whereRelation(
                         'latest_failed_log',
-                        'data->prevalidation_request_failed_reason',
-                        IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR
+                        'data->prevalidation_request_fail_reason',
+                        IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR,
                     )
                     ->count(),
             ],
@@ -57,21 +56,21 @@ class PrevalidationRequestController extends Controller
     /**
      * @param UploadPrevalidationRequestsRequest $request
      * @param Organization $organization
-     * @return JsonResponse
+     * @return NoContentResponse
      */
     public function storeCollection(
         UploadPrevalidationRequestsRequest $request,
         Organization $organization,
-    ): JsonResponse {
+    ): NoContentResponse {
         $this->authorize('create', [PrevalidationRequest::class, $organization]);
 
         $data = $request->input('data', []);
         $employee = $request->employee($organization);
-        $fund = Fund::find($request->input('fund_id'));
+        $fund = $organization->funds()->find($request->input('fund_id'));
 
         PrevalidationRequest::makeFromArray($fund, $employee, $data);
 
-        return new JsonResponse([]);
+        return new NoContentResponse();
     }
 
     /**
@@ -93,12 +92,12 @@ class PrevalidationRequestController extends Controller
      * Resubmit failed prevalidation requests.
      * @param ResubmitFailedPrevalidationRequestsRequest $request
      * @param Organization $organization
-     * @return JsonResponse
+     * @return NoContentResponse
      */
     public function resubmitFailed(
         ResubmitFailedPrevalidationRequestsRequest $request,
-        Organization $organization
-    ): JsonResponse {
+        Organization $organization,
+    ): NoContentResponse {
         $this->authorize('resubmitFailed', [PrevalidationRequest::class, $organization]);
 
         $reason = $request->input('reason', IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR);
@@ -106,28 +105,29 @@ class PrevalidationRequestController extends Controller
         $organization
             ->prevalidation_requests()
             ->where('state', PrevalidationRequest::STATE_FAIL)
-            ->whereRelation('latest_failed_log', 'data->prevalidation_request_failed_reason', $reason)
+            ->whereRelation('latest_failed_log', 'data->prevalidation_request_fail_reason', $reason)
             ->get()
             ->each(fn (PrevalidationRequest $prevalidationRequest) => $prevalidationRequest->resubmit());
 
-        return new JsonResponse([]);
+        return new NoContentResponse();
     }
 
     /**
      * Delete prevalidation request.
+     *
      * @param Organization $organization
      * @param PrevalidationRequest $prevalidationRequest
-     * @return JsonResponse
+     * @return NoContentResponse
      */
     public function destroy(
         Organization $organization,
         PrevalidationRequest $prevalidationRequest,
-    ): JsonResponse {
+    ): NoContentResponse {
         $this->authorize('destroy', [$prevalidationRequest, $organization]);
 
         PrevalidationRequestDeleted::dispatch($prevalidationRequest);
         $prevalidationRequest->delete();
 
-        return new JsonResponse([]);
+        return new NoContentResponse();
     }
 }

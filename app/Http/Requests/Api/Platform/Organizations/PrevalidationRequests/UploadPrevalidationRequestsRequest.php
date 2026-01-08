@@ -10,6 +10,7 @@ use App\Models\RecordType;
 use App\Rules\PrevalidationDataItemRule;
 use App\Rules\PrevalidationDataRule;
 use App\Scopes\Builders\FundQuery;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -38,7 +39,8 @@ class UploadPrevalidationRequestsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $fund = Fund::find($this->input('fund_id'));
+        /** @var Fund $fund */
+        $fund = $this->getAvailableFunds()->find($this->input('fund_id'));
         $recordTypes = RecordType::search()->keyBy('key');
         $data = $this->input('data', []);
         $data = array_filter(is_array($data) ? $data : []);
@@ -82,17 +84,18 @@ class UploadPrevalidationRequestsRequest extends BaseFormRequest
 
     /**
      * @param Collection $recordTypes
-     * @param Fund $fund
+     * @param Fund|null $fund
      * @param array $data
      * @return array
      */
-    private function requiredGroupsRules(Collection $recordTypes, Fund $fund, array $data): array
+    private function requiredGroupsRules(Collection $recordTypes, ?Fund $fund, array $data): array
     {
         $rules = [];
 
-        $groups = $fund->criteria_groups()
-            ->where('required', true)
-            ->get();
+        $groups = $fund
+            ?->criteria_groups()
+            ?->where('required', true)
+            ?->get() ?? [];
 
         foreach ($groups as $group) {
             foreach ($data as $index => $datum) {
@@ -117,13 +120,15 @@ class UploadPrevalidationRequestsRequest extends BaseFormRequest
     }
 
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|Fund[]
      */
-    private function getAvailableFunds(): Builder|Relation
+    private function getAvailableFunds(): Builder|Relation|Arrayable
     {
-        return $this->organization->funds()->where(function (Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->where('state', '!=', Fund::STATE_CLOSED);
+        return $this->organization->funds()
+            ->where(function (Builder $builder) {
+                FundQuery::whereIsInternal($builder);
+                FundQuery::whereIsConfiguredByForus($builder);
+            })
+            ->where('state', '!=', Fund::STATE_CLOSED);
     }
 }

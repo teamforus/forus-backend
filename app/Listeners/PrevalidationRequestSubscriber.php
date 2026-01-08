@@ -5,8 +5,8 @@ namespace App\Listeners;
 use App\Events\PrevalidationRequests\PrevalidationRequestCreated;
 use App\Events\PrevalidationRequests\PrevalidationRequestDeleted;
 use App\Events\PrevalidationRequests\PrevalidationRequestFailed;
-use App\Events\PrevalidationRequests\PrevalidationRequestResubmitted;
-use App\Events\PrevalidationRequests\PrevalidationRequestUpdated;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmitted;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdated;
 use App\Models\PrevalidationRequest;
 use Exception;
 use Illuminate\Events\Dispatcher;
@@ -29,11 +29,11 @@ class PrevalidationRequestSubscriber
     }
 
     /**
-     * @param PrevalidationRequestUpdated $prevalidationRequestUpdated
+     * @param PrevalidationRequestStateUpdated $prevalidationRequestUpdated
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestUpdated(PrevalidationRequestUpdated $prevalidationRequestUpdated): void
+    public function onPrevalidationRequestUpdated(PrevalidationRequestStateUpdated $prevalidationRequestUpdated): void
     {
         $prevalidationRequest = $prevalidationRequestUpdated->getPrevalidationRequest();
 
@@ -56,16 +56,16 @@ class PrevalidationRequestSubscriber
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
         ], [
-            'prevalidation_request_failed_reason' => $prevalidationRequestFailed->getFailedReason(),
+            'prevalidation_request_fail_reason' => $prevalidationRequestFailed->getReason(),
         ]);
     }
 
     /**
-     * @param PrevalidationRequestResubmitted $prevalidationRequestResubmitted
+     * @param PrevalidationRequestStateResubmitted $prevalidationRequestResubmitted
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestResubmitted(PrevalidationRequestResubmitted $prevalidationRequestResubmitted): void
+    public function onPrevalidationRequestResubmitted(PrevalidationRequestStateResubmitted $prevalidationRequestResubmitted): void
     {
         $prevalidationRequest = $prevalidationRequestResubmitted->getPrevalidationRequest();
 
@@ -103,9 +103,9 @@ class PrevalidationRequestSubscriber
         $class = '\\' . static::class;
 
         $events->listen(PrevalidationRequestCreated::class, "$class@onPrevalidationRequestCreated");
-        $events->listen(PrevalidationRequestUpdated::class, "$class@onPrevalidationRequestUpdated");
+        $events->listen(PrevalidationRequestStateUpdated::class, "$class@onPrevalidationRequestUpdated");
         $events->listen(PrevalidationRequestFailed::class, "$class@onPrevalidationRequestFailed");
         $events->listen(PrevalidationRequestDeleted::class, "$class@onPrevalidationRequestDeleted");
-        $events->listen(PrevalidationRequestResubmitted::class, "$class@onPrevalidationRequestResubmitted");
+        $events->listen(PrevalidationRequestStateResubmitted::class, "$class@onPrevalidationRequestResubmitted");
     }
 }

@@ -4,7 +4,7 @@ namespace App\Events\PrevalidationRequests;
 
 use App\Models\PrevalidationRequest;
 
-class PrevalidationRequestUpdated extends BasePrevalidationRequestEvent
+class PrevalidationRequestStateUpdated extends BasePrevalidationRequestEvent
 {
     protected string $previous_state;
 
