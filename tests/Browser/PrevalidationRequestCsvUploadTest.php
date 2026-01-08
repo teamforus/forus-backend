@@ -767,6 +767,11 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
                 $browser->waitFor("@btnPrevalidationRequestDelete$request->id");
                 $browser->press("@btnPrevalidationRequestDelete$request->id");
 
+                $browser->waitFor('@modalDangerZone');
+                $browser->waitFor('@btnDangerZoneSubmit');
+                $browser->press('@btnDangerZoneSubmit');
+                $browser->waitUntilMissing('@modalDangerZone');
+
                 $this->assertAndCloseSuccessNotification($browser);
 
                 // assert that request is missing
