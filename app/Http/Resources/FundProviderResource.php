@@ -32,6 +32,7 @@ class FundProviderResource extends BaseJsonResource
         'organization.offices.photo.presets',
         'organization.offices.organization.logo',
         'organization.offices.organization.business_type.translations',
+        'organization.last_employee_session',
         'organization.products',
         'organization.logo',
         'organization.employees.roles.translations',

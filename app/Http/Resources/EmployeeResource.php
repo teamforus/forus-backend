@@ -11,6 +11,7 @@ use App\Models\Role;
 class EmployeeResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'office',
         'organization',
         'roles.translations',
         'roles.permissions',

@@ -29,6 +29,7 @@ class FundResource extends BaseJsonResource
         'parent',
         'children',
         'logo.presets',
+        'criteria_steps',
         'criteria.fund',
         'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
@@ -45,10 +46,12 @@ class FundResource extends BaseJsonResource
         'fund_formula_products',
         'provider_organizations_approved.employees',
         'tags_webshop',
+        'tags_webshop.translations',
         'fund_formulas.record_type.translations',
         'fund_formulas.record_type.record_type_options.translations',
         'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
+        'amount_presets',
         'fund_form',
     ];
 

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 class PrevalidationResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'fund',
         'prevalidation_records.record_type.translations',
     ];
 

@@ -43,6 +43,7 @@ class OrganizationResource extends BaseJsonResource
             'offices',
             'business_type',
             'tags.translations',
+            'tags',
             'reservation_fields',
             'bank_connection_active',
             'employees.roles.permissions',
@@ -51,6 +52,7 @@ class OrganizationResource extends BaseJsonResource
         self::isRequested('logo', $request) && array_push($load, 'logo');
         self::isRequested('funds', $request) && array_push($load, 'funds');
         self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
+        self::isRequested('funds_count', $request) && array_push($load, 'funds');
 
         return array_merge($load, $request?->isProviderDashboard() ? [
             'mollie_connection',

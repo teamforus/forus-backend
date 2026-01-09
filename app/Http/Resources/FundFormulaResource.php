@@ -9,6 +9,10 @@ use App\Models\FundFormula;
  */
 class FundFormulaResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'record_type',
+    ];
+
     /**
      * Transform the resource into an array.
      *

@@ -9,6 +9,11 @@ use App\Models\ImplementationBlock;
  */
 class ImplementationBlockResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'photo',
+        'implementation_page.implementation',
+    ];
+
     /**
      * Transform the resource into an array.
      *

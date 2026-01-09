@@ -31,6 +31,7 @@ class ProductResource extends BaseJsonResource
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
+        'organization.reservation_fields',
         'bookmarks',
         'reservation_fields',
     ];

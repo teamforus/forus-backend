@@ -17,6 +17,7 @@ class FundSmallResource extends BaseJsonResource
     public const array LOAD = [
         'logo.presets',
         'fund_formulas',
+        'fund_config.implementation',
         'organization.logo.presets',
     ];
 

@@ -13,6 +13,12 @@ use Illuminate\Http\Request;
  */
 class FundRequestResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'fund',
+        'records',
+        'vouchers',
+    ];
+
     /**
      * Transform the resource into an array.
      *

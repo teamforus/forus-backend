@@ -11,6 +11,7 @@ class FundProviderInvitationResource extends BaseJsonResource
 {
     public const array LOAD = [
         'fund',
+        'fund.organization',
         'from_fund',
         'organization',
     ];

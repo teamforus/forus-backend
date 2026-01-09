@@ -10,6 +10,7 @@ use App\Services\MollieService\Models\MollieConnection;
 class MollieConnectionResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'organization',
         'profiles',
         'profile_active',
         'profile_pending',

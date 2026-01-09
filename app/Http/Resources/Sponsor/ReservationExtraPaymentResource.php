@@ -14,6 +14,7 @@ class ReservationExtraPaymentResource extends BaseJsonResource
 {
     public const array LOAD = [
         'refunds',
+        'refunds_completed',
         'product_reservation.voucher.fund.organization',
         'product_reservation.product.organization',
         'product_reservation.product.photos.presets',

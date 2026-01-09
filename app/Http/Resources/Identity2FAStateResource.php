@@ -22,6 +22,7 @@ class Identity2FAStateResource extends BaseJsonResource
     public const array LOAD = [
         'funds.fund_config',
         'funds.logo.presets',
+        'funds.organization',
         'identity_2fa_active',
         'employees.organization',
     ];

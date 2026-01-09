@@ -9,6 +9,10 @@ use App\Models\Identity2FA;
  */
 class Identity2FAResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'auth_2fa_provider',
+    ];
+
     /**
      * @param $request
      * @return array

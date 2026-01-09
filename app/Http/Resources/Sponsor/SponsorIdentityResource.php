@@ -26,6 +26,7 @@ class SponsorIdentityResource extends BaseJsonResource
     public const array LOAD = [
         'emails',
         'vouchers',
+        'vouchers.transactions',
         'record_bsn',
         'primary_email',
         'reimbursements.voucher.fund',

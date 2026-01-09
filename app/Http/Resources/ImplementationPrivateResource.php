@@ -16,7 +16,9 @@ class ImplementationPrivateResource extends BaseJsonResource
     public const array LOAD = [
         'pages',
         'banner',
+        'pre_check_banner',
         'languages',
+        'organization',
     ];
 
     /**

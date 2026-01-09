@@ -35,6 +35,8 @@ class SponsorProductResource extends BaseJsonResource
         'sponsor_organization.logo.presets',
         'sponsor_organization.business_type.translations',
         'product_exclusions',
+        'fund_provider_chats',
+        'logs_monitored_field_changed',
         'logs_last_monitored_field_changed',
     ];
     protected Collection |null $funds = null;

@@ -9,6 +9,11 @@ use App\Models\RecordValidation;
  */
 class RecordValidationResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'organization',
+        'identity',
+    ];
+
     /**
      * Transform the resource into an array.
      *

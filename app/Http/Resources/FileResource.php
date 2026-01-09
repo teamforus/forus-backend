@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
  */
 class FileResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'preview',
+    ];
+
     /**
      * Transform the resource into an array.
      *

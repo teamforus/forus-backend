@@ -25,6 +25,16 @@ class ProviderAppVoucherResource extends BaseJsonResource
 {
     protected BaseFormRequest $request;
 
+    public const array LOAD = [
+        'voucher',
+        'voucher.fund',
+        'voucher.fund.organization',
+        'voucher.fund.logo',
+        'voucher.fund.fund_config',
+        'voucher.product',
+        'voucher.product_vouchers',
+    ];
+
     /**
      * @param string|null $append
      * @return array

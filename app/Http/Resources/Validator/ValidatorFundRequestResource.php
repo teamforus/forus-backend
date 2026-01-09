@@ -36,14 +36,21 @@ class ValidatorFundRequestResource extends BaseJsonResource
      */
     public const array LOAD = [
         'records.files.preview.presets',
+        'records.fund_request',
+        'records.logs',
         'records.record_type.translations',
+        'records.record_type.record_type_options.translations',
         'employee.organization',
         'employee.roles.translations',
         'employee.roles.permissions',
         'records.fund_request_clarifications.files.preview.presets',
         'records.fund_request_clarifications.fund_request_record.record_type.translations',
         'identity.primary_email',
+        'fund.amount_presets',
         'fund.criteria.record_type.translation',
+        'fund.fund_config',
+        'fund.fund_formulas',
+        'fund.fund_formula_products',
         'fund.tags.translations',
     ];
 
@@ -164,7 +171,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         BaseFormRequest $request,
         Organization $organization,
     ): Relation|Builder {
-        $employeesQuery = $organization->employees();
+        $employeesQuery = $organization->employees()->with('identity');
 
         $isManagerQuery = $organization
             ->employeesWithPermissionsQuery(Permission::MANAGE_VALIDATORS)

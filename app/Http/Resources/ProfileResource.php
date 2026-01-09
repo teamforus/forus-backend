@@ -16,6 +16,12 @@ class ProfileResource extends BaseJsonResource
 {
     public static $wrap = null;
 
+    public const array LOAD = [
+        'emails',
+        'record_bsn',
+        'sessions',
+    ];
+
     /**
      * Transform the resource into an array.
      *

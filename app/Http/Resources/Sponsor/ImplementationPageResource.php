@@ -14,7 +14,9 @@ use App\Models\ImplementationPage;
 class ImplementationPageResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'blocks',
         'faq',
+        'implementation',
     ];
 
     /**

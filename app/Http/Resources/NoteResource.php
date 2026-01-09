@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
  */
 class NoteResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'employee.identity',
+    ];
+
     /**
      * Transform the resource into an array.
      *

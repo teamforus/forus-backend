@@ -12,6 +12,11 @@ use Illuminate\Http\Request;
  */
 class SponsorPhysicalCardResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'voucher',
+        'physical_card_type.photo.presets',
+    ];
+
     /**
      * Transform the resource into an array.
      *

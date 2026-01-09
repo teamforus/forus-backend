@@ -13,6 +13,7 @@ class PhysicalCardResource extends BaseJsonResource
 {
     public const array LOAD = [
         'physical_card_type.photo',
+        'voucher',
     ];
 
     /**
