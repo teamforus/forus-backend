@@ -2,11 +2,11 @@
 
 namespace App\Listeners;
 
-use App\Events\PrevalidationRequests\PrevalidationRequestCreated;
-use App\Events\PrevalidationRequests\PrevalidationRequestDeleted;
-use App\Events\PrevalidationRequests\PrevalidationRequestFailed;
-use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmitted;
-use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdated;
+use App\Events\PrevalidationRequests\PrevalidationRequestCreatedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestDeletedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestFailedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmittedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdatedEvent;
 use App\Models\PrevalidationRequest;
 use Exception;
 use Illuminate\Events\Dispatcher;
@@ -14,81 +14,88 @@ use Illuminate\Events\Dispatcher;
 class PrevalidationRequestSubscriber
 {
     /**
-     * @param PrevalidationRequestCreated $prevalidationRequestCreated
+     * @param PrevalidationRequestCreatedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestCreated(PrevalidationRequestCreated $prevalidationRequestCreated): void
+    public function onPrevalidationRequestCreated(PrevalidationRequestCreatedEvent $event): void
     {
-        $prevalidationRequest = $prevalidationRequestCreated->getPrevalidationRequest();
+        $prevalidationRequest = $event->getPrevalidationRequest();
 
         $prevalidationRequest->log(PrevalidationRequest::EVENT_CREATED, [
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
+        ], [
+            ...$event->getResponseArray(),
         ]);
     }
 
     /**
-     * @param PrevalidationRequestStateUpdated $prevalidationRequestUpdated
+     * @param PrevalidationRequestStateUpdatedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestUpdated(PrevalidationRequestStateUpdated $prevalidationRequestUpdated): void
+    public function onPrevalidationRequestUpdated(PrevalidationRequestStateUpdatedEvent $event): void
     {
-        $prevalidationRequest = $prevalidationRequestUpdated->getPrevalidationRequest();
+        $prevalidationRequest = $event->getPrevalidationRequest();
 
         $prevalidationRequest->log(PrevalidationRequest::EVENT_UPDATED, [
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
         ], [
-            'prevalidation_request_previous_state' => $prevalidationRequestUpdated->getPreviousState(),
+            'prevalidation_request_previous_state' => $event->getPreviousState(),
+            ...$event->getResponseArray(),
         ]);
     }
 
     /**
-     * @param PrevalidationRequestFailed $prevalidationRequestFailed
+     * @param PrevalidationRequestFailedEvent $event
      */
-    public function onPrevalidationRequestFailed(PrevalidationRequestFailed $prevalidationRequestFailed): void
+    public function onPrevalidationRequestFailed(PrevalidationRequestFailedEvent $event): void
     {
-        $prevalidationRequest = $prevalidationRequestFailed->getPrevalidationRequest();
+        $prevalidationRequest = $event->getPrevalidationRequest();
 
         $prevalidationRequest->log(PrevalidationRequest::EVENT_FAILED, [
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
         ], [
-            'prevalidation_request_fail_reason' => $prevalidationRequestFailed->getReason(),
+            'prevalidation_request_fail_reason' => $event->getReason(),
+            ...$event->getResponseArray(),
         ]);
     }
 
     /**
-     * @param PrevalidationRequestStateResubmitted $prevalidationRequestResubmitted
+     * @param PrevalidationRequestStateResubmittedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestResubmitted(PrevalidationRequestStateResubmitted $prevalidationRequestResubmitted): void
+    public function onPrevalidationRequestResubmitted(PrevalidationRequestStateResubmittedEvent $event): void
     {
-        $prevalidationRequest = $prevalidationRequestResubmitted->getPrevalidationRequest();
+        $prevalidationRequest = $event->getPrevalidationRequest();
 
         $prevalidationRequest->log(PrevalidationRequest::EVENT_RESUBMITTED, [
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
         ], [
-            'prevalidation_request_previous_state' => $prevalidationRequestResubmitted->getPreviousState(),
+            'prevalidation_request_previous_state' => $event->getPreviousState(),
+            ...$event->getResponseArray(),
         ]);
     }
 
     /**
-     * @param PrevalidationRequestDeleted $prevalidationRequestDeleted
+     * @param PrevalidationRequestDeletedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestDeleted(PrevalidationRequestDeleted $prevalidationRequestDeleted): void
+    public function onPrevalidationRequestDeleted(PrevalidationRequestDeletedEvent $event): void
     {
-        $prevalidationRequest = $prevalidationRequestDeleted->getPrevalidationRequest();
+        $prevalidationRequest = $event->getPrevalidationRequest();
 
         $prevalidationRequest->log(PrevalidationRequest::EVENT_DELETED, [
             'prevalidation_request' => $prevalidationRequest,
             'organization' => $prevalidationRequest->organization,
+        ], [
+            ...$event->getResponseArray(),
         ]);
     }
 
@@ -102,10 +109,10 @@ class PrevalidationRequestSubscriber
     {
         $class = '\\' . static::class;
 
-        $events->listen(PrevalidationRequestCreated::class, "$class@onPrevalidationRequestCreated");
-        $events->listen(PrevalidationRequestStateUpdated::class, "$class@onPrevalidationRequestUpdated");
-        $events->listen(PrevalidationRequestFailed::class, "$class@onPrevalidationRequestFailed");
-        $events->listen(PrevalidationRequestDeleted::class, "$class@onPrevalidationRequestDeleted");
-        $events->listen(PrevalidationRequestStateResubmitted::class, "$class@onPrevalidationRequestResubmitted");
+        $events->listen(PrevalidationRequestCreatedEvent::class, "$class@onPrevalidationRequestCreated");
+        $events->listen(PrevalidationRequestStateUpdatedEvent::class, "$class@onPrevalidationRequestUpdated");
+        $events->listen(PrevalidationRequestFailedEvent::class, "$class@onPrevalidationRequestFailed");
+        $events->listen(PrevalidationRequestDeletedEvent::class, "$class@onPrevalidationRequestDeleted");
+        $events->listen(PrevalidationRequestStateResubmittedEvent::class, "$class@onPrevalidationRequestResubmitted");
     }
 }

@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use App\Events\PrevalidationRequests\PrevalidationRequestCreated;
-use App\Events\PrevalidationRequests\PrevalidationRequestFailed;
-use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmitted;
-use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdated;
+use App\Events\PrevalidationRequests\PrevalidationRequestCreatedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestFailedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmittedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdatedEvent;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
@@ -26,7 +27,6 @@ use Illuminate\Support\Facades\Validator;
  * @property int $organization_id
  * @property int|null $employee_id
  * @property int $fund_id
- * @property int|null $prevalidation_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
@@ -48,7 +48,6 @@ use Illuminate\Support\Facades\Validator;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest wherePrevalidationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -80,7 +79,7 @@ class PrevalidationRequest extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'bsn', 'state', 'fund_id', 'organization_id', 'employee_id', 'prevalidation_id',
+        'bsn', 'state', 'fund_id', 'organization_id', 'employee_id',
     ];
 
     /**
@@ -108,11 +107,12 @@ class PrevalidationRequest extends BaseModel
     }
 
     /**
-     * @return BelongsTo
+     * @noinspection PhpUnused
+     * @return HasOne
      */
-    public function prevalidation(): BelongsTo
+    public function prevalidation(): HasOne
     {
-        return $this->belongsTo(Prevalidation::class);
+        return $this->hasOne(Prevalidation::class);
     }
 
     /**
@@ -163,7 +163,7 @@ class PrevalidationRequest extends BaseModel
                 $item->records()->create(compact('record_type_key', 'value'));
             }
 
-            PrevalidationRequestCreated::dispatch($item);
+            Event::dispatch(new PrevalidationRequestCreatedEvent($item, null));
         }
     }
 
@@ -175,7 +175,7 @@ class PrevalidationRequest extends BaseModel
         $prevState = $this->state;
         $this->update(['state' => PrevalidationRequest::STATE_PENDING]);
 
-        Event::dispatch(new PrevalidationRequestStateResubmitted($this, $prevState));
+        Event::dispatch(new PrevalidationRequestStateResubmittedEvent($this, null, $prevState));
 
         return $this;
     }
@@ -186,11 +186,15 @@ class PrevalidationRequest extends BaseModel
     public function makePrevalidation(): void
     {
         $prevState = $this->state;
-        $fundPrefills = IConnectPrefill::getBsnApiPrefills($this->fund, $this->bsn);
+        $fundPrefills = IConnectPrefill::getBsnApiPrefills($this->fund, $this->bsn, withResponseData: true);
 
         if (is_array($fundPrefills['error'])) {
             $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailed($this, Arr::get($fundPrefills, 'error.key')));
+            Event::dispatch(new PrevalidationRequestFailedEvent(
+                $this,
+                Arr::get($fundPrefills, 'response'),
+                Arr::get($fundPrefills, 'error.key'),
+            ));
 
             return;
         }
@@ -210,7 +214,11 @@ class PrevalidationRequest extends BaseModel
 
         if (!$this->recordsIsValid($this->fund, $data)) {
             $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailed($this, $this::FAILED_REASON_INVALID_RECORDS));
+            Event::dispatch(new PrevalidationRequestFailedEvent(
+                $this,
+                Arr::get($fundPrefills, 'response'),
+                $this::FAILED_REASON_INVALID_RECORDS,
+            ));
 
             return;
         }
@@ -225,17 +233,28 @@ class PrevalidationRequest extends BaseModel
 
         if ($prevalidations->count() === 0) {
             $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailed($this, $this::FAILED_REASON_EMPTY_PREVALIDATIONS));
+            Event::dispatch(new PrevalidationRequestFailedEvent(
+                $this,
+                Arr::get($fundPrefills, 'response'),
+                $this::FAILED_REASON_EMPTY_PREVALIDATIONS,
+            ));
 
             return;
         }
 
         $this->update([
             'state' => $this::STATE_SUCCESS,
-            'prevalidation_id' => $prevalidations[0]->id,
         ]);
 
-        Event::dispatch(new PrevalidationRequestStateUpdated($this, $prevState));
+        $prevalidations->each(fn (Prevalidation $prevalidation) => $prevalidation->update([
+            'prevalidation_request_id' => $this->id,
+        ]));
+
+        Event::dispatch(new PrevalidationRequestStateUpdatedEvent(
+            $this,
+            Arr::get($fundPrefills, 'response'),
+            $prevState,
+        ));
     }
 
     /**

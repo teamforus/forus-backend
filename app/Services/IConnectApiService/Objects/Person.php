@@ -154,4 +154,15 @@ class Person extends BasePerson
             return $child->getIndex() === $scopeId;
         });
     }
+
+    /**
+     * @return array
+     */
+    public function getResponseData(): array
+    {
+        return [
+            'code' => $this->response()?->getCode(),
+            'body' => $this->getData(),
+        ];
+    }
 }

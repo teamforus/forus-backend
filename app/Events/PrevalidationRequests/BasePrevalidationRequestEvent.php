@@ -8,6 +8,8 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 abstract class BasePrevalidationRequestEvent
 {
@@ -15,17 +17,18 @@ abstract class BasePrevalidationRequestEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    protected PrevalidationRequest $prevalidationRequest;
-
     /**
      * Create a new event instance.
      *
      * PrevalidationRequestCreated constructor.
      * @param PrevalidationRequest $prevalidationRequest
+     * @param array|null $responseData
      */
-    public function __construct(PrevalidationRequest $prevalidationRequest)
-    {
-        $this->prevalidationRequest = $prevalidationRequest;
+    public function __construct(
+        protected PrevalidationRequest $prevalidationRequest,
+        protected ?array $responseData
+    ) {
+
     }
 
     /**
@@ -36,6 +39,17 @@ abstract class BasePrevalidationRequestEvent
     public function getPrevalidationRequest(): PrevalidationRequest
     {
         return $this->prevalidationRequest;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResponseArray(): array
+    {
+        return $this->responseData ? [
+            'prevalidation_request_response_code' => Arr::get($this->responseData, 'code'),
+            'prevalidation_request_response_body' => Str::limit(json_encode(Arr::get($this->responseData, 'body')), 4096),
+        ] : [];
     }
 
     /**

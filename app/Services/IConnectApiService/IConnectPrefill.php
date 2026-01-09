@@ -21,19 +21,21 @@ class IConnectPrefill
     /**
      * @param Fund $fund
      * @param string $bsn
+     * @param bool $withResponseData
      * @return array
      */
-    public static function getBsnApiPrefills(Fund $fund, string $bsn): array
+    public static function getBsnApiPrefills(Fund $fund, string $bsn, bool $withResponseData = false): array
     {
-        return (new static())->getPrefills($fund, $bsn);
+        return (new static())->getPrefills($fund, $bsn, $withResponseData);
     }
 
     /**
      * @param Fund $fund
      * @param string $bsn
+     * @param bool $withResponseData
      * @return array
      */
-    public function getPrefills(Fund $fund, string $bsn): array
+    public function getPrefills(Fund $fund, string $bsn, bool $withResponseData = false): array
     {
         $person = IConnect::make($fund->organization->getIConnectApiConfigs())->getPerson($bsn, [
             'parents', 'children', 'partners',
@@ -47,6 +49,7 @@ class IConnectPrefill
                         'key' => static::PREFILL_ERROR_NOT_FOUND,
                         'message' => trans('person_bsn_api.errors.not_found'),
                     ],
+                    'response' => $withResponseData ? $person?->getResponseData() : null,
                 ];
             }
 
@@ -55,6 +58,7 @@ class IConnectPrefill
                     'key' => static::PREFILL_ERROR_CONNECTION_ERROR,
                     'message' => trans('person_bsn_api.errors.connection_error'),
                 ],
+                'response' => $withResponseData ? $person?->getResponseData() : null,
             ];
         }
 
@@ -67,6 +71,7 @@ class IConnectPrefill
                     'key' => static::PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA,
                     'message' => trans('person_bsn_api.errors.not_filled_required_criteria'),
                 ],
+                'response' => $withResponseData ? $person->getResponseData() : null,
             ];
         }
 
@@ -79,6 +84,7 @@ class IConnectPrefill
                     'key' => static::PREFILL_ERROR_TAKEN_BY_PARTNER,
                     'message' => trans('person_bsn_api.errors.taken_by_partner'),
                 ],
+                'response' => $withResponseData ? $person->getResponseData() : null,
             ];
         }
 
@@ -87,12 +93,10 @@ class IConnectPrefill
 
         return [
             'error' => null,
+            'response' => $withResponseData ? $person->getResponseData() : null,
             'person' => [
                 ...$personPrefills,
                 [
-                    'record_type_key' => 'city',
-                    'value' => 'lorem-ipsum',
-                ], [
                     'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
                     'value' => count($partner) ? 2 : 1,
                 ], [

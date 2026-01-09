@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Events\PrevalidationRequests\PrevalidationRequestDeleted;
+use App\Events\PrevalidationRequests\PrevalidationRequestDeletedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests\ResubmitFailedPrevalidationRequestsRequest;
 use App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests\SearchPrevalidationRequestsRequest;
@@ -15,6 +15,7 @@ use App\Scopes\Builders\PrevalidationRequestQuery;
 use App\Searches\PrevalidationRequestSearch;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Event;
 
 class PrevalidationRequestController extends Controller
 {
@@ -141,7 +142,7 @@ class PrevalidationRequestController extends Controller
     ): NoContentResponse {
         $this->authorize('destroy', [$prevalidationRequest, $organization]);
 
-        PrevalidationRequestDeleted::dispatch($prevalidationRequest);
+        Event::dispatch(new PrevalidationRequestDeletedEvent($prevalidationRequest, null));
         $prevalidationRequest->delete();
 
         return new NoContentResponse();
