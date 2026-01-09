@@ -30,6 +30,7 @@ class FundResource extends BaseJsonResource
         'children',
         'logo.presets',
         'criteria.fund',
+        'criteria.group',
         'criteria.fund_criterion_rules',
         'criteria.record_type.translation',
         'criteria.record_type.record_type_options.translations',
@@ -271,6 +272,12 @@ class FundResource extends BaseJsonResource
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
             'csv_required_keys' => $fund->requiredPrevalidationKeys(false, []),
+            'csv_required_keys_by_groups' => $fund->requiredPrevalidationKeysByGroups(),
+            'csv_required_keys_except_prefill' => $fund->requiredPrevalidationKeys(
+                withOptional: false,
+                values: [],
+                exceptPrefillKeys: true
+            ),
         ];
     }
 

@@ -22,6 +22,7 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Gate;
 use Throwable;
@@ -162,6 +163,10 @@ class FundsController extends Controller
     {
         $this->authorize('viewPersonBsnApiRecords', $fund);
 
-        return new JsonResponse(IConnectPrefill::getBsnApiPrefills($fund, $request->identity()->bsn));
+        $response = Arr::only(IConnectPrefill::getBsnApiPrefills($fund, $request->identity()->bsn), [
+            'error', 'person', 'partner', 'children', 'children_groups_counts',
+        ]);
+
+        return new JsonResponse($response);
     }
 }

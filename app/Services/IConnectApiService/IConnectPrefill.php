@@ -9,76 +9,33 @@ use App\Models\PersonBsnApiRecordType;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiIsTakenByPartnerException;
 use App\Services\IConnectApiService\Objects\Person;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
 class IConnectPrefill
 {
+    public const string PREFILL_ERROR_NOT_FOUND = 'not_found';
+    public const string PREFILL_ERROR_CONNECTION_ERROR = 'connection_error';
+    public const string PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA = 'not_filled_required_criteria';
+    public const string PREFILL_ERROR_TAKEN_BY_PARTNER = 'taken_by_partner';
+
     /**
      * @param Fund $fund
      * @param string $bsn
+     * @param bool $withResponseData
      * @return array
      */
-    public static function getBsnApiPrefills(Fund $fund, string $bsn): array
+    public static function getBsnApiPrefills(Fund $fund, string $bsn, bool $withResponseData = false): array
     {
-        $cacheKey = static::makeFundPrefillCacheKey($fund, $bsn);
-        $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
-        $shouldCache = $cacheTime > 0;
-
-        if ($shouldCache && Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
-
-        $prefills = (new static())->getPrefills($fund, $bsn);
-
-        if ($shouldCache && is_null(Arr::get($prefills, 'error'))) {
-            Cache::put($cacheKey, $prefills, $cacheTime);
-        }
-
-        return $prefills;
+        return (new static())->getPrefills($fund, $bsn, $withResponseData);
     }
 
     /**
      * @param Fund $fund
      * @param string $bsn
-     * @return void
-     */
-    public static function forgetBsnApiPrefills(Fund $fund, string $bsn): void
-    {
-        Cache::forget(static::makeFundPrefillCacheKey($fund, $bsn));
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $bsn
-     * @return string
-     */
-    public static function makeFundPrefillCacheKey(Fund $fund, string $bsn): string
-    {
-        $hashData = [
-            'fund_config_key' => $fund->fund_config?->key,
-            'criteria' => $fund->criteria
-                ->map(fn (FundCriterion $criterion) => [
-                    'record_type_key' => $criterion->record_type_key,
-                    'fill_type' => $criterion->fill_type,
-                    'optional' => $criterion->optional,
-                ])
-                ->sortBy('record_type_key')
-                ->values()
-                ->toArray(),
-        ];
-
-        $hash = md5(json_encode($hashData));
-
-        return 'bsn_fund_prefill_data_' . $fund->id . '_' . $hash . '_' . $bsn;
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $bsn
+     * @param bool $withResponseData
      * @return array
      */
-    public function getPrefills(Fund $fund, string $bsn): array
+    public function getPrefills(Fund $fund, string $bsn, bool $withResponseData = false): array
     {
         $person = IConnect::make($fund->organization->getIConnectApiConfigs())->getPerson($bsn, [
             'parents', 'children', 'partners',
@@ -89,17 +46,19 @@ class IConnectPrefill
             if ($person?->response()->getCode() === 404) {
                 return [
                     'error' => [
-                        'key' => 'not_found',
+                        'key' => static::PREFILL_ERROR_NOT_FOUND,
                         'message' => trans('person_bsn_api.errors.not_found'),
                     ],
+                    'response' => $withResponseData ? $person?->getResponseData() : null,
                 ];
             }
 
             return [
                 'error' => [
-                    'key' => 'connection_error',
+                    'key' => static::PREFILL_ERROR_CONNECTION_ERROR,
                     'message' => trans('person_bsn_api.errors.connection_error'),
                 ],
+                'response' => $withResponseData ? $person?->getResponseData() : null,
             ];
         }
 
@@ -109,9 +68,10 @@ class IConnectPrefill
         if ($this->isRequiredCriteriaFilledWithPrefills($fund, $personPrefills)) {
             return [
                 'error' => [
-                    'key' => 'not_filled_required_criteria',
+                    'key' => static::PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA,
                     'message' => trans('person_bsn_api.errors.not_filled_required_criteria'),
                 ],
+                'response' => $withResponseData ? $person->getResponseData() : null,
             ];
         }
 
@@ -121,9 +81,10 @@ class IConnectPrefill
         } catch (PersonBsnApiIsTakenByPartnerException) {
             return [
                 'error' => [
-                    'key' => 'taken_by_partner',
+                    'key' => static::PREFILL_ERROR_TAKEN_BY_PARTNER,
                     'message' => trans('person_bsn_api.errors.taken_by_partner'),
                 ],
+                'response' => $withResponseData ? $person->getResponseData() : null,
             ];
         }
 
@@ -132,12 +93,10 @@ class IConnectPrefill
 
         return [
             'error' => null,
+            'response' => $withResponseData ? $person->getResponseData() : null,
             'person' => [
                 ...$personPrefills,
                 [
-                    'record_type_key' => 'city',
-                    'value' => 'lorem-ipsum',
-                ], [
                     'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
                     'value' => count($partner) ? 2 : 1,
                 ], [
@@ -198,8 +157,8 @@ class IConnectPrefill
     /**
      * @param Fund $fund
      * @param Person $person
-     * @return array
      * @throws PersonBsnApiIsTakenByPartnerException
+     * @return array
      */
     protected function getPartnerPrefills(Fund $fund, Person $person): array
     {
@@ -219,24 +178,24 @@ class IConnectPrefill
                 if (($partner && $fund->identityHasActiveVoucher($partner)) || ($identity && $fund->isTakenByPartner($identity))) {
                     throw new PersonBsnApiIsTakenByPartnerException();
                 }
-            }
 
-            return [[
-                'record_type_key' => 'partner_bsn',
-                'value' => $partnerApi->getBSN(),
-            ], [
-                'record_type_key' => 'partner_first_name',
-                'value' => $partnerApi->getFirstName(),
-            ], [
-                'record_type_key' => 'partner_last_name',
-                'value' => $partnerApi->getLastName(),
-            ], [
-                'record_type_key' => 'partner_birth_date',
-                'value' => $partnerApi->getBirthDate(),
-            ], [
-                'record_type_key' => 'partner_gender',
-                'value' => $partnerApi->getGender(),
-            ]];
+                return [[
+                    'record_type_key' => 'partner_bsn',
+                    'value' => $partnerApi->getBSN(),
+                ], [
+                    'record_type_key' => 'partner_first_name',
+                    'value' => $partnerApi->getFirstName(),
+                ], [
+                    'record_type_key' => 'partner_last_name',
+                    'value' => $partnerApi->getLastName(),
+                ], [
+                    'record_type_key' => 'partner_birth_date',
+                    'value' => $partnerApi->getBirthDate(),
+                ], [
+                    'record_type_key' => 'partner_gender',
+                    'value' => $partnerApi->getGender(),
+                ]];
+            }
         }
 
         return [];

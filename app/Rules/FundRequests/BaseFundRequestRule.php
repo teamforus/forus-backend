@@ -77,16 +77,17 @@ abstract class BaseFundRequestRule extends BaseRule
 
     /**
      * @param string $attribute
+     * @param array $records
      * @return FundCriterion|null
      */
-    protected function findCriterion(string $attribute): ?FundCriterion
+    protected function findCriterion(string $attribute, array $records): ?FundCriterion
     {
         if (!str_starts_with($attribute, 'records.')) {
             throw new LogicException("Invalid attribute path in BaseFundRequestRule::findCriterion: '$attribute'");
         }
 
         $index = explode('.', $attribute)[1] ?? null;
-        $record = $this->request->input("records.$index");
+        $record = Arr::get($records, $index);
 
         return $this->fund->criteria()->find($record['fund_criterion_id'] ?? null);
     }

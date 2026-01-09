@@ -13,6 +13,7 @@ use App\Models\PersonBsnApiRecordType;
 use App\Models\RecordType;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\RollbackModelsTrait;
@@ -768,7 +769,7 @@ class FundRequestPrefillsTest extends DuskTestCase
     ): void {
         // create a requester and run the form flow
         $requester = $this->makeIdentity($this->makeUniqueEmail(), $config['bsn']);
-        $this->forgetFundPrefillCache($fund, $config['bsn']);
+        Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester, $config) {
             $browser->visit($implementation->urlWebshop());
@@ -835,7 +836,7 @@ class FundRequestPrefillsTest extends DuskTestCase
     ): void {
         // create a requester and run the form flow
         $requester = $this->makeIdentity($this->makeUniqueEmail(), $bsn);
-        $this->forgetFundPrefillCache($fund, $bsn);
+        Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester) {
             $browser->visit($implementation->urlWebshop());
@@ -877,7 +878,7 @@ class FundRequestPrefillsTest extends DuskTestCase
     ): void {
         // create a requester and run the full form flow
         $requester = $this->makeIdentity($this->makeUniqueEmail(), $config['bsn']);
-        $this->forgetFundPrefillCache($fund, $config['bsn']);
+        Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester, $config) {
             $browser->visit($implementation->urlWebshop());

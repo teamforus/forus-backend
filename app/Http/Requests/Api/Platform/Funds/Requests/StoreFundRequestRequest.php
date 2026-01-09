@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
 class StoreFundRequestRequest extends BaseFormRequest
 {
     protected bool $isValidationRequest = false;
+    protected bool $isCsvRequest = false;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -56,9 +57,10 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $records = $this->input('records');
+
         return [
-            'asd' => 'postcode',
-            ...$this->recordsRule($this->fund),
+            ...$this->recordsRule($this->fund, is_array($records) ? $records : []),
             ...$this->contactInformationRule($this->fund),
             ...$this->physicalCardRequestRule($this->fund),
         ];
@@ -85,6 +87,52 @@ class StoreFundRequestRequest extends BaseFormRequest
         }
 
         return $messages;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $records
+     * @param bool $forPrevalidationRequestsCSV
+     * @return array
+     */
+    public function recordsRule(Fund $fund, array $records, bool $forPrevalidationRequestsCSV = false): array
+    {
+        $values = Arr::pluck($records, 'value', 'fund_criterion_id');
+
+        if ($this->isValidationRequest && !$this->has('records')) {
+            return [];
+        }
+
+        return [
+            'records' => [
+                'present',
+                'array',
+                'min:1',
+                new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
+            ],
+            'criteria_groups' => [
+                'present',
+                'array',
+            ],
+            'criteria_groups.*' => [
+                'required',
+                new FundRequestRequiredGroupRule($fund, $this, $values),
+            ],
+            'records.*' => 'required|array',
+            'records.*.value' => [
+                'present',
+                new FundRequestRecordValueRule($fund, $this, $values, $records, $this->isValidationRequest, $forPrevalidationRequestsCSV),
+            ],
+            'records.*.files' => $forPrevalidationRequestsCSV ? [] : [
+                'present',
+                new FundRequestRecordFilesRule($fund, $this, $values, $records),
+            ],
+            'records.*.fund_criterion_id' => [
+                'present',
+                'numeric',
+                new FundRequestRecordCriterionIdRule($fund, $this),
+            ],
+        ];
     }
 
     /**
@@ -128,51 +176,6 @@ class StoreFundRequestRequest extends BaseFormRequest
                 'min:5',
                 'max:2000',
             ] : ['nullable', 'string'],
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @return array
-     */
-    protected function recordsRule(Fund $fund): array
-    {
-        $values = $this->input('records');
-        $values = is_array($values) ? Arr::pluck($values, 'value', 'fund_criterion_id') : [];
-
-        if ($this->isValidationRequest && !$this->has('records')) {
-            return [];
-        }
-
-        return [
-            'records' => [
-                'present',
-                'array',
-                'min:1',
-                new FundRequestRequiredRecordsRule($fund, $this, $values, $this->isValidationRequest),
-            ],
-            'criteria_groups' => [
-                'present',
-                'array',
-            ],
-            'criteria_groups.*' => [
-                'required',
-                new FundRequestRequiredGroupRule($fund, $this, $values),
-            ],
-            'records.*' => 'required|array',
-            'records.*.value' => [
-                'present',
-                new FundRequestRecordValueRule($fund, $this, $values, $this->isValidationRequest),
-            ],
-            'records.*.files' => [
-                'present',
-                new FundRequestRecordFilesRule($fund, $this, $values),
-            ],
-            'records.*.fund_criterion_id' => [
-                'present',
-                'numeric',
-                new FundRequestRecordCriterionIdRule($fund, $this),
-            ],
         ];
     }
 

@@ -68,7 +68,7 @@ class IConnect
      */
     public function getPerson(string $bsn, array $with = [], array $fields = [], bool $cacheResponse = true): ?Person
     {
-        $cacheKey = 'bsn_prefill_data_' . $this->getApiOin() . '_' . $bsn;
+        $cacheKey = 'bsn_prefill_data_' . $this->getApiOin() . '_' . $bsn . '_' . md5(json_encode($with));
         $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
         $shouldCache = $cacheResponse && $cacheTime > 0;
 

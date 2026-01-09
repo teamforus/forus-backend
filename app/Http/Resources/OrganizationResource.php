@@ -154,6 +154,7 @@ class OrganizationResource extends BaseJsonResource
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_product_updates',
                 'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
+                'allow_prevalidation_requests',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),

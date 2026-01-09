@@ -8,7 +8,6 @@ use App\Models\Organization;
 use App\Models\PersonBsnApiRecordType;
 use App\Models\RecordType;
 use App\Services\IConnectApiService\IConnect;
-use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -144,15 +143,5 @@ trait MakesTestFundRequestPrefills
         $identity->setBsnRecord($bsn);
 
         return $this->postJson($url, [...compact('records'), ...$data], $this->makeApiHeaders($proxy, $headers));
-    }
-
-    /**
-     * @param Fund $fund
-     * @param string $bsn
-     * @return void
-     */
-    protected function forgetFundPrefillCache(Fund $fund, string $bsn): void
-    {
-        IConnectPrefill::forgetBsnApiPrefills($fund, $bsn);
     }
 }
