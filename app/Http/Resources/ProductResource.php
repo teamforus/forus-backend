@@ -19,14 +19,6 @@ class ProductResource extends BaseJsonResource
     public const array LOAD = [
         'voucher_transactions',
         'product_reservations_pending',
-        'photos.presets',
-        'product_category.translations',
-        'organization.offices.photo.presets',
-        'organization.offices.schedules',
-        'organization.offices.organization',
-        'organization.offices.organization.logo.presets',
-        'organization.logo.presets',
-        'organization.business_type.translations',
         'organization.fund_providers',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
@@ -36,10 +28,17 @@ class ProductResource extends BaseJsonResource
         'reservation_fields',
     ];
 
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
+        'product_category' => ProductCategoryResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'organization.offices' => OfficeResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

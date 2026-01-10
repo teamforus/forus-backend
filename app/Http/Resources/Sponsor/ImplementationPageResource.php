@@ -7,6 +7,7 @@ use App\Http\Resources\FaqResource;
 use App\Http\Resources\ImplementationBlockResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use Illuminate\Http\Request;
 
 /**
  * @property ImplementationPage $resource
@@ -14,18 +15,21 @@ use App\Models\ImplementationPage;
 class ImplementationPageResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'blocks',
-        'faq',
         'implementation',
+    ];
+
+    public const array LOAD_NESTED = [
+        'blocks' => ImplementationBlockResource::class,
+        'faq' => FaqResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $page = $this->resource;
 

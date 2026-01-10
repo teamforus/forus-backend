@@ -20,6 +20,16 @@ use Illuminate\Support\Facades\Gate;
  */
 class OrganizationResource extends BaseJsonResource
 {
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+        'tags' => TagResource::class,
+        'business_type' => BusinessTypeResource::class,
+        'contacts' => OrganizationContactResource::class,
+        'reservation_fields' => ReservationFieldResource::class,
+    ];
+
     public const array DEPENDENCIES = [
         'logo',
         'funds',
@@ -54,10 +64,12 @@ class OrganizationResource extends BaseJsonResource
         self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
         self::isRequested('funds_count', $request) && array_push($load, 'funds');
 
-        return array_merge($load, $request?->isProviderDashboard() ? [
+        $load = array_merge($load, $request?->isProviderDashboard() ? [
             'mollie_connection',
             'fund_providers_allowed_extra_payments',
         ] : []);
+
+        return array_values(array_unique(array_merge($load, static::load())));
     }
 
     public static function isRequested(string $key, $request = null): bool
@@ -68,7 +80,7 @@ class OrganizationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

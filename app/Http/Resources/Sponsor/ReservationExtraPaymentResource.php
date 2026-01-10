@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\ProductReservationResource;
 use App\Http\Resources\ReservationExtraPaymentRefundResource;
 use App\Models\ReservationExtraPayment;
+use Illuminate\Http\Request;
 
 /**
  * @property-read ReservationExtraPayment $resource
@@ -13,24 +14,21 @@ use App\Models\ReservationExtraPayment;
 class ReservationExtraPaymentResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'refunds',
         'refunds_completed',
-        'product_reservation.voucher.fund.organization',
-        'product_reservation.product.organization',
-        'product_reservation.product.photos.presets',
-        'product_reservation.voucher_transaction',
-        'product_reservation.extra_payment.refunds',
-        'product_reservation.custom_fields.reservation_field',
-        'product_reservation.custom_fields.files',
+    ];
+
+    public const array LOAD_NESTED = [
+        'refunds' => ReservationExtraPaymentRefundResource::class,
+        'product_reservation' => ProductReservationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
             ...$this->resource->only([

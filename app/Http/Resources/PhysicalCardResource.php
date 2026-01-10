@@ -11,27 +11,17 @@ use Illuminate\Http\Request;
  */
 class PhysicalCardResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'physical_card_type.photo',
-        'voucher',
-    ];
+    public const array LOAD = [];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [
-            ...parent::load($append),
-            ...VoucherResource::load('voucher'),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'physical_card_type.photo' => MediaResource::class,
+        'voucher' => VoucherResource::class,
+    ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

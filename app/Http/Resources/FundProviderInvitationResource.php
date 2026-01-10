@@ -3,26 +3,29 @@
 namespace App\Http\Resources;
 
 use App\Models\FundProviderInvitation;
+use Illuminate\Http\Request;
 
 /**
  * @property FundProviderInvitation $resource
  */
 class FundProviderInvitationResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'fund',
-        'fund.organization',
-        'from_fund',
-        'organization',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundResource::class,
+        'fund.organization' => OrganizationResource::class,
+        'from_fund' => FundResource::class,
+        'organization' => OrganizationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $invitation = $this->resource;
 

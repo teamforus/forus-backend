@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\BankConnection;
 use App\Services\BankService\Resources\BankResource;
+use Illuminate\Http\Request;
 
 /**
  * @property-read BankConnection $resource
@@ -12,17 +13,20 @@ class BankConnectionResource extends BaseJsonResource
 {
     public const array LOAD = [
         'bank',
-        'bank_connection_accounts',
-        'bank_connection_default_account',
+    ];
+
+    public const array LOAD_NESTED = [
+        'bank_connection_accounts' => BankConnectionAccountResource::class,
+        'bank_connection_default_account' => BankConnectionAccountResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only('id', 'state', 'organization_id'), [
             'bank' => new BankResource($this->resource->bank),

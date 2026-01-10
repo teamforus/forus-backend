@@ -17,6 +17,7 @@ class BaseJsonResource extends JsonResource
     public const array LOAD = [];
     public const array LOAD_COUNT = [];
     public const array LOAD_MORPH = [];
+    public const array LOAD_NESTED = [];
 
     /**
      * @var string
@@ -42,11 +43,23 @@ class BaseJsonResource extends JsonResource
      */
     public static function load(?string $append = null): array
     {
-        if ($append) {
-            return array_map(fn ($load) => "$append.$load", static::LOAD);
+        $prepend = $append ? "$append." : '';
+        $loads = static::prefixLoads(static::LOAD, $prepend);
+
+        foreach (static::LOAD_NESTED as $relation => $resourceClass) {
+            $nestedRelation = $prepend . $relation;
+            $resourceClasses = is_array($resourceClass) ? $resourceClass : [$resourceClass];
+
+            $loads[] = $nestedRelation;
+
+            foreach ($resourceClasses as $class) {
+                if (is_string($class) && is_subclass_of($class, self::class)) {
+                    $loads = array_merge($loads, $class::load($nestedRelation));
+                }
+            }
         }
 
-        return static::LOAD;
+        return static::uniqueLoads($loads);
     }
 
     /**
@@ -126,6 +139,60 @@ class BaseJsonResource extends JsonResource
         }
 
         return $this;
+    }
+
+    /**
+     * @param array $loads
+     * @param string $prepend
+     * @return array
+     */
+    protected static function prefixLoads(array $loads, string $prepend): array
+    {
+        if ($prepend === '') {
+            return $loads;
+        }
+
+        $prefixed = [];
+
+        foreach ($loads as $key => $value) {
+            if (is_int($key)) {
+                $prefixed[] = $prepend . $value;
+                continue;
+            }
+
+            $prefixed[$prepend . $key] = $value;
+        }
+
+        return $prefixed;
+    }
+
+    /**
+     * @param array $loads
+     * @return array
+     */
+    protected static function uniqueLoads(array $loads): array
+    {
+        $keyed = array_filter($loads, fn ($key) => !is_int($key), ARRAY_FILTER_USE_KEY);
+        $unique = [];
+        $seen = [];
+
+        foreach ($loads as $key => $value) {
+            if (!is_int($key)) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                if (isset($keyed[$value]) || isset($seen[$value])) {
+                    continue;
+                }
+
+                $seen[$value] = true;
+            }
+
+            $unique[] = $value;
+        }
+
+        return array_merge($unique, $keyed);
     }
 
     /**

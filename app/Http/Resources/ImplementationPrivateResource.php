@@ -14,17 +14,21 @@ use League\CommonMark\Exception\CommonMarkException;
 class ImplementationPrivateResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'pages',
-        'banner',
-        'pre_check_banner',
-        'languages',
         'organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'banner' => MediaResource::class,
+        'pre_check_banner' => MediaResource::class,
+        'email_logo' => MediaCompactResource::class,
+        'pages' => ImplementationPageResource::class,
+        'languages' => LanguageResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws CommonMarkException
      * @return ?array
      * @property Implementation $resource

@@ -24,41 +24,33 @@ use Illuminate\Support\Facades\Gate;
 class FundResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'faq',
         'tags',
         'parent',
         'children',
-        'logo.presets',
-        'criteria_steps',
-        'criteria.fund',
-        'criteria.fund_criterion_rules',
-        'criteria.record_type.translation',
-        'criteria.record_type.record_type_options.translations',
-        'organization.tags.translations',
-        'organization.offices',
-        'organization.contacts',
-        'organization.logo.presets',
-        'organization.reservation_fields',
-        'organization.bank_connection_active',
-        'organization.business_type.translations',
-        'organization.employees.roles.permissions',
-        'fund_config.implementation.page_provider',
-        'fund_formula_products',
+        'organization',
+        'fund_config',
         'provider_organizations_approved.employees',
-        'tags_webshop',
-        'tags_webshop.translations',
-        'fund_formulas.record_type.translations',
-        'fund_formulas.record_type.record_type_options.translations',
-        'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
-        'amount_presets',
         'fund_form',
+    ];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+        'organization' => OrganizationResource::class,
+        'criteria' => FundCriterionResource::class,
+        'criteria_steps' => FundCriteriaStepResource::class,
+        'faq' => FaqResource::class,
+        'fund_formulas' => FundFormulaResource::class,
+        'fund_formula_products' => FundFormulaProductResource::class,
+        'amount_presets' => FundAmountPresetResource::class,
+        'tags_webshop' => TagResource::class,
+        'fund_config.implementation' => ImplementationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

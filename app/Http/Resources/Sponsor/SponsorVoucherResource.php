@@ -26,8 +26,6 @@ class SponsorVoucherResource extends BaseJsonResource
         'product_vouchers.paid_out_transactions',
         'reimbursements_pending',
         'product.product_category',
-        'product.photos.presets',
-        'product.organization',
         'fund.organization',
         'fund.fund_config.implementation',
         'fund.physical_card_types.photo.presets',
@@ -40,25 +38,17 @@ class SponsorVoucherResource extends BaseJsonResource
         'paid_out_transactions',
     ];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
-
-        return [
-            ...parent::load($append),
-            ...EmployeeResource::load("{$prepend}employee"),
-            ...FundPhysicalCardTypeResource::load("{$prepend}fund.fund_physical_card_types"),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'employee' => EmployeeResource::class,
+        'fund.fund_physical_card_types' => FundPhysicalCardTypeResource::class,
+        'product.photos' => MediaResource::class,
+        'product.organization' => OrganizationBasicResource::class,
+    ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

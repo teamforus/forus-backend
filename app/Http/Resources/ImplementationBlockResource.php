@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\ImplementationBlock;
+use Illuminate\Http\Request;
 
 /**
  * @property ImplementationBlock $resource
@@ -10,17 +11,20 @@ use App\Models\ImplementationBlock;
 class ImplementationBlockResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'photo',
         'implementation_page.implementation',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photo' => MediaResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $block = $this->resource;
 

@@ -30,7 +30,6 @@ class VoucherResource extends BaseJsonResource
         'parent',
         'token_with_confirmation',
         'last_transaction',
-        'all_transactions',
         'transactions',
         'product_vouchers.fund',
         'product_vouchers.product.photos.presets',
@@ -38,16 +37,22 @@ class VoucherResource extends BaseJsonResource
         'product_vouchers.product_reservation',
         'reimbursements_pending',
         'fund.fund_config.implementation',
-        'fund.fund_physical_card_types',
-        'fund.provider_organizations_approved.offices',
-        'physical_cards',
-        'physical_cards.physical_card_type.photo.presets',
-        'product.photos.presets',
-        'product.organization.offices',
         'last_deactivation_log',
         'top_up_transactions',
-        'voucher_records.record_type.translations',
         'fund_request.records',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund.logo' => MediaCompactResource::class,
+        'product.photos' => MediaResource::class,
+        'product.organization' => OrganizationBasicWithPrivateResource::class,
+        'product.organization.offices' => OfficeResource::class,
+        'fund.organization' => OrganizationBasicWithPrivateResource::class,
+        'fund.provider_organizations_approved.offices' => OfficeResource::class,
+        'all_transactions' => VoucherTransactionResource::class,
+        'fund.fund_physical_card_types' => FundPhysicalCardTypeResource::class,
+        'physical_cards.physical_card_type' => PhysicalCardTypeResource::class,
+        'voucher_records' => VoucherRecordResource::class,
     ];
 
     public const array LOAD_COUNT = [
@@ -56,29 +61,9 @@ class VoucherResource extends BaseJsonResource
     ];
 
     /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
-
-        return [
-            ...parent::load($append),
-            ...MediaResource::load("{$prepend}fund.logo"),
-            ...MediaResource::load("{$prepend}product.photos"),
-            ...OfficeResource::load("{$prepend}fund.provider_organizations_approved.offices"),
-            ...OrganizationBasicResource::load("{$prepend}product.organization"),
-            ...OrganizationBasicResource::load("{$prepend}fund.organization"),
-            ...VoucherTransactionResource::load("{$prepend}all_transactions"),
-            ...FundPhysicalCardTypeResource::load("{$prepend}fund.fund_physical_card_types"),
-        ];
-    }
-
-    /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws Exception
      * @return array
      */

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\ReservationExtraPaymentRefund;
+use Illuminate\Http\Request;
 
 /**
  * @property-read ReservationExtraPaymentRefund $resource
@@ -12,10 +13,10 @@ class ReservationExtraPaymentRefundResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
             ...$this->resource->only([

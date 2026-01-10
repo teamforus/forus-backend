@@ -14,18 +14,19 @@ use Illuminate\Http\Request;
 class ReimbursementResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'files.preview',
         'voucher.identity',
+        'voucher.fund',
         'voucher.fund.organization',
         'voucher.fund.fund_config.implementation',
-        'employee.organization',
-        'employee.roles.translations',
-        'employee.roles.permissions',
         'reimbursement_category',
-        'voucher_transaction.product',
-        'voucher_transaction.provider.logo.presets',
-        'voucher_transaction.voucher.fund.fund_config.implementation',
-        'voucher_transaction.voucher.fund.logo.presets',
+        'voucher_transaction',
+    ];
+
+    public const array LOAD_NESTED = [
+        'files' => FileResource::class,
+        'voucher_transaction' => VoucherTransactionResource::class,
+        'voucher.fund' => FundTinyResource::class,
+        'voucher.fund.organization' => OrganizationTinyResource::class,
     ];
 
     /**

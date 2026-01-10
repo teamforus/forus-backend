@@ -29,23 +29,15 @@ class ProviderAppVoucherResource extends BaseJsonResource
         'voucher',
         'voucher.fund',
         'voucher.fund.organization',
-        'voucher.fund.logo',
         'voucher.fund.fund_config',
-        'voucher.product',
         'voucher.product_vouchers',
     ];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [
-            ...parent::load($append),
-            ...ProviderAppProductResource::load('product'),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'voucher.fund.logo' => MediaCompactResource::class,
+        'voucher.product' => ProviderAppProductResource::class,
+    ];
+
 
     /**
      * Transform the resource into an array.

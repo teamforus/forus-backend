@@ -20,7 +20,7 @@ class NoteResource extends BaseJsonResource
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only('id', 'description'), [
             'employee' => $this->resource->employee ? [

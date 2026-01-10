@@ -3,12 +3,13 @@
 namespace App\Http\Resources\Arr;
 
 use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\BaseJsonResource;
+use Illuminate\Http\Request;
 
 /**
  * @property-read PersonInterface $resource
  */
-class IdentityPersonArrResource extends JsonResource
+class IdentityPersonArrResource extends BaseJsonResource
 {
     /**
      * @var string[]
@@ -21,10 +22,10 @@ class IdentityPersonArrResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $person = $this->resource;
 

@@ -14,12 +14,12 @@ use Throwable;
 /**
  * @property Model|Organization|Product|Fund $resource
  */
-class SearchResource extends JsonResource
+class SearchResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param Request$request
+     * @param Request $request
      * @throws Throwable
      * @return array
      */

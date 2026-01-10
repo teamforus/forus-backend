@@ -140,7 +140,7 @@ class ProvidersController extends Controller
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
-        ]))->with(ProviderFinancialResource::$load);
+        ]))->with(ProviderFinancialResource::load());
 
         return ProviderFinancialResource::collection($providers->paginate(
             $request->input('per_page')
@@ -187,7 +187,7 @@ class ProvidersController extends Controller
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
-        ]))->with(ProviderFinancialResource::$load)->get();
+        ]))->with(ProviderFinancialResource::load())->get();
 
         $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;

@@ -23,17 +23,19 @@ class FundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const array LOAD = [
-        'fund.logo.presets',
         'records.record_type.translations',
-        'records.fund_request_clarifications.files.preview.presets',
-        'records.fund_request_clarifications.fund_request_record.record_type.translations',
-        'vouchers.transactions',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundTinyResource::class,
+        'records.fund_request_clarifications' => FundRequestClarificationResource::class,
+        'vouchers' => VoucherResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

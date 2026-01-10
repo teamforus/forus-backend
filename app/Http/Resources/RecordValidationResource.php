@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\RecordValidation;
+use Illuminate\Http\Request;
 
 /**
  * @property-read RecordValidation $resource
@@ -17,10 +18,10 @@ class RecordValidationResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $validation = $this->resource;
 
