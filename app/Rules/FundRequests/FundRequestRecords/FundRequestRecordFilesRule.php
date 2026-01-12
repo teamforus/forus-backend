@@ -3,7 +3,10 @@
 namespace App\Rules\FundRequests\FundRequestRecords;
 
 use App\Helpers\Validation;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\FundCriterion;
+use App\Models\RecordType;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Services\FileService\Models\File;
 use Illuminate\Database\Query\Builder;
@@ -11,6 +14,23 @@ use Illuminate\Validation\Rule;
 
 class FundRequestRecordFilesRule extends BaseFundRequestRule
 {
+    /**
+     * Create a new rule instance.
+     *
+     * @param Fund|null $fund
+     * @param BaseFormRequest|null $request
+     * @param array $submittedRecords
+     * @param array $submittedRawRecords
+     */
+    public function __construct(
+        protected ?Fund $fund,
+        protected ?BaseFormRequest $request = null,
+        protected array $submittedRecords,
+        protected array $submittedRawRecords,
+    ) {
+        parent::__construct($fund, $request);
+    }
+
     /**
      * Determine if the validation rule passes.
      *
@@ -20,7 +40,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $criterion = $this->findCriterion($attribute);
+        $criterion = $this->findCriterion($attribute, $this->submittedRawRecords);
         $label = trans('validation.attributes.file');
 
         if (!$criterion) {
@@ -51,7 +71,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
         // validate each file
         foreach ($value as $index => $file) {
             $validation = Validation::check($file, [
-                $this->isRequiredRule($criterion),
+                $this->isRequiredRule($criterion) ? 'required' : 'nullable',
                 Rule::exists('files', 'uid')->where(function (Builder|File $builder) {
                     $builder->where('identity_address', $this->request->auth_address());
                     $builder->where('type', 'fund_request_record_proof');
@@ -74,7 +94,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      */
     private function filesRules(FundCriterion $criterion): string
     {
-        if ($criterion->optional) {
+        if (!$this->isRequiredRule($criterion)) {
             return 'nullable|array';
         }
 
@@ -87,6 +107,16 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      */
     private function isRequiredRule(FundCriterion $criterion): string
     {
-        return $criterion->optional ? 'nullable' : 'required';
+        $value = $this->mapRecordValues($this->submittedRecords)[$criterion->record_type_key] ?? null;
+
+        if (
+            $criterion->record_type->type === RecordType::TYPE_BOOL &&
+            $criterion->record_type->control_type === RecordType::CONTROL_TYPE_CHECKBOX &&
+            $value === RecordType::TYPE_BOOL_OPTION_YES
+        ) {
+            return true;
+        }
+
+        return !$criterion->optional;
     }
 }

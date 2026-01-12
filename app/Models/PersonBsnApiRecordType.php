@@ -55,10 +55,10 @@ class PersonBsnApiRecordType extends Model
         }
 
         return match ($control_type) {
-            'number',
-            'currency' => (float) $value,
-            'step' => (int) $value,
-            'date' => $this->parseDate($value),
+            RecordType::CONTROL_TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_CURRENCY => (float) $value,
+            RecordType::CONTROL_TYPE_STEP => (int) $value,
+            RecordType::CONTROL_TYPE_DATE => $this->parseDate($value),
             default => $value,
         };
     }

@@ -26,6 +26,7 @@ use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpiredCommand;
 use App\Console\Commands\NotifyAboutVoucherExpireSoonCommand;
 use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
+use App\Console\Commands\ProcessPrevalidationRequestsCommand;
 use App\Console\Commands\ReservationExtraPaymentExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
@@ -125,6 +126,9 @@ class Kernel extends ConsoleKernel
 
         // Email logger
         MailDatabaseLoggerClearUnusedAttachmentsCommand::class,
+
+        // Prevalidation requests
+        ProcessPrevalidationRequestsCommand::class,
     ];
 
     /**
@@ -302,6 +306,14 @@ class Kernel extends ConsoleKernel
          */
         $schedule->command('forus.action.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
+
+        /**
+         * ProcessPrevalidationRequestsCommand.
+         */
+        $schedule->command('forus.prevalidation_requests:process')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->onOneServer();
 
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
