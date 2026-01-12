@@ -16,6 +16,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
+use App\Models\PrevalidationRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
@@ -66,6 +67,7 @@ class EventLogService implements IEventLogService
             'mollie_connection' => fn () => $this->mollieConnectionMeta($model),
             'reservation_extra_payment' => fn () => $this->reservationExtraPaymentMeta($model),
             'bi_connection' => fn () => $this->biConnectionMeta($model),
+            'prevalidation_request' => fn () => $this->prevalidationRequestMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -493,6 +495,18 @@ class EventLogService implements IEventLogService
             'data_types' => $connection->data_types,
             'expiration_period' => $connection->expiration_period,
         ], 'bi_connection_');
+    }
+
+    /**
+     * @param PrevalidationRequest $prevalidationRequest
+     * @return array
+     */
+    protected function prevalidationRequestMeta(PrevalidationRequest $prevalidationRequest): array
+    {
+        return $this->keyPrepend([
+            'id' => $prevalidationRequest->id,
+            'state' => $prevalidationRequest->state,
+        ], 'prevalidation_request_');
     }
 
     /**

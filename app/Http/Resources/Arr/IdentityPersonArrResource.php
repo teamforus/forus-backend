@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources\Arr;
 
-use App\Services\PersonBsnApiService\Interfaces\PersonInterface;
+use App\Services\IConnectApiService\Objects\BasePerson;
+use App\Services\IConnectApiService\Objects\Person;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read PersonInterface $resource
+ * @property-read Person $resource
  */
 class IdentityPersonArrResource extends JsonResource
 {
@@ -30,18 +31,18 @@ class IdentityPersonArrResource extends JsonResource
 
         return array_merge($this->baseFieldsToArray($person), [
             'relations' => [
-                'parents' => $this->relationToArray($person->geRelated('parents')),
-                'partners' => $this->relationToArray($person->geRelated('partners')),
-                'children' => $this->relationToArray($person->geRelated('children')),
+                'parents' => $this->relationToArray($person->getRelated('parents')),
+                'partners' => $this->relationToArray($person->getRelated('partners')),
+                'children' => $this->relationToArray($person->getRelated('children')),
             ],
         ]);
     }
 
     /**
-     * @param PersonInterface $person
+     * @param BasePerson $person
      * @return array
      */
-    public function baseFieldsToArray(PersonInterface $person): array
+    public function baseFieldsToArray(BasePerson $person): array
     {
         return [
             'bsn' => $person->getBSN(),
@@ -57,14 +58,14 @@ class IdentityPersonArrResource extends JsonResource
      */
     public function relationToArray(array $relations): array
     {
-        return array_map(fn (PersonInterface $person) => $this->baseFieldsToArray($person), $relations);
+        return array_map(fn (BasePerson $person) => $this->baseFieldsToArray($person), $relations);
     }
 
     /**
-     * @param PersonInterface $person
+     * @param BasePerson $person
      * @return array
      */
-    public function personToFields(PersonInterface $person): array
+    public function personToFields(BasePerson $person): array
     {
         $personData = $person->toArray();
         $baseFields = [];

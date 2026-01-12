@@ -50,7 +50,7 @@ abstract class BaseCriteriaRuleTypeRule extends BaseRule
         RecordType $recordType,
         FundCriterionRule $rule,
     ): Validator {
-        return Validation::check($value, new static($recordType, $rule));
+        return Validation::check($value, ['required', new static($recordType, $rule)]);
     }
 
     abstract public function rules(): array;

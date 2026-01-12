@@ -5,6 +5,9 @@ namespace App\Rules\FundRequests\FundRequestRecords;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\FundRequests\BaseFundRequestRule;
+use App\Services\IConnectApiService\IConnectPrefill;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 
 class FundRequestRecordValueRule extends BaseFundRequestRule
 {
@@ -14,11 +17,16 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
      * @param Fund|null $fund
      * @param BaseFormRequest|null $request
      * @param array $submittedRecords
+     * @param array $submittedRawRecords
+     * @param bool $isValidationRequest
      */
     public function __construct(
         protected ?Fund $fund,
         protected ?BaseFormRequest $request,
         protected array $submittedRecords,
+        protected array $submittedRawRecords,
+        protected bool $isValidationRequest = false,
+        protected bool $forPrevalidationRequestsCSV = false
     ) {
         parent::__construct($this->fund, $this->request);
     }
@@ -32,25 +40,47 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
      */
     public function passes($attribute, mixed $value): bool
     {
-        $criterion = $this->findCriterion($attribute);
+        $criterion = $this->findCriterion($attribute, $this->submittedRawRecords);
         $submittedRecordValues = $this->mapRecordValues($this->submittedRecords);
 
         if (!$criterion) {
             return $this->reject(__('validation.in', compact('attribute')));
         }
 
-        $requiredRecordTypes = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
-        $existingRecordValues = $this->fund->getTrustedRecordOfTypes($this->request->identity(), $requiredRecordTypes);
-        $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
-
-        if ($criterion->isExcludedByRules($allRecordValues)) {
-            return $this->reject(__('validation.fund_request.invalid_record', compact('attribute')));
-        }
-
         $label = $criterion->record_type->translation->name
             ?? $criterion->label
             ?? $criterion->title
             ?? trans('validation.attributes.value');
+
+        // validate prefills not modified
+        if (Gate::allows('viewPersonBsnApiRecords', $criterion->fund)) {
+            $fundPrefills = IConnectPrefill::getBsnApiPrefills($criterion->fund, $this->request->identity()->bsn);
+
+            if (is_array($fundPrefills['error'])) {
+                return $this->reject(Arr::get($fundPrefills, 'error.message'));
+            }
+
+            $prefills = Arr::keyBy(Arr::get($fundPrefills, 'person', []), 'record_type_key');
+
+            if (
+                Arr::has($prefills, $criterion->record_type_key) &&
+                !static::valuesIsEqual(Arr::get($prefills, "$criterion->record_type_key.value"), $value)
+            ) {
+                return $this->reject(__('validation.fund_request.invalid_prefill_value', ['attribute' => $label]));
+            }
+        }
+
+        $requiredRecordTypes = $criterion->fund_criterion_rules->pluck('record_type_key')->toArray();
+
+        $existingRecordValues = !$this->forPrevalidationRequestsCSV
+            ? $this->fund->getTrustedRecordOfTypes($this->request->identity(), $requiredRecordTypes)
+            : [];
+
+        $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
+
+        if ($criterion->isExcludedByRules($allRecordValues, $this->isValidationRequest)) {
+            return $this->reject(__('validation.fund_request.invalid_record', compact('attribute')));
+        }
 
         $rule = static::recordTypeRuleFor($criterion, $label);
 
@@ -59,5 +89,19 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
         }
 
         return true;
+    }
+
+    /**
+     * @param mixed $a
+     * @param mixed $b
+     * @return bool
+     */
+    protected static function valuesIsEqual(mixed $a, mixed $b): bool
+    {
+        if (is_numeric($a) && is_numeric($b)) {
+            return (float) $a === (float) $b;
+        }
+
+        return $a === $b;
     }
 }

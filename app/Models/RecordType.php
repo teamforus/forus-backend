@@ -78,6 +78,17 @@ class RecordType extends BaseModel
     public const string TYPE_SELECT = 'select';
     public const string TYPE_SELECT_NUMBER = 'select_number';
 
+    public const string CONTROL_TYPE_TEXT = 'text';
+    public const string CONTROL_TYPE_NUMBER = 'number';
+    public const string CONTROL_TYPE_DATE = 'date';
+    public const string CONTROL_TYPE_CHECKBOX = 'checkbox';
+    public const string CONTROL_TYPE_SELECT = 'select';
+    public const string CONTROL_TYPE_CURRENCY = 'currency';
+    public const string CONTROL_TYPE_STEP = 'step';
+
+    public const string TYPE_BOOL_OPTION_YES = 'Ja';
+    public const string TYPE_BOOL_OPTION_NO = 'Nee';
+
     public const array TYPES = [
         self::TYPE_BOOL,
         self::TYPE_IBAN,
@@ -105,7 +116,7 @@ class RecordType extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type',
+        'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type', 'pre_check',
     ];
 
     protected $perPage = 100;
@@ -241,8 +252,8 @@ class RecordType extends BaseModel
     {
         if ($this->type == 'bool') {
             return [
-                ['value' => 'Ja', 'name' => trans('record_types.options.yes')],
-                ['value' => 'Nee', 'name' => trans('record_types.options.no')],
+                ['value' => static::TYPE_BOOL_OPTION_YES, 'name' => trans('record_types.options.yes')],
+                ['value' => static::TYPE_BOOL_OPTION_NO, 'name' => trans('record_types.options.no')],
             ];
         }
 
