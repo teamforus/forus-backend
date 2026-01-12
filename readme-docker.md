@@ -174,7 +174,7 @@ The next command will start the containers (`php`, `apache2`, `mysql` and `phpmy
 ___
 If you want to make changes to the `.env` file from the container - adjust the `.env` file from the project directory and run the following command to update the `.env` file within the container.
 ``` 
-docker exec -it forus-backend-app nano .env
+docker exec -it forus-backend nano .env
 ```
 
 ## Database
@@ -182,23 +182,23 @@ ___
 
 To run the migrations (create db structure):
 ```bash
-docker exec -it forus-backend-app bash -c "composer dumpautoload && php artisan migrate" 
+docker exec -it forus-backend bash -c "composer dumpautoload && php artisan migrate" 
 ```
 
 And base seeders (bare minimum):
 ```bash
-docker exec -it forus-backend-app bash -c "php artisan db:seed"
+docker exec -it forus-backend bash -c "php artisan db:seed"
 ```
 
 To generate test data, please run:
 ```bash
-docker exec -it forus-backend-app bash -c "php artisan test-data:seed"
+docker exec -it forus-backend bash -c "php artisan test-data:seed"
 ```
 
 To reset the database run:  
 **WARNING!** this will drop all existing tables
 ```bash
-docker exec -it forus-backend-app bash -c "php artisan migrate:reset"
+docker exec -it forus-backend bash -c "php artisan migrate:reset"
 ```
 
 ## Links

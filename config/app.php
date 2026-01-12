@@ -223,6 +223,8 @@ return [
         App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
         App\Services\MollieService\MollieServiceProvider::class,
 
+        App\Services\IConnectApiService\IConnectServiceProvider::class,
+
         App\Services\TranslationService\TranslationServiceProvider::class,
     ],
 

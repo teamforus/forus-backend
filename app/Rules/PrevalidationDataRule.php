@@ -10,8 +10,9 @@ class PrevalidationDataRule extends BaseRule
      * Create a new rule instance.
      *
      * @param Fund|null $fund
+     * @param bool $exceptPrefillKeys
      */
-    public function __construct(protected ?Fund $fund = null)
+    public function __construct(protected ?Fund $fund = null, protected bool $exceptPrefillKeys = false)
     {
     }
 
@@ -33,7 +34,7 @@ class PrevalidationDataRule extends BaseRule
         $fund = $this->fund;
 
         foreach ($data as $records) {
-            $requiredKeys = $fund ? $fund->requiredPrevalidationKeys(false, $records) : [];
+            $requiredKeys = $fund ? $fund->requiredPrevalidationKeys(false, $records, $this->exceptPrefillKeys) : [];
             $records = collect($records);
 
             if ($fund && $records->keys()->search($fund->fund_config->csv_primary_key) === false) {

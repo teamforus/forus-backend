@@ -171,6 +171,28 @@ trait NavigatesFrontendDashboard
 
     /**
      * @param Browser $browser
+     * @param Fund $fund
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToPrevalidationRequestsPage(Browser $browser, Fund $fund): void
+    {
+        $browser->waitFor('@asideMenuGroupFundRequests');
+        $browser->element('@asideMenuGroupFundRequests')->click();
+        $browser->waitFor('@csvPrevalidationRequestsPage');
+        $browser->element('@csvPrevalidationRequestsPage')->click();
+
+        $browser->waitFor('@prevalidationsSelectFund');
+        $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
+            $browser->element('@selectControlFunds')->click();
+
+            $browser->waitFor("@selectControlFundItem$fund->id");
+            $browser->element("@selectControlFundItem$fund->id")->click();
+        });
+    }
+
+    /**
+     * @param Browser $browser
      * @throws TimeoutException
      * @return void
      */
