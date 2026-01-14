@@ -4,17 +4,19 @@ namespace App\Services\IConnectApiService;
 
 use App\Services\IConnectApiService\Objects\Person;
 use App\Services\IConnectApiService\Responses\ResponseData;
-use GuzzleHttp\Client;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Throwable;
 
 class IConnect
 {
-    private const string METHOD_GET = 'GET';
+    public const string URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
 
     private const string ENV_PRODUCTION = 'production';
     private const string ENV_SANDBOX = 'sandbox';
@@ -23,8 +25,6 @@ class IConnect
         self::ENV_SANDBOX,
         self::ENV_PRODUCTION,
     ];
-
-    private const string URL_SANDBOX = 'https://lab.api.mijniconnect.nl/iconnect/apihcbrp/mks/v1/';
 
     private array $with = [
         'parents' => 'ouders',
@@ -51,19 +51,61 @@ class IConnect
     }
 
     /**
+     * @param array $configs
+     * @return static
+     */
+    public static function make(array $configs): static
+    {
+        return new static($configs);
+    }
+
+    /**
      * @param string $bsn
      * @param array $with can contain parents,children,partners
      * @param array $fields can contain burgerservicenummer,naam.voorletters
-     * @throws Throwable
+     * @param bool $cacheResponse
      * @return Person|null
      */
-    public function getPerson(string $bsn, array $with = [], array $fields = []): ?Person
+    public function getPerson(string $bsn, array $with = [], array $fields = [], bool $cacheResponse = true): ?Person
+    {
+        $cacheKey = 'bsn_prefill_data_' . $this->getApiOin() . '_' . $bsn . '_' . md5(json_encode($with));
+        $cacheTime = max(Config::get('forus.person_bsn.fund_prefill_cache_time', 60 * 15), 0);
+        $shouldCache = $cacheResponse && $cacheTime > 0;
+
+        if ($shouldCache && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $person = $this->getPersonResponse($bsn, $with, $fields);
+
+        if ($shouldCache && $person?->response()?->success()) {
+            Cache::put($cacheKey, $person, $cacheTime);
+        }
+
+        return $person;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getApiOin(): ?string
+    {
+        return Arr::get($this->configs, 'api_oin', '');
+    }
+
+    /**
+     * @param string $bsn
+     * @param array $with
+     * @param array $fields
+     * @return Person|null
+     */
+    protected function getPersonResponse(string $bsn, array $with = [], array $fields = []): ?Person
     {
         $url = $this->api_url . "ingeschrevenpersonen/$bsn";
         $query = $this->buildQuery($with, $fields);
         $response = $this->request($url, $query);
 
-        return $response ? new Person(new ResponseData($this->request($url, $query))) : null;
+        return $response ? new Person(new ResponseData($response)) : null;
     }
 
     /**
@@ -71,11 +113,10 @@ class IConnect
      *
      * @param string $url
      * @param array $data
-     * @return ResponseInterface|null
+     * @return Response|null
      */
-    private function request(string $url, array $data = []): ?ResponseInterface
+    private function request(string $url, array $data = []): ?Response
     {
-        $guzzleClient = new Client();
         $options = $this->makeRequestOptions($data);
 
         $keyTmpFile = new TmpFile(Arr::get($this->configs, 'key', ''));
@@ -88,9 +129,9 @@ class IConnect
         $options['http_errors'] = false;
 
         try {
-            return $guzzleClient->request(self::METHOD_GET, $url, $options);
+            return Http::withOptions($options)->get($url);
         } catch (Throwable $e) {
-            Log::channel('iconnect')->error($e->getMessage());
+            Log::channel('person_bsn_api')->error($e->getMessage());
 
             return null;
         } finally {

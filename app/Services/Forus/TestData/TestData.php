@@ -17,6 +17,7 @@ use App\Helpers\Arr;
 use App\Models\BusinessType;
 use App\Models\Fund;
 use App\Models\FundConfig;
+use App\Models\FundCriteriaGroup;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundForm;
@@ -28,6 +29,7 @@ use App\Models\ImplementationPage;
 use App\Models\Language;
 use App\Models\Office;
 use App\Models\Organization;
+use App\Models\PersonBsnApiRecordType;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductCategory;
@@ -165,6 +167,10 @@ class TestData
         foreach ($this->config('record_types', []) as $type) {
             $recordType = RecordType::firstOrCreate(Arr::only($type, 'key'), $type);
 
+            $recordType->translateOrNew(app()->getLocale())->fill([
+                'name' => Arr::get($type, 'name', Arr::get($type, 'key')),
+            ])->save();
+
             foreach (Arr::get($type, 'options', []) as $option) {
                 $recordType->record_type_options()->firstOrCreate([
                     'value' => $option[0],
@@ -172,6 +178,13 @@ class TestData
                     'name' => $option[1],
                 ])->save();
             }
+        }
+
+        // add record type mapping for person BSN API
+        foreach ($this->config('person_bsn_api_record_types', []) as $type) {
+            PersonBsnApiRecordType::firstOrCreate(Arr::only($type, [
+                'person_bsn_api_field', 'record_type_key',
+            ]), $type);
         }
     }
 
@@ -679,8 +692,8 @@ class TestData
 
         $recordType = RecordType::firstOrCreate([
             'key' => $eligibility_key,
-            'type' => 'bool',
-            'control_type' => 'checkbox',
+            'type' => RecordType::TYPE_BOOL,
+            'control_type' => RecordType::CONTROL_TYPE_CHECKBOX,
         ], [
             'name' => "$fund->name eligible",
             'system' => false,
@@ -727,10 +740,24 @@ class TestData
                     ...$stepFields,
                 ])) : null;
 
+            $groupTitle = Arr::get($criterion, 'group', Arr::get($criterion, 'group.title'));
+            $groupFields = is_array(Arr::get($criterion, 'group')) ? Arr::get($criterion, 'group') : [];
+
+            /** @var FundCriteriaGroup $groupModel */
+            $groupModel = $groupTitle ?
+                ($fund->criteria_groups()->firstWhere([
+                    'title' => $groupTitle,
+                    ...$groupFields,
+                ]) ?: $fund->criteria_groups()->forceCreate([
+                    'title' => $groupTitle,
+                    ...$groupFields,
+                ])) : null;
+
             /** @var FundCriterion $criterionModel */
             $criterionModel = $fund->criteria()->create([
                 ...array_except($criterion, ['rules', 'step']),
                 'fund_criteria_step_id' => $stepModel?->id,
+                'fund_criteria_group_id' => $groupModel?->id,
             ]);
 
             foreach ($criterion['rules'] ?? [] as $rule) {

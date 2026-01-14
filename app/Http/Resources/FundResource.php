@@ -38,6 +38,7 @@ class FundResource extends BaseJsonResource
         'organization' => OrganizationResource::class,
         'criteria' => FundCriterionResource::class,
         'criteria_steps' => FundCriteriaStepResource::class,
+        'criteria_groups' => FundCriteriaGroupResource::class,
         'faq' => FaqResource::class,
         'fund_formulas' => FundFormulaResource::class,
         'fund_formula_products' => FundFormulaProductResource::class,
@@ -98,6 +99,7 @@ class FundResource extends BaseJsonResource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
+            'criteria_groups' => FundCriteriaGroupResource::collection($fund->criteria_groups->sortBy('order')),
             'faq' => FaqResource::collection($fund->faq),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
@@ -262,6 +264,12 @@ class FundResource extends BaseJsonResource
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
             'csv_required_keys' => $fund->requiredPrevalidationKeys(false, []),
+            'csv_required_keys_by_groups' => $fund->requiredPrevalidationKeysByGroups(),
+            'csv_required_keys_except_prefill' => $fund->requiredPrevalidationKeys(
+                withOptional: false,
+                values: [],
+                exceptPrefillKeys: true
+            ),
         ];
     }
 

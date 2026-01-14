@@ -36,7 +36,7 @@ class FundCriterionResource extends BaseJsonResource
                 'id', 'record_type_key', 'operator', 'show_attachment', 'order',
                 'title', 'description', 'description_html', 'record_type', 'label',
                 'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
-                'extra_description', 'extra_description_html',
+                'extra_description', 'extra_description_html', 'fund_criteria_group_id', 'fill_type',
             ]),
             ...$criterion->translateColumns($criterion->only([
                 'title',  'description_html', 'label', 'extra_description_html',

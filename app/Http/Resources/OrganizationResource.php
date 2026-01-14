@@ -10,7 +10,6 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\MollieService\Models\MollieConnection;
-use App\Services\PersonBsnApiService\PersonBsnApiManager;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -130,6 +129,7 @@ class OrganizationResource extends BaseJsonResource
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_product_updates',
                 'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
+                'allow_prevalidation_requests',
             ]),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
@@ -209,9 +209,7 @@ class OrganizationResource extends BaseJsonResource
     protected function getPersonBsnApiConfigured(Organization $organization): array
     {
         return [
-            'has_person_bsn_api' =>
-                $organization->bsn_enabled &&
-                PersonBsnApiManager::make($organization)->hasConnection(),
+            'has_person_bsn_api' => $organization->bsn_enabled && $organization->hasIConnectApiOin(),
         ];
     }
 
