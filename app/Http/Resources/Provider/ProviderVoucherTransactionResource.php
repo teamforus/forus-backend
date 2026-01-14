@@ -18,7 +18,6 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
 {
     public const array LOAD = [
         'provider',
-        'voucher.fund',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
     ];
 

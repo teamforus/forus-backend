@@ -28,7 +28,7 @@ class VouchersController extends Controller
         $isUpdatedClient = $isMobileClient && $clientVersion && $clientVersion >= 1;
 
         if ($useAsProvider->allowed() || ($isUpdatedClient && ($useChildVouchers || $sellProductsToVouchers))) {
-            return new ProviderAppVoucherResource($voucherToken);
+            return ProviderAppVoucherResource::create($voucherToken);
         }
 
         return $useAsProvider->authorize();

@@ -49,7 +49,7 @@ class MediaController extends Controller
             $media->where(compact('type'));
         }
 
-        return MediaResource::collection($media->get());
+        return MediaResource::createCollection($media->get());
     }
 
     /**
@@ -85,7 +85,7 @@ class MediaController extends Controller
             ));
         }
 
-        return new MediaResource($media ?? null);
+        return MediaResource::create($media ?? null);
     }
 
     /**
@@ -99,7 +99,7 @@ class MediaController extends Controller
     {
         $this->authorize('show', $media);
 
-        return new MediaResource($media);
+        return MediaResource::create($media);
     }
 
     /**
@@ -127,7 +127,7 @@ class MediaController extends Controller
             ));
         }
 
-        return new MediaResource($media ?? null);
+        return MediaResource::create($media ?? null);
     }
 
     /**

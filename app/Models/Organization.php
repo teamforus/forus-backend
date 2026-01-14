@@ -772,15 +772,10 @@ class Organization extends BaseModel
     }
 
     /**
-     * @param bool $fresh
      * @return bool
      */
-    public function canUseExtraPaymentsAsProvider(bool $fresh = false): bool
+    public function canUseExtraPaymentsAsProvider(): bool
     {
-        if ($fresh) {
-            return $this->fund_providers_allowed_extra_payments()->exists();
-        }
-
         return $this->fund_providers_allowed_extra_payments->isNotEmpty();
     }
 

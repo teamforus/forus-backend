@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 class FundProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'organization',
         'organization.last_employee_session',
         'organization.products',
         'fund_provider_products',

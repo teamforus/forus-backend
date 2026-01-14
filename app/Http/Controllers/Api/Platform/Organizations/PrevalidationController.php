@@ -104,7 +104,7 @@ class PrevalidationController extends Controller
 
         DB::commit();
 
-        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::LOAD));
+        return PrevalidationResource::createCollection($prevalidations);
     }
 
     /**

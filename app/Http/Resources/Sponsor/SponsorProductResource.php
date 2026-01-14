@@ -29,8 +29,8 @@ class SponsorProductResource extends BaseJsonResource
     public const array LOAD = [
         'product_reservations_pending',
         'product_exclusions',
-        'fund_provider_chats',
         'fund_provider_chats.fund_provider',
+        'voucher_transactions.voucher',
         'logs_monitored_field_changed',
         'logs_last_monitored_field_changed',
     ];
@@ -68,7 +68,7 @@ class SponsorProductResource extends BaseJsonResource
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached($fundProvider?->fund),
-            'sold_amount' => $product->countSold($fundProvider?->fund),
+            'sold_amount' => $product->countSoldCached($fundProvider?->fund),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'price_locale' => $product->price_locale,

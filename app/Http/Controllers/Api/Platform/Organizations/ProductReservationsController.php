@@ -98,9 +98,7 @@ class ProductReservationsController extends Controller
 
         $reservation->acceptProvider();
 
-        return new ProductReservationResource($reservation->load(
-            ProductReservationResource::load()
-        ));
+        return ProductReservationResource::create($reservation);
     }
 
     /**
@@ -145,7 +143,7 @@ class ProductReservationsController extends Controller
         }
 
         $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
-        $reserved = ProductReservationResource::collection($reservations->load(ProductReservationResource::load()));
+        $reserved = ProductReservationResource::createCollection($reservations);
 
         return [
             'reserved' => $reserved,
@@ -170,7 +168,7 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewProvider', [$productReservation, $organization]);
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -192,7 +190,7 @@ class ProductReservationsController extends Controller
 
         $productReservation->acceptProvider($organization->findEmployee($request->auth_address()));
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -219,7 +217,7 @@ class ProductReservationsController extends Controller
             $request->post('share_note_by_email', false),
         );
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -281,7 +279,7 @@ class ProductReservationsController extends Controller
 
         $productReservation->archive($organization->findEmployee($request->auth_address()));
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -302,7 +300,7 @@ class ProductReservationsController extends Controller
 
         $productReservation->unArchive($organization->findEmployee($request->auth_address()));
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -326,7 +324,7 @@ class ProductReservationsController extends Controller
             abort(503, $e->getMessage());
         }
 
-        return new ProductReservationResource($productReservation->refresh());
+        return ProductReservationResource::create($productReservation->refresh());
     }
 
     /**
@@ -359,7 +357,7 @@ class ProductReservationsController extends Controller
             abort(503, $e->getMessage());
         }
 
-        return new ProductReservationResource($productReservation->refresh());
+        return ProductReservationResource::create($productReservation->refresh());
     }
 
     /**
@@ -378,7 +376,7 @@ class ProductReservationsController extends Controller
 
         $productReservation->update($request->only('invoice_number'));
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**
@@ -417,7 +415,7 @@ class ProductReservationsController extends Controller
             }
         }
 
-        return new ProductReservationResource($productReservation);
+        return ProductReservationResource::create($productReservation);
     }
 
     /**

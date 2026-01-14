@@ -174,9 +174,7 @@ class ReimbursementTest extends DuskTestCase
             $this->goToDashboardReimbursementDetailsPage($browser, $reimbursement);
 
             $this->assignReimbursement($browser);
-
-            $reimbursement->refresh();
-            $this->assertNotNull($reimbursement->employee);
+            $this->assertNotNull($reimbursement->refresh()->employee);
 
             if ($state === 'approved') {
                 $browser->waitFor('@reimbursementApprove');

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 class ProductSmallResource extends ProductResource
 {
     public const array LOAD = [
+        'organization',
     ];
 
     public const array LOAD_NESTED = [

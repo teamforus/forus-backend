@@ -20,7 +20,15 @@ use Illuminate\Support\Facades\Gate;
  */
 class OrganizationResource extends BaseJsonResource
 {
-    public const array LOAD = [];
+    public const array LOAD = [
+        'offices',
+        'employees.roles.permissions',
+        'implementations',
+        'bank_connection_active',
+        'funds',
+        'fund_providers_allowed_extra_payments',
+        'mollie_connection',
+    ];
 
     public const array LOAD_NESTED = [
         'logo' => MediaResource::class,
@@ -29,53 +37,6 @@ class OrganizationResource extends BaseJsonResource
         'contacts' => OrganizationContactResource::class,
         'reservation_fields' => ReservationFieldResource::class,
     ];
-
-    public const array DEPENDENCIES = [
-        'logo',
-        'funds',
-        'offices',
-        'permissions',
-        'funds_count',
-        'business_type',
-        'bank_connection_active',
-        'employees.roles.permissions',
-    ];
-
-    /**
-     * @param null $request
-     * @return array
-     */
-    public static function loadDeps($request = null): array
-    {
-        $load = [
-            'offices',
-            'contacts',
-            'offices',
-            'business_type',
-            'tags.translations',
-            'tags',
-            'reservation_fields',
-            'bank_connection_active',
-            'employees.roles.permissions',
-        ];
-
-        self::isRequested('logo', $request) && array_push($load, 'logo');
-        self::isRequested('funds', $request) && array_push($load, 'funds');
-        self::isRequested('business_type', $request) && array_push($load, 'business_type.translations');
-        self::isRequested('funds_count', $request) && array_push($load, 'funds');
-
-        $load = array_merge($load, $request?->isProviderDashboard() ? [
-            'mollie_connection',
-            'fund_providers_allowed_extra_payments',
-        ] : []);
-
-        return array_values(array_unique(array_merge($load, static::load())));
-    }
-
-    public static function isRequested(string $key, $request = null): bool
-    {
-        return api_dependency_requested($key, $request);
-    }
 
     /**
      * Transform the resource into an array.
@@ -88,18 +49,17 @@ class OrganizationResource extends BaseJsonResource
         $baseRequest = BaseFormRequest::createFrom($request);
         $organization = $this->resource;
 
-        $fundsDep = api_dependency_requested('funds', $request, false);
-        $fundsCountDep = api_dependency_requested('funds_count', $request, false);
-        $permissionsCountDep = api_dependency_requested('permissions', $request, $baseRequest->isDashboard());
-
         $ownerData = $baseRequest->isDashboard() ? $this->ownerData($organization, $baseRequest) : [];
         $biConnectionData = $baseRequest->isDashboard() ? $this->getBIConnectionData($organization) : [];
         $extraPaymentsData = $baseRequest->isProviderDashboard() ? $this->getExtraPaymentsData($organization) : [];
         $privateData = $this->privateData($organization);
         $employeeOnlyData = $baseRequest->isDashboard() ? $this->employeeOnlyData($baseRequest, $organization) : [];
         $funds2FAOnlyData = $baseRequest->isDashboard() ? $this->funds2FAOnlyData($organization) : [];
-        $permissionsData = $permissionsCountDep ? $this->getIdentityPermissions($organization, $baseRequest->identity()) : null;
+        $permissionsData = $baseRequest->isDashboard()
+            ? $this->getIdentityPermissions($organization, $baseRequest->identity())
+            : null;
         $iConnect = $this->getPersonBsnApiConfigured($organization);
+        $permissions = is_array($permissionsData) ? ['permissions' => $permissionsData] : [];
 
         return array_filter([
             ...$organization->only([
@@ -120,9 +80,8 @@ class OrganizationResource extends BaseJsonResource
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
-            'funds' => $fundsDep ? $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')) : '_null_',
-            'funds_count' => $fundsCountDep ? $organization->funds_count : '_null_',
-            'permissions' => is_array($permissionsData) ? $permissionsData : '_null_',
+            'funds' => $organization->funds->map(fn (Fund $fund) => $fund->only('id', 'name')),
+            ...$permissions,
             'offices_count' => $organization->offices->count(),
         ], static function ($item) {
             return $item !== '_null_';
@@ -160,7 +119,9 @@ class OrganizationResource extends BaseJsonResource
     {
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
-            'implementations' => $organization->implementations()->select('id', 'name')->get()->toArray(),
+            'implementations' => $organization->implementations->map(fn ($implementation) => $implementation->only([
+                'id', 'name',
+            ])),
             ...$organization->only([
                 'manage_provider_products', 'backoffice_available',
                 'reservations_auto_accept', 'allow_custom_fund_notifications', 'reservations_enabled',

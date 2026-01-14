@@ -27,12 +27,14 @@ class SearchController extends Controller
         ]));
 
         if (!$overview) {
-            return SearchResource::collection($search->query(
+            $query = $search->query(
                 $request->input('search_item_types', ['funds', 'providers', 'products'])
             )->orderBy(
                 $request->input('order_by', 'created_at'),
                 $request->input('order_dir', 'desc'),
-            )->paginate($request->get('per_page', 15)));
+            );
+
+            return SearchResource::queryCollection($query, $request);
         }
 
         $providers = $search->query('providers');
@@ -42,15 +44,15 @@ class SearchController extends Controller
         return response()->json([
             'data' => [
                 'products' => [
-                    'items' => SearchLiteResource::collection((clone $products)->take(3)->get()),
+                    'items' => SearchLiteResource::createCollection((clone $products)->take(3)->get()),
                     'count' => $products->count(),
                 ],
                 'funds' => [
-                    'items' => SearchLiteResource::collection((clone $funds)->take(3)->get()),
+                    'items' => SearchLiteResource::createCollection((clone $funds)->take(3)->get()),
                     'count' => $funds->count(),
                 ],
                 'providers' => [
-                    'items' => SearchLiteResource::collection((clone $providers)->take(3)->get()),
+                    'items' => SearchLiteResource::createCollection((clone $providers)->take(3)->get()),
                     'count' => $providers->count(),
                 ],
             ],

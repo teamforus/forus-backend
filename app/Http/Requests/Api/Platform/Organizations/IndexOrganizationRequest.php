@@ -3,12 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\OrganizationResource;
-use App\Rules\DependencyRule;
 
-/**
- * @property string $dependency
- */
 class IndexOrganizationRequest extends BaseFormRequest
 {
     /**
@@ -35,10 +30,6 @@ class IndexOrganizationRequest extends BaseFormRequest
             'is_provider' => 'nullable|boolean',
             'is_validator' => 'nullable|boolean',
             'has_reservations' => 'nullable|boolean',
-            'dependency' => [
-                'nullable',
-                new DependencyRule(OrganizationResource::DEPENDENCIES),
-            ],
             ...$this->sortableResourceRules(500, [
                 'created_at', 'is_sponsor', 'is_provider', 'is_validator',
                 'name', 'phone', 'email', 'website',

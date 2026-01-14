@@ -13,10 +13,6 @@ use Illuminate\Http\Request;
 class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'provider',
-        'product',
-        'voucher.fund',
-        'voucher.fund.organization',
         'fund_provider_product',
         'notes',
     ];

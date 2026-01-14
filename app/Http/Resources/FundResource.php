@@ -28,7 +28,6 @@ class FundResource extends BaseJsonResource
         'parent',
         'children',
         'organization',
-        'fund_config',
         'provider_organizations_approved.employees',
         'top_up_transactions',
         'fund_form',

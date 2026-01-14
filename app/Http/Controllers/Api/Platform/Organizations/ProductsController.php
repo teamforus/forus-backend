@@ -33,11 +33,11 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
-        return ProviderProductResource::collection(Product::searchAny($request)->where([
+        $query = Product::searchAny($request)->where([
             'organization_id' => $organization->id,
-        ])->with(
-            ProviderProductResource::load()
-        )->paginate($request->input('per_page', 15)))->additional([
+        ]);
+
+        return ProviderProductResource::queryCollection($query, $request)->additional([
             'meta' => $organization->productsMeta(),
         ]);
     }
@@ -61,7 +61,7 @@ class ProductsController extends Controller
 
         Event::dispatch(new ProductCreated($product));
 
-        return new ProviderProductResource($product);
+        return ProviderProductResource::create($product);
     }
 
     /**
@@ -77,7 +77,7 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$product, $organization]);
 
-        return new ProviderProductResource($product);
+        return ProviderProductResource::create($product);
     }
 
     /**
@@ -99,7 +99,7 @@ class ProductsController extends Controller
 
         $product->updateFromRequest($request);
 
-        return new ProviderProductResource($product);
+        return ProviderProductResource::create($product);
     }
 
     /**
@@ -123,7 +123,7 @@ class ProductsController extends Controller
 
         Event::dispatch(new ProductUpdated($product));
 
-        return new ProviderProductResource($product);
+        return ProviderProductResource::create($product);
     }
 
     /**

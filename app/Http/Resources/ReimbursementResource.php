@@ -15,7 +15,6 @@ class ReimbursementResource extends BaseJsonResource
 {
     public const array LOAD = [
         'voucher.identity',
-        'voucher.fund',
         'voucher.fund.organization',
         'voucher.fund.fund_config.implementation',
         'reimbursement_category',

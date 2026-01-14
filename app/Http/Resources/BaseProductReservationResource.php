@@ -9,7 +9,6 @@ class BaseProductReservationResource extends BaseJsonResource
 {
     public const array LOAD = [
         'fund_provider_product_with_trashed',
-        'product',
         'product.organization',
     ];
 

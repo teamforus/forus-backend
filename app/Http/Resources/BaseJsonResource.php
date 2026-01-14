@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection as SupportCollection;
 
 class BaseJsonResource extends JsonResource
 {
@@ -85,6 +86,28 @@ class BaseJsonResource extends JsonResource
         }
 
         return (new static($resource))->setAttributes($attributes);
+    }
+
+    /**
+     * @param Collection|SupportCollection|array $resource
+     * @param array $attributes
+     * @return AnonymousResourceCollection
+     */
+    public static function createCollection(
+        Collection|SupportCollection|array $resource,
+        array $attributes = []
+    ): AnonymousResourceCollection {
+        $collection = $resource instanceof Collection
+            ? $resource
+            : new Collection($resource instanceof SupportCollection ? $resource->all() : $resource);
+
+        static::load_morph_collection($collection);
+        $collection->load(static::load())->loadCount(static::load_count());
+
+        $resourceCollection = static::collection($collection);
+        $resourceCollection->collection->map(fn (self $resource) => $resource->setAttributes($attributes));
+
+        return $resourceCollection;
     }
 
     /**
@@ -206,6 +229,19 @@ class BaseJsonResource extends JsonResource
         }
 
         return $builder;
+    }
+
+    /**
+     * @param Collection $collection
+     * @return Collection
+     */
+    protected static function load_morph_collection(Collection $collection): Collection
+    {
+        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
+            $collection->loadMorph($morphKey, $morphRelations);
+        }
+
+        return $collection;
     }
 
     /**

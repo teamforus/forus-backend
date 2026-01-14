@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 class FundRequestClarificationResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'fund_request_record.record_type',
         'fund_request_record.record_type.translation',
     ];
 

@@ -55,9 +55,9 @@ class SearchResource extends BaseJsonResource
     public function makeResource(Model $model): JsonResource
     {
         return match (get_class($model)) {
-            Fund::class => new FundResource($model),
-            Product::class => new ProductResource($model->load(ProductResource::load())),
-            Organization::class => new ProviderResource($model->load(OrganizationResource::loadDeps())),
+            Fund::class => FundResource::create($model),
+            Product::class => ProductResource::create($model),
+            Organization::class => ProviderResource::create($model),
             default => throw new Exception('Unknown search type!'),
         };
     }

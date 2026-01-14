@@ -20,7 +20,6 @@ class ImplementationPreChecksResource extends BaseJsonResource
 {
     public const array LOAD = [
         'pre_checks',
-        'pre_checks_records',
     ];
 
     public const array LOAD_NESTED = [

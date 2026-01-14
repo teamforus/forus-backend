@@ -49,13 +49,12 @@ class FundsController extends Controller
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn (Organization $item) => $item->only('id', 'name'));
         $meta = compact('organizations');
-        $query->with(FundResource::load());
 
-        if ($per_page = $request->input('per_page', false)) {
-            return FundResource::collection($query->paginate($per_page))->additional(compact('meta'));
+        if ($request->input('per_page', false)) {
+            return FundResource::queryCollection($query, $request)->additional(compact('meta'));
         }
 
-        return FundResource::collection($query->get());
+        return FundResource::createCollection($query->get());
     }
 
     /**
@@ -95,7 +94,7 @@ class FundsController extends Controller
 
         return new JsonResponse([
             'prevalidation' => $prevalidation ? PrevalidationResource::create($prevalidation) : null,
-            'vouchers' => VoucherResource::collection($vouchers),
+            'vouchers' => VoucherResource::createCollection($vouchers),
         ]);
     }
 
@@ -123,7 +122,7 @@ class FundsController extends Controller
             'identity_id' => $request->auth_id(),
         ])->first();
 
-        return $voucher ? new VoucherResource($voucher) : null;
+        return $voucher ? VoucherResource::create($voucher) : null;
     }
 
     /**
@@ -140,9 +139,11 @@ class FundsController extends Controller
 
         $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
         $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
-        $prevalidation_vouchers = $prevalidations > 0 ? VoucherResource::collection(
-            $request->implementation()->makeVouchersInApplicableFunds($request->identity())
-        ) : [];
+        $prevalidation_vouchers = $prevalidations > 0
+            ? VoucherResource::createCollection(
+                $request->implementation()->makeVouchersInApplicableFunds($request->identity())
+            )
+            : [];
 
         $hasBackoffice = $fund->fund_config && $fund->organization->backoffice_available;
 
@@ -201,4 +202,5 @@ class FundsController extends Controller
 
         return new JsonResponse($criteriaArr);
     }
+
 }

@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 class FundFormulaResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'record_type',
         'record_type.translation',
     ];
 

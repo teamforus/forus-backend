@@ -140,11 +140,9 @@ class ProvidersController extends Controller
         ]), [
             'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
             'date_to' => $to ? Carbon::parse($to)->endOfDay() : null,
-        ]))->with(ProviderFinancialResource::load());
+        ]));
 
-        return ProviderFinancialResource::collection($providers->paginate(
-            $request->input('per_page')
-        ));
+        return ProviderFinancialResource::queryCollection($providers, $request);
     }
 
     /**

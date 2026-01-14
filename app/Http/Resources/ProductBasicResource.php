@@ -14,6 +14,8 @@ class ProductBasicResource extends ProductResource
         'organization',
     ];
 
+    public const array LOAD_NESTED = [];
+
     /**
      * Transform the resource into an array.
      *

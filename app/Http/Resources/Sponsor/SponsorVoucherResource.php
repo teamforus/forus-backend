@@ -29,7 +29,6 @@ class SponsorVoucherResource extends BaseJsonResource
         'fund.organization',
         'fund.fund_config.implementation',
         'fund.physical_card_types.photo.presets',
-        'physical_cards',
         'physical_cards.physical_card_type',
         'voucher_records.record_type',
         'voucher_relation',
