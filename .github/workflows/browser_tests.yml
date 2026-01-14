@@ -20,8 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1, 2, 3, 4, 5 ]
-        total: [ 5 ]
+        shard: [ 1, 2, 3, 4 ]
+        total: [ 4 ]
 
     defaults:
       run:
