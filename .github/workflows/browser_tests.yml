@@ -11,17 +11,15 @@ on:
         description: 'Frontend branch name'
         required: false
         default: 'develop'
+      debug:
+        description: 'Enable verbose logs'
+        required: false
+        default: 'false'
 
 jobs:
 
   test_ui:
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [ 1, 2, 3, 4, 5 ]
-        total: [ 5 ]
 
     defaults:
       run:
@@ -41,17 +39,33 @@ jobs:
         with:
           path: forus-backend
 
+      - name: Set log verbosity
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.debug }}" == "true" ]; then
+            echo "COMPOSE_PROGRESS=auto" >> "$GITHUB_ENV"
+            echo "COMPOSE_BUILD_QUIET=" >> "$GITHUB_ENV"
+            echo "COMPOSE_PULL_FLAGS=" >> "$GITHUB_ENV"
+            echo "COMPOSER_FLAGS=" >> "$GITHUB_ENV"
+          else
+            echo "COMPOSE_PROGRESS=quiet" >> "$GITHUB_ENV"
+            echo "COMPOSE_BUILD_QUIET=-q" >> "$GITHUB_ENV"
+            echo "COMPOSE_PULL_FLAGS=--quiet-pull" >> "$GITHUB_ENV"
+            echo "COMPOSER_FLAGS=--no-progress -q" >> "$GITHUB_ENV"
+          fi
+
       - name: Create .env from .env.docker.dusk
         run: cp -n .env.docker.dusk .env && cat .env
 
       - name: Run docker compose up
-        run: docker compose --profile testing up -d
+        run: |
+          docker compose --profile testing build $COMPOSE_BUILD_QUIET
+          COMPOSE_PROGRESS=$COMPOSE_PROGRESS docker compose --profile testing up -d $COMPOSE_PULL_FLAGS --no-build
 
       - name: Set ownership of files due to volume on Github agent
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
 
       - name: Install dependencies
-        run: docker compose exec -T app bash -c "composer install"
+        run: docker compose exec -T app bash -c "composer install $COMPOSER_FLAGS"
 
       - name: Create database structure with artisan
         run: docker compose exec -T app bash -c "composer dumpautoload && php artisan migrate"
@@ -117,29 +131,17 @@ jobs:
         run: docker compose exec -T app bash -c "php artisan dusk:chrome"
 
       - name: --- RUN BROWSER TESTS ---
-        # run: docker compose exec -T app bash -c "php artisan dusk --testdox --stop-on-error --stop-on-failure"
-        run: |
-          docker compose exec -T app bash -lc "\
-            files=(\$(find tests/Browser -type f -name '*Test.php' | sort)); \
-            total=${{ matrix.total }}; shard=${{ matrix.shard }}; \
-            shard_size=\$(( (\${#files[@]} + total - 1) / total )); \
-            start=\$(( (shard - 1) * shard_size )); \
-            subset=( \"\${files[@]:start:shard_size}\" ); \
-            if [ \${#subset[@]} -gt 0 ]; then \
-              php artisan dusk \"\${subset[@]}\" --testdox; \
-            else \
-              echo \"No tests for shard \$shard\"; \
-            fi"
+        run: docker compose exec -T app bash -lc "php artisan dusk --filter testWebshopFundRequestRecordStringControlTypes --testdox --stop-on-error --stop-on-failure"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dusk-results-shard-${{ matrix.shard }}
+          name: dusk-results
           path: |
             forus-backend/tests/Browser/screenshots/*
             forus-backend/tests/Browser/console/*
             forus-backend/storage/app/dusk-downloads/*
-            forus-backend/storage/logs/laravel.log
+            forus-backend/storage/logs/*
           if-no-files-found: warn
           retention-days: 5
           overwrite: false
