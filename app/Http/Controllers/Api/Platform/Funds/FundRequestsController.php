@@ -11,9 +11,13 @@ use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
+use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Throwable;
 
 class FundRequestsController extends Controller
@@ -82,7 +86,14 @@ class FundRequestsController extends Controller
 
         DB::commit();
 
-        FundRequestCreated::dispatch($fundRequest);
+        $responseData = [];
+
+        if (Gate::forUser($request->identity())->allows('viewPersonBsnApiRecords', $fund)) {
+            $fundPrefills = IConnectPrefill::getBsnApiPrefills($fund, $request->identity()->bsn, true);
+            $responseData = Arr::get($fundPrefills, 'response');
+        }
+
+        Event::dispatch(new FundRequestCreated($fundRequest, responseData: $responseData));
 
         return FundRequestResource::create($fundRequest);
     }

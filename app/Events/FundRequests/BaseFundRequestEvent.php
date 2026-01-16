@@ -8,6 +8,8 @@ use App\Models\FundRequest;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 abstract class BaseFundRequestEvent
 {
@@ -15,25 +17,20 @@ abstract class BaseFundRequestEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    protected FundRequest $fundRequest;
-    protected ?Employee $employee;
-    protected ?Employee $supervisorEmployee;
-
     /**
      * Create a new event instance.
      *
      * @param FundRequest $fundRequest
      * @param Employee|null $employee
      * @param Employee|null $supervisorEmployee
+     * @param array|null $responseData
      */
     public function __construct(
-        FundRequest $fundRequest,
-        Employee $employee = null,
-        ?Employee $supervisorEmployee = null
+        protected FundRequest $fundRequest,
+        protected ?Employee $employee = null,
+        protected ?Employee $supervisorEmployee = null,
+        protected ?array $responseData = null,
     ) {
-        $this->fundRequest = $fundRequest;
-        $this->employee = $employee;
-        $this->supervisorEmployee = $supervisorEmployee;
     }
 
     /**
@@ -70,5 +67,16 @@ abstract class BaseFundRequestEvent
     public function getSupervisorEmployee(): ?Employee
     {
         return $this->supervisorEmployee;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResponseArray(): array
+    {
+        return $this->responseData ? [
+            'fund_request_prefill_response_code' => Arr::get($this->responseData, 'code'),
+            'fund_request_prefill_response_body' => Str::limit(json_encode(Arr::get($this->responseData, 'body')), 16384),
+        ] : [];
     }
 }
