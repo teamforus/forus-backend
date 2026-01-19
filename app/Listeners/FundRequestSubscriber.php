@@ -52,7 +52,8 @@ class FundRequestSubscriber
 
         $event = $fundRequest->log(
             $fundRequest::EVENT_CREATED,
-            $this->getFundRequestLogModels($fundRequest)
+            $this->getFundRequestLogModels($fundRequest),
+            $fundRequestCreated->getIConnectResponseArray(),
         );
 
         FundRequestCreatedValidatorNotification::send($event);
