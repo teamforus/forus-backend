@@ -2,12 +2,11 @@
 
 namespace App\Rules\FundRequests\FundRequestRecords;
 
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\FundRequests\BaseFundRequestRule;
-use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Gate;
 
 class FundRequestRecordValueRule extends BaseFundRequestRule
 {
@@ -15,14 +14,15 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
      * Create a new rule instance.
      *
      * @param Fund|null $fund
-     * @param BaseFormRequest|null $request
+     * @param BaseFormRequest|StoreFundRequestRequest|null $request
      * @param array $submittedRecords
      * @param array $submittedRawRecords
      * @param bool $isValidationRequest
+     * @param bool $forPrevalidationRequestsCSV
      */
     public function __construct(
         protected ?Fund $fund,
-        protected ?BaseFormRequest $request,
+        protected BaseFormRequest|StoreFundRequestRequest|null $request,
         protected array $submittedRecords,
         protected array $submittedRawRecords,
         protected bool $isValidationRequest = false,
@@ -53,9 +53,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
             ?? trans('validation.attributes.value');
 
         // validate prefills not modified
-        if (Gate::allows('viewPersonBsnApiRecords', $criterion->fund)) {
-            $fundPrefills = IConnectPrefill::getBsnApiPrefills($criterion->fund, $this->request->identity()->bsn);
-
+        if ($fundPrefills = $this->request->getIConnectPrefills($criterion->fund)) {
             if (is_array($fundPrefills['error'])) {
                 return $this->reject(Arr::get($fundPrefills, 'error.message'));
             }
