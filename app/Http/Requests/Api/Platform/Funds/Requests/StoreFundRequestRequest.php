@@ -10,6 +10,7 @@ use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredGroupRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
+use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class StoreFundRequestRequest extends BaseFormRequest
 {
+    protected ?array $iConnectPrefill = null;
     protected bool $isValidationRequest = false;
 
     /**
@@ -132,6 +134,23 @@ class StoreFundRequestRequest extends BaseFormRequest
                 new FundRequestRecordCriterionIdRule($fund, $this),
             ],
         ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array|null
+     */
+    public function getIConnectPrefills(Fund $fund): ?array
+    {
+        if ($this->iConnectPrefill) {
+            return $this->iConnectPrefill;
+        }
+
+        if (Gate::allows('viewPersonBsnApiRecords', $fund)) {
+            $this->iConnectPrefill = IConnectPrefill::getBsnApiPrefills($fund, $this->identity()->bsn, true);
+        }
+
+        return $this->iConnectPrefill;
     }
 
     /**
