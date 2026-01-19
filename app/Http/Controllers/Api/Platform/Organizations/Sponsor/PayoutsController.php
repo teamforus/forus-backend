@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\IndexPayoutBankAccountsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\IndexPayoutTransactionsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\StorePayoutTransactionBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\StorePayoutTransactionRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\UpdatePayoutTransactionRequest;
+use App\Http\Resources\Sponsor\SponsorPayoutBankAccountResource;
 use App\Http\Resources\Sponsor\VoucherTransactionPayoutResource;
 use App\Models\Data\BankAccount;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\Sponsor\PayoutBankAccountsSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -48,8 +53,12 @@ class PayoutsController extends Controller
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from'))->startOfDay() : null,
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to'))->endOfDay() : null,
             'targets' => [VoucherTransaction::TARGET_PAYOUT],
-            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
         ], VoucherTransaction::searchSponsor($request, $organization));
+
+        $query->whereIn('initiator', [
+            VoucherTransaction::INITIATOR_SPONSOR,
+            VoucherTransaction::INITIATOR_REQUESTER,
+        ]);
 
         return VoucherTransactionPayoutResource::queryCollection(VoucherTransactionQuery::order(
             $query,
@@ -95,12 +104,16 @@ class PayoutsController extends Controller
 
         $fund = $organization->funds()->find($request->input('fund_id'));
         $employee = $request->employee($organization);
+        $fundRequest = $request->fundRequest();
 
         $amount = $request->input('amount_preset_id') ?
             $fund->amount_presets?->find($request->input('amount_preset_id')) :
             $request->input('amount');
 
-        $bankAccount = new BankAccount(
+        $bankAccount = $fundRequest ? new BankAccount(
+            $fundRequest->getIban(false),
+            $fundRequest->getIbanName(false),
+        ) : new BankAccount(
             $request->input('target_iban'),
             $request->input('target_name'),
         );
@@ -231,5 +244,27 @@ class PayoutsController extends Controller
         }
 
         return VoucherTransactionPayoutResource::create($transaction);
+    }
+
+    /**
+     * Display available payout bank accounts.
+     *
+     * @param IndexPayoutBankAccountsRequest $request
+     * @param Organization $organization
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
+     * @noinspection PhpUnused
+     */
+    public function bankAccounts(
+        IndexPayoutBankAccountsRequest $request,
+        Organization $organization,
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyPayoutBankAccountsSponsor', [VoucherTransaction::class, $organization]);
+
+        $query = FundRequestQuery::whereHasPayoutBankAccountRecordsForOrganization(FundRequest::query(), $organization);
+        $search = new PayoutBankAccountsSearch($request->only('q'), $query);
+
+        return SponsorPayoutBankAccountResource::queryCollection($search->query()->latest(), $request);
     }
 }

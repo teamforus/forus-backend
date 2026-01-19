@@ -30,16 +30,17 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
-        $organizationState = $organization->only(['fund_request_resolve_policy']);
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
 
+        $organization->forceFill(['allow_profiles' => true])->save();
         $fund = $this->makePayoutEnabledFund($organization, $implementation);
 
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $iban = $this->faker()->iban('NL');
-        $ibanName = $this->makeIbanName();
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
 
-        $result = $this->makePayoutVoucherViaApplication($identity, $fund, $iban, $ibanName);
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
         $voucher = $result['voucher'];
+        $iban = $result['iban'];
+        $ibanName = $result['iban_name'];
 
         $this->rollbackModels([
             [$organization, $organizationState],
@@ -92,23 +93,132 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     /**
      * @throws Throwable
      */
+    public function testRequesterVoucherPayoutSelectsOtherFundRequest(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund1 = $this->makePayoutEnabledFund($organization, $implementation);
+        $fund2 = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result1 = $this->makePayoutVoucherViaApplication($identity, $fund1);
+        $result1['fund_request']->forceFill(['created_at' => now()->subDay()])->save();
+
+        $result2 = $this->makePayoutVoucherViaApplication($identity, $fund2);
+        $voucher = $result2['voucher'];
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $result1) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $result1) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->waitFor('@openVoucherPayoutModal');
+                $browser->press('@openVoucherPayoutModal');
+
+                $browser->waitFor('@voucherPayoutForm');
+                $browser->waitFor('@voucherPayoutFundRequestSelect');
+                $browser->click('@voucherPayoutFundRequestSelect');
+                $browser->waitFor('@voucherPayoutFundRequestSelectOptions');
+                $browser->within('@voucherPayoutFundRequestSelectOptions', function (Browser $browser) {
+                    $browser->click('.select-control-option:last-child');
+                });
+
+                $browser->waitFor('@voucherPayoutAmount');
+                $browser->typeSlowly('@voucherPayoutAmount', '50.00', 20);
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+
+                $browser->waitFor('@voucherPayoutSuccess');
+
+                $transaction = VoucherTransaction::where('voucher_id', $voucher->id)
+                    ->where('target', VoucherTransaction::TARGET_PAYOUT)
+                    ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER)
+                    ->latest('id')
+                    ->first();
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($result1['iban'], $transaction->target_iban);
+                $this->assertEquals($result1['iban_name'], $transaction->target_name);
+
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund1, $fund2) {
+            $fund1 && $this->deleteFund($fund1);
+            $fund2 && $this->deleteFund($fund2);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutHiddenWithoutFundRequests(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $voucher = $fund->makeVoucher(identity: $identity, amount: 100);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->assertMissing('@openVoucherPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testRequesterVoucherPayoutFromPayoutsTabShowsAmountWarning(): void
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
-        $organizationState = $organization->only(['fund_request_resolve_policy']);
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
 
+        $organization->forceFill(['allow_profiles' => true])->save();
         $fund = $this->makePayoutEnabledFund($organization, $implementation);
         $fund->fund_config->forceFill([
             'allow_voucher_payout_amount' => '50.00',
         ])->save();
         $fund->fund_formulas()->update(['amount' => 10]);
 
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $iban = $this->faker()->iban('NL');
-        $ibanName = $this->makeIbanName();
-
-        $this->makePayoutVoucherViaApplication($identity, $fund, $iban, $ibanName);
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $this->makePayoutVoucherViaApplication($identity, $fund);
 
         $this->rollbackModels([
             [$organization, $organizationState],
@@ -146,8 +256,9 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
-        $organizationState = $organization->only(['fund_request_resolve_policy']);
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
 
+        $organization->forceFill(['allow_profiles' => true])->save();
         $fund = $this->makePayoutEnabledFund($organization, $implementation);
         $fund->fund_config->forceFill([
             'allow_voucher_payout_count' => 1,
@@ -157,12 +268,11 @@ class RequesterVoucherPayoutTest extends DuskTestCase
         $product = $products[0];
         $this->addProductToFund($fund, $product, false);
 
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $iban = $this->faker()->iban('NL');
-        $ibanName = $this->makeIbanName();
-
-        $result = $this->makePayoutVoucherViaApplication($identity, $fund, $iban, $ibanName);
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
         $voucher = $result['voucher'];
+        $iban = $result['iban'];
+        $ibanName = $result['iban_name'];
 
         $voucher->makeTransaction([
             'target' => VoucherTransaction::TARGET_PAYOUT,
@@ -213,19 +323,17 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
-        $organizationState = $organization->only(['fund_request_resolve_policy']);
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
 
+        $organization->forceFill(['allow_profiles' => true])->save();
         $fund = $this->makePayoutEnabledFund($organization, $implementation);
 
         $products = $this->makeTestProviderWithProducts(1);
         $product = $products[0];
         $this->addProductToFund($fund, $product, false);
 
-        $identity = $this->makeIdentity($this->makeUniqueEmail());
-        $iban = $this->faker()->iban('NL');
-        $ibanName = $this->makeIbanName();
-
-        $this->makePayoutVoucherViaApplication($identity, $fund, $iban, $ibanName);
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $this->makePayoutVoucherViaApplication($identity, $fund);
 
         $this->rollbackModels([
             [$organization, $organizationState],

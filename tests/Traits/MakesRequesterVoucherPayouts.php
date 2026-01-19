@@ -63,20 +63,18 @@ trait MakesRequesterVoucherPayouts
     /**
      * @param Identity $identity
      * @param Fund $fund
-     * @param string $iban
-     * @param string $ibanName
+     * @param string|null $iban
+     * @param string|null $ibanName
      * @return array{fund_request: FundRequest, voucher: Voucher}
      */
     protected function makePayoutVoucherViaApplication(
         Identity $identity,
         Fund $fund,
-        string $iban,
-        string $ibanName,
+        ?string $iban = null,
+        ?string $ibanName = null,
     ): array {
-        $identity->setBsnRecord('123456789');
-
-        $fund->loadMissing('fund_config');
-
+        $iban = $iban ?: $this->makeIban();
+        $ibanName = $ibanName ?: $this->makeIbanName();
         [$ibanKey, $ibanNameKey] = $this->getPayoutIbanRecordKeys();
 
         $this->assertEquals($ibanKey, $fund->fund_config->iban_record_key);
@@ -107,6 +105,8 @@ trait MakesRequesterVoucherPayouts
         $this->assertNotNull($voucher);
 
         return [
+            'iban' => $iban,
+            'iban_name' => $ibanName,
             'fund_request' => $fundRequest->refresh(),
             'voucher' => $voucher->refresh(),
         ];

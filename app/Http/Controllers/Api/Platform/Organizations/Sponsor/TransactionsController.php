@@ -55,12 +55,16 @@ class TransactionsController extends Controller
 
         if (!$organization->show_provider_transactions &&
             ($request->has('voucher_id') || $request->has('reservation_voucher_id'))) {
-            $options['target'] = [
+            $options['targets'] = [
                 VoucherTransaction::TARGET_IBAN,
                 VoucherTransaction::TARGET_PAYOUT,
                 VoucherTransaction::TARGET_TOP_UP,
             ];
-            $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
+
+            $options['initiator'] = [
+                VoucherTransaction::INITIATOR_SPONSOR,
+                VoucherTransaction::INITIATOR_REQUESTER,
+            ];
         }
 
         $query = VoucherTransaction::searchSponsor($request, $organization);

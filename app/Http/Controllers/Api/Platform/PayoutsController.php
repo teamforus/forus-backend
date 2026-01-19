@@ -93,11 +93,15 @@ class PayoutsController extends Controller
                 ]);
             }
 
+            $fundRequest = $request->fundRequest();
+
+            $fundRequest?->loadMissing('records');
+
             $transaction = $voucher->makeTransaction([
                 'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
                 'target' => VoucherTransaction::TARGET_PAYOUT,
-                'target_iban' => $voucher->fund_request->getIban(false),
-                'target_name' => $voucher->fund_request->getIbanName(false),
+                'target_iban' => $fundRequest?->getIban(false),
+                'target_name' => $fundRequest?->getIbanName(false),
                 'amount' => $amount,
             ]);
 
