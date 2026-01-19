@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Gate;
 class StoreFundRequestRequest extends BaseFormRequest
 {
     protected bool $isValidationRequest = false;
-    protected bool $isCsvRequest = false;
 
     /**
      * Determine if the user is authorized to make this request.

@@ -24,7 +24,7 @@ class FundRequestRecordFilesRule extends BaseFundRequestRule
      */
     public function __construct(
         protected ?Fund $fund,
-        protected ?BaseFormRequest $request = null,
+        protected ?BaseFormRequest $request,
         protected array $submittedRecords,
         protected array $submittedRawRecords,
     ) {
