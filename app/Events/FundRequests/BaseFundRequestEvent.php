@@ -15,10 +15,6 @@ abstract class BaseFundRequestEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    protected FundRequest $fundRequest;
-    protected ?Employee $employee;
-    protected ?Employee $supervisorEmployee;
-
     /**
      * Create a new event instance.
      *
@@ -27,13 +23,10 @@ abstract class BaseFundRequestEvent
      * @param Employee|null $supervisorEmployee
      */
     public function __construct(
-        FundRequest $fundRequest,
-        Employee $employee = null,
-        ?Employee $supervisorEmployee = null
+        protected FundRequest $fundRequest,
+        protected ?Employee $employee = null,
+        protected ?Employee $supervisorEmployee = null,
     ) {
-        $this->fundRequest = $fundRequest;
-        $this->employee = $employee;
-        $this->supervisorEmployee = $supervisorEmployee;
     }
 
     /**
