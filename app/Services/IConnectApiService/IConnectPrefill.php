@@ -224,6 +224,10 @@ class IConnectPrefill
 
             $childrenApi = $this->getChildrenFromBsnApi($fund, $person);
 
+            /**
+             * @var int $index
+             * @var Person $personChild
+             */
             foreach ($childrenApi as $index => $personChild) {
                 $i = $index + 1;
 
@@ -248,10 +252,12 @@ class IConnectPrefill
                     $recordKey = Arr::get($config, 'record_type_key');
                     $minAge = Arr::get($config, 'from');
                     $maxAge = Arr::get($config, 'to');
+                    $gender = Arr::get($config, 'gender');
 
                     if (
                         (int) $personChild->getAge() >= $minAge &&
-                        (int) $personChild->getAge() <= $maxAge
+                        (int) $personChild->getAge() <= $maxAge &&
+                        (!$gender || $gender === $personChild->getGender())
                     ) {
                         $groups[$recordKey] = $groups[$recordKey] + 1;
                     }
