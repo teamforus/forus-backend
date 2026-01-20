@@ -202,7 +202,7 @@ class FundResource extends BaseJsonResource
                     'key', 'allow_fund_requests', 'allow_fund_request_prefill', 'allow_prevalidations',
                     'allow_direct_requests', 'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
                     'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
-                    'allow_voucher_payouts', 'allow_voucher_payout_amount', 'allow_voucher_payout_count',
+                    'allow_voucher_payouts', 'allow_voucher_payout_count',
                     'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
                     'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
                     'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
