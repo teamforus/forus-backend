@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Searches\Sponsor;
+namespace App\Searches\Sponsor\PayoutBankAccounts;
 
 use App\Models\FundRequest;
-use App\Searches\BaseSearch;
+use App\Models\Organization;
+use App\Scopes\Builders\FundRequestQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class PayoutBankAccountsSearch extends BaseSearch
+class FundRequestPayoutBankAccountSearch extends BasePayoutBankAccountSearch
 {
     /**
      * @return Builder|Relation|FundRequest
@@ -20,9 +21,11 @@ class PayoutBankAccountsSearch extends BaseSearch
         if ($this->getFilter('q')) {
             $builder->where(function ($builder) {
                 $builder->whereHas('identity', function ($identityBuilder) {
-                    $identityBuilder
-                        ->where('email', 'LIKE', '%' . $this->getFilter('q') . '%')
-                        ->orWhere('bsn', 'LIKE', '%' . $this->getFilter('q') . '%');
+                    $identityBuilder->where('email', 'LIKE', '%' . $this->getFilter('q') . '%');
+
+                    if ($this->getFilter('bsn_enabled')) {
+                        $identityBuilder->orWhere('bsn', 'LIKE', '%' . $this->getFilter('q') . '%');
+                    }
                 });
 
                 $builder->orWhereHas('fund', function ($fundBuilder) {
@@ -40,5 +43,14 @@ class PayoutBankAccountsSearch extends BaseSearch
         }
 
         return $builder;
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Builder|Relation|FundRequest
+     */
+    public static function queryForOrganization(Organization $organization): Builder|Relation|FundRequest
+    {
+        return FundRequestQuery::whereHasPayoutBankAccountRecordsForOrganization(FundRequest::query(), $organization);
     }
 }

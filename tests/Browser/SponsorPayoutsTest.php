@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
@@ -14,6 +15,9 @@ use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestReimbursements;
+use Tests\Traits\MakesTestVouchers;
 use Throwable;
 
 class SponsorPayoutsTest extends DuskTestCase
@@ -21,6 +25,9 @@ class SponsorPayoutsTest extends DuskTestCase
     use WithFaker;
     use MakesTestFunds;
     use MakesRequesterVoucherPayouts;
+    use MakesTestIdentities;
+    use MakesTestReimbursements;
+    use MakesTestVouchers;
     use HasFrontendActions;
     use NavigatesFrontendDashboard;
     use RollbackModelsTrait;
@@ -168,7 +175,7 @@ class SponsorPayoutsTest extends DuskTestCase
 
                 $browser->waitFor('@payoutCreateModal');
                 $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 1);
-                $this->changeSelectControl($browser, '@payoutFundRequestSelect', index: 1);
+                $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
 
                 $browser->waitFor('@payoutAmount');
                 $browser->typeSlowly('@payoutAmount', '100.00', 20);
@@ -188,6 +195,274 @@ class SponsorPayoutsTest extends DuskTestCase
         }, function () use ($payoutFund, $requestFund) {
             $payoutFund && $this->deleteFund($payoutFund);
             $requestFund && $this->deleteFund($requestFund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testSponsorCanCreatePayoutFromProfileBankAccount(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'fund_request_resolve_policy']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $payoutFund = $this->makeTestFund($organization, fundConfigsData: [
+            'allow_custom_amounts' => true,
+            'custom_amount_min' => 1,
+            'custom_amount_max' => 1000,
+        ], implementation: $implementation);
+
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+
+        $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $iban,
+            'name' => $ibanName,
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $organization, $iban, $ibanName) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $iban, $ibanName) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
+                $this->selectDashboardOrganization($browser, $organization);
+
+                $this->goSponsorPayoutsPage($browser);
+
+                $browser->waitFor('@payoutsPage');
+                $browser->waitFor('@payoutCreateButton');
+                $browser->click('@payoutCreateButton');
+
+                $browser->waitFor('@payoutCreateModal');
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 2);
+                $browser->waitFor('@payoutBankAccountSelect');
+                $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
+
+                $browser->waitFor('@payoutAmount');
+                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $browser->press('@payoutSubmit');
+                $browser->waitUntilMissing('@payoutCreateModal');
+
+                $transaction = $this->findTransactionByIban($organization, $iban);
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($ibanName, $transaction->target_name);
+
+                $browser->waitFor("@payoutsTableRow$transaction->id");
+                $browser->assertPresent("@payoutsTableRow$transaction->id");
+
+                $this->logout($browser);
+            });
+        }, function () use ($payoutFund) {
+            $payoutFund && $this->deleteFund($payoutFund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testSponsorCanCreatePayoutFromReimbursement(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'fund_request_resolve_policy']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $payoutFund = $this->makeTestFund($organization, fundConfigsData: [
+            'allow_custom_amounts' => true,
+            'custom_amount_min' => 1,
+            'custom_amount_max' => 1000,
+        ], implementation: $implementation);
+
+        $reimbursementFund = $this->makeTestFund($organization, fundConfigsData: [
+            'allow_reimbursements' => true,
+        ], implementation: $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($reimbursementFund, $identity, amount: 100);
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+
+        $this->makeReimbursement($voucher, submit: true)->forceFill([
+            'iban' => $iban,
+            'iban_name' => $ibanName,
+        ])->save();
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $organization, $iban, $ibanName) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $iban, $ibanName) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
+                $this->selectDashboardOrganization($browser, $organization);
+
+                $this->goSponsorPayoutsPage($browser);
+
+                $browser->waitFor('@payoutsPage');
+                $browser->waitFor('@payoutCreateButton');
+                $browser->click('@payoutCreateButton');
+
+                $browser->waitFor('@payoutCreateModal');
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 3);
+                $browser->waitFor('@payoutBankAccountSelect');
+                $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
+
+                $browser->waitFor('@payoutAmount');
+                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $browser->press('@payoutSubmit');
+                $browser->waitUntilMissing('@payoutCreateModal');
+
+                $transaction = $this->findTransactionByIban($organization, $iban);
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($ibanName, $transaction->target_name);
+
+                $browser->waitFor("@payoutsTableRow$transaction->id");
+                $browser->assertPresent("@payoutsTableRow$transaction->id");
+
+                $this->logout($browser);
+            });
+        }, function () use ($payoutFund, $reimbursementFund) {
+            $payoutFund && $this->deleteFund($payoutFund);
+            $reimbursementFund && $this->deleteFund($reimbursementFund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testSponsorCanCreatePayoutFromPayoutTransaction(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'fund_request_resolve_policy']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $payoutFund = $this->makeTestFund($organization, fundConfigsData: [
+            'allow_custom_amounts' => true,
+            'custom_amount_min' => 1,
+            'custom_amount_max' => 1000,
+        ], implementation: $implementation);
+
+        $previousFund = $this->makeTestFund($organization, implementation: $implementation);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($previousFund, $identity);
+
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+
+        $voucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $iban,
+            'target_name' => $ibanName,
+            'amount' => '50.00',
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $organization, $iban, $ibanName) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $iban, $ibanName) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
+                $this->selectDashboardOrganization($browser, $organization);
+
+                $this->goSponsorPayoutsPage($browser);
+
+                $browser->waitFor('@payoutsPage');
+                $browser->waitFor('@payoutCreateButton');
+                $browser->click('@payoutCreateButton');
+
+                $browser->waitFor('@payoutCreateModal');
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 4);
+                $browser->waitFor('@payoutBankAccountSelect');
+                $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
+
+                $browser->waitFor('@payoutAmount');
+                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $browser->press('@payoutSubmit');
+                $browser->waitUntilMissing('@payoutCreateModal');
+
+                $transaction = $this->findTransactionByIban($organization, $iban);
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($ibanName, $transaction->target_name);
+
+                $browser->waitFor("@payoutsTableRow$transaction->id");
+                $browser->assertPresent("@payoutsTableRow$transaction->id");
+
+                $this->logout($browser);
+            });
+        }, function () use ($payoutFund, $previousFund) {
+            $payoutFund && $this->deleteFund($payoutFund);
+            $previousFund && $this->deleteFund($previousFund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testSponsorPayoutBankAccountSourceSwitching(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'fund_request_resolve_policy']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $payoutFund = $this->makeTestFund($organization, fundConfigsData: [
+            'allow_custom_amounts' => true,
+            'custom_amount_min' => 1,
+            'custom_amount_max' => 1000,
+        ], implementation: $implementation);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $organization) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
+                $this->selectDashboardOrganization($browser, $organization);
+
+                $this->goSponsorPayoutsPage($browser);
+
+                $browser->waitFor('@payoutsPage');
+                $browser->waitFor('@payoutCreateButton');
+                $browser->click('@payoutCreateButton');
+
+                $browser->waitFor('@payoutCreateModal');
+                $browser->waitFor('@payoutTargetIban');
+                $browser->assertEnabled('@payoutTargetIban');
+
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 1);
+                $browser->pause(100);
+
+                $browser->assertDisabled('@payoutTargetIban');
+                $browser->waitFor('@payoutBankAccountSelect');
+
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 0);
+                $browser->pause(300);
+
+                $browser->assertEnabled('@payoutTargetIban');
+
+                $browser->press('@payoutCreateModal .modal-close');
+                $browser->waitUntilMissing('@payoutCreateModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($payoutFund) {
+            $payoutFund && $this->deleteFund($payoutFund);
         });
     }
 

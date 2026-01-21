@@ -11,17 +11,19 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\UpdatePayoutTra
 use App\Http\Resources\Sponsor\SponsorPayoutBankAccountResource;
 use App\Http\Resources\Sponsor\VoucherTransactionPayoutResource;
 use App\Models\Data\BankAccount;
-use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
-use App\Searches\Sponsor\PayoutBankAccountsSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\FundRequestPayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\PayoutTransactionPayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\ProfilePayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\ReimbursementPayoutBankAccountSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
+use InvalidArgumentException;
 use Random\RandomException;
 
 /**
@@ -35,7 +37,7 @@ class PayoutsController extends Controller
      * @param IndexPayoutTransactionsRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      * @noinspection PhpUnused
      */
     public function index(
@@ -104,19 +106,11 @@ class PayoutsController extends Controller
 
         $fund = $organization->funds()->find($request->input('fund_id'));
         $employee = $request->employee($organization);
-        $fundRequest = $request->fundRequest();
+        $bankAccount = $request->bankAccount();
 
         $amount = $request->input('amount_preset_id') ?
             $fund->amount_presets?->find($request->input('amount_preset_id')) :
             $request->input('amount');
-
-        $bankAccount = $fundRequest ? new BankAccount(
-            $fundRequest->getIban(false),
-            $fundRequest->getIbanName(false),
-        ) : new BankAccount(
-            $request->input('target_iban'),
-            $request->input('target_name'),
-        );
 
         $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
             'description' => $request->input('description'),
@@ -262,9 +256,14 @@ class PayoutsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyPayoutBankAccountsSponsor', [VoucherTransaction::class, $organization]);
 
-        $query = FundRequestQuery::whereHasPayoutBankAccountRecordsForOrganization(FundRequest::query(), $organization);
-        $search = new PayoutBankAccountsSearch($request->only('q'), $query);
+        $search = match ($request->input('type')) {
+            'fund_request' => new FundRequestPayoutBankAccountSearch($organization, $request->only('q')),
+            'profile_bank_account' => new ProfilePayoutBankAccountSearch($organization, $request->only('q')),
+            'reimbursement' => new ReimbursementPayoutBankAccountSearch($organization, $request->only('q')),
+            'payout' => new PayoutTransactionPayoutBankAccountSearch($organization, $request->only('q')),
+            default => throw new InvalidArgumentException("Invalid type: {$request->input('type')}"),
+        };
 
-        return SponsorPayoutBankAccountResource::queryCollection($search->query()->latest(), $request);
+        return SponsorPayoutBankAccountResource::queryCollection($search->query()->latest('created_at'), $request);
     }
 }

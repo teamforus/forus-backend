@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Data\BankAccount;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
@@ -10,11 +11,15 @@ use App\Models\VoucherTransaction;
 use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\FundRequestQuery;
+use App\Searches\Sponsor\PayoutBankAccounts\FundRequestPayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\PayoutTransactionPayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\ProfilePayoutBankAccountSearch;
+use App\Searches\Sponsor\PayoutBankAccounts\ReimbursementPayoutBankAccountSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @property Organization $organization
@@ -41,11 +46,14 @@ class StorePayoutTransactionRequest extends BaseFormRequest
     public function rules(): array
     {
         $fund = $this->getFundsQuery()->find($this->input('fund_id'));
-        $useBankAccount = (bool) $this->input('fund_request_id');
+        $useBankAccount = $this->hasBankAccountId();
 
         return [
             'fund_id' => $this->fundIdsRules(),
             'fund_request_id' => $this->fundRequestIdRules(),
+            'profile_bank_account_id' => $this->profileBankAccountIdRules(),
+            'reimbursement_id' => $this->reimbursementIdRules(),
+            'payout_transaction_id' => $this->payoutTransactionIdRules(),
             'amount' => [
                 'required_without:amount_preset_id',
                 ...$this->amountRules($fund),
@@ -60,6 +68,94 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             'email' => ['nullable', ...$this->emailRules()],
             'description' => $this->descriptionRules(),
         ];
+    }
+
+    /**
+     * @return FundRequest|null
+     */
+    public function fundRequest(): ?FundRequest
+    {
+        if ($this->fundRequest) {
+            return $this->fundRequest;
+        }
+
+        $fundRequestId = $this->input('fund_request_id');
+
+        return $fundRequestId ? ($this->fundRequest = FundRequest::find((int) $fundRequestId)) : null;
+    }
+
+    /**
+     * @return BankAccount
+     */
+    public function bankAccount(): BankAccount
+    {
+        $sources = [
+            'fund_request_id' => [
+                'getModel' => fn ($id) => $this->fundRequest(),
+                'getIban' => fn ($model) => $model->getIban(false),
+                'getName' => fn ($model) => $model->getIbanName(false),
+                'loadMissing' => ['records', 'fund.fund_config'],
+                'type' => 'Fund request',
+            ],
+            'profile_bank_account_id' => [
+                'getModel' => fn ($id) => ProfilePayoutBankAccountSearch::queryForOrganization($this->organization)->find($id),
+                'getIban' => fn ($model) => $model->iban,
+                'getName' => fn ($model) => $model->name,
+                'loadMissing' => null,
+                'type' => 'Profile bank account',
+            ],
+            'reimbursement_id' => [
+                'getModel' => fn ($id) => ReimbursementPayoutBankAccountSearch::queryForOrganization($this->organization)->find($id),
+                'getIban' => fn ($model) => $model->iban,
+                'getName' => fn ($model) => $model->iban_name,
+                'loadMissing' => null,
+                'type' => 'Reimbursement',
+            ],
+            'payout_transaction_id' => [
+                'getModel' => fn ($id) => PayoutTransactionPayoutBankAccountSearch::queryForOrganization($this->organization)->find($id),
+                'getIban' => fn ($model) => $model->target_iban,
+                'getName' => fn ($model) => $model->target_name,
+                'loadMissing' => null,
+                'type' => 'Payout transaction',
+            ],
+        ];
+
+        foreach ($sources as $inputKey => $config) {
+            if ($id = $this->input($inputKey)) {
+                $model = $config['getModel']($id);
+
+                if ($config['loadMissing'] && $model) {
+                    $model->loadMissing($config['loadMissing']);
+                }
+
+                if (!$model) {
+                    throw ValidationException::withMessages([
+                        $inputKey => [trans('validation.in', ['attribute' => $inputKey])],
+                    ]);
+                }
+
+                return new BankAccount(
+                    $config['getIban']($model),
+                    $config['getName']($model),
+                );
+            }
+        }
+
+        return new BankAccount(
+            $this->input('target_iban'),
+            $this->input('target_name'),
+        );
+    }
+
+    /**
+     * @return bool
+     */
+    protected function hasBankAccountId(): bool
+    {
+        return $this->input('fund_request_id') ||
+            $this->input('profile_bank_account_id') ||
+            $this->input('reimbursement_id') ||
+            $this->input('payout_transaction_id');
     }
 
     /**
@@ -91,36 +187,6 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             Rule::exists('voucher_transactions', 'upload_batch_id')
                 ->whereNotNull('employee_id')
                 ->where('employee_id', $this->employee($this->organization)?->id),
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function fundRequestIdRules(): array
-    {
-        return [
-            'nullable',
-            'integer',
-            function (string $attribute, mixed $value, callable $fail) {
-                if (!$value) {
-                    return;
-                }
-
-                $fundRequest = FundRequestQuery::whereHasPayoutBankAccountRecordsForOrganization(
-                    FundRequest::query(),
-                    $this->organization,
-                )->find((int) $value);
-
-                $fundRequest?->loadMissing(['records', 'fund.fund_config']);
-
-                if (!$fundRequest?->getIban(false) || !$fundRequest?->getIbanName(false)) {
-                    $fail(trans('validation.in', ['attribute' => $attribute]));
-                    return;
-                }
-
-                $this->fundRequest = $fundRequest;
-            },
         ];
     }
 
@@ -190,16 +256,55 @@ class StorePayoutTransactionRequest extends BaseFormRequest
     }
 
     /**
-     * @return FundRequest|null
+     * @param Builder|Relation $search
+     * @return array
      */
-    public function fundRequest(): ?FundRequest
+    protected function bankAccountIdRules(Builder|Relation $search): array
     {
-        if ($this->fundRequest instanceof FundRequest) {
-            return $this->fundRequest;
-        }
+        return [
+            'nullable',
+            'integer',
+            function (string $attribute, mixed $value, callable $fail) use ($search) {
+                if (!$value) {
+                    return;
+                }
 
-        $fundRequestId = $this->input('fund_request_id');
+                if (!$search->find((int) $value)) {
+                    $fail(trans('validation.in', ['attribute' => $attribute]));
+                }
+            },
+        ];
+    }
 
-        return $fundRequestId ? ($this->fundRequest = FundRequest::find((int) $fundRequestId)) : null;
+    /**
+     * @return array
+     */
+    protected function fundRequestIdRules(): array
+    {
+        return $this->bankAccountIdRules(FundRequestPayoutBankAccountSearch::queryForOrganization($this->organization));
+    }
+
+    /**
+     * @return array
+     */
+    protected function profileBankAccountIdRules(): array
+    {
+        return $this->bankAccountIdRules(ProfilePayoutBankAccountSearch::queryForOrganization($this->organization));
+    }
+
+    /**
+     * @return array
+     */
+    protected function reimbursementIdRules(): array
+    {
+        return $this->bankAccountIdRules(ReimbursementPayoutBankAccountSearch::queryForOrganization($this->organization));
+    }
+
+    /**
+     * @return array
+     */
+    protected function payoutTransactionIdRules(): array
+    {
+        return $this->bankAccountIdRules(PayoutTransactionPayoutBankAccountSearch::queryForOrganization($this->organization));
     }
 }
