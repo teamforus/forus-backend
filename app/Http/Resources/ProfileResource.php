@@ -8,13 +8,13 @@ use Illuminate\Http\Request;
 
 /**
  * @property-read Identity $resource
- * @property-read bool $profile
- * @property-read array $records
- * @property-read array $bank_accounts
  */
 class ProfileResource extends BaseJsonResource
 {
     public static $wrap = null;
+    protected ?bool $profile = null;
+    protected ?array $records = null;
+    protected ?array $bank_accounts = null;
 
     /**
      * Transform the resource into an array.

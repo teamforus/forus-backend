@@ -92,8 +92,8 @@ class FundStatisticsOverviewPayoutVouchersTest extends TestCase
                 amount: 100,
                 employee: $employee,
                 bankAccount: new BankAccount(
-                    $this->faker()->iban,
-                    $this->faker()->name,
+                    $this->faker()->iban(),
+                    $this->faker()->name(),
                 ),
             )->setPaid(null, now());
         }

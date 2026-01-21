@@ -14,8 +14,11 @@ class PhysicalCardsController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $maxAttempts = 5;
-    private $decayMinutes = 60 * 24;
+    public function __construct()
+    {
+        $this->maxAttempts = 5;
+        $this->decayMinutes = 60 * 24;
+    }
 
     /**
      * Link existing physical card to existing voucher.

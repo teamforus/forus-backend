@@ -45,8 +45,8 @@ class StoreOrganizationRequest extends BaseFormRequest
             'kvk' => [
                 'required',
                 'digits:8',
-                $kvkDebug || $kvkGeneric ? null : 'unique:organizations,kvk',
-                $kvkGeneric ? null : new KvkRule(),
+                ...($kvkDebug || $kvkGeneric) ? [] : ['unique:organizations,kvk'],
+                ...$kvkGeneric ? [] : [new KvkRule()],
             ],
             'btw' => ['nullable', 'string', new BtwRule()],
             'website' => 'nullable|max:200|url',

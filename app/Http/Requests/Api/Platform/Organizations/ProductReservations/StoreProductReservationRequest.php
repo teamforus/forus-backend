@@ -20,8 +20,8 @@ class StoreProductReservationRequest extends BaseFormRequest
 {
     use ThrottleWithMeta;
 
-    protected $maxAttempts = 100;
-    protected $decayMinutes = 180;
+    protected int $maxAttempts = 100;
+    protected int $decayMinutes = 180;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -62,7 +62,7 @@ class StoreProductReservationRequest extends BaseFormRequest
             'number' => [
                 'required',
                 'exists:physical_cards,code',
-                $sponsorIsValid && $addressIsValid ? null : 'in:',
+                ...($sponsorIsValid && $addressIsValid) ? [] : ['in:'],
             ],
             'product_id' => [
                 'required',

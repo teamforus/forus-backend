@@ -106,7 +106,7 @@ class PayoutsTest extends TestCase
             'amount' => '50.00',
             'fund_id' => $fund->id,
             'description' => 'Test description',
-            'target_iban' => $this->faker()->iban,
+            'target_iban' => $this->faker()->iban(),
             'target_name' => $this->makeIbanName(),
         ];
 
@@ -202,7 +202,7 @@ class PayoutsTest extends TestCase
         $res = $this->storeRequestBatch($fund, [
             'description' => 'Test description',
             'amount' => '50',
-            'target_iban' => $this->faker()->iban,
+            'target_iban' => $this->faker()->iban(),
             'target_name' => $this->makeIbanName(),
         ]);
 
@@ -531,7 +531,7 @@ class PayoutsTest extends TestCase
         $recordTypes = $fund->criteria->pluck('id', 'record_type.key');
 
         return $this->makeFundRequest($fund, [
-            ['fund_criterion_id' => $recordTypes['iban'], 'value' => $this->faker()->iban, 'files' => null],
+            ['fund_criterion_id' => $recordTypes['iban'], 'value' => $this->faker()->iban(), 'files' => null],
             ['fund_criterion_id' => $recordTypes['iban_name'], 'value' => 'John doe', 'files' => null],
         ]);
     }

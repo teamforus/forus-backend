@@ -68,8 +68,8 @@ class ProductReservationTest extends DuskTestCase
             $this->assertFundHasApprovedProviders($fund);
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -159,8 +159,8 @@ class ProductReservationTest extends DuskTestCase
             }
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fields);
 
             // Assert if reservation_fields_enabled is false - no custom fields used
@@ -169,8 +169,8 @@ class ProductReservationTest extends DuskTestCase
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -254,8 +254,8 @@ class ProductReservationTest extends DuskTestCase
             }
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $productFields);
 
             // Assert if reservation_fields_config is 'global' - organization fields used
@@ -264,8 +264,8 @@ class ProductReservationTest extends DuskTestCase
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $organizationFields);
 
             // Assert if reservation_fields_config is 'no' - no custom fields used
@@ -274,8 +274,8 @@ class ProductReservationTest extends DuskTestCase
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -324,8 +324,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation with optional phone field
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsOptional);
 
             $product->forceFill([
@@ -335,8 +335,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test required reservation phone
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsRequired);
 
             // Set global configs for phone
@@ -351,8 +351,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation with global optional phone field
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsOptional);
 
             $provider->forceFill([
@@ -361,8 +361,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test global required reservation phone
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsRequired);
 
             // Assert if reservation_fields_enabled is false - no phone field used
@@ -372,8 +372,8 @@ class ProductReservationTest extends DuskTestCase
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -422,8 +422,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation with optional birth_date field
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsOptional);
 
             $product->forceFill([
@@ -433,8 +433,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test required reservation birth_date
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsRequired);
 
             // Set global configs for birth_date
@@ -449,8 +449,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation with global optional birth_date field
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsOptional);
 
             $provider->forceFill([
@@ -459,8 +459,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test global required reservation birth_date
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], otherFields: $fieldsRequired);
 
             // Assert if reservation_fields_enabled is false - no birth_date field used
@@ -470,8 +470,8 @@ class ProductReservationTest extends DuskTestCase
             ])->save();
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -501,8 +501,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation with optional user note field
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
 
             $provider->forceFill([
@@ -511,8 +511,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test without a user note
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], noteDisabled: true);
 
             $provider->forceFill([
@@ -521,8 +521,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test without a user note
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -561,8 +561,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test reservation without optional address when no address is saved
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => false, 'optional' => true]);
 
             $product->forceFill([
@@ -572,20 +572,20 @@ class ProductReservationTest extends DuskTestCase
 
             // Test required reservation address without saved address
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => false]);
 
             // Test required reservation address with saved address
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => true]);
 
             // Test required reservation address with saved address
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => true, 'existing_update' => true]);
 
             $product->forceFill([
@@ -595,8 +595,8 @@ class ProductReservationTest extends DuskTestCase
 
             // Test required reservation address with saved address
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => true, 'optional' => true, 'skip' => true]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
@@ -683,8 +683,8 @@ class ProductReservationTest extends DuskTestCase
             ]);
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], cancelReservation: false);
 
             $product->product_reservations()->first()->acceptProvider();
@@ -724,8 +724,8 @@ class ProductReservationTest extends DuskTestCase
             ]);
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], cancelReservation: false);
 
             $product->product_reservations()->first()->acceptProvider();
@@ -766,8 +766,8 @@ class ProductReservationTest extends DuskTestCase
             ]);
 
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
             ], cancelReservation: false);
 
             $product->product_reservations()->first()->acceptProvider();

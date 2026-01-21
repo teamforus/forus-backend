@@ -80,6 +80,7 @@ if (!function_exists('currency_format_locale')) {
      */
     function currency_format_locale($number): string
     {
+        $number = is_null($number) ? 0 : $number;
         $isWhole = ($number - round($number)) === 0.0;
 
         return '€ ' . implode('', [

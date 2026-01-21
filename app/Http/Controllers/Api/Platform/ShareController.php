@@ -15,9 +15,6 @@ class ShareController extends Controller
 {
     use ThrottleWithMeta;
 
-    protected $maxAttempts = 3;
-    protected $decayMinutes = 1;
-
     protected SmsService $smsService;
     protected NotificationService $notificationService;
 
@@ -30,6 +27,8 @@ class ShareController extends Controller
     {
         $this->smsService = $smsService;
         $this->notificationService = $notificationService;
+        $this->maxAttempts = 3;
+        $this->decayMinutes = 1;
     }
 
     /**

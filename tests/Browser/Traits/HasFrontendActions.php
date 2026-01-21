@@ -488,7 +488,7 @@ trait HasFrontendActions
 
         /** @var string $value */
         $value = $browser->value($selector);
-        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+        $browser->keys($selector, ...array_fill(0, $value ? strlen($value) : 0, '{backspace}'));
     }
 
     /**

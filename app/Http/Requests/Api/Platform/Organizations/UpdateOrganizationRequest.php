@@ -57,8 +57,8 @@ class UpdateOrganizationRequest extends BaseFormRequest
             'kvk' => [
                 'nullable',
                 'digits:8',
-                $kvkDebug || $kvkGeneric ? null : $kvkUniqueRule,
-                $kvkGeneric ? null : new KvkRule(),
+                ...($kvkDebug || $kvkGeneric) ? [] : [$kvkUniqueRule],
+                ...$kvkGeneric ? [] : [new KvkRule()],
             ],
             'btw' => ['nullable', new BtwRule()],
             'website' => 'nullable|max:200|url',

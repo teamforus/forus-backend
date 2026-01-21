@@ -92,8 +92,8 @@ class ProductReservationsExportTest extends DuskTestCase
         $product = $this->findProductForReservation($voucher);
 
         $reservation = $this->makeReservation($voucher, $product, [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
         ]);
 
         $this->assertNotNull($reservation);

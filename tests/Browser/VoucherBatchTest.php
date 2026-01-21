@@ -161,10 +161,10 @@ class VoucherBatchTest extends DuskTestCase
     protected function recordsFields(): array
     {
         return [
-            'record.given_name' => $this->faker()->firstName,
-            'record.family_name' => $this->faker()->lastName,
+            'record.given_name' => $this->faker()->firstName(),
+            'record.family_name' => $this->faker()->lastName(),
             'record.birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
-            'record.address' => $this->faker()->address,
+            'record.address' => $this->faker()->address(),
         ];
     }
 

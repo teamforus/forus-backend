@@ -15,7 +15,6 @@ use Illuminate\Support\Collection;
 
 /**
  * @property Organization $resource
- * @property Organization $sponsor_organization
  */
 class SponsorProviderResource extends BaseJsonResource
 {
@@ -37,6 +36,8 @@ class SponsorProviderResource extends BaseJsonResource
         'bank_connection_active',
         'last_employee_session',
     ];
+
+    protected ?Organization $sponsor_organization = null;
 
     /**
      * Transform the resource into an array.

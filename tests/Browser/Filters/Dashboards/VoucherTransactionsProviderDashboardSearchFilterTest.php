@@ -152,7 +152,7 @@ class VoucherTransactionsProviderDashboardSearchFilterTest extends DuskTestCase
         ]);
 
         $transaction->notes_provider()->create([
-            'message' => $this->faker->sentence,
+            'message' => $this->faker->sentence(),
             'shared' => true,
         ]);
 
@@ -174,7 +174,7 @@ class VoucherTransactionsProviderDashboardSearchFilterTest extends DuskTestCase
 
             $office = $this->makeOrganizationOffice($organization, [
                 'branch_id' => $this->faker->numberBetween(100000, 1000000),
-                'branch_name' => $this->faker->name,
+                'branch_name' => $this->faker->name(),
                 'branch_number' => $this->faker->numberBetween(100000, 1000000),
             ]);
 

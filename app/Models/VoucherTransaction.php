@@ -599,7 +599,7 @@ class VoucherTransaction extends BaseModel
             return null;
         }
 
-        return max(now()->diffInDays($this->transfer_at), 0);
+        return max((int) now()->diffInDays($this->transfer_at), 0);
     }
 
     /**

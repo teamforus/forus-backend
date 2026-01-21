@@ -71,8 +71,8 @@ trait MakesTestFunds
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
             'external' => false,
-            'description_text' => $this->faker->sentence,
-            'description_short' => $this->faker->sentence,
+            'description_text' => $this->faker->sentence(),
+            'description_short' => $this->faker->sentence(),
             ...$fundData,
         ]);
 
@@ -389,7 +389,7 @@ trait MakesTestFunds
      */
     protected function makeAndAppendTestFundTag(Fund $fund): Tag
     {
-        $tagName = $this->faker->name;
+        $tagName = $this->faker->name();
 
         $tag = $fund->tags()->firstOrCreate([
             'key' => Str::slug($tagName),

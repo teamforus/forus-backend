@@ -69,7 +69,7 @@ class FundRequestCriteriaStepsTest extends TestCase
             RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
-                    'assert_valid' => $this->faker->email,
+                    'assert_valid' => $this->faker->email(),
                     'assert_invalid' => 'invalid_email',
                 ],
             ],
@@ -86,7 +86,7 @@ class FundRequestCriteriaStepsTest extends TestCase
             RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
-                    'assert_valid' => $this->faker->iban,
+                    'assert_valid' => $this->faker->iban(),
                     'assert_invalid' => 'invalid_iban',
                 ],
             ],
@@ -386,7 +386,7 @@ class FundRequestCriteriaStepsTest extends TestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'assert_valid' => $this->faker->email,
+            'assert_valid' => $this->faker->email(),
             'step' => 'Step #2',
         ], [
             'record_type' => RecordType::TYPE_STRING,
@@ -839,7 +839,7 @@ class FundRequestCriteriaStepsTest extends TestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'input_value' => $this->faker->email,
+            'input_value' => $this->faker->email(),
             'step' => 'Step #2',
             'rules' => [[
                 'record_type_key' => $numberRecordTypeKey,
@@ -852,7 +852,7 @@ class FundRequestCriteriaStepsTest extends TestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'input_value' => $this->faker->email,
+            'input_value' => $this->faker->email(),
             'step' => 'Step #3',
             'exclude_value' => true,
             'rules' => [[

@@ -110,8 +110,8 @@ class TestData
 
         $identity = Identity::build(email: $email, records: [
             'primary_email' => $email,
-            'given_name' => $this->faker->firstName,
-            'family_name' => $this->faker->lastName,
+            'given_name' => $this->faker->firstName(),
+            'family_name' => $this->faker->lastName(),
         ]);
 
         $identity->primary_email->setVerified();
@@ -1302,8 +1302,8 @@ class TestData
                 }
 
                 $voucher->reserveProduct(product: $product, extraData: [
-                    'first_name' => $this->faker->firstName,
-                    'last_name' => $this->faker->lastName,
+                    'first_name' => $this->faker->firstName(),
+                    'last_name' => $this->faker->lastName(),
                     'user_note' => $this->faker->text(random_int(64, 256)),
                 ]);
             }

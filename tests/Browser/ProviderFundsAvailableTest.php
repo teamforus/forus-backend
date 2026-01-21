@@ -33,7 +33,7 @@ class ProviderFundsAvailableTest extends DuskTestCase
     {
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $implementation = $this->makeTestImplementation($organization);
-        $fundTag = $this->faker->name;
+        $fundTag = $this->faker->name();
 
         $fund = $this->makeTestFund(organization: $organization, fundConfigsData: [
             'allow_provider_sign_up' => true,
