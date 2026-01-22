@@ -21,7 +21,6 @@ use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
-use App\Services\IConnectApiService\IConnectPrefill;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
@@ -40,7 +39,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -1510,13 +1508,15 @@ class Fund extends BaseModel
      * @param Identity $identity
      * @param array $records
      * @param string|null $contactInformation
+     * @param array|null $iConnectPrefills
      * @throws PersonBsnApiException
      * @return FundRequest
      */
     public function makeFundRequest(
         Identity $identity,
         array $records,
-        ?string $contactInformation = null
+        ?string $contactInformation = null,
+        ?array $iConnectPrefills = null,
     ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
@@ -1542,24 +1542,22 @@ class Fund extends BaseModel
             $requestRecord->appendFilesByUid($record['files'] ?? []);
         }
 
-        if (Gate::forUser($identity)->allows('viewPersonBsnApiRecords', $this)) {
-            $fundPrefills = IConnectPrefill::getBsnApiPrefills($this, $identity->bsn);
-
-            if (is_array($fundPrefills['error'])) {
-                throw new PersonBsnApiException(Arr::get($fundPrefills, 'error.message'));
+        if ($iConnectPrefills) {
+            if (is_array($iConnectPrefills['error'])) {
+                throw new PersonBsnApiException(Arr::get($iConnectPrefills, 'error.message'));
             }
 
             $data = [
-                ...Arr::get($fundPrefills, 'person', []),
-                ...Arr::get($fundPrefills, 'partner', []),
-                ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
-                ...Arr::get($fundPrefills, 'children_groups_counts', []),
+                ...Arr::get($iConnectPrefills, 'person', []),
+                ...Arr::get($iConnectPrefills, 'partner', []),
+                ...Arr::collapse(Arr::get($iConnectPrefills, 'children', [])),
+                ...Arr::get($iConnectPrefills, 'children_groups_counts', []),
             ];
 
             foreach ($data as $item) {
                 $fundRequest->records()->firstOrCreate([
                     'record_type_key' => Arr::get($item, 'record_type_key'),
-                    'value' => Arr::get($item, 'value'),
+                    'value' => Arr::get($item, 'value') ?? '',
                 ]);
             }
         }

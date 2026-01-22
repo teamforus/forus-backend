@@ -48,7 +48,7 @@ abstract class BasePrevalidationRequestEvent
     {
         return $this->responseData ? [
             'prevalidation_request_response_code' => Arr::get($this->responseData, 'code'),
-            'prevalidation_request_response_body' => Str::limit(json_encode(Arr::get($this->responseData, 'body')), 4096),
+            'prevalidation_request_response_body' => Str::limit(json_encode(Arr::get($this->responseData, 'body')), 16384),
         ] : [];
     }
 
