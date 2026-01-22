@@ -103,7 +103,7 @@ class SponsorVoucherDirectPaymentsTest extends DuskTestCase
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $voucher = $this->makeTestVoucher($fund, $identity, amount: 100);
-        $reimbursement = $this->makeReimbursement($voucher, submit: true);
+        $reimbursement = $this->makeReimbursement($voucher, submit: true)->assign($organization->employees[0])->approve();
 
         $this->rollbackModels([], function () use ($implementation, $organization, $voucher, $reimbursement) {
             $this->browse(function (Browser $browser) use ($implementation, $organization, $voucher, $reimbursement) {

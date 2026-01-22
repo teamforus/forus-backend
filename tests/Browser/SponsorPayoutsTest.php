@@ -289,10 +289,10 @@ class SponsorPayoutsTest extends DuskTestCase
         $iban = $this->makeIban();
         $ibanName = $this->makeIbanName();
 
-        $this->makeReimbursement($voucher, submit: true)->forceFill([
-            'iban' => $iban,
-            'iban_name' => $ibanName,
-        ])->save();
+        $reimbursement = $this->makeReimbursement($voucher, submit: true);
+
+        $reimbursement->forceFill(['iban' => $iban, 'iban_name' => $ibanName])->save();
+        $reimbursement->assign($organization->employees[0])->approve();
 
         $this->rollbackModels([
             [$organization, $organizationState],

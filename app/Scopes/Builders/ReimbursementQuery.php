@@ -110,6 +110,7 @@ class ReimbursementQuery
             ->where('iban', '!=', '')
             ->whereNotNull('iban_name')
             ->where('iban_name', '!=', '')
+            ->where('state', Reimbursement::STATE_APPROVED)
             ->whereHas('voucher', fn ($q) => $q->whereRelation('fund', 'organization_id', $organization->id));
     }
 }

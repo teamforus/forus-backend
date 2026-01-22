@@ -462,7 +462,10 @@ class PayoutsTest extends TestCase
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $voucher = $this->makeTestVoucher($fund, $identity, amount: 100);
-        $reimbursement = $this->makeReimbursement($voucher, submit: true);
+
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
 
         $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $otherVoucher = $this->makeTestVoucher($fund, $otherIdentity, amount: 100);
@@ -633,7 +636,10 @@ class PayoutsTest extends TestCase
         $fund = $this->makeTestFund($sponsorOrganization, fundConfigsData: ['allow_reimbursements' => true]);
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $voucher = $this->makeTestVoucher($fund, $identity, amount: 100);
-        $reimbursement = $this->makeReimbursement($voucher, submit: true);
+
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
 
         $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
         $otherFund = $this->makeTestFund($otherOrganization, fundConfigsData: ['allow_reimbursements' => true]);
@@ -779,7 +785,10 @@ class PayoutsTest extends TestCase
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $voucher = $this->makeTestVoucher($fund1, $identity, amount: 100);
-        $reimbursement = $this->makeReimbursement($voucher, submit: true);
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
+
         $iban = $reimbursement->iban;
         $ibanName = $reimbursement->iban_name;
 
@@ -967,7 +976,11 @@ class PayoutsTest extends TestCase
 
         $reimbursementIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $reimbursementVoucher = $this->makeTestVoucher($fund, $reimbursementIdentity, amount: 100);
-        $reimbursement = $this->makeReimbursement($reimbursementVoucher, submit: true);
+
+        $reimbursement = $this
+            ->makeReimbursement($reimbursementVoucher, submit: true)
+            ->assign($organization->employees[0])
+            ->approve();
 
         $payoutIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $payoutVoucher = $this->makeTestVoucher($fund, $payoutIdentity);
