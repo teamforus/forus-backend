@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 
 class ImplementationResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'page_provider',
+    ];
+
     /**
      * Transform the resource into an array.
      *

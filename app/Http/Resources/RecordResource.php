@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Record;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Record $resource
@@ -11,18 +12,20 @@ class RecordResource extends BaseJsonResource
 {
     public const array LOAD = [
         'record_type.translations',
-        'validations_approved.identity',
-        'validations_approved.organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'validations_approved' => RecordValidationResource::class,
     ];
     public static $wrap = null;
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $record = $this->resource;
 

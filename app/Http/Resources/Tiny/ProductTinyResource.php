@@ -13,13 +13,16 @@ use Illuminate\Http\Request;
 class ProductTinyResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'photos.presets',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

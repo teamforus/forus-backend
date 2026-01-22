@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 class FundCriterionResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'fund',
         'fund_criterion_rules',
         'record_type.translation',
         'record_type.record_type_options.translations',
@@ -22,7 +23,7 @@ class FundCriterionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

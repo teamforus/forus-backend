@@ -2,21 +2,22 @@
 
 namespace App\Http\Resources\Arr;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\BaseJsonResource;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 /**
  * @property-read array $resource
  */
-class ExportFieldArrResource extends JsonResource
+class ExportFieldArrResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return Arr::only($this->resource, ['key', 'name']);
     }

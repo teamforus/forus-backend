@@ -34,13 +34,13 @@ class FundProviderChatsController extends Controller
             FundProviderChat::class, $product, $organization,
         ]);
 
-        return FundProviderChatResource::collection(
-            FundProviderChatQuery::whereProductAndProviderOrganizationFilter(
-                FundProviderChat::query(),
-                $product->id,
-                $organization->id
-            )->paginate($request->input('per_page'))
+        $query = FundProviderChatQuery::whereProductAndProviderOrganizationFilter(
+            FundProviderChat::query(),
+            $product->id,
+            $organization->id
         );
+
+        return FundProviderChatResource::queryCollection($query, $request);
     }
 
     /**
@@ -64,6 +64,6 @@ class FundProviderChatsController extends Controller
             $fundProviderChat, $product, $organization,
         ]);
 
-        return new FundProviderChatResource($fundProviderChat);
+        return FundProviderChatResource::create($fundProviderChat);
     }
 }

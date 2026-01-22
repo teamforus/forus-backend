@@ -29,11 +29,7 @@ class FundRequestRecordsController extends Controller
         $this->authorize('viewAnyAsRequester', [$fundRequest, $fund]);
         $this->authorize('viewAnyAsRequester', [FundRequestRecord::class, $fundRequest, $fund]);
 
-        return FundRequestRecordResource::collection(
-            $fundRequest->records()->paginate(
-                $request->input('per_page')
-            )
-        );
+w        return FundRequestRecordResource::queryCollection($fundRequest->records(), $request);
     }
 
     /**
@@ -53,6 +49,6 @@ class FundRequestRecordsController extends Controller
         $this->authorize('viewAsRequester', [$fundRequest, $fund]);
         $this->authorize('viewAsRequester', [$fundRequestRecord, $fundRequest, $fund]);
 
-        return new FundRequestRecordResource($fundRequestRecord);
+        return FundRequestRecordResource::create($fundRequestRecord);
     }
 }

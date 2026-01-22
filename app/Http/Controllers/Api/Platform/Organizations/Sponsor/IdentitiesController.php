@@ -261,7 +261,7 @@ class IdentitiesController extends Controller
             abort(400, $errorMessage);
         }
 
-        return new IdentityPersonArrResource($person);
+        return IdentityPersonArrResource::create($person);
     }
 
     /**

@@ -15,6 +15,10 @@ class PrevalidationResource extends BaseJsonResource
         'prevalidation_records.record_type.translations',
     ];
 
+    public const array LOAD_NESTED = [
+        'fund' => FundSmallResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *

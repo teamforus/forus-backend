@@ -83,8 +83,8 @@ class FundProviderInvitationsController extends Controller
             FundProviderInvitation::class, $fromFund, $fund, $organization,
         ]);
 
-        return FundProviderInvitationResource::collection(
-            FundProviderInvitation::inviteFromFundToFund($fromFund, $fund)
-        );
+        $invitations = FundProviderInvitation::inviteFromFundToFund($fromFund, $fund);
+
+        return FundProviderInvitationResource::createCollection($invitations);
     }
 }
