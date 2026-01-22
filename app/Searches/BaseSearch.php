@@ -23,7 +23,7 @@ class BaseSearch
     public function __construct(array $filters, BaseModel|Builder|Relation|null $builder = null)
     {
         $this->filters = $filters;
-        $this->builder = clone $builder;
+        $this->builder = $builder ? clone $builder : null;
     }
 
     /**

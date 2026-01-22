@@ -3,6 +3,7 @@
 namespace Tests\Browser;
 
 use App\Models\Implementation;
+use App\Models\FundPayoutFormula;
 use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
@@ -212,9 +213,10 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
         $organization->forceFill(['allow_profiles' => true])->save();
         $fund = $this->makePayoutEnabledFund($organization, $implementation);
-        $fund->fund_config->forceFill([
-            'allow_voucher_payout_amount' => '50.00',
-        ])->save();
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_FIXED,
+            'amount' => 50.00,
+        ]);
         $fund->fund_formulas()->update(['amount' => 10]);
 
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());

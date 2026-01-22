@@ -268,4 +268,22 @@ class VoucherTransactionQuery
             ') as `transfer_in`',
         ]));
     }
+
+    /**
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @param Organization $organization
+     * @return Builder|Relation|VoucherTransaction
+     */
+    public static function whereHasPayoutBankAccountForOrganization(
+        Builder|Relation|VoucherTransaction $builder,
+        Organization $organization,
+    ): Builder|Relation|VoucherTransaction {
+        return $builder
+            ->where('target', VoucherTransaction::TARGET_PAYOUT)
+            ->whereNotNull('target_iban')
+            ->where('target_iban', '!=', '')
+            ->whereNotNull('target_name')
+            ->where('target_name', '!=', '')
+            ->whereHas('voucher', fn ($q) => $q->whereRelation('fund', 'organization_id', $organization->id));
+    }
 }
