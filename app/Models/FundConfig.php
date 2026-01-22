@@ -46,7 +46,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_reservations
  * @property bool $allow_reimbursements
  * @property bool $allow_voucher_payouts
- * @property string|null $allow_voucher_payout_amount
  * @property int|null $allow_voucher_payout_count
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments

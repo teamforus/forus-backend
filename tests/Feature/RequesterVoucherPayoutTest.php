@@ -2,7 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Fund;
+use App\Models\FundPayoutFormula;
 use App\Models\FundRequest;
+use App\Models\Identity;
+use App\Models\Organization;
+use App\Models\Prevalidation;
+use App\Models\Record;
+use App\Models\RecordType;
+use App\Models\RecordValidation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -246,37 +254,30 @@ class RequesterVoucherPayoutTest extends TestCase
      * @throws Throwable
      * @return void
      */
-    public function testRequesterPayoutFixedAmountValidation(): void
+    public function testRequesterPayoutFixedFormulaValidation(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
         $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
         $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
 
         $fund = $this->makePayoutEnabledFund($sponsorOrganization);
-        $fund->fund_config->forceFill([
-            'allow_voucher_payout_amount' => '25.00',
-        ])->save();
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 25],
+            ],
+            [],
+        );
 
-        $fund->fund_formulas()->update(['amount' => 100]);
-
-        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
-        $fundRequest = $result['fund_request'];
-        $voucher = $result['voucher'];
-
-        $res = $this->apiMakePayoutRequest([
-            'voucher_id' => $voucher->id,
-            'amount' => '20.00',
-            'fund_request_id' => $fundRequest->id,
-        ], $requester);
-
-        $res->assertJsonValidationErrorFor('amount');
-
-        $transaction = $this->apiMakePayout([
-            'voucher_id' => $voucher->id,
-            'amount' => '25.00',
-            'fund_request_id' => $fundRequest->id,
-        ], $requester);
-        $this->assertEquals(25.00, (float) $transaction->amount);
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 20],
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 80],
+            ],
+            [],
+        );
 
         $fund->fund_formulas()->update(['amount' => 10]);
 
@@ -292,6 +293,77 @@ class RequesterVoucherPayoutTest extends TestCase
         ], $lowBalanceIdentity);
 
         $res->assertJsonValidationErrorFor('amount');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutMultiplyFormulaValidation(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+
+        $keyA = 'payout_income_' . token_generator()->generate(6);
+        $keyB = 'payout_bonus_' . token_generator()->generate(6);
+
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 10, 'record_type_key' => $keyA],
+            ],
+            [$keyA => 3],
+        );
+
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 5, 'record_type_key' => $keyA],
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 7, 'record_type_key' => $keyB],
+            ],
+            [$keyA => 4, $keyB => 2],
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutMixedFormulaValidation(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+
+        $keyX = 'payout_multiplier_' . token_generator()->generate(6);
+        $keyY = 'payout_multiplier_' . token_generator()->generate(6);
+
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 15],
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 3, 'record_type_key' => $keyX],
+            ],
+            [$keyX => 5],
+        );
+
+        $this->runPayoutFormulaScenario(
+            $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn()),
+            $fund,
+            [
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 20],
+                ['type' => FundPayoutFormula::TYPE_FIXED, 'amount' => 80],
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 2, 'record_type_key' => $keyX],
+                ['type' => FundPayoutFormula::TYPE_MULTIPLY, 'amount' => 4, 'record_type_key' => $keyY],
+            ],
+            [$keyX => 3, $keyY => 2],
+        );
     }
 
     /**
@@ -530,8 +602,8 @@ class RequesterVoucherPayoutTest extends TestCase
     }
 
     /**
-     * @throws Throwable
      * @return void
+     * @throws Throwable
      */
     public function testRequesterPayoutRequiresEligibleFundRequest(): void
     {
@@ -549,5 +621,167 @@ class RequesterVoucherPayoutTest extends TestCase
             'amount' => '50.00',
             'fund_request_id' => 0,
         ], $requester)->assertForbidden();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param array $formulas
+     * @param array $recordValues
+     * @return void
+     */
+    private function runPayoutFormulaScenario(
+        Identity $identity,
+        Fund $fund,
+        array $formulas,
+        array $recordValues,
+    ): void {
+        $fund->fund_payout_formulas()->delete();
+
+        foreach (array_unique(array_filter(array_column($formulas, 'record_type_key'))) as $recordTypeKey) {
+            $this->ensureNumberRecordType($fund->organization, $recordTypeKey);
+        }
+
+        foreach ($formulas as $formula) {
+            $fund->fund_payout_formulas()->create($formula);
+        }
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $fundRequest = $result['fund_request'];
+        $voucher = $result['voucher'];
+
+        foreach ($recordValues as $key => $value) {
+            $this->createTrustedRecord($identity, $fund, $fundRequest, $key, $value);
+        }
+
+        $expectedAmount = $this->calculateFormulaTotal($formulas, $recordValues);
+        $invalidAmount = max(0.01, $expectedAmount - 0.01);
+
+        if (abs($invalidAmount - $expectedAmount) < 0.0001) {
+            $invalidAmount = max(0.01, $invalidAmount - 0.01);
+        }
+
+        $res = $this->apiMakePayoutRequest([
+            'voucher_id' => $voucher->id,
+            'amount' => number_format($invalidAmount, 2, '.', ''),
+            'fund_request_id' => $fundRequest->id,
+        ], $identity);
+
+        $res->assertJsonValidationErrorFor('amount');
+
+        $transaction = $this->apiMakePayout([
+            'voucher_id' => $voucher->id,
+            'amount' => number_format($expectedAmount, 2, '.', ''),
+            'fund_request_id' => $fundRequest->id,
+        ], $identity);
+
+        $this->assertEquals($expectedAmount, (float) $transaction->amount);
+    }
+
+    /**
+     * @param array $formulas
+     * @param array $recordValues
+     * @return float
+     */
+    private function calculateFormulaTotal(array $formulas, array $recordValues): float
+    {
+        $total = 0.0;
+
+        foreach ($formulas as $formula) {
+            if ($formula['type'] === FundPayoutFormula::TYPE_FIXED) {
+                $total += (float) $formula['amount'];
+                continue;
+            }
+
+            if ($formula['type'] === FundPayoutFormula::TYPE_MULTIPLY) {
+                $key = $formula['record_type_key'] ?? null;
+
+                if (!$key) {
+                    continue;
+                }
+
+                $value = isset($recordValues[$key]) ? (float) $recordValues[$key] : 0.0;
+                $total += (float) $formula['amount'] * $value;
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param string $recordTypeKey
+     * @return RecordType
+     */
+    private function ensureNumberRecordType(Organization $organization, string $recordTypeKey): RecordType
+    {
+        $recordType = RecordType::query()
+            ->where('organization_id', $organization->id)
+            ->where('key', $recordTypeKey)
+            ->first();
+
+        if ($recordType) {
+            if (!$recordType->criteria) {
+                $recordType->forceFill(['criteria' => true])->save();
+            }
+
+            return $recordType;
+        }
+
+        return RecordType::create([
+            'organization_id' => $organization->id,
+            'criteria' => true,
+            'type' => RecordType::TYPE_NUMBER,
+            'key' => $recordTypeKey,
+        ]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param FundRequest $fundRequest
+     * @param string $recordTypeKey
+     * @param string|float $value
+     * @return void
+     */
+    private function createTrustedRecord(
+        Identity $identity,
+        Fund $fund,
+        FundRequest $fundRequest,
+        string $recordTypeKey,
+        string|float $value,
+    ): void {
+        $recordType = $this->ensureNumberRecordType($fund->organization, $recordTypeKey);
+
+        Record::where('identity_address', $identity->address)
+            ->where('record_type_id', $recordType->id)
+            ->forceDelete();
+
+        $record = Record::create([
+            'identity_address' => $identity->address,
+            'record_type_id' => $recordType->id,
+            'fund_request_id' => $fundRequest->id,
+            'organization_id' => $fund->organization_id,
+            'value' => (string) $value,
+            'order' => 0,
+        ]);
+
+        $prevalidation = Prevalidation::create([
+            'uid' => token_generator()->generate(32),
+            'identity_address' => $identity->address,
+            'fund_id' => $fund->id,
+            'organization_id' => $fund->organization_id,
+            'state' => Prevalidation::STATE_PENDING,
+            'validated_at' => now(),
+        ]);
+
+        RecordValidation::create([
+            'record_id' => $record->id,
+            'state' => RecordValidation::STATE_APPROVED,
+            'uuid' => token_generator()->generate(64),
+            'identity_address' => $identity->address,
+            'organization_id' => $fund->organization_id,
+            'prevalidation_id' => $prevalidation->id,
+        ]);
     }
 }

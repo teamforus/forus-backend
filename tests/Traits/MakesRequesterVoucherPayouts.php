@@ -15,14 +15,17 @@ trait MakesRequesterVoucherPayouts
     /**
      * @param Organization $organization
      * @param Implementation|null $implementation
+     * @param array $fundConfigsData
      * @return Fund
      */
     protected function makePayoutEnabledFund(
         Organization $organization,
         ?Implementation $implementation = null,
+        array $fundConfigsData = [],
     ): Fund {
         $fund = $this->makeTestFund($organization, fundConfigsData: [
             'allow_voucher_payouts' => true,
+            ...$fundConfigsData,
         ], implementation: $implementation);
 
         [$ibanKey, $ibanNameKey] = $this->getPayoutIbanRecordKeys();
