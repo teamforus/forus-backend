@@ -3,6 +3,7 @@
 namespace Tests\Browser;
 
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -414,7 +415,11 @@ class PrevalidationsTest extends DuskTestCase
      */
     protected function addTestCriteriaToFund(Fund $fund): void
     {
-        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria->each(function (FundCriterion $criterion) {
+            $criterion->fund_criterion_rules()->delete();
+            $criterion->fund_request_record()->delete();
+        });
+
         $fund->criteria()->forceDelete();
 
         RecordType::whereIn('key', [

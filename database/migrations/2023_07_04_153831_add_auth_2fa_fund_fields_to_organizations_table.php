@@ -12,10 +12,16 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE organizations MODIFY COLUMN auth_2fa_policy ENUM('optional', 'required') DEFAULT 'optional' AFTER bank_cron_time");
-        DB::statement('ALTER TABLE organizations MODIFY COLUMN auth_2fa_remember_ip BOOLEAN AFTER auth_2fa_policy');
-
         Schema::table('organizations', function (Blueprint $table) {
+            $table->enum('auth_2fa_policy', ['optional', 'required'])
+                ->default('optional')
+                ->after('bank_cron_time')
+                ->change();
+
+            $table->boolean('auth_2fa_remember_ip')
+                ->after('auth_2fa_policy')
+                ->change();
+
             $table->enum('auth_2fa_funds_policy', [
                 'optional', 'required', 'restrict_features',
             ])->default('optional')->after('auth_2fa_remember_ip');
