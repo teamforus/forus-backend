@@ -18,16 +18,24 @@ class ProfilePayoutBankAccountSearch extends BasePayoutBankAccountSearch
         /** @var Builder|Relation|ProfileBankAccount $builder */
         $builder = parent::query();
 
-        if ($this->getFilter('q')) {
-            $builder->where(function ($query) {
-                $query->where('iban', 'LIKE', '%' . $this->getFilter('q') . '%');
-                $query->orWhere('name', 'LIKE', '%' . $this->getFilter('q') . '%');
+        $q = $this->getFilter('q');
+        $bsnEnabled = $this->getFilter('bsn_enabled');
+        $identityId = $this->getFilter('identity_id');
 
-                $query->orWhereHas('profile.identity', function ($q) {
-                    $q->where('email', 'LIKE', '%' . $this->getFilter('q') . '%');
+        if ($identityId) {
+            $builder->whereHas('profile', fn (Builder $builder) => $builder->where('identity_id', $identityId));
+        }
 
-                    if ($this->getFilter('bsn_enabled')) {
-                        $q->orWhere('bsn', 'LIKE', '%' . $this->getFilter('q') . '%');
+        if ($q) {
+            $builder->where(function ($query) use ($q, $bsnEnabled) {
+                $query->where('iban', 'LIKE', '%' . $q . '%');
+                $query->orWhere('name', 'LIKE', '%' . $q . '%');
+
+                $query->orWhereHas('profile.identity', function ($identityQuery) use ($q, $bsnEnabled) {
+                    $identityQuery->where('email', 'LIKE', '%' . $q . '%');
+
+                    if ($bsnEnabled) {
+                        $identityQuery->orWhere('bsn', 'LIKE', '%' . $q . '%');
                     }
                 });
             });

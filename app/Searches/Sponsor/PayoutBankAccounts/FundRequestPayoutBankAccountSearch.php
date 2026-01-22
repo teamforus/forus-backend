@@ -18,25 +18,33 @@ class FundRequestPayoutBankAccountSearch extends BasePayoutBankAccountSearch
         /** @var Builder|Relation|FundRequest $builder */
         $builder = parent::query();
 
-        if ($this->getFilter('q')) {
-            $builder->where(function ($builder) {
-                $builder->whereHas('identity', function ($identityBuilder) {
-                    $identityBuilder->where('email', 'LIKE', '%' . $this->getFilter('q') . '%');
+        $q = $this->getFilter('q');
+        $bsnEnabled = $this->getFilter('bsn_enabled');
+        $identityId = $this->getFilter('identity_id');
 
-                    if ($this->getFilter('bsn_enabled')) {
-                        $identityBuilder->orWhere('bsn', 'LIKE', '%' . $this->getFilter('q') . '%');
+        if ($identityId) {
+            $builder->where('identity_id', $identityId);
+        }
+
+        if ($q) {
+            $builder->where(function ($builder) use ($q, $bsnEnabled) {
+                $builder->whereHas('identity', function ($identityBuilder) use ($q, $bsnEnabled) {
+                    $identityBuilder->where('email', 'LIKE', '%' . $q . '%');
+
+                    if ($bsnEnabled) {
+                        $identityBuilder->orWhere('bsn', 'LIKE', '%' . $q . '%');
                     }
                 });
 
-                $builder->orWhereHas('fund', function ($fundBuilder) {
-                    $fundBuilder->where('name', 'LIKE', '%' . $this->getFilter('q') . '%');
+                $builder->orWhereHas('fund', function ($fundBuilder) use ($q) {
+                    $fundBuilder->where('name', 'LIKE', '%' . $q . '%');
                 });
 
-                $builder->orWhereHas('vouchers', function ($voucherBuilder) {
-                    $voucherBuilder->where('number', 'LIKE', '%' . $this->getFilter('q') . '%');
+                $builder->orWhereHas('vouchers', function ($voucherBuilder) use ($q) {
+                    $voucherBuilder->where('number', 'LIKE', '%' . $q . '%');
 
-                    if (is_numeric($this->getFilter('q'))) {
-                        $voucherBuilder->orWhereKey($this->getFilter('q'));
+                    if (is_numeric($q)) {
+                        $voucherBuilder->orWhereKey($q);
                     }
                 });
             });

@@ -89,7 +89,6 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
     private function transformBankAccount(int $id, string $iban, string $ibanName, string $type, array $timestamps): array
     {
         return [
-            'id' => $id,
             'iban' => $iban,
             'iban_name' => $ibanName,
             'type' => $type,

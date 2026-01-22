@@ -32,6 +32,7 @@ class IndexPayoutBankAccountsRequest extends BaseIndexFormRequest
             ...parent::rules(),
             'per_page' => $this->perPageRule(1000),
             'type' => ['required', 'string', Rule::in(['fund_request', 'profile_bank_account', 'reimbursement', 'payout'])],
+            'identity_id' => ['nullable', 'integer'],
         ];
     }
 }

@@ -18,15 +18,23 @@ class PayoutTransactionPayoutBankAccountSearch extends BasePayoutBankAccountSear
         /** @var Builder|Relation|VoucherTransaction $builder */
         $builder = parent::query();
 
-        if ($this->getFilter('q')) {
-            $builder->where(function ($query) {
-                $query->where('target_iban', 'LIKE', '%' . $this->getFilter('q') . '%')
-                    ->orWhere('target_name', 'LIKE', '%' . $this->getFilter('q') . '%')
-                    ->orWhereHas('voucher.identity', function ($q) {
-                        $q->where('email', 'LIKE', '%' . $this->getFilter('q') . '%');
+        $q = $this->getFilter('q');
+        $bsnEnabled = $this->getFilter('bsn_enabled');
+        $identityId = $this->getFilter('identity_id');
 
-                        if ($this->getFilter('bsn_enabled')) {
-                            $q->orWhere('bsn', 'LIKE', '%' . $this->getFilter('q') . '%');
+        if ($identityId) {
+            $builder->whereHas('voucher', fn ($query) => $query->where('identity_id', $identityId));
+        }
+
+        if ($q) {
+            $builder->where(function ($query) use ($q, $bsnEnabled) {
+                $query->where('target_iban', 'LIKE', '%' . $q . '%')
+                    ->orWhere('target_name', 'LIKE', '%' . $q . '%')
+                    ->orWhereHas('voucher.identity', function ($identityQuery) use ($q, $bsnEnabled) {
+                        $identityQuery->where('email', 'LIKE', '%' . $q . '%');
+
+                        if ($bsnEnabled) {
+                            $identityQuery->orWhere('bsn', 'LIKE', '%' . $q . '%');
                         }
                     });
             });

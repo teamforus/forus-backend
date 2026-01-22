@@ -106,7 +106,9 @@ class PayoutsController extends Controller
 
         $fund = $organization->funds()->find($request->input('fund_id'));
         $employee = $request->employee($organization);
-        $bankAccount = $request->bankAccount();
+
+        $bankAccountData = $request->bankAccountData();
+        $bankAccount = new BankAccount($bankAccountData['target_iban'] ?? null, $bankAccountData['target_name'] ?? null);
 
         $amount = $request->input('amount_preset_id') ?
             $fund->amount_presets?->find($request->input('amount_preset_id')) :
@@ -114,6 +116,7 @@ class PayoutsController extends Controller
 
         $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
             'description' => $request->input('description'),
+            ...array_only($bankAccountData, ['target_source_type', 'target_source_id']),
         ]);
 
         if ($request->input('bsn') && $organization->bsn_enabled) {
@@ -256,11 +259,15 @@ class PayoutsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyPayoutBankAccountsSponsor', [VoucherTransaction::class, $organization]);
 
+        $filters = $request->only([
+            'q', 'identity_id',
+        ]);
+
         $search = match ($request->input('type')) {
-            'fund_request' => new FundRequestPayoutBankAccountSearch($organization, $request->only('q')),
-            'profile_bank_account' => new ProfilePayoutBankAccountSearch($organization, $request->only('q')),
-            'reimbursement' => new ReimbursementPayoutBankAccountSearch($organization, $request->only('q')),
-            'payout' => new PayoutTransactionPayoutBankAccountSearch($organization, $request->only('q')),
+            'fund_request' => new FundRequestPayoutBankAccountSearch($organization, $filters),
+            'profile_bank_account' => new ProfilePayoutBankAccountSearch($organization, $filters),
+            'reimbursement' => new ReimbursementPayoutBankAccountSearch($organization, $filters),
+            'payout' => new PayoutTransactionPayoutBankAccountSearch($organization, $filters),
             default => throw new InvalidArgumentException("Invalid type: {$request->input('type')}"),
         };
 
