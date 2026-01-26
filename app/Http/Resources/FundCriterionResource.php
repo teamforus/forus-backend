@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 class FundCriterionResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'fund',
         'fund_criterion_rules',
         'record_type.translation',
         'record_type.record_type_options.translations',
@@ -22,7 +23,7 @@ class FundCriterionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -35,7 +36,7 @@ class FundCriterionResource extends BaseJsonResource
                 'id', 'record_type_key', 'operator', 'show_attachment', 'order',
                 'title', 'description', 'description_html', 'record_type', 'label',
                 'min', 'max', 'optional', 'value', 'fund_criteria_step_id',
-                'extra_description', 'extra_description_html',
+                'extra_description', 'extra_description_html', 'fund_criteria_group_id', 'fill_type',
             ]),
             ...$criterion->translateColumns($criterion->only([
                 'title',  'description_html', 'label', 'extra_description_html',

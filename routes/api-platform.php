@@ -580,7 +580,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     }
 
     $router->resource('payouts', "Api\Platform\PayoutsController")->only([
-        'index',
+        'index', 'store',
     ]);
 
     $router->resource(
@@ -1092,6 +1092,25 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource('organizations/{organization}/prevalidations', 'Api\Platform\Organizations\PrevalidationController')
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
+
+    $router->post('organizations/{organization}/prevalidation-requests/collection', 'Api\Platform\Organizations\PrevalidationRequestController@storeCollection');
+    $router->post(
+        'organizations/{organization}/prevalidation-requests/collection/validate',
+        'Api\Platform\Organizations\PrevalidationRequestController@storeCollectionValidate'
+    );
+
+    $router->get(
+        'organizations/{organization}/prevalidation-requests/resubmit-failed',
+        'Api\Platform\Organizations\PrevalidationRequestController@resubmitFailed'
+    );
+
+    $router->get(
+        'organizations/{organization}/prevalidation-requests/{prevalidationRequest}/resubmit',
+        'Api\Platform\Organizations\PrevalidationRequestController@resubmit'
+    );
+
+    $router->resource('organizations/{organization}/prevalidation-requests', 'Api\Platform\Organizations\PrevalidationRequestController')
+        ->only('index', 'destroy');
 
     $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');

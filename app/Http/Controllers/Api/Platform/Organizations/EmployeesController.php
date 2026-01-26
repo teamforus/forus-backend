@@ -98,7 +98,7 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('show', [$employee, $organization]);
 
-        return new EmployeeResource($employee);
+        return EmployeeResource::create($employee);
     }
 
     /**
@@ -128,7 +128,7 @@ class EmployeesController extends Controller
 
         EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 
-        return new EmployeeResource($employee);
+        return EmployeeResource::create($employee);
     }
 
     /**

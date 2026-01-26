@@ -13,10 +13,20 @@ use Illuminate\Http\Request;
  */
 class FundRequestResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'vouchers',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundResource::class,
+        'records' => FundRequestRecordResource::class,
+        'vouchers' => VoucherTinyResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

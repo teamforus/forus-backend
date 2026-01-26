@@ -206,11 +206,12 @@ return [
         App\Services\FileService\FileServiceProvider::class,
         App\Services\MediaService\MediaServiceProvider::class,
         App\Services\GeocodeService\GeocodeServiceProvider::class,
+        App\Services\QueryCounterService\QueryCounterServiceProvider::class,
 
         App\Services\BankService\BankServiceProvider::class,
         App\Services\Forus\Notification\NotificationServiceProvider::class,
 
-        \App\Services\Forus\TestData\TestDataProvider::class,
+        App\Services\Forus\TestData\TestDataProvider::class,
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
         App\Services\DigIdService\DigIdServiceProvider::class,
         App\Services\Forus\Session\SessionServiceProvider::class,
@@ -222,6 +223,8 @@ return [
         App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,
         App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
         App\Services\MollieService\MollieServiceProvider::class,
+
+        App\Services\IConnectApiService\IConnectServiceProvider::class,
 
         App\Services\TranslationService\TranslationServiceProvider::class,
     ],

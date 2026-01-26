@@ -7,6 +7,7 @@ use App\Http\Resources\FundRequestClarificationResource;
 use App\Http\Resources\Tiny\FundTinyResource;
 use App\Http\Resources\VoucherResource;
 use App\Http\Resources\VoucherTransactionPayoutResource;
+use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Voucher;
@@ -23,17 +24,20 @@ class FundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const array LOAD = [
-        'fund.logo.presets',
+        'fund.criteria',
         'records.record_type.translations',
-        'records.fund_request_clarifications.files.preview.presets',
-        'records.fund_request_clarifications.fund_request_record.record_type.translations',
-        'vouchers.transactions',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundTinyResource::class,
+        'records.fund_request_clarifications' => FundRequestClarificationResource::class,
+        'vouchers' => VoucherResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -45,6 +49,9 @@ class FundRequestResource extends BaseJsonResource
             'fund' => [
                 ...(new FundTinyResource($this->resource->fund))->toArray($request),
                 ...$this->resource->fund->translateColumns($this->resource->fund->only('name')),
+                'criteria' => $this->resource->fund->criteria->map(fn (FundCriterion $criterion) => $criterion->only([
+                    'id', 'record_type_key',
+                ])),
             ],
             'records' => $this->getRecordsDetails($this->resource),
             'payouts' => VoucherTransactionPayoutResource::collection($this->getPayouts($this->resource)),

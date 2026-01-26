@@ -35,22 +35,29 @@ class ValidatorFundRequestResource extends BaseJsonResource
      * @var string[]
      */
     public const array LOAD = [
-        'records.files.preview.presets',
+        'records.fund_request',
+        'records.logs',
         'records.record_type.translations',
-        'employee.organization',
-        'employee.roles.translations',
-        'employee.roles.permissions',
-        'records.fund_request_clarifications.files.preview.presets',
-        'records.fund_request_clarifications.fund_request_record.record_type.translations',
+        'records.record_type.record_type_options.translations',
         'identity.primary_email',
-        'fund.criteria.record_type.translation',
-        'fund.tags.translations',
+        'fund.fund_config',
+    ];
+
+    public const array LOAD_NESTED = [
+        'records.files' => FileResource::class,
+        'records.fund_request_clarifications' => FundRequestClarificationResource::class,
+        'employee' => EmployeeResource::class,
+        'fund.tags' => TagResource::class,
+        'fund.criteria' => FundCriterionResource::class,
+        'fund.amount_presets' => FundAmountPresetResource::class,
+        'fund.fund_formulas' => FundFormulaResource::class,
+        'fund.fund_formula_products' => FundFormulaProductResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -164,7 +171,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         BaseFormRequest $request,
         Organization $organization,
     ): Relation|Builder {
-        $employeesQuery = $organization->employees();
+        $employeesQuery = $organization->employees()->with('identity');
 
         $isManagerQuery = $organization
             ->employeesWithPermissionsQuery(Permission::MANAGE_VALIDATORS)

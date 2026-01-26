@@ -2,7 +2,7 @@
 
 return [
     'payment' => [
-        'description' => 'Beschrijving',
+        'description' => 'Platform Forus',
     ],
     'refund' => [
         'description' => 'Betaling terugbetalen',

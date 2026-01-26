@@ -1,6 +1,6 @@
 <?php
 
-namespace Browser\Exports;
+namespace Tests\Browser\Exports;
 
 use App\Exports\EventLogsExport;
 use App\Models\Employee;

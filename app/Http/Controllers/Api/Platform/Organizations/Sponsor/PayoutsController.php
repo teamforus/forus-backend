@@ -180,7 +180,7 @@ class PayoutsController extends Controller
             'data->uploaded_file_meta->created_ids' => Arr::pluck($payouts, 'id'),
         ])->update();
 
-        return VoucherTransactionPayoutResource::collection($payouts);
+        return VoucherTransactionPayoutResource::createCollection($payouts);
     }
 
     /**

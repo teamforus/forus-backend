@@ -16,16 +16,18 @@ class VoucherTransactionResource extends BaseJsonResource
      */
     public const array LOAD = [
         'voucher_transaction_bulk',
-        'provider.logo.presets',
-        'voucher.fund.logo.presets',
-        'product.organization',
-        'product.photos.presets',
+    ];
+
+    public const array LOAD_NESTED = [
+        'provider.logo' => MediaResource::class,
+        'voucher.fund.logo' => MediaResource::class,
+        'product' => ProductSmallResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

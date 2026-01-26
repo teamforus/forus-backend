@@ -349,7 +349,7 @@ class Reimbursement extends Model
 
         ReimbursementAssigned::broadcast($this, $employee);
 
-        return $this;
+        return $this->refresh();
     }
 
     /**
@@ -363,7 +363,7 @@ class Reimbursement extends Model
 
         ReimbursementResigned::broadcast($this);
 
-        return $this;
+        return $this->refresh();
     }
 
     /**
@@ -375,7 +375,7 @@ class Reimbursement extends Model
     {
         DB::transaction(fn () => $this->resolve(true, $note));
 
-        return $this;
+        return $this->refresh();
     }
 
     /**
@@ -386,7 +386,7 @@ class Reimbursement extends Model
     {
         DB::transaction(fn () => $this->resolve(false, $note, $reason));
 
-        return $this;
+        return $this->refresh();
     }
 
     /**

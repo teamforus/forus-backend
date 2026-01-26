@@ -185,6 +185,11 @@ return [
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'bsn' => 'Het :attribute moet een geldig burgerservicenummer (BSN) zijn.',
     'business_type_id' => 'Organisatie type',
+    'payout' => [
+        'amount_between' => 'Het uitbetalingsbedrag moet tussen :min en :max liggen.',
+        'amount_exact' => 'Het uitbetalingsbedrag moet precies :amount zijn.',
+        'count_reached' => 'Het maximale aantal uitbetalingen voor dit tegoed (:count) is bereikt.',
+    ],
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
@@ -233,6 +238,8 @@ return [
         'required_record' => 'Het veld :attribute is verplicht voor de fondaanvraag.',
         'invalid_record' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
         'extra_records' => 'Er zijn extra records ingediend die niet zijn toegestaan.',
+        'invalid_prefill_value' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
+        'group_required' => 'Fill at least one of records',
     ],
     'attributes' => [
         'pin_code' => 'pincode',

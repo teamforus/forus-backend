@@ -13,8 +13,10 @@ class PhysicalCardTypeResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public const array LOAD = [
-        'photo.presets',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'photo' => MediaResource::class,
     ];
 
     /**

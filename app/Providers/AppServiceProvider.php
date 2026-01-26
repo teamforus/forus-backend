@@ -31,6 +31,7 @@ use App\Models\Office;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
+use App\Models\PrevalidationRequest;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
@@ -91,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
         'fund_request_clarification' => FundRequestClarification::class,
         'voucher_record' => VoucherRecord::class,
         'voucher_transaction' => VoucherTransaction::class,
+        'prevalidation_request' => PrevalidationRequest::class,
         'voucher_transaction_bulk' => VoucherTransactionBulk::class,
         'reservation_extra_payment' => ReservationExtraPayment::class,
     ];

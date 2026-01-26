@@ -89,10 +89,10 @@ class FundPreCheckWebshopSearchFilterTest extends BaseWebshopSearchFilter
         // add criteria
         $recordType = RecordType::create([
             'key' => token_generator()->generate(16),
-            'type' => 'number',
+            'type' => RecordType::TYPE_NUMBER,
             'criteria' => true,
-            'control_type' => 'number',
             'pre_check' => true,
+            'control_type' => RecordType::CONTROL_TYPE_NUMBER,
         ]);
 
         $criterion = [
@@ -138,8 +138,8 @@ class FundPreCheckWebshopSearchFilterTest extends BaseWebshopSearchFilter
             $record_key = $criterion->record_type_key;
 
             $selector = match ($criterion->record_type->control_type) {
-                'number' => '@controlNumber' . $record_key,
-                'text' => '@controlText' . $record_key,
+                RecordType::CONTROL_TYPE_NUMBER => '@controlNumber' . $record_key,
+                RecordType::CONTROL_TYPE_TEXT => '@controlText' . $record_key,
             };
 
             $browser->waitFor($selector);

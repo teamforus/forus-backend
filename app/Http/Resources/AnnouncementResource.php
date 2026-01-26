@@ -14,7 +14,7 @@ class AnnouncementResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws Throwable
      * @return array
      */

@@ -9,6 +9,7 @@ use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\MollieConnectionSubscriber;
 use App\Listeners\OrganizationSubscriber;
+use App\Listeners\PrevalidationRequestSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\ReimbursementSubscriber;
@@ -39,6 +40,7 @@ class EventServiceProvider extends ServiceProvider
         MollieConnectionSubscriber::class,
         ProductReservationSubscriber::class,
         VoucherTransactionsSubscriber::class,
+        PrevalidationRequestSubscriber::class,
         ReservationExtraPaymentSubscriber::class,
     ];
 

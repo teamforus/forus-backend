@@ -24,38 +24,33 @@ use Illuminate\Support\Facades\Gate;
 class FundResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'faq',
         'tags',
         'parent',
         'children',
-        'logo.presets',
-        'criteria.fund',
-        'criteria.fund_criterion_rules',
-        'criteria.record_type.translation',
-        'criteria.record_type.record_type_options.translations',
-        'organization.tags.translations',
-        'organization.offices',
-        'organization.contacts',
-        'organization.logo.presets',
-        'organization.reservation_fields',
-        'organization.bank_connection_active',
-        'organization.business_type.translations',
-        'organization.employees.roles.permissions',
-        'fund_config.implementation.page_provider',
-        'fund_formula_products',
+        'organization',
         'provider_organizations_approved.employees',
-        'tags_webshop',
-        'fund_formulas.record_type.translations',
-        'fund_formulas.record_type.record_type_options.translations',
-        'fund_formulas.fund.fund_config.implementation',
         'top_up_transactions',
         'fund_form',
+    ];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+        'organization' => OrganizationResource::class,
+        'criteria' => FundCriterionResource::class,
+        'criteria_steps' => FundCriteriaStepResource::class,
+        'criteria_groups' => FundCriteriaGroupResource::class,
+        'faq' => FaqResource::class,
+        'fund_formulas' => FundFormulaResource::class,
+        'fund_formula_products' => FundFormulaProductResource::class,
+        'amount_presets' => FundAmountPresetResource::class,
+        'tags_webshop' => TagResource::class,
+        'fund_config.implementation' => ImplementationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -104,6 +99,7 @@ class FundResource extends BaseJsonResource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'criteria_steps' => FundCriteriaStepResource::collection($fund->criteria_steps->sortBy('order')),
+            'criteria_groups' => FundCriteriaGroupResource::collection($fund->criteria_groups->sortBy('order')),
             'faq' => FaqResource::collection($fund->faq),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => FundFormulaProductResource::collection($fund->fund_formula_products),
@@ -206,6 +202,7 @@ class FundResource extends BaseJsonResource
                     'key', 'allow_fund_requests', 'allow_fund_request_prefill', 'allow_prevalidations',
                     'allow_direct_requests', 'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
                     'email_required', 'contact_info_enabled', 'contact_info_required', 'allow_reimbursements',
+                    'allow_voucher_payouts', 'allow_voucher_payout_amount', 'allow_voucher_payout_count',
                     'contact_info_message_custom', 'contact_info_message_text', 'bsn_confirmation_time',
                     'auth_2fa_policy', 'auth_2fa_remember_ip', 'auth_2fa_restrict_reimbursements',
                     'auth_2fa_restrict_auth_sessions', 'auth_2fa_restrict_emails',
@@ -267,6 +264,12 @@ class FundResource extends BaseJsonResource
         return [
             'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
             'csv_required_keys' => $fund->requiredPrevalidationKeys(false, []),
+            'csv_required_keys_by_groups' => $fund->requiredPrevalidationKeysByGroups(),
+            'csv_required_keys_except_prefill' => $fund->requiredPrevalidationKeys(
+                withOptional: false,
+                values: [],
+                exceptPrefillKeys: true
+            ),
         ];
     }
 

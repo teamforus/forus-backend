@@ -52,10 +52,10 @@ class FundRequestRequiredRecordsRule extends BaseFundRequestRule
                 ->pluck('record_type_key')
                 ->toArray();
 
-            $existingRecordValues = $this->fund->getTrustedRecordOfTypes(
+            $existingRecordValues = $this->request->identity() ? $this->fund->getTrustedRecordOfTypes(
                 $this->request->identity(),
                 $requiredRecordTypes
-            );
+            ) : [];
 
             $allRecordValues = array_merge($existingRecordValues, $submittedRecordValues);
 

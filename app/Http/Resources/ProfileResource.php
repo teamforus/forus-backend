@@ -16,10 +16,19 @@ class ProfileResource extends BaseJsonResource
 {
     public static $wrap = null;
 
+    public const array LOAD = [
+        'record_bsn',
+        'sessions',
+    ];
+
+    public const array LOAD_NESTED = [
+        'emails' => IdentityEmailResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

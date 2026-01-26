@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\IdentityEmail;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Database\Eloquent\Builder;
@@ -86,6 +87,36 @@ class VoucherTransactionQuery
         Builder|Relation|VoucherTransaction $builder,
     ): Builder|Relation|VoucherTransaction {
         return $builder->whereIn('target', VoucherTransaction::TARGETS_INCOMING);
+    }
+
+    /**
+     * @param Builder|Relation|VoucherTransaction $builder
+     * @return Builder|Relation|VoucherTransaction
+     */
+    public static function whereRequesterPayouts(
+        Builder|Relation|VoucherTransaction $builder,
+    ): Builder|Relation|VoucherTransaction {
+        return $builder
+            ->where('target', VoucherTransaction::TARGET_PAYOUT)
+            ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param bool $lock
+     * @return int
+     */
+    public static function countRequesterPayouts(Voucher $voucher, bool $lock = false): int
+    {
+        $query = self::whereRequesterPayouts(
+            VoucherTransaction::query()->where('voucher_id', $voucher->id),
+        );
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->count();
     }
 
     /**

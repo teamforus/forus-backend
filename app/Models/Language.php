@@ -98,6 +98,6 @@ class Language extends BaseModel
      */
     public static function getAllLanguages(): Collection|Arrayable
     {
-        return Cache::driver('array')->remember('languages-all', 0, fn () => self::get());
+        return Cache::driver('array')->remember('languages-all', 5, fn () => self::get());
     }
 }

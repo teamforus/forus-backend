@@ -3,10 +3,12 @@
 namespace Tests\Traits;
 
 use App\Models\Fund;
+use App\Models\FundCriteriaGroup;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Organization;
+use App\Models\RecordType;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -37,6 +39,51 @@ trait MakesTestFundRequests
         $identity->setBsnRecord('123456789');
 
         return $this->postJson($url, [...compact('records'), ...$data], $this->makeApiHeaders($proxy, $headers));
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $title
+     * @param string|null $description
+     * @param int $order
+     * @param bool $required
+     * @return FundCriteriaGroup
+     */
+    protected function makeCriteriaGroup(
+        Fund $fund,
+        string $title = 'Criteria group',
+        ?string $description = null,
+        int $order = 1,
+        bool $required = false,
+    ): FundCriteriaGroup {
+        return $fund->criteria_groups()->forceCreate([
+            'title' => $title,
+            'description' => $description,
+            'order' => $order,
+            'required' => $required,
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param string $type
+     * @param string $controlType
+     * @param string|null $key
+     * @return RecordType
+     */
+    protected function makeCriteriaRecordType(
+        Organization $organization,
+        string $type,
+        string $controlType,
+        ?string $key = null,
+    ): RecordType {
+        return RecordType::create([
+            'key' => $key ?? token_generator()->generate(16),
+            'type' => $type,
+            'criteria' => true,
+            'control_type' => $controlType,
+            'organization_id' => $organization->id,
+        ]);
     }
 
     /**

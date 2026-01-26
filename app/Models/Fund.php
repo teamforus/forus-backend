@@ -20,6 +20,7 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Exception\CommonMarkException;
@@ -84,6 +86,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $children_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read Collection|\App\Models\FundCriteriaGroup[] $criteria_groups
+ * @property-read int|null $criteria_groups_count
  * @property-read Collection|\App\Models\FundCriteriaStep[] $criteria_steps
  * @property-read int|null $criteria_steps_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -138,6 +142,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $payout_vouchers_count
  * @property-read Collection|\App\Models\PhysicalCardType[] $physical_card_types
  * @property-read int|null $physical_card_types_count
+ * @property-read Collection|\App\Models\PrevalidationRequest[] $prevalidation_requests
+ * @property-read int|null $prevalidation_requests_count
  * @property-read Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read Collection|\App\Models\Product[] $products
@@ -264,6 +270,9 @@ class Fund extends BaseModel
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
+    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
+    public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -353,6 +362,15 @@ class Fund extends BaseModel
     public function criteria_steps(): HasMany
     {
         return $this->hasMany(FundCriteriaStep::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function criteria_groups(): HasMany
+    {
+        return $this->hasMany(FundCriteriaGroup::class);
     }
 
     /**
@@ -983,6 +1001,15 @@ class Fund extends BaseModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function prevalidation_requests(): HasMany
+    {
+        return $this->hasMany(PrevalidationRequest::class);
+    }
+
+    /**
      * @param Identity $identity
      * @param array $recordTypes
      * @return array|Record[]
@@ -1139,10 +1166,14 @@ class Fund extends BaseModel
     /**
      * @param bool $withOptional
      * @param array $values
+     * @param bool $exceptPrefillKeys
      * @return array
      */
-    public function requiredPrevalidationKeys(bool $withOptional, array $values): array
-    {
+    public function requiredPrevalidationKeys(
+        bool $withOptional,
+        array $values,
+        bool $exceptPrefillKeys = false,
+    ): array {
         $criteriaKeys = $withOptional ?
             $this->criteria
                 ?->pluck('record_type_key')
@@ -1165,7 +1196,40 @@ class Fund extends BaseModel
             ...$formulaKeys,
         ]);
 
+        if ($exceptPrefillKeys) {
+            // except criteria that must be prefilled
+            // except children_age_groups record type keys
+            // except custom record type keys like "partner living same address" and "children same address"
+            $prefillRecordTypeKeys = $this->criteria
+                ?->filter(fn (FundCriterion $criterion) => $criterion->fill_type === FundCriterion::FILL_TYPE_PREFILL)
+                ?->pluck('record_type_key')
+                ?->toArray() ?? [];
+
+            $prefillRecordTypeKeys = [
+                ...$prefillRecordTypeKeys,
+                ...Arr::pluck(
+                    Config::get("forus.children_age_groups.{$this->fund_config->key}", []),
+                    'record_type_key'
+                ),
+                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+                static::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            ];
+
+            $list = array_filter($list, fn ($item) => !in_array($item, $prefillRecordTypeKeys));
+        }
+
         return array_values(array_unique($list));
+    }
+
+    /**
+     * @return array
+     */
+    public function requiredPrevalidationKeysByGroups(): array
+    {
+        return $this->criteria
+            ?->filter(fn (FundCriterion $criterion) => $criterion->group?->required)
+            ?->pluck('record_type_key')
+            ?->toArray() ?? [];
     }
 
     /**
@@ -1444,12 +1508,15 @@ class Fund extends BaseModel
      * @param Identity $identity
      * @param array $records
      * @param string|null $contactInformation
+     * @param array|null $iConnectPrefills
+     * @throws PersonBsnApiException
      * @return FundRequest
      */
     public function makeFundRequest(
         Identity $identity,
         array $records,
-        ?string $contactInformation = null
+        ?string $contactInformation = null,
+        ?array $iConnectPrefills = null,
     ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
@@ -1473,6 +1540,26 @@ class Fund extends BaseModel
             ]));
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
+        }
+
+        if ($iConnectPrefills) {
+            if (is_array($iConnectPrefills['error'])) {
+                throw new PersonBsnApiException(Arr::get($iConnectPrefills, 'error.message'));
+            }
+
+            $data = [
+                ...Arr::get($iConnectPrefills, 'person', []),
+                ...Arr::get($iConnectPrefills, 'partner', []),
+                ...Arr::collapse(Arr::get($iConnectPrefills, 'children', [])),
+                ...Arr::get($iConnectPrefills, 'children_groups_counts', []),
+            ];
+
+            foreach ($data as $item) {
+                $fundRequest->records()->firstOrCreate([
+                    'record_type_key' => Arr::get($item, 'record_type_key'),
+                    'value' => Arr::get($item, 'value') ?? '',
+                ]);
+            }
         }
 
         return $fundRequest;

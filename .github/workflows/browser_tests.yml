@@ -20,8 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1,2,3,4,5,6 ]
-        total: [ 6 ]
+        shard: [ 1, 2, 3, 4, 5 ]
+        total: [ 5 ]
 
     defaults:
       run:
@@ -126,7 +126,7 @@ jobs:
             start=\$(( (shard - 1) * shard_size )); \
             subset=( \"\${files[@]:start:shard_size}\" ); \
             if [ \${#subset[@]} -gt 0 ]; then \
-              php artisan dusk \"\${subset[@]}\" --testdox --stop-on-error --stop-on-failure; \
+              php artisan dusk \"\${subset[@]}\" --testdox; \
             else \
               echo \"No tests for shard \$shard\"; \
             fi"

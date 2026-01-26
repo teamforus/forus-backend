@@ -13,6 +13,10 @@ class IdentityResource extends BaseJsonResource
 {
     public static $wrap = null;
 
+    public const array LOAD = [
+        'record_bsn',
+    ];
+
     /**
      * Transform the resource into an array.
      *
