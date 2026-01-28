@@ -23,7 +23,7 @@ class SponsorIdentityResource extends BaseJsonResource
 {
     public const array LOAD = [
         'emails',
-        'vouchers',
+        'vouchers.transactions',
         'record_bsn',
         'primary_email',
         'reimbursements.voucher.fund',
@@ -53,7 +53,7 @@ class SponsorIdentityResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Illuminate\Http\Request;
 
 /**
  * @property Organization $resource
@@ -20,10 +21,10 @@ class OrganizationFeaturesResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $organization = $this->resource;
 

@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Models\OfficeSchedule;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property OfficeSchedule $resource
  */
-class OfficeScheduleResource extends JsonResource
+class OfficeScheduleResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.

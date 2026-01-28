@@ -22,15 +22,18 @@ class SponsorVoucherTransactionResource extends BaseJsonResource
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'voucher.product_reservation',
         'voucher_transaction_bulk',
-        'product.photos.presets',
         'provider:id,name,iban',
-        'notes_sponsor',
+    ];
+
+    public const array LOAD_NESTED = [
+        'product' => ProductTinyResource::class,
+        'notes_sponsor' => VoucherTransactionNoteResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

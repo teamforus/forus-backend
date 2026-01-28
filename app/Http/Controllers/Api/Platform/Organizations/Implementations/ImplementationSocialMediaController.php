@@ -60,7 +60,7 @@ class ImplementationSocialMediaController extends Controller
             'type', 'url', 'title',
         ]));
 
-        return new ImplementationSocialMediaResource($socialMedia);
+        return ImplementationSocialMediaResource::create($socialMedia);
     }
 
     /**
@@ -81,7 +81,7 @@ class ImplementationSocialMediaController extends Controller
         $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        return new ImplementationSocialMediaResource($socialMedia);
+        return ImplementationSocialMediaResource::create($socialMedia);
     }
 
     /**
@@ -108,7 +108,7 @@ class ImplementationSocialMediaController extends Controller
             'type', 'url', 'title',
         ]));
 
-        return new ImplementationSocialMediaResource($socialMedia);
+        return ImplementationSocialMediaResource::create($socialMedia);
     }
 
     /**

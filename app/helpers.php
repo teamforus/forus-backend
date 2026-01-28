@@ -203,29 +203,6 @@ if (!function_exists('log_debug')) {
     }
 }
 
-if (!function_exists('api_dependency_requested')) {
-    /**
-     * @param string $key
-     * @param \Illuminate\Http\Request|null $request
-     * @param bool $default
-     * @return bool
-     */
-    function api_dependency_requested(
-        string $key,
-        \Illuminate\Http\Request $request = null,
-        bool $default = true
-    ): bool {
-        $requestData = $request ?? request();
-        $dependency = $requestData->input('dependency');
-
-        if (is_array($dependency)) {
-            return in_array($key, $dependency, true);
-        }
-
-        return $default;
-    }
-}
-
 if (!function_exists('filter_bool')) {
     /**
      * @param $value

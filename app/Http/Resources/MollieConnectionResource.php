@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Services\MollieService\Models\MollieConnection;
+use Illuminate\Http\Request;
 
 /**
  * @property MollieConnection $resource
@@ -10,18 +11,22 @@ use App\Services\MollieService\Models\MollieConnection;
 class MollieConnectionResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'profiles',
-        'profile_active',
-        'profile_pending',
+        'organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'profiles' => MollieConnectionProfileResource::class,
+        'profile_active' => MollieConnectionProfileResource::class,
+        'profile_pending' => MollieConnectionProfileResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         if (is_null($connection = $this->resource)) {
             return null;

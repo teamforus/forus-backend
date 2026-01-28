@@ -37,7 +37,7 @@ class PhysicalCardsController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
         $this->authorize('create', [PhysicalCard::class, $fundPhysicalCardType, $voucher]);
 
-        return new PhysicalCardResource($voucher->addPhysicalCard(
+        return PhysicalCardResource::create($voucher->addPhysicalCard(
             $request->post('code'),
             $fundPhysicalCardType->physical_card_type,
         ));

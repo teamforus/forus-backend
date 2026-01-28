@@ -19,23 +19,22 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * @property VoucherToken|Voucher $resource
+ * @property Voucher $resource
  */
 class ProviderAppVoucherResource extends BaseJsonResource
 {
-    protected BaseFormRequest $request;
+    public const array LOAD = [
+        'fund.organization',
+        'fund.fund_config',
+        'product_vouchers',
+    ];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [
-            ...parent::load($append),
-            ...ProviderAppProductResource::load('product'),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'fund.logo' => MediaCompactResource::class,
+        'product' => ProviderAppProductResource::class,
+    ];
+
+    protected BaseFormRequest $request;
 
     /**
      * Transform the resource into an array.

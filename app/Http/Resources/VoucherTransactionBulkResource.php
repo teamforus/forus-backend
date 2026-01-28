@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\VoucherTransactionBulk;
 use App\Services\BankService\Resources\BankResource;
+use Illuminate\Http\Request;
 
 /**
  * @property-read VoucherTransactionBulk $resource
@@ -12,16 +13,19 @@ class VoucherTransactionBulkResource extends BaseJsonResource
 {
     public const array LOAD = [
         'voucher_transactions',
-        'bank_connection.bank',
+    ];
+
+    public const array LOAD_NESTED = [
+        'bank_connection.bank' => BankResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $transactionBulk = $this->resource;
         $executionDate = $this->resource->execution_date;

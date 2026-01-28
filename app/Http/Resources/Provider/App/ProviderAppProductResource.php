@@ -16,12 +16,15 @@ use Illuminate\Http\Request;
  */
 class ProviderAppProductResource extends ProductResource
 {
-    public const array LOAD = [
-        'fund_provider_products.fund_provider.fund.organization',
-        'fund_provider_products.product.photos.presets',
-        'fund_provider_products.product.product_category.translations',
-        'fund_provider_products.product.organization.logo.presets',
-        'fund_provider_products.product.organization.business_type.translations',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'fund_provider_products.product.photos' => MediaResource::class,
+        'fund_provider_products.product.product_category' => ProductCategoryResource::class,
+        'fund_provider_products.product.organization' => OrganizationBasicResource::class,
+        'fund_provider_products.fund_provider.fund.organization' => OrganizationBasicResource::class,
     ];
 
     protected ?Voucher $voucher = null;

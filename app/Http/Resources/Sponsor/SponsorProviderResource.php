@@ -9,8 +9,10 @@ use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationWithPrivateResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
+use App\Http\Resources\TagResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,22 +21,18 @@ use Illuminate\Support\Collection;
 class SponsorProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'tags',
         'funds',
-        'logo.presets',
         'fund_providers.fund',
-        'offices.photo.presets',
-        'offices.organization.employees.roles.translations',
-        'offices.organization.logo',
-        'offices.organization.business_type.translations',
-        'offices.schedules',
-        'employees.roles.translations',
-        'employees.roles.permissions',
-        'employees.organization',
-        'employees.identity.primary_email',
-        'business_type.translations',
         'bank_connection_active',
         'last_employee_session',
+    ];
+
+    public const array LOAD_NESTED = [
+        'tags' => TagResource::class,
+        'logo' => MediaCompactResource::class,
+        'offices' => OfficeResource::class,
+        'employees' => EmployeeResource::class,
+        'business_type' => BusinessTypeResource::class,
     ];
 
     protected ?Organization $sponsor_organization = null;
@@ -42,10 +40,10 @@ class SponsorProviderResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $provider = $this->resource;
 

@@ -4,17 +4,20 @@ namespace App\Http\Resources;
 
 use App\Models\FundProviderChat;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property FundProviderChat $resource
  */
-class FundProviderChatResource extends JsonResource
+class FundProviderChatResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'fund_provider',
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param  Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

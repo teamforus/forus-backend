@@ -4,16 +4,17 @@ namespace App\Http\Resources;
 
 use App\Models\Organization;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property Organization $resource
  */
-class ProviderFinancialResource extends JsonResource
+class ProviderFinancialResource extends BaseJsonResource
 {
-    public static array $load = [
-        'logo',
-        'business_type.translations',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaCompactResource::class,
+        'business_type' => BusinessTypeResource::class,
     ];
 
     /**

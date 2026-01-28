@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Models\Employee;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Http\Request;
 
 /**
  * @property EventLog $resource
@@ -28,10 +29,10 @@ class EventLogResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $eventLog = $this->resource;
         abort_unless($this->employee instanceof Employee, 403);

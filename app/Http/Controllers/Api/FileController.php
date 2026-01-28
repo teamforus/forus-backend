@@ -73,7 +73,7 @@ class FileController extends Controller
             'identity_address' => $request->auth_address(),
         ]);
 
-        return new FileResource($file);
+        return FileResource::create($file);
     }
 
     /**
@@ -99,7 +99,7 @@ class FileController extends Controller
     {
         $this->authorize('show', $file);
 
-        return new FileResource($file);
+        return FileResource::create($file);
     }
 
     /**
