@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
-use App\Services\Forus\TestData\TestData;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Carbon\Carbon;
@@ -477,14 +476,5 @@ trait VoucherTestTrait
         $this->assertNotNull($fund, 'Fund not found');
 
         return $fund;
-    }
-
-    /**
-     * @throws Throwable
-     * @return int
-     */
-    protected function randomFakeBsn(): int
-    {
-        return TestData::randomFakeBsn();
     }
 }

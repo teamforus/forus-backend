@@ -6,19 +6,21 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
-use App\Rules\Base\IbanNameRule;
-use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundQuery;
+use App\Traits\ResolvesPayoutBankAccountPayload;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * @property Organization $organization
  */
 class StorePayoutTransactionRequest extends BaseFormRequest
 {
+    use ResolvesPayoutBankAccountPayload;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -40,6 +42,10 @@ class StorePayoutTransactionRequest extends BaseFormRequest
 
         return [
             'fund_id' => $this->fundIdsRules(),
+            'fund_request_id' => $this->fundRequestIdRules(),
+            'profile_bank_account_id' => $this->profileBankAccountIdRules(),
+            'reimbursement_id' => $this->reimbursementIdRules(),
+            'payout_transaction_id' => $this->payoutTransactionIdRules(),
             'amount' => [
                 'required_without:amount_preset_id',
                 ...$this->amountRules($fund),
@@ -54,6 +60,16 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             'email' => ['nullable', ...$this->emailRules()],
             'description' => $this->descriptionRules(),
         ];
+    }
+
+    /**
+     * @param Validator $validator
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $validator) => $this->validateSingleBankAccountSource($validator));
     }
 
     /**
@@ -85,30 +101,6 @@ class StorePayoutTransactionRequest extends BaseFormRequest
             Rule::exists('voucher_transactions', 'upload_batch_id')
                 ->whereNotNull('employee_id')
                 ->where('employee_id', $this->employee($this->organization)?->id),
-        ];
-    }
-
-    /**
-     * @param bool $nullable
-     * @return array
-     */
-    protected function targetIbanRules(bool $nullable = false): array
-    {
-        return [
-            $nullable ? 'nullable' : 'required',
-            new IbanRule(),
-        ];
-    }
-
-    /**
-     * @param bool $nullable
-     * @return string[]
-     */
-    protected function targetNameRules(bool $nullable = false): array
-    {
-        return [
-            $nullable ? 'nullable' : 'required',
-            new IbanNameRule(),
         ];
     }
 
