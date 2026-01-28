@@ -175,7 +175,7 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
 
         $product->forceFill([
             'product_category_id' => $this->makeProductCategory()->id,
-            'description_text' => $this->faker->sentence,
+            'description_text' => $this->faker->sentence(),
             'reservation_enabled' => true,
         ])->save();
 

@@ -49,7 +49,7 @@ class PrevalidationsTest extends DuskTestCase
         ], [
             'record_type_key' => 'test_iban',
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
-            'assert_valid' => fake()->iban,
+            'assert_valid' => fake()->iban(),
             'assert_invalid' => '123456789',
         ], [
             'record_type_key' => 'test_date',
@@ -59,7 +59,7 @@ class PrevalidationsTest extends DuskTestCase
         ], [
             'record_type_key' => 'test_email',
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
-            'assert_valid' => fake()->email,
+            'assert_valid' => fake()->email(),
             'assert_invalid' => 'fake_email',
         ], [
             'record_type_key' => 'test_string_any',
@@ -171,9 +171,9 @@ class PrevalidationsTest extends DuskTestCase
         // prepare new prevalidation with unique primary_key
         $newPrevalidationData = [
             'uid' => token_generator()->generate(32),
-            'test_iban' => fake()->iban,
+            'test_iban' => fake()->iban(),
             'test_date' => '01-01-2010',
-            'test_email' => fake()->email,
+            'test_email' => fake()->email(),
             'test_string_any' => 'lorem_ipsum',
             'test_number' => 7,
             'test_select' => 'foo',
@@ -253,9 +253,9 @@ class PrevalidationsTest extends DuskTestCase
         // prepare new prevalidation with unique primary_key
         $newPrevalidationData = [
             'uid' => token_generator()->generate(32),
-            'test_iban' => fake()->iban,
+            'test_iban' => fake()->iban(),
             'test_date' => '01-01-2010',
-            'test_email' => fake()->email,
+            'test_email' => fake()->email(),
             'test_string_any' => 'lorem_ipsum',
             'test_number' => 7,
             'test_select' => 'foo',
@@ -393,9 +393,9 @@ class PrevalidationsTest extends DuskTestCase
     ): Prevalidation {
         // create prevalidation
         $response = $this->apiMakeStorePrevalidationRequest($organization, $fund, [
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
             $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 7),
             $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),

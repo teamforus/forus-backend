@@ -175,19 +175,19 @@ class EmailLogTest extends TestCase
         $voucher2 = $this->makeTestVoucher($this->makeTestFund($organization2), $identity);
 
         $voucher1->makePhysicalCardRequest([
-            'address' => $this->faker->streetAddress,
-            'house' => $this->faker->buildingNumber,
-            'house_addition' => $this->faker->buildingNumber,
-            'postcode' => $this->faker->postcode,
-            'city' => $this->faker->city,
+            'address' => $this->faker->streetAddress(),
+            'house' => $this->faker->buildingNumber(),
+            'house_addition' => $this->faker->buildingNumber(),
+            'postcode' => $this->faker->postcode(),
+            'city' => $this->faker->city(),
         ], true);
 
         $voucher2->makePhysicalCardRequest([
-            'address' => $this->faker->streetAddress,
-            'house' => $this->faker->buildingNumber,
-            'house_addition' => $this->faker->buildingNumber,
-            'postcode' => $this->faker->postcode,
-            'city' => $this->faker->city,
+            'address' => $this->faker->streetAddress(),
+            'house' => $this->faker->buildingNumber(),
+            'house_addition' => $this->faker->buildingNumber(),
+            'postcode' => $this->faker->postcode(),
+            'city' => $this->faker->city(),
         ], true);
 
         $this->assertIdentityEmailLogVisibilityForOrganizations(

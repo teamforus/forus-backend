@@ -63,7 +63,7 @@ class StorePrevalidationsRequest extends BaseFormRequest
     public function attributes(): array
     {
         return RecordType::get()->mapWithKeys(static function (RecordType $recordType) {
-            return ["data.$recordType->key" => strtolower($recordType->name)];
+            return ["data.$recordType->key" => strtolower($recordType->name ?? '')];
         })->toArray();
     }
 

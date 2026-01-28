@@ -27,7 +27,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     {
         parent::__construct();
         $this->maxAttempts = 1;
-        $this->decayMinutes = Config::get('forus.transactions.hard_limit') / 60;
+        $this->decayMinutes = (int) (Config::get('forus.transactions.hard_limit') / 60);
     }
 
     /**

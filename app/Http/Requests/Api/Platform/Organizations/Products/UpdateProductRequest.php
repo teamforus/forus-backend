@@ -35,9 +35,9 @@ class UpdateProductRequest extends BaseProductRequest
             ...$this->reservationCustomFieldRules($product),
 
             'total_amount' => [
-                $product->unlimited_stock ? null : 'required',
+                ...$product->unlimited_stock ? [] : ['required'],
                 'numeric',
-                $product->unlimited_stock ? null : 'min:' . $minAmount,
+                ...$product->unlimited_stock ? [] : ['min:' . $minAmount],
             ],
         ];
     }

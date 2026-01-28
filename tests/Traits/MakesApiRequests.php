@@ -484,9 +484,9 @@ trait MakesApiRequests
     ): TestResponse {
         return $this->apiMakeStorePrevalidationRequest($organization, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
             $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
             $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 7),

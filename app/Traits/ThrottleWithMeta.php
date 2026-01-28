@@ -7,13 +7,12 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-/**
- * @property float $decayMinutes
- * @property float $maxAttempts
- */
 trait ThrottleWithMeta
 {
     use ThrottlesLogins;
+
+    protected int $decayMinutes = 1;
+    protected int $maxAttempts = 5;
 
     /**
      * @var string

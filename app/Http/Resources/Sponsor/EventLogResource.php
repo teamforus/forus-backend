@@ -24,6 +24,8 @@ class EventLogResource extends BaseJsonResource
         ],
     ];
 
+    protected ?Employee $employee = null;
+
     /**
      * Transform the resource into an array.
      *

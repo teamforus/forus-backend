@@ -6,8 +6,8 @@ use App\Http\Requests\BaseFormRequest;
 
 class RedirectBankConnectionRequest extends BaseFormRequest
 {
-    protected $maxAttempts = 5;
-    protected $decayMinutes = 30;
+    protected int $maxAttempts = 5;
+    protected int $decayMinutes = 30;
 
     /**
      * Determine if the user is authorized to make this request.

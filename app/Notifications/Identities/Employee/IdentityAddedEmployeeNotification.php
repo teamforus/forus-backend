@@ -28,7 +28,7 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 
         $confirmationLink = sprintf(
             '%s/confirmation/email/%s',
-            rtrim(Implementation::byKey($implementation_key)['url_' . $client_type], '/'),
+            rtrim(Implementation::byKey($implementation_key)['url_' . $client_type] ?? '', '/'),
             $identity->makeIdentityPoxy()->exchange_token,
         );
 

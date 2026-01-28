@@ -3,12 +3,11 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
+use App\Models\Organization;
 use App\Models\ProfileRelation;
-use App\Services\MollieService\Objects\Organization;
 use Illuminate\Http\Request;
 
 /**
- * @property Organization $organization
  * @property ProfileRelation $resource
  */
 class IdentityRelationResource extends BaseJsonResource
@@ -17,6 +16,8 @@ class IdentityRelationResource extends BaseJsonResource
         'profile.identity' => SponsorIdentityResource::class,
         'related_profile.identity' => SponsorIdentityResource::class,
     ];
+
+    protected ?Organization $organization = null;
 
     /**
      * @param Request $request

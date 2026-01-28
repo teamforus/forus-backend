@@ -14,8 +14,11 @@ class PhysicalCardRequestsController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $maxAttempts = 3;
-    private $decayMinutes = 60 * 24;
+    public function __construct()
+    {
+        $this->maxAttempts = 3;
+        $this->decayMinutes = 60 * 24;
+    }
 
     /**
      * Display a listing of the resource.

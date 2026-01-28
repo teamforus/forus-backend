@@ -1313,7 +1313,7 @@ class Voucher extends BaseModel
         $zipFilePath = stream_get_meta_data($zipFile)['uri'];
 
         $zip = new ZipArchive();
-        $zip->open($zipFilePath, ZipArchive::CREATE);
+        $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         if ($qrFormat === 'png') {
             $zip->addEmptyDir($imagesDirName);

@@ -399,7 +399,7 @@ class ReservationExtraPayment extends Model
      */
     public function expiresIn(): ?int
     {
-        return $this->expires_at ? max(now()->diffInSeconds($this->expires_at, false), 0) : null;
+        return $this->expires_at ? max((int) now()->diffInSeconds($this->expires_at, false), 0) : null;
     }
 
     /**

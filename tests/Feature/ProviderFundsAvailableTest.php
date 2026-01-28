@@ -29,7 +29,7 @@ class ProviderFundsAvailableTest extends TestCase
         // make organization and fund which has allow_provider_sign_up = true
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $provider = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
-        $fundTag = $this->faker->name;
+        $fundTag = $this->faker->name();
 
         $fund = $this->makeTestFund(organization: $organization, fundConfigsData: [
             'allow_provider_sign_up' => true,

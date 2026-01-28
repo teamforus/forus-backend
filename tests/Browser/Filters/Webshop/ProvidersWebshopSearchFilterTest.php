@@ -108,7 +108,7 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function prepareProvider(Organization $providerOrganization): Organization
     {
-        $typeName = $this->faker->name;
+        $typeName = $this->faker->name();
 
         $type = BusinessType::create([
             'key' => Str::slug($typeName),
@@ -121,22 +121,22 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $providerOrganization->update([
             'business_type_id' => $type->id,
             'email_public' => true,
-            'email' => $this->faker->email,
+            'email' => $this->faker->email(),
             'phone_public' => true,
-            'phone' => $this->faker->phoneNumber,
+            'phone' => $this->faker->phoneNumber(),
             'website_public' => true,
-            'website' => 'https://' . $this->faker->domainName,
+            'website' => 'https://' . $this->faker->domainName(),
         ]);
 
         $employee = $providerOrganization->addEmployee($this->makeIdentity(), Role::pluck('id')->toArray());
 
         $office = $this->makeOrganizationOffice($providerOrganization, [
             'branch_id' => $this->faker->numberBetween(100000, 1000000),
-            'branch_name' => $this->faker->name,
+            'branch_name' => $this->faker->name(),
             'branch_number' => $this->faker->numberBetween(100000, 1000000),
             'lon' => 6,
             'lat' => 49,
-            'postcode' => $this->faker->postcode,
+            'postcode' => $this->faker->postcode(),
         ]);
 
         $employee->update(['office_id' => $office->id]);
@@ -166,7 +166,7 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function addCategoryToProduct(Product $product, ?int $parentId = null): void
     {
-        $name = $this->faker->name;
+        $name = $this->faker->name();
 
         $category = ProductCategory::create([
             'key' => Str::slug($name),
