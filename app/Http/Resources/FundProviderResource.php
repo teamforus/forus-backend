@@ -12,37 +12,22 @@ use Illuminate\Http\Request;
 class FundProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'fund.faq',
-        'fund.tags.translations',
-        'fund.logo.presets',
-        'fund.criteria.fund',
-        'fund.organization.logo.presets',
-        'fund.organization.employees',
-        'fund.organization.employees.roles.permissions',
-        'fund.organization.business_type.translations',
-        'fund.organization.bank_connection_active',
-        'fund.organization.tags.translations',
-        'fund.fund_config.implementation',
-        'fund.fund_formula_products',
-        'fund.provider_organizations_approved.employees',
-        'fund.tags_webshop.translations',
-        'fund.fund_formulas',
-        'fund.top_up_transactions',
-        'organization.offices.schedules',
-        'organization.offices.photo.presets',
-        'organization.offices.organization.logo',
-        'organization.offices.organization.business_type.translations',
+        'organization.last_employee_session',
         'organization.products',
-        'organization.logo',
-        'organization.employees.roles.translations',
-        'organization.business_type.translations',
         'fund_provider_products',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundResource::class,
+        'organization' => OrganizationWithPrivateResource::class,
+        'organization.offices' => OfficeResource::class,
+        'organization.employees' => EmployeeResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

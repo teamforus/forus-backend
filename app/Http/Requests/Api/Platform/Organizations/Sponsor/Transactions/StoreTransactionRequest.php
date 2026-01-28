@@ -5,22 +5,26 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Rules\Base\IbanNameRule;
-use App\Rules\Base\IbanRule;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
+use App\Traits\ResolvesPayoutBankAccountPayload;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * @property Organization $organization
  */
 class StoreTransactionRequest extends BaseFormRequest
 {
+    use ResolvesPayoutBankAccountPayload;
+
+    protected ?array $voucherIds = null;
+    protected ?Voucher $voucher = null;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -38,12 +42,12 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $voucher = $this->has('voucher_id') ? Voucher::find($this->input('voucher_id')) : null;
+        $voucher = $this->getVoucher();
 
-        return array_merge([
+        return [
             'voucher_id' => [
                 'required',
-                Rule::in($this->voucherIds()),
+                Rule::in($this->voucherIdList()),
             ],
             'organization_id' => [
                 'required_if:target,' . VoucherTransaction::TARGET_PROVIDER,
@@ -52,7 +56,22 @@ class StoreTransactionRequest extends BaseFormRequest
             'note' => 'nullable|string|max:255',
             'note_shared' => 'nullable|boolean',
             'amount' => $this->amountRule($voucher),
-        ], $this->targetRules($voucher));
+            ...$this->targetRules($voucher),
+        ];
+    }
+
+    /**
+     * @param Validator $validator
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if ($this->input('target') === VoucherTransaction::TARGET_IBAN) {
+                $this->validateSingleBankAccountSource($validator);
+            }
+        });
     }
 
     /**
@@ -74,12 +93,12 @@ class StoreTransactionRequest extends BaseFormRequest
         return array_merge([
             'target' => ['required', Rule::in(array_filter($targets))],
         ], $this->input('target') == VoucherTransaction::TARGET_IBAN ? [
-            'target_iban' => ['required_without:target_reimbursement_id', new IbanRule()],
-            'target_name' => ['required_without:target_reimbursement_id', new IbanNameRule()],
-            'target_reimbursement_id' => [
-                'required_without:target_iban',
-                Rule::exists('reimbursements', 'id')->whereIn('id', $this->reimbursementIds($voucher)),
-            ],
+            'fund_request_id' => $this->fundRequestIdRules(),
+            'profile_bank_account_id' => $this->profileBankAccountIdRules(),
+            'reimbursement_id' => $this->reimbursementIdRules(),
+            'payout_transaction_id' => $this->payoutTransactionIdRules(),
+            'target_iban' => $this->targetIbanRules(),
+            'target_name' => $this->targetNameRules(),
         ] : []);
     }
 
@@ -89,6 +108,10 @@ class StoreTransactionRequest extends BaseFormRequest
      */
     protected function amountRule(?Voucher $voucher): string
     {
+        if (!$voucher) {
+            return 'required|numeric|min:.02|max:0';
+        }
+
         $max = match($this->input('target')) {
             VoucherTransaction::TARGET_IBAN,
             VoucherTransaction::TARGET_PROVIDER => $voucher->amount_available,
@@ -103,9 +126,9 @@ class StoreTransactionRequest extends BaseFormRequest
     }
 
     /**
-     * @return array
+     * @return Builder|Voucher
      */
-    protected function voucherIds(): array
+    protected function vouchersQuery(): Builder|Voucher
     {
         $builder = VoucherQuery::whereNotExpiredAndActive(Voucher::query());
 
@@ -115,7 +138,7 @@ class StoreTransactionRequest extends BaseFormRequest
             ]))->select('funds.id');
         });
 
-        return $builder->whereNull('product_id')->pluck('vouchers.id')->toArray();
+        return $builder->whereNull('product_id');
     }
 
     /**
@@ -134,21 +157,38 @@ class StoreTransactionRequest extends BaseFormRequest
     }
 
     /**
-     * @param Voucher|null $voucher
-     * @return Builder|array
+     * @return Voucher|null
      */
-    protected function reimbursementIds(?Voucher $voucher): Builder|array
+    protected function getVoucher(): ?Voucher
     {
-        if (!$voucher) {
-            return [];
+        if ($this->voucher !== null) {
+            return $this->voucher;
         }
 
-        return Reimbursement::query()
-            ->whereHas('voucher', fn (Builder|Voucher $builder) => $builder->where([
-                'fund_id' => $voucher->fund_id,
-                'identity_id' => $voucher->identity_id,
-            ]))
-            ->where('state', Reimbursement::STATE_APPROVED)
-            ->select('id');
+        return $this->voucher = $this->has('voucher_id')
+            ? $this->vouchersQuery()->find($this->input('voucher_id'))
+            : null;
+    }
+
+    /**
+     * @return array
+     */
+    protected function voucherIdList(): array
+    {
+        if ($this->voucherIds !== null) {
+            return $this->voucherIds;
+        }
+
+        return $this->voucherIds = $this->vouchersQuery()->pluck('vouchers.id')->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    protected function bankAccountSearchFilters(): array
+    {
+        return [
+            'identity_id' => $this->getVoucher()?->identity_id ?? -1,
+        ];
     }
 }

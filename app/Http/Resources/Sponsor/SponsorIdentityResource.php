@@ -4,12 +4,14 @@ namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Models\Identity;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\Profile;
 use App\Models\ProfileBankAccount;
 use App\Models\ProfileRecord;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -25,7 +27,7 @@ class SponsorIdentityResource extends BaseJsonResource
 {
     public const array LOAD = [
         'emails',
-        'vouchers',
+        'vouchers.transactions',
         'record_bsn',
         'primary_email',
         'reimbursements.voucher.fund',
@@ -54,7 +56,7 @@ class SponsorIdentityResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -105,6 +107,18 @@ class SponsorIdentityResource extends BaseJsonResource
         ?Organization $organization,
         ?Profile $profile,
     ): array {
+        $fundRequests = $organization ? FundRequest::query()
+            ->with('records')
+            ->where('identity_id', $identity->id)
+            ->where('state', FundRequest::STATE_APPROVED)
+            ->whereRelation('fund', 'organization_id', $organization->id)
+            ->whereHas('fund.vouchers', function (Builder $builder) use ($identity) {
+                $builder->where('identity_id', $identity->id);
+                VoucherQuery::whereNotExpiredAndActive($builder);
+            })
+            ->orderByDesc('created_at')
+            ->get() : collect();
+
         $reimbursements = $identity->reimbursements->filter(function ($item) use ($organization) {
             return $item?->voucher?->fund?->organization_id === $organization?->id;
         });
@@ -122,29 +136,52 @@ class SponsorIdentityResource extends BaseJsonResource
                 'name' => $profileBankAccount->name,
                 'created_by' => 'manual',
                 'created_by_locale' => 'Manual',
+                'type' => 'profile_bank_account',
+                'type_id' => $profileBankAccount->id,
                 ...static::makeTimestampsStatic([
                     'created_at' => $profileBankAccount->created_at,
                     'updated_at' => $profileBankAccount->updated_at,
                 ]),
             ])->toArray() ?: [],
             ...$reimbursements->map(fn ($reimbursement) => [
+                'id' => null,
                 'iban' => $reimbursement->iban,
                 'name' => $reimbursement->iban_name,
                 'created_by' => 'reimbursement',
                 'created_by_locale' => 'Declaratie',
+                'type' => 'reimbursement',
+                'type_id' => $reimbursement->id,
                 ...static::makeTimestampsStatic([
                     'created_at' => $reimbursement->created_at,
                     'updated_at' => $reimbursement->updated_at,
                 ]),
             ]),
             ...collect($payoutTransactions)->map(fn (VoucherTransaction $transaction) => [
+                'id' => null,
                 'iban' => $transaction->target_iban,
                 'name' => $transaction->target_name,
                 'created_by' => 'payout',
                 'created_by_locale' => 'Uitbetalingen',
+                'type' => 'payout',
+                'type_id' => $transaction->id,
                 ...static::makeTimestampsStatic([
                     'created_at' => $transaction->created_at,
                     'updated_at' => $transaction->updated_at,
+                ]),
+            ]),
+            ...$fundRequests->filter(fn (FundRequest $fundRequest) => (
+                $fundRequest->getIban(false) && $fundRequest->getIbanName(false)
+            ))->map(fn (FundRequest $fundRequest) => [
+                'id' => null,
+                'iban' => $fundRequest->getIban(false),
+                'name' => $fundRequest->getIbanName(false),
+                'created_by' => 'fund_request',
+                'created_by_locale' => 'Aanvraag',
+                'type' => 'fund_request',
+                'type_id' => $fundRequest->id,
+                ...static::makeTimestampsStatic([
+                    'created_at' => $fundRequest->created_at,
+                    'updated_at' => $fundRequest->updated_at,
                 ]),
             ]),
         ];
@@ -157,6 +194,7 @@ class SponsorIdentityResource extends BaseJsonResource
      */
     public static function getProfileRecords(?Profile $profile, bool $forSponsor = false): array
     {
+        /** @var Collection $groups */
         $groups = $profile?->profile_records?->map(fn (ProfileRecord $record) => [
             ...$record->only([
                 'id', 'value', 'value_locale',

@@ -114,6 +114,6 @@ class FundProviderController extends Controller
             ]);
         });
 
-        return new FundProviderResource($fundProvider);
+        return FundProviderResource::create($fundProvider);
     }
 }

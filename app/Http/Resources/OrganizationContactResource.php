@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\OrganizationContact;
+use Illuminate\Http\Request;
 use Throwable;
 
 /**
@@ -13,11 +14,11 @@ class OrganizationContactResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws Throwable
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->resource->only([
             'id', 'type', 'key', 'value', 'organization_id',

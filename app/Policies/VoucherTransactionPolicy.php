@@ -4,10 +4,13 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\Identity;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -163,6 +166,16 @@ class VoucherTransactionPolicy
 
     /**
      * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAnyPayoutBankAccountsSponsor(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, [Permission::MANAGE_PAYOUTS]);
+    }
+
+    /**
+     * @param Identity $identity
      * @param VoucherTransaction $transaction
      * @param Organization|null $organization
      * @return bool|Response
@@ -240,10 +253,20 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        if (!$voucher->fund_request?->getIban(false) || !$voucher?->fund_request->getIbanName(false)) {
+        if (!$voucher->fund?->organization?->allow_profiles) {
             return false;
         }
 
-        return $voucher->fund?->fund_config?->allow_voucher_payouts === true;
+        $hasEligibleFundRequest = FundRequest::query()
+            ->where('identity_id', $identity->id)
+            ->where('state', FundRequest::STATE_APPROVED)
+            ->whereRelation('fund', 'organization_id', $voucher->fund?->organization_id)
+            ->whereHas('fund.vouchers', function (Builder $builder) use ($identity) {
+                $builder->where('identity_id', $identity->id);
+                VoucherQuery::whereNotExpiredAndActive($builder);
+            })
+            ->exists();
+
+        return $hasEligibleFundRequest && $voucher->fund?->fund_config?->allow_voucher_payouts === true;
     }
 }

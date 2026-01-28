@@ -18,7 +18,7 @@ class BIFundProviderFinancesExporter extends BaseBIExporter
     public function toArray(): array
     {
         $providers = Organization::searchProviderOrganizations($this->organization, [])
-            ->with(ProviderFinancialResource::$load)
+            ->with(ProviderFinancialResource::load())
             ->get();
 
         $fields = ProviderFinancesExport::getExportFieldsRaw();

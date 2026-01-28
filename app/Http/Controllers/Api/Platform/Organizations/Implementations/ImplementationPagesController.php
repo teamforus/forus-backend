@@ -36,7 +36,7 @@ class ImplementationPagesController extends Controller
         $this->authorize('updateCMS', [$implementation, $organization]);
         $this->authorize('viewAny', [ImplementationPage::class, $implementation, $organization]);
 
-        return ImplementationPageResource::collection($implementation->pages);
+        return ImplementationPageResource::createCollection($implementation->pages);
     }
 
     /**
@@ -76,7 +76,7 @@ class ImplementationPagesController extends Controller
             $implementationPage->syncFaqOptional($request->input('faq'));
         }
 
-        return new ImplementationPageResource($implementationPage);
+        return ImplementationPageResource::create($implementationPage);
     }
 
     /**
@@ -116,7 +116,7 @@ class ImplementationPagesController extends Controller
         $this->authorize('updateCMS', [$implementation, $organization]);
         $this->authorize('view', [$implementationPage, $implementation, $organization]);
 
-        return new ImplementationPageResource($implementationPage);
+        return ImplementationPageResource::create($implementationPage);
     }
 
     /**
@@ -157,7 +157,7 @@ class ImplementationPagesController extends Controller
             $implementationPage->syncFaqOptional($request->input('faq'));
         }
 
-        return new ImplementationPageResource($implementationPage);
+        return ImplementationPageResource::create($implementationPage);
     }
 
     /**

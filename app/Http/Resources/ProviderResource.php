@@ -11,12 +11,12 @@ use Illuminate\Http\Request;
 class ProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'business_type.translations',
-        'offices.photo.presets',
-        'offices.organization.business_type.translations',
-        'offices.organization.logo.presets',
-        'offices.schedules',
-        'logo.presets',
+    ];
+
+    public const array LOAD_NESTED = [
+        'business_type' => BusinessTypeResource::class,
+        'offices' => OfficeResource::class,
+        'logo' => MediaCompactResource::class,
     ];
 
     /**
