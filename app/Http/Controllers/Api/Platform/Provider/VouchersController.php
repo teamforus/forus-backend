@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Provider;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\Provider\App\ProviderAppVoucherResource;
+use App\Http\Resources\Provider\App\ProviderAppVoucherTokenResource;
 use App\Models\VoucherToken;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +15,7 @@ class VouchersController extends Controller
      * @param BaseFormRequest $request
      * @param VoucherToken $voucherToken
      *@throws AuthorizationException
-     * @return ProviderAppVoucherResource|\Illuminate\Auth\Access\Response
+     * @return ProviderAppVoucherTokenResource|\Illuminate\Auth\Access\Response
      */
     public function show(BaseFormRequest $request, VoucherToken $voucherToken)
     {
@@ -28,7 +28,7 @@ class VouchersController extends Controller
         $isUpdatedClient = $isMobileClient && $clientVersion && $clientVersion >= 1;
 
         if ($useAsProvider->allowed() || ($isUpdatedClient && ($useChildVouchers || $sellProductsToVouchers))) {
-            return new ProviderAppVoucherResource($voucherToken);
+            return ProviderAppVoucherTokenResource::create($voucherToken);
         }
 
         return $useAsProvider->authorize();

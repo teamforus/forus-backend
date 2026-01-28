@@ -13,8 +13,21 @@ return [
     // Default minimum total query time (in ms) to trigger logging
     'min_queries_time' => env('QUERY_COUNTER_MIN_QUERIES_TIME', 1000),
 
-    // Log channel to be used (e.g., 'single', 'daily', 'stack', etc.)
-    'log_channel' => env('QUERY_COUNTER_LOG_CHANNEL', 'daily'),
+    // Log providers (configure at least one provider to log)
+    'providers' => [
+        [
+            'driver' => App\Services\QueryCounterService\Providers\LogQueryCounterProvider::class,
+            'channel' => env('QUERY_COUNTER_LOG_CHANNEL', 'daily'),
+            'enabled' => env('QUERY_COUNTER_LOG_ENABLED', true),
+        ],
+        [
+            'driver' => App\Services\QueryCounterService\Providers\DatabaseQueryCounterProvider::class,
+            'connection' => env('QUERY_COUNTER_DB_CONNECTION', 'mysql'),
+            'enabled' => env('QUERY_COUNTER_DB_ENABLED', false),
+            'table' => 'query_counter_logs',
+            'group' => env('QUERY_COUNTER_DB_GROUP', 'default'),
+        ],
+    ],
 
     // Routes to exclude from logging
     'excluded_routes' => [

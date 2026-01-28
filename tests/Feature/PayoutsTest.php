@@ -7,6 +7,7 @@ use App\Models\FundAmountPreset;
 use App\Models\FundConfig;
 use App\Models\FundFormula;
 use App\Models\FundRequest;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -15,8 +16,12 @@ use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
+use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestReimbursements;
+use Tests\Traits\MakesTestVouchers;
+use Throwable;
 
 class PayoutsTest extends TestCase
 {
@@ -24,6 +29,9 @@ class PayoutsTest extends TestCase
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesProductReservations;
+    use MakesRequesterVoucherPayouts;
+    use MakesTestReimbursements;
+    use MakesTestVouchers;
 
     /**
      * @return void
@@ -265,6 +273,858 @@ class PayoutsTest extends TestCase
         // assert amount is required when amount_preset_id is missing
         $this->storeRequestBatch($fund, ['amount' => null ])->assertJsonValidationErrorFor('payouts.0.amount');
         $this->storeRequestBatch($fund, ['amount_preset' => $presets[1]])->assertJsonMissingValidationErrors('payouts.0.amount');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutsListIncludesRequesterPayout(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $payoutRes = $this->postJson('/api/v1/platform/payouts', [
+            'voucher_id' => $voucher->id,
+            'amount' => '50.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $this->makeApiHeaders($requester));
+
+        $payoutRes->assertSuccessful();
+
+        $transaction = VoucherTransaction::find($payoutRes->json('data.id'));
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::INITIATOR_REQUESTER, $transaction->initiator);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'id' => $transaction->id,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsListIncludesEligibleFundRequests(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $fundRequest = $result['fund_request'];
+        $iban = $result['iban'];
+        $ibanName = $result['iban_name'];
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $otherFund = $this->makePayoutEnabledFund($otherOrganization);
+        $otherRequester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $otherResult = $this->makePayoutVoucherViaApplication($otherRequester, $otherFund);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'fund_request',
+            'type_id' => $fundRequest->id,
+            'iban' => $iban,
+            'iban_name' => $ibanName,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherResult['fund_request']->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsDoNotExposeId(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $fundRequest = $result['fund_request'];
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonMissing([
+            'id' => $fundRequest->id,
+        ]);
+        $listRes->assertJsonFragment([
+            'type' => 'fund_request',
+            'type_id' => $fundRequest->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsRespectIdentityFilter(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $otherRequester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $otherResult = $this->makePayoutVoucherViaApplication($otherRequester, $fund);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request&identity_id=$requester->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'fund_request',
+            'type_id' => $result['fund_request']->id,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherResult['fund_request']->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsProfileBankAccountIdentityFilter(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $sponsorOrganization->id);
+        $profile = $sponsorOrganization->findOrMakeProfile($identity);
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $otherIdentity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $sponsorOrganization->id);
+        $otherProfile = $sponsorOrganization->findOrMakeProfile($otherIdentity);
+        $otherProfileBankAccount = $otherProfile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
+            "?type=profile_bank_account&identity_id=$identity->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'profile_bank_account',
+            'type_id' => $profileBankAccount->id,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherProfileBankAccount->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsReimbursementIdentityFilter(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsorOrganization, fundConfigsData: ['allow_reimbursements' => true]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund, $identity, amount: 100);
+
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
+
+        $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $otherVoucher = $this->makeTestVoucher($fund, $otherIdentity, amount: 100);
+        $otherReimbursement = $this->makeReimbursement($otherVoucher, submit: true);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
+            "?type=reimbursement&identity_id=$identity->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'reimbursement',
+            'type_id' => $reimbursement->id,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherReimbursement->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsPayoutIdentityFilter(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_payouts' => true])->save();
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund, $identity);
+        $payoutTransaction = $voucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $this->makeIban(),
+            'target_name' => $this->makeIbanName(),
+            'amount' => '50.00',
+        ]);
+
+        $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $otherVoucher = $this->makeTestVoucher($fund, $otherIdentity);
+        $otherPayoutTransaction = $otherVoucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $this->makeIban(),
+            'target_name' => $this->makeIbanName(),
+            'amount' => '50.00',
+        ]);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
+            "?type=payout&identity_id=$identity->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'payout',
+            'type_id' => $payoutTransaction->id,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherPayoutTransaction->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutCreateUsesFundRequestBankAccount(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill([
+            'allow_payouts' => true,
+            'allow_profiles' => true,
+        ])->save();
+
+        $fund1 = $this->makePayoutEnabledFund($sponsorOrganization);
+        $fund2 = $this->makePayoutEnabledFund($sponsorOrganization);
+
+        $this->configureFundPayouts($fund2);
+        $this->assertPayoutsUpdated($fund2);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund1);
+        $fundRequest = $result['fund_request'];
+        $iban = $result['iban'];
+        $ibanName = $result['iban_name'];
+
+        $res = $this->postJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts",
+            [
+                'fund_id' => $fund2->id,
+                'amount' => '50.00',
+                'description' => 'Test description',
+                'fund_request_id' => $fundRequest->id,
+            ],
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $res->assertJsonPath('data.fund.id', $fund2->id);
+        $res->assertJsonPath('data.iban_to', $iban);
+        $res->assertJsonPath('data.iban_to_name', $ibanName);
+
+        $transaction = VoucherTransaction::find($res->json('data.id'));
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::INITIATOR_SPONSOR, $transaction->initiator);
+        $this->assertEquals($iban, $transaction->getTargetIban());
+        $this->assertEquals($ibanName, $transaction->getTargetName());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsListIncludesProfileBankAccounts(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $sponsorOrganization->id);
+        $profile = $sponsorOrganization->findOrMakeProfile($identity);
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $otherOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $otherIdentity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $otherOrganization->id);
+        $otherProfile = $otherOrganization->findOrMakeProfile($otherIdentity);
+        $otherProfileBankAccount = $otherProfile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=profile_bank_account",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'profile_bank_account',
+            'type_id' => $profileBankAccount->id,
+            'iban' => $profileBankAccount->iban,
+            'iban_name' => $profileBankAccount->name,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherProfileBankAccount->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsListIncludesReimbursements(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsorOrganization, fundConfigsData: ['allow_reimbursements' => true]);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund, $identity, amount: 100);
+
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $otherFund = $this->makeTestFund($otherOrganization, fundConfigsData: ['allow_reimbursements' => true]);
+        $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $otherVoucher = $this->makeTestVoucher($otherFund, $otherIdentity, amount: 100);
+        $otherReimbursement = $this->makeReimbursement($otherVoucher, submit: true);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=reimbursement",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'reimbursement',
+            'type_id' => $reimbursement->id,
+            'iban' => $reimbursement->iban,
+            'iban_name' => $reimbursement->iban_name,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherReimbursement->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsListIncludesPayoutTransactions(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_payouts' => true])->save();
+        $fund = $this->makeTestFund($sponsorOrganization);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund, $identity);
+
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+        $payoutTransaction = $voucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $iban,
+            'target_name' => $ibanName,
+            'amount' => '50.00',
+        ]);
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $otherOrganization->forceFill(['allow_payouts' => true])->save();
+        $otherFund = $this->makeTestFund($otherOrganization);
+        $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $otherVoucher = $this->makeTestVoucher($otherFund, $otherIdentity);
+
+        $otherIban = $this->makeIban();
+        $otherIbanName = $this->makeIbanName();
+        $otherPayoutTransaction = $otherVoucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $otherIban,
+            'target_name' => $otherIbanName,
+            'amount' => '50.00',
+        ]);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=payout",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'type' => 'payout',
+            'type_id' => $payoutTransaction->id,
+            'iban' => $iban,
+            'iban_name' => $ibanName,
+        ]);
+
+        $listRes->assertJsonMissing([
+            'type_id' => $otherPayoutTransaction->id,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutCreateUsesProfileBankAccount(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill([
+            'allow_payouts' => true,
+            'allow_profiles' => true,
+        ])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $sponsorOrganization->id);
+        $profile = $sponsorOrganization->findOrMakeProfile($identity);
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $iban,
+            'name' => $ibanName,
+        ]);
+
+        $res = $this->postJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts",
+            [
+                'fund_id' => $fund->id,
+                'amount' => '50.00',
+                'description' => 'Test description',
+                'profile_bank_account_id' => $profileBankAccount->id,
+            ],
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $res->assertJsonPath('data.fund.id', $fund->id);
+        $res->assertJsonPath('data.iban_to', $iban);
+        $res->assertJsonPath('data.iban_to_name', $ibanName);
+
+        $transaction = VoucherTransaction::find($res->json('data.id'));
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::INITIATOR_SPONSOR, $transaction->initiator);
+        $this->assertEquals($iban, $transaction->getTargetIban());
+        $this->assertEquals($ibanName, $transaction->getTargetName());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutCreateUsesReimbursementBankAccount(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_payouts' => true])->save();
+
+        $fund1 = $this->makeTestFund($sponsorOrganization, fundConfigsData: ['allow_reimbursements' => true]);
+        $fund2 = $this->makePayoutEnabledFund($sponsorOrganization);
+        $this->configureFundPayouts($fund2);
+        $this->assertPayoutsUpdated($fund2);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund1, $identity, amount: 100);
+        $reimbursement = $this->makeReimbursement($voucher, submit: false)
+            ->assign($sponsorOrganization->employees[0])
+            ->approve();
+
+        $iban = $reimbursement->iban;
+        $ibanName = $reimbursement->iban_name;
+
+        $res = $this->postJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts",
+            [
+                'fund_id' => $fund2->id,
+                'amount' => '50.00',
+                'description' => 'Test description',
+                'reimbursement_id' => $reimbursement->id,
+            ],
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $res->assertJsonPath('data.fund.id', $fund2->id);
+        $res->assertJsonPath('data.iban_to', $iban);
+        $res->assertJsonPath('data.iban_to_name', $ibanName);
+
+        $transaction = VoucherTransaction::find($res->json('data.id'));
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::INITIATOR_SPONSOR, $transaction->initiator);
+        $this->assertEquals($iban, $transaction->getTargetIban());
+        $this->assertEquals($ibanName, $transaction->getTargetName());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutCreateUsesPayoutTransactionBankAccount(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_payouts' => true])->save();
+
+        $fund1 = $this->makeTestFund($sponsorOrganization);
+        $fund2 = $this->makePayoutEnabledFund($sponsorOrganization);
+        $this->configureFundPayouts($fund2);
+        $this->assertPayoutsUpdated($fund2);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund1, $identity);
+
+        $iban = $this->makeIban();
+        $ibanName = $this->makeIbanName();
+        $previousPayoutTransaction = $voucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $iban,
+            'target_name' => $ibanName,
+            'amount' => '50.00',
+        ]);
+
+        $res = $this->postJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts",
+            [
+                'fund_id' => $fund2->id,
+                'amount' => '50.00',
+                'description' => 'Test description',
+                'payout_transaction_id' => $previousPayoutTransaction->id,
+            ],
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $res->assertJsonPath('data.fund.id', $fund2->id);
+        $res->assertJsonPath('data.iban_to', $iban);
+        $res->assertJsonPath('data.iban_to_name', $ibanName);
+
+        $transaction = VoucherTransaction::find($res->json('data.id'));
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::INITIATOR_SPONSOR, $transaction->initiator);
+        $this->assertEquals($iban, $transaction->getTargetIban());
+        $this->assertEquals($ibanName, $transaction->getTargetName());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountIdValidation(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_payouts' => true, 'allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $otherOrganization->forceFill(['allow_profiles' => true])->save();
+        $otherIdentity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $otherOrganization->id);
+        $otherProfile = $otherOrganization->findOrMakeProfile($otherIdentity);
+        $otherProfileBankAccount = $otherProfile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $otherFund = $this->makeTestFund($otherOrganization, fundConfigsData: ['allow_reimbursements' => true]);
+        $otherVoucherIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $otherVoucher = $this->makeTestVoucher($otherFund, $otherVoucherIdentity, amount: 100);
+        $otherReimbursement = $this->makeReimbursement($otherVoucher, submit: true);
+
+        $otherPayoutVoucher = $this->makeTestVoucher($otherFund, $otherVoucherIdentity);
+        $otherPayoutTransaction = $otherPayoutVoucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $this->makeIban(),
+            'target_name' => $this->makeIbanName(),
+            'amount' => '50.00',
+        ]);
+
+        // Test invalid profile_bank_account_id (wrong organization)
+        $this->storeRequest($fund, [
+            'profile_bank_account_id' => $otherProfileBankAccount->id,
+        ])->assertJsonValidationErrorFor('profile_bank_account_id');
+
+        // Test invalid reimbursement_id (wrong organization)
+        $this->storeRequest($fund, [
+            'reimbursement_id' => $otherReimbursement->id,
+        ])->assertJsonValidationErrorFor('reimbursement_id');
+
+        // Test invalid payout_transaction_id (wrong organization)
+        $this->storeRequest($fund, [
+            'payout_transaction_id' => $otherPayoutTransaction->id,
+        ])->assertJsonValidationErrorFor('payout_transaction_id');
+
+        // Test non-existent IDs
+        $this->storeRequest($fund, [
+            'profile_bank_account_id' => 99999,
+        ])->assertJsonValidationErrorFor('profile_bank_account_id');
+
+        $this->storeRequest($fund, [
+            'reimbursement_id' => 99999,
+        ])->assertJsonValidationErrorFor('reimbursement_id');
+
+        $this->storeRequest($fund, [
+            'payout_transaction_id' => 99999,
+        ])->assertJsonValidationErrorFor('payout_transaction_id');
+
+        // Test that when bank account ID is provided, manual IBAN/name are not required
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $sponsorOrganization->id);
+        $profile = $sponsorOrganization->findOrMakeProfile($identity);
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->storeRequest($fund, [
+            'profile_bank_account_id' => $profileBankAccount->id,
+        ])->assertJsonMissingValidationErrors(['target_iban', 'target_name']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutTargetSourceStoredForBankAccountSources(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $organization->forceFill([
+            'allow_payouts' => true,
+            'allow_profiles' => true,
+        ])->save();
+
+        $fund = $this->makePayoutEnabledFund($organization, fundConfigsData: [
+            'allow_direct_payments' => true,
+            'allow_reimbursements' => true,
+        ]);
+
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $profileIdentity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($profileIdentity);
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+        $profileVoucher = $this->makeTestVoucher($fund, $profileIdentity);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $fundRequest = $result['fund_request'];
+        $fundRequestVoucher = $result['voucher'];
+
+        $reimbursementIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $reimbursementVoucher = $this->makeTestVoucher($fund, $reimbursementIdentity, amount: 100);
+
+        $reimbursement = $this
+            ->makeReimbursement($reimbursementVoucher, submit: true)
+            ->assign($organization->employees[0])
+            ->approve();
+
+        $payoutIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $payoutVoucher = $this->makeTestVoucher($fund, $payoutIdentity);
+        $previousPayoutTransaction = $payoutVoucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $this->makeIban(),
+            'target_name' => $this->makeIbanName(),
+            'amount' => '50.00',
+        ]);
+
+        $cases = [
+            [
+                'field' => 'profile_bank_account_id',
+                'id' => $profileBankAccount->id,
+                'type' => 'profile_bank_account',
+                'voucher_id' => $profileVoucher->id,
+                'model' => $profileBankAccount,
+            ],
+            [
+                'field' => 'fund_request_id',
+                'id' => $fundRequest->id,
+                'type' => 'fund_request',
+                'voucher_id' => $fundRequestVoucher->id,
+            ],
+            [
+                'field' => 'reimbursement_id',
+                'id' => $reimbursement->id,
+                'type' => 'reimbursement',
+                'voucher_id' => $reimbursementVoucher->id,
+            ],
+            [
+                'field' => 'payout_transaction_id',
+                'id' => $previousPayoutTransaction->id,
+                'type' => 'voucher_transaction',
+                'voucher_id' => $payoutVoucher->id,
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $res = $this->storeRequest($fund, [
+                'voucher_id' => $case['voucher_id'],
+                'amount' => '25.00',
+                $case['field'] => $case['id'],
+            ]);
+
+            $res->assertSuccessful();
+
+            $transaction = VoucherTransaction::find($res->json('data.id'));
+
+            $this->assertEquals($case['type'], $transaction->target_source_type);
+            $this->assertEquals($case['id'], $transaction->target_source_id);
+            $this->assertEquals($case['id'], $transaction->target_source->getKey());
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorPayoutBankAccountsApiRequiresType(): void
+    {
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+
+        // Test missing type parameter
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertJsonValidationErrorFor('type');
+
+        // Test invalid type value
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=invalid",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertJsonValidationErrorFor('type');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorTransactionsListIncludesRequesterPayoutForVoucher(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill([
+            'allow_profiles' => true,
+            'show_provider_transactions' => false,
+        ])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $payout = $this->apiMakePayout([
+            'voucher_id' => $voucher->id,
+            'amount' => '50.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $requester);
+
+        $listRes = $this->getJson(
+            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/transactions?voucher_id=$voucher->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
+        );
+
+        $listRes->assertSuccessful();
+        $listRes->assertJsonFragment([
+            'id' => $payout->id,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorIdentityShowsPayoutBankAccount(): void
+    {
+        $fundRequest = $this->makePayoutFundRequest();
+        $fundRequest = $this->approveFundRequest($fundRequest);
+        $organization = $fundRequest->fund->organization;
+        $identity = $fundRequest->identity;
+
+        $transaction = $fundRequest->vouchers[0]?->transactions[0];
+        $this->assertNotNull($transaction);
+        $this->assertEquals(VoucherTransaction::TARGET_PAYOUT, $transaction->target);
+
+        $res = $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/identities/$identity->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $res->assertSuccessful();
+        $res->assertJsonFragment([
+            'type' => 'payout',
+            'type_id' => $transaction->id,
+            'iban' => $transaction->target_iban,
+            'name' => $transaction->target_name,
+        ]);
     }
 
     /**

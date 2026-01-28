@@ -3,25 +3,27 @@
 namespace App\Http\Resources;
 
 use App\Models\ImplementationPage;
+use Illuminate\Http\Request;
 
 /**
  * @property ImplementationPage $resource
  */
 class ImplementationPageResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'faq',
-        'blocks.photo',
-        'blocks.implementation_page.implementation',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'blocks' => ImplementationBlockResource::class,
+        'faq' => FaqResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $page = $this->resource;
         $translateDescription = $page->page_type === ImplementationPage::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES;

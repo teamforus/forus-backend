@@ -2,14 +2,15 @@
 
 namespace App\Http\Resources\Arr;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Services\IConnectApiService\Objects\BasePerson;
 use App\Services\IConnectApiService\Objects\Person;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Person $resource
  */
-class IdentityPersonArrResource extends JsonResource
+class IdentityPersonArrResource extends BaseJsonResource
 {
     /**
      * @var string[]
@@ -22,10 +23,10 @@ class IdentityPersonArrResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $person = $this->resource;
 

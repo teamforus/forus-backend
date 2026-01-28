@@ -3,20 +3,20 @@
 namespace App\Http\Resources;
 
 use App\Models\FundProviderChatMessage;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
  * @property FundProviderChatMessage $resource
  */
-class FundProviderChatMessageResource extends JsonResource
+class FundProviderChatMessageResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $message = $this->resource;
 

@@ -10,10 +10,16 @@ use Illuminate\Http\Request;
  */
 class FileResource extends BaseJsonResource
 {
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'preview' => MediaCompactResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

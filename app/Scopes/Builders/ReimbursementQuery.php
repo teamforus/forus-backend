@@ -2,6 +2,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Organization;
 use App\Models\Reimbursement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -93,5 +94,23 @@ class ReimbursementQuery
         Builder|Relation|Reimbursement $builder,
     ): Builder|Relation|Reimbursement {
         return $builder->whereNotIn('id', self::whereArchived(Reimbursement::query())->select('id'));
+    }
+
+    /**
+     * @param Builder|Relation|Reimbursement $builder
+     * @param Organization $organization
+     * @return Builder|Relation|Reimbursement
+     */
+    public static function whereHasPayoutBankAccountForOrganization(
+        Builder|Relation|Reimbursement $builder,
+        Organization $organization,
+    ): Builder|Relation|Reimbursement {
+        return $builder
+            ->whereNotNull('iban')
+            ->where('iban', '!=', '')
+            ->whereNotNull('iban_name')
+            ->where('iban_name', '!=', '')
+            ->where('state', Reimbursement::STATE_APPROVED)
+            ->whereHas('voucher', fn ($q) => $q->whereRelation('fund', 'organization_id', $organization->id));
     }
 }

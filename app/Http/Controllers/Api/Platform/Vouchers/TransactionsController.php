@@ -77,7 +77,7 @@ class TransactionsController extends Controller
                 $voucher->product_reservation->product->organization,
             ]);
 
-            return new VoucherTransactionResource(
+            return VoucherTransactionResource::create(
                 $voucher->product_reservation->acceptByApp($request->auth_address(), $note)
             );
         }

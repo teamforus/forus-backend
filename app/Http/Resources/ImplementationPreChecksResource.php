@@ -20,14 +20,16 @@ class ImplementationPreChecksResource extends BaseJsonResource
 {
     public const array LOAD = [
         'pre_checks',
-        'pre_checks_records.settings.fund.logo.presets',
-        'pre_checks_records.settings.fund.fund_config.implementation',
+    ];
+
+    public const array LOAD_NESTED = [
+        'pre_checks_records.settings' => PreCheckRecordSettingResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

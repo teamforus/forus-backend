@@ -13,7 +13,10 @@ use Illuminate\Http\Request;
 class SponsorVoucherRecordResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'record_type',
+    ];
+
+    public const array LOAD_NESTED = [
+        'record_type' => RecordTypeResource::class,
     ];
 
     /**
@@ -22,7 +25,7 @@ class SponsorVoucherRecordResource extends BaseJsonResource
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->makeResource($this->resource, true);
     }

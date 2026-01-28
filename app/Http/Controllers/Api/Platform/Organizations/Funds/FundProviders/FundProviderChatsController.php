@@ -44,9 +44,7 @@ class FundProviderChatsController extends Controller
             $query->where('product_id', $request->input('product_id'));
         }
 
-        return FundProviderChatResource::collection(
-            $query->paginate($request->input('per_page'))
-        );
+        return FundProviderChatResource::queryCollection($query, $request);
     }
 
     /**
@@ -79,7 +77,7 @@ class FundProviderChatsController extends Controller
 
         FundProviderSponsorChatMessage::dispatch($fundProvider, $chatMessage);
 
-        return new FundProviderChatResource($chatMessage->fund_provider_chat);
+        return FundProviderChatResource::create($chatMessage->fund_provider_chat);
     }
 
     /**
@@ -101,6 +99,6 @@ class FundProviderChatsController extends Controller
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
         $this->authorize('viewSponsor', [$fundProviderChat, $fundProvider, $fund, $organization]);
 
-        return new FundProviderChatResource($fundProviderChat);
+        return FundProviderChatResource::create($fundProviderChat);
     }
 }

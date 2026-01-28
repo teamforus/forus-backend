@@ -50,9 +50,7 @@ class FundProviderChatMessagesController extends Controller
             'sponsor_seen' => true,
         ]);
 
-        return FundProviderChatMessageResource::collection(
-            $fundProviderChat->messages()->paginate($request->input('per_page'))
-        );
+        return FundProviderChatMessageResource::queryCollection($fundProviderChat->messages(), $request);
     }
 
     /**
@@ -87,7 +85,7 @@ class FundProviderChatMessagesController extends Controller
 
         FundProviderSponsorChatMessage::dispatch($fundProvider, $chatMessage);
 
-        return new FundProviderChatMessageResource($chatMessage);
+        return FundProviderChatMessageResource::create($chatMessage);
     }
 
     /**
@@ -124,7 +122,7 @@ class FundProviderChatMessagesController extends Controller
             'sponsor_seen' => true,
         ]);
 
-        return new FundProviderChatMessageResource(
+        return FundProviderChatMessageResource::create(
             $fundProviderChat->messages()->find($fundProviderChatMessage->id)
         );
     }

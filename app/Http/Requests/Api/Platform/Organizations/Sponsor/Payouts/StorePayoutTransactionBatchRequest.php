@@ -31,8 +31,8 @@ class StorePayoutTransactionBatchRequest extends StorePayoutTransactionRequest
             ],
             'payouts.*.bsn' => ['nullable', ...$this->bsnRules()],
             'payouts.*.email' => ['nullable', ...$this->emailRules()],
-            'payouts.*.target_iban' => $this->targetIbanRules(),
-            'payouts.*.target_name' => $this->targetNameRules(),
+            'payouts.*.target_iban' => $this->targetIbanRules(batch:true),
+            'payouts.*.target_name' => $this->targetNameRules(batch:true),
             'payouts.*.description' => $this->descriptionRules(),
             ...$this->uploadedCSVFileRules(),
         ];

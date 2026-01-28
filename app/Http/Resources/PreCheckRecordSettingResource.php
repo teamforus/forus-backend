@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\PreCheckRecordSetting;
+use Illuminate\Http\Request;
 
 /**
  * @property-read PreCheckRecordSetting $resource
@@ -10,17 +11,20 @@ use App\Models\PreCheckRecordSetting;
 class PreCheckRecordSettingResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'fund.logo.presets',
         'fund.fund_config.implementation',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund.logo' => MediaResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $recordSetting = $this->resource;
 

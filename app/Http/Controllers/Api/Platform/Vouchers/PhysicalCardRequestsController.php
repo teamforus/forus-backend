@@ -29,8 +29,8 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('show', $voucher);
         $this->authorize('showAny', [PhysicalCardRequest::class, $voucher]);
 
-        return PhysicalCardRequestResource::collection(
-            $voucher->physical_card_requests()->orderByDesc('created_at')->paginate()
+        return PhysicalCardRequestResource::queryCollection(
+            $voucher->physical_card_requests()->orderByDesc('created_at')
         );
     }
 
@@ -61,7 +61,7 @@ class PhysicalCardRequestsController extends Controller
             'physical_card_type_id' => $fundPhysicalCardType->physical_card_type_id,
         ], true);
 
-        return new PhysicalCardRequestResource($cardRequest);
+        return PhysicalCardRequestResource::create($cardRequest);
     }
 
     /**
@@ -92,6 +92,6 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('show', $voucher);
         $this->authorize('show', $physicalCardRequest);
 
-        return new PhysicalCardRequestResource($physicalCardRequest);
+        return PhysicalCardRequestResource::create($physicalCardRequest);
     }
 }

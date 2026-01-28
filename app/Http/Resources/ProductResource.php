@@ -19,40 +19,57 @@ class ProductResource extends BaseJsonResource
     public const array LOAD = [
         'voucher_transactions',
         'product_reservations_pending',
-        'photos.presets',
-        'product_category.translations',
-        'organization.offices.photo.presets',
-        'organization.offices.schedules',
-        'organization.offices.organization',
-        'organization.offices.organization.logo.presets',
-        'organization.logo.presets',
-        'organization.business_type.translations',
         'organization.fund_providers',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
+        'organization.reservation_fields',
         'bookmarks',
         'reservation_fields',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
+        'product_category' => ProductCategoryResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'organization.offices' => OfficeResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
     {
         $baseRequest = BaseFormRequest::createFrom($request);
-        $product = $this->resource;
 
-        return array_merge($this->baseFields($product), [
+        return $this->getProductData($request, $this->resource, $baseRequest->isWebshop());
+    }
+
+    /**
+     * @param Request $request
+     * @param Product $product
+     * @param bool $forWebshop
+     * @return array
+     */
+    protected function getProductData(Request $request, Product $product, bool $forWebshop): array
+    {
+        $baseRequest = BaseFormRequest::createFrom($request);
+
+        $priceFields = $this->priceFields($product);
+        $priceFieldsExtra = $forWebshop ? $this->priceFieldsExtra($product) : [];
+        $productReservationFields = $this->productReservationFieldSettings($product);
+
+        return [
+            ...$this->baseFields($product),
             'photos' => MediaResource::collection($product->photos),
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached(),
-            'sold_amount' => $product->countSold(),
+            'sold_amount' => $product->countSoldCached(),
             'stock_amount' => $product->stock_amount,
             'expire_at' => $product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
@@ -60,14 +77,14 @@ class ProductResource extends BaseJsonResource
             'deleted_at' => $product->deleted_at?->format('Y-m-d'),
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => $product->trashed(),
-            'funds' => $product->trashed() ? [] : $this->getProductFunds($baseRequest, $product),
+            'funds' => $product->trashed() || !$forWebshop ? [] : $this->getProductFunds($baseRequest, $product),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category),
-            'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
-        ], array_merge(
-            $this->priceFields($product),
-            $this->productReservationFieldSettings($product),
-        ));
+            'bookmarked' => $forWebshop ? $product->isBookmarkedBy($baseRequest->identity()) : null,
+            ...$priceFields,
+            ...$priceFieldsExtra,
+            ...$productReservationFields,
+        ];
     }
 
     /**
@@ -103,13 +120,23 @@ class ProductResource extends BaseJsonResource
      */
     protected function priceFields(Product $product): array
     {
+        return [
+            'price_type' => $product->price_type,
+            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
+        ];
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    protected function priceFieldsExtra(Product $product): array
+    {
         $price_min = $this->getProductSubsidyPrice($product, 'min');
         $price_max = $this->getProductSubsidyPrice($product, 'max');
         $lowest_price = min($product->price, $price_min);
 
         return [
-            'price_type' => $product->price_type,
-            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
             'price_discount_locale' => $product->price_discount_locale,
             'price_min' => currency_format($price_min),
             'price_min_locale' => currency_format_locale($price_min),

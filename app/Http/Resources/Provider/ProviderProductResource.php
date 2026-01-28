@@ -2,15 +2,40 @@
 
 namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\MediaResource;
+use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationBasicResource;
+use App\Http\Resources\ProductCategoryResource;
 use App\Http\Resources\ProductResource;
-use App\Models\Fund;
-use App\Models\FundProviderChatMessage;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\FundProvider;
+use App\Models\FundProviderChat;
+use App\Models\FundProviderProductExclusion;
 use Illuminate\Http\Request;
 
 class ProviderProductResource extends ProductResource
 {
+    public const array LOAD = [
+        'voucher_transactions',
+        'product_reservations_pending',
+        'organization.fund_providers_allowed_extra_payments',
+        'organization.fund_providers_allowed_extra_payments_full',
+        'organization.mollie_connection',
+        'organization.reservation_fields',
+        'organization.fund_providers.fund',
+        'organization.fund_providers.product_exclusions',
+        'bookmarks',
+        'reservation_fields',
+        'fund_provider_chats.messages',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
+        'product_category' => ProductCategoryResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'organization.offices' => OfficeResource::class,
+        'sponsor_organization' => OrganizationBasicResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -20,16 +45,24 @@ class ProviderProductResource extends ProductResource
     public function toArray(Request $request): array
     {
         return [
-            ...parent::toArray($request),
+            ...$this->getProductData($request, $this->resource, false),
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'unseen_messages' => $this->hasUnseenMessages(),
-            'excluded_funds' => Fund::whereHas('providers.product_exclusions', function (Builder $builder) {
-                $builder->where('product_id', '=', $this->resource->id);
-                $builder->orWhereNull('product_id');
-            })->select([
-                'id', 'name', 'state',
-            ])->get(),
+            'excluded_funds' => $this->resource->organization->fund_providers
+                ->filter(function (FundProvider $fundProvider) {
+                    return $fundProvider->product_exclusions->contains(
+                        fn (FundProviderProductExclusion $exclusion) => (
+                            $exclusion->product_id === null ||
+                            $exclusion->product_id === $this->resource->id
+                        )
+                    );
+                })
+                ->map(fn (FundProvider $fundProvider) => $fundProvider->fund?->only([
+                    'id', 'name', 'state',
+                ]))
+                ->filter()
+                ->values(),
             ...$this->resource->only([
                 'sku', 'ean',
             ]),
@@ -42,10 +75,9 @@ class ProviderProductResource extends ProductResource
      */
     protected function hasUnseenMessages(): int
     {
-        return FundProviderChatMessage::whereIn(
-            'fund_provider_chat_id',
-            $this->resource->fund_provider_chats()->pluck('id')
-        )->where('provider_seen', '=', false)->count();
+        return $this->resource->fund_provider_chats->sum(
+            fn (FundProviderChat $chat) => $chat->messages->where('provider_seen', false)->count()
+        );
     }
 
     /**

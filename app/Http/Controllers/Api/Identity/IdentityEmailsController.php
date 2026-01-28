@@ -63,7 +63,7 @@ class IdentityEmailsController extends Controller
             'implementation_id' => $request->implementation()->id,
         ]);
 
-        return new IdentityEmailResource($identityEmail->sendVerificationEmail());
+        return IdentityEmailResource::create($identityEmail->sendVerificationEmail());
     }
 
     /**
@@ -82,7 +82,7 @@ class IdentityEmailsController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        return new IdentityEmailResource($identityEmail);
+        return IdentityEmailResource::create($identityEmail);
     }
 
     /**
@@ -102,7 +102,7 @@ class IdentityEmailsController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        return new IdentityEmailResource($identityEmail->sendVerificationEmail());
+        return IdentityEmailResource::create($identityEmail->sendVerificationEmail());
     }
 
     /**
@@ -122,7 +122,7 @@ class IdentityEmailsController extends Controller
             $request->identityProxy2FAConfirmed(),
         ]);
 
-        return new IdentityEmailResource($identityEmail->setPrimary());
+        return IdentityEmailResource::create($identityEmail->setPrimary());
     }
 
     /**
@@ -172,6 +172,6 @@ class IdentityEmailsController extends Controller
 
         $identityEmail->setVerified();
 
-        return new IdentityEmailResource($identityEmail->setVerified());
+        return IdentityEmailResource::create($identityEmail->setVerified());
     }
 }

@@ -13,7 +13,6 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReserva
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationReservationSettingsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
-use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\OrganizationFeaturesResource;
 use App\Http\Resources\OrganizationResource;
 use App\Models\Employee;
@@ -46,12 +45,7 @@ class OrganizationsController extends Controller
             'implementation_id' => $request->implementation()?->id,
         ], Organization::query());
 
-        $organizations = $search->query()
-            ->with(OrganizationResource::loadDeps($request))
-            ->orderBy('name')
-            ->paginate($request->input('per_page', 10));
-
-        return OrganizationResource::collection($organizations);
+        return OrganizationResource::queryCollection($search->query());
     }
 
     /**
@@ -87,22 +81,21 @@ class OrganizationsController extends Controller
 
         OrganizationCreated::dispatch($organization);
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param BaseFormRequest $request
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return OrganizationResource
      */
-    public function show(BaseFormRequest $request, Organization $organization): OrganizationResource
+    public function show(Organization $organization): OrganizationResource
     {
         $this->authorize('show', $organization);
 
-        return new OrganizationResource($organization->load(OrganizationResource::loadDeps($request)));
+        return OrganizationResource::create($organization);
     }
 
     /**
@@ -156,7 +149,7 @@ class OrganizationsController extends Controller
 
         OrganizationUpdated::dispatch($organization);
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**
@@ -176,7 +169,7 @@ class OrganizationsController extends Controller
             'is_sponsor', 'is_provider', 'is_validator',
         ])));
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**
@@ -199,7 +192,7 @@ class OrganizationsController extends Controller
             'bank_reservation_invoice_number',
         ])));
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**
@@ -219,7 +212,7 @@ class OrganizationsController extends Controller
             'reservations_auto_accept',
         ])));
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**
@@ -245,7 +238,7 @@ class OrganizationsController extends Controller
 
         $organization->syncReservationFields($request->get('fields', []));
 
-        return new OrganizationResource($organization);
+        return OrganizationResource::create($organization);
     }
 
     /**

@@ -16,17 +16,9 @@ class SponsorFundPhysicalCardTypeResource extends BaseJsonResource
         'physical_card_type.physical_cards',
     ];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [
-            ...parent::load($append),
-            ...SponsorPhysicalCardTypeResource::load('physical_card_type'),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'physical_card_type' => SponsorPhysicalCardTypeResource::class,
+    ];
 
     /**
      * Transform the resource into an array.

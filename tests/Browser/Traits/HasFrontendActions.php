@@ -66,6 +66,19 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goSponsorPayoutsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
+        $browser->waitFor('@payoutsNav');
+        $browser->element('@payoutsNav')->click();
+    }
+
+    /**
+     * @param Browser $browser
      * @param int $count
      * @param string $selector
      * @param string $operator

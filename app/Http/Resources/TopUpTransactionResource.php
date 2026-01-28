@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\FundTopUpTransaction;
+use Illuminate\Http\Request;
 
 /**
  * @property FundTopUpTransaction $resource
@@ -16,10 +17,10 @@ class TopUpTransactionResource extends BaseJsonResource
 
     /**
      * Transform the resource into an array.
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $topUpTransaction = $this->resource;
 

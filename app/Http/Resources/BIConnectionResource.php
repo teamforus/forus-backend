@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Services\BIConnectionService\Models\BIConnection;
 use Carbon\CarbonInterface;
+use Illuminate\Http\Request;
 
 /**
  * @property BIConnection $resource
@@ -13,10 +14,10 @@ class BIConnectionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         if (is_null($connection = $this->resource)) {
             return null;

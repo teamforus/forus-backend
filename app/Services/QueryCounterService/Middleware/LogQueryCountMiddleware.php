@@ -2,12 +2,13 @@
 
 namespace App\Services\QueryCounterService\Middleware;
 
+use App\Services\QueryCounterService\Contracts\QueryCounterLogContract;
 use App\Services\QueryCounterService\Data\QueryCounter;
 use App\Services\QueryCounterService\QueryCounterService;
 use Closure;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Arr;
 
 class LogQueryCountMiddleware
 {
@@ -22,8 +23,9 @@ class LogQueryCountMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  Closure  $next
+     * @param \Illuminate\Http\Request $request
+     * @param Closure $next
+     * @throws BindingResolutionException
      * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
@@ -40,18 +42,41 @@ class LogQueryCountMiddleware
 
     /**
      * @param QueryCounter $queryCounter
+     * @throws BindingResolutionException
      * @return void
      */
     protected function log(QueryCounter $queryCounter): void
     {
-        Log::channel($queryCounter->getConfig()->getLogChannel())->debug('Max queries per route exceeded:', [
-            'route_name' => $queryCounter->getRouteName(),
-            'url' => $queryCounter->getRequest()->url(),
-            'query' => $queryCounter->getRequest()->query(),
-            'locale' => Lang::getLocale(),
-            'sql_queries_time' => $queryCounter->getQueriesTime(),
-            'sql_queries_count' => $queryCounter->getQueriesCount(),
-            // 'queries' => $queryCounter->getQueriesCount(),
-        ]);
+        foreach ($this->getProviders($queryCounter) as $providerConfig) {
+            if (is_string($providerConfig)) {
+                $providerConfig = ['driver' => $providerConfig];
+            }
+
+            if (!Arr::get($providerConfig, 'enabled', true)) {
+                continue;
+            }
+
+            $driver = Arr::get($providerConfig, 'driver');
+
+            if (!$driver || !class_exists($driver) ||
+                !is_subclass_of($driver, QueryCounterLogContract::class)) {
+                continue;
+            }
+
+            $provider = app()->makeWith($driver, ['config' => $providerConfig]);
+
+            if ($provider instanceof QueryCounterLogContract) {
+                $provider->log($queryCounter);
+            }
+        }
+    }
+
+    /**
+     * @param QueryCounter $queryCounter
+     * @return array
+     */
+    protected function getProviders(QueryCounter $queryCounter): array
+    {
+        return $queryCounter->getConfig()->getProviders();
     }
 }

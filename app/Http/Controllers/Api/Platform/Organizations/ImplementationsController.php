@@ -63,7 +63,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('view', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation);
+        return ImplementationPrivateResource::create($implementation);
     }
 
     /**
@@ -108,7 +108,7 @@ class ImplementationsController extends Controller
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
         $implementation->syncMarkdownMedia('cms_media');
 
-        return new ImplementationPrivateResource($implementation);
+        return ImplementationPrivateResource::create($implementation);
     }
 
     /**
@@ -133,7 +133,7 @@ class ImplementationsController extends Controller
             'digid_enabled', 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server',
         ]));
 
-        return new ImplementationPrivateResource($implementation);
+        return ImplementationPrivateResource::create($implementation);
     }
 
     /**
@@ -154,7 +154,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateEmail', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return ImplementationPrivateResource::create($implementation->updateModel($request->only([
             'email_from_address', 'email_from_name',
         ])));
     }
@@ -177,7 +177,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateEmailBranding', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return ImplementationPrivateResource::create($implementation->updateModel($request->only([
             'email_color', 'email_signature',
         ]))->attachMediaByUid($request->input('email_logo_uid')));
     }
@@ -200,7 +200,7 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updatePreChecks', [$implementation, $organization]);
 
-        return new ImplementationPrivateResource($implementation->updateModel($request->only([
+        return ImplementationPrivateResource::create($implementation->updateModel($request->only([
             'pre_check_banner_state', 'pre_check_banner_title',
             'pre_check_banner_description', 'pre_check_banner_label',
         ]))->attachMediaByUid($request->input('pre_check_media_uid')));

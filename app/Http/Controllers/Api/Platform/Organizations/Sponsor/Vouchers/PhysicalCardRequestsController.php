@@ -38,7 +38,7 @@ class PhysicalCardRequestsController extends Controller
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
         ]));
 
-        return new PhysicalCardRequestResource($cardRequest);
+        return PhysicalCardRequestResource::create($cardRequest);
     }
 
     /**

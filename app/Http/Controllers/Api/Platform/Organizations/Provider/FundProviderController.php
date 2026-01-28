@@ -49,6 +49,10 @@ class FundProviderController extends Controller
             'order_by', 'order_dir',
         ]), FundProvider::queryAvailableFunds($organization)))->query()->latest();
 
+        $tags = Tag::whereHas('funds', static function (Builder $builder) use ($query) {
+            return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
+        })->where('scope', 'provider')->get();
+
         $meta = [
             'organizations' => Organization::whereHas('funds', function (Builder $builder) use ($query) {
                 $builder->whereIn('id', (clone($query))->select('funds.id'));
@@ -60,17 +64,11 @@ class FundProviderController extends Controller
             })->select(['id', 'name'])->get()->map(static function (Implementation $implementation) {
                 return $implementation->only('id', 'name');
             }),
-            'tags' => TagResource::collection(Tag::whereHas('funds', static function (Builder $builder) use ($query) {
-                return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
-            })->where('scope', 'provider')->with('translations')->get()),
+            'tags' => TagResource::createCollection($tags),
             'totals' => FundProvider::makeTotalsMeta($organization),
         ];
 
-        return FundResource::collection(
-            $query->paginate(
-                $request->input('per_page', 10)
-            )
-        )->additional(compact('meta'));
+        return FundResource::queryCollection($query, $request)->additional(compact('meta'));
     }
 
     /**

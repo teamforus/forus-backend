@@ -59,7 +59,7 @@ class VoucherRecordsController extends Controller
     ): SponsorVoucherRecordResource {
         $this->authorize('create', [VoucherRecord::class, $voucher, $organization]);
 
-        return new SponsorVoucherRecordResource($voucher->appendRecord(
+        return SponsorVoucherRecordResource::create($voucher->appendRecord(
             $request->string('record_type_key'),
             $request->string('value'),
             $request->string('note'),
@@ -82,7 +82,7 @@ class VoucherRecordsController extends Controller
     ): SponsorVoucherRecordResource {
         $this->authorize('view', [$voucherRecord, $voucher, $organization]);
 
-        return new SponsorVoucherRecordResource($voucherRecord);
+        return SponsorVoucherRecordResource::create($voucherRecord);
     }
 
     /**
@@ -109,7 +109,7 @@ class VoucherRecordsController extends Controller
 
         Event::dispatch(new VoucherRecordUpdated($voucherRecord));
 
-        return new SponsorVoucherRecordResource($voucherRecord);
+        return SponsorVoucherRecordResource::create($voucherRecord);
     }
 
     /**

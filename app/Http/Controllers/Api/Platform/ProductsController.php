@@ -79,18 +79,18 @@ class ProductsController extends Controller
             ->whereHas('medias')
             ->where('show_on_webshop', true)
             ->take($per_page)->groupBy('organization_id')->distinct()
-            ->with(ProductResource::load())->get();
+            ->get();
 
         if ($resultProducts->count() < 6) {
             $resultProducts = $resultProducts->merge(
                 Product::implementationSample()->whereKeyNot($resultProducts->pluck('id'))
                     ->take($per_page - $resultProducts->count())
                     ->where('show_on_webshop', true)
-                    ->with(ProductResource::load())->get()
+                    ->get()
             );
         }
 
-        return ProductResource::collection($resultProducts->load(ProductResource::load()));
+        return ProductResource::createCollection($resultProducts);
     }
 
     /**

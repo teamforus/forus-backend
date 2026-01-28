@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Models\PhysicalCardRequest;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property PhysicalCardRequest $resource
  */
-class PhysicalCardRequestResource extends JsonResource
+class PhysicalCardRequestResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.

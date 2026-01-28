@@ -16,7 +16,10 @@ class SponsorPhysicalCardTypeResource extends BaseJsonResource
      * @var string[]
      */
     public const array LOAD = [
-        'photo.presets',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photo' => MediaResource::class,
     ];
 
     public const array LOAD_COUNT = [

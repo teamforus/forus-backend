@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
+use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
@@ -20,6 +21,7 @@ class SponsorIdentityProfilesTest extends TestCase
     use MakesTestOrganizations;
     use MakesTestIdentities;
     use MakesTestFunds;
+    use MakesRequesterVoucherPayouts;
 
     /**
      * Tests that a sponsor can list identities associated with their organization.
@@ -126,6 +128,33 @@ class SponsorIdentityProfilesTest extends TestCase
                     $identity3->profiles()->count() > 0 ? $organization->id : null,
                 );
         }
+    }
+
+    /**
+     * Tests that sponsor identity details include fund request bank accounts.
+     *
+     * @throws \Throwable
+     * @return void
+     */
+    public function testSponsorIdentityShowsFundRequestBankAccount(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $fund = $this->makePayoutEnabledFund($organization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $fundRequest = $result['fund_request'];
+        $iban = $result['iban'];
+        $ibanName = $result['iban_name'];
+
+        $this->apiViewIdentityRequest($organization->id, $requester->id, $organization->identity)
+            ->assertSuccessful()
+            ->assertJsonFragment([
+                'type' => 'fund_request',
+                'type_id' => $fundRequest->id,
+                'iban' => $iban,
+                'name' => $ibanName,
+            ]);
     }
 
     /**

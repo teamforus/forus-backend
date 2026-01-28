@@ -28,8 +28,6 @@ class EmployeesController extends Controller
             });
         }
 
-        return EmployeeResource::collection($employees->paginate(
-            $request->input('per_page', 20)
-        ));
+        return EmployeeResource::queryCollection($employees, $request->input('per_page', 20));
     }
 }

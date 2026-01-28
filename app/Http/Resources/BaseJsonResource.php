@@ -11,12 +11,14 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection as SupportCollection;
 
 class BaseJsonResource extends JsonResource
 {
     public const array LOAD = [];
     public const array LOAD_COUNT = [];
     public const array LOAD_MORPH = [];
+    public const array LOAD_NESTED = [];
 
     /**
      * @var string
@@ -42,11 +44,23 @@ class BaseJsonResource extends JsonResource
      */
     public static function load(?string $append = null): array
     {
-        if ($append) {
-            return array_map(fn ($load) => "$append.$load", static::LOAD);
+        $prepend = $append ? "$append." : '';
+        $loads = static::prefixLoads(static::LOAD, $prepend);
+
+        foreach (static::LOAD_NESTED as $relation => $resourceClass) {
+            $nestedRelation = $prepend . $relation;
+            $resourceClasses = is_array($resourceClass) ? $resourceClass : [$resourceClass];
+
+            $loads[] = $nestedRelation;
+
+            foreach ($resourceClasses as $class) {
+                if (is_string($class) && is_subclass_of($class, self::class)) {
+                    $loads = array_merge($loads, $class::load($nestedRelation));
+                }
+            }
         }
 
-        return static::LOAD;
+        return static::uniqueLoads($loads);
     }
 
     /**
@@ -72,6 +86,28 @@ class BaseJsonResource extends JsonResource
         }
 
         return (new static($resource))->setAttributes($attributes);
+    }
+
+    /**
+     * @param Collection|SupportCollection|array $resource
+     * @param array $attributes
+     * @return AnonymousResourceCollection
+     */
+    public static function createCollection(
+        Collection|SupportCollection|array $resource,
+        array $attributes = []
+    ): AnonymousResourceCollection {
+        $collection = $resource instanceof Collection
+            ? $resource
+            : new Collection($resource instanceof SupportCollection ? $resource->all() : $resource);
+
+        static::load_morph_collection($collection);
+        $collection->load(static::load())->loadCount(static::load_count());
+
+        $resourceCollection = static::collection($collection);
+        $resourceCollection->collection->map(fn (self $resource) => $resource->setAttributes($attributes));
+
+        return $resourceCollection;
     }
 
     /**
@@ -129,6 +165,60 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
+     * @param array $loads
+     * @param string $prepend
+     * @return array
+     */
+    protected static function prefixLoads(array $loads, string $prepend): array
+    {
+        if ($prepend === '') {
+            return $loads;
+        }
+
+        $prefixed = [];
+
+        foreach ($loads as $key => $value) {
+            if (is_int($key)) {
+                $prefixed[] = $prepend . $value;
+                continue;
+            }
+
+            $prefixed[$prepend . $key] = $value;
+        }
+
+        return $prefixed;
+    }
+
+    /**
+     * @param array $loads
+     * @return array
+     */
+    protected static function uniqueLoads(array $loads): array
+    {
+        $keyed = array_filter($loads, fn ($key) => !is_int($key), ARRAY_FILTER_USE_KEY);
+        $unique = [];
+        $seen = [];
+
+        foreach ($loads as $key => $value) {
+            if (!is_int($key)) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                if (isset($keyed[$value]) || isset($seen[$value])) {
+                    continue;
+                }
+
+                $seen[$value] = true;
+            }
+
+            $unique[] = $value;
+        }
+
+        return array_merge($unique, $keyed);
+    }
+
+    /**
      * @param Model $builder
      * @return Model
      */
@@ -139,6 +229,19 @@ class BaseJsonResource extends JsonResource
         }
 
         return $builder;
+    }
+
+    /**
+     * @param Collection $collection
+     * @return Collection
+     */
+    protected static function load_morph_collection(Collection $collection): Collection
+    {
+        foreach (static::LOAD_MORPH as $morphKey => $morphRelations) {
+            $collection->loadMorph($morphKey, $morphRelations);
+        }
+
+        return $collection;
     }
 
     /**

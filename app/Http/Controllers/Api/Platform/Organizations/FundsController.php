@@ -292,7 +292,7 @@ class FundsController extends Controller
             $fund->syncCriteria($request->input('criteria'));
         }
 
-        return new FundResource($fund);
+        return FundResource::create($fund);
     }
 
     /**

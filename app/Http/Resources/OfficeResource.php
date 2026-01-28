@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Office;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -12,10 +13,13 @@ use Illuminate\Support\Facades\Gate;
 class OfficeResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'schedules',
-        'photo.presets',
-        'organization.logo',
-        'organization.business_type.translations',
+        'organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photo' => MediaResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'schedules' => OfficeScheduleResource::class,
     ];
 
     public const array LOAD_COUNT = [
@@ -25,10 +29,10 @@ class OfficeResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request|any $request
+     * @param Request $request
      * @return array|null
      */
-    public function toArray($request): ?array
+    public function toArray(Request $request): ?array
     {
         if ($this->resource === null) {
             return null;

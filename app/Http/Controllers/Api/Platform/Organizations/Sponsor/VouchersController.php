@@ -292,7 +292,7 @@ class VouchersController extends Controller
             'data->uploaded_file_meta->created_ids' => $voucherModels->pluck('id')->toArray(),
         ])->update();
 
-        return SponsorVoucherResource::collection($voucherModels);
+        return SponsorVoucherResource::createCollection($voucherModels);
     }
 
     /**
@@ -540,6 +540,6 @@ class VouchersController extends Controller
             ]);
         }
 
-        return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data', 'name']));
+        return VoucherExportArrResource::create(Arr::only($exportData, ['files', 'data', 'name']));
     }
 }

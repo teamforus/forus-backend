@@ -13,13 +13,17 @@ use Illuminate\Http\Request;
 class ProductSmallResource extends ProductResource
 {
     public const array LOAD = [
-        'photos.presets',
+        'organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

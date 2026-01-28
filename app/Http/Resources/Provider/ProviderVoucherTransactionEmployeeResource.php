@@ -13,10 +13,15 @@ use Illuminate\Http\Request;
 class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'voucher.fund.logo',
-        'provider.logo',
-        'product.photos.presets',
         'fund_provider_product',
+        'notes',
+    ];
+
+    public const array LOAD_NESTED = [
+        'provider.logo' => MediaResource::class,
+        'product.photos' => MediaResource::class,
+        'voucher.fund.logo' => MediaResource::class,
+        'voucher.fund.organization.logo' => MediaResource::class,
     ];
 
     /**

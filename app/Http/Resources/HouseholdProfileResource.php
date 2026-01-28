@@ -13,19 +13,9 @@ use Illuminate\Http\Request;
  */
 class HouseholdProfileResource extends BaseJsonResource
 {
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
-
-        return [
-            ...parent::load($append),
-            ...SponsorIdentityResource::load("{$prepend}profile.identity"),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'profile.identity' => SponsorIdentityResource::class,
+    ];
 
     /**
      * @param Request $request

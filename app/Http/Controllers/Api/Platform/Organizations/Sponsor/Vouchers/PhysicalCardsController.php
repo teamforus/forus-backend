@@ -33,7 +33,7 @@ class PhysicalCardsController extends Controller
         $this->authorize('showSponsor', [$voucher, $organization]);
         $this->authorize('createSponsor', [PhysicalCard::class, $fundPhysicalCardType, $voucher, $organization]);
 
-        return new SponsorPhysicalCardResource($voucher->addPhysicalCard(
+        return SponsorPhysicalCardResource::create($voucher->addPhysicalCard(
             $request->post('code'),
             $fundPhysicalCardType->physical_card_type,
         ));

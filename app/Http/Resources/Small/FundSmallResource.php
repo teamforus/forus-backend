@@ -7,6 +7,7 @@ use App\Http\Resources\ImplementationResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\Fund;
+use Illuminate\Http\Request;
 
 /**
  * @property Fund $resource
@@ -15,18 +16,22 @@ use App\Models\Fund;
 class FundSmallResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'logo.presets',
         'fund_formulas',
-        'organization.logo.presets',
+    ];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+        'organization' => OrganizationTinyResource::class,
+        'fund_config.implementation' => ImplementationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fundAmount = $this->resource->amountFixedByFormula();
 

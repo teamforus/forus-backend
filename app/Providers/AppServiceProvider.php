@@ -36,6 +36,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
 use App\Models\ProductReservationFieldValue;
+use App\Models\ProfileBankAccount;
 use App\Models\Reimbursement;
 use App\Models\ReservationExtraPayment;
 use App\Models\Voucher;
@@ -93,6 +94,7 @@ class AppServiceProvider extends ServiceProvider
         'voucher_record' => VoucherRecord::class,
         'voucher_transaction' => VoucherTransaction::class,
         'prevalidation_request' => PrevalidationRequest::class,
+        'profile_bank_account' => ProfileBankAccount::class,
         'voucher_transaction_bulk' => VoucherTransactionBulk::class,
         'reservation_extra_payment' => ReservationExtraPayment::class,
     ];
