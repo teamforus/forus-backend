@@ -13,6 +13,7 @@ use App\Models\PersonBsnApiRecordType;
 use App\Models\RecordType;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -388,11 +389,17 @@ class FundRequestPrefillsTest extends DuskTestCase
             ['key' => 'child_2_last_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
             ['key' => 'child_2_birth_date', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
             ['key' => 'child_2_gender', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_bsn', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_first_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_last_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_birth_date', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_gender', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
             ['key' => 'children_age_group_0_3', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_4_11', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_12_13', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_14_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_18_99', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_12_17_gender_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
         ];
 
         $recordTypes = collect($recordTypeConfigs)
@@ -756,6 +763,191 @@ class FundRequestPrefillsTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
+     */
+    public function testWebshopFundRequestPrefillsWithChildrenByGender(): void
+    {
+        // configure implementation and organization for prefills
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+
+        $this->assertNotNull($implementation);
+        $this->assertNotNull($organization);
+
+        $implementationData = $implementation->only(['digid_enabled', 'digid_required']);
+        $organizationData = $organization->only([
+            'fund_request_resolve_policy', 'bsn_enabled', 'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
+            'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust', 'iconnect_target_binding',
+            'iconnect_api_oin', 'iconnect_base_url',
+        ]);
+
+        // create record types
+        $recordTypeConfigs = [
+            ['key' => 'given_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'family_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'birth_date', 'type' => RecordType::TYPE_DATE, 'control_type' => RecordType::CONTROL_TYPE_DATE],
+            ['key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS, 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'child_1_bsn', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_1_first_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_1_last_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_1_birth_date', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_1_gender', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_2_bsn', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_2_first_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_2_last_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_2_birth_date', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_2_gender', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_bsn', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_first_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_last_name', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_birth_date', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'child_3_gender', 'type' => RecordType::TYPE_STRING, 'control_type' => RecordType::CONTROL_TYPE_TEXT],
+            ['key' => 'children_age_group_0_3', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_4_11', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_12_13', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_14_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_18_99', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_12_17_gender_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+        ];
+
+        $recordTypes = collect($recordTypeConfigs)
+            ->map(fn (array $config) => $this->makeRecordTypeForKey(
+                $organization,
+                $config['key'],
+                $config['type'],
+                $config['control_type'],
+            ))
+            ->filter(fn (RecordType $recordType) => $recordType->wasRecentlyCreated);
+
+        // define person bsn prefill mappings
+        $prefillRecordTypes = collect([
+            PersonBsnApiRecordType::firstOrCreate([
+                'person_bsn_api_field' => 'naam.voornamen',
+                'record_type_key' => 'given_name',
+            ]),
+            PersonBsnApiRecordType::firstOrCreate([
+                'person_bsn_api_field' => 'naam.geslachtsnaam',
+                'record_type_key' => 'family_name',
+            ]),
+            PersonBsnApiRecordType::firstOrCreate([
+                'person_bsn_api_field' => 'geboorte.datum.datum',
+                'record_type_key' => 'birth_date',
+            ]),
+        ])->filter(fn (PersonBsnApiRecordType $recordType) => $recordType->wasRecentlyCreated);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'key' => 'nijmegen-vi',
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+        ], $implementation);
+
+        $employeeIdentity = $this->makeIdentity($this->makeUniqueEmail());
+        $rolesValidator = Role::where('key', 'validation')->pluck('id')->toArray();
+        $employee = $organization->addEmployee($employeeIdentity, $rolesValidator);
+
+        $this->rollbackModels([
+            [$implementation, $implementationData],
+            [$organization, $organizationData],
+        ], function () use ($implementation, $organization, $fund, $employee) {
+            // configure organization policy and disable digid
+            $implementation->forceFill([
+                'digid_enabled' => false,
+                'digid_required' => false,
+            ])->save();
+
+            $fund->forceFill([
+                'default_validator_employee_id' => $employee->id,
+                'auto_requests_validation' => false,
+            ])->save();
+
+            // configure iConnect settings and auto-approve requests
+            $this->enablePersonBsnApiForOrganization($organization);
+
+            // replace default formulas with the configured multipliers
+            $fund->fund_formulas()->delete();
+
+            $fund->fund_formulas()->create([
+                'type' => FundFormula::TYPE_MULTIPLY,
+                'amount' => '100.00',
+                'record_type_key' => 'partner_same_address_nth',
+            ]);
+
+            $fund->fund_formulas()->create([
+                'type' => FundFormula::TYPE_MULTIPLY,
+                'amount' => '50.00',
+                'record_type_key' => 'children_age_group_12_17_gender_female',
+            ]);
+
+            // define criteria with steps
+            $criteria = [[
+                'title' => 'First name',
+                'description' => '',
+                'record_type_key' => 'given_name',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+            ], [
+                'title' => 'Last name',
+                'description' => '',
+                'record_type_key' => 'family_name',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+            ], [
+                'title' => 'Date of birth',
+                'description' => '',
+                'record_type_key' => 'birth_date',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+            ], [
+                'title' => 'Partner',
+                'description' => '',
+                'record_type_key' => 'partner_same_address_nth',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+                'optional' => true,
+            ], [
+                'title' => 'Children',
+                'description' => '',
+                'record_type_key' => 'children_same_address_nth',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+                'optional' => true,
+            ]];
+
+            $this->makeFundCriteria($fund, $criteria);
+
+            $this->processFundRequestPrefillsTestCase($implementation, $fund, [
+                'bsn' => '999993112',
+                'prefill_value' => 'Zon',
+                'partner_value' => 'Gerrit',
+                'child_value' => 'Zoey',
+                'expected_amount' => 250,
+            ]);
+        }, function () use ($fund, $prefillRecordTypes, $recordTypes) {
+            // cleanup fund, mappings, and record types
+            $fund && $this->deleteFund($fund);
+            $prefillRecordTypes->each(fn (PersonBsnApiRecordType $recordType) => $recordType->delete());
+            $recordTypes->each(fn (RecordType $recordType) => $recordType->delete());
+        });
+    }
+
+    /**
      * @param Implementation $implementation
      * @param Fund $fund
      * @param array $config
@@ -797,7 +989,10 @@ class FundRequestPrefillsTest extends DuskTestCase
 
             // complete manual input and continue
             // fill manual field and proceed to overview
-            $this->fillInput($browser, '@controlNumber', 'number', $config['number_value']);
+            if (Arr::has($config, 'number_value')) {
+                $this->fillInput($browser, '@controlNumber', 'number', $config['number_value']);
+            }
+
             $browser->click('@nextStepButton');
 
             $browser->waitFor('@submitButton');
@@ -816,10 +1011,30 @@ class FundRequestPrefillsTest extends DuskTestCase
 
         $request = FundRequest::where('fund_id', $fund->id)
             ->where('identity_id', $requester->id)
-            ->exists();
+            ->first();
 
         // assert fund request persisted
-        $this->assertTrue($request);
+        $this->assertNotNull($request);
+
+        if (!Arr::has($config, 'expected_amount')) {
+            return;
+        }
+
+        if (!$request->employee_id) {
+            $employee = $fund->default_validator_employee;
+            $employee && $request->assignEmployee($employee);
+        }
+
+        $request->approve();
+
+        // assert voucher amount after approval
+        $voucher = $fund->vouchers()
+            ->where('identity_id', $requester->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($voucher);
+        $this->assertEquals($config['expected_amount'], (float) $voucher->amount);
     }
 
     /**

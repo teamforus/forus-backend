@@ -428,4 +428,11 @@ return [[
     'system' => false,
     'vouchers' => true,
     'criteria' => true,
+], [
+    'key' => 'children_age_group_12_17_gender_female',
+    'name' => 'Children age group 12-17 gender female',
+    'type' => RecordType::TYPE_NUMBER,
+    'system' => false,
+    'vouchers' => true,
+    'criteria' => true,
 ]];
