@@ -18,19 +18,21 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
 {
     public const array LOAD = [
         'provider',
-        'provider.business_type.translations',
-        'provider.logo.presets',
-        'voucher.fund',
-        'voucher.fund.logo.presets',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
-        'product',
-        'notes_provider',
+    ];
+
+    public const array LOAD_NESTED = [
+        'provider' => OrganizationTinyResource::class,
+        'voucher.fund' => FundTinyResource::class,
+        'product' => ProductResource::class,
+        'product_reservation' => ProductReservationResource::class,
+        'notes_provider' => VoucherTransactionNoteResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

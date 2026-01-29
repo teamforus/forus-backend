@@ -21,7 +21,7 @@ class BanksController extends Controller
     {
         $this->authorize('viewAny', Bank::class);
 
-        return BankResource::collection(Bank::paginate($request->input('per_page')));
+        return BankResource::queryCollection(Bank::query(), $request);
     }
 
     /**
@@ -35,6 +35,6 @@ class BanksController extends Controller
     {
         $this->authorize('show', $bank);
 
-        return new BankResource($bank);
+        return BankResource::create($bank);
     }
 }

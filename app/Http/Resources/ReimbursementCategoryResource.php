@@ -12,11 +12,14 @@ use Illuminate\Http\Request;
 class ReimbursementCategoryResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'organization.logo.presets',
     ];
 
     public const array LOAD_COUNT = [
         'reimbursements',
+    ];
+
+    public const array LOAD_NESTED = [
+        'organization' => OrganizationTinyResource::class,
     ];
 
     /**
@@ -25,7 +28,7 @@ class ReimbursementCategoryResource extends BaseJsonResource
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'name', 'reimbursements_count',

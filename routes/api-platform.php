@@ -876,6 +876,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\Sponsor\PayoutsController@storeBatchValidate"
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/payouts/bank-accounts',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@bankAccounts"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/payouts',
         'Api\Platform\Organizations\Sponsor\PayoutsController'

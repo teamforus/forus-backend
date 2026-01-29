@@ -11,9 +11,11 @@ use Illuminate\Support\Collection;
  */
 class OrganizationBasicResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'logo.presets',
-        'business_type.translations',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaCompactResource::class,
+        'business_type' => BusinessTypeResource::class,
     ];
 
     /**

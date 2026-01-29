@@ -14,24 +14,14 @@ class OrganizationTinyResource extends BaseJsonResource
 {
     public const array LOAD = [];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
-
-        return [
-            ...parent::load($append),
-            ...MediaResource::load("{$prepend}logo"),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+    ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

@@ -27,22 +27,26 @@ use Illuminate\Support\Arr;
 class SponsorProductResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'photos.presets',
         'product_reservations_pending',
-        'product_category.translations',
-        'organization.logo.presets',
-        'organization.business_type.translations',
-        'sponsor_organization.logo.presets',
-        'sponsor_organization.business_type.translations',
         'product_exclusions',
+        'fund_provider_chats.fund_provider',
+        'voucher_transactions.voucher',
+        'logs_monitored_field_changed',
         'logs_last_monitored_field_changed',
+    ];
+
+    public const array LOAD_NESTED = [
+        'photos' => MediaResource::class,
+        'product_category' => ProductCategoryResource::class,
+        'organization' => OrganizationBasicResource::class,
+        'sponsor_organization' => OrganizationBasicResource::class,
     ];
     protected Collection |null $funds = null;
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array
@@ -64,7 +68,7 @@ class SponsorProductResource extends BaseJsonResource
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->countReservedCached($fundProvider?->fund),
-            'sold_amount' => $product->countSold($fundProvider?->fund),
+            'sold_amount' => $product->countSoldCached($fundProvider?->fund),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'price_locale' => $product->price_locale,

@@ -10,14 +10,9 @@ use Illuminate\Http\Request;
  */
 class FundFormResource extends BaseJsonResource
 {
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [...parent::load($append), ...FundResource::load('fund')];
-    }
+    public const array LOAD_NESTED = [
+        'fund' => FundResource::class,
+    ];
 
     /**
      * Transform the resource into an array.

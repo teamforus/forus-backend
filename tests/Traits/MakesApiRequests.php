@@ -17,6 +17,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductReservation;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Testing\TestResponse;
@@ -946,5 +947,27 @@ trait MakesApiRequests
             'data' => $data,
             'overwrite' => $overwrite,
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakePayoutRequest(array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/payouts', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return VoucherTransaction
+     */
+    public function apiMakePayout(array $data, Identity $identity): VoucherTransaction
+    {
+        $response = $this->apiMakePayoutRequest($data, $identity)->assertSuccessful();
+
+        return VoucherTransaction::findOrFail($response->json('data.id'));
     }
 }

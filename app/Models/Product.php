@@ -612,6 +612,23 @@ class Product extends BaseModel
     }
 
     /**
+     * Count actually sold products using the loaded relation.
+     *
+     * @param Fund|null $fund
+     * @return int
+     */
+    public function countSoldCached(?Fund $fund = null): int
+    {
+        return $this->voucher_transactions->filter(function (VoucherTransaction $transaction) use ($fund) {
+            if ($transaction->state === VoucherTransaction::STATE_CANCELED) {
+                return false;
+            }
+
+            return !$fund || $transaction->voucher?->fund_id === $fund->id;
+        })->count();
+    }
+
+    /**
      * @return int|null
      * @noinspection PhpUnused
      */

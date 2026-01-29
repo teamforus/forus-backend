@@ -2,21 +2,22 @@
 
 namespace App\Services\BankService\Resources;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Services\BankService\Models\Bank;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
  * @property-read Bank $resource
  */
-class BankResource extends JsonResource
+class BankResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return $this->resource->only('id', 'key', 'name');
     }

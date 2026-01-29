@@ -10,9 +10,11 @@ use Illuminate\Http\Request;
  */
 class ProductReservationFieldValueResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'files',
-        'reservation_field',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'files' => FileResource::class,
+        'reservation_field' => ReservationFieldResource::class,
     ];
 
     /**

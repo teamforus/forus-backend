@@ -86,7 +86,7 @@ class Identity2FAController extends Controller
             ],
         }));
 
-        return (new Identity2FAResource($identity2FA))->additional([
+        return Identity2FAResource::create($identity2FA)->additional([
             'code_sent' => $identity2FA->isTypePhone() && $identity2FA->sendCode(),
         ]);
     }
@@ -105,7 +105,7 @@ class Identity2FAController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'auth_2fa', 'resend');
         $this->authorize('resend', $identity2FA);
 
-        return (new Identity2FAResource($identity2FA))->additional([
+        return Identity2FAResource::create($identity2FA)->additional([
             'code_sent' => $identity2FA->isTypePhone() && $identity2FA->sendCode(),
         ]);
     }
@@ -134,7 +134,7 @@ class Identity2FAController extends Controller
             ])->save();
         }
 
-        return new Identity2FAResource($identity2FA);
+        return Identity2FAResource::create($identity2FA);
     }
 
     /**

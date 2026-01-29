@@ -6,6 +6,7 @@ use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Data\BankAccount;
+use App\Models\FundPayoutFormula;
 use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
@@ -170,6 +171,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property-read int|null $top_ups_count
  * @property-read Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
+ * @property-read Collection|\App\Models\FundPayoutFormula[] $fund_payout_formulas
+ * @property-read int|null $fund_payout_formulas_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -969,6 +972,15 @@ class Fund extends BaseModel
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
+    public function fund_payout_formulas(): HasMany
+    {
+        return $this->hasMany(FundPayoutFormula::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
     public function amount_presets(): HasMany
     {
         return $this->hasMany(FundAmountPreset::class);
@@ -1007,6 +1019,49 @@ class Fund extends BaseModel
     public function prevalidation_requests(): HasMany
     {
         return $this->hasMany(PrevalidationRequest::class);
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @param bool $fresh
+     * @return float|null
+     */
+    public function voucherPayoutAmountForIdentity(?Identity $identity, bool $fresh = true): ?float
+    {
+        $formulas = $fresh ? $this->fund_payout_formulas()->get() : $this->fund_payout_formulas;
+
+        if ($formulas->isEmpty()) {
+            return null;
+        }
+
+        return $formulas->map(function (FundPayoutFormula $formula) use ($identity) {
+            switch ($formula->type) {
+                case FundPayoutFormula::TYPE_FIXED:
+                    return (float) $formula->amount;
+                case FundPayoutFormula::TYPE_MULTIPLY:
+                    if (!$formula->record_type_key) {
+                        return 0.0;
+                    }
+
+                    $record = $identity
+                        ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)
+                        : null;
+                    $value = $record?->value;
+
+                    return is_numeric($value) ? (float) $formula->amount * (float) $value : 0.0;
+                default:
+                    return 0.0;
+            }
+        })->sum();
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return float|null
+     */
+    public function voucherPayoutAmountForIdentityCached(?Identity $identity): ?float
+    {
+        return $this->voucherPayoutAmountForIdentity($identity, false);
     }
 
     /**

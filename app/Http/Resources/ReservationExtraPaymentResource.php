@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\ReservationExtraPayment;
+use Illuminate\Http\Request;
 
 /**
  * @property-read ReservationExtraPayment $resource
@@ -10,16 +11,21 @@ use App\Models\ReservationExtraPayment;
 class ReservationExtraPaymentResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'refunds',
+        'refunds_active',
+        'refunds_completed',
+    ];
+
+    public const array LOAD_NESTED = [
+        'refunds' => ReservationExtraPaymentRefundResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return ([
             ...$this->resource->only([
