@@ -253,6 +253,14 @@ return [[
     'vouchers' => true,
     'criteria' => true,
 ], [
+    'key' => 'partner_same_address_gender_female_nth',
+    'name' => 'Partners same address gender female',
+    'type' => RecordType::TYPE_NUMBER,
+    'control_type' => RecordType::CONTROL_TYPE_NUMBER,
+    'system' => false,
+    'vouchers' => true,
+    'criteria' => true,
+], [
     'key' => 'partner_first_name',
     'name' => 'Partner first name',
     'type' => RecordType::TYPE_STRING,

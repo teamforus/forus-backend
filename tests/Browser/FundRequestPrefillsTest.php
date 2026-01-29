@@ -765,7 +765,7 @@ class FundRequestPrefillsTest extends DuskTestCase
     /**
      * @throws Throwable
      */
-    public function testWebshopFundRequestPrefillsWithChildrenByGender(): void
+    public function testWebshopFundRequestPrefillsWithPartnerAndChildrenByGender(): void
     {
         // configure implementation and organization for prefills
         $implementation = Implementation::byKey('nijmegen');
@@ -871,7 +871,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             $fund->fund_formulas()->create([
                 'type' => FundFormula::TYPE_MULTIPLY,
                 'amount' => '100.00',
-                'record_type_key' => 'partner_same_address_nth',
+                'record_type_key' => 'partner_same_address_gender_female_nth',
             ]);
 
             $fund->fund_formulas()->create([
@@ -911,7 +911,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             ], [
                 'title' => 'Partner',
                 'description' => '',
-                'record_type_key' => 'partner_same_address_nth',
+                'record_type_key' => 'partner_same_address_gender_female_nth',
                 'operator' => '*',
                 'value' => '',
                 'show_attachment' => false,
@@ -937,7 +937,7 @@ class FundRequestPrefillsTest extends DuskTestCase
                 'prefill_value' => 'Zon',
                 'partner_value' => 'Gerrit',
                 'child_value' => 'Zoey',
-                'expected_amount' => 250,
+                'expected_amount' => 150,
             ]);
         }, function () use ($fund, $prefillRecordTypes, $recordTypes) {
             // cleanup fund, mappings, and record types

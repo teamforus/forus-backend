@@ -18,6 +18,8 @@ class IConnectPrefill
     public const string PREFILL_ERROR_NOT_FILLED_REQUIRED_CRITERIA = 'not_filled_required_criteria';
     public const string PREFILL_ERROR_TAKEN_BY_PARTNER = 'taken_by_partner';
 
+    public const string GENDER_FEMALE = 'vrouw';
+
     /**
      * @param Fund $fund
      * @param string $bsn
@@ -91,17 +93,30 @@ class IConnectPrefill
         // prepare children prefills with group counts by age
         $childrenPrefills = $this->getChildrenPrefillsWithGroupCounts($fund, $person);
 
+        $partnerGender = Arr::get(Arr::first(
+            $partner,
+            fn (array $item) => Arr::get($item, 'record_type_key') === 'partner_gender',
+            []
+        ), 'value');
+
+        $partnersGenderFemale =
+            ($person->getGender() === static::GENDER_FEMALE ? 1 : 0) +
+            ($partnerGender === static::GENDER_FEMALE ? 1 : 0);
+
         return [
             'error' => null,
             'response' => $withResponseData ? $person->getResponseData() : null,
             'person' => [
                 ...$personPrefills,
                 [
+                    'record_type_key' => $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+                    'value' => count(Arr::get($childrenPrefills, 'children', [])),
+                ], [
                     'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
                     'value' => count($partner) ? 2 : 1,
                 ], [
-                    'record_type_key' => $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
-                    'value' => count(Arr::get($childrenPrefills, 'children', [])),
+                    'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
+                    'value' => $partnersGenderFemale,
                 ],
             ],
             ...$childrenPrefills,
@@ -164,7 +179,10 @@ class IConnectPrefill
     {
         $partnerRequired = $fund->criteria
             ->where('fill_type', FundCriterion::FILL_TYPE_PREFILL)
-            ->where('record_type_key', $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS)
+            ->whereIn('record_type_key', [
+                $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+                $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
+            ])
             ->isNotEmpty();
 
         if ($partnerRequired) {
