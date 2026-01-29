@@ -273,8 +273,9 @@ class Fund extends BaseModel
         self::DESCRIPTION_POSITION_REPLACE,
     ];
 
-    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
     public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
+    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
+    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE = 'partner_same_address_gender_female_nth';
 
     /**
      * The attributes that are mass assignable.
@@ -1266,8 +1267,9 @@ class Fund extends BaseModel
                     Config::get("forus.children_age_groups.{$this->fund_config->key}", []),
                     'record_type_key'
                 ),
-                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
                 static::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
             ];
 
             $list = array_filter($list, fn ($item) => !in_array($item, $prefillRecordTypeKeys));

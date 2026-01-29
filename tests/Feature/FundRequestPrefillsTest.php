@@ -118,11 +118,12 @@ class FundRequestPrefillsTest extends TestCase
         $children = $response->json('children');
 
         $this->assertNotEmpty($partner);
-        $this->assertCount(2, $children);
+        $this->assertCount(3, $children);
 
         // assert children group counts
         $groupCounts = collect($response->json('children_groups_counts'));
         $this->assertEquals(2, (int) $groupCounts->firstWhere('record_type_key', 'children_age_group_4_11')['value']);
+        $this->assertEquals(1, (int) $groupCounts->firstWhere('record_type_key', 'children_age_group_12_17_gender_female')['value']);
     }
 
     /**
@@ -427,7 +428,7 @@ class FundRequestPrefillsTest extends TestCase
         $records = [
             $this->makeRequestCriterionValue($fund, $prefillKey, 'Zon'),
             $this->makeRequestCriterionValue($fund, Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS, 2),
-            $this->makeRequestCriterionValue($fund, Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS, 2),
+            $this->makeRequestCriterionValue($fund, Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS, 3),
             $this->makeRequestCriterionValue($fund, $manualKey, 3),
         ];
 
@@ -444,5 +445,6 @@ class FundRequestPrefillsTest extends TestCase
         $this->assertContains('partner_bsn', $recordKeys);
         $this->assertContains('child_1_first_name', $recordKeys);
         $this->assertContains('children_age_group_18_99', $recordKeys);
+        $this->assertContains('children_age_group_12_17_gender_female', $recordKeys);
     }
 }
