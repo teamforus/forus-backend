@@ -372,6 +372,7 @@ trait MakesTestFunds
         ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
         Record::where('fund_request_id', $fund->fund_requests()->pluck('id')->toArray())->forceDelete();
         FundProviderProduct::whereIn('fund_provider_id', $fund->providers()->pluck('id')->toArray())->forceDelete();
+        Prevalidation::where('fund_id', $fund->id)->forceDelete();
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->forceDelete();
