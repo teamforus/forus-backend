@@ -11,7 +11,7 @@ trait ThrottleWithMeta
 {
     use ThrottlesLogins;
 
-    protected int $decayMinutes = 1;
+    protected float $decayMinutes = 1.0;
     protected int $maxAttempts = 5;
 
     /**

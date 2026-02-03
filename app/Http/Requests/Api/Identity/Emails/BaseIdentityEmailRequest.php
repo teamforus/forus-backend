@@ -7,7 +7,7 @@ use App\Http\Requests\BaseFormRequest;
 class BaseIdentityEmailRequest extends BaseFormRequest
 {
     protected int $maxAttempts = 5;
-    protected int $decayMinutes = 30;
+    protected float $decayMinutes = 30;
 
     /**
      * Determine if the user is authorized to make this request.

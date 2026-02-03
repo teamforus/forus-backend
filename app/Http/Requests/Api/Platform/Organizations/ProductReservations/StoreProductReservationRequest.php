@@ -21,7 +21,7 @@ class StoreProductReservationRequest extends BaseFormRequest
     use ThrottleWithMeta;
 
     protected int $maxAttempts = 100;
-    protected int $decayMinutes = 180;
+    protected float $decayMinutes = 180;
 
     /**
      * Determine if the user is authorized to make this request.
