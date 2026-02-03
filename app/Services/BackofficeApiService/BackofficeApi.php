@@ -107,7 +107,7 @@ class BackofficeApi
         $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS));
 
         if ($response['success'] ?? false) {
-            return $log->updateModel(array_merge(Arr::only($response, [
+            return tap($log)->update(array_merge(Arr::only($response, [
                 'response_code', 'response_body',
             ]), [
                 'state' => self::STATE_SUCCESS,
@@ -121,7 +121,7 @@ class BackofficeApi
             json_encode(Arr::get($response, 'response_body', ''), JSON_PRETTY_PRINT),
         ));
 
-        return $log->updateModel(array_merge(Arr::only($response, [
+        return tap($log)->update(array_merge(Arr::only($response, [
             'response_code', 'response_error',
         ]), [
             'state' => self::STATE_ERROR,
@@ -283,7 +283,7 @@ class BackofficeApi
             ]));
 
             if ($response['success'] ?? false) {
-                $log->updateModel([
+                $log->update([
                     'state' => self::STATE_SUCCESS,
                     'request_id' => $requestId,
                     'response_id' => $response['response_body']['id'] ?? $requestId,
@@ -298,7 +298,7 @@ class BackofficeApi
                     json_encode(Arr::get($response, 'response_body', ''), JSON_PRETTY_PRINT),
                 ));
 
-                $log->updateModel(array_merge(Arr::only($response, [
+                $log->update(array_merge(Arr::only($response, [
                     'response_code', 'response_error',
                 ]), [
                     'state' => self::STATE_ERROR,
@@ -378,7 +378,7 @@ class BackofficeApi
         ]));
 
         if ($response['success'] ?? false) {
-            return $log->updateModel(array_merge(Arr::only($response, [
+            return tap($log)->update(array_merge(Arr::only($response, [
                 'response_code', 'response_body',
             ]), [
                 'state' => self::STATE_SUCCESS,
@@ -393,7 +393,7 @@ class BackofficeApi
             json_encode(Arr::get($response, 'response_body', []), JSON_PRETTY_PRINT),
         ));
 
-        return $log->updateModel(array_merge(Arr::only($response, [
+        return tap($log)->update(array_merge(Arr::only($response, [
             'response_code', 'response_error', 'response_body',
         ]), [
             'state' => self::STATE_ERROR,

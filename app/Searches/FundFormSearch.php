@@ -11,17 +11,17 @@ class FundFormSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|FundForm $builder
      */
-    public function __construct(array $filters, Builder|Relation $builder)
+    public function __construct(array $filters, Builder|Relation|FundForm $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|FundForm
      */
-    public function query(): Builder|Relation
+    public function query(): Builder|Relation|FundForm
     {
         /** @var Builder|Relation|FundForm $builder */
         $builder = parent::query();

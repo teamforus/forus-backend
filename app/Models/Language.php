@@ -5,6 +5,7 @@ namespace App\Models;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
@@ -33,7 +34,7 @@ use Illuminate\Support\Facades\Cache;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Language whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Language extends BaseModel
+class Language extends Model
 {
     /**
      * The attributes that are mass assignable.

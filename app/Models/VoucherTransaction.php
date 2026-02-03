@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Scopes\Builders\VoucherTransactionQuery;
-use App\Searches\VoucherTransactionsSearch;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Eloquent;
@@ -17,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -137,7 +135,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|VoucherTransaction withoutTrashed()
  * @mixin \Eloquent
  */
-class VoucherTransaction extends BaseModel
+class VoucherTransaction extends Model
 {
     use HasLogs;
     use SoftDeletes;
@@ -451,61 +449,6 @@ class VoucherTransaction extends BaseModel
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Builder
-     */
-    public static function searchSponsor(Request $request, Organization $organization): Builder
-    {
-        $builder = new VoucherTransactionsSearch($request->only([
-            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
-            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
-            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
-            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
-            'identity_address', 'execution_date_from', 'execution_date_to',
-        ]), self::query());
-
-        return $builder->searchSponsor($organization);
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Builder
-     */
-    public static function searchProvider(Request $request, Organization $organization): Builder
-    {
-        $builder = new VoucherTransactionsSearch([
-            ...$request->only([
-                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
-                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
-            ]),
-            'q_type' => 'provider',
-        ], self::query());
-
-        return $builder->searchProvider()->where([
-            'organization_id' => $organization->id,
-        ]);
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Request $request
-     * @return Builder
-     */
-    public static function searchVoucher(Voucher $voucher, Request $request): Builder
-    {
-        $builder = new VoucherTransactionsSearch($request->only([
-            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
-            'transfer_in_min', 'transfer_in_max', 'fund_state',
-        ]), self::query());
-
-        return $builder->query()->where([
-            'voucher_id' => $voucher->id,
-        ]);
-    }
-
-    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -623,7 +566,7 @@ class VoucherTransaction extends BaseModel
      */
     public function setForReview(): self
     {
-        return $this->updateModel([
+        return tap($this)->update([
             'attempts' => 50,
             'last_attempt_at' => now(),
         ]);

@@ -2,15 +2,16 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\Fund;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class FundsExport extends BaseFieldedExport
+class FundsExport extends BaseExport
 {
     protected static string $transKey = 'funds';
 
@@ -48,66 +49,53 @@ class FundsExport extends BaseFieldedExport
     ];
 
     /**
-     * FundsExport constructor.
-     * @param EloquentCollection $funds
+     * @param Builder|Relation|Fund $builder
+     * @param array $fields
      * @param Carbon $from
      * @param Carbon $to
-     * @param array $fields
      */
     public function __construct(
-        EloquentCollection $funds,
+        Builder|Relation|Fund $builder,
+        protected array $fields,
         protected Carbon $from,
         protected Carbon $to,
-        protected array $fields
     ) {
-        $this->data = $this->export($funds);
-        $this->data = collect($this->data)->merge($this->getTotals());
+        parent::__construct($builder, $fields);
     }
 
     /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function export(Collection $data): Collection
-    {
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys(
-            $data->map(fn (Fund $fund) => array_only($this->getRow($fund), $this->fields))
-        );
-    }
-
-    /**
-     * @param Fund $fund
+     * @param Model|Fund $model
      * @return array
      */
-    protected function getRow(Fund $fund): array
+    protected function getRow(Model|Fund $model): array
     {
-        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($fund, $this->from, $this->to);
-        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($fund, $this->from, $this->to);
-        $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($fund, $this->from, $this->to);
+        $total = FinancialOverviewStatisticQueries::getFundBudgetTotal($model, $this->from, $this->to);
+        $used = FinancialOverviewStatisticQueries::getFundBudgetUsed($model, $this->from, $this->to);
+        $costs = FinancialOverviewStatisticQueries::getFundTransactionCosts($model, $this->from, $this->to);
 
-        $this->totals = [
-            'balance' => $this->totals['balance'] + ($total - $used),
-            'expenses' => $this->totals['expenses'] + $used,
-            'transactions' => $this->totals['transactions'] + $costs,
-            'total_top_up' => $this->totals['total_top_up'] + $total,
-        ];
+        $this->accumulateTotals($total, $used, $costs);
 
         return [
-            'name' => $fund->name,
+            'name' => $model->name,
             'balance' => currency_format(round($total - $used, 2)),
             'expenses' => currency_format($used),
             'transactions' => currency_format($costs),
             'total_top_up' => currency_format($total),
         ];
+    }
+
+    /**
+     * @param float $total
+     * @param float $used
+     * @param float $costs
+     * @return void
+     */
+    protected function accumulateTotals(float $total, float $used, float $costs): void
+    {
+        $this->totals['balance'] += ($total - $used);
+        $this->totals['expenses'] += $used;
+        $this->totals['transactions'] += $costs;
+        $this->totals['total_top_up'] += $total;
     }
 
     /**
@@ -125,10 +113,8 @@ class FundsExport extends BaseFieldedExport
             'total_top_up' => currency_format($this->totals['total_top_up']),
         ], $this->fields);
 
-        $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
+        return array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
             $fieldLabels[$key] => $row[$key],
         ]), []);
-
-        return [$row];
     }
 }

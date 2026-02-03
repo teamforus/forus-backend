@@ -1,14 +1,15 @@
 <?php
 
 use App\Models\RecordType;
+use App\Searches\RecordTypeSearch;
 use App\Services\Forus\Session\Services\Browser;
 use App\Services\Forus\Session\Services\Data\AgentData;
 use App\Services\TokenGeneratorService\TokenGenerator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 if (!function_exists('format_datetime_locale')) {
@@ -128,7 +129,7 @@ if (!function_exists('record_types_cached')) {
         bool $reset = false
     ): mixed {
         return cache_optional('record_types', static function () {
-            return RecordType::search()->toArray();
+            return (new RecordTypeSearch([], RecordType::query()))->query()->get()->toArray();
         }, $minutes, null, $reset);
     }
 }
@@ -142,7 +143,8 @@ if (!function_exists('record_types_static')) {
         static $cache = null;
 
         if ($cache === null) {
-            $cache = RecordType::searchQuery()->with('translations')->get();
+            $search = new RecordTypeSearch([], RecordType::query());
+            $cache = $search->query()->get();
         }
 
         return $cache->keyBy('key');
