@@ -214,7 +214,7 @@ class FinancialStatisticQueries
         }
 
         if (Arr::get($options, 'initiator')) {
-            $query->whereInitiator(Arr::get($options, 'initiator'));
+            $query->whereIn('initiator', (array) Arr::get($options, 'initiator'));
         }
 
         return $query->whereIn('target', is_array($targets) ? $targets : []);

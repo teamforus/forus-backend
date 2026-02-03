@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
@@ -96,7 +95,7 @@ class VoucherResource extends BaseJsonResource
             ) : null,
             'address' => $voucher->token_with_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
-            'fund' => $this->getFundResource($voucher->fund),
+            'fund' => $this->getFundResource($voucher),
             'parent' => $voucher->parent ? [
                 ...$voucher->parent->only(['identity_id', 'fund_id']),
                 'created_at' => $voucher->parent->created_at_string,
@@ -252,11 +251,14 @@ class VoucherResource extends BaseJsonResource
     }
 
     /**
-     * @param Fund $fund
+     * @param Voucher $voucher
      * @return array
      */
-    protected function getFundResource(Fund $fund): array
+    protected function getFundResource(Voucher $voucher): array
     {
+        $fund = $voucher->fund;
+        $payoutAmount = $fund->voucherPayoutAmountForIdentityCached($voucher->identity);
+
         return  [
             ...$fund->only('id', 'state', 'type'),
             ...$fund->translateColumns($fund->only(['name', 'description_short', 'how_it_works_html'])),
@@ -272,8 +274,9 @@ class VoucherResource extends BaseJsonResource
             'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
             ...$fund->fund_config->only([
                 'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
-                'allow_voucher_payouts', 'allow_voucher_payout_amount', 'allow_voucher_payout_count',
+                'allow_voucher_payouts', 'allow_voucher_payout_count',
             ]),
+            'voucher_payout_fixed_amount' => $payoutAmount === null ? null : currency_format($payoutAmount),
         ];
     }
 

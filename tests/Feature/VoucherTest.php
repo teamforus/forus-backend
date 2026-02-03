@@ -25,6 +25,7 @@ use Random\RandomException;
 use Tests\TestCase;
 use Tests\TestCases\VoucherTestCases;
 use Tests\Traits\MakesProductReservations;
+use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\TestsReservations;
@@ -39,6 +40,7 @@ class VoucherTest extends TestCase
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesProductReservations;
+    use MakesRequesterVoucherPayouts;
 
     /**
      * @var string
@@ -200,6 +202,39 @@ class VoucherTest extends TestCase
 
         $reservation->refresh();
         $this->assertTrue($reservation->isCanceledByClient(), 'Reservation cancel failed');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testVoucherTransactionsIncludeRequesterPayout(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $payout = $this->apiMakePayout([
+            'voucher_id' => $voucher->id,
+            'amount' => '50.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $requester);
+
+        $voucherResponse = $this->getJson(
+            $this->getIdentityApiUrl($voucher),
+            $this->makeApiHeaders($requester),
+        );
+
+        $voucherResponse->assertSuccessful();
+        $voucherResponse->assertJsonFragment([
+            'id' => $payout->id,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
     }
 
     /**

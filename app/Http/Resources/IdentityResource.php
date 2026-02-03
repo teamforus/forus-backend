@@ -11,11 +11,11 @@ use Illuminate\Http\Request;
  */
 class IdentityResource extends BaseJsonResource
 {
-    public static $wrap = null;
-
     public const array LOAD = [
         'record_bsn',
     ];
+
+    public static $wrap = null;
 
     /**
      * Transform the resource into an array.

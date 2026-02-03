@@ -5,6 +5,7 @@ namespace App\Scopes\Builders;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\Organization;
 use App\Models\Permission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -65,6 +66,53 @@ class FundRequestQuery
                 static::whereIsPending($builder, $identity_id);
             });
         });
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @param Organization $organization
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereHasPayoutBankAccountRecordsForOrganization(
+        Builder|Relation|FundRequest $builder,
+        Organization $organization,
+    ): Builder|Relation|FundRequest {
+        $builder = $builder
+            ->where('state', FundRequest::STATE_APPROVED)
+            ->whereRelation('fund', 'organization_id', $organization->id)
+            ->whereHas('vouchers', fn (Builder $builder) => VoucherQuery::whereNotExpiredAndActive($builder));
+
+        return static::whereHasPayoutBankAccountRecords($builder);
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereHasPayoutBankAccountRecords(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return $builder
+            ->whereHas('records', function (Builder $builder) {
+                $builder
+                    ->whereNotNull('fund_request_records.value')
+                    ->where('fund_request_records.value', '!=', '')
+                    ->join('fund_configs', 'fund_configs.fund_id', '=', 'fund_requests.fund_id')
+                    ->whereColumn(
+                        'fund_request_records.record_type_key',
+                        'fund_configs.iban_record_key',
+                    );
+            })
+            ->whereHas('records', function (Builder $builder) {
+                $builder
+                    ->whereNotNull('fund_request_records.value')
+                    ->where('fund_request_records.value', '!=', '')
+                    ->join('fund_configs', 'fund_configs.fund_id', '=', 'fund_requests.fund_id')
+                    ->whereColumn(
+                        'fund_request_records.record_type_key',
+                        'fund_configs.iban_name_record_key',
+                    );
+            });
     }
 
     /**

@@ -29,17 +29,17 @@ class VoucherPayoutAmountRule extends BaseRule
             return true;
         }
 
-        $fixedAmount = $this->voucher->fund?->fund_config?->allow_voucher_payout_amount;
+        $fixedAmount = $this->voucher->fund?->voucherPayoutAmountForIdentity($this->voucher->identity);
         $balance = (float) $this->voucher->amount_available;
         $balanceCents = self::toCents($balance);
         $amountCents = self::toCents((float) $value);
 
         if ($fixedAmount !== null) {
-            $fixedAmountCents = self::toCents((float) $fixedAmount);
+            $fixedAmountCents = self::toCents($fixedAmount);
 
             if ($amountCents !== $fixedAmountCents) {
                 return $this->reject(trans('validation.payout.amount_exact', [
-                    'amount' => currency_format_locale((float) $fixedAmount),
+                    'amount' => currency_format_locale($fixedAmount),
                 ]));
             }
 
@@ -87,7 +87,7 @@ class VoucherPayoutAmountRule extends BaseRule
      */
     public static function balanceExceededMessage(Voucher $voucher): string
     {
-        $fixedAmount = $voucher->fund?->fund_config?->allow_voucher_payout_amount;
+        $fixedAmount = $voucher->fund?->voucherPayoutAmountForIdentity($voucher->identity);
         $balance = (float) $voucher->amount_available;
 
         if ($fixedAmount !== null) {
