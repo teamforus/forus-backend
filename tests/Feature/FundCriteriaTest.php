@@ -622,7 +622,7 @@ class FundCriteriaTest extends TestCase
                 $recordType::TYPE_IBAN => $this->faker->iban('NL'),
                 $recordType::TYPE_EMAIL => $this->faker->email(),
                 $recordType::TYPE_SELECT,
-                $recordType::TYPE_SELECT_NUMBER => !empty($options) ? array_first($options) : null,
+                $recordType::TYPE_SELECT_NUMBER => !empty($options) ? Arr::first($options) : null,
                 $recordType::TYPE_STRING => token_generator()->generate(10),
                 default => token_generator()->generate(5),
             };

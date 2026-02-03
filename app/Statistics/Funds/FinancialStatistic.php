@@ -2,6 +2,7 @@
 
 namespace App\Statistics\Funds;
 
+use App\Helpers\Arr;
 use App\Models\BaseModel;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
@@ -22,8 +23,8 @@ class FinancialStatistic
         $queries = new FinancialStatisticQueries();
         $dates = $this->makeDates($options);
         $options = array_merge($options, [
-            'date_from' => array_first($dates)['from'] ?? null,
-            'date_to' => array_last($dates)['to'] ?? null,
+            'date_from' => Arr::first($dates)['from'] ?? null,
+            'date_to' => Arr::last($dates)['to'] ?? null,
         ]);
 
         return [

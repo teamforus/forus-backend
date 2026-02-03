@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\Arr;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\PrevalidationQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -336,7 +337,7 @@ class Prevalidation extends BaseModel
             $prevalidation->updateHashes();
 
             if (in_array($records['primaryKey'], $topUpKeys, true)) {
-                $voucherId = array_first(array_where($topUps, function (array $topUp) use ($records) {
+                $voucherId = Arr::first(Arr::where($topUps, function (array $topUp) use ($records) {
                     return $topUp['key'] === $records['primaryKey'];
                 }))['voucher_id'] ?? null;
 
