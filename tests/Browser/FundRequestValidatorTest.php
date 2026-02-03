@@ -384,6 +384,10 @@ class FundRequestValidatorTest extends DuskTestCase
                 $record = $this->assertUpdateFundRequestRecord($browser, $fundRequest);
 
                 // assert files tab
+                $browser
+                    ->waitFor("@fundRequestRecordToggleCollapse$record->id")
+                    ->click("@fundRequestRecordToggleCollapse$record->id");
+
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
 
@@ -603,6 +607,10 @@ class FundRequestValidatorTest extends DuskTestCase
         // the first record is children_nth, and it can be an int and >= 2.
         // the value for the current fund request record is 5
         $record = $fundRequest->records()->first();
+
+        $browser
+            ->waitFor('@toggleCollapseBtn')
+            ->click('@toggleCollapseBtn');
 
         $browser->waitFor("@fundRequestRecordMenuBtn$record->id");
         $browser->click("@fundRequestRecordMenuBtn$record->id");
