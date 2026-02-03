@@ -520,6 +520,27 @@ class FundRequest extends BaseModel
     /**
      * @return array
      */
+    public function getRecordGroups(): array
+    {
+        return FundRequestRecordGroup::getCachedList()
+            ->filter(function (FundRequestRecordGroup $group) {
+                return
+                    (!$group->organization_id && !$group->fund_id) ||
+                    ($group->organization_id === $this->fund->organization_id && !$group->fund_id) ||
+                    $group->fund_id === $this->fund_id;
+            })
+            ->map(function (FundRequestRecordGroup $group) {
+                return [
+                    ...$group->only('id', 'title', 'organization_id', 'fund_id', 'order'),
+                    'record_types' => $group->records->pluck('record_type_key')->toArray(),
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * @return array
+     */
     private function getTrustedAndPendingRecordValues(): array
     {
         $recordTypes = array_unique([

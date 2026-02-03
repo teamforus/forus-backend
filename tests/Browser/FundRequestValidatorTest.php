@@ -78,6 +78,10 @@ class FundRequestValidatorTest extends DuskTestCase
                 $record = $fundRequest->records()->where('record_type_key', 'partner_bsn')->first();
 
                 $browser
+                    ->waitFor('@toggleCollapseBtn')
+                    ->click('@toggleCollapseBtn');
+
+                $browser
                     ->waitFor("@tableFundRequestRecordRow$record->id")
                     ->assertSeeIn("@tableFundRequestRecordRow$record->id", $record->record_type->name)
                     ->assertSeeIn("@tableFundRequestRecordRow$record->id", $partnerBsn);

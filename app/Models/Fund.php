@@ -6,7 +6,6 @@ use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Data\BankAccount;
-use App\Models\FundPayoutFormula;
 use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
@@ -1592,6 +1591,9 @@ class Fund extends BaseModel
             /** @var FundRequestRecord $requestRecord */
             $requestRecord = $fundRequest->records()->create(array_merge($record, [
                 'record_type_key' => $criteria->record_type_key,
+                'source' => $criteria->fill_type === $criteria::FILL_TYPE_PREFILL
+                    ? FundRequestRecord::SOURCE_BRP
+                    : FundRequestRecord::SOURCE_FORM,
             ]));
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
@@ -1613,6 +1615,7 @@ class Fund extends BaseModel
                 $fundRequest->records()->firstOrCreate([
                     'record_type_key' => Arr::get($item, 'record_type_key'),
                     'value' => Arr::get($item, 'value') ?? '',
+                    'source' => FundRequestRecord::SOURCE_BRP,
                 ]);
             }
         }

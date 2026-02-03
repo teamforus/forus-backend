@@ -81,6 +81,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
             'fund' => $this->fundDetails($fundRequest->fund),
             'email' => $fundRequest->identity->email,
             'records' => $this->getRecordsDetails($baseFormRequest, $organization, $fundRequest),
+            'record_groups' => $fundRequest->getRecordGroups(),
             'replaced' => $this->isReplaced($fundRequest),
             'employee' => new EmployeeResource($fundRequest->employee),
             'allowed_employees' => $allowedEmployees->map(fn (Employee $employee) => [
@@ -128,7 +129,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $is_assignable = !$is_assigned && !$record->fund_request->employee_id && $record->fund_request->isPending();
 
         $baseFields = array_merge($record->only([
-            'id', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
+            'id', 'record_type_key', 'fund_request_id', 'fund_criterion_id', 'source',
         ]), [
             'value' => $is_assignable || $is_assigned ? $record->value : null,
         ]);
