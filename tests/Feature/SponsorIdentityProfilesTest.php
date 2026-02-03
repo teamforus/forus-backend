@@ -305,7 +305,7 @@ class SponsorIdentityProfilesTest extends TestCase
 
         $response->assertSuccessful();
         $response->assertHeader('content-disposition');
-        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('content-type', 'text/csv; charset=utf-8');
     }
 
     /**
