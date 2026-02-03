@@ -43,12 +43,10 @@ class VoucherTransactionNoteTest extends TestCase
         $voucher = $this->makeTestVoucher($fund, $this->makeIdentity());
         $address = $voucher->token_without_confirmation->address;
 
-        $headers = $this->makeApiHeaders($providerOrganization->identity);
-        $response = $this->post("/api/v1/platform/provider/vouchers/$address/transactions", [
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $providerOrganization, [
             'note' => $this->note,
             'amount' => round($voucher->amount_available / 2),
-            'organization_id' => $providerOrganization->id,
-        ], $headers);
+        ], $providerOrganization->identity);
 
         $response->assertSuccessful();
 

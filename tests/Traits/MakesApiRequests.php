@@ -954,7 +954,7 @@ trait MakesApiRequests
      * @param Identity $identity
      * @return TestResponse
      */
-    public function apiMakePayoutRequest(array $data, Identity $identity): TestResponse
+    protected function apiMakePayoutRequest(array $data, Identity $identity): TestResponse
     {
         return $this->postJson('/api/v1/platform/payouts', $data, $this->makeApiHeaders($identity));
     }
@@ -964,9 +964,50 @@ trait MakesApiRequests
      * @param Identity $identity
      * @return VoucherTransaction
      */
-    public function apiMakePayout(array $data, Identity $identity): VoucherTransaction
+    protected function apiMakePayout(array $data, Identity $identity): VoucherTransaction
     {
         $response = $this->apiMakePayoutRequest($data, $identity)->assertSuccessful();
+
+        return VoucherTransaction::findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function makeProviderVoucherTransactionRequest(
+        Voucher $voucher,
+        Organization $providerOrganization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        $manualVoucherToken = $voucher->token_without_confirmation->address;
+
+        return $this->postJson("/api/v1/platform/provider/vouchers/$manualVoucherToken/transactions", [
+            'organization_id' => $providerOrganization->id,
+            ...$data,
+        ], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @param array $data
+     * @param Identity $identity
+     * @return VoucherTransaction
+     * @noinspection PhpUnused
+     */
+    protected function makeProviderVoucherTransaction(
+        Voucher $voucher,
+        Organization $providerOrganization,
+        array $data,
+        Identity $identity,
+    ): VoucherTransaction {
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $providerOrganization, $data, $identity)
+            ->assertSuccessful();
 
         return VoucherTransaction::findOrFail($response->json('data.id'));
     }
