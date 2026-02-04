@@ -13,7 +13,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MollieService\Exceptions\MollieException;
 use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use App\Services\MollieService\Objects\Payment;
-use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -123,7 +123,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation withoutTrashed()
  * @mixin \Eloquent
  */
-class ProductReservation extends BaseModel
+class ProductReservation extends Model
 {
     use HasLogs;
     use HasNotes;
@@ -226,7 +226,7 @@ class ProductReservation extends BaseModel
     ];
 
     /**
-     * @throws Exception
+     * @throws Throwable
      */
     public static function makeCode(): int
     {
@@ -430,9 +430,8 @@ class ProductReservation extends BaseModel
      */
     public function archive(Employee $employee): self
     {
-        $this->updateModel([
-            'archived' => true,
-        ])->log(self::EVENT_ARCHIVED, $this->getLogModels($employee));
+        $this->update(['archived' => true]);
+        $this->log(self::EVENT_ARCHIVED, $this->getLogModels($employee));
 
         return $this;
     }
@@ -442,9 +441,8 @@ class ProductReservation extends BaseModel
      */
     public function unArchive(Employee $employee): self
     {
-        $this->updateModel([
-            'archived' => false,
-        ])->log(self::EVENT_UNARCHIVED, $this->getLogModels($employee));
+        $this->update(['archived' => false]);
+        $this->log(self::EVENT_UNARCHIVED, $this->getLogModels($employee));
 
         return $this;
     }

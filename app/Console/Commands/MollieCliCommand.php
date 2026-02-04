@@ -237,13 +237,13 @@ class MollieCliCommand extends BaseCommand
             'name' => $orgName,
             'owner' => [
                 'email' => $clientEmail,
-                'givenName' => $this->ask('Owner given name', fake()->firstName),
-                'familyName' => $this->ask('Owner family name', fake()->lastName),
+                'givenName' => $this->ask('Owner given name', fake()->firstName()),
+                'familyName' => $this->ask('Owner family name', fake()->lastName()),
                 'locale' => $this->ask('Locale', 'nl_NL'),
             ],
             'address' => [
-                'streetAndNumber' => $this->ask('Street and number', fake()->streetAddress),
-                'postalCode' => $this->ask('Postal code', fake()->postcode),
+                'streetAndNumber' => $this->ask('Street and number', fake()->streetAddress()),
+                'postalCode' => $this->ask('Postal code', fake()->postcode()),
                 'city' => $this->ask('City', 'Amsterdam'),
                 'country' => $this->ask('Country', 'NL'),
             ],

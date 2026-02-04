@@ -18,6 +18,7 @@ use App\Searches\Sponsor\PayoutBankAccounts\FundRequestPayoutBankAccountSearch;
 use App\Searches\Sponsor\PayoutBankAccounts\PayoutTransactionPayoutBankAccountSearch;
 use App\Searches\Sponsor\PayoutBankAccounts\ProfilePayoutBankAccountSearch;
 use App\Searches\Sponsor\PayoutBankAccounts\ReimbursementPayoutBankAccountSearch;
+use App\Searches\VoucherTransactionsSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,14 @@ class PayoutsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyPayoutsSponsor', [VoucherTransaction::class, $organization]);
 
+        $search = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address', 'execution_date_from', 'execution_date_to',
+        ]), VoucherTransaction::query());
+
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, [
             ...$request->only([
                 'state', 'fund_id', 'fund_state', 'amount_min', 'amount_max',
@@ -55,7 +64,7 @@ class PayoutsController extends Controller
             'date_from' => $request->input('from') ? Carbon::parse($request->input('from'))->startOfDay() : null,
             'date_to' => $request->input('to') ? Carbon::parse($request->input('to'))->endOfDay() : null,
             'targets' => [VoucherTransaction::TARGET_PAYOUT],
-        ], VoucherTransaction::searchSponsor($request, $organization));
+        ], $search->searchSponsor($organization));
 
         $query->whereIn('initiator', [
             VoucherTransaction::INITIATOR_SPONSOR,

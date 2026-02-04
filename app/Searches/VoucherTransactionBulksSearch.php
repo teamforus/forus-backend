@@ -5,24 +5,25 @@ namespace App\Searches;
 use App\Models\VoucherTransactionBulk;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class VoucherTransactionBulksSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Builder|Relation|VoucherTransactionBulk $builder
      */
-    public function __construct(array $filters, Builder $builder)
+    public function __construct(array $filters, Builder|Relation|VoucherTransactionBulk $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return VoucherTransactionBulk|Builder
+     * @return Builder|Relation|VoucherTransactionBulk
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|VoucherTransactionBulk
     {
-        /** @var Builder|VoucherTransactionBulk $builder */
+        /** @var Builder|Relation|VoucherTransactionBulk $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('from') && $this->getFilter('from')) {

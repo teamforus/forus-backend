@@ -60,11 +60,11 @@ class BankConnectionsController extends Controller
         $connection = $organization->makeBankConnection($bank, $employee, $request->implementation());
         $auth_url = $connection->makeOauthUrl();
 
-        $connection->updateModel(is_string($auth_url) ? [
-            'auth_url' => $auth_url,
-        ] : [
-            'state' => $connection::STATE_ERROR,
-        ]);
+        if (is_string($auth_url)) {
+            $connection->update(['auth_url' => $auth_url]);
+        } else {
+            $connection->update(['state' => $connection::STATE_ERROR]);
+        }
 
         return BankConnectionResource::create($connection);
     }

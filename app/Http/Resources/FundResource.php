@@ -47,6 +47,9 @@ class FundResource extends BaseJsonResource
         'fund_config.implementation' => ImplementationResource::class,
     ];
 
+    protected ?string $stats = null;
+    protected ?int $year = null;
+
     /**
      * Transform the resource into an array.
      *

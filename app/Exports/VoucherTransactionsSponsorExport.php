@@ -3,11 +3,6 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseVoucherTransactionsExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
-use App\Models\Organization;
-use App\Models\VoucherTransaction;
-use App\Scopes\Builders\VoucherTransactionQuery;
-use Illuminate\Support\Collection;
 
 class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
 {
@@ -28,28 +23,4 @@ class VoucherTransactionsSponsorExport extends BaseVoucherTransactionsExport
         'state',
         'bulk_status_locale',
     ];
-
-    /**
-     * @param BaseIndexTransactionsRequest $request
-     * @param Organization $organization
-     * @return \Illuminate\Support\Collection
-     */
-    protected function export(BaseIndexTransactionsRequest $request, Organization $organization): Collection
-    {
-        $builder = VoucherTransactionQuery::order(
-            VoucherTransaction::searchSponsor($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        );
-
-        $builder->with([
-            'product',
-            'provider',
-            'voucher.fund',
-            'notes_provider',
-            'product_reservation',
-        ]);
-
-        return $this->exportTransform($builder->get());
-    }
 }

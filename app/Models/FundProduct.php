@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\FundProduct.
  *
@@ -22,7 +24,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProduct extends BaseModel
+class FundProduct extends Model
 {
     /**
      * The attributes that are mass assignable.

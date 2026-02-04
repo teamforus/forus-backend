@@ -64,7 +64,7 @@ class FundsController extends Controller
                 Fund::STATE_PAUSED,
                 Fund::STATE_ACTIVE,
             ] : $request->input('state'),
-        ], $organization->funds()->getQuery()))->query();
+        ], $organization->funds()))->query();
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);
@@ -214,7 +214,7 @@ class FundsController extends Controller
             ]);
 
             if (!$fund->default_validator_employee_id) {
-                $fund->updateModelValue('auto_requests_validation', false);
+                $fund->update(['auto_requests_validation' => false]);
             }
 
             $fund->updateFundsConfig([
@@ -433,14 +433,14 @@ class FundsController extends Controller
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
 
         if ($detailed) {
-            $budgetFunds = FundQuery::whereIsInternal($organization->funds())->get();
+            $budgetFundsBuilder = FundQuery::whereIsInternal($organization->funds());
             $hasPayoutFunds = $organization->hasPayoutFunds();
             $fields = $request->input('fields', FundsExportDetailed::getExportFieldsRaw($hasPayoutFunds));
-            $exportData = new FundsExportDetailed($budgetFunds, $from, $to, $fields);
+            $exportData = new FundsExportDetailed($budgetFundsBuilder, $fields, $from, $to);
         } else {
             $fields = $request->input('fields', FundsExport::getExportFieldsRaw());
-            $funds = $organization->funds()->where('state', '!=', Fund::STATE_WAITING)->get();
-            $exportData = new FundsExport($funds, $from, $to, $fields);
+            $builder = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
+            $exportData = new FundsExport($builder, $fields, $from, $to);
         }
 
         return resolve('excel')->download($exportData, $fileName);
