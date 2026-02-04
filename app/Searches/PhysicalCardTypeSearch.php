@@ -4,24 +4,25 @@ namespace App\Searches;
 
 use App\Models\PhysicalCardType;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class PhysicalCardTypeSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param PhysicalCardType|Builder $builder
+     * @param Builder|Relation|PhysicalCardType $builder
      */
-    public function __construct(array $filters, PhysicalCardType|Builder $builder)
+    public function __construct(array $filters, Builder|Relation|PhysicalCardType $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return PhysicalCardType|Builder
+     * @return Builder|Relation|PhysicalCardType
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|PhysicalCardType
     {
-        /** @var PhysicalCardType|Builder $builder */
+        /** @var Builder|Relation|PhysicalCardType $builder */
         $builder = parent::query();
 
         if ($this->getFilter('q')) {
@@ -39,10 +40,10 @@ class PhysicalCardTypeSearch extends BaseSearch
     }
 
     /**
-     * @param PhysicalCardType|Builder $builder
-     * @return PhysicalCardType|Builder
+     * @param Builder|Relation|PhysicalCardType $builder
+     * @return Builder|Relation|PhysicalCardType
      */
-    protected function order(PhysicalCardType|Builder $builder): PhysicalCardType|Builder
+    protected function order(Builder|Relation|PhysicalCardType $builder): Builder|Relation|PhysicalCardType
     {
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'asc');

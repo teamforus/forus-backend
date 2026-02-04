@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\RecordType;
+use App\Searches\RecordTypeSearch;
 
 class RecordTypeKeyExistsRule extends BaseRule
 {
@@ -15,7 +16,11 @@ class RecordTypeKeyExistsRule extends BaseRule
      */
     public function __construct(bool $allowSystemKeys = false)
     {
-        $this->recordTypes = RecordType::search($allowSystemKeys)->pluck('key')->toArray();
+        $search = new RecordTypeSearch([
+            'without_system' => !$allowSystemKeys,
+        ], RecordType::query());
+
+        $this->recordTypes = $search->query()->pluck('key')->toArray();
     }
 
     /**

@@ -12,19 +12,19 @@ class ReimbursementsSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Builder|Relation|Reimbursement $builder
      */
-    public function __construct(array $filters, Builder $builder)
+    public function __construct(array $filters, Builder|Relation|Reimbursement $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|Reimbursement
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|Reimbursement
     {
-        /** @var Builder|Reimbursement $builder */
+        /** @var Builder|Relation|Reimbursement $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('fund_id')) {
@@ -65,7 +65,7 @@ class ReimbursementsSearch extends BaseSearch
 
     /**
      * @param Builder|Relation|Reimbursement $builder
-     * @return Reimbursement|Builder|Relation
+     * @return Builder|Relation|Reimbursement
      */
     protected function filterByStateAndExpiration(
         Builder|Relation|Reimbursement $builder
@@ -103,7 +103,7 @@ class ReimbursementsSearch extends BaseSearch
 
     /**
      * @param Builder|Relation|Reimbursement $builder
-     * @return Reimbursement|Builder|Relation
+     * @return Builder|Relation|Reimbursement
      */
     protected function filterByQueryString(
         Builder|Relation|Reimbursement $builder

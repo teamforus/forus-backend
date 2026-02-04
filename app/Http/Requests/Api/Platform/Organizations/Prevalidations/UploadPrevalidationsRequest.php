@@ -10,6 +10,7 @@ use App\Models\RecordType;
 use App\Rules\PrevalidationDataItemRule;
 use App\Rules\PrevalidationDataRule;
 use App\Scopes\Builders\FundQuery;
+use App\Searches\RecordTypeSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -38,7 +39,10 @@ class UploadPrevalidationsRequest extends BaseFormRequest
     public function rules(): array
     {
         $fund = Fund::find($this->input('fund_id'));
-        $recordTypes = RecordType::search()->keyBy('key');
+
+        $search = new RecordTypeSearch([], RecordType::query());
+        $recordTypes = $search->query()->get()->keyBy('key');
+
         $data = $this->input('data', []);
         $data = array_filter(is_array($data) ? $data : []);
 

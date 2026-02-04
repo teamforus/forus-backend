@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\IConnectApiService\IConnectPrefill;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -52,7 +53,7 @@ use Illuminate\Support\Facades\Validator;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class PrevalidationRequest extends BaseModel
+class PrevalidationRequest extends Model
 {
     use HasLogs;
 

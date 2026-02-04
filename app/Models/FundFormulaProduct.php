@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -29,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormulaProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundFormulaProduct extends BaseModel
+class FundFormulaProduct extends Model
 {
     /**
      * @var array

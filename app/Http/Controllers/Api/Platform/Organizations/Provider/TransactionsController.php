@@ -10,6 +10,7 @@ use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionsSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -31,7 +32,15 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $query = VoucherTransaction::searchProvider($request, $organization);
+        $search = new VoucherTransactionsSearch([
+            ...$request->only([
+                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            ]),
+            'q_type' => 'provider',
+        ], VoucherTransaction::query());
+
+        $query = $search->searchProvider()->where('organization_id', $organization->id);
         $totalAmount = currency_format((clone $query)->sum('amount'));
 
         $meta = [
@@ -79,8 +88,22 @@ class TransactionsController extends Controller
         $fields = $request->input('fields', VoucherTransactionsProviderExport::getExportFieldsRaw());
         $type = $request->input('data_format', 'xls');
 
+        $search = new VoucherTransactionsSearch([
+            ...$request->only([
+                'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+                'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            ]),
+            'q_type' => 'provider',
+        ], VoucherTransaction::query());
+
+        $builder = VoucherTransactionQuery::order(
+            $search->searchProvider()->where('organization_id', $organization->id),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        );
+
         return resolve('excel')->download(
-            new VoucherTransactionsProviderExport($request, $organization, $fields),
+            new VoucherTransactionsProviderExport($builder, $fields),
             date('Y-m-d H:i:s') . '.' . $type
         );
     }

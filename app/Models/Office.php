@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -56,7 +57,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static Builder<static>|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Office extends BaseModel
+class Office extends Model
 {
     use HasMedia;
 

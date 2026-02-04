@@ -12,6 +12,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
+use App\Searches\ProductSearch;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -34,8 +35,11 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('listSponsorProduct', [Product::class, $provider, $sponsor]);
 
-        $query = Product::searchAny($request, $provider->products()->getQuery());
-        $query = ProductQuery::whereNotExpired($query->where([
+        $search = new ProductSearch($request->only([
+            'unlimited_stock', 'q', 'source', 'order_by', 'order_dir',
+        ]), $provider->products());
+
+        $query = ProductQuery::whereNotExpired($search->query()->where([
             'sponsor_organization_id' => $sponsor->id,
         ]))->latest();
 
@@ -60,7 +64,7 @@ class ProductsController extends Controller
 
         $product = Product::storeFromRequest($provider, $request);
 
-        ProductCreated::dispatch($product->updateModel([
+        ProductCreated::dispatch(tap($product)->update([
             'sponsor_organization_id' => $sponsor->id,
         ]));
 
