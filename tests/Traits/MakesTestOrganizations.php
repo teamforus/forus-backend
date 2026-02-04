@@ -34,11 +34,11 @@ trait MakesTestOrganizations
     {
         $organization = Organization::forceCreate([
             'name' => fake()->text(30),
-            'email' => fake()->email,
+            'email' => fake()->email(),
             'email_public' => false,
-            'phone' => fake()->phoneNumber,
+            'phone' => fake()->phoneNumber(),
             'phone_public' => false,
-            'website' => fake()->url,
+            'website' => fake()->url(),
             'website_public' => false,
             'description' => fake()->text(400),
             'business_type_id' => BusinessType::pluck('id')->random(),

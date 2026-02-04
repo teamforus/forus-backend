@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\FundForms;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Services\MollieService\Objects\Organization;
+use App\Models\Organization;
 use Illuminate\Validation\Rule;
 
 /**

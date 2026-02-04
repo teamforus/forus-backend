@@ -60,7 +60,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $this->goToProviderFundsPage($browser, 'funds_active');
                 $this->assertFundVisibility($browser, $fundProvider, '@activeTableFunds', available: true);
 
-                $note = $this->faker->sentence;
+                $note = $this->faker->sentence();
                 $this->unsubscribe($browser, $fundProvider, $note);
                 $this->assertEmailSent($fundProvider, $startDate);
                 $this->assertLogCreated($fundProvider, $note);
@@ -130,7 +130,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $this->assertFundVisibility($browser, $fundProvider, '@activeTableFunds', available: true);
 
                 // assert provider can not unsubscribe if there are not resolved reservations
-                $note = $this->faker->sentence;
+                $note = $this->faker->sentence();
                 $this->unsubscribe($browser, $fundProvider, $note, false);
 
                 // resolve reservations and accept provider can unsubscribe
@@ -195,7 +195,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $this->assertFundVisibility($browser, $fundProvider, '@activeTableFunds', available: true);
 
                 // assert provider can not unsubscribe if there are not resolved product vouchers
-                $note = $this->faker->sentence;
+                $note = $this->faker->sentence();
                 $this->unsubscribe($browser, $fundProvider, $note, false);
 
                 // resolve product voucher and accept provider can unsubscribe

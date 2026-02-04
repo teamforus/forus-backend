@@ -154,7 +154,7 @@ class FundRequest extends Model
      */
     public function getLeadTimeDaysAttribute(): ?int
     {
-        return ($this->resolved_at ?: now())->diffInDays($this->created_at);
+        return (int) ($this->resolved_at ?: now())->diffInDays($this->created_at);
     }
 
     /**

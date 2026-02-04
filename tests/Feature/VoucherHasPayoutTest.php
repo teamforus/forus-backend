@@ -91,12 +91,10 @@ class VoucherHasPayoutTest extends TestCase
         // has_payouts must be false by default
         $this->assertFalse($voucher->has_payouts);
 
-        $headers = $this->makeApiHeaders($providerOrganization->identity);
-        $response = $this->post("/api/v1/platform/provider/vouchers/$address/transactions", [
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $providerOrganization, [
             'note' => Str::random(),
             'amount' => round($voucher->amount_available / 2),
-            'organization_id' => $providerOrganization->id,
-        ], $headers);
+        ], $providerOrganization->identity);
 
         $response->assertSuccessful();
 

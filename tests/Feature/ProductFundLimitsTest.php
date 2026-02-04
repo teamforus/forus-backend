@@ -535,14 +535,9 @@ class ProductFundLimitsTest extends TestCase
         Product $product,
         bool $assertCreated = true
     ): void {
-        $proxy = $this->makeIdentityProxy($provider->identity);
-        $headers = $this->makeApiHeaders($proxy);
-        $voucherToken = $voucher->token_without_confirmation->address;
-
-        $response = $this->postJson("/api/v1/platform/provider/vouchers/$voucherToken/transactions", [
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $provider, [
             'product_id' => $product->id,
-            'organization_id' => $provider->id,
-        ], $headers);
+        ], $provider->identity);
 
         if ($assertCreated) {
             $response->assertSuccessful();

@@ -451,17 +451,17 @@ class MollieExtraPaymentsTest extends TestCase
             $response = $this->postJson("/api/v1/platform/organizations/$provider->id/mollie-connection/connect", [], $apiHeaders);
         } else {
             $response = $this->postJson("/api/v1/platform/organizations/$provider->id/mollie-connection", [
-                'name' => $this->faker->name,
-                'country_code' => $this->faker->countryCode,
-                'profile_name' => $this->faker->name,
-                'phone' => $this->faker->e164PhoneNumber,
-                'website' => $this->faker->url,
-                'email' => $this->faker->email,
-                'first_name' => $this->faker->firstName,
-                'last_name' => $this->faker->lastName,
-                'street' => $this->faker->streetName,
-                'city' => $this->faker->city,
-                'postcode' => $this->faker->postcode,
+                'name' => $this->faker->name(),
+                'country_code' => $this->faker->countryCode(),
+                'profile_name' => $this->faker->name(),
+                'phone' => $this->faker->e164PhoneNumber(),
+                'website' => $this->faker->url(),
+                'email' => $this->faker->email(),
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+                'street' => $this->faker->streetName(),
+                'city' => $this->faker->city(),
+                'postcode' => $this->faker->postcode(),
             ], $apiHeaders);
         }
 

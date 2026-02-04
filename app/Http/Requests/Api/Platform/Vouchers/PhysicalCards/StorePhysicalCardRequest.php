@@ -45,7 +45,7 @@ class StorePhysicalCardRequest extends FormRequest
                 'required',
                 'string',
                 'size:' . $physicalCardType->code_block_size * $physicalCardType->code_blocks,
-                $physicalCardType->code_prefix ? 'starts_with:' . $physicalCardType->code_prefix : null,
+                ...$physicalCardType->code_prefix ? ['starts_with:' . $physicalCardType->code_prefix] : [],
                 Rule::unique('physical_cards', 'code')
                     ->where('physical_card_type_id', $physicalCardType->id),
             ]),
