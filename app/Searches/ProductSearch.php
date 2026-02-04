@@ -10,7 +10,6 @@ use App\Scopes\Builders\TrashedQuery;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
 class ProductSearch extends BaseSearch
@@ -170,9 +169,10 @@ class ProductSearch extends BaseSearch
         if ($this->getFilter('postcode') && $this->getFilter('distance')) {
             $geocodeService = resolve('geocode_api');
             $location = $geocodeService->getLocation($this->getFilter('postcode') . ', Netherlands');
+            $distance = (int) $this->getFilter('distance');
 
-            $builder->whereHas('organization.offices', static function (Builder $builder) use ($location) {
-                OfficeQuery::whereDistance($builder, (int) $this->getFilter('distance'), [
+            $builder->whereHas('organization.offices', static function (Builder $builder) use ($location, $distance) {
+                OfficeQuery::whereDistance($builder, $distance, [
                     'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
                     'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);

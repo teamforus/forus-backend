@@ -129,9 +129,10 @@ class OrganizationSearch extends BaseSearch
         if ($this->getFilter('postcode') && $this->getFilter('distance')) {
             $geocodeService = resolve('geocode_api');
             $location = $geocodeService->getLocation($this->getFilter('postcode') . ', Netherlands');
+            $distance = (int) $this->getFilter('distance');
 
-            $builder->whereHas('offices', static function (Builder $builder) use ($location) {
-                OfficeQuery::whereDistance($builder, (int) $this->getFilter('distance'), [
+            $builder->whereHas('offices', static function (Builder $builder) use ($location, $distance) {
+                OfficeQuery::whereDistance($builder, $distance, [
                     'lat' => $location ? $location['lat'] : config('forus.office.default_lat'),
                     'lng' => $location ? $location['lng'] : config('forus.office.default_lng'),
                 ]);

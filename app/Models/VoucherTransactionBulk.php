@@ -350,7 +350,9 @@ class VoucherTransactionBulk extends Model
                 $this->update([
                     'state' => self::STATE_PENDING,
                     'payment_id' => $payment->getValue(),
-                ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+                ]);
+
+                $this->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
 
                 return $this;
             });
@@ -360,7 +362,9 @@ class VoucherTransactionBulk extends Model
 
             $this->update([
                 'state' => self::STATE_ERROR,
-            ])->logError([
+            ]);
+
+            $this->logError([
                 'error_message' => $e->getMessage(),
             ], $employee);
         }
@@ -400,7 +404,9 @@ class VoucherTransactionBulk extends Model
                     'auth_params' => $response->getAuthData()->getParams(),
                     'execution_date' => $requestedExecutionDate,
                     'implementation_id' => $implementation->id,
-                ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+                ]);
+
+                $this->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
 
                 return $this;
             });
@@ -412,7 +418,9 @@ class VoucherTransactionBulk extends Model
 
             $this->update([
                 'state' => self::STATE_ERROR,
-            ])->logError([
+            ]);
+
+            $this->logError([
                 'error_message' => $e->getMessage(),
             ], $employee);
         }
@@ -437,7 +445,9 @@ class VoucherTransactionBulk extends Model
     {
         $this->update([
             'state' => static::STATE_REJECTED,
-        ])->log(static::STATE_REJECTED, $this->getLogModels());
+        ]);
+
+        $this->log(static::STATE_REJECTED, $this->getLogModels());
 
         return $this;
     }
