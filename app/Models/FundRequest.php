@@ -13,6 +13,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -77,7 +78,7 @@ use Throwable;
  * @method static Builder<static>|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundRequest extends BaseModel
+class FundRequest extends Model
 {
     use HasLogs;
     use HasNotes;
@@ -153,7 +154,7 @@ class FundRequest extends BaseModel
      */
     public function getLeadTimeDaysAttribute(): ?int
     {
-        return ($this->resolved_at ?: now())->diffInDays($this->created_at);
+        return (int) ($this->resolved_at ?: now())->diffInDays($this->created_at);
     }
 
     /**

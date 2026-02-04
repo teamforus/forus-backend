@@ -6,6 +6,7 @@ use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -42,7 +43,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
  */
-class FundRequestRecord extends BaseModel
+class FundRequestRecord extends Model
 {
     use HasFiles;
     use HasLogs;

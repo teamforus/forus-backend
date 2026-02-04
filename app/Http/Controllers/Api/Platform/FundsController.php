@@ -12,10 +12,10 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Scopes\Builders\ImplementationQuery;
 use App\Searches\FundSearch;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Exception;
@@ -40,7 +40,7 @@ class FundsController extends Controller
         $query = (new FundSearch($request->only([
             'tag', 'tag_id', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id',
             'with_external', 'has_products', 'has_providers', 'order_by', 'order_dir',
-        ]), Implementation::queryFundsByState(Fund::STATE_ACTIVE)))->query();
+        ]), ImplementationQuery::queryFundsByState(Fund::STATE_ACTIVE)))->query();
 
         $organizations = Organization::whereIn('id', (clone $query)->select('organization_id'))->get();
         $organizations = $organizations->map(fn (Organization $item) => $item->only('id', 'name'));
@@ -114,7 +114,7 @@ class FundsController extends Controller
         $voucher = $fund->makeVoucher(identity: $request->identity());
         $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
 
-        $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
+        $voucher = $voucher ?: Arr::first($formulaProductVouchers) ?: $fund->vouchers()->where([
             'identity_id' => $request->auth_id(),
         ])->first();
 

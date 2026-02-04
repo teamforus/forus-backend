@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Notification\Commands;
 
+use App\Helpers\Arr;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -49,7 +50,7 @@ class NotificationsTokensImportCommand extends Command
             exit();
         }
 
-        $header = array_first($tokens);
+        $header = Arr::first($tokens);
 
         if ($header[0] !== 'type' || $header[1] !== 'identity_address' || $header[2] !== 'token') {
             $this->error(sprintf("File '%s': wrong format!", $csvPath));

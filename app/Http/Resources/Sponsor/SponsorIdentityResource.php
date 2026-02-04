@@ -19,9 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
- * @property-read bool $detailed
  * @property-read Identity $resource
- * @property-read Organization $organization
  */
 class SponsorIdentityResource extends BaseJsonResource
 {
@@ -38,6 +36,7 @@ class SponsorIdentityResource extends BaseJsonResource
     ];
 
     public bool $detailed = false;
+    protected ?Organization $organization = null;
 
     /**
      * @param string|null $append

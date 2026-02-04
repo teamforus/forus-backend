@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Helpers\Arr;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\PrevalidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -68,7 +70,7 @@ use RuntimeException;
  * @method static Builder<static>|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
-class Prevalidation extends BaseModel
+class Prevalidation extends Model
 {
     use SoftDeletes;
     use HasDbTokens;
@@ -241,7 +243,7 @@ class Prevalidation extends BaseModel
                 ->approve(null, $this->organization, $this);
         }
 
-        return $this->updateModel([
+        return tap($this)->update([
             'state' => 'used',
             'redeemed_by_address' => $identity->address,
         ]);
@@ -336,7 +338,7 @@ class Prevalidation extends BaseModel
             $prevalidation->updateHashes();
 
             if (in_array($records['primaryKey'], $topUpKeys, true)) {
-                $voucherId = array_first(array_where($topUps, function (array $topUp) use ($records) {
+                $voucherId = Arr::first(Arr::where($topUps, function (array $topUp) use ($records) {
                     return $topUp['key'] === $records['primaryKey'];
                 }))['voucher_id'] ?? null;
 

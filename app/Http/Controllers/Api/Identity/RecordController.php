@@ -11,6 +11,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\RecordResource;
 use App\Models\Record;
 use App\Models\RecordType;
+use App\Searches\RecordSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -31,11 +32,11 @@ class RecordController extends Controller
         $query = $request->identity()->records();
         $query = $deleted ? $query->onlyTrashed() : $query;
 
-        $query = Record::search($query, $request->only([
+        $search = new RecordSearch($request->only([
             'type', 'record_category_id',
-        ]), env('HIDE_SYSTEM_RECORDS', false));
+        ]), $query, env('HIDE_SYSTEM_RECORDS', false));
 
-        return new JsonResponse(RecordResource::queryCollection($query)->toArray($request));
+        return new JsonResponse(RecordResource::queryCollection($search->query())->toArray($request));
     }
 
     /**

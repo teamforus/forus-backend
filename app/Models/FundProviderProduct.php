@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Scopes\Builders\ProductSubQuery;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -63,7 +64,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|FundProviderProduct withoutTrashed()
  * @mixin \Eloquent
  */
-class FundProviderProduct extends BaseModel
+class FundProviderProduct extends Model
 {
     use SoftDeletes;
 
