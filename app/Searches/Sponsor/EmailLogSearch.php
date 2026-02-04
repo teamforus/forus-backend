@@ -9,28 +9,29 @@ use App\Scopes\Builders\EmailLogQuery;
 use App\Searches\BaseSearch;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class EmailLogSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Builder|Relation|EmailLog $builder
      * @param Organization $organization
      */
     public function __construct(
         array $filters,
-        Builder $builder,
+        Builder|Relation|EmailLog $builder,
         protected Organization $organization,
     ) {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return EmailLog|Builder
+     * @return Builder|Relation|EmailLog
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|EmailLog
     {
-        /** @var EmailLog|Builder $builder */
+        /** @var Builder|Relation|EmailLog $builder */
         $builder = parent::query();
         $identityId = $this->getFilter('identity_id');
         $fundRequestId = $this->getFilter('fund_request_id');

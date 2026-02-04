@@ -119,8 +119,8 @@ class ImplementationPrivateResource extends BaseJsonResource
             return [
                 'email_logo' => new MediaCompactResource($implementation->email_logo),
                 'email_logo_default' => new MediaCompactResource($generalImplementation->email_logo),
-                'email_color' => trim(strtoupper($implementation->email_color)),
-                'email_color_default' => trim(strtoupper($generalImplementation->email_color)),
+                'email_color' => trim(strtoupper($implementation->email_color ?? '')),
+                'email_color_default' => trim(strtoupper($generalImplementation->email_color ?? '')),
                 'email_signature' => trim($implementation->email_signature ?: ''),
                 'email_signature_html' => Markdown::convert($implementation->email_signature ?: ''),
                 'email_signature_default' => trim($generalImplementation->email_signature ?: ''),

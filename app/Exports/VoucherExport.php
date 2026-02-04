@@ -2,10 +2,14 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
+use App\Models\Voucher;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
-class VoucherExport extends BaseFieldedExport
+class VoucherExport extends BaseExport
 {
     protected static string $transKey = 'vouchers';
 
@@ -45,12 +49,12 @@ class VoucherExport extends BaseFieldedExport
     ];
 
     /**
-     * @param array $data
+     * @param array $voucherData
      * @param array $fields
      */
-    public function __construct(array $data, protected array $fields)
+    public function __construct(protected array $voucherData, protected array $fields)
     {
-        $this->data = $this->exportTransform(collect($data));
+        parent::__construct(Voucher::query()->whereRaw('FALSE'), $fields);
     }
 
     /**
@@ -88,12 +92,30 @@ class VoucherExport extends BaseFieldedExport
     }
 
     /**
+     * @param Builder|Relation $builder
+     * @return Collection
+     */
+    protected function export(Builder|Relation $builder): Collection
+    {
+        return $this->exportTransform(collect($this->voucherData));
+    }
+
+    /**
      * @param Collection $data
      * @return Collection
      */
     protected function exportTransform(Collection $data): Collection
     {
         return $this->transformKeys($data);
+    }
+
+    /**
+     * @param Model $model
+     * @return array
+     */
+    protected function getRow(Model $model): array
+    {
+        return [];
     }
 
     /**

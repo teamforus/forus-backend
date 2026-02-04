@@ -78,7 +78,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
-                    'assert_valid' => $this->faker->email,
+                    'assert_valid' => $this->faker->email(),
                     'assert_invalid' => 'invalid_email',
                 ],
             ],
@@ -95,7 +95,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             RecordType::CONTROL_TYPE_TEXT => [
                 '*' => [
                     'value' => '',
-                    'assert_valid' => $this->faker->iban,
+                    'assert_valid' => $this->faker->iban(),
                     'assert_invalid' => 'invalid_iban',
                 ],
             ],
@@ -395,7 +395,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'assert_valid' => $this->faker->email,
+            'assert_valid' => $this->faker->email(),
             'step' => 'Step #2',
         ], [
             'record_type' => RecordType::TYPE_STRING,
@@ -644,7 +644,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'assert_valid' => $this->faker->email,
+            'assert_valid' => $this->faker->email(),
             'step' => 'Step #2',
             'assert_hidden_step' => false,
             'assert_hidden_step_in_overview' => true,
@@ -659,7 +659,7 @@ class FundRequestCriteriaStepsTest extends DuskTestCase
             'control_type' => RecordType::CONTROL_TYPE_TEXT,
             'operator' => '*',
             'value' => '',
-            'assert_valid' => $this->faker->email,
+            'assert_valid' => $this->faker->email(),
             'step' => 'Step #3',
             'assert_hidden_step' => true,
             'assert_hidden_step_in_overview' => true,

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Models\Source.
  *
@@ -20,7 +22,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereUrl($value)
  * @mixin \Eloquent
  */
-class Source extends BaseModel
+class Source extends Model
 {
     protected $fillable = [
         'key', 'url',

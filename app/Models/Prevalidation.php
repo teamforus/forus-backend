@@ -8,6 +8,7 @@ use App\Scopes\Builders\PrevalidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -69,7 +70,7 @@ use RuntimeException;
  * @method static Builder<static>|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
-class Prevalidation extends BaseModel
+class Prevalidation extends Model
 {
     use SoftDeletes;
     use HasDbTokens;
@@ -242,7 +243,7 @@ class Prevalidation extends BaseModel
                 ->approve(null, $this->organization, $this);
         }
 
-        return $this->updateModel([
+        return tap($this)->update([
             'state' => 'used',
             'redeemed_by_address' => $identity->address,
         ]);
