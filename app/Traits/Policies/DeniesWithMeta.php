@@ -17,7 +17,7 @@ trait DeniesWithMeta
         return AuthorizationJsonResponse::deny(is_array($message) ? $message : array_merge([
             'key' => $message,
             'error' => $message,
-        ], trans_fb("policies/reimbursements.$message", [
+        ], trans_fb("policies.reimbursements.$message", [
             'title' => $message,
             'message' => $message,
         ])), $code);
