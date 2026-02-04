@@ -2,12 +2,11 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
+use App\Exports\Base\BaseExport;
 use App\Models\ProductReservation;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class ProductReservationsExport extends BaseFieldedExport
+class ProductReservationsExport extends BaseExport
 {
     protected static string $transKey = 'reservations';
 
@@ -34,59 +33,28 @@ class ProductReservationsExport extends BaseFieldedExport
     ];
 
     /**
-     * @param EloquentCollection|array $reservations
-     * @param array $fields
-     */
-    public function __construct(EloquentCollection|array $reservations, array $fields = [])
-    {
-        $this->fields = $fields;
-        $this->data = $this->export($reservations);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    public function export(Collection $data): Collection
-    {
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (ProductReservation $reservation) => array_only(
-            $this->getRow($reservation),
-            $this->fields,
-        )));
-    }
-
-    /**
-     * @param ProductReservation $reservation
+     * @param Model|ProductReservation $model
      * @return array
      */
-    protected function getRow(ProductReservation $reservation): array
+    protected function getRow(Model|ProductReservation $model): array
     {
         return [
-            'code' => $reservation->code,
-            'product_name' => $reservation->product->name,
-            'amount' => currency_format($reservation->amount),
-            'email' => $reservation->voucher->identity?->email,
-            'first_name' => $reservation->first_name,
-            'last_name' => $reservation->last_name,
-            'user_note' => $reservation->user_note ?: '-',
-            'phone' => $reservation->phone ?: '-',
-            'address' => $reservation->address ?: '-',
-            'birth_date' => format_date_locale($reservation->birth_date) ?: '-',
-            'state' => $reservation->state_locale,
-            'created_at' => format_date_locale($reservation->created_at),
-            'expire_at' => format_date_locale($reservation->expire_at),
-            'ean' => $reservation->product->ean,
-            'sku' => $reservation->product->sku,
-            'transaction_id' => $reservation->voucher_transaction?->id,
+            'code' => $model->code,
+            'product_name' => $model->product->name,
+            'amount' => currency_format($model->amount),
+            'email' => $model->voucher->identity?->email,
+            'first_name' => $model->first_name,
+            'last_name' => $model->last_name,
+            'user_note' => $model->user_note ?: '-',
+            'phone' => $model->phone ?: '-',
+            'address' => $model->address ?: '-',
+            'birth_date' => format_date_locale($model->birth_date) ?: '-',
+            'state' => $model->state_locale,
+            'created_at' => format_date_locale($model->created_at),
+            'expire_at' => format_date_locale($model->expire_at),
+            'ean' => $model->product->ean,
+            'sku' => $model->product->sku,
+            'transaction_id' => $model->voucher_transaction?->id,
         ];
     }
 }
