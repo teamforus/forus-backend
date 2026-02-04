@@ -114,7 +114,7 @@ class FundsController extends Controller
         $voucher = $fund->makeVoucher(identity: $request->identity());
         $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
 
-        $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
+        $voucher = $voucher ?: Arr::first($formulaProductVouchers) ?: $fund->vouchers()->where([
             'identity_id' => $request->auth_id(),
         ])->first();
 

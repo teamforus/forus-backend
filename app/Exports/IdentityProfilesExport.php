@@ -100,7 +100,7 @@ class IdentityProfilesExport extends BaseExport
             'bsn' => $this->organization->bsn_enabled ? $model->bsn ?: '-' : '-',
             'client_number' => Arr::get($records, 'client_number.0.value_locale', '-'),
             'birth_date' => Arr::get($records, 'birth_date.0.value_locale', '-'),
-            'last_activity' => format_datetime_locale(array_first($model->sessions)?->last_activity_at),
+            'last_activity' => format_datetime_locale(Arr::first($model->sessions)?->last_activity_at),
             'city' => Arr::get($records, 'city.0.value_locale', '-'),
             'street' => Arr::get($records, 'street.0.value_locale', '-'),
             'house_number' => Arr::get($records, 'house_number.0.value_locale', '-'),

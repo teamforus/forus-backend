@@ -180,7 +180,7 @@ class TransactionsController extends Controller
 
         while (count($transactions) > $index) {
             $slice = array_slice($transactions, $index++, 1, true);
-            $item = array_first($slice);
+            $item = Arr::first($slice);
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {

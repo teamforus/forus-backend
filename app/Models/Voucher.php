@@ -893,7 +893,7 @@ class Voucher extends Model
         Product $product,
         ProductReservation $productReservation = null
     ): Voucher {
-        $voucherExpireAt = array_first(array_sort(array_filter([
+        $voucherExpireAt = Arr::first(Arr::sort(Arr::whereNotNull([
             $product->expire_at,
             $this->expire_at,
             $this->fund->end_date,
@@ -1090,7 +1090,7 @@ class Voucher extends Model
      */
     public function calcExpireDateForProduct(Product $product = null): ?Carbon
     {
-        return array_first(array_sort(array_filter([
+        return Arr::first(Arr::sort(Arr::whereNotNull([
             $product?->expire_at,
             $this->expire_at->clone()->addDays($this->fund->fund_config->reservation_approve_offset),
             $this->fund->end_date->clone()->addDays($this->fund->fund_config->reservation_approve_offset),
