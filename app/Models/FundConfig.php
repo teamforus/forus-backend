@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Helpers\Markdown;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -46,7 +47,6 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_reservations
  * @property bool $allow_reimbursements
  * @property bool $allow_voucher_payouts
- * @property string|null $allow_voucher_payout_amount
  * @property int|null $allow_voucher_payout_count
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
@@ -210,7 +210,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereVouchersType($value)
  * @mixin \Eloquent
  */
-class FundConfig extends BaseModel
+class FundConfig extends Model
 {
     use HasOnDemandTranslations;
 

@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
-use App\Services\Forus\TestData\TestData;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Carbon\Carbon;
@@ -136,10 +135,10 @@ trait VoucherTestTrait
     {
         return [
             'records' => [
-                'given_name' => $this->faker()->firstName,
-                'family_name' => $this->faker()->lastName,
+                'given_name' => $this->faker()->firstName(),
+                'family_name' => $this->faker()->lastName(),
                 'birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
-                'address' => $this->faker()->address,
+                'address' => $this->faker()->address(),
             ],
         ];
     }
@@ -477,14 +476,5 @@ trait VoucherTestTrait
         $this->assertNotNull($fund, 'Fund not found');
 
         return $fund;
-    }
-
-    /**
-     * @throws Throwable
-     * @return int
-     */
-    protected function randomFakeBsn(): int
-    {
-        return TestData::randomFakeBsn();
     }
 }

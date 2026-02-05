@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchProvidersRequest;
 use App\Http\Resources\ProviderResource;
-use App\Models\Implementation;
 use App\Models\Organization;
+use App\Searches\OrganizationSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProvidersController extends Controller
@@ -19,10 +19,12 @@ class ProvidersController extends Controller
      */
     public function index(SearchProvidersRequest $request): AnonymousResourceCollection
     {
-        return ProviderResource::queryCollection(Implementation::searchProviders($request->only([
+        $search = new OrganizationSearch($request->only([
             'q', 'business_type_id', 'product_category_id', 'product_category_ids', 'fund_id', 'fund_ids',
             'postcode', 'distance', 'order_by', 'order_dir',
-        ])), $request);
+        ]), Organization::query());
+
+        return ProviderResource::queryCollection($search->queryProviders(), $request);
     }
 
     /**

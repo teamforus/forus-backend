@@ -110,8 +110,8 @@ class TestData
 
         $identity = Identity::build(email: $email, records: [
             'primary_email' => $email,
-            'given_name' => $this->faker->firstName,
-            'family_name' => $this->faker->lastName,
+            'given_name' => $this->faker->firstName(),
+            'family_name' => $this->faker->lastName(),
         ]);
 
         $identity->primary_email->setVerified();
@@ -228,7 +228,7 @@ class TestData
                     'organization_id' => $providers->random(),
                 ]);
 
-                FundProviderApplied::dispatch($fund, $provider->updateModel([
+                FundProviderApplied::dispatch($fund, tap($provider)->update([
                     'allow_products' => true,
                     'allow_budget' => true,
                     'state' => FundProvider::STATE_ACCEPTED,
@@ -1302,8 +1302,8 @@ class TestData
                 }
 
                 $voucher->reserveProduct(product: $product, extraData: [
-                    'first_name' => $this->faker->firstName,
-                    'last_name' => $this->faker->lastName,
+                    'first_name' => $this->faker->firstName(),
+                    'last_name' => $this->faker->lastName(),
                     'user_note' => $this->faker->text(random_int(64, 256)),
                 ]);
             }

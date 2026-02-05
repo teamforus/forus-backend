@@ -20,7 +20,7 @@ class TopUpResource extends BaseJsonResource
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $bankConnection = $this->resource->fund->organization->bank_connection_active;
         $bankConnectionAccount = $bankConnection->bank_connection_default_account;

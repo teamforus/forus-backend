@@ -4,17 +4,20 @@ namespace App\Http\Resources;
 
 use App\Models\PrevalidationRecord;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property PrevalidationRecord $resource
  */
-class PrevalidationRecordResource extends JsonResource
+class PrevalidationRecordResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'record_type.translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

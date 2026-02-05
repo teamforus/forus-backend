@@ -26,6 +26,7 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherRelation;
 use App\Scopes\Builders\VoucherSubQuery;
+use App\Searches\VouchersSearch;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -52,11 +53,16 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return SponsorVoucherResource::queryCollection(Voucher::searchSponsorQuery(
-            $request,
-            $organization,
-            $organization->findFund($request->get('fund_id'))
-        ), $request);
+        $search = new VouchersSearch($request->only([
+            'expired', 'q', 'implementation_id', 'granted', 'from', 'to', 'amount_min', 'amount_max',
+            'amount_available_min', 'amount_available_max', 'unassigned', 'type', 'source',
+            'in_use_from', 'in_use_to', 'in_use', 'has_payouts', 'count_per_identity_min',
+            'count_per_identity_max', 'state', 'email', 'identity_id', 'bsn',
+        ]), Voucher::query());
+
+        $query = $search->searchSponsor($organization, $organization->findFund($request->get('fund_id')));
+
+        return SponsorVoucherResource::queryCollection($query, $request);
     }
 
     /**
@@ -292,7 +298,7 @@ class VouchersController extends Controller
             'data->uploaded_file_meta->created_ids' => $voucherModels->pluck('id')->toArray(),
         ])->update();
 
-        return SponsorVoucherResource::collection($voucherModels);
+        return SponsorVoucherResource::createCollection($voucherModels);
     }
 
     /**
@@ -517,7 +523,14 @@ class VouchersController extends Controller
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 
-        $query = Voucher::searchSponsorQuery($request, $organization, $organization->findFund($fundId));
+        $search = new VouchersSearch($request->only([
+            'expired', 'q', 'implementation_id', 'granted', 'from', 'to', 'amount_min', 'amount_max',
+            'amount_available_min', 'amount_available_max', 'unassigned', 'type', 'source',
+            'in_use_from', 'in_use_to', 'in_use', 'has_payouts', 'count_per_identity_min',
+            'count_per_identity_max', 'state', 'email', 'identity_id', 'bsn',
+        ]), Voucher::query());
+
+        $query = $search->searchSponsor($organization, $organization->findFund($fundId));
         $query = VoucherSubQuery::appendFirstUseFields($query);
 
         $vouchers = $query->with([
@@ -540,6 +553,6 @@ class VouchersController extends Controller
             ]);
         }
 
-        return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data', 'name']));
+        return VoucherExportArrResource::create(Arr::only($exportData, ['files', 'data', 'name']));
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\Translations\TagTranslationsTrait;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tag withTranslation(?string $locale = null)
  * @mixin \Eloquent
  */
-class Tag extends BaseModel
+class Tag extends Model
 {
     use Translatable;
     use TagTranslationsTrait;

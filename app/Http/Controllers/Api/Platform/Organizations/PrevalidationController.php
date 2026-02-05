@@ -104,7 +104,7 @@ class PrevalidationController extends Controller
 
         DB::commit();
 
-        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::LOAD));
+        return PrevalidationResource::createCollection($prevalidations);
     }
 
     /**
@@ -164,11 +164,15 @@ class PrevalidationController extends Controller
             'q', 'fund_id', 'from', 'to', 'state', 'exported',
         ]), $query);
 
+        (clone $search->query())->update([
+            'exported' => true,
+        ]);
+
         $type = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
-
         $fields = $request->input('fields', PrevalidationsExport::getExportFieldsRaw());
-        $fileData = new PrevalidationsExport($fields, $search->query());
+
+        $fileData = new PrevalidationsExport($search->query(), $fields);
 
         return resolve('excel')->download($fileData, $fileName);
     }

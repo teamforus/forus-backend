@@ -63,7 +63,7 @@ class GeocodeService
      */
     protected function addressComponentsToPostcode(array $address_components): array
     {
-        $postalCode = array_first(array_filter($address_components, function ($component) {
+        $postalCode = Arr::first(Arr::where($address_components, function ($component) {
             return in_array('postal_code', $component['types']);
         }))['long_name'] ?? null;
 

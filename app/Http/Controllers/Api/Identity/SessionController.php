@@ -43,7 +43,7 @@ class SessionController extends Controller
     {
         $this->authorize('show', [$session, $request->identityProxy2FAConfirmed()]);
 
-        return new SessionResource($session);
+        return SessionResource::create($session);
     }
 
     /**

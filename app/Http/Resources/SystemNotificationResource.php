@@ -7,10 +7,10 @@ use App\Models\SystemNotification;
 use App\Models\SystemNotificationConfig;
 use App\Notifications\BaseNotification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 /**
  * @property SystemNotification $resource
- * @property array $fundIds
  */
 class SystemNotificationResource extends BaseJsonResource
 {
@@ -19,13 +19,15 @@ class SystemNotificationResource extends BaseJsonResource
         'system_notification_configs',
     ];
 
+    protected ?array $fundIds = null;
+
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         /** @var Implementation $implementation */
         $systemNotification = $this->resource;

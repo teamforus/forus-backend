@@ -4,28 +4,19 @@ namespace App\Http\Resources;
 
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
 use App\Models\HouseholdProfile;
-use App\Services\MollieService\Objects\Organization;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 
 /**
- * @property Organization $organization
  * @property HouseholdProfile $resource
  */
 class HouseholdProfileResource extends BaseJsonResource
 {
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
+    public const array LOAD_NESTED = [
+        'profile.identity' => SponsorIdentityResource::class,
+    ];
 
-        return [
-            ...parent::load($append),
-            ...SponsorIdentityResource::load("{$prepend}profile.identity"),
-        ];
-    }
+    protected ?Organization $organization = null;
 
     /**
      * @param Request $request

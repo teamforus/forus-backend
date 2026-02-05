@@ -14,15 +14,21 @@ use League\CommonMark\Exception\CommonMarkException;
 class ImplementationPrivateResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'pages',
-        'banner',
-        'languages',
+        'organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'banner' => MediaResource::class,
+        'pre_check_banner' => MediaResource::class,
+        'email_logo' => MediaCompactResource::class,
+        'pages' => ImplementationPageResource::class,
+        'languages' => LanguageResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws CommonMarkException
      * @return ?array
      * @property Implementation $resource
@@ -113,8 +119,8 @@ class ImplementationPrivateResource extends BaseJsonResource
             return [
                 'email_logo' => new MediaCompactResource($implementation->email_logo),
                 'email_logo_default' => new MediaCompactResource($generalImplementation->email_logo),
-                'email_color' => trim(strtoupper($implementation->email_color)),
-                'email_color_default' => trim(strtoupper($generalImplementation->email_color)),
+                'email_color' => trim(strtoupper($implementation->email_color ?? '')),
+                'email_color_default' => trim(strtoupper($generalImplementation->email_color ?? '')),
                 'email_signature' => trim($implementation->email_signature ?: ''),
                 'email_signature_html' => Markdown::convert($implementation->email_signature ?: ''),
                 'email_signature_default' => trim($generalImplementation->email_signature ?: ''),

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\DemoTransaction;
+use Illuminate\Http\Request;
 
 /**
  * @property DemoTransaction $resource
@@ -12,10 +13,10 @@ class DemoTransactionResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only([
             'id', 'token', 'state',

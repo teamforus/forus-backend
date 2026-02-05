@@ -2,26 +2,28 @@
 
 namespace App\Searches;
 
+use App\Models\Employee;
 use App\Scopes\Builders\EmployeeQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class EmployeesSearch extends BaseSearch
 {
     /**
      * @param array $filters
-     * @param Builder $builder
+     * @param Relation|Builder|Employee $builder
      */
-    public function __construct(array $filters, Builder $builder)
+    public function __construct(array $filters, Relation|Builder|Employee $builder)
     {
         parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder
+     * @return Relation|Builder|Employee
      */
-    public function query(): Builder
+    public function query(): Relation|Builder|Employee
     {
-        /** @var Builder $builder */
+        /** @var Relation|Builder|Employee $builder */
         $builder = parent::query();
 
         $roleFilters = array_only($this->getFilters(), ['role', 'roles']);

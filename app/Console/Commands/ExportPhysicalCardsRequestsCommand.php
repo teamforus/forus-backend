@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Exports\PhysicalCardRequestsExport;
+use App\Models\PhysicalCardRequest;
+use App\Searches\PhysicalCardRequestSearch;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 
 class ExportPhysicalCardsRequestsCommand extends BaseCommand
@@ -43,7 +45,13 @@ class ExportPhysicalCardsRequestsCommand extends BaseCommand
         $date = $this->getOption('date') ?: now()->subDay()->format('Y-m-d');
         $path = $this->option('export_path') . $date . '.csv';
         $fields = PhysicalCardRequestsExport::getExportFieldsRaw();
-        $exporter = new PhysicalCardRequestsExport($this->getOption('fund_id'), $date, $fields);
+
+        $search = new PhysicalCardRequestSearch([
+            'fund_id' => $this->getOption('fund_id'),
+            'date' => $date,
+        ], PhysicalCardRequest::query());
+
+        $exporter = new PhysicalCardRequestsExport($search->query(), $fields);
 
         try {
             resolve('excel')->store($exporter, $path, $disc);

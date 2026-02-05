@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use Illuminate\Http\Request;
 
 /**
  * @property Fund $resource
@@ -14,25 +15,21 @@ use App\Scopes\Builders\FundQuery;
  */
 class ProductFundResource extends BaseJsonResource
 {
-    public const array LOAD = [
-        'logo.presets',
-        'organization.logo.presets',
-        'organization.employees',
-        'organization.employees.roles.permissions',
-        'organization.business_type.translations',
-        'organization.bank_connection_active',
-        'organization.tags.translations',
-        'organization.offices',
-        'fund_config.implementation.page_provider',
+    public const array LOAD = [];
+
+    public const array LOAD_NESTED = [
+        'logo' => MediaResource::class,
+        'organization' => OrganizationResource::class,
+        'fund_config.implementation' => ImplementationResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fund = $this->resource;
         $fundProvider = $this->product->organization->fund_providers->where('fund_id', $fund->id)->first();

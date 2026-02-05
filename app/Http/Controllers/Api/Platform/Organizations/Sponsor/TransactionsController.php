@@ -10,10 +10,10 @@ use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTrans
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
-use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Searches\VoucherTransactionsSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -55,15 +55,27 @@ class TransactionsController extends Controller
 
         if (!$organization->show_provider_transactions &&
             ($request->has('voucher_id') || $request->has('reservation_voucher_id'))) {
-            $options['target'] = [
+            $options['targets'] = [
                 VoucherTransaction::TARGET_IBAN,
                 VoucherTransaction::TARGET_PAYOUT,
                 VoucherTransaction::TARGET_TOP_UP,
             ];
-            $options['initiator'] = VoucherTransaction::INITIATOR_SPONSOR;
+
+            $options['initiator'] = [
+                VoucherTransaction::INITIATOR_SPONSOR,
+                VoucherTransaction::INITIATOR_REQUESTER,
+            ];
         }
 
-        $query = VoucherTransaction::searchSponsor($request, $organization);
+        $search = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address', 'execution_date_from', 'execution_date_to',
+        ]), VoucherTransaction::query());
+
+        $query = $search->searchSponsor($organization);
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
 
         $total_amount = currency_format((clone $query)->sum('amount'));
@@ -97,30 +109,26 @@ class TransactionsController extends Controller
         $provider = Organization::find($request->input('organization_id')) ?: false;
         $provider = $target == VoucherTransaction::TARGET_PROVIDER ? $provider : null;
 
-        $reimbursement = $request->input('target_reimbursement_id');
-        $reimbursement = $reimbursement ? Reimbursement::find($reimbursement) : null;
-
         $this->authorize('show', $organization);
         $this->authorize('useAsSponsor', [$voucher, $provider]);
-
-        $reimbursementFields = $reimbursement ? [
-            'target_iban' => $reimbursement->iban,
-            'target_name' => $reimbursement->iban_name,
-            'target_reimbursement_id' => $reimbursement->id,
-        ] : [];
 
         return SponsorVoucherTransactionResource::create(match ($target) {
             VoucherTransaction::TARGET_PROVIDER => $voucher->makeTransactionBySponsor(
                 $employee,
-                $request->only('target', 'amount', 'organization_id'),
+                [
+                    'target' => VoucherTransaction::TARGET_PROVIDER,
+                    'amount' => $request->get('amount'),
+                    'organization_id' => $request->get('organization_id'),
+                ],
                 $request->input('note'),
                 $request->boolean('note_shared')
             ),
             VoucherTransaction::TARGET_IBAN => $voucher->makeTransactionBySponsor(
                 $employee,
                 [
-                    ...$request->only('target', 'amount', 'target_iban', 'target_name'),
-                    ...$reimbursementFields,
+                    'target' => VoucherTransaction::TARGET_IBAN,
+                    'amount' => $request->get('amount'),
+                    ...$request->bankAccountData(),
                 ],
                 $request->input('note'),
             ),
@@ -131,6 +139,7 @@ class TransactionsController extends Controller
             ),
         });
     }
+
 
     /**
      * @param StoreTransactionBatchRequest $request
@@ -171,7 +180,7 @@ class TransactionsController extends Controller
 
         while (count($transactions) > $index) {
             $slice = array_slice($transactions, $index++, 1, true);
-            $item = array_first($slice);
+            $item = Arr::first($slice);
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
@@ -233,7 +242,22 @@ class TransactionsController extends Controller
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFieldsRaw());
-        $fileData = new VoucherTransactionsSponsorExport($request, $organization, $fields);
+
+        $search = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state', 'fund_id',
+            'voucher_transaction_bulk_id', 'voucher_id', 'pending_bulking',
+            'reservation_voucher_id', 'non_cancelable_from', 'non_cancelable_to', 'bulk_state',
+            'identity_address', 'execution_date_from', 'execution_date_to',
+        ]), VoucherTransaction::query());
+
+        $builder = VoucherTransactionQuery::order(
+            $search->searchSponsor($organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        );
+
+        $fileData = new VoucherTransactionsSponsorExport($builder, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

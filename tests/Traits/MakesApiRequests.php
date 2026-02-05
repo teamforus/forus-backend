@@ -17,6 +17,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductReservation;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Testing\TestResponse;
@@ -483,9 +484,9 @@ trait MakesApiRequests
     ): TestResponse {
         return $this->apiMakeStorePrevalidationRequest($organization, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
             $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
             $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 7),
@@ -946,5 +947,68 @@ trait MakesApiRequests
             'data' => $data,
             'overwrite' => $overwrite,
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function apiMakePayoutRequest(array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/payouts', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity $identity
+     * @return VoucherTransaction
+     */
+    protected function apiMakePayout(array $data, Identity $identity): VoucherTransaction
+    {
+        $response = $this->apiMakePayoutRequest($data, $identity)->assertSuccessful();
+
+        return VoucherTransaction::findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    protected function makeProviderVoucherTransactionRequest(
+        Voucher $voucher,
+        Organization $providerOrganization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        $manualVoucherToken = $voucher->token_without_confirmation->address;
+
+        return $this->postJson("/api/v1/platform/provider/vouchers/$manualVoucherToken/transactions", [
+            'organization_id' => $providerOrganization->id,
+            ...$data,
+        ], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @param array $data
+     * @param Identity $identity
+     * @return VoucherTransaction
+     * @noinspection PhpUnused
+     */
+    protected function makeProviderVoucherTransaction(
+        Voucher $voucher,
+        Organization $providerOrganization,
+        array $data,
+        Identity $identity,
+    ): VoucherTransaction {
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $providerOrganization, $data, $identity)
+            ->assertSuccessful();
+
+        return VoucherTransaction::findOrFail($response->json('data.id'));
     }
 }

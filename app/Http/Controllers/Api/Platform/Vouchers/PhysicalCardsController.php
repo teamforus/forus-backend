@@ -14,8 +14,11 @@ class PhysicalCardsController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $maxAttempts = 5;
-    private $decayMinutes = 60 * 24;
+    public function __construct()
+    {
+        $this->maxAttempts = 5;
+        $this->decayMinutes = 60 * 24;
+    }
 
     /**
      * Link existing physical card to existing voucher.
@@ -34,7 +37,7 @@ class PhysicalCardsController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
         $this->authorize('create', [PhysicalCard::class, $fundPhysicalCardType, $voucher]);
 
-        return new PhysicalCardResource($voucher->addPhysicalCard(
+        return PhysicalCardResource::create($voucher->addPhysicalCard(
             $request->post('code'),
             $fundPhysicalCardType->physical_card_type,
         ));

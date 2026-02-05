@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use App\Services\Forus\TestData\TestData;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -121,12 +122,29 @@ trait DoesTesting
     /**
      * @return string
      */
+    protected function makeIban(): string
+    {
+        return $this->faker()->iban('NL');
+    }
+
+    /**
+     * @throws Throwable
+     * @return int
+     */
+    protected function randomFakeBsn(): int
+    {
+        return TestData::randomFakeBsn();
+    }
+
+    /**
+     * @return string
+     */
     protected function makeIbanName(): string
     {
         return preg_replace(
             '/[^a-zA-Z .]+/',
             '',
-            $this->faker()->firstName . ' ' . $this->faker()->lastName
+            $this->faker()->firstName() . ' ' . $this->faker()->lastName()
         );
     }
 }

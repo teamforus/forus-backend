@@ -62,6 +62,7 @@ class FundRequestRecordValueRule extends BaseFundRequestRule
 
             if (
                 Arr::has($prefills, $criterion->record_type_key) &&
+                $criterion->fill_type === $criterion::FILL_TYPE_PREFILL &&
                 !static::valuesIsEqual(Arr::get($prefills, "$criterion->record_type_key.value"), $value)
             ) {
                 return $this->reject(__('validation.fund_request.invalid_prefill_value', ['attribute' => $label]));

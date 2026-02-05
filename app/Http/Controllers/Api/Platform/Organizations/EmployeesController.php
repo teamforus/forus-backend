@@ -48,7 +48,7 @@ class EmployeesController extends Controller
 
         $search = new EmployeesSearch($request->only([
             'role', 'roles', 'permission', 'permissions', 'q',
-        ]), $organization->employees()->getQuery());
+        ]), $organization->employees());
 
         return EmployeeResource::queryCollection($search->query(), $request);
     }
@@ -98,7 +98,7 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('show', [$employee, $organization]);
 
-        return new EmployeeResource($employee);
+        return EmployeeResource::create($employee);
     }
 
     /**
@@ -128,7 +128,7 @@ class EmployeesController extends Controller
 
         EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 
-        return new EmployeeResource($employee);
+        return EmployeeResource::create($employee);
     }
 
     /**
@@ -180,7 +180,7 @@ class EmployeesController extends Controller
 
         $search = new EmployeesSearch($request->only([
             'role', 'roles', 'permission', 'permissions', 'q',
-        ]), $organization->employees()->getQuery());
+        ]), $organization->employees());
 
         $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;

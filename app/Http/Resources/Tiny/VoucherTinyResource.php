@@ -15,7 +15,7 @@ class VoucherTinyResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @throws Exception
      * @return array
      */

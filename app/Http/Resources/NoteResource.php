@@ -10,13 +10,17 @@ use Illuminate\Http\Request;
  */
 class NoteResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'employee.identity',
+    ];
+
     /**
      * Transform the resource into an array.
      *
      * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return array_merge($this->resource->only('id', 'description'), [
             'employee' => $this->resource->employee ? [

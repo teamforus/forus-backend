@@ -2,15 +2,13 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseFieldedExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
+use App\Exports\Base\BaseExport;
 use App\Models\FundProvider;
-use App\Models\Organization;
 use App\Scopes\Builders\ProductQuery;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-class FundProvidersExport extends BaseFieldedExport
+class FundProvidersExport extends BaseExport
 {
     protected static string $transKey = 'providers';
 
@@ -37,64 +35,32 @@ class FundProvidersExport extends BaseFieldedExport
     ];
 
     /**
-     * @param IndexProvidersRequest $request
-     * @param Organization $organization
-     * @param array $fields
+     * @var array|string[]
      */
-    public function __construct(
-        IndexProvidersRequest $request,
-        Organization $organization,
-        protected array $fields,
-    ) {
-        $this->data = $this->export($request, $organization);
-    }
+    protected array $builderWithArray = [
+        'fund.fund_config.implementation',
+        'organization.last_employee_session',
+    ];
 
     /**
-     * @param IndexProvidersRequest $request
-     * @param Organization $organization
-     * @return Collection
-     */
-    protected function export(IndexProvidersRequest $request, Organization $organization): Collection
-    {
-        $data = FundProvider::search($request, $organization)->with([
-            'fund.fund_config.implementation',
-            'organization.last_employee_session',
-        ])->get();
-
-        return $this->exportTransform($data);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data->map(fn (FundProvider $fundProvider) => array_only(
-            $this->getRow($fundProvider),
-            $this->fields
-        )));
-    }
-
-    /**
-     * @param FundProvider $fundProvider
+     * @param Model|FundProvider $model
      * @return array
      */
-    protected function getRow(FundProvider $fundProvider): array
+    protected function getRow(Model|FundProvider $model): array
     {
-        $provider = $fundProvider->organization;
-        $lastActivity = $fundProvider->getLastActivity();
+        $provider = $model->organization;
+        $lastActivity = $model->getLastActivity();
 
         $providerProductsQuery = ProductQuery::whereNotExpired($provider->products_provider());
-        $individualProductsQuery = $fundProvider->fund_provider_products()->whereHas('product');
+        $individualProductsQuery = $model->fund_provider_products()->whereHas('product');
 
         $sponsorProductsQuery = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
-            'sponsor_organization_id' => $fundProvider->fund->organization_id,
+            'sponsor_organization_id' => $model->fund->organization_id,
         ]));
 
         $activeProductsQuery = ProductQuery::approvedForFundsAndActiveFilter(
-            $fundProvider->products()->getQuery(),
-            $fundProvider->fund_id,
+            $model->products()->getQuery(),
+            $model->fund_id,
         );
 
         $result = DB::query()->select([
@@ -104,11 +70,11 @@ class FundProvidersExport extends BaseFieldedExport
             'active_products_count' => $activeProductsQuery->selectRaw('count(*)'),
         ])->first();
 
-        $hasIndividualProducts = ($result->individual_products_count > 0 || $fundProvider->allow_products);
+        $hasIndividualProducts = ($result->individual_products_count > 0 || $model->allow_products);
 
         return [
-            'fund' => $fundProvider->fund->name,
-            'implementation' => $fundProvider->fund->fund_config?->implementation?->name,
+            'fund' => $model->fund->name,
+            'implementation' => $model->fund->fund_config?->implementation?->name,
             'provider' => $provider->name,
             'iban' => $provider->iban,
             'provider_last_activity' => $lastActivity?->diffForHumans(now()),
@@ -118,10 +84,10 @@ class FundProvidersExport extends BaseFieldedExport
             'products_count' => $result->provider_products_count + $result->sponsor_products_count,
             'phone' => $provider->phone,
             'email' => $provider->email,
-            'kvk' => $fundProvider->organization->kvk,
-            'state' => $fundProvider->state_locale,
-            'allow_budget' => $fundProvider->allow_budget ? 'Ja' : 'Nee',
-            'allow_products' => $fundProvider->allow_products ? 'Ja' : 'Nee',
+            'kvk' => $model->organization->kvk,
+            'state' => $model->state_locale,
+            'allow_budget' => $model->allow_budget ? 'Ja' : 'Nee',
+            'allow_products' => $model->allow_products ? 'Ja' : 'Nee',
             'allow_some_products' => $hasIndividualProducts ? 'Ja' : 'Nee',
         ];
     }

@@ -10,10 +10,15 @@ use Illuminate\Http\Request;
  */
 class FundRequestRecordResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'record_type.translation',
+        'record_type.record_type_options.translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray(Request $request): array

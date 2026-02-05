@@ -500,7 +500,7 @@ class VoucherPolicy
         }
 
         $applied = $voucher->fund->providers()->pluck('organization_id');
-        $providers = Organization::queryByIdentityPermissions($identity->address, Permission::SCAN_VOUCHERS);
+        $providers = OrganizationQuery::queryByIdentityPermissions($identity->address, Permission::SCAN_VOUCHERS);
         $providers = $providers->pluck('id');
         extract($this->getVoucherProvidersLists($voucher, $product_id));
 

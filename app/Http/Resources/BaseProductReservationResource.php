@@ -7,6 +7,16 @@ use App\Models\ProductReservation;
 
 class BaseProductReservationResource extends BaseJsonResource
 {
+    public const array LOAD = [
+        'fund_provider_product_with_trashed',
+        'product.organization',
+    ];
+
+    public const array LOAD_NESTED = [
+        'extra_payment' => ReservationExtraPaymentResource::class,
+        'product.photos' => MediaResource::class,
+    ];
+
     /**
      * @param ProductReservation $reservation
      * @return array

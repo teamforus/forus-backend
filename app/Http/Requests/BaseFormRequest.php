@@ -131,6 +131,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
+     * @return string
+     */
+    public function pageRule(): string
+    {
+        return 'nullable|numeric|min:1';
+    }
+
+    /**
      * @param ...$columns
      * @return string[]
      */

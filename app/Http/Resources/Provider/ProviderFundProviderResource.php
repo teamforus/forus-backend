@@ -6,6 +6,7 @@ use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\Small\FundSmallResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Models\FundProvider;
+use Illuminate\Http\Request;
 
 /**
  * @property FundProvider $resource
@@ -13,21 +14,21 @@ use App\Models\FundProvider;
 class ProviderFundProviderResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'fund.logo.presets',
-        'fund.fund_formulas',
-        'fund.organization.logo.presets',
-        'fund.fund_config.implementation',
-        'organization.logo.presets',
         'fund_provider_products',
+    ];
+
+    public const array LOAD_NESTED = [
+        'fund' => FundSmallResource::class,
+        'organization' => OrganizationTinyResource::class,
     ];
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return array
      */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         $fundProvider = $this->resource;
 

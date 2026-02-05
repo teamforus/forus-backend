@@ -3,35 +3,21 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
+use App\Models\Organization;
 use App\Models\ProfileRelation;
-use App\Services\MollieService\Objects\Organization;
 use Illuminate\Http\Request;
 
 /**
- * @property Organization $organization
  * @property ProfileRelation $resource
  */
 class IdentityRelationResource extends BaseJsonResource
 {
-    /**
-     * @var string[]
-     */
-    public const array LOAD = [];
+    public const array LOAD_NESTED = [
+        'profile.identity' => SponsorIdentityResource::class,
+        'related_profile.identity' => SponsorIdentityResource::class,
+    ];
 
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        $prepend = $append ? "$append." : '';
-
-        return [
-            ...parent::load($append),
-            ...SponsorIdentityResource::load("{$prepend}profile.identity"),
-            ...SponsorIdentityResource::load("{$prepend}related_profile.identity"),
-        ];
-    }
+    protected ?Organization $organization = null;
 
     /**
      * @param Request $request

@@ -11,18 +11,9 @@ use Illuminate\Http\Request;
 class FundPhysicalCardTypeResource extends BaseJsonResource
 {
     public const array LOAD = [];
-
-    /**
-     * @param string|null $append
-     * @return array
-     */
-    public static function load(?string $append = null): array
-    {
-        return [
-            ...parent::load($append),
-            ...PhysicalCardTypeResource::load("$append.physical_card_type"),
-        ];
-    }
+    public const array LOAD_NESTED = [
+        'physical_card_type' => PhysicalCardTypeResource::class,
+    ];
 
     /**
      * Transform the resource into an array.

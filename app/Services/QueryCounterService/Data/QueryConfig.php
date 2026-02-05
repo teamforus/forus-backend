@@ -13,7 +13,7 @@ class QueryConfig
     protected array $minQueriesOverwrite;
     protected array $minQueriesTimeOverwrite;
     protected array $excludedRoutes;
-    protected string $logChannel;
+    protected array $providers;
 
     /**
      * @param array $config
@@ -22,12 +22,12 @@ class QueryConfig
     {
         $this->locale = Arr::get($this->config, 'locale');
         $this->enabled = Arr::get($this->config, 'enabled', false);
-        $this->logChannel = Arr::get($this->config, 'log_channel', 'daily');
         $this->minQueries = (int) Arr::get($this->config, 'min_queries', 100);
         $this->minQueriesTime = (int) Arr::get($this->config, 'min_queries_time', 100);
         $this->excludedRoutes = Arr::get($this->config, 'excluded_routes', []);
         $this->minQueriesOverwrite = (array) Arr::get($this->config, 'min_queries_overwrite', []);
         $this->minQueriesTimeOverwrite = (array) Arr::get($this->config, 'min_queries_time_overwrite', []);
+        $this->providers = (array) Arr::get($this->config, 'providers', []);
     }
 
     /**
@@ -97,12 +97,12 @@ class QueryConfig
     }
 
     /**
-     * Get the configured log channel.
+     * Get log providers configuration.
      *
-     * @return string
+     * @return array
      */
-    public function getLogChannel(): string
+    public function getProviders(): array
     {
-        return $this->logChannel;
+        return $this->providers;
     }
 }

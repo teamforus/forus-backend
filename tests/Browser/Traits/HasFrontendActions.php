@@ -66,6 +66,19 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goSponsorPayoutsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupVouchers');
+        $browser->element('@asideMenuGroupVouchers')->click();
+        $browser->waitFor('@payoutsNav');
+        $browser->element('@payoutsNav')->click();
+    }
+
+    /**
+     * @param Browser $browser
      * @param int $count
      * @param string $selector
      * @param string $operator
@@ -488,7 +501,7 @@ trait HasFrontendActions
 
         /** @var string $value */
         $value = $browser->value($selector);
-        $browser->keys($selector, ...array_fill(0, strlen($value), '{backspace}'));
+        $browser->keys($selector, ...array_fill(0, $value ? strlen($value) : 0, '{backspace}'));
     }
 
     /**

@@ -7,13 +7,12 @@ use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Throwable;
 
 /**
  * @property Model|Organization|Product|Fund $resource
  */
-class SearchLiteResource extends JsonResource
+class SearchLiteResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
