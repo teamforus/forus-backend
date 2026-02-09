@@ -2,6 +2,7 @@
 
 namespace App\Services\MailDatabaseLoggerService\Traits;
 
+use App\Helpers\Arr;
 use App\Models\Identity;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Carbon\Carbon;
@@ -178,7 +179,7 @@ trait AssertsSentEmails
      */
     protected function getEmailLink(string $content, string $urlSubstr): ?string
     {
-        return array_first(array_filter(
+        return Arr::first(Arr::where(
             $this->getEmailLinks($content),
             fn (string $link) => str_contains($link, $urlSubstr)
         ));

@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Searches\FundRequestSearch;
@@ -43,7 +44,7 @@ class FundRequestTest extends DuskTestCase
                 'archived' => false,
             ];
 
-            $fundRequest = (new FundRequestSearch($search))->query()->first();
+            $fundRequest = (new FundRequestSearch($search, FundRequest::query()))->query()->first();
             $this->assertNotNull($fundRequest);
 
             $identity = $fundRequest->identity;
@@ -51,7 +52,7 @@ class FundRequestTest extends DuskTestCase
             $this->loginIdentity($browser, $identity);
             $browser->waitFor('@headerTitle');
 
-            $fundRequests = (new FundRequestSearch($search))->query()->where([
+            $fundRequests = (new FundRequestSearch($search, FundRequest::query()))->query()->where([
                 'identity_id' => $identity->id,
             ])->take(10)->get();
 

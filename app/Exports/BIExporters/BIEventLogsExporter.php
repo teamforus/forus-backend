@@ -3,8 +3,9 @@
 namespace App\Exports\BIExporters;
 
 use App\Exports\EventLogsExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\EventLog\IndexEventLogRequest;
+use App\Searches\EmployeeEventLogSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
+use App\Services\EventLogService\Models\EventLog;
 
 class BIEventLogsExporter extends BaseBIExporter
 {
@@ -16,15 +17,14 @@ class BIEventLogsExporter extends BaseBIExporter
      */
     public function toArray(): array
     {
-        $fields = EventLogsExport::getExportFieldsRaw();
         $employee = $this->organization->findEmployee($this->organization->identity_address);
 
-        $request = (new IndexEventLogRequest())->merge([
+        $search = new EmployeeEventLogSearch($employee, [
             'loggable' => ['fund', 'bank_connection', 'employees'],
-        ]);
+        ], EventLog::query());
 
-        $data = new EventLogsExport($request, $employee, $fields);
+        $export = new EventLogsExport($search->query(), EventLogsExport::getExportFieldsRaw(), $employee);
 
-        return $data->collection()->toArray();
+        return $export->collection()->toArray();
     }
 }

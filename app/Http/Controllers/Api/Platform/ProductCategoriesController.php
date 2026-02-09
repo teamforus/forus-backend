@@ -21,7 +21,7 @@ class ProductCategoriesController extends Controller
     public function index(IndexProductCategoriesRequest $request): AnonymousResourceCollection
     {
         $disabledCategories = Config::get('forus.product_categories.disabled_top_categories', []);
-        $search = new ProductCategorySearch($request->only('q', 'parent_id', 'used'));
+        $search = new ProductCategorySearch($request->only('q', 'parent_id', 'used'), ProductCategory::query());
         $query = $search->query()->whereNotIn('id', $disabledCategories)->orderBy('id');
 
         return ProductCategoryResource::queryCollection($query, $request);

@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
+use App\Searches\VoucherTransactionsSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Throwable;
@@ -32,7 +33,12 @@ class TransactionsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
-        $query = VoucherTransaction::searchVoucher($voucherToken->voucher, $request);
+        $builder = new VoucherTransactionsSearch($request->only([
+            'q', 'targets', 'state', 'from', 'to', 'amount_min', 'amount_max',
+            'transfer_in_min', 'transfer_in_max', 'fund_state',
+        ]), $voucherToken->voucher->all_transactions());
+
+        $query = $builder->query();
 
         if ($request->isMeApp()) {
             $query->where('target', VoucherTransaction::TARGET_PROVIDER);

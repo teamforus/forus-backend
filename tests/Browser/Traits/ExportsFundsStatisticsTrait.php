@@ -4,6 +4,7 @@ namespace Tests\Browser\Traits;
 
 use App\Exports\FundsExport;
 use App\Exports\FundsExportDetailed;
+use App\Helpers\Arr;
 use App\Models\Fund;
 use App\Models\Implementation;
 use Facebook\WebDriver\Exception\TimeoutException;
@@ -126,7 +127,7 @@ trait ExportsFundsStatisticsTrait
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
 
-        $item = array_first($rows, fn ($row) => $row[0] === $fund->name);
+        $item = Arr::first(Arr::where($rows, fn ($row) => $row[0] === $fund->name));
         $this->assertEquals($fund->name, $item[0] ?? null);
     }
 }

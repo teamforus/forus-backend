@@ -12,7 +12,7 @@ class TokenGenerator
     public function generate($block_length, $block_count = 1): string
     {
         return collect(range(0, $block_count - 1))->map(static function () use ($block_length) {
-            return bin2hex(random_bytes($block_length / 2));
+            return bin2hex(random_bytes((int) ($block_length / 2)));
         })->implode('-');
     }
 

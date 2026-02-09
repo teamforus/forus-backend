@@ -3,15 +3,16 @@
 namespace App\Searches\Sponsor;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\BaseSearch;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
 class FundIdentitiesSearch extends BaseSearch
 {
     /**
-     * ProductReservationsSearch constructor.
      * @param array $filters
      * @param Fund $fund
      */
@@ -29,10 +30,11 @@ class FundIdentitiesSearch extends BaseSearch
     }
 
     /**
-     * @return Builder|null
+     * @return Builder|Relation|Identity
      */
-    public function query(): ?Builder
+    public function query(): Builder|Relation|Identity
     {
+        /** @var Builder|Relation|Identity $builder */
         $builder = parent::query();
 
         if ($this->hasFilter('q') && $this->getFilter('q')) {
