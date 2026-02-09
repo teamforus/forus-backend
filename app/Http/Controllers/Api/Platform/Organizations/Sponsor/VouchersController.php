@@ -57,7 +57,7 @@ class VouchersController extends Controller
             'expired', 'q', 'implementation_id', 'granted', 'from', 'to', 'amount_min', 'amount_max',
             'amount_available_min', 'amount_available_max', 'unassigned', 'type', 'source',
             'in_use_from', 'in_use_to', 'in_use', 'has_payouts', 'count_per_identity_min',
-            'count_per_identity_max', 'state', 'email', 'identity_id', 'bsn',
+            'count_per_identity_max', 'state', 'email', 'identity_id', 'bsn', 'order_by', 'order_dir',
         ]), Voucher::query());
 
         $query = $search->searchSponsor($organization, $organization->findFund($request->get('fund_id')));
