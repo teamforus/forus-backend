@@ -18,6 +18,10 @@ return [
         'from' => 14,
         'to' => 17,
     ], [
+        'record_type_key' => 'children_age_group_4_17',
+        'from' => 4,
+        'to' => 17,
+    ], [
         'record_type_key' => 'children_age_group_18_99',
         'from' => 18,
         'to' => 99,
@@ -38,6 +42,10 @@ return [
     ], [
         'record_type_key' => 'children_age_group_14_17',
         'from' => 14,
+        'to' => 17,
+    ], [
+        'record_type_key' => 'children_age_group_4_17',
+        'from' => 4,
         'to' => 17,
     ], [
         'record_type_key' => 'children_age_group_18_99',
