@@ -297,7 +297,12 @@ class BackofficeTest extends TestCase
         $product = $this->makeProviderAndProducts($voucher->fund)['approved'][0];
 
         $this->assertNull($voucher->backoffice_log_first_use()->first());
-        $this->makeProviderVoucherTransactionRequest($voucher, $product->organization)->assertSuccessful();
+        $this->assertNotNull($this->makeProviderVoucherTransaction(
+            $voucher,
+            $product->organization,
+            ['amount' => 1],
+            $product->organization->identity
+        ));
         $this->assertVoucherFirstUseLogGoesFromPendingToSuccess($voucher, $bsn);
     }
 
@@ -335,21 +340,6 @@ class BackofficeTest extends TestCase
     protected function makeFundCheckRequest(Fund $fund, Identity $identity): TestResponse
     {
         return $this->postJson("/api/v1/platform/funds/$fund->id/check", [], $this->makeApiHeaders($identity));
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param Organization $providerOrganization
-     * @return TestResponse
-     */
-    protected function makeProviderVoucherTransactionRequest(Voucher $voucher, Organization $providerOrganization): TestResponse
-    {
-        $manualVoucherToken = $voucher->token_without_confirmation->address;
-
-        return $this->postJson("/api/v1/platform/provider/vouchers/$manualVoucherToken/transactions", [
-            'amount' => 1,
-            'organization_id' => $providerOrganization->id,
-        ], $this->makeApiHeaders($providerOrganization->identity));
     }
 
     /**

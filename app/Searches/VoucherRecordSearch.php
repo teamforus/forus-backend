@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 class VoucherRecordSearch extends BaseSearch
 {
     /**
-     * @return Builder|Relation
+     * @return Builder|Relation|VoucherRecord
      */
-    public function query(): Builder|Relation
+    public function query(): Builder|Relation|VoucherRecord
     {
         $builder = $this->appendSortColumns(parent::getBuilder());
 
@@ -31,10 +31,10 @@ class VoucherRecordSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|VoucherRecord $builder
      * @return Builder|Relation|VoucherRecord
      */
-    protected function appendSortColumns(Builder|Relation $builder): Builder|Relation|VoucherRecord
+    protected function appendSortColumns(Builder|Relation|VoucherRecord $builder): Builder|Relation|VoucherRecord
     {
         $builder->addSelect([
             'record_type_name' => RecordTypeTranslation::query()

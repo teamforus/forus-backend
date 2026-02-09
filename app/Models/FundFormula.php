@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundFormula whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundFormula extends BaseModel
+class FundFormula extends Model
 {
     public const string TYPE_FIXED = 'fixed';
     public const string TYPE_MULTIPLY = 'multiply';

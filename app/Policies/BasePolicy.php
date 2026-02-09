@@ -24,7 +24,7 @@ abstract class BasePolicy
      */
     protected function deny($message, $code = 403)
     {
-        $policyError = sprintf('%s/%s.%s', $this->policyRoot, $this->getPolicyKey(), $message);
+        $policyError = sprintf('%s.%s.%s', $this->policyRoot, $this->getPolicyKey(), $message);
 
         $error = $message;
         $titleKey = sprintf('%s.title', $policyError);

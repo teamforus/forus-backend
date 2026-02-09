@@ -3,11 +3,6 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseVoucherTransactionsExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
-use App\Models\Organization;
-use App\Models\VoucherTransaction;
-use App\Scopes\Builders\VoucherTransactionQuery;
-use Illuminate\Support\Collection;
 
 class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
 {
@@ -32,28 +27,4 @@ class VoucherTransactionsProviderExport extends BaseVoucherTransactionsExport
         'notes_provider',
         'reservation_code',
     ];
-
-    /**
-     * @param BaseIndexTransactionsRequest $request
-     * @param Organization $organization
-     * @return \Illuminate\Support\Collection
-     */
-    protected function export(BaseIndexTransactionsRequest $request, Organization $organization): Collection
-    {
-        $builder = VoucherTransactionQuery::order(
-            VoucherTransaction::searchProvider($request, $organization),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        );
-
-        $builder->with([
-            'product',
-            'provider',
-            'voucher.fund',
-            'notes_provider',
-            'product_reservation',
-        ]);
-
-        return $this->exportTransform($builder->get());
-    }
 }

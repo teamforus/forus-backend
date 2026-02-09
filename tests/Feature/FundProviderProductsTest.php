@@ -29,6 +29,9 @@ class FundProviderProductsTest extends TestCase
     use DatabaseTransactions;
     use MakesProductReservations;
 
+    private int $throttleTotalPendingCount;
+    private int $throttleRecentlyCanceledCount;
+
     /**
      * @return void
      */
@@ -712,8 +715,8 @@ class FundProviderProductsTest extends TestCase
         $response = $this->apiMakeProductReservationRequest([
             'product_id' => $product->id,
             'voucher_id' => $voucher->id,
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
         ], $voucher->identity);
 
         if ($assertSuccess) {

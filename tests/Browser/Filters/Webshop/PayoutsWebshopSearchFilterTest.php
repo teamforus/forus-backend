@@ -89,7 +89,7 @@ class PayoutsWebshopSearchFilterTest extends BaseWebshopSearchFilter
             identity: $identity,
             amount: 100,
             employee: $employee,
-            bankAccount: new BankAccount($this->faker()->iban, $this->faker()->name),
+            bankAccount: new BankAccount($this->faker()->iban(), $this->faker()->name()),
             voucherFields: [ 'fund_request_id' => $fundRequest->id ],
         );
 

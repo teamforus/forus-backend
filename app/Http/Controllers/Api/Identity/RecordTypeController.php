@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\RecordTypes\IndexRecordTypesRequest;
 use App\Http\Resources\RecordTypeResource;
 use App\Models\RecordType;
+use App\Searches\RecordTypeSearch;
 use Illuminate\Http\JsonResponse;
 
 class RecordTypeController extends Controller
@@ -18,11 +19,11 @@ class RecordTypeController extends Controller
      */
     public function index(IndexRecordTypesRequest $request): JsonResponse
     {
-        $query = RecordType::searchQuery($request->only([
+        $search = new RecordTypeSearch($request->only([
             'vouchers', 'criteria', 'organization_id',
-        ]));
+        ]), RecordType::query());
 
-        $recordTypesCollection = RecordTypeResource::queryCollection($query, 1000);
+        $recordTypesCollection = RecordTypeResource::queryCollection($search->query(), 1000);
 
         return new JsonResponse($recordTypesCollection->toArray($request));
     }

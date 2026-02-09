@@ -475,7 +475,7 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string|null $email
-     * @return Identity|BaseModel|null
+     * @return Identity|Model|null
      */
     public static function findByEmail(?string $email): Identity|Model|null
     {
@@ -484,7 +484,7 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string|null $bsn
-     * @return Identity|BaseModel|null
+     * @return Identity|Model|null
      */
     public static function findByBsn(?string $bsn): Identity|Model|null
     {
@@ -500,7 +500,7 @@ class Identity extends Model implements Authenticatable
      * @param bool $verified
      * @param bool $primary
      * @param bool $initial
-     * @return IdentityEmail|BaseModel
+     * @return IdentityEmail|Model
      */
     public function addEmail(
         string $email,
@@ -630,7 +630,7 @@ class Identity extends Model implements Authenticatable
      * Add new record category to identity.
      * @param string $name
      * @param int $order
-     * @return RecordCategory|BaseModel
+     * @return RecordCategory|Model
      */
     public function createRecordCategory(string $name, int $order = 0): RecordCategory|Model
     {
@@ -837,7 +837,7 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string $bsnValue
-     * @return Record|BaseModel
+     * @return Record|Model
      */
     public function setBsnRecord(string $bsnValue): Record|Model
     {

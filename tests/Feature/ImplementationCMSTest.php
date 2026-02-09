@@ -350,7 +350,7 @@ class ImplementationCMSTest extends TestCase
     {
         return [
             'button_enabled' => (bool) rand(0, 1),
-            'button_link' => $this->faker->url,
+            'button_link' => $this->faker->url(),
             'button_link_label' => $this->faker->text(),
             'button_target_blank' => (bool) rand(0, 1),
             'button_text' => $this->faker->text(100),
@@ -433,7 +433,7 @@ class ImplementationCMSTest extends TestCase
             'external' => $external,
             'page_type' => Arr::random($pageTypes),
             'description' => $this->makeMarkdownDescription($this->makeMedia('cms_media')),
-            'external_url' => $external ? $this->faker->url : null,
+            'external_url' => $external ? $this->faker->url() : null,
             'description_position' => Arr::random(ImplementationPage::DESCRIPTION_POSITIONS),
             'description_alignment' => Arr::random(['left', 'center', 'right']),
         ], $replace);
