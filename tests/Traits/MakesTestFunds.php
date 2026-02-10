@@ -8,6 +8,7 @@ use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundFormula;
 use App\Models\FundProviderProduct;
+use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -367,6 +368,7 @@ trait MakesTestFunds
         FundProviderProduct::whereIn('fund_provider_id', $fund->providers()->pluck('id')->toArray())->forceDelete();
 
         $fund->vouchers()->forceDelete();
+        $fund->fund_requests()->get()->each(fn (FundRequest $fundRequest) => $fundRequest->vouchers()->update(['fund_request_id' => null]));
         $fund->fund_requests()->forceDelete();
         $fund->amount_presets()->forceDelete();
         $fund->prevalidation_requests()->forceDelete();
