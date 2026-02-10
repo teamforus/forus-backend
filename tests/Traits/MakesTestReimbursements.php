@@ -145,7 +145,7 @@ trait MakesTestReimbursements
     {
         $type = 'reimbursement_proof';
         $filePath = base_path('tests/assets/test.png');
-        $file = UploadedFile::fake()->createWithContent($this->faker()->uuid . '.png', $filePath);
+        $file = UploadedFile::fake()->createWithContent($this->faker()->uuid() . '.png', $filePath);
 
         $response = $this->postJson('/api/v1/files', compact('type', 'file'), $headers);
         $response->assertCreated();

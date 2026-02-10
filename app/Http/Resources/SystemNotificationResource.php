@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 /**
  * @property SystemNotification $resource
- * @property array $fundIds
  */
 class SystemNotificationResource extends BaseJsonResource
 {
@@ -19,6 +18,8 @@ class SystemNotificationResource extends BaseJsonResource
         'templates',
         'system_notification_configs',
     ];
+
+    protected ?array $fundIds = null;
 
     /**
      * Transform the resource into an array.

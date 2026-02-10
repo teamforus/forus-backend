@@ -3,6 +3,7 @@
 namespace Tests\Browser\Exports;
 
 use App\Exports\ProviderFinancesExport;
+use App\Helpers\Arr;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -116,7 +117,7 @@ class ProviderFinancesExportTest extends DuskTestCase
         // Assert that the first row (header) contains expected columns
         $this->assertEquals($fields, $rows[0]);
 
-        $item = array_first($rows, fn ($row) => $row[0] === $organization->name);
+        $item = Arr::first(Arr::where($rows, fn ($row) => $row[0] === $organization->name));
         $this->assertEquals($organization->name, $item[0] ?? null);
     }
 }

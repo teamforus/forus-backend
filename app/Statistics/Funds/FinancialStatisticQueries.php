@@ -2,7 +2,6 @@
 
 namespace App\Statistics\Funds;
 
-use App\Models\BaseModel;
 use App\Models\BusinessType;
 use App\Models\Office;
 use App\Models\Organization;
@@ -13,6 +12,7 @@ use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as BaseCollection;
@@ -112,13 +112,11 @@ class FinancialStatisticQueries
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
-        return $this->collectionOnly($query->get()->map(function (Office $office) {
-            return (new BaseModel())->forceFill([
-                'id' => $office->postcode_number,
-                'name' => $office->postcode_number,
-                'transactions' => $office->transactions ?? 0,
-            ]);
-        }), ['id', 'name', 'transactions']);
+        return $query->get()->map(fn (Office $office) => [
+            'id' => $office->postcode_number,
+            'name' => $office->postcode_number,
+            'transactions' => $office->transactions ?? 0,
+        ])->values()->toArray();
     }
 
     /**
@@ -227,7 +225,7 @@ class FinancialStatisticQueries
      */
     protected function collectionOnly(BaseCollection $collection, array $only): array
     {
-        return $collection->map(function (BaseModel $model) use ($only) {
+        return $collection->map(function (Model $model) use ($only) {
             return $model->only($only);
         })->values()->toArray();
     }

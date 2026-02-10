@@ -161,10 +161,10 @@ class VoucherBatchTest extends DuskTestCase
     protected function recordsFields(): array
     {
         return [
-            'record.given_name' => $this->faker()->firstName,
-            'record.family_name' => $this->faker()->lastName,
+            'record.given_name' => $this->faker()->firstName(),
+            'record.family_name' => $this->faker()->lastName(),
             'record.birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
-            'record.address' => $this->faker()->address,
+            'record.address' => $this->faker()->address(),
         ];
     }
 
@@ -184,7 +184,8 @@ class VoucherBatchTest extends DuskTestCase
         };
 
         $browser->waitFor('@tableVoucherSearch');
-        $browser->value('@tableVoucherSearch', $search);
+        $this->clearField($browser, '@tableVoucherSearch');
+        $browser->typeSlowly('@tableVoucherSearch', $search, 50);
 
         $browser->waitFor("@tableVoucherRow$voucher->id");
         $browser->assertSeeIn("@tableVoucherRow$voucher->id", $search);
@@ -206,10 +207,10 @@ class VoucherBatchTest extends DuskTestCase
         $browser->waitFor('@uploadVouchersBatchButton');
         $browser->element('@uploadVouchersBatchButton')->click();
 
+        $browser->waitFor('@modalVoucherUpload');
+
         $browser->waitFor('@modalFundSelectSubmit');
         $browser->element('@modalFundSelectSubmit')->click();
-
-        $browser->waitFor('@modalVoucherUpload');
 
         $browser->waitFor('@selectFileButton');
         $browser->element('@selectFileButton')->click();
@@ -235,6 +236,7 @@ class VoucherBatchTest extends DuskTestCase
 
         $browser->element('@closeModalButton')->click();
         $browser->waitUntilMissing('@modalVoucherUpload');
+        $browser->waitUntilMissing('@successNotification');
 
         Storage::delete($this->csvPath);
     }

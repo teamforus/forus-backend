@@ -2,6 +2,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Fund;
 use App\Models\Implementation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -18,5 +19,28 @@ class ImplementationQuery
         string $q,
     ): Builder|Relation|Implementation {
         return $query->where('name', 'LIKE', "%$q%");
+    }
+
+    /**
+     * @return Builder|Fund
+     */
+    public static function queryFunds(): Builder|Fund
+    {
+        $query = FundQuery::whereIsConfiguredByForus(Fund::query());
+
+        if (Implementation::activeKey() !== Implementation::KEY_GENERAL) {
+            $query->whereRelation('fund_config.implementation', 'key', Implementation::activeKey());
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param ...$states
+     * @return Builder|Fund
+     */
+    public static function queryFundsByState(...$states): Builder|Fund
+    {
+        return self::queryFunds()->whereIn('state', is_array($states[0] ?? null) ? $states[0] : $states);
     }
 }

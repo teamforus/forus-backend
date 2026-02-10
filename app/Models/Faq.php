@@ -6,6 +6,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * App\Models\Faq.
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder<static>|Faq whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class Faq extends BaseModel
+class Faq extends Model
 {
     use HasMedia;
     use HasMarkdownFields;
