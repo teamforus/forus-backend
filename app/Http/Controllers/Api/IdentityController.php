@@ -30,16 +30,6 @@ class IdentityController extends Controller
     use ThrottleWithMeta;
 
     /**
-     * @var array|float|mixed
-     */
-    private mixed $maxAttempts;
-
-    /**
-     * @var array|float|mixed
-     */
-    private mixed $decayMinutes;
-
-    /**
      * Get identity details.
      *
      * @param BaseFormRequest $request

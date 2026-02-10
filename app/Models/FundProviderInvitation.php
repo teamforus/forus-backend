@@ -7,6 +7,7 @@ use App\Scopes\Builders\FundProviderQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -42,7 +43,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|FundProviderInvitation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundProviderInvitation extends BaseModel
+class FundProviderInvitation extends Model
 {
     public const string STATE_ACCEPTED = 'accepted';
     public const string STATE_EXPIRED = 'expired';
@@ -160,7 +161,7 @@ class FundProviderInvitation extends BaseModel
             'organization_id' => $this->organization_id,
         ])->update($this->only('allow_products', 'allow_budget'));
 
-        return $this->updateModel([
+        return tap($this)->update([
             'state' => self::STATE_ACCEPTED,
         ]);
     }

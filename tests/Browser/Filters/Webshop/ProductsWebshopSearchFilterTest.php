@@ -160,7 +160,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function prepareProvider(Organization $providerOrganization): Organization
     {
-        $typeName = $this->faker->name;
+        $typeName = $this->faker->name();
 
         $type = BusinessType::create([
             'key' => Str::slug($typeName),
@@ -173,19 +173,19 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $providerOrganization->update([
             'business_type_id' => $type->id,
             'email_public' => true,
-            'email' => $this->faker->email,
+            'email' => $this->faker->email(),
             'phone_public' => true,
-            'phone' => $this->faker->phoneNumber,
+            'phone' => $this->faker->phoneNumber(),
             'website_public' => true,
-            'website' => $this->faker->url,
-            'description_text' => $this->faker->sentence,
+            'website' => $this->faker->url(),
+            'description_text' => $this->faker->sentence(),
         ]);
 
         $employee = $providerOrganization->addEmployee($this->makeIdentity(), Role::pluck('id')->toArray());
 
         $office = $this->makeOrganizationOffice($providerOrganization, [
             'branch_id' => $this->faker->numberBetween(100000, 1000000),
-            'branch_name' => $this->faker->name,
+            'branch_name' => $this->faker->name(),
             'branch_number' => $this->faker->numberBetween(100000, 1000000),
             'postcode' => '9721 AN',
             'lat' => 53.1935717,
@@ -215,7 +215,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $category = $this->makeProductCategory($base->id);
 
         $products[0]->update([
-            'description_text' => $this->faker->sentence,
+            'description_text' => $this->faker->sentence(),
             'product_category_id' => $category->id,
             'reservation_enabled' => true,
         ]);
@@ -229,7 +229,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
      */
     protected function makeProductCategory(?int $parentId = null): ProductCategory
     {
-        $name = $this->faker->name;
+        $name = $this->faker->name();
 
         $category = ProductCategory::create([
             'key' => Str::slug($name),

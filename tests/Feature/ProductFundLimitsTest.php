@@ -535,14 +535,9 @@ class ProductFundLimitsTest extends TestCase
         Product $product,
         bool $assertCreated = true
     ): void {
-        $proxy = $this->makeIdentityProxy($provider->identity);
-        $headers = $this->makeApiHeaders($proxy);
-        $voucherToken = $voucher->token_without_confirmation->address;
-
-        $response = $this->postJson("/api/v1/platform/provider/vouchers/$voucherToken/transactions", [
+        $response = $this->makeProviderVoucherTransactionRequest($voucher, $provider, [
             'product_id' => $product->id,
-            'organization_id' => $provider->id,
-        ], $headers);
+        ], $provider->identity);
 
         if ($assertCreated) {
             $response->assertSuccessful();
@@ -723,7 +718,7 @@ class ProductFundLimitsTest extends TestCase
         $productFunds = $this->getProductOnWebshop($product, $identity)['funds'];
 
         foreach ($asserts as $assert) {
-            $fund = array_first($productFunds, fn ($item) => $assert['fund_id'] === $item['id']);
+            $fund = Arr::first(Arr::where($productFunds, fn ($item) => $assert['fund_id'] === $item['id']));
 
             $this->assertNotNull($fund, 'Fund not found');
             $this->assertEquals($assert['limit_available'], $fund['limit_available'], 'Limits not equals');
@@ -743,7 +738,7 @@ class ProductFundLimitsTest extends TestCase
 
                 if ($assert['products']) {
                     $response->assertSuccessful();
-                    $exists = array_first($response['data'], fn ($item) => $product->id === $item['id']);
+                    $exists = Arr::first(Arr::where($response['data'], fn ($item) => $product->id === $item['id']));
                 } else {
                     $response->assertForbidden();
                 }
@@ -796,7 +791,7 @@ class ProductFundLimitsTest extends TestCase
         $response = $this->getJson("/api/v1/platform/products?organization_id=$product->organization_id", $headers);
         $response->assertSuccessful();
 
-        $productArr = array_first($response['data'], fn ($item) => $product->id === $item['id']);
+        $productArr = Arr::first(Arr::where($response['data'], fn ($item) => $product->id === $item['id']));
         $this->assertNotNull($productArr, 'Product not found');
 
         return $productArr;
@@ -839,10 +834,10 @@ class ProductFundLimitsTest extends TestCase
         $response = $this->getJson("/api/v1/platform/provider/vouchers/$voucherToken", $headers);
         $response->assertSuccessful();
 
-        $organizationExists = array_first(
+        $organizationExists = Arr::first(Arr::where(
             $response['data']['allowed_organizations'],
             fn ($item) => $provider->id === $item['id']
-        );
+        ));
 
         $exist
             ? $this->assertNotNull($organizationExists, 'The provider organization should be in the list.')

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
@@ -34,7 +35,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PhysicalCard whereVoucherId($value)
  * @mixin \Eloquent
  */
-class PhysicalCard extends BaseModel
+class PhysicalCard extends Model
 {
     use HasLogs;
 

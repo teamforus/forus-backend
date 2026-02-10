@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundTopUpTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundTopUpTransaction extends BaseModel
+class FundTopUpTransaction extends Model
 {
     protected $perPage = 10;
 

@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Arr;
 
 /**
  * App\Models\Record.
@@ -54,7 +52,7 @@ use Illuminate\Support\Arr;
  * @method static Builder<static>|Record withoutTrashed()
  * @mixin \Eloquent
  */
-class Record extends BaseModel
+class Record extends Model
 {
     use SoftDeletes;
 
@@ -144,33 +142,5 @@ class Record extends BaseModel
             'state' => 'pending',
             'identity_address' => null,
         ]);
-    }
-
-    /**
-     * @param Builder|Relation|null $builder
-     * @param array $filters
-     * @param bool $hideSystemRecords
-     * @return Builder|Relation|Record
-     */
-    public static function search(
-        Builder|Relation $builder = null,
-        array $filters = [],
-        bool $hideSystemRecords = false
-    ): Builder|Relation|Record {
-        $builder = $builder ?: static::query();
-
-        if (Arr::has($filters, 'type')) {
-            $builder->whereRelation('record_type', 'key', '=', Arr::get($filters, 'type'));
-        }
-
-        if ($hideSystemRecords) {
-            $builder->whereRelation('record_type', 'system', '=', false);
-        }
-
-        if (Arr::has($filters, 'record_category_id')) {
-            $builder->where('record_category_id', '=', Arr::get($filters, 'record_category_id'));
-        }
-
-        return $builder->orderBy('order');
     }
 }

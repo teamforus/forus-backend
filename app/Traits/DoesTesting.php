@@ -144,7 +144,7 @@ trait DoesTesting
         return preg_replace(
             '/[^a-zA-Z .]+/',
             '',
-            $this->faker()->firstName . ' ' . $this->faker()->lastName
+            $this->faker()->firstName() . ' ' . $this->faker()->lastName()
         );
     }
 }

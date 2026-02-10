@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\Products\IndexProductsRequest;
 use App\Http\Resources\Provider\App\ProviderAppProductResource;
-use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\VoucherToken;
+use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,9 +32,10 @@ class ProductsController extends Controller
 
         $voucher = $voucherToken->voucher;
         $checkForReservableFlag = $request->get('reservable', false);
-        $organizationQuery = Organization::queryByIdentityPermissions(
+
+        $organizationQuery = OrganizationQuery::queryByIdentityPermissions(
             $request->auth_address(),
-            Permission::SCAN_VOUCHERS
+            Permission::SCAN_VOUCHERS,
         );
 
         if ($request->get('organization_id') !== null) {

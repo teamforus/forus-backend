@@ -8,6 +8,7 @@ use App\Models\Implementation;
 use App\Models\Permission;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AnnouncementSearch extends BaseSearch
 {
@@ -22,19 +23,19 @@ class AnnouncementSearch extends BaseSearch
 
     /**
      * @param array $filters
-     * @param Builder|Announcement|null $builder
+     * @param Relation|Builder|Announcement $builder
      */
-    public function __construct(array $filters, Builder|Announcement $builder = null)
+    public function __construct(array $filters, Relation|Builder|Announcement $builder)
     {
-        parent::__construct($filters, $builder ?: Announcement::query());
+        parent::__construct($filters, $builder);
     }
 
     /**
-     * @return Builder|null
+     * @return Relation|Builder|Announcement
      */
-    public function query(): ?Builder
+    public function query(): Relation|Builder|Announcement
     {
-        /** @var Builder|Announcement $builder */
+        /** @var Relation|Builder|Announcement $builder */
         $builder = parent::query();
 
         $clientType = $this->getFilter('client_type');
@@ -93,16 +94,16 @@ class AnnouncementSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Announcement $builder
+     * @param Relation|Builder|Announcement $builder
      * @param string|null $identityAddress
      * @param int|null $organizationId
-     * @return Builder|Announcement
+     * @return Relation|Builder|Announcement
      */
     protected function whereBankConnection(
-        Builder|Announcement $builder,
+        Relation|Builder|Announcement $builder,
         ?string $identityAddress = null,
         ?int $organizationId = null,
-    ): Builder|Announcement {
+    ): Relation|Builder|Announcement {
         return $builder->whereHasMorph('announceable', BankConnection::class, function (
             Builder $builder,
         ) use ($identityAddress, $organizationId) {
@@ -121,16 +122,16 @@ class AnnouncementSearch extends BaseSearch
     }
 
     /**
-     * @param Builder|Announcement $builder
+     * @param Relation|Builder|Announcement $builder
      * @param string|null $identityAddress
      * @param int|null $organizationId
-     * @return Builder|Announcement
+     * @return Relation|Builder|Announcement
      */
     protected function whereOrganizationOrRole(
-        Builder|Announcement $builder,
+        Relation|Builder|Announcement $builder,
         ?string $identityAddress = null,
         ?int $organizationId = null,
-    ): Builder|Announcement {
+    ): Relation|Builder|Announcement {
         return $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {
             if ($identityAddress) {
                 $builder->where(function (Builder $builder) use ($identityAddress, $organizationId) {

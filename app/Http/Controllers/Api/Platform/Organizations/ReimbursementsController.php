@@ -271,7 +271,16 @@ class ReimbursementsController extends Controller
         $this->authorize('viewAnyAsSponsor', [Reimbursement::class, $organization]);
 
         $fields = $request->input('fields', ReimbursementsSponsorExport::getExportFieldsRaw());
-        $fileData = new ReimbursementsSponsorExport($request, $organization, $fields);
+
+        $query = Reimbursement::where('state', '!=', Reimbursement::STATE_DRAFT);
+        $query = $query->whereRelation('voucher.fund', 'organization_id', $organization->id);
+
+        $search = new ReimbursementsSearch($request->only([
+            'q', 'fund_id', 'from', 'to', 'amount_min', 'amount_max', 'state',
+            'expired', 'archived', 'deactivated', 'identity_address', 'implementation_id',
+        ]), $query);
+
+        $fileData = new ReimbursementsSponsorExport($search->query()->latest(), $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

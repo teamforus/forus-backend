@@ -311,9 +311,9 @@ class FundCriteriaTest extends TestCase
 
         $records = [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
             $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
             $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 7),
@@ -340,9 +340,9 @@ class FundCriteriaTest extends TestCase
 
         $response = $this->makeFundRequest($identity, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
             $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
             $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
             $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 7),
@@ -480,9 +480,9 @@ class FundCriteriaTest extends TestCase
 
         $records = [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Nee'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->name),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->name()),
             $this->makeRequestCriterionValue($fund, 'test_date', '2010-01-01'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->name),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->name()),
             $this->makeRequestCriterionValue($fund, 'test_string', 'ipsum_lorem'),
             $this->makeRequestCriterionValue($fund, 'test_number', 5),
             $this->makeRequestCriterionValue($fund, 'test_select', 'bar'),
@@ -627,7 +627,7 @@ class FundCriteriaTest extends TestCase
                 $recordType::TYPE_IBAN => $this->faker->iban('NL'),
                 $recordType::TYPE_EMAIL => $this->faker->email(),
                 $recordType::TYPE_SELECT,
-                $recordType::TYPE_SELECT_NUMBER => !empty($options) ? array_first($options) : null,
+                $recordType::TYPE_SELECT_NUMBER => !empty($options) ? Arr::first($options) : null,
                 $recordType::TYPE_STRING => token_generator()->generate(10),
                 default => token_generator()->generate(5),
             };

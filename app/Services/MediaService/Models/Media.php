@@ -155,12 +155,4 @@ class Media extends Model
     {
         return $this->dominant_color ? Color::createFromHex($this->dominant_color)->isDark() : null;
     }
-
-    /**
-     * @return $this
-     */
-    public function updateModel(array $attributes = [], array $options = []): self
-    {
-        return tap($this)->update($attributes, $options);
-    }
 }

@@ -135,10 +135,10 @@ trait VoucherTestTrait
     {
         return [
             'records' => [
-                'given_name' => $this->faker()->firstName,
-                'family_name' => $this->faker()->lastName,
+                'given_name' => $this->faker()->firstName(),
+                'family_name' => $this->faker()->lastName(),
                 'birth_date' => Carbon::create(2000, 1, 5)->format('Y-m-d'),
-                'address' => $this->faker()->address,
+                'address' => $this->faker()->address(),
             ],
         ];
     }

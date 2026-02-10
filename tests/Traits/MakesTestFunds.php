@@ -8,6 +8,7 @@ use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundFormula;
 use App\Models\FundProviderProduct;
+use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Prevalidation;
@@ -71,8 +72,8 @@ trait MakesTestFunds
             'end_date' => now()->addYear(),
             'criteria_editable_after_start' => true,
             'external' => false,
-            'description_text' => $this->faker->sentence,
-            'description_short' => $this->faker->sentence,
+            'description_text' => $this->faker->sentence(),
+            'description_short' => $this->faker->sentence(),
             ...$fundData,
         ]);
 
@@ -375,6 +376,7 @@ trait MakesTestFunds
         Prevalidation::where('fund_id', $fund->id)->forceDelete();
 
         $fund->vouchers()->forceDelete();
+        $fund->fund_requests()->get()->each(fn (FundRequest $fundRequest) => $fundRequest->vouchers()->update(['fund_request_id' => null]));
         $fund->fund_requests()->forceDelete();
         $fund->amount_presets()->forceDelete();
         $fund->prevalidation_requests()->forceDelete();
@@ -398,7 +400,7 @@ trait MakesTestFunds
      */
     protected function makeAndAppendTestFundTag(Fund $fund): Tag
     {
-        $tagName = $this->faker->name;
+        $tagName = $this->faker->name();
 
         $tag = $fund->tags()->firstOrCreate([
             'key' => Str::slug($tagName),

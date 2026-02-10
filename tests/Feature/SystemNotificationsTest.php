@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Helpers\Arr;
 use App\Models\Fund;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
@@ -437,6 +438,6 @@ class SystemNotificationsTest extends TestCase
         });
 
         self::assertCount(1, $notifications, 'Only 1 database notification expected.');
-        $this->assertStringContainsString($subject, array_first($notifications)['title']);
+        $this->assertStringContainsString($subject, Arr::first($notifications)['title']);
     }
 }

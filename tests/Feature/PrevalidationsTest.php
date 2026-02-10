@@ -80,9 +80,9 @@ class PrevalidationsTest extends TestCase
         $newPrevalidationData = [
             'uid' => token_generator()->generate(32),
             'test_bool' => 'Ja',
-            'test_iban' => fake()->iban,
+            'test_iban' => fake()->iban(),
             'test_date' => '01-01-2010',
-            'test_email' => fake()->email,
+            'test_email' => fake()->email(),
             'test_string' => 'lorem_ipsum',
             'test_string_any' => 'lorem_ipsum',
             'test_number' => 7,
@@ -135,9 +135,9 @@ class PrevalidationsTest extends TestCase
         $newPrevalidationData = [
             'uid' => token_generator()->generate(32),
             'test_bool' => 'Ja',
-            'test_iban' => fake()->iban,
+            'test_iban' => fake()->iban(),
             'test_date' => '01-01-2010',
-            'test_email' => fake()->email,
+            'test_email' => fake()->email(),
             'test_string' => 'lorem_ipsum',
             'test_string_any' => 'lorem_ipsum',
             'test_number' => 7,
