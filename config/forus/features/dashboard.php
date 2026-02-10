@@ -1,46 +1,24 @@
 <?php
 
 return [
-    'add_money' => false,
-    'validationRequests' => true,
+    // Exposed to the dashboard to hide event log filter options the backend blocks anyway.
     'event_permissions' => array_combine(
         array_keys(config('forus.event_permissions')),
         array_pluck(config('forus.event_permissions'), 'permissions'),
     ),
     'organizations' => [
-        'list' => true,
-        'show' => true,
         'funds' => [
-            'list' => true,
-            'vouchers' => [
-                'regular' => true,
-                'products' => false,
-            ],
-            'mustAcceptProducts' => false,
-            'allowPrevalidations' => true,
-            'allowValidationRequests' => false,
-
-            /**
-             * Sponsor may set/edit criteria from dashboard.
-             */
+            // Enables criteria validation and syncing plus criteria update endpoints.
             'criteria' => env('FUND_CRITERIA_EDITABLE_BY_USER', false),
-
-            /**
-             * Enable fund requests in dashboard
-             * Hides elements from validator panel and disable responsible
-             * api endpoints when disabled.
-             */
+            // Registers fund request routes and shows dashboard fund request sections.
             'fund_requests' => env('ENABLE_FUND_REQUESTS_PANEL', true),
-
-            /**
-             * Sponsor may set/edit fund formula products from dashboard.
-             */
+            // Enables formula product validation and syncing plus the editor.
             'formula_products' => env('FUND_FORMULA_PRODUCTS_EDITABLE_BY_USER', false),
         ],
         'products' => [
-            // list all funds
-            'list' => true,
+            // Hard cap for org products and blocks creation at the limit.
             'hard_limit' => env('PRODUCT_MAX_COUNT', 25),
+            // Soft cap for dashboard warnings as counts approach the hard limit.
             'soft_limit' => env('PRODUCT_MAX_COUNT_SOFT_LIMIT', 15),
         ],
     ],
