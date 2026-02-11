@@ -310,9 +310,7 @@ class Prevalidation extends Model
                 // find existing prevalidation to be updated
                 $prevalidation = Prevalidation::where([
                     'state' => in_array($records['primaryKey'], $topUpKeys) ? Prevalidation::STATE_USED : Prevalidation::STATE_PENDING,
-                    'identity_address' => $employee->identity_address,
                     'organization_id' => $fund->organization_id,
-                    'employee_id' => $employee->id,
                     'fund_id' => $fund->id,
                 ])->whereRelation('prevalidation_records', [
                     'record_type_id' => $fundPrevalidationPrimaryKey,
