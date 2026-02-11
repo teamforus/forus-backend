@@ -401,7 +401,6 @@ class Prevalidation extends Model
                 : $query
             )
             ->where('fund_id', $fund->id)
-            ->where('employee_id', $employee->id)
             ->whereIn('state', [Prevalidation::STATE_PENDING, Prevalidation::STATE_USED])
             ->with(['identity_redeemed'])
             ->get();
