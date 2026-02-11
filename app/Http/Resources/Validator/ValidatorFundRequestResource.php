@@ -16,6 +16,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
+use App\Models\FundRequestRecordGroup;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Scopes\Builders\EmployeeQuery;
@@ -66,22 +67,24 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $baseFormRequest = BaseFormRequest::createFrom($request);
 
         /** @var Organization $organization */
-        $organization = $request->route('organization') or abort(403);
+        $organization = $baseFormRequest->route('organization') or abort(403);
         $allowedEmployees = $this->getAllowedRequestEmployeesQuery($baseFormRequest, $organization)->get();
-
-        /** @var Organization $organization */
-        $organization = $request->route('organization') or abort(403);
         $bsn_enabled = $organization->bsn_enabled;
+        $visibleRecords = $this->getVisibleRecords($organization, $fundRequest);
+        $employee = $baseFormRequest->employee($organization) or abort(403);
 
-        return array_merge($fundRequest->only([
-            'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
-            'contact_information', 'state_locale', 'employee_id', 'identity_id',
-        ]), [
+        return [
+            ...$fundRequest->only([
+                'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
+                'contact_information', 'state_locale', 'employee_id', 'identity_id',
+            ]),
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest->fund),
             'email' => $fundRequest->identity->email,
-            'records' => $this->getRecordsDetails($baseFormRequest, $organization, $fundRequest),
-            'record_groups' => $fundRequest->getRecordGroups(),
+            'records' => $visibleRecords
+                ->map(fn (FundRequestRecord $record) => static::recordToArray($record, $employee))
+                ->toArray(),
+            'record_groups' => $this->getRecordGroups($fundRequest, $visibleRecords),
             'replaced' => $this->isReplaced($fundRequest),
             'employee' => new EmployeeResource($fundRequest->employee),
             'allowed_employees' => $allowedEmployees->map(fn (Employee $employee) => [
@@ -90,28 +93,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 ]),
                 'email' => $employee->identity?->email,
             ])->toArray(),
-        ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return array
-     */
-    public function getRecordsDetails(
-        BaseFormRequest $request,
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): array {
-        $employee = $request->employee($organization) or abort(403);
-        $bsnFields = ['bsn', 'partner_bsn'];
-
-        return $fundRequest->records->filter(function (FundRequestRecord $record) use ($organization, $bsnFields) {
-            return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
-        })->map(function (FundRequestRecord $record) use ($employee) {
-            return static::recordToArray($record, $employee);
-        })->toArray();
+            ...$this->makeTimestamps($fundRequest->only([
+                'created_at', 'updated_at', 'resolved_at',
+            ])),
+        ];
     }
 
     /**
@@ -136,7 +121,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
 
         $relations = [
             'files' => FileResource::collection($record->files),
-            'history' => $is_assignable || $is_assigned ? self::getHistory($record)->values() : [],
+            'history' => $is_assignable || $is_assigned ? static::getHistory($record)->values() : [],
             'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
         ];
 
@@ -155,12 +140,31 @@ class ValidatorFundRequestResource extends BaseJsonResource
      */
     public static function getHistory(FundRequestRecord $record): Collection
     {
-        return $record->historyLogs()->map(fn (EventLog $eventLog) => array_merge([
+        return $record->historyLogs()->map(fn (EventLog $eventLog) => [
             'id' => $eventLog->id,
             'new_value' => $eventLog->data['fund_request_record_value'] ?? '',
             'old_value' => $eventLog->data['fund_request_record_previous_value'] ?? '',
             'employee_email' => $eventLog->data['employee_email'] ?? '',
-        ], self::makeTimestampsStatic($eventLog->only('created_at'))));
+            ...self::makeTimestampsStatic($eventLog->only([
+                'created_at',
+            ])),
+        ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return Collection
+     */
+    protected function getVisibleRecords(Organization $organization, FundRequest $fundRequest): Collection
+    {
+        $bsnFields = ['bsn', 'partner_bsn'];
+
+        return $fundRequest->records
+            ->filter(function (FundRequestRecord $record) use ($organization, $bsnFields) {
+                return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
+            })
+            ->values();
     }
 
     /**
@@ -223,5 +227,82 @@ class ValidatorFundRequestResource extends BaseJsonResource
             $request->fund->fund_requests()->where('id', '!=', $request->id),
             $request->id,
         )->exists();
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @param Collection $records
+     * @return array
+     */
+    protected function getRecordGroups(FundRequest $fundRequest, Collection $records): array
+    {
+        $groups = FundRequestRecordGroup::getCachedList()
+            ->filter(function (FundRequestRecordGroup $group) use ($fundRequest) {
+                return
+                    // global scope
+                    (!$group->organization_id && !$group->fund_id) ||
+                    // organization scope
+                    ($group->organization_id === $fundRequest->fund->organization_id && !$group->fund_id) ||
+                    // organization and fund scope
+                    ($group->organization_id === $fundRequest->fund->organization_id && $group->fund_id === $fundRequest->fund_id);
+            })
+            ->values();
+
+        $groupsPriority = $groups
+            ->sortBy(fn (FundRequestRecordGroup $group) => $group->fund_id ? 0 : ($group->organization_id ? 1 : 2))
+            ->values();
+
+        $groupRecordTypes = $groupsPriority
+            ->mapWithKeys(fn (FundRequestRecordGroup $group) => [
+                $group->id => $group->records->pluck('record_type_key')->values()->toArray(),
+            ])
+            ->toArray();
+
+        $recordIdsByGroup = $groupsPriority
+            ->pluck('id')
+            ->mapWithKeys(fn (int $groupId) => [$groupId => []])
+            ->toArray();
+
+        $ungroupedRecordIds = [];
+
+        foreach ($records as $record) {
+            $assigned = false;
+
+            foreach ($groupsPriority as $group) {
+                if (in_array($record->record_type_key, $groupRecordTypes[$group->id] ?? [], true)) {
+                    $recordIdsByGroup[$group->id][] = $record->id;
+                    $assigned = true;
+                    break;
+                }
+            }
+
+            if (!$assigned) {
+                $ungroupedRecordIds[] = $record->id;
+            }
+        }
+
+        $recordGroups = $groups
+            ->map(fn (FundRequestRecordGroup $group) => [
+                ...$group->only([
+                    'id', 'title', 'organization_id', 'fund_id', 'order',
+                ]),
+                'record_ids' => $recordIdsByGroup[$group->id] ?? [],
+            ])
+            ->filter(fn (array $group) => count($group['record_ids']) > 0)
+            ->values()
+            ->toArray();
+
+        if (!empty($ungroupedRecordIds)) {
+            $recordGroups[] = [
+                'id' => 0,
+                'title' => 'Without group',
+                'organization_id' => null,
+                'fund_id' => null,
+                'order' => 999,
+                'record_ids' => $ungroupedRecordIds,
+            ];
+        }
+
+        return $recordGroups;
     }
 }

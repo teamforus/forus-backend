@@ -385,8 +385,11 @@ class FundRequestValidatorTest extends DuskTestCase
 
                 // assert files tab
                 $browser
-                    ->waitFor("@fundRequestRecordToggleCollapse$record->id")
-                    ->click("@fundRequestRecordToggleCollapse$record->id");
+                    ->waitFor("@fundRequestRecordToggleCollapse$record->id");
+
+                if (!$browser->element("@fundRequestRecordTabs$record->id")) {
+                    $browser->click("@fundRequestRecordToggleCollapse$record->id");
+                }
 
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");

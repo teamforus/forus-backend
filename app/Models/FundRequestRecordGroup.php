@@ -7,11 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 
 /**
- *
- *
  * @property int $id
  * @property string $title
  * @property int|null $organization_id
@@ -73,10 +70,10 @@ class FundRequestRecordGroup extends Model
      */
     public static function getCachedList(): Collection
     {
-        $cacheKey = Config::get('forus.fund_requests.record_groups.cache_name');
-        $cacheDuration = Config::get('forus.fund_requests.record_groups.cache_time');
+        $cacheKey = 'fund_request_record_groups';
+        $cacheDuration = 60 * 5;
 
-        return Cache::remember($cacheKey, $cacheDuration, function () {
+        return Cache::store('array')->remember($cacheKey, $cacheDuration, function () {
             return static::with('records')->get();
         });
     }

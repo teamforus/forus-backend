@@ -10,7 +10,7 @@ use App\Helpers\Validation;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
 use App\Services\EventLogService\Traits\HasLogs;
-use Carbon\CarbonInterface;
+use Carbon\Constants\DiffOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -166,7 +166,7 @@ class FundRequest extends Model
         return ($this->resolved_at ?: now())->diffForHumans($this->created_at, [
             'parts' => 5,
             'join' => ', ',
-            'syntax' => CarbonInterface::DIFF_ABSOLUTE,
+            'syntax' => DiffOptions::DIFF_ABSOLUTE,
             'skip' => ['seconds', 'weeks'],
         ]);
     }
@@ -516,27 +516,6 @@ class FundRequest extends Model
         Event::dispatch(new FundRequestPhysicalCardRequestEvent($this, $cardRequest));
 
         return $cardRequest;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRecordGroups(): array
-    {
-        return FundRequestRecordGroup::getCachedList()
-            ->filter(function (FundRequestRecordGroup $group) {
-                return
-                    (!$group->organization_id && !$group->fund_id) ||
-                    ($group->organization_id === $this->fund->organization_id && !$group->fund_id) ||
-                    $group->fund_id === $this->fund_id;
-            })
-            ->map(function (FundRequestRecordGroup $group) {
-                return [
-                    ...$group->only('id', 'title', 'organization_id', 'fund_id', 'order'),
-                    'record_types' => $group->records->pluck('record_type_key')->toArray(),
-                ];
-            })
-            ->toArray();
     }
 
     /**
