@@ -295,7 +295,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         if (!empty($ungroupedRecordIds)) {
             $recordGroups[] = [
                 'id' => 0,
-                'title' => 'Without group',
+                'title' => 'Overige gegevens',
                 'organization_id' => null,
                 'fund_id' => null,
                 'order' => 999,
