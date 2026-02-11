@@ -189,7 +189,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
             'branch_number' => $this->faker->numberBetween(100000, 1000000),
             'postcode' => '9721 AN',
             'lat' => 53.1935717,
-            'lng' => 6.5825892,
+            'lon' => 6.5825892,
         ]);
 
         $employee->update(['office_id' => $office->id]);
