@@ -793,7 +793,8 @@ class FundRequestPrefillsTest extends DuskTestCase
                 ->first();
 
             $this->assertNotNull($voucher);
-            $this->assertEquals(100, (float) $voucher->amount);
+            // assert 3 children (from test data, 6, 6 and 14 years old) multiply by 50 = 150
+            $this->assertEquals(150, (float) $voucher->amount);
         }, function () use ($fund, $fund2AutoApplied, $prefillRecordTypes, $recordTypes) {
             // cleanup fund, mappings, and record types
             $fund && $this->deleteFund($fund);
