@@ -398,6 +398,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             ['key' => 'children_age_group_4_11', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_12_13', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_14_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_4_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_18_99', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_12_17_gender_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
         ];
@@ -469,6 +470,14 @@ class FundRequestPrefillsTest extends DuskTestCase
             'allow_prevalidations' => false,
         ], $implementation);
 
+        // add another fund that can be auto applied
+        $fund2AutoApplied = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'key' => 'nijmegen-vii',
+            'allow_fund_request_prefill' => true,
+        ], $implementation);
+
         $employeeIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $rolesValidator = Role::where('key', 'validation')->pluck('id')->toArray();
         $employee = $organization->addEmployee($employeeIdentity, $rolesValidator);
@@ -476,7 +485,7 @@ class FundRequestPrefillsTest extends DuskTestCase
         $this->rollbackModels([
             [$implementation, $implementationData],
             [$organization, $organizationData],
-        ], function () use ($implementation, $organization, $fund, $employee) {
+        ], function () use ($implementation, $organization, $fund, $fund2AutoApplied, $employee) {
             // configure organization policy and disable digid
             $implementation->forceFill([
                 'digid_enabled' => false,
@@ -486,7 +495,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             // configure iConnect settings and auto-approve requests
             $this->enablePersonBsnApiForOrganization($organization);
             $organization->forceFill([
-                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_REQUESTED,
+                'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_AVAILABLE,
             ])->save();
 
             $fund->forceFill([
@@ -494,7 +503,7 @@ class FundRequestPrefillsTest extends DuskTestCase
                 'auto_requests_validation' => false,
             ])->save();
 
-            // replace default formulas with the configured multipliers
+            // replace default formulas with the configured multipliers for base fund
             $fund->fund_formulas()->delete();
             $fund->fund_formulas()->create([
                 'type' => FundFormula::TYPE_MULTIPLY,
@@ -505,6 +514,14 @@ class FundRequestPrefillsTest extends DuskTestCase
                 'type' => FundFormula::TYPE_MULTIPLY,
                 'amount' => '50.00',
                 'record_type_key' => 'children_age_group_4_11',
+            ]);
+
+            // replace default formulas with the configured multipliers for related fund
+            $fund2AutoApplied->fund_formulas()->delete();
+            $fund2AutoApplied->fund_formulas()->create([
+                'type' => FundFormula::TYPE_MULTIPLY,
+                'amount' => '50.00',
+                'record_type_key' => 'children_age_group_4_17',
             ]);
 
             // create criteria groups for each step
@@ -748,15 +765,39 @@ class FundRequestPrefillsTest extends DuskTestCase
 
             $this->makeFundCriteria($fund, $criteria);
 
-            $this->processFundRequestPrefillsCompleteWorkflowTestCase($implementation, $fund, [
-                'bsn' => '999993112',
+            // add criteria for related fund
+            $this->makeFundCriteria($fund2AutoApplied, [[
+                'title' => 'Children age group 4-17',
+                'description' => '',
+                'record_type_key' => 'children_age_group_4_17',
+                'operator' => '>=',
+                'value' => 1,
+                'show_attachment' => false,
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+                'optional' => false,
+            ]]);
+
+            // create a requester and run the full form flow
+            $requester = $this->makeIdentity($this->makeUniqueEmail(), '999993112');
+
+            $this->processFundRequestPrefillsCompleteWorkflowTestCase($requester, $implementation, $fund, [
                 'phone' => '0612345678',
                 'other_income' => 'Other income details',
                 'expected_amount' => 300,
             ]);
-        }, function () use ($fund, $prefillRecordTypes, $recordTypes) {
+
+            // assert voucher amount of related fund after approval base fund
+            $voucher = $fund2AutoApplied->vouchers()
+                ->where('identity_id', $requester->id)
+                ->latest('id')
+                ->first();
+
+            $this->assertNotNull($voucher);
+            $this->assertEquals(100, (float) $voucher->amount);
+        }, function () use ($fund, $fund2AutoApplied, $prefillRecordTypes, $recordTypes) {
             // cleanup fund, mappings, and record types
             $fund && $this->deleteFund($fund);
+            $fund2AutoApplied && $this->deleteFund($fund2AutoApplied);
             $prefillRecordTypes->each(fn (PersonBsnApiRecordType $recordType) => $recordType->delete());
             $recordTypes->each(fn (RecordType $recordType) => $recordType->delete());
         });
@@ -1080,6 +1121,7 @@ class FundRequestPrefillsTest extends DuskTestCase
     }
 
     /**
+     * @param Identity $requester
      * @param Implementation $implementation
      * @param Fund $fund
      * @param array $config
@@ -1087,12 +1129,11 @@ class FundRequestPrefillsTest extends DuskTestCase
      * @return void
      */
     protected function processFundRequestPrefillsCompleteWorkflowTestCase(
+        Identity $requester,
         Implementation $implementation,
         Fund $fund,
         array $config,
     ): void {
-        // create a requester and run the full form flow
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), $config['bsn']);
         Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester, $config) {

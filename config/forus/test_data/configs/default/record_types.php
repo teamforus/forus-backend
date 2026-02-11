@@ -430,6 +430,13 @@ return [[
     'vouchers' => true,
     'criteria' => true,
 ], [
+    'key' => 'children_age_group_4_17',
+    'name' => 'Children age group 4-17',
+    'type' => RecordType::TYPE_NUMBER,
+    'system' => false,
+    'vouchers' => true,
+    'criteria' => true,
+], [
     'key' => 'children_age_group_18_99',
     'name' => 'Children age group 18+',
     'type' => RecordType::TYPE_NUMBER,
