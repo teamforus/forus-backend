@@ -1263,7 +1263,7 @@ class Fund extends Model
             $prefillRecordTypeKeys = [
                 ...$prefillRecordTypeKeys,
                 ...Arr::pluck(
-                    Config::get("forus.children_age_groups.{$this->fund_config->key}", []),
+                    Config::get("forus.children_age_groups.groups.{$this->fund_config->key}", []),
                     'record_type_key'
                 ),
                 static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,

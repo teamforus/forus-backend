@@ -101,10 +101,10 @@ class IConnectPrefill
                     'value' => count($partner) ? 2 : 1,
                 ], [
                     'record_type_key' => $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
-                    'value' => count(Arr::get($childrenPrefills, 'children', [])),
+                    'value' => Arr::get($childrenPrefills, 'children_count', 0),
                 ],
             ],
-            ...$childrenPrefills,
+            ...Arr::only($childrenPrefills, ['children', 'children_groups_counts']),
             ...compact('partner'),
         ];
     }
@@ -208,12 +208,18 @@ class IConnectPrefill
      */
     protected function getChildrenPrefillsWithGroupCounts(Fund $fund, Person $person): array
     {
+        $childrenCount = 0;
+
         $childrenRequired = $fund->criteria
             ->where('fill_type', FundCriterion::FILL_TYPE_PREFILL)
             ->where('record_type_key', $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS)
             ->isNotEmpty();
 
-        $configs = Config::get("forus.children_age_groups.{$fund->fund_config->key}");
+        $configs = Config::get("forus.children_age_groups.groups.{$fund->fund_config->key}");
+        $configBase = Config::get("forus.children_age_groups.base.{$fund->fund_config->key}");
+
+        $baseMinAge = Arr::get($configBase, 'from', 0);
+        $baseMaxAge = Arr::get($configBase, 'to', 99);
 
         if ($childrenRequired && $configs) {
             $children = [];
@@ -224,6 +230,10 @@ class IConnectPrefill
 
             $childrenApi = $this->getChildrenFromBsnApi($fund, $person);
 
+            /**
+             * @var int $index
+             * @var Person $personChild
+             */
             foreach ($childrenApi as $index => $personChild) {
                 $i = $index + 1;
 
@@ -256,10 +266,18 @@ class IConnectPrefill
                         $groups[$recordKey] = $groups[$recordKey] + 1;
                     }
                 }
+
+                if (
+                    (int) $personChild->getAge() >= $baseMinAge &&
+                    (int) $personChild->getAge() <= $baseMaxAge
+                ) {
+                    $childrenCount++;
+                }
             }
 
             return [
                 'children' => $children,
+                'children_count' => $childrenCount,
                 'children_groups_counts' => array_map(
                     fn ($record_type_key, $value) => compact('record_type_key', 'value'),
                     array_keys($groups),
