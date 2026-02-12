@@ -78,6 +78,10 @@ class FundRequestValidatorTest extends DuskTestCase
                 $record = $fundRequest->records()->where('record_type_key', 'partner_bsn')->first();
 
                 $browser
+                    ->waitFor('@toggleCollapseBtn')
+                    ->click('@toggleCollapseBtn');
+
+                $browser
                     ->waitFor("@tableFundRequestRecordRow$record->id")
                     ->assertSeeIn("@tableFundRequestRecordRow$record->id", $record->record_type->name)
                     ->assertSeeIn("@tableFundRequestRecordRow$record->id", $partnerBsn);
@@ -380,6 +384,13 @@ class FundRequestValidatorTest extends DuskTestCase
                 $record = $this->assertUpdateFundRequestRecord($browser, $fundRequest);
 
                 // assert files tab
+                $browser
+                    ->waitFor("@fundRequestRecordToggleCollapse$record->id");
+
+                if (!$browser->element("@fundRequestRecordTabs$record->id")) {
+                    $browser->click("@fundRequestRecordToggleCollapse$record->id");
+                }
+
                 $browser->waitFor("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
                 $browser->click("@fundRequestRecordTabs$record->id @fundRequestRecordFilesTab");
 
@@ -599,6 +610,10 @@ class FundRequestValidatorTest extends DuskTestCase
         // the first record is children_nth, and it can be an int and >= 2.
         // the value for the current fund request record is 5
         $record = $fundRequest->records()->first();
+
+        $browser
+            ->waitFor('@toggleCollapseBtn')
+            ->click('@toggleCollapseBtn');
 
         $browser->waitFor("@fundRequestRecordMenuBtn$record->id");
         $browser->click("@fundRequestRecordMenuBtn$record->id");

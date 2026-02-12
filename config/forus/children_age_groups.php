@@ -25,6 +25,11 @@ return [
         'record_type_key' => 'children_age_group_18_99',
         'from' => 18,
         'to' => 99,
+    ], [
+        'record_type_key' => 'children_age_group_12_17_gender_female',
+        'from' => 12,
+        'to' => 17,
+        'gender' => 'vrouw',
     ]],
 
     'eemsdelta' => [[
@@ -51,6 +56,11 @@ return [
         'record_type_key' => 'children_age_group_18_99',
         'from' => 18,
         'to' => 99,
+    ], [
+        'record_type_key' => 'children_age_group_12_17_gender_female',
+        'from' => 12,
+        'to' => 17,
+        'gender' => 'vrouw',
     ]],
 
     'paswijzer' => [[

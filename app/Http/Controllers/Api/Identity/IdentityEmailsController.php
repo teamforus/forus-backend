@@ -172,6 +172,6 @@ class IdentityEmailsController extends Controller
 
         $identityEmail->setVerified();
 
-        return IdentityEmailResource::create($identityEmail->setVerified());
+        return IdentityEmailResource::create($identityEmail);
     }
 }
