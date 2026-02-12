@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $record_type_key
  * @property string $value
  * @property string $note
+ * @property string $source
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Services\FileService\Models\File[] $files
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereSource($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
@@ -52,8 +54,11 @@ class FundRequestRecord extends Model
     public const string EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
     public const string EVENT_UPDATED = 'updated';
 
+    public const string SOURCE_BRP = 'brp';
+    public const string SOURCE_FORM = 'form';
+
     protected $fillable = [
-        'value', 'record_type_key', 'fund_request_id', 'fund_criterion_id',
+        'value', 'record_type_key', 'fund_request_id', 'fund_criterion_id', 'source',
     ];
 
     /**

@@ -4,13 +4,16 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestRecordGroup;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\RecordType;
 use App\Models\Role;
 use App\Services\MediaService\Traits\UsesMediaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
@@ -546,6 +549,385 @@ class FundRequestValidatorTest extends TestCase
         $this->apiGetFundRequestRequest($fund->organization, $employee, $fundRequest)
             ->assertJsonPath('data.records.0.files', fn ($files) => count($files) === 2)
             ->assertSuccessful();
+    }
+
+    /**
+     * Check that record groups are filtered by scope (groups from other funds and organizations are excluded).
+     *
+     * @return void
+     */
+    public function testFundRequestRecordGroupsFilterByScope(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $organization = $fund->organization;
+        $employee = $organization->findEmployee($organization->identity);
+
+        $otherOrganization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $otherFundSameOrg = $this->makeTestFund($organization);
+        $otherFundOtherOrg = $this->makeTestFund($otherOrganization);
+
+        $recordTypeText = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'group_scope_text');
+        $recordTypeNumber = $this->makeRecordType($organization, RecordType::TYPE_NUMBER, 'group_scope_number');
+        $recordTypeFlag = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'group_scope_flag');
+
+        $fund->criteria()->delete();
+        $fund->criteria()->create([
+            'value' => 'foo',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeText->key,
+        ]);
+        $fund->criteria()->create([
+            'value' => 1,
+            'operator' => '>=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeNumber->key,
+        ]);
+        $fund->criteria()->create([
+            'value' => 'yes',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeFlag->key,
+        ]);
+
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
+            $recordTypeText->key => 'foo',
+            $recordTypeNumber->key => 2,
+            $recordTypeFlag->key => 'yes',
+        ]);
+
+        $globalGroup = FundRequestRecordGroup::create([
+            'title' => 'Global',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 1,
+        ]);
+        $globalGroup->records()->create(['record_type_key' => $recordTypeText->key]);
+
+        $orgGroup = FundRequestRecordGroup::create([
+            'title' => 'Org',
+            'organization_id' => $organization->id,
+            'fund_id' => null,
+            'order' => 2,
+        ]);
+        $orgGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
+
+        $fundGroup = FundRequestRecordGroup::create([
+            'title' => 'Fund',
+            'organization_id' => $organization->id,
+            'fund_id' => $fund->id,
+            'order' => 3,
+        ]);
+        $fundGroup->records()->create(['record_type_key' => $recordTypeFlag->key]);
+
+        $otherOrgGroup = FundRequestRecordGroup::create([
+            'title' => 'Other org',
+            'organization_id' => $otherOrganization->id,
+            'fund_id' => null,
+            'order' => 4,
+        ]);
+        $otherOrgGroup->records()->create(['record_type_key' => $recordTypeText->key]);
+
+        $otherFundGroup = FundRequestRecordGroup::create([
+            'title' => 'Other fund',
+            'organization_id' => $organization->id,
+            'fund_id' => $otherFundSameOrg->id,
+            'order' => 5,
+        ]);
+        $otherFundGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
+
+        $otherOrgFundGroup = FundRequestRecordGroup::create([
+            'title' => 'Other org fund',
+            'organization_id' => $otherOrganization->id,
+            'fund_id' => $otherFundOtherOrg->id,
+            'order' => 6,
+        ]);
+        $otherOrgFundGroup->records()->create(['record_type_key' => $recordTypeFlag->key]);
+
+        Cache::store('array')->flush();
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $groupIds = collect($response->json('data.record_groups'))->pluck('id')->toArray();
+
+        self::assertEqualsCanonicalizing([
+            $globalGroup->id,
+            $orgGroup->id,
+            $fundGroup->id,
+        ], $groupIds);
+    }
+
+    /**
+     * Check that record type overlaps are assigned by priority and empty groups are filtered out.
+     *
+     * @return void
+     */
+    public function testFundRequestRecordGroupsAssignByPriority(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $organization = $fund->organization;
+        $employee = $organization->findEmployee($organization->identity);
+
+        $recordType = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'group_priority_key');
+
+        $fund->criteria()->delete();
+        $fund->criteria()->create([
+            'value' => 'foo',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordType->key,
+        ]);
+
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
+            $recordType->key => 'foo',
+        ]);
+
+        $globalGroup = FundRequestRecordGroup::create([
+            'title' => 'Global',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 1,
+        ]);
+        $globalGroup->records()->create(['record_type_key' => $recordType->key]);
+
+        $orgGroup = FundRequestRecordGroup::create([
+            'title' => 'Org',
+            'organization_id' => $organization->id,
+            'fund_id' => null,
+            'order' => 2,
+        ]);
+        $orgGroup->records()->create(['record_type_key' => $recordType->key]);
+
+        $fundGroup = FundRequestRecordGroup::create([
+            'title' => 'Fund',
+            'organization_id' => $organization->id,
+            'fund_id' => $fund->id,
+            'order' => 3,
+        ]);
+        $fundGroup->records()->create(['record_type_key' => $recordType->key]);
+
+        Cache::store('array')->flush();
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $recordGroups = $response->json('data.record_groups');
+
+        self::assertCount(1, $recordGroups);
+        self::assertSame($fundGroup->id, $recordGroups[0]['id']);
+        self::assertEqualsCanonicalizing($fundRequest->records->pluck('id')->toArray(), $recordGroups[0]['record_ids']);
+    }
+
+    /**
+     * Check that ungrouped records are listed under a "Without group" bucket only when needed.
+     *
+     * @return void
+     */
+    public function testFundRequestRecordGroupsIncludeUngroupedBucket(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $organization = $fund->organization;
+        $employee = $organization->findEmployee($organization->identity);
+
+        $recordTypeA = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'group_ungrouped_a');
+        $recordTypeB = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'group_ungrouped_b');
+
+        $fund->criteria()->delete();
+        $fund->criteria()->create([
+            'value' => 'foo',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeA->key,
+        ]);
+        $fund->criteria()->create([
+            'value' => 'bar',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeB->key,
+        ]);
+
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
+            $recordTypeA->key => 'foo',
+            $recordTypeB->key => 'bar',
+        ]);
+
+        $groupA = FundRequestRecordGroup::create([
+            'title' => 'Group A',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 1,
+        ]);
+        $groupA->records()->create(['record_type_key' => $recordTypeA->key]);
+
+        Cache::store('array')->flush();
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $recordGroups = $response->json('data.record_groups');
+        $ungrouped = collect($recordGroups)->firstWhere('id', 0);
+
+        self::assertNotNull($ungrouped);
+        self::assertEqualsCanonicalizing([
+            $fundRequest->records->firstWhere('record_type_key', $recordTypeB->key)->id,
+        ], $ungrouped['record_ids']);
+
+        $groupB = FundRequestRecordGroup::create([
+            'title' => 'Group B',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 2,
+        ]);
+        $groupB->records()->create(['record_type_key' => $recordTypeB->key]);
+
+        Cache::store('array')->flush();
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $recordGroups = $response->json('data.record_groups');
+
+        self::assertNull(collect($recordGroups)->firstWhere('id', 0));
+    }
+
+    /**
+     * Check that BSN records are hidden when bsn_enabled is false and groups update accordingly.
+     *
+     * @return void
+     */
+    public function testFundRequestRecordGroupsRespectBsnVisibility(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $organization = $fund->organization;
+        $employee = $organization->findEmployee($organization->identity);
+
+        $fund->criteria()->delete();
+        $fund->criteria()->create([
+            'value' => 2,
+            'operator' => '>=',
+            'show_attachment' => false,
+            'record_type_key' => 'children_nth',
+        ]);
+        $fund->criteria()->create([
+            'value' => '',
+            'operator' => '*',
+            'show_attachment' => false,
+            'record_type_key' => 'bsn',
+        ]);
+        $fund->criteria()->create([
+            'value' => '',
+            'operator' => '*',
+            'show_attachment' => false,
+            'record_type_key' => 'partner_bsn',
+        ]);
+
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
+            'children_nth' => 2,
+            'bsn' => '123456789',
+            'partner_bsn' => '987654321',
+        ]);
+
+        $groupBsn = FundRequestRecordGroup::create([
+            'title' => 'BSN Group',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 1,
+        ]);
+        $groupBsn->records()->create(['record_type_key' => 'bsn']);
+
+        $groupPartnerBsn = FundRequestRecordGroup::create([
+            'title' => 'Partner BSN Group',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 2,
+        ]);
+        $groupPartnerBsn->records()->create(['record_type_key' => 'partner_bsn']);
+
+        Cache::store('array')->flush();
+
+        $organization->update(['bsn_enabled' => false]);
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $recordKeys = collect($response->json('data.records'))->pluck('record_type_key')->toArray();
+        $groupIds = collect($response->json('data.record_groups'))->pluck('id')->toArray();
+
+        self::assertFalse(in_array('bsn', $recordKeys, true));
+        self::assertFalse(in_array('partner_bsn', $recordKeys, true));
+        self::assertFalse(in_array($groupBsn->id, $groupIds, true));
+        self::assertFalse(in_array($groupPartnerBsn->id, $groupIds, true));
+
+        $organization->update(['bsn_enabled' => true]);
+        Cache::store('array')->flush();
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $recordKeys = collect($response->json('data.records'))->pluck('record_type_key')->toArray();
+        $groupIds = collect($response->json('data.record_groups'))->pluck('id')->toArray();
+
+        self::assertTrue(in_array('bsn', $recordKeys, true));
+        self::assertTrue(in_array('partner_bsn', $recordKeys, true));
+        self::assertTrue(in_array($groupBsn->id, $groupIds, true));
+        self::assertTrue(in_array($groupPartnerBsn->id, $groupIds, true));
+    }
+
+    /**
+     * Check that record_groups record_ids match visible records and records JSON is a list.
+     *
+     * @return void
+     */
+    public function testFundRequestRecordGroupsRecordIds(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $organization = $fund->organization;
+        $employee = $organization->findEmployee($organization->identity);
+
+        $recordTypeText = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'shape_text');
+        $recordTypeNumber = $this->makeRecordType($organization, RecordType::TYPE_NUMBER, 'shape_number');
+
+        $fund->criteria()->delete();
+        $fund->criteria()->create([
+            'value' => 'foo',
+            'operator' => '=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeText->key,
+        ]);
+        $fund->criteria()->create([
+            'value' => 1,
+            'operator' => '>=',
+            'show_attachment' => false,
+            'record_type_key' => $recordTypeNumber->key,
+        ]);
+        $fund->criteria()->create([
+            'value' => '',
+            'operator' => '*',
+            'show_attachment' => false,
+            'record_type_key' => 'partner_bsn',
+        ]);
+
+        $requester = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, [
+            $recordTypeText->key => 'foo',
+            $recordTypeNumber->key => 2,
+            'partner_bsn' => '987654321',
+        ]);
+
+        $groupText = FundRequestRecordGroup::create([
+            'title' => 'Text Group',
+            'organization_id' => null,
+            'fund_id' => null,
+            'order' => 1,
+        ]);
+        $groupText->records()->create(['record_type_key' => $recordTypeText->key]);
+
+        Cache::store('array')->flush();
+        $organization->update(['bsn_enabled' => false]);
+
+        $response = $this->apiGetFundRequestRequest($organization, $employee, $fundRequest)->assertSuccessful();
+        $records = $response->json('data.records');
+
+        self::assertTrue(array_is_list($records));
+
+        $visibleRecordIds = collect($records)->pluck('id')->toArray();
+        $recordGroups = $response->json('data.record_groups');
+        $recordGroupIds = collect($recordGroups)->pluck('record_ids')->flatten()->toArray();
+
+        self::assertEqualsCanonicalizing($visibleRecordIds, $recordGroupIds);
     }
 
     /**

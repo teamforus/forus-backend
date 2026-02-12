@@ -31,6 +31,7 @@ return [
                 'kinderen' => [
                     ['burgerservicenummer' => 999995807],
                     ['burgerservicenummer' => 999995832],
+                    ['burgerservicenummer' => 123456782],
                 ],
 
                 'partners' => [['burgerservicenummer' => 999994542]],
@@ -67,6 +68,7 @@ return [
                 'kinderen' => [
                     ['burgerservicenummer' => 999995807],
                     ['burgerservicenummer' => 999995832],
+                    ['burgerservicenummer' => 123456782],
                 ],
 
                 'partners' => [['burgerservicenummer' => 999993112]],
@@ -129,6 +131,32 @@ return [
             'aNummer' => 2363230194,
             'geslachtsaanduiding' => 'vrouw',
             ...$makeBirthData(6),
+            'naam' => [
+                'geslachtsnaam' => 'Braber',
+                'voorletters' => 'A.',
+                'voornamen' => 'Alexander',
+                'voorvoegsel' => 'den',
+            ],
+            'verblijfplaats' => [
+                'straat' => 'Schakelstraat',
+                'huisnummer' => 14,
+                'huisnummertoevoeging' => 'H',
+                'postcode' => '1014AW',
+                'woonplaats' => 'Amsterdam',
+                'nummeraanduidingIdentificatie' => '0363200000264601',
+                'functieAdres' => 'woonadres',
+                'korteNaam' => 'Schakelstraat',
+                'adresregel1' => 'Schakelstraat 14 H',
+                'adresregel2' => '1014AW Amsterdam',
+            ],
+        ],
+
+        123456782 => [
+            '_embedded' => [],
+            'burgerservicenummer' => 123456782,
+            'aNummer' => 2363230194,
+            'geslachtsaanduiding' => 'vrouw',
+            ...$makeBirthData(14),
             'naam' => [
                 'geslachtsnaam' => 'Braber',
                 'voorletters' => 'A.',
