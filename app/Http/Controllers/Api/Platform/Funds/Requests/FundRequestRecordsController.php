@@ -29,7 +29,7 @@ class FundRequestRecordsController extends Controller
         $this->authorize('viewAnyAsRequester', [$fundRequest, $fund]);
         $this->authorize('viewAnyAsRequester', [FundRequestRecord::class, $fundRequest, $fund]);
 
-w        return FundRequestRecordResource::queryCollection($fundRequest->records(), $request);
+        return FundRequestRecordResource::queryCollection($fundRequest->records(), $request);
     }
 
     /**
