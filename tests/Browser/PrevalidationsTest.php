@@ -381,6 +381,79 @@ class PrevalidationsTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPrevalidationBatchUploadDuplicatePrimaryKey(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+
+        $fund = $this->makeTestFund($implementation->organization, fundConfigsData: ['csv_primary_key' => 'uid']);
+        $this->addTestCriteriaToFund($fund);
+
+        // prepare prevalidation records for upload
+        $prevalidationData = [
+            'uid' => token_generator()->generate(32),
+            'test_iban' => fake()->iban(),
+            'test_date' => '01-01-2010',
+            'test_email' => fake()->email(),
+            'test_string_any' => 'lorem_ipsum',
+            'test_number' => 7,
+            'test_select' => 'foo',
+        ];
+
+        $prevalidationDataSameUid = [
+            'uid' => $prevalidationData['uid'],
+            'test_iban' => fake()->iban(),
+            'test_date' => '01-01-2010',
+            'test_email' => fake()->email(),
+            'test_string_any' => 'lorem_ipsum',
+            'test_number' => 7,
+            'test_select' => 'foo',
+        ];
+
+        // sort records for same key order
+        ksort($prevalidationData);
+        ksort($prevalidationDataSameUid);
+
+        $this->rollbackModels([], function () use (
+            $implementation,
+            $fund,
+            $prevalidationData,
+            $prevalidationDataSameUid,
+        ) {
+            $this->browse(function (Browser $browser) use (
+                $implementation,
+                $fund,
+                $prevalidationData,
+                $prevalidationDataSameUid,
+            ) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                // Authorize identity
+                $this->loginIdentity($browser, $implementation->organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
+                $this->selectDashboardOrganization($browser, $implementation->organization);
+
+                $this->goToPrevalidationsPage($browser, $fund);
+
+                $this->uploadPrevalidationsBatch($browser, [
+                    $prevalidationData,
+                    $prevalidationDataSameUid,
+                ], true, true);
+
+                // assert second prevalidation not created
+                $this->assertPrevalidationNotCreated($fund, $prevalidationData);
+
+                // Logout
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
      * @param Organization $organization
      * @param Fund $fund
      * @param string|null $primaryKey
@@ -557,13 +630,17 @@ class PrevalidationsTest extends DuskTestCase
      * @param Browser $browser
      * @param array $prevalidationsData
      * @param bool $confirmUpdate
+     * @param bool $closeAfterConfirm
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
      * @return void
      */
     protected function uploadPrevalidationsBatch(
         Browser $browser,
         array $prevalidationsData,
-        bool $confirmUpdate = false
+        bool $confirmUpdate = false,
+        bool $closeAfterConfirm = false
     ): void {
         $browser->waitFor('@uploadPrevalidationsBatchButton');
         $browser->element('@uploadPrevalidationsBatchButton')->click();
@@ -589,6 +666,14 @@ class PrevalidationsTest extends DuskTestCase
             $browser->element('@modalDuplicatesPickerConfirm')->click();
 
             $browser->waitUntilMissing('@modalDuplicatesPicker');
+
+            if ($closeAfterConfirm) {
+                $browser->waitFor('@closeModalButton');
+                $browser->click('@closeModalButton');
+                $browser->waitUntilMissing('@modalPrevalidationUpload');
+
+                return;
+            }
         }
 
         $browser->waitFor('@successUploadIcon');
@@ -648,5 +733,24 @@ class PrevalidationsTest extends DuskTestCase
             $this->assertNotNull($record);
             $this->assertEquals($value, $record->value);
         }
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @return void
+     */
+    protected function assertPrevalidationNotCreated(Fund $fund, array $data): void
+    {
+        $record = RecordType::where('key', 'uid')->first();
+
+        $prevalidation = Prevalidation::where('fund_id', $fund->id)
+            ->whereHas('prevalidation_records', function (Builder $builder) use ($record, $data) {
+                $builder->where('record_type_id', $record->id);
+                $builder->where('value', $data['uid']);
+            })
+            ->first();
+
+        $this->assertNull($prevalidation);
     }
 }
