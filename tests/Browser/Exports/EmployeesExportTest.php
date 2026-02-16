@@ -6,6 +6,7 @@ use App\Exports\EmployeesExport;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Role;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -65,7 +66,7 @@ class EmployeesExportTest extends DuskTestCase
     protected function getExportFields(): array
     {
         // Filter headers except roles header and add all roles
-        $fields = array_pluck(EmployeesExport::getExportFields(), 'name');
+        $fields = Arr::pluck(EmployeesExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== EmployeesExport::trans('roles'));
         $roles = Role::with('translations')->get()->pluck('name')->toArray();
 

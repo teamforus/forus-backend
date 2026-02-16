@@ -75,7 +75,7 @@ trait VoucherTestTrait
             if ($voucherType === 'budget') {
                 $amount = $exceedVoucherAmountLimit ? $fund->getMaxAmountPerVoucher() + 10 : $amount;
             } elseif ($voucherType === 'product') {
-                $productId = array_random($products)->id;
+                $productId = Arr::random($products)->id;
             }
 
             $item = array_merge($params, [

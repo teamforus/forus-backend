@@ -74,7 +74,7 @@ class FinancialStatistic
      */
     public function makeDatesData(array $options, Organization $sponsor, array $dates): Collection
     {
-        $type = array_get($options, 'type');
+        $type = Arr::get($options, 'type');
 
         foreach ($dates as $index => $dateItem) {
             /** @var Carbon $dateFrom */
@@ -111,8 +111,8 @@ class FinancialStatistic
      */
     protected function makeDates(array $options): array
     {
-        $type = array_get($options, 'type');
-        $date = Carbon::createFromDate(array_get($options, 'type_value'))->startOfDay();
+        $type = Arr::get($options, 'type');
+        $date = Carbon::createFromDate(Arr::get($options, 'type_value'))->startOfDay();
 
         $dates = [];
 

@@ -1,10 +1,12 @@
 <?php
 
+use Illuminate\Support\Arr;
+
 return [
     // Exposed to the dashboard to hide event log filter options the backend blocks anyway.
     'event_permissions' => array_combine(
         array_keys(config('forus.event_permissions')),
-        array_pluck(config('forus.event_permissions'), 'permissions'),
+        Arr::pluck(config('forus.event_permissions'), 'permissions'),
     ),
     'organizations' => [
         'funds' => [

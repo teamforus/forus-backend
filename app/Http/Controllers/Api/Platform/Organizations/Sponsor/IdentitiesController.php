@@ -26,6 +26,7 @@ use App\Services\IConnectApiService\IConnect;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -71,7 +72,7 @@ class IdentitiesController extends Controller
         $employee = $request->employee($organization);
         $identity = Identity::build(type: Identity::TYPE_PROFILE, employeeId: $employee->id, organizationId: $organization->id);
 
-        $organization->findOrMakeProfile($identity)->updateRecords(array_only($request->validated(), [
+        $organization->findOrMakeProfile($identity)->updateRecords(Arr::only($request->validated(), [
             'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
             'street', 'house_number', 'house_number_addition', 'postal_code',
             'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
@@ -109,7 +110,7 @@ class IdentitiesController extends Controller
     ): SponsorIdentityResource {
         $this->authorize('updateSponsorIdentities', [$organization, $identity]);
 
-        $organization->findOrMakeProfile($identity)->updateRecords(array_only($request->validated(), [
+        $organization->findOrMakeProfile($identity)->updateRecords(Arr::only($request->validated(), [
             'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
             'street', 'house_number', 'house_number_addition', 'postal_code',
             'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
@@ -212,7 +213,7 @@ class IdentitiesController extends Controller
 
         $fields = $request->input(
             'fields',
-            array_pluck(IdentityProfilesExport::getExportFields($organization), 'key')
+            Arr::pluck(IdentityProfilesExport::getExportFields($organization), 'key')
         );
 
         $search = new IdentitiesSearch([

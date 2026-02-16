@@ -3,6 +3,7 @@
 namespace App\Models\Data;
 
 use App\Models\Voucher;
+use Illuminate\Support\Arr;
 
 /**
  * @property Voucher $voucher
@@ -82,7 +83,7 @@ class VoucherExportData
             'has_payouts' => $this->voucher->has_payouts ? 'Ja' : 'Nee',
         ];
 
-        return array_only(array_merge(
+        return Arr::only(array_merge(
             $export_data,
             $allowRecords ? $this->getRecordsData($this->voucher) : [],
         ), $this->fields);

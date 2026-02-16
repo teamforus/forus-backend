@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ProductReservation;
 use Exception;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -53,7 +54,7 @@ class ProductReservationsExportTest extends DuskTestCase
                 $this->goToReservationsPage($browser);
                 $this->searchTable($browser, '@tableReservation', $reservation->first_name, $reservation->id);
 
-                $fields = array_pluck(ProductReservationsExport::getExportFields(), 'name');
+                $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

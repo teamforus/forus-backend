@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class ClientTypeMiddleware
 {
@@ -47,7 +48,7 @@ class ClientTypeMiddleware
      */
     private function availableTypes(): array
     {
-        return array_filter(array_flatten(config('forus.clients')));
+        return array_filter(Arr::flatten(config('forus.clients')));
     }
 
     /**

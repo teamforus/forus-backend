@@ -5,6 +5,7 @@ namespace App\Models\Traits;
 use App\Models\Faq;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Arr;
 use Throwable;
 
 /**
@@ -38,7 +39,7 @@ trait HasFaq
     public function syncFaq(array $faq): static
     {
         // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
+        $this->faq()->whereNotIn('id', array_filter(Arr::pluck($faq, 'id')))->delete();
 
         foreach ($faq as $order => $question) {
             $this->syncQuestion(array_merge($question, compact('order')));
@@ -59,7 +60,7 @@ trait HasFaq
         /** @var Faq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
 
-        $faq->update(array_only($question, ['title', 'subtitle', 'description', 'order', 'type']));
+        $faq->update(Arr::only($question, ['title', 'subtitle', 'description', 'order', 'type']));
         $faq->syncMarkdownMedia('cms_media');
 
         return $faq;

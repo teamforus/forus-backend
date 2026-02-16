@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
+use Illuminate\Support\Arr;
 
 class ProviderProductReservationBatchItemStockRule extends BaseRule
 {
@@ -34,7 +35,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
     public function passes($attribute, $value): bool
     {
         // get current reservation index
-        $this->index = (int) (array_last(explode('.', $attribute)) ?? 0);
+        $this->index = (int) (Arr::last(explode('.', $attribute)) ?? 0);
 
         /** @var Voucher|null $voucher current row voucher */
         /** @var Product|null $product current row product */
@@ -126,7 +127,7 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         });
 
         // total amount from the voucher
-        $totalAmount = array_sum(array_pluck($reservationsProducts, 'product.amount'));
+        $totalAmount = array_sum(Arr::pluck($reservationsProducts, 'product.amount'));
 
         // Sponsor total limit for the product reached.
         if ($totalAmount > $voucher->amount_available) {

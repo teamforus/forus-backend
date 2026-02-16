@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\ReimbursementsSponsorExport;
 use App\Models\Reimbursement;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -52,7 +53,7 @@ class ReimbursementsExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
+        $fields = Arr::pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
         $this->assertReimbursementsFields($response, $reimbursement, $fields);
 
         // Assert with passed all fields

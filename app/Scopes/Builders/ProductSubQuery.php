@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class ProductSubQuery
@@ -26,7 +27,7 @@ class ProductSubQuery
         array $options,
         Builder|Relation|Product $builder = null,
     ): Builder {
-        if (count(array_filter(array_only($options, ['identity_id', 'voucher_id', 'fund_id']))) == 0) {
+        if (count(array_filter(Arr::only($options, ['identity_id', 'voucher_id', 'fund_id']))) == 0) {
             throw new Exception('At least one filter is required.');
         }
 
@@ -73,13 +74,13 @@ class ProductSubQuery
     protected static function limitMultiplierQuery(array $options = []): Builder|Relation|Voucher
     {
         /** @var int|null $fund_id */
-        $fund_id = array_get($options, 'fund_id');
+        $fund_id = Arr::get($options, 'fund_id');
 
         /** @var int|null $voucher_id */
-        $voucher_id = array_get($options, 'voucher_id');
+        $voucher_id = Arr::get($options, 'voucher_id');
 
         /** @var string|null $identity_id */
-        $identity_id = array_get($options, 'identity_id');
+        $identity_id = Arr::get($options, 'identity_id');
 
         return VoucherQuery::whereNotExpired(
             Voucher::query()->where(function (Builder $builder) use ($identity_id, $voucher_id) {
@@ -136,13 +137,13 @@ class ProductSubQuery
         array $options = [],
     ): Builder|Relation|FundProviderProduct {
         /** @var int|null $fund_id */
-        $fund_id = array_get($options, 'fund_id');
+        $fund_id = Arr::get($options, 'fund_id');
 
         /** @var int|null $voucher_id */
-        $voucher_id = array_get($options, 'voucher_id');
+        $voucher_id = Arr::get($options, 'voucher_id');
 
         /** @var string|null $identity_id */
-        $identity_id = array_get($options, 'identity_id');
+        $identity_id = Arr::get($options, 'identity_id');
 
         return FundProviderProduct::query()->where(function (Builder $builder) use ($fund_id, $voucher_id, $identity_id) {
             if ($fund_id || $voucher_id || $identity_id) {
@@ -260,18 +261,18 @@ class ProductSubQuery
         VoucherQuery::whereNotExpired($builder);
 
         /** @var string|null $identity_id */
-        if ($identity_id = array_get($options, 'identity_id')) {
+        if ($identity_id = Arr::get($options, 'identity_id')) {
             $builder->whereRelation('identity', 'id', $identity_id);
         }
 
         /** @var string|null $fund_id */
-        if ($fund_id = array_get($options, 'fund_id')) {
+        if ($fund_id = Arr::get($options, 'fund_id')) {
             $builder->where('fund_id', $fund_id);
         }
 
         return $builder->whereHas('fund', function (Builder $builder) use ($options) {
             /** @var int|null $fund_voucher_id */
-            if ($fund_voucher_id = array_get($options, 'fund_voucher_id')) {
+            if ($fund_voucher_id = Arr::get($options, 'fund_voucher_id')) {
                 $builder->whereHas('vouchers', function (Builder $builder) use ($fund_voucher_id) {
                     $builder->where('vouchers.id', $fund_voucher_id);
                 });

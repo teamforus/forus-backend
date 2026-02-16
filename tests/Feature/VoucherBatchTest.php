@@ -9,6 +9,7 @@ use App\Models\Voucher;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 use Tests\TestCases\VoucherBatchTestCases;
@@ -105,7 +106,7 @@ class VoucherBatchTest extends TestCase
         $this->addTestCriteriaToFund($fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        $this->setFundFormulaProductsForFund($fund, Arr::random($products['approved'], 3), 'test_number');
 
         // create vouchers
         foreach ($testCase['asserts'] as $assert) {

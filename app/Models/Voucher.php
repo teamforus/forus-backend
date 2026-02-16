@@ -1020,7 +1020,7 @@ class Voucher extends Model
             'employee_id' => $employee?->id,
             'fund_provider_product_id' => $fundProviderProduct?->id,
             'amount_extra' => $extra_amount,
-            ...array_only($extraData, [
+            ...Arr::only($extraData, [
                 'first_name', 'last_name', 'user_note', 'note', 'phone', 'birth_date',
                 'street', 'house_nr', 'house_nr_addition', 'city', 'postal_code',
             ]),
@@ -1070,7 +1070,7 @@ class Voucher extends Model
             'code' => Reimbursement::makeCode(),
             'state' => Reimbursement::STATE_DRAFT,
             'submitted_at' => $submitNow ? now() : null,
-        ], array_only($data, [
+        ], Arr::only($data, [
             'title', 'description', 'amount', 'email', 'iban', 'iban_name', 'state',
         ])));
 
@@ -1171,7 +1171,7 @@ class Voucher extends Model
         $zip->close();
 
         $data = array_map(function ($item) use ($qrFormat) {
-            return array_merge($item['values'], array_only($item, $qrFormat === 'data' ? [
+            return array_merge($item['values'], Arr::only($item, $qrFormat === 'data' ? [
                 'name', 'value',
             ] : []));
         }, $data);

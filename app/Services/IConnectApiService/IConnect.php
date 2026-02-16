@@ -179,7 +179,7 @@ class IConnect
      */
     private function buildQuery(array $with = [], array $fields = []): array
     {
-        $with = array_only($this->with, $with);
+        $with = Arr::only($this->with, $with);
 
         sort($with);
         sort($fields);

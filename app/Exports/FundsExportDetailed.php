@@ -134,7 +134,7 @@ class FundsExportDetailed extends BaseExport
      */
     protected function exportTransform(Collection $data): Collection
     {
-        $data = $data->map(fn (Fund $fund) => array_only($this->getRow($fund), $this->fields));
+        $data = $data->map(fn (Fund $fund) => Arr::only($this->getRow($fund), $this->fields));
 
         if (!$data->first(fn (array $item) => ($item['budget_children_count'] ?? 0) > 0)) {
             $data = $data->map(function (array $item) {

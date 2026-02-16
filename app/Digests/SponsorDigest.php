@@ -19,6 +19,7 @@ use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 
 class SponsorDigest extends BaseOrganizationDigest
@@ -315,7 +316,7 @@ class SponsorDigest extends BaseOrganizationDigest
             $events[] = [$fund, $query->count(), $query->get()];
         }
 
-        $total_messages = array_sum(array_pluck($events, '1'));
+        $total_messages = array_sum(Arr::pluck($events, '1'));
 
         if ($total_messages > 0) {
             $emailBody->separator();

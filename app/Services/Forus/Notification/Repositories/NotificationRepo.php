@@ -79,6 +79,7 @@ use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 
 class NotificationRepo implements INotificationRepo
 {
@@ -427,7 +428,7 @@ class NotificationRepo implements INotificationRepo
      */
     public function updateIdentityPreferences(string $identityAddress, array $data): array
     {
-        $data_keys = array_keys(array_pluck($data, 'subscribed', 'key'));
+        $data_keys = array_keys(Arr::pluck($data, 'subscribed', 'key'));
         $preference_keys = $this->allPreferenceKeys();
 
         foreach ($data as $setting) {

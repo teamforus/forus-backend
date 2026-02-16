@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -47,7 +48,7 @@ class MediaService
     public function __construct()
     {
         $this->model = new Media();
-        $this->storagePath = str_start(config('media.storage_path'), '/');
+        $this->storagePath = Str::start(config('media.storage_path'), '/');
         $this->storageDriver = config('media.filesystem_driver', 'local');
     }
 
@@ -204,7 +205,7 @@ class MediaService
         $dbFiles = PresetModel::query()->pluck('path');
 
         return array_filter($storage->allFiles($this->storagePath), function ($file) use ($dbFiles) {
-            return $dbFiles->search(str_start($file, '/')) === false;
+            return $dbFiles->search(Str::start($file, '/')) === false;
         });
     }
 

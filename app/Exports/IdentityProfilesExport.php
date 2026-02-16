@@ -74,7 +74,7 @@ class IdentityProfilesExport extends BaseExport
      */
     protected function transformKeys(Collection $data): Collection
     {
-        $fieldLabels = array_pluck(static::getExportFields($this->organization), 'name', 'key');
+        $fieldLabels = Arr::pluck(static::getExportFields($this->organization), 'name', 'key');
 
         return $data->map(function ($item) use ($fieldLabels) {
             return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [

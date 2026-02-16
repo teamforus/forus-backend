@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -48,7 +49,7 @@ class VoucherTransactionsProviderExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(VoucherTransactionsProviderExport::getExportFields(), 'name');
+        $fields = Arr::pluck(VoucherTransactionsProviderExport::getExportFields(), 'name');
         $this->assertFields($response, $transaction, $fields);
 
         // Assert with passed all fields

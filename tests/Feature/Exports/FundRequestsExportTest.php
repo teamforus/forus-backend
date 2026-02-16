@@ -6,6 +6,7 @@ use App\Exports\FundRequestsExport;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -81,7 +82,7 @@ class FundRequestsExportTest extends TestCase
      */
     protected function getExportFields(FundRequest $fundRequest): array
     {
-        $fields = array_pluck(FundRequestsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(FundRequestsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== FundRequestsExport::trans('records'));
 
         $recordKeyList = FundRequestRecord::query()

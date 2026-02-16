@@ -10,8 +10,10 @@ use bunq\Model\Generated\Endpoint\OauthClient;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -109,7 +111,7 @@ class BanksTableSeeder extends Seeder
      */
     public function apiKeyToEnvironmentType(?string $apiKey): BunqEnumApiEnvironmentType
     {
-        if (is_string($apiKey) && !starts_with(strtolower($apiKey), 'sandbox')) {
+        if (is_string($apiKey) && !Str::startsWith(strtolower($apiKey), 'sandbox')) {
             return BunqEnumApiEnvironmentType::PRODUCTION();
         }
 
@@ -252,10 +254,10 @@ class BanksTableSeeder extends Seeder
         $data = json_decode(file_get_contents(storage_path($this->bunqContextFile)), true);
 
         return Bank::updateOrCreate(compact('key'), array_merge(compact('name'), [
-            'data' => array_only($data, ['context', 'oauth_client']),
+            'data' => Arr::only($data, ['context', 'oauth_client']),
             'transaction_cost' => .11,
-            'oauth_redirect_id' => array_get($data, 'oauth_redirect_id'),
-            'oauth_redirect_url' => array_get($data, 'oauth_redirect_url'),
+            'oauth_redirect_id' => Arr::get($data, 'oauth_redirect_id'),
+            'oauth_redirect_url' => Arr::get($data, 'oauth_redirect_url'),
         ]));
     }
 }
