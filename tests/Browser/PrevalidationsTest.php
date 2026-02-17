@@ -442,7 +442,7 @@ class PrevalidationsTest extends DuskTestCase
                     $prevalidationDataSameUid,
                 ], true, true);
 
-                // assert second prevalidation not created
+                // assert no prevalidation is created
                 $this->assertPrevalidationNotCreated($fund, $prevalidationData);
 
                 // Logout
@@ -630,17 +630,17 @@ class PrevalidationsTest extends DuskTestCase
      * @param Browser $browser
      * @param array $prevalidationsData
      * @param bool $confirmUpdate
-     * @param bool $closeAfterConfirm
-     * @throws ElementClickInterceptedException
+     * @param bool $closeWhenConfirmationRequired
      * @throws NoSuchElementException
      * @throws TimeoutException
+     * @throws ElementClickInterceptedException
      * @return void
      */
     protected function uploadPrevalidationsBatch(
         Browser $browser,
         array $prevalidationsData,
         bool $confirmUpdate = false,
-        bool $closeAfterConfirm = false
+        bool $closeWhenConfirmationRequired = false
     ): void {
         $browser->waitFor('@uploadPrevalidationsBatchButton');
         $browser->element('@uploadPrevalidationsBatchButton')->click();
@@ -667,7 +667,7 @@ class PrevalidationsTest extends DuskTestCase
 
             $browser->waitUntilMissing('@modalDuplicatesPicker');
 
-            if ($closeAfterConfirm) {
+            if ($closeWhenConfirmationRequired) {
                 $browser->waitFor('@closeModalButton');
                 $browser->click('@closeModalButton');
                 $browser->waitUntilMissing('@modalPrevalidationUpload');
