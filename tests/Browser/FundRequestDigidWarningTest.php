@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Services\DigIdService\Models\DigIdSession;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Traits\HasFundRequestFormActions;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
@@ -18,6 +19,7 @@ class FundRequestDigidWarningTest extends DuskTestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use HasFundRequestFormActions;
     use HasFrontendActions;
     use MakesTestOrganizations;
 
@@ -56,8 +58,8 @@ class FundRequestDigidWarningTest extends DuskTestCase
             'type' => 'budget',
         ], [
             'outcome_type' => 'voucher',
-            'bsn_confirmation_time' => 20,
-            'bsn_confirmation_api_time' => 30,
+            'bsn_confirmation_time' => 10,
+            'bsn_confirmation_api_time' => 15,
             'allow_fund_requests' => true,
             'allow_prevalidations' => true,
         ]);
@@ -96,27 +98,15 @@ class FundRequestDigidWarningTest extends DuskTestCase
     {
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
+        // set a BSN for the requester to enable fund request option
+        $requester->setBsnRecord('12345678');
+
         $this->browse(function (Browser $browser) use (
             $implementation,
             $fund,
             $requester
         ) {
-            $browser->visit($implementation->urlWebshop());
-            $this->loginIdentity($browser, $requester);
-            $browser->waitFor('@headerTitle');
-
-            // visit fund page and assert request button available
-            $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
-            $browser->waitFor('@fundTitle');
-            $browser->assertSeeIn('@fundTitle', $fund->name);
-
-            // set a BSN for the requester to enable fund request option
-            $requester->setBsnRecord('12345678');
-            $browser->waitFor('@requestButton')->click('@requestButton');
-
-            // select the DigID option and ensure the fund request form loads
-            $browser->waitFor('@digidOption')->click('@digidOption');
-            $browser->waitFor('@fundRequestForm');
+            $this->openFundRequestFormByDigiD($browser, $implementation, $fund, $requester);
 
             // verify the warning and expiration messages is not shown ahead of time
             $browser->assertMissing('@bsnWarning');

@@ -10,7 +10,7 @@ use App\Helpers\Validation;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
 use App\Services\EventLogService\Traits\HasLogs;
-use Carbon\CarbonInterface;
+use Carbon\Constants\DiffOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -166,7 +166,7 @@ class FundRequest extends Model
         return ($this->resolved_at ?: now())->diffForHumans($this->created_at, [
             'parts' => 5,
             'join' => ', ',
-            'syntax' => CarbonInterface::DIFF_ABSOLUTE,
+            'syntax' => DiffOptions::DIFF_ABSOLUTE,
             'skip' => ['seconds', 'weeks'],
         ]);
     }
