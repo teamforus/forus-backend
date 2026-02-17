@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class () extends Migration {
     /**
@@ -10,7 +12,9 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE `funds` CHANGE `type` `type` ENUM('budget', 'subsidies', 'external') DEFAULT 'budget';");
+        Schema::table('funds', function (Blueprint $table) {
+            $table->enum('type', ['budget', 'subsidies', 'external'])->default('budget')->change();
+        });
     }
 
     /**
@@ -20,6 +24,8 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE `funds` CHANGE `type` `type` ENUM('budget', 'subsidies') DEFAULT 'budget';");
+        Schema::table('funds', function (Blueprint $table) {
+            $table->enum('type', ['budget', 'subsidies'])->default('budget')->change();
+        });
     }
 };
