@@ -26,6 +26,7 @@ abstract class MediaConfig
         'png',
         'gif',
         'bmp',
+        'webp',
     ];
 
     /**
@@ -36,6 +37,7 @@ abstract class MediaConfig
         'image/png',
         'image/gif',
         'image/bmp',
+        'image/webp',
     ];
 
     /**
