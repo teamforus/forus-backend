@@ -22,30 +22,44 @@ class ProductQuery
     /**
      * @param Builder|Relation|Product $query
      * @param array|int $fund_id
+     * @param bool $visibleOnWebshop
      * @return Builder|Relation|Product
      */
     public static function approvedForFundsFilter(
         Builder|Relation|Product $query,
         array|int $fund_id,
+        bool $visibleOnWebshop = false,
     ): Builder|Relation|Product {
-        return $query->where(static function (Builder $builder) use ($fund_id) {
+        return $query->where(static function (Builder $builder) use ($fund_id, $visibleOnWebshop) {
             self::whereFundNotExcluded($builder, $fund_id);
 
-            $builder->where(static function (Builder $builder) use ($fund_id) {
-                $builder->whereHas('fund_provider_products.fund_provider', static function (Builder $builder) use ($fund_id) {
+            $builder->where(static function (Builder $builder) use ($fund_id, $visibleOnWebshop) {
+                $builder->whereHas('fund_provider_products.fund_provider', static function (Builder $builder) use (
+                    $fund_id,
+                    $visibleOnWebshop
+                ) {
                     $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
-                    $builder->where('excluded', false);
+
+                    if ($visibleOnWebshop) {
+                        $builder->where('excluded', false);
+                    }
                 });
 
-                $builder->orWhereHas('organization.fund_providers', static function (Builder $builder) use ($fund_id) {
+                $builder->orWhereHas('organization.fund_providers', static function (Builder $builder) use (
+                    $fund_id,
+                    $visibleOnWebshop
+                ) {
                     $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
 
                     $builder->where('allow_products', true);
-                    $builder->where('excluded', false);
+
+                    if ($visibleOnWebshop) {
+                        $builder->where('excluded', false);
+                    }
                 });
             });
         });

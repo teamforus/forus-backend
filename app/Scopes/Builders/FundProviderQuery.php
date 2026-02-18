@@ -24,7 +24,6 @@ class FundProviderQuery extends BaseQuery
     ): Builder|Relation|FundProvider {
         return $query->where(static function (Builder $builder) use ($fund_id, $approvalType, $product_id) {
             $builder->where('state', FundProvider::STATE_ACCEPTED);
-            $builder->where('excluded', false);
             $builder->whereIn('fund_id', self::isQueryable($fund_id) ? $fund_id : (array) $fund_id);
 
             $builder->where(static function (Builder $builder) use ($approvalType, $product_id) {

@@ -86,6 +86,7 @@ class OrganizationSearch extends BaseSearch
 
         $builder->whereHas('fund_providers', function (Builder $builder) {
             $builder->whereIn('fund_id', Implementation::activeFundsForWebshop());
+            $builder->where('excluded', false);
 
             if ($fund_id = $this->getFilter('fund_id')) {
                 $builder->whereIn('fund_id', [$fund_id]);
@@ -229,7 +230,7 @@ class OrganizationSearch extends BaseSearch
             $builder = ProductQuery::inStockAndActiveFilter($builder->select('id'));
 
             // only approved by at least one sponsor
-            return ProductQuery::approvedForFundsFilter($builder, $fundIds);
+            return ProductQuery::approvedForFundsFilter($builder, $fundIds, visibleOnWebshop: true);
         });
     }
 }
