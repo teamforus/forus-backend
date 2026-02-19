@@ -664,7 +664,7 @@ class Product extends Model
         $builder = ProductQuery::approvedForFundsFilter(
             ProductQuery::inStockAndActiveFilter(Product::query()),
             Implementation::activeFundsQuery()->pluck('id')->toArray(),
-            visibleOnWebshop: true
+            filterExcludedProviders: true
         );
 
         return $builder->inRandomOrder();

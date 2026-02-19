@@ -22,34 +22,34 @@ class ProductQuery
     /**
      * @param Builder|Relation|Product $query
      * @param array|int $fund_id
-     * @param bool $visibleOnWebshop
+     * @param bool $filterExcludedProviders
      * @return Builder|Relation|Product
      */
     public static function approvedForFundsFilter(
         Builder|Relation|Product $query,
         array|int $fund_id,
-        bool $visibleOnWebshop = false,
+        bool $filterExcludedProviders = false,
     ): Builder|Relation|Product {
-        return $query->where(static function (Builder $builder) use ($fund_id, $visibleOnWebshop) {
+        return $query->where(static function (Builder $builder) use ($fund_id, $filterExcludedProviders) {
             self::whereFundNotExcluded($builder, $fund_id);
 
-            $builder->where(static function (Builder $builder) use ($fund_id, $visibleOnWebshop) {
+            $builder->where(static function (Builder $builder) use ($fund_id, $filterExcludedProviders) {
                 $builder->whereHas('fund_provider_products.fund_provider', static function (Builder $builder) use (
                     $fund_id,
-                    $visibleOnWebshop
+                    $filterExcludedProviders
                 ) {
                     $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
                     FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
 
-                    if ($visibleOnWebshop) {
+                    if ($filterExcludedProviders) {
                         $builder->where('excluded', false);
                     }
                 });
 
                 $builder->orWhereHas('organization.fund_providers', static function (Builder $builder) use (
                     $fund_id,
-                    $visibleOnWebshop
+                    $filterExcludedProviders
                 ) {
                     $builder->whereIn('fund_id', (array) $fund_id);
                     $builder->where('state', FundProvider::STATE_ACCEPTED);
@@ -57,7 +57,7 @@ class ProductQuery
 
                     $builder->where('allow_products', true);
 
-                    if ($visibleOnWebshop) {
+                    if ($filterExcludedProviders) {
                         $builder->where('excluded', false);
                     }
                 });

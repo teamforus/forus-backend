@@ -124,7 +124,7 @@ class ProductSearch extends BaseSearch
         $builder = ProductQuery::approvedForFundsFilter(
             ProductQuery::inStockAndActiveFilter($builder),
             $activeFunds,
-            visibleOnWebshop: true
+            filterExcludedProviders: true
         );
 
         $builder->withCount('voucher_transactions');

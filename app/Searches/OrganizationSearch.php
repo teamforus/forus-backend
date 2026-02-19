@@ -230,7 +230,7 @@ class OrganizationSearch extends BaseSearch
             $builder = ProductQuery::inStockAndActiveFilter($builder->select('id'));
 
             // only approved by at least one sponsor
-            return ProductQuery::approvedForFundsFilter($builder, $fundIds, visibleOnWebshop: true);
+            return ProductQuery::approvedForFundsFilter($builder, $fundIds, filterExcludedProviders: true);
         });
     }
 }

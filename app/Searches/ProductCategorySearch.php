@@ -41,7 +41,7 @@ class ProductCategorySearch extends BaseSearch
                 $productBuilder = ProductQuery::approvedForFundsFilter(
                     ProductQuery::inStockAndActiveFilter(Product::query()),
                     Implementation::activeFundsForWebshop(),
-                    visibleOnWebshop: true
+                    filterExcludedProviders: true
                 );
 
                 $ids = $productBuilder->distinct()->pluck('product_category_id')->toArray();
