@@ -405,7 +405,7 @@ class Prevalidation extends Model
 
         return $prevalidations->reduce(function (array $list, Prevalidation $prevalidation) use ($fund) {
             $vouchers = $prevalidation->identity_redeemed
-                ? VoucherQuery::whereActive(Voucher::query())
+                ? VoucherQuery::whereNotExpiredAndActive(Voucher::query())
                     ->where('identity_id', '=', $prevalidation->identity_redeemed->id)
                     ->where('fund_id', $fund->id)
                     ->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER)

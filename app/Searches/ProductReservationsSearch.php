@@ -38,12 +38,17 @@ class ProductReservationsSearch extends BaseSearch
         }
 
         if ($this->hasFilter('state')) {
-            if ($this->getFilter('state') === 'expired') {
-                ProductReservationQuery::whereExpired($builder);
-                $builder->where('state', ProductReservation::STATE_PENDING);
-            } else {
-                ProductReservationQuery::whereNotExpired($builder);
-                $builder->where('state', $this->getFilter('state'));
+            switch ($this->getFilter('state')) {
+                case 'expired':
+                    ProductReservationQuery::whereExpired($builder);
+                    $builder->where('state', ProductReservation::STATE_PENDING);
+                    break;
+                case ProductReservation::STATE_PENDING:
+                    ProductReservationQuery::whereNotExpired($builder);
+                    $builder->where('state', ProductReservation::STATE_PENDING);
+                    break;
+                default:
+                    $builder->where('state', $this->getFilter('state'));
             }
         }
 
