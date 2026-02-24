@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
@@ -330,7 +331,11 @@ class PhysicalCardsTest extends TestCase
         $identity2 = $this->makeIdentity($this->makeUniqueEmail());
         $recordTypeKey = 'test_date_' . token_generator()->generate(32);
 
-        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria->each(function (FundCriterion $criterion) {
+            $criterion->fund_criterion_rules()->delete();
+            $criterion->fund_request_record()->delete();
+        });
+
         $fund->criteria()->forceDelete();
 
         $this->makeRecordType($fund->organization, RecordType::TYPE_DATE, $recordTypeKey);
