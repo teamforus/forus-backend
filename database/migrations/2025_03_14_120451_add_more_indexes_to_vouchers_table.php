@@ -21,7 +21,13 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::table('vouchers', function (Blueprint $table) {
+            $table->dropForeign(['parent_id']);
             $table->dropIndex('idx_vouchers_search');
+
+            $table->foreign('parent_id')
+                ->references('id')
+                ->on('vouchers')
+                ->onDelete('restrict');
         });
     }
 };
