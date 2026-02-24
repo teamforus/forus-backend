@@ -48,7 +48,7 @@ class EmployeesController extends Controller
 
         $search = new EmployeesSearch($request->only([
             'role', 'roles', 'permission', 'permissions', 'q',
-        ]), $organization->employees());
+        ]), $organization->employees()->latest());
 
         return EmployeeResource::queryCollection($search->query(), $request);
     }
@@ -180,7 +180,7 @@ class EmployeesController extends Controller
 
         $search = new EmployeesSearch($request->only([
             'role', 'roles', 'permission', 'permissions', 'q',
-        ]), $organization->employees());
+        ]), $organization->employees()->latest());
 
         $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
