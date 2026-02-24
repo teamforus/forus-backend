@@ -400,7 +400,6 @@ class FundRequestPrefillsTest extends DuskTestCase
             ['key' => 'children_age_group_14_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_4_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_18_99', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
-            ['key' => 'children_age_group_12_17_gender_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
         ];
 
         $recordTypes = collect($recordTypeConfigs)
@@ -849,7 +848,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             ['key' => 'children_age_group_12_13', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_14_17', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
             ['key' => 'children_age_group_18_99', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
-            ['key' => 'children_age_group_12_17_gender_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
+            ['key' => 'children_age_group_12_17_gender_female_partner_female', 'type' => RecordType::TYPE_NUMBER, 'control_type' => RecordType::CONTROL_TYPE_NUMBER],
         ];
 
         $recordTypes = collect($recordTypeConfigs)
@@ -913,13 +912,7 @@ class FundRequestPrefillsTest extends DuskTestCase
             $fund->fund_formulas()->create([
                 'type' => FundFormula::TYPE_MULTIPLY,
                 'amount' => '100.00',
-                'record_type_key' => 'partner_same_address_gender_female_nth',
-            ]);
-
-            $fund->fund_formulas()->create([
-                'type' => FundFormula::TYPE_MULTIPLY,
-                'amount' => '50.00',
-                'record_type_key' => 'children_age_group_12_17_gender_female',
+                'record_type_key' => 'children_age_group_12_17_gender_female_partner_female',
             ]);
 
             // define criteria with steps
@@ -953,7 +946,17 @@ class FundRequestPrefillsTest extends DuskTestCase
             ], [
                 'title' => 'Partner',
                 'description' => '',
-                'record_type_key' => 'partner_same_address_gender_female_nth',
+                'record_type_key' => 'partner_same_address_nth',
+                'operator' => '*',
+                'value' => '',
+                'show_attachment' => false,
+                'step' => 'Step 1',
+                'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+                'optional' => true,
+            ], [
+                'title' => 'Children and partner gender female',
+                'description' => '',
+                'record_type_key' => 'children_age_group_12_17_gender_female_partner_female',
                 'operator' => '*',
                 'value' => '',
                 'show_attachment' => false,
@@ -979,7 +982,7 @@ class FundRequestPrefillsTest extends DuskTestCase
                 'prefill_value' => 'Zon',
                 'partner_value' => 'Gerrit',
                 'child_value' => 'Zoey',
-                'expected_amount' => 150,
+                'expected_amount' => 200,
             ]);
         }, function () use ($fund, $prefillRecordTypes, $recordTypes) {
             // cleanup fund, mappings, and record types

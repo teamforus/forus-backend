@@ -42,7 +42,7 @@ return [
             'from' => 18,
             'to' => 99,
         ], [
-            'record_type_key' => 'children_age_group_12_17_gender_female',
+            'record_type_key' => 'children_age_group_12_17_gender_female_partner_female',
             'from' => 12,
             'to' => 17,
             'gender' => 'vrouw',
@@ -73,7 +73,7 @@ return [
             'from' => 18,
             'to' => 99,
         ], [
-            'record_type_key' => 'children_age_group_12_17_gender_female',
+            'record_type_key' => 'children_age_group_12_17_gender_female_partner_female',
             'from' => 12,
             'to' => 17,
             'gender' => 'vrouw',

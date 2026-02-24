@@ -93,15 +93,13 @@ class IConnectPrefill
         // prepare children prefills with group counts by age
         $childrenPrefills = $this->getChildrenPrefillsWithGroupCounts($fund, $person);
 
-        $partnerGender = Arr::get(Arr::first(
-            $partner,
-            fn (array $item) => Arr::get($item, 'record_type_key') === 'partner_gender',
-            []
-        ), 'value');
-
-        $partnersGenderFemale =
-            ($person->getGender() === static::GENDER_FEMALE ? 1 : 0) +
-            ($partnerGender === static::GENDER_FEMALE ? 1 : 0);
+        if (Arr::has($childrenPrefills, 'children_groups_counts')) {
+            $childrenPrefills = $this->addPartnersGenderFemaleCountToChildrenGroup(
+                $person,
+                $partner,
+                $childrenPrefills
+            );
+        }
 
         return [
             'error' => null,
@@ -114,9 +112,6 @@ class IConnectPrefill
                 ], [
                     'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
                     'value' => count($partner) ? 2 : 1,
-                ], [
-                    'record_type_key' => $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
-                    'value' => $partnersGenderFemale,
                 ],
             ],
             ...Arr::only($childrenPrefills, ['children', 'children_groups_counts']),
@@ -181,7 +176,7 @@ class IConnectPrefill
             ->where('fill_type', FundCriterion::FILL_TYPE_PREFILL)
             ->whereIn('record_type_key', [
                 $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
-                $fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
+                $fund::RECORD_TYPE_KEY_CHILDREN_12_17_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
             ])
             ->isNotEmpty();
 
@@ -230,7 +225,10 @@ class IConnectPrefill
 
         $childrenRequired = $fund->criteria
             ->where('fill_type', FundCriterion::FILL_TYPE_PREFILL)
-            ->where('record_type_key', $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS)
+            ->whereIn('record_type_key', [
+                $fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+                $fund::RECORD_TYPE_KEY_CHILDREN_12_17_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
+            ])
             ->isNotEmpty();
 
         $configs = Config::get("forus.children_age_groups.groups.{$fund->fund_config->key}");
@@ -307,6 +305,41 @@ class IConnectPrefill
         }
 
         return [];
+    }
+
+    /**
+     * @param Person $person
+     * @param array $partner
+     * @param array $childrenPrefills
+     * @return array
+     */
+    protected function addPartnersGenderFemaleCountToChildrenGroup(
+        Person $person,
+        array $partner,
+        array $childrenPrefills
+    ): array {
+        $partnerGender = Arr::get(Arr::first(
+            $partner,
+            fn (array $item) => Arr::get($item, 'record_type_key') === 'partner_gender',
+            []
+        ), 'value');
+
+        $partnersGenderFemale =
+            ($person->getGender() === static::GENDER_FEMALE ? 1 : 0) +
+            ($partnerGender === static::GENDER_FEMALE ? 1 : 0);
+
+        $childrenPrefills['children_groups_counts'] = array_map(
+            function (array $group) use ($partnersGenderFemale) {
+                if ($group['record_type_key'] === Fund::RECORD_TYPE_KEY_CHILDREN_12_17_PARTNERS_SAME_ADDRESS_GENDER_FEMALE) {
+                    $group['value'] += $partnersGenderFemale;
+                }
+
+                return $group;
+            },
+            $childrenPrefills['children_groups_counts']
+        );
+
+        return $childrenPrefills;
     }
 
     /**

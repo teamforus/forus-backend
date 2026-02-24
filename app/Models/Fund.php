@@ -275,7 +275,8 @@ class Fund extends Model
 
     public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
     public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
-    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE = 'partner_same_address_gender_female_nth';
+    public const string RECORD_TYPE_KEY_CHILDREN_12_17_PARTNERS_SAME_ADDRESS_GENDER_FEMALE =
+        'children_age_group_12_17_gender_female_partner_female';
 
     /**
      * The attributes that are mass assignable.
@@ -1269,7 +1270,6 @@ class Fund extends Model
                 ),
                 static::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
                 static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
-                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
             ];
 
             $list = array_filter($list, fn ($item) => !in_array($item, $prefillRecordTypeKeys));
