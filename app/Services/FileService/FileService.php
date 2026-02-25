@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileService
@@ -40,7 +41,7 @@ class FileService
     public function __construct()
     {
         $this->model = File::query();
-        $this->storagePath = str_start(config('file.storage_path'), '/');
+        $this->storagePath = Str::start(config('file.storage_path'), '/');
         $this->storageDriver = config('file.filesystem_driver', 'local');
     }
 
@@ -198,7 +199,7 @@ class FileService
         $dbFiles = File::query()->pluck('path');
 
         return array_filter($storage->allFiles($this->storagePath), function ($file) use ($dbFiles) {
-            return $dbFiles->search(str_start($file, '/')) === false;
+            return $dbFiles->search(Str::start($file, '/')) === false;
         });
     }
 
@@ -243,8 +244,8 @@ class FileService
         $storagePrefix = Arr::get($options, 'storage_prefix', '');
         $visibility = Arr::get($options, 'visibility', 'private');
 
-        $path = str_start($name . '.' . $ext, '/');
-        $path = str_start($this->storagePath . $storagePrefix . $path, '/');
+        $path = Str::start($name . '.' . $ext, '/');
+        $path = Str::start($this->storagePath . $storagePrefix . $path, '/');
 
         $this->storage()->put($path, file_get_contents($file_path), $visibility);
 

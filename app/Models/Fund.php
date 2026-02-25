@@ -41,6 +41,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
@@ -275,7 +276,8 @@ class Fund extends Model
 
     public const string RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS = 'children_same_address_nth';
     public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS = 'partner_same_address_nth';
-    public const string RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE = 'partner_same_address_gender_female_nth';
+    public const string RECORD_TYPE_KEY_CHILDREN_12_17_PARTNERS_SAME_ADDRESS_GENDER_FEMALE =
+        'children_age_group_12_17_gender_female_partner_female';
 
     /**
      * The attributes that are mass assignable.
@@ -591,7 +593,7 @@ class Fund extends Model
         $preApprove = $this->external && $this->organization->pre_approve_external_funds;
 
         $this->fund_config()->create()->forceFill($preApprove ? [
-            'key' => str_slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
+            'key' => Str::slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
             'outcome_type' => Arr::get($attributes, 'outcome_type', FundConfig::OUTCOME_TYPE_VOUCHER),
             'is_configured' => 1,
             'implementation_id' => $this->organization->implementations[0]->id ?? null,
@@ -642,7 +644,7 @@ class Fund extends Model
             ->delete();
 
         foreach ($presets as $preset) {
-            $data = array_only($preset, ['name', 'amount']);
+            $data = Arr::only($preset, ['name', 'amount']);
 
             $preset['id'] ?? null ?
                 $this->amount_presets()->find($preset['id'])->update($data) :
@@ -1264,12 +1266,11 @@ class Fund extends Model
             $prefillRecordTypeKeys = [
                 ...$prefillRecordTypeKeys,
                 ...Arr::pluck(
-                    Config::get("forus.children_age_groups.{$this->fund_config->key}", []),
+                    Config::get("forus.children_age_groups.groups.{$this->fund_config->key}", []),
                     'record_type_key'
                 ),
                 static::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
                 static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
-                static::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS_GENDER_FEMALE,
             ];
 
             $list = array_filter($list, fn ($item) => !in_array($item, $prefillRecordTypeKeys));
@@ -1637,7 +1638,7 @@ class Fund extends Model
         // remove criteria not listed in the array
         if ($this->criteriaIsEditable() && !$textsOnly) {
             $this->criteria()->whereNotIn('id', array_filter(
-                array_pluck($criteria, 'id'),
+                Arr::pluck($criteria, 'id'),
                 fn ($id) => !empty($id)
             ))->delete();
         }
@@ -2064,7 +2065,7 @@ class Fund extends Model
         }
 
         /** @var FundCriterion|null $db_criteria */
-        $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
+        $data_criterion = Arr::only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
             'description', 'title', 'optional', 'min', 'max', 'label',
             'extra_description',
@@ -2076,7 +2077,7 @@ class Fund extends Model
         }
 
         if ($fundCriterion) {
-            $fundCriterion->update($textsOnly ? array_only($data_criterion, [
+            $fundCriterion->update($textsOnly ? Arr::only($data_criterion, [
                 'title', 'description', 'extra_description',
             ]) : $data_criterion);
         } elseif (!$textsOnly) {

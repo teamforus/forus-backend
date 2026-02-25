@@ -6,6 +6,7 @@ use App\Exports\EventLogsExport;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Role;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -50,7 +51,7 @@ class EventLogsExportTest extends DuskTestCase
             $this->goToEventLogsPage($browser);
             $this->searchTable($browser, '@tableEventLogs', $employee->identity->email, $employee->logs()->first()->id);
 
-            $fields = array_pluck(EventLogsExport::getExportFields(), 'name');
+            $fields = Arr::pluck(EventLogsExport::getExportFields(), 'name');
 
             foreach (static::FORMATS as $format) {
                 // assert all fields exported

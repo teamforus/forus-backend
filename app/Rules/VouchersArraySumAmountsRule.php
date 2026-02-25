@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\Fund;
+use Illuminate\Support\Arr;
 
 class VouchersArraySumAmountsRule extends BaseRule
 {
@@ -28,7 +29,7 @@ class VouchersArraySumAmountsRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $vouchers = is_array($this->vouchers) ? array_pluck($this->vouchers, 'amount') : [];
+        $vouchers = is_array($this->vouchers) ? Arr::pluck($this->vouchers, 'amount') : [];
         $vouchersSum = array_sum(array_filter($vouchers, fn ($amount) => is_numeric($amount)));
 
         if ($vouchersSum > $this->fund->getMaxAmountSumVouchers()) {

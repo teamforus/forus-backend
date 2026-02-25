@@ -8,6 +8,7 @@ use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductSubQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 
 class ProviderProductReservationBatchRule extends BaseRule
 {
@@ -49,7 +50,7 @@ class ProviderProductReservationBatchRule extends BaseRule
         $fieldsData = array_combine($requiredFields, array_fill(0, count($requiredFields), []));
 
         foreach ($requiredFields as $field) {
-            $fieldsData[$field] = array_filter(array_pluck($reservations, $field));
+            $fieldsData[$field] = array_filter(Arr::pluck($reservations, $field));
         }
 
         return count(array_filter($fieldsData, function ($fieldData) use ($countAll) {
@@ -83,7 +84,7 @@ class ProviderProductReservationBatchRule extends BaseRule
         })->groupBy('voucher_id');
 
         $groupedData = $groupedData->map(function ($data, $voucher_id) {
-            $productIds = array_pluck($data, 'product_id');
+            $productIds = Arr::pluck($data, 'product_id');
             $productsList = ProductSubQuery::appendReservationStats([
                 'voucher_id' => $voucher_id,
             ], Product::query()->whereIn('id', $productIds))->get();

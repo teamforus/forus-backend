@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * App\Models\VoucherTransaction.
@@ -610,7 +611,7 @@ class VoucherTransaction extends Model
             $this->provider->bank_note ? $this->notes_provider->first()?->message : null,
         ])));
 
-        return strlen($description) <= $maxLength ? $description : str_limit($description, $maxLength - 3);
+        return strlen($description) <= $maxLength ? $description : Str::limit($description, $maxLength - 3);
     }
 
     /**

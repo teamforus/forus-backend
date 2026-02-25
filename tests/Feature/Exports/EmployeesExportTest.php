@@ -6,6 +6,7 @@ use App\Exports\EmployeesExport;
 use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -70,7 +71,7 @@ class EmployeesExportTest extends TestCase
      */
     protected function getExportFields(): array
     {
-        $fields = array_pluck(EmployeesExport::getExportFields(), 'name');
+        $fields = Arr::pluck(EmployeesExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== EmployeesExport::trans('roles'));
         $roles = Role::with('translations')->get()->pluck('name')->toArray();
 

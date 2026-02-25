@@ -4,6 +4,7 @@ use App\Models\RecordType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class () extends Migration {
     /**
@@ -39,9 +40,9 @@ return new class () extends Migration {
     protected function isSystemRecordType(RecordType $recordType): bool
     {
         return
-            ends_with($recordType->key, '_eligible_nth') ||
-            ends_with($recordType->key, '_eligible') ||
-            ends_with($recordType->key, '_hash') ||
+            Str::endsWith($recordType->key, '_eligible_nth') ||
+            Str::endsWith($recordType->key, '_eligible') ||
+            Str::endsWith($recordType->key, '_hash') ||
             in_array($recordType->key, ['bsn', 'partner_bsn', 'uid', 'primary_email'], true);
     }
 };

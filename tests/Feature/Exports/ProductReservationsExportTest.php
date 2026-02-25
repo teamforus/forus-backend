@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\ProductReservationsExport;
 use App\Models\ProductReservation;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -51,7 +52,7 @@ class ProductReservationsExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(ProductReservationsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
         $this->assertFields($response, $reservation, $fields);
 
         // Assert with passed all fields

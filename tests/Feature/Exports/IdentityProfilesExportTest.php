@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\IdentityProfilesExport;
 use App\Models\Identity;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -45,13 +46,13 @@ class IdentityProfilesExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(IdentityProfilesExport::getExportFields($organization), 'name');
+        $fields = Arr::pluck(IdentityProfilesExport::getExportFields($organization), 'name');
         $this->assertFields($response, $identity, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
             'data_format' => 'csv',
-            'fields' => array_pluck(IdentityProfilesExport::getExportFields($organization), 'key'),
+            'fields' => Arr::pluck(IdentityProfilesExport::getExportFields($organization), 'key'),
         ]);
 
         $response = $this->getJson($url, $apiHeaders);

@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -102,7 +103,7 @@ class FundRequestsExportTest extends DuskTestCase
      */
     protected function getExportFields(FundRequest $fundRequest): array
     {
-        $fields = array_pluck(FundRequestsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(FundRequestsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== FundRequestsExport::trans('records'));
 
         $recordKeyList = FundRequestRecord::query()

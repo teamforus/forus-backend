@@ -6,6 +6,7 @@ use App\Exports\VoucherExport;
 use App\Imports\BrowserTestEntitiesImport;
 use App\Models\Implementation;
 use App\Models\Voucher;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -65,7 +66,7 @@ class VouchersExportTest extends DuskTestCase
                 $this->searchTable($browser, '@tableVoucher', $voucher->identity->email, $voucher->id);
 
                 $fieldsRaw = VoucherExport::getExportFieldsRaw();
-                $fields = array_pluck(
+                $fields = Arr::pluck(
                     array_filter(VoucherExport::getExportFields(), fn ($field) => !($field['is_record_field'] ?? false)),
                     'name'
                 );

@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\FundProvidersExport;
 use App\Models\FundProvider;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -44,7 +45,7 @@ class FundProvidersExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(FundProvidersExport::getExportFields(), 'name');
+        $fields = Arr::pluck(FundProvidersExport::getExportFields(), 'name');
         $this->assertFields($response, $fundProvider, $fields);
 
         // Assert with passed all fields

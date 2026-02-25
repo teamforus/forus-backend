@@ -88,7 +88,7 @@ trait MakesTestFunds
         }
 
         $fund->fund_config()->forceCreate([
-            'key' => str_slug(token_generator()->generate(4, 4)),
+            'key' => Str::slug(token_generator()->generate(4, 4)),
             'implementation_id' => $implementation->id,
             'is_configured' => true,
             'email_required' => true,
@@ -340,7 +340,7 @@ trait MakesTestFunds
 
             /** @var FundCriterion $criterionModel */
             $criterionModel = $fund->criteria()->create([
-                ...array_except($criterion, ['rules', 'step']),
+                ...Arr::except($criterion, ['rules', 'step']),
                 'fund_criteria_step_id' => $stepModel?->id,
             ]);
 

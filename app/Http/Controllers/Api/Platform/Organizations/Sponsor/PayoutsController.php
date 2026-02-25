@@ -125,7 +125,7 @@ class PayoutsController extends Controller
 
         $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
             'description' => $request->input('description'),
-            ...array_only($bankAccountData, ['target_source_type', 'target_source_id']),
+            ...Arr::only($bankAccountData, ['target_source_type', 'target_source_id']),
         ]);
 
         if ($request->input('bsn') && $organization->bsn_enabled) {

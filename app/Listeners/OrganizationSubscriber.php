@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Arr;
 use League\CommonMark\Exception\CommonMarkException;
 use Throwable;
 
@@ -31,7 +32,7 @@ class OrganizationSubscriber
         try {
             if ($organization->kvk != Organization::GENERIC_KVK) {
                 foreach (resolve('kvk_api')->getOffices($organization->kvk) as $office) {
-                    $organization->offices()->create(array_only($office, ['address', 'lon', 'lat']));
+                    $organization->offices()->create(Arr::only($office, ['address', 'lon', 'lat']));
                 }
             }
         } catch (Throwable) {

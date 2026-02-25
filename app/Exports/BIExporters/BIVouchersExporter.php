@@ -7,6 +7,7 @@ use App\Models\Voucher;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Searches\VouchersSearch;
 use App\Services\BIConnectionService\Exporters\BaseBIExporter;
+use Illuminate\Support\Arr;
 use Throwable;
 
 class BIVouchersExporter extends BaseBIExporter
@@ -51,7 +52,7 @@ class BIVouchersExporter extends BaseBIExporter
         ])->get();
 
         $array = Voucher::exportOnlyDataArray($vouchers, $fields);
-        $fieldLabels = array_pluck(VoucherExport::getExportFields('product'), 'name', 'key');
+        $fieldLabels = Arr::pluck(VoucherExport::getExportFields('product'), 'name', 'key');
 
         return $this->transformKeys($array, $fieldLabels);
     }

@@ -5,6 +5,7 @@ namespace Tests\Browser\Exports;
 use App\Exports\IdentityProfilesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -47,7 +48,7 @@ class IdentityProfilesExportTest extends DuskTestCase
                 $this->goSponsorProfilesPage($browser);
                 $this->searchTable($browser, '@tableProfiles', $identity->email, $identity->id);
 
-                $fields = array_pluck(IdentityProfilesExport::getExportFields($implementation->organization), 'name');
+                $fields = Arr::pluck(IdentityProfilesExport::getExportFields($implementation->organization), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

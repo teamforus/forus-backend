@@ -16,8 +16,10 @@ use App\Scopes\Builders\PrevalidationQuery;
 use App\Searches\PrevalidationSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class PrevalidationController extends Controller
 {
@@ -67,8 +69,8 @@ class PrevalidationController extends Controller
     /**
      * @param UploadPrevalidationsRequest $request
      * @param Organization $organization
+     * @throws Throwable
      * @return AnonymousResourceCollection
-     * @throws \Throwable
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request,
@@ -123,7 +125,7 @@ class PrevalidationController extends Controller
         $fund = Fund::find($request->input('fund_id'));
         $data = $request->input('data', []);
 
-        $uids = array_pluck($data, $fund->fund_config->csv_primary_key);
+        $uids = Arr::pluck($data, $fund->fund_config->csv_primary_key);
 
         return [
             'db' => Prevalidation::getDbState($organization, $fund, $request->employee($organization), $uids),

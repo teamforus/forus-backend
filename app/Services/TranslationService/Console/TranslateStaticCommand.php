@@ -6,6 +6,7 @@ use App\Services\TranslationService\Exceptions\TranslationException;
 use App\Services\TranslationService\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Throwable;
 
@@ -124,7 +125,7 @@ class TranslateStaticCommand extends Command
                 $batchValuesReplaced = array_map(fn ($row) => $this->replaceVars($row), $batchValues);
 
                 $translatedBatch = $this->service->translateBatch(
-                    array_pluck($batchValuesReplaced, 'text'),
+                    Arr::pluck($batchValuesReplaced, 'text'),
                     $this->service->getSourceLanguage(),
                     $locale,
                 );

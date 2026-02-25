@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -52,7 +53,7 @@ class VoucherTransactionsProviderExportTest extends DuskTestCase
                 $this->goToTransactionsPage($browser);
                 $this->searchTable($browser, '@tableTransaction', $transaction->voucher->fund->name, $transaction->id);
 
-                $fields = array_pluck(VoucherTransactionsProviderExport::getExportFields(), 'name');
+                $fields = Arr::pluck(VoucherTransactionsProviderExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

@@ -23,7 +23,7 @@ class Arr extends \Illuminate\Support\Arr
      */
     public static function whereKey($array, callable $callback): array
     {
-        return array_only($array, self::where(array_keys($array), $callback));
+        return static::only($array, self::where(array_keys($array), $callback));
     }
 
     /**

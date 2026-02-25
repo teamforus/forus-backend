@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use JetBrains\PhpStorm\NoReturn;
 use Throwable;
 
@@ -80,7 +81,7 @@ abstract class BaseCommand extends Command
     {
         foreach ($list as $item) {
             if (is_string($item)) {
-                if (starts_with($item, '#')) {
+                if (Str::startsWith($item, '#')) {
                     echo str_repeat('    ', $depth) . '[' . $this->green($item) . "]  \n";
                 } else {
                     echo str_repeat('    ', $depth) . " - $item  \n";

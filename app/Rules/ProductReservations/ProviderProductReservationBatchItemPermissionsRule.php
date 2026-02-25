@@ -9,6 +9,7 @@ use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
 class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
@@ -42,7 +43,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
     public function passes($attribute, $value): bool
     {
         // get current reservation index
-        $this->index = (array_last(explode('.', $attribute)) ?? 0);
+        $this->index = (Arr::last(explode('.', $attribute)) ?? 0);
 
         /** @var Voucher|null $voucher current row voucher */
         /** @var Product|null $product current row product */

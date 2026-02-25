@@ -8,6 +8,7 @@ use App\Models\FundRequestRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class FundRequestsExport extends BaseExport
@@ -58,10 +59,10 @@ class FundRequestsExport extends BaseExport
      */
     protected function exportTransform(Collection $data): Collection
     {
-        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
+        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
 
         return $data->map(function (FundRequest $request) use ($fieldLabels) {
-            $row = array_only($this->getRow($request), $this->fields);
+            $row = Arr::only($this->getRow($request), $this->fields);
 
             $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
                 $fieldLabels[$key] => $row[$key],

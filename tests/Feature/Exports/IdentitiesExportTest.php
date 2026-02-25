@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\FundIdentitiesExport;
 use App\Models\Identity;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -45,7 +46,7 @@ class IdentitiesExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(FundIdentitiesExport::getExportFields(), 'name');
+        $fields = Arr::pluck(FundIdentitiesExport::getExportFields(), 'name');
         $this->assertFields($response, $identity, $fields);
 
         // Assert with passed all fields

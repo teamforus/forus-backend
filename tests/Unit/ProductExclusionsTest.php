@@ -101,8 +101,11 @@ class ProductExclusionsTest extends TestCase
      */
     protected function getApprovedProducts(array|int $products, array|int $funds): array
     {
-        $query = Product::whereIn('id', (array) $products);
-        $query = ProductQuery::approvedForFundsAndActiveFilter($query, (array) $funds);
+        $query = ProductQuery::approvedForFundsFilter(
+            ProductQuery::inStockAndActiveFilter(Product::whereIn('id', (array) $products)),
+            (array) $funds,
+            filterExcludedProviders: true,
+        );
 
         return $query->pluck('id')->toArray();
     }
