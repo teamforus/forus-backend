@@ -176,7 +176,11 @@ trait MakesTestFunds
      */
     protected function addTestCriteriaToFund(Fund $fund): void
     {
-        $fund->criteria->each(fn ($criterion) => $criterion->fund_criterion_rules()->delete());
+        $fund->criteria->each(function (FundCriterion $criterion) {
+            $criterion->fund_criterion_rules()->delete();
+            $criterion->fund_request_record()->delete();
+        });
+
         $fund->criteria()->forceDelete();
 
         RecordType::whereIn('key', [
@@ -354,7 +358,10 @@ trait MakesTestFunds
     {
         $fund->criteria()
             ->get()
-            ->each(fn (FundCriterion $criteria) => $criteria->fund_criterion_rules()->forceDelete());
+            ->each(function (FundCriterion $criterion) {
+                $criterion->fund_criterion_rules()->delete();
+                $criterion->fund_request_record()->delete();
+            });
 
         $fund->criteria()->forceDelete();
         $fund->criteria_steps()->forceDelete();
@@ -366,6 +373,7 @@ trait MakesTestFunds
         ProductReservation::whereRelation('voucher', 'fund_id', $fund->id)->forceDelete();
         Record::where('fund_request_id', $fund->fund_requests()->pluck('id')->toArray())->forceDelete();
         FundProviderProduct::whereIn('fund_provider_id', $fund->providers()->pluck('id')->toArray())->forceDelete();
+        Prevalidation::where('fund_id', $fund->id)->forceDelete();
 
         $fund->vouchers()->forceDelete();
         $fund->fund_requests()->get()->each(fn (FundRequest $fundRequest) => $fundRequest->vouchers()->update(['fund_request_id' => null]));

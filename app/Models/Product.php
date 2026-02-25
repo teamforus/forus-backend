@@ -663,7 +663,8 @@ class Product extends Model
     {
         $builder = ProductQuery::approvedForFundsFilter(
             ProductQuery::inStockAndActiveFilter(Product::query()),
-            Implementation::activeFundsQuery()->pluck('id')->toArray()
+            Implementation::activeFundsQuery()->pluck('id')->toArray(),
+            filterExcludedProviders: true
         );
 
         return $builder->inRandomOrder();
