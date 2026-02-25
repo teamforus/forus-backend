@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Faq;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 trait ValidatesFaq
@@ -45,7 +46,7 @@ trait ValidatesFaq
      */
     protected function getFaqAttributes(): array
     {
-        $keys = array_dot(array_keys($this->rules()));
+        $keys = Arr::dot(array_keys($this->rules()));
 
         return array_combine($keys, array_map(static function ($key) {
             $value = last(explode('.', $key));

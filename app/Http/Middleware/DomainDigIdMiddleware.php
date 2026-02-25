@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Implementation;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DomainDigIdMiddleware
 {
@@ -48,7 +49,7 @@ class DomainDigIdMiddleware
         }
 
         return $allowedDomains->filter(function ($url) use ($request) {
-            return starts_with($request->url(), $url);
+            return Str::startsWith($request->url(), $url);
         })->isNotEmpty();
     }
 }

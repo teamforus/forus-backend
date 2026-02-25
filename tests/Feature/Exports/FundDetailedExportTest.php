@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -82,7 +83,7 @@ class FundDetailedExportTest extends TestCase
         $hasPayoutFunds = $fund->organization->hasPayoutFunds();
 
         return array_values(array_filter(
-            array_pluck(FundsExportDetailed::getExportFields($hasPayoutFunds), 'name'),
+            Arr::pluck(FundsExportDetailed::getExportFields($hasPayoutFunds), 'name'),
             fn (string $field) => $field !== FundsExportDetailed::trans('budget_children_count')
         ));
     }

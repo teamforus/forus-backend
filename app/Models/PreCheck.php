@@ -160,7 +160,7 @@ class PreCheck extends Model
                 'amount_for_identity_locale' => currency_format_locale($amountIdentity),
                 'fund_formula_products' => self::getFundFormulaProducts($fund, $records),
                 'product_count' => $fund->fund_formula_products->count(),
-                'products_amount_total' => array_sum(array_pluck($fund->fund_formula_products, 'price')),
+                'products_amount_total' => array_sum(Arr::pluck($fund->fund_formula_products, 'price')),
             ];
         })->toArray();
     }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 
 class BaseSearch
 {
@@ -68,7 +69,7 @@ class BaseSearch
      */
     public function hasFilter(string $key): bool
     {
-        return array_has($this->filters, $key);
+        return Arr::has($this->filters, $key);
     }
 
     /**
@@ -78,7 +79,7 @@ class BaseSearch
      */
     public function getFilter(string $key, $default = null): mixed
     {
-        return array_get($this->filters, $key, $default);
+        return Arr::get($this->filters, $key, $default);
     }
 
     /**

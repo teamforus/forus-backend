@@ -8,6 +8,7 @@ use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -51,7 +52,7 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToTransactionsPage($browser, true);
 
-                $fields = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name');
+                $fields = Arr::pluck(VoucherTransactionBulksExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

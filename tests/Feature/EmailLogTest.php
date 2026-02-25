@@ -31,6 +31,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
@@ -743,7 +744,7 @@ class EmailLogTest extends TestCase
         $this->makeEmailLogsRequest($organization, ['identity_id' => $identity->id])
             ->assertSuccessful()
             ->assertJsonPath('data', function (array $data) use ($logsVisibleIds, $logsNotVisibleIds) {
-                $ids = array_pluck($data, 'id');
+                $ids = Arr::pluck($data, 'id');
 
                 foreach ($logsVisibleIds as $id) {
 
@@ -827,7 +828,7 @@ class EmailLogTest extends TestCase
         $this->makeEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id])
             ->assertSuccessful()
             ->assertJsonPath('data', function (array $data) use ($logsVisibleIds, $logsNotVisibleIds) {
-                $ids = array_pluck($data, 'id');
+                $ids = Arr::pluck($data, 'id');
 
                 foreach ($logsVisibleIds as $id) {
 

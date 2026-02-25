@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\FundsExport;
 use App\Models\Fund;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -43,7 +44,7 @@ class FundsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $fields = array_pluck(FundsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(FundsExport::getExportFields(), 'name');
         $this->assertFields($response, $fund, $fields);
 
         // Assert with passed all fields

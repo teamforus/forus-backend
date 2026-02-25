@@ -5,6 +5,7 @@ namespace Tests\Browser\Exports;
 use App\Exports\FundProvidersExport;
 use App\Models\FundProvider;
 use App\Models\Implementation;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -48,7 +49,7 @@ class FundProvidersExportTest extends DuskTestCase
                 $this->goToSponsorProvidersPage($browser);
                 $this->searchTable($browser, '@tableProvider', $fundProvider->organization->name, $fundProvider->organization->id);
 
-                $fields = array_pluck(FundProvidersExport::getExportFields(), 'name');
+                $fields = Arr::pluck(FundProvidersExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

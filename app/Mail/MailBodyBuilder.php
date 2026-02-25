@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Helpers\Markdown;
 use DomDocument;
+use Illuminate\Support\Arr;
 use League\CommonMark\Exception\CommonMarkException;
 
 class MailBodyBuilder
@@ -144,7 +145,7 @@ class MailBodyBuilder
         $styles['p'] = $styles['text'] ?? '';
         $styles['a'] = $styles['link'] ?? '';
 
-        foreach (array_only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a', 'li']) as $tagName => $tagStyles) {
+        foreach (Arr::only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a', 'li']) as $tagName => $tagStyles) {
             $elements = $document->getElementsByTagName($tagName);
 
             for ($i = $elements->length; --$i >= 0;) {

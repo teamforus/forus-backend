@@ -122,7 +122,7 @@ class ImplementationCMSTest extends TestCase
             $this->makeApiHeaders($proxy),
         );
 
-        $response->assertJsonValidationErrors(array_keys(array_except($pageData, [
+        $response->assertJsonValidationErrors(array_keys(Arr::except($pageData, [
             'state', 'description', 'description_position', 'description_alignment', 'blocks', 'external_url',
         ])));
     }
@@ -267,7 +267,7 @@ class ImplementationCMSTest extends TestCase
 
         $response = $this->patchJson($implementationPageUrl, $bodyEmpty, $this->makeApiHeaders($proxy));
 
-        $response->assertJsonValidationErrors(array_keys(array_except($pageBody, [
+        $response->assertJsonValidationErrors(array_keys(Arr::except($pageBody, [
             'state', 'description', 'description_position', 'description_alignment', 'blocks',
             'external_url', 'page_type',
         ])));

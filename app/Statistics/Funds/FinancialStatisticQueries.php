@@ -151,17 +151,17 @@ class FinancialStatisticQueries
         array $options = [],
         Builder $query = null
     ): Builder|Relation|VoucherTransaction {
-        $productCategoryIds = array_get($options, 'product_category_ids');
-        $businessTypeIds = array_get($options, 'business_type_ids');
-        $providerIds = array_get($options, 'provider_ids');
-        $postcodes = array_get($options, 'postcodes');
-        $fundIds = array_get($options, 'fund_ids');
-        $targets = array_get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
+        $productCategoryIds = Arr::get($options, 'product_category_ids');
+        $businessTypeIds = Arr::get($options, 'business_type_ids');
+        $providerIds = Arr::get($options, 'provider_ids');
+        $postcodes = Arr::get($options, 'postcodes');
+        $fundIds = Arr::get($options, 'fund_ids');
+        $targets = Arr::get($options, 'targets', VoucherTransaction::TARGETS_OUTGOING);
 
         /** @var Carbon|null $dateFrom */
-        $dateFrom = array_get($options, 'date_from');
+        $dateFrom = Arr::get($options, 'date_from');
         /** @var Carbon|null $dateTo */
-        $dateTo = array_get($options, 'date_to');
+        $dateTo = Arr::get($options, 'date_to');
 
         $query = $query ?: VoucherTransaction::query();
         $query = $query->whereHas('voucher.fund', function (Builder $builder) use ($sponsor) {

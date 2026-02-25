@@ -50,7 +50,7 @@ class ProviderFinancesExportTest extends DuskTestCase
                 // Go to list, open export modal and assert all export fields in file
                 $this->goToSponsorFinancialDashboardPage($browser);
 
-                $fields = array_pluck(ProviderFinancesExport::getExportFields(), 'name');
+                $fields = Arr::pluck(ProviderFinancesExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

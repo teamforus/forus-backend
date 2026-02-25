@@ -12,6 +12,7 @@ use App\Models\Household;
 use App\Models\Organization;
 use App\Searches\Sponsor\HouseholdSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 
 class HouseholdsController extends Controller
 {
@@ -48,7 +49,7 @@ class HouseholdsController extends Controller
         $this->authorize('createHousehold', [Household::class, $organization]);
 
         return HouseholdResource::create(Household::create([
-            ...array_only($request->validated(), [
+            ...Arr::only($request->validated(), [
                 'living_arrangement', 'uid', 'count_people', 'count_minors', 'count_adults',
                 'city', 'street', 'house_nr', 'house_nr_addition', 'postal_code', 'neighborhood_name', 'municipality_name',
             ]),
@@ -85,7 +86,7 @@ class HouseholdsController extends Controller
     ): HouseholdResource {
         $this->authorize('updateHousehold', [$household, $organization]);
 
-        $household->update(array_only($request->validated(), [
+        $household->update(Arr::only($request->validated(), [
             'living_arrangement', 'uid', 'count_people', 'count_minors', 'count_adults',
             'city', 'street', 'house_nr', 'house_nr_addition', 'postal_code', 'neighborhood_name', 'municipality_name',
         ]));

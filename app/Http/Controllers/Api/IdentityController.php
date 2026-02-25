@@ -22,6 +22,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 
@@ -120,7 +121,7 @@ class IdentityController extends Controller
         $implementationKey = $request->input('implementation_key');
 
         if ((!$isMobile || $clientType) &&
-            !in_array($clientType, array_flatten(config('forus.clients')), true)) {
+            !in_array($clientType, Arr::flatten(config('forus.clients')), true)) {
             abort(404, 'Invalid client type.');
         }
 
@@ -233,7 +234,7 @@ class IdentityController extends Controller
         $isMobile = $request->input('is_mobile', false);
 
         if ((!$isMobile || $clientType) &&
-            !in_array($clientType, array_flatten(config('forus.clients')), true)) {
+            !in_array($clientType, Arr::flatten(config('forus.clients')), true)) {
             abort(404, 'Invalid client type.');
         }
 

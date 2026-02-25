@@ -5,6 +5,7 @@ namespace Tests\Browser\Exports;
 use App\Exports\FundIdentitiesExport;
 use App\Models\Identity;
 use App\Models\Implementation;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -51,7 +52,7 @@ class IdentitiesExportTest extends DuskTestCase
                 $this->goToSponsorFundDetailsPageTab($browser, $implementation, $organization, $fund, 'identities');
                 $this->searchTable($browser, '@tableIdentity', $identity->email, $identity->id);
 
-                $fields = array_pluck(FundIdentitiesExport::getExportFields(), 'name');
+                $fields = Arr::pluck(FundIdentitiesExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

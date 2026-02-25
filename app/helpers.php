@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -296,7 +297,7 @@ if (!function_exists('trans_fb')) {
 if (!function_exists('str_var_replace')) {
     function str_var_replace(string $string, array $replace, bool $filterValues = true): string
     {
-        $replace = array_sort($replace, fn ($value, $key) => mb_strlen($key) * -1);
+        $replace = Arr::sort($replace, fn ($value, $key) => mb_strlen($key) * -1);
 
         foreach ($replace as $key => $value) {
             if (!$filterValues || (is_string($value) || is_numeric($value))) {

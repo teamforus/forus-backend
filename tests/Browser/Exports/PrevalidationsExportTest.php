@@ -6,6 +6,7 @@ use App\Exports\PrevalidationsExport;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -77,7 +78,7 @@ class PrevalidationsExportTest extends DuskTestCase
      */
     protected function getExportFields(Prevalidation $prevalidation): array
     {
-        $fields = array_pluck(PrevalidationsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(PrevalidationsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== PrevalidationsExport::trans('records'));
 
         $records = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {

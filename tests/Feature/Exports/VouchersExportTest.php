@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\VoucherExport;
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -48,7 +49,7 @@ class VouchersExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $fields = array_pluck(
+        $fields = Arr::pluck(
             array_filter(VoucherExport::getExportFields(), fn ($field) => !($field['is_record_field'] ?? false)),
             'name'
         );

@@ -6,6 +6,7 @@ use App\Exports\PrevalidationsExport;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -68,7 +69,7 @@ class PrevalidationsExportTest extends TestCase
      */
     protected function getExportFields(Prevalidation $prevalidation): array
     {
-        $fields = array_pluck(PrevalidationsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(PrevalidationsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== PrevalidationsExport::trans('records'));
 
         $records = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {

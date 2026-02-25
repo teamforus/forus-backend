@@ -92,7 +92,7 @@ class PayoutsTest extends TestCase
         $fund->refresh();
 
         self::assertEquals(
-            array_sum(array_pluck($presets, 'amount')),
+            array_sum(Arr::pluck($presets, 'amount')),
             $fund->amount_presets->sum('amount'),
         );
     }
