@@ -20,14 +20,13 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Validator;
 
 /**
- *
- *
  * @property int $id
  * @property string $bsn
  * @property string $state
  * @property int $organization_id
  * @property int|null $employee_id
  * @property int $fund_id
+ * @property \Illuminate\Support\Carbon|null $fetched_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
@@ -46,6 +45,7 @@ use Illuminate\Support\Facades\Validator;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereFetchedDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PrevalidationRequest whereOrganizationId($value)
@@ -80,7 +80,14 @@ class PrevalidationRequest extends Model
      * @var array
      */
     protected $fillable = [
-        'bsn', 'state', 'fund_id', 'organization_id', 'employee_id',
+        'bsn', 'state', 'fund_id', 'organization_id', 'employee_id', 'fetched_date',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $casts = [
+        'fetched_date' => 'datetime',
     ];
 
     /**
@@ -201,17 +208,7 @@ class PrevalidationRequest extends Model
         }
 
         // prepare prefill records
-        $data = Arr::mapWithKeys([
-            ...Arr::get($fundPrefills, 'person', []),
-            ...Arr::get($fundPrefills, 'partner', []),
-            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
-            ...Arr::get($fundPrefills, 'children_groups_counts', []),
-        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
-
-        $data = [
-            ...$data,
-            ...$this->records->pluck('value', 'record_type_key')->toArray(),
-        ];
+        $data = $this->prepareRecords($fundPrefills);
 
         if (!$this->recordsIsValid($this->fund, $data)) {
             $this->update(['state' => $this::STATE_FAIL]);
@@ -245,6 +242,7 @@ class PrevalidationRequest extends Model
 
         $this->update([
             'state' => $this::STATE_SUCCESS,
+            'fetched_date' => now(),
         ]);
 
         $prevalidations->each(fn (Prevalidation $prevalidation) => $prevalidation->update([
@@ -259,11 +257,31 @@ class PrevalidationRequest extends Model
     }
 
     /**
+     * @param array $fundPrefills
+     * @return array|null
+     */
+    public function prepareRecords(array $fundPrefills): ?array
+    {
+        // prepare prefill records
+        $data = Arr::mapWithKeys([
+            ...Arr::get($fundPrefills, 'person', []),
+            ...Arr::get($fundPrefills, 'partner', []),
+            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+            ...Arr::get($fundPrefills, 'children_groups_counts', []),
+        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
+
+        return [
+            ...$data,
+            ...$this->records->pluck('value', 'record_type_key')->toArray(),
+        ];
+    }
+
+    /**
      * @param Fund $fund
      * @param array $data
      * @return bool
      */
-    private function recordsIsValid(Fund $fund, array $data): bool
+    public function recordsIsValid(Fund $fund, array $data): bool
     {
         $criteriaByKey = $fund->criteria->pluck('id', 'record_type_key')->toArray();
 

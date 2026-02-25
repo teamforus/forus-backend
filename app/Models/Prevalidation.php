@@ -272,38 +272,7 @@ class Prevalidation extends Model
         $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
             abort(500, 'Unknown csv_primary_key');
 
-        // list existing uid from fund prevalidations
-        $existingPrimaryKeys = PrevalidationRecord::whereHas('prevalidation', fn (Builder $builder) => $builder->where([
-            'identity_address' => $employee->identity_address,
-            'organization_id' => $fund->organization_id,
-            'employee_id' => $employee->id,
-            'fund_id' => $fund->id,
-        ]))->where([
-            'record_type_id' => $fundPrevalidationPrimaryKey,
-        ])->pluck('value');
-
-        // only new pre validations and pre validations that have to be updated
-        $data = array_reduce($data, function (array $list, array $record) use ($existingPrimaryKeys, $fund, $updateKeys, $recordTypes) {
-            $primaryKey = $record[$fund->fund_config->csv_primary_key];
-
-            // already exists and not in the replacement list
-            if ($existingPrimaryKeys->search($primaryKey) !== false && !in_array($primaryKey, $updateKeys, true)) {
-                return $list;
-            }
-
-            return [...$list, [
-                'primaryKey' => $primaryKey,
-                'record' => $record,
-                'records' => array_filter(array_map(static function ($key) use ($recordTypes, $record) {
-                    return (!$recordTypes[$key] || $key === 'primary_email') ? false : [
-                        'record_type_id' => $recordTypes[$key],
-                        'value' => is_null($record[$key]) ? '' : $record[$key],
-                    ];
-                }, array_keys($record)), static function ($value) {
-                    return (bool) $value;
-                }),
-            ]];
-        }, []);
+        $data = static::prepareDataForUpdate($employee, $fund, $data, $updateKeys);
 
         $prevalidations = array_map(static function (array $records) use ($fund, $updateKeys, $topUpKeys, $topUps, $fundPrevalidationPrimaryKey, $employee) {
             if (in_array($records['primaryKey'], $updateKeys, true)) {
@@ -349,6 +318,43 @@ class Prevalidation extends Model
         }, $data);
 
         return new EloquentCollection($prevalidations);
+    }
+
+    /**
+     * @param array $records
+     * @return void
+     */
+    public function updatePrevalidationRecords(array $records): void
+    {
+        $data = Arr::first(static::prepareDataForUpdate(
+            $this->employee,
+            $this->fund,
+            [$records],
+            [$records[$this->fund->fund_config->csv_primary_key]]
+        ));
+
+        $this->prevalidation_records()->delete();
+        $this->prevalidation_records()->createMany($data['records']);
+        $this->updateHashes();
+    }
+
+    /**
+     * @param array $records
+     * @return void
+     */
+    public function addPrevalidationRecords(array $records): void
+    {
+        $identity = $this->identity_redeemed;
+
+        foreach (static::mapRawRecords($records) as $rawRecord) {
+            $record = $this->prevalidation_records()->create($rawRecord);
+
+            $record->makeRecord($identity)
+                ->makeValidationRequest()
+                ->approve(null, $this->organization, $this);
+        }
+
+        $this->updateHashes();
     }
 
     /**
@@ -494,6 +500,70 @@ class Prevalidation extends Model
                 Prevalidation::whereUid($value)->doesntExist() &&
                 Voucher::whereActivationCode('activation_code')->doesntExist();
         }, 4, 2);
+    }
+
+    /**
+     * @param array $records
+     * @return array
+     */
+    public static function mapRawRecords(array $records): array
+    {
+        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+
+        return array_filter(array_map(static function ($key) use ($recordTypes, $records) {
+            return (!$recordTypes[$key] || $key === 'primary_email') ? false : [
+                'record_type_id' => $recordTypes[$key],
+                'value' => is_null($records[$key]) ? '' : $records[$key],
+            ];
+        }, array_keys($records)), static function ($value) {
+            return (bool) $value;
+        });
+    }
+
+    /**
+     * @param Employee $employee
+     * @param Fund $fund
+     * @param array $data
+     * @param array $updateKeys
+     * @return array
+     */
+    protected static function prepareDataForUpdate(
+        Employee $employee,
+        Fund $fund,
+        array $data,
+        array $updateKeys,
+    ): array {
+        $primaryKeyName = $fund->fund_config->csv_primary_key;
+
+        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+        $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
+            abort(500, 'Unknown csv_primary_key');
+
+        // list existing uid from fund prevalidations
+        $existingPrimaryKeys = PrevalidationRecord::whereHas('prevalidation', fn (Builder $builder) => $builder->where([
+            'identity_address' => $employee->identity_address,
+            'organization_id' => $fund->organization_id,
+            'employee_id' => $employee->id,
+            'fund_id' => $fund->id,
+        ]))->where([
+            'record_type_id' => $fundPrevalidationPrimaryKey,
+        ])->pluck('value');
+
+        // only new pre validations and pre validations that have to be updated
+        return array_reduce($data, function (array $list, array $record) use ($existingPrimaryKeys, $updateKeys, $fund, $recordTypes) {
+            $primaryKey = $record[$fund->fund_config->csv_primary_key];
+
+            // already exists and not in the replacement list
+            if ($existingPrimaryKeys->search($primaryKey) !== false && !in_array($primaryKey, $updateKeys, true)) {
+                return $list;
+            }
+
+            return [...$list, [
+                'primaryKey' => $primaryKey,
+                'record' => $record,
+                'records' => static::mapRawRecords($record),
+            ]];
+        }, []);
     }
 
     /**
