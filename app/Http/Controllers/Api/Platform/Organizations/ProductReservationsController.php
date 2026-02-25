@@ -32,6 +32,7 @@ use App\Services\MollieService\Exceptions\MollieException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -129,10 +130,10 @@ class ProductReservationsController extends Controller
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
-                $product = Product::find(array_get($item, 'product_id'));
-                $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
+                $product = Product::find(Arr::get($item, 'product_id'));
+                $voucher = Voucher::findByAddressOrPhysicalCard(Arr::get($item, 'number'));
 
-                $reservation = $voucher->reserveProduct($product, $employee, extraData: array_only($item, [
+                $reservation = $voucher->reserveProduct($product, $employee, extraData: Arr::only($item, [
                     'note',
                 ]));
 

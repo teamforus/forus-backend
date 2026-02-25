@@ -10,6 +10,7 @@ use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 /**
  * @property Product|null $resource
@@ -53,8 +54,8 @@ class ProviderAppProductResource extends ProductResource
             'description_html' => $this->resource->description_html,
             'price_user' => currency_format(0),
             'price_user_locale' => 'Gratis',
-            'sponsor_subsidy' => array_get($data, 'price'),
-            'sponsor_subsidy_locale' => array_get($data, 'price_locale'),
+            'sponsor_subsidy' => Arr::get($data, 'price'),
+            'sponsor_subsidy_locale' => Arr::get($data, 'price_locale'),
         ];
     }
 

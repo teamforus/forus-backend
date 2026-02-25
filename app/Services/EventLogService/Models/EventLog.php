@@ -112,7 +112,7 @@ class EventLog extends Model
      */
     public function getLoggableLocaleDashboardAttribute(): ?string
     {
-        $attributes = array_filter(array_dot($this->data), function ($value) {
+        $attributes = array_filter(Arr::dot($this->data), function ($value) {
             return is_string($value) || is_numeric($value);
         });
 

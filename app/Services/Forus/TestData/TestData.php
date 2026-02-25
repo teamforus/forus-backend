@@ -199,7 +199,7 @@ class TestData
         $countOffices = $this->config('provider_offices_count');
         $organizations = $this->makeOrganizations('Provider', $identityAddress, $count, [], $countOffices);
 
-        foreach (array_random($organizations, ceil(count($organizations) / 2)) as $organization) {
+        foreach (Arr::random($organizations, ceil(count($organizations) / 2)) as $organization) {
             foreach (Fund::take(Fund::count() / 2)->get() as $fund) {
                 FundProviderApplied::dispatch($fund, $fund->providers()->forceCreate([
                     'fund_id' => $fund->id,
@@ -522,7 +522,7 @@ class TestData
         string $name,
         ?Organization $organization = null,
     ): Implementation|Model {
-        $key = str_slug($name);
+        $key = Str::slug($name);
         $faker = fake('nl_NL');
         $generator = new MarkdownPageGenerator($faker);
         $blockGenerator = new MarkdownBlockGenerator($faker);
@@ -650,7 +650,7 @@ class TestData
         $defaultData = [
             'fund_id' => $fund->id,
             'implementation_id' => $implementation->id,
-            'key' => str_slug($fund->name . '_' . date('Y')),
+            'key' => Str::slug($fund->name . '_' . date('Y')),
             'bunq_sandbox' => true,
             'csv_primary_key' => 'uid',
             'is_configured' => true,
@@ -755,7 +755,7 @@ class TestData
 
             /** @var FundCriterion $criterionModel */
             $criterionModel = $fund->criteria()->create([
-                ...array_except($criterion, ['rules', 'step']),
+                ...Arr::except($criterion, ['rules', 'step']),
                 'fund_criteria_step_id' => $stepModel?->id,
                 'fund_criteria_group_id' => $groupModel?->id,
             ]);
@@ -897,7 +897,7 @@ class TestData
             ]);
 
             $out[] = array_merge([
-                ...array_only($prevalidation, $fund->criteria->pluck('record_type_key')->toArray()),
+                ...Arr::only($prevalidation, $fund->criteria->pluck('record_type_key')->toArray()),
                 $csvPrimaryKey => $primaryKeyValue,
             ]);
         }
@@ -971,7 +971,7 @@ class TestData
             'info_where' => $this->faker->address(),
             'info_more_info' => 'Only for children aged 1 and up',
             'info_attention' => 'Children up to 12 years old must bring swimwear. Voucher code available once per day.',
-        ], array_only($fields, [
+        ], Arr::only($fields, [
             'name', 'total_amount', 'sold_out', 'expire_at',
         ])));
 

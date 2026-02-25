@@ -67,7 +67,7 @@ trait ExportsFundsStatisticsTrait
     protected function exportTable(Browser $browser, Fund $fund, bool $budget): void
     {
         if (!$budget) {
-            $fields = array_pluck(FundsExport::getExportFields(), 'name');
+            $fields = Arr::pluck(FundsExport::getExportFields(), 'name');
 
             foreach (static::FORMATS as $format) {
                 // assert all fields exported
@@ -87,7 +87,7 @@ trait ExportsFundsStatisticsTrait
             return;
         }
 
-        $fields = array_pluck(
+        $fields = Arr::pluck(
             FundsExportDetailed::getExportFields($fund->organization->hasPayoutFunds()),
             'name'
         );

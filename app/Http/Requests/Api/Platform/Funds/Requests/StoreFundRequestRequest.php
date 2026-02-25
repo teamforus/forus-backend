@@ -13,6 +13,7 @@ use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 /**
  * @property Fund $fund
@@ -79,7 +80,7 @@ class StoreFundRequestRequest extends BaseFormRequest
             $record_type_key = Arr::get($val, 'record_type_key', false);
 
             if ($record_type_key) {
-                $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
+                $prefix = (Str::endsWith($record_type_key, '_eligible') ? 'eligible_' : '');
 
                 $messages['records.*.value.required'] = trans(
                     "validation.fund_request_request_{$prefix}field_incomplete",

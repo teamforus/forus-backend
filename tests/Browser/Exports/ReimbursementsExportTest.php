@@ -6,6 +6,7 @@ use App\Exports\ReimbursementsSponsorExport;
 use App\Models\Implementation;
 use App\Models\Reimbursement;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -59,7 +60,7 @@ class ReimbursementsExportTest extends DuskTestCase
                 $this->goToReimbursementsPage($browser);
                 $this->searchTable($browser, '@tableReimbursement', $reimbursement->voucher->identity->email, $reimbursement->id);
 
-                $fields = array_pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
+                $fields = Arr::pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported

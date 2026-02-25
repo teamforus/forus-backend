@@ -6,6 +6,7 @@ use App\Exports\EventLogsExport;
 use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\BaseExport;
@@ -56,7 +57,7 @@ class EventLogsExportTest extends TestCase
             $apiHeaders
         );
 
-        $fields = array_pluck(EventLogsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(EventLogsExport::getExportFields(), 'name');
         $this->assertFields($response, $employee, $newEmployee, $fields);
 
         // Assert with passed all fields

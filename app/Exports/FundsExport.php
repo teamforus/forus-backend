@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class FundsExport extends BaseExport
@@ -103,9 +104,9 @@ class FundsExport extends BaseExport
      */
     protected function getTotals(): array
     {
-        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
+        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
 
-        $row = array_only([
+        $row = Arr::only([
             'name' => static::trans('total'),
             'balance' => currency_format($this->totals['balance']),
             'expenses' => currency_format($this->totals['expenses']),

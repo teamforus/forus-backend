@@ -82,7 +82,7 @@ class VoucherTransactionBatchUploadTest extends TestCase
                 'voucher_number' => $voucher->number,
             ]);
 
-            if ($voucher->amount_available_cached < array_sum(array_pluck($transactions, 'amount'))) {
+            if ($voucher->amount_available_cached < array_sum(Arr::pluck($transactions, 'amount'))) {
                 $errors[] = "transactions.$item.amount";
             }
         }

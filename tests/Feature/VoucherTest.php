@@ -19,6 +19,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Random\RandomException;
@@ -136,7 +137,7 @@ class VoucherTest extends TestCase
         $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        $this->setFundFormulaProductsForFund($fund, Arr::random($products['approved'], 3), 'test_number');
 
         $prevalidation->assignToIdentity($identity);
         $this->makeVoucherForFundFormulaProduct($fund, $identity);
@@ -289,7 +290,7 @@ class VoucherTest extends TestCase
         $this->addTestCriteriaToFund($fund);
         $products = $this->makeProviderAndProducts($fund);
 
-        $this->setFundFormulaProductsForFund($fund, array_random($products['approved'], 3), 'test_number');
+        $this->setFundFormulaProductsForFund($fund, Arr::random($products['approved'], 3), 'test_number');
 
         foreach ($testCase['asserts'] as $assert) {
             $this->storeVoucher($fund, $assert, $products[$assert['product'] ?? 'approved']);

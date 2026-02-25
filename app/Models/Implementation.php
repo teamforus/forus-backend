@@ -25,7 +25,6 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -821,7 +820,7 @@ class Implementation extends Model
                 'url_validator_sign_up' => $implementation->urlValidatorDashboard('aanmelden'),
             ],
             'map' => $implementation->only('lon', 'lat'),
-            'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
+            'banner' => $banner ? Arr::only((new MediaResource($banner))->toArray(request()), [
                 'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
             ]) : null,
             'languages' => $implementation->getAvailableLanguages(),

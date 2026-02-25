@@ -6,6 +6,7 @@ use App\Exports\Base\BaseExport;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -35,10 +36,10 @@ class PrevalidationsExport extends BaseExport
      */
     protected function exportTransform(Collection $data): Collection
     {
-        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
+        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
 
         return $data->map(function (Prevalidation $prevalidation) use ($fieldLabels) {
-            $row = array_only($this->getRow($prevalidation), $this->fields);
+            $row = Arr::only($this->getRow($prevalidation), $this->fields);
 
             $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
                 $fieldLabels[$key] => $row[$key],

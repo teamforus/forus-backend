@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class EmployeesExport extends BaseExport
@@ -54,10 +55,10 @@ class EmployeesExport extends BaseExport
     protected function exportTransform(Collection $data): Collection
     {
         $roles = Role::with('translations')->get();
-        $fieldLabels = array_pluck(static::getExportFields(), 'name', 'key');
+        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
 
         return $data->map(function (Employee $employee) use ($fieldLabels, $roles) {
-            $row = array_only($this->getRow($employee), $this->fields);
+            $row = Arr::only($this->getRow($employee), $this->fields);
 
             $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
                 $fieldLabels[$key] => $row[$key],

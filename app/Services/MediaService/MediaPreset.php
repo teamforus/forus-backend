@@ -6,6 +6,7 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset as PresetModel;
 use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 abstract class MediaPreset
 {
@@ -42,7 +43,7 @@ abstract class MediaPreset
     ): string {
         $extension = $extension ?: $this->format;
 
-        return str_start(sprintf(
+        return Str::start(sprintf(
             '%s/%s.%s',
             $storagePath,
             $this->makeUniqueFileNme($storage, $storagePath, $extension),

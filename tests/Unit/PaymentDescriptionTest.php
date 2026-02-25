@@ -6,6 +6,8 @@ use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Tests\CreatesApplication;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
@@ -67,7 +69,7 @@ class PaymentDescriptionTest extends TestCase
     {
         $transaction = $this->makeVoucherTransaction();
 
-        $separator = array_random(Organization::BANK_SEPARATORS);
+        $separator = Arr::random(Organization::BANK_SEPARATORS);
         $this->updateProviderTransactionFlags($transaction->provider, [], $separator);
 
         self::assertEquals(" $separator ", $transaction->makePaymentDescription());
@@ -134,7 +136,7 @@ class PaymentDescriptionTest extends TestCase
             'voucher_transaction_id' => $transaction->id,
         ]);
 
-        $separator = array_random(Organization::BANK_SEPARATORS);
+        $separator = Arr::random(Organization::BANK_SEPARATORS);
         $this->updateProviderTransactionFlags($transaction->provider, $providerFlags, $separator);
 
         $note = $transaction->notes_provider()->create([
@@ -160,7 +162,7 @@ class PaymentDescriptionTest extends TestCase
 
         $expectedDescription = strlen($expectedDescription) <= 140
             ? $expectedDescription
-            : str_limit($expectedDescription, 140 - 3);
+            : Str::limit($expectedDescription, 140 - 3);
 
         self::assertEquals(
             $expectedDescription,

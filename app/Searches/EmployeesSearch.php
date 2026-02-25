@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Scopes\Builders\EmployeeQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 
 class EmployeesSearch extends BaseSearch
 {
@@ -26,8 +27,8 @@ class EmployeesSearch extends BaseSearch
         /** @var Relation|Builder|Employee $builder */
         $builder = parent::query();
 
-        $roleFilters = array_only($this->getFilters(), ['role', 'roles']);
-        $permissionFilters = array_only($this->getFilters(), ['permission', 'permissions']);
+        $roleFilters = Arr::only($this->getFilters(), ['role', 'roles']);
+        $permissionFilters = Arr::only($this->getFilters(), ['permission', 'permissions']);
 
         foreach ($roleFilters as $roleFilter) {
             EmployeeQuery::whereHasRoleFilter($builder, $roleFilter);

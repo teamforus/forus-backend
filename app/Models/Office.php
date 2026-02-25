@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\Office.
@@ -136,14 +137,14 @@ class Office extends Model
      */
     public function updateSchedule(?array $schedules = []): self
     {
-        $this->schedules()->whereNotIn('week_day', array_pluck(
+        $this->schedules()->whereNotIn('week_day', Arr::pluck(
             $schedules,
             'week_day'
         ))->delete();
 
         foreach ($schedules as $schedule) {
             $this->schedules()->firstOrCreate(
-                array_only($schedule, 'week_day')
+                Arr::only($schedule, 'week_day')
             )->update(array_merge(array_fill_keys([
                 'start_time', 'end_time', 'break_start_time', 'break_end_time',
             ], null), $schedule));

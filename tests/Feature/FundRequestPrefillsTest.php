@@ -123,7 +123,7 @@ class FundRequestPrefillsTest extends TestCase
         // assert children group counts
         $groupCounts = collect($response->json('children_groups_counts'));
         $this->assertEquals(2, (int) $groupCounts->firstWhere('record_type_key', 'children_age_group_4_11')['value']);
-        $this->assertEquals(1, (int) $groupCounts->firstWhere('record_type_key', 'children_age_group_12_17_gender_female')['value']);
+        $this->assertEquals(2, (int) $groupCounts->firstWhere('record_type_key', 'children_age_group_12_17_gender_female_partner_female')['value']);
     }
 
     /**
@@ -445,6 +445,6 @@ class FundRequestPrefillsTest extends TestCase
         $this->assertContains('partner_bsn', $recordKeys);
         $this->assertContains('child_1_first_name', $recordKeys);
         $this->assertContains('children_age_group_18_99', $recordKeys);
-        $this->assertContains('children_age_group_12_17_gender_female', $recordKeys);
+        $this->assertContains('children_age_group_12_17_gender_female_partner_female', $recordKeys);
     }
 }

@@ -123,7 +123,8 @@ class ProductSearch extends BaseSearch
 
         $builder = ProductQuery::approvedForFundsFilter(
             ProductQuery::inStockAndActiveFilter($builder),
-            $activeFunds
+            $activeFunds,
+            filterExcludedProviders: true
         );
 
         $builder->withCount('voucher_transactions');
@@ -141,11 +142,11 @@ class ProductSearch extends BaseSearch
         }
 
         if ($this->getFilter('fund_id')) {
-            $builder = ProductQuery::approvedForFundsFilter($builder, $this->getFilter('fund_id'));
+            $builder = ProductQuery::approvedForFundsFilter($builder, $this->getFilter('fund_id'), true);
         }
 
         if ($this->getFilter('fund_ids')) {
-            $builder = ProductQuery::approvedForFundsFilter($builder, $this->getFilter('fund_ids'));
+            $builder = ProductQuery::approvedForFundsFilter($builder, $this->getFilter('fund_ids'), true);
         }
 
         if ($price_type = $this->getFilter('price_type')) {

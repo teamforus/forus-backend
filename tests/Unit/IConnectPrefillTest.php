@@ -123,7 +123,7 @@ class IConnectPrefillTest extends TestCase
      */
     public function testGetChildrenPrefillsGroupsCounts(): void
     {
-        Config::set('forus.children_age_groups.unit-test', [[
+        Config::set('forus.children_age_groups.groups.unit-test', [[
             'record_type_key' => 'children_age_group_0_3',
             'from' => 0,
             'to' => 3,
@@ -193,8 +193,84 @@ class IConnectPrefillTest extends TestCase
 
         $this->assertSame(1, $groupCounts['children_age_group_0_3']['value']);
         $this->assertSame(2, $groupCounts['children_age_group_4_10']['value']);
-        $this->assertCount(3, $result['children']);
+        $this->assertSame(3, $result['children_count']);
         $this->assertSame('child_1_bsn', $result['children'][0][0]['record_type_key']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testGetChildrenPrefillsChildrenCountsByAge(): void
+    {
+        Config::set('forus.children_age_groups.base.unit-test', [
+            'from' => 0,
+            'to' => 17,
+        ]);
+
+        Config::set('forus.children_age_groups.groups.unit-test', [[
+            'record_type_key' => 'children_age_group_0_3',
+            'from' => 0,
+            'to' => 3,
+        ]]);
+
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($organization, [], ['key' => 'unit-test']);
+
+        $fund->criteria()->create([
+            'record_type_key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            'operator' => '>=',
+            'value' => 1,
+            'show_attachment' => false,
+            'optional' => true,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ]);
+
+        $fund->load('criteria', 'fund_config');
+
+        $children = [
+            new Person([
+                'burgerservicenummer' => '111111111',
+                'naam' => ['voornamen' => 'A', 'geslachtsnaam' => 'Alpha'],
+                'geboorte' => ['datum' => ['datum' => '2021-01-01']],
+                'geslachtsaanduiding' => 'M',
+                'leeftijd' => 2,
+            ]),
+            new Person([
+                'burgerservicenummer' => '222222222',
+                'naam' => ['voornamen' => 'B', 'geslachtsnaam' => 'Beta'],
+                'geboorte' => ['datum' => ['datum' => '2018-01-01']],
+                'geslachtsaanduiding' => 'V',
+                'leeftijd' => 5,
+            ]),
+            new Person([
+                'burgerservicenummer' => '333333333',
+                'naam' => ['voornamen' => 'C', 'geslachtsnaam' => 'Gamma'],
+                'geboorte' => ['datum' => ['datum' => '2013-01-01']],
+                'geslachtsaanduiding' => 'V',
+                'leeftijd' => 20,
+            ]),
+        ];
+
+        $prefill = new class ($children) extends IConnectPrefill {
+            public function __construct(private readonly array $children)
+            {
+            }
+
+            public function getChildrenPrefillsWithGroupCountsPublic(Fund $fund, Person $person): array
+            {
+                return $this->getChildrenPrefillsWithGroupCounts($fund, $person);
+            }
+
+            protected function getChildrenFromBsnApi(Fund $fund, Person $person): array
+            {
+                return $this->children;
+            }
+        };
+
+        $result = $prefill->getChildrenPrefillsWithGroupCountsPublic($fund, new Person([]));
+
+        $this->assertSame(2, $result['children_count']);
     }
 
     /**
@@ -202,7 +278,7 @@ class IConnectPrefillTest extends TestCase
      */
     public function testGetChildrenPrefillsReturnsEmptyWhenNotRequired(): void
     {
-        Config::set('forus.children_age_groups.unit-test-not-required', [[
+        Config::set('forus.children_age_groups.groups.unit-test-not-required', [[
             'record_type_key' => 'children_age_group_0_3',
             'from' => 0,
             'to' => 3,

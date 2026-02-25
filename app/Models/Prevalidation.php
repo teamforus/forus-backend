@@ -265,10 +265,10 @@ class Prevalidation extends Model
         array $overwriteKeys,
     ): EloquentCollection|array {
         $primaryKeyName = $fund->fund_config->csv_primary_key;
-        $topUpKeys = array_pluck($topUps, 'key');
+        $topUpKeys = Arr::pluck($topUps, 'key');
         $updateKeys = [...$topUpKeys, ...$overwriteKeys];
 
-        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+        $recordTypes = Arr::pluck(record_types_cached(), 'id', 'key');
         $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
             abort(500, 'Unknown csv_primary_key');
 
@@ -506,8 +506,8 @@ class Prevalidation extends Model
     protected function findVoucherForTopUp(Employee $employee, Fund $fund, string $primaryKey, string|int $voucherId): ?Voucher
     {
         $state = self::getDbState($employee->organization, $fund, $employee, $primaryKey);
-        $vouchers = array_get($state, '0.vouchers');
-        $targetVoucherId = array_get($state, '0.vouchers.0.id');
+        $vouchers = Arr::get($state, '0.vouchers');
+        $targetVoucherId = Arr::get($state, '0.vouchers.0.id');
 
         if (count($state) == 1 && count($vouchers) == 1 && $targetVoucherId == $voucherId) {
             return $fund->vouchers()->find($targetVoucherId);

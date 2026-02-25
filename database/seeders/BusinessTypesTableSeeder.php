@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Models\BusinessType;
 use App\Models\BusinessTypeTranslation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class BusinessTypesTableSeeder extends Seeder
 {
@@ -52,30 +54,30 @@ class BusinessTypesTableSeeder extends Seeder
         $taxonomiesNames = [];
 
         foreach ($locales as $localeKey => $locale) {
-            array_set($taxonomiesRaw, $localeKey, collect(
+            Arr::set($taxonomiesRaw, $localeKey, collect(
                 explode("\n", file_get_contents(database_path(
                     sprintf('/seeders/db/%s.%s.txt', $file, $locale)
                 )))
             )->filter(function ($row) {
-                return !empty($row) && !starts_with($row, ['#']);
+                return !empty($row) && !Str::startsWith($row, ['#']);
             })->map(function ($row) use ($localeKey, &$taxonomiesNames) {
                 list($id, $names) = explode(' - ', $row);
 
                 $names = explode(' > ', $names);
-                $keys = array_map('str_slug', $names);
+                $keys = array_map(fn (string $name) => Str::slug($name), $names);
 
                 if (!isset($taxonomiesNames[$id])) {
                     $taxonomiesNames[$id] = [];
                 }
 
-                array_set($taxonomiesNames[$id], $localeKey, $names);
+                Arr::set($taxonomiesNames[$id], $localeKey, $names);
 
                 return compact('id', 'names', 'keys');
             })->values());
         }
 
         return $taxonomiesRaw[$keyLocale]->map(function ($taxonomy) use ($taxonomiesNames) {
-            return array_set($taxonomy, 'names', array_map(static function (
+            return Arr::set($taxonomy, 'names', array_map(static function (
                 $nameKey
             ) use ($taxonomiesNames, $taxonomy) {
                 return array_map(static function ($names) use ($nameKey) {

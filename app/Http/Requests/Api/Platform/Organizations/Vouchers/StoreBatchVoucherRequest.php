@@ -8,6 +8,7 @@ use App\Rules\Base\IbanRule;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersArraySumAmountsRule;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
@@ -62,7 +63,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
      */
     public function attributes(): array
     {
-        $keys = array_dot(array_keys($this->rules()));
+        $keys = Arr::dot(array_keys($this->rules()));
 
         return array_combine($keys, array_map(static function ($key) {
             $value = last(explode('.', $key));

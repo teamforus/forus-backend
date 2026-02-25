@@ -356,7 +356,7 @@ class FundProvider extends Model
      */
     public function approveProducts(array $products): self
     {
-        $productIds = array_pluck($products, 'id');
+        $productIds = Arr::pluck($products, 'id');
         $oldProducts = $this->products()->pluck('products.id')->toArray();
         $newProducts = array_diff($productIds, $oldProducts);
 
@@ -471,7 +471,7 @@ class FundProvider extends Model
         }
 
         return [
-            ...array_only($productData, [
+            ...Arr::only($productData, [
                 'id', 'expire_at', 'payment_type', 'limit_total_unlimited', 'limit_per_identity_unlimited',
             ]),
             'amount' => !isset($productData['amount']) ? null : currency_format($productData['amount']),
