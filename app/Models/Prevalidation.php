@@ -508,7 +508,7 @@ class Prevalidation extends Model
      */
     public static function mapRawRecords(array $records): array
     {
-        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+        $recordTypes = Arr::pluck(record_types_cached(), 'id', 'key');
 
         return array_filter(array_map(static function ($key) use ($recordTypes, $records) {
             return (!$recordTypes[$key] || $key === 'primary_email') ? false : [
@@ -535,7 +535,7 @@ class Prevalidation extends Model
     ): array {
         $primaryKeyName = $fund->fund_config->csv_primary_key;
 
-        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+        $recordTypes = Arr::pluck(record_types_cached(), 'id', 'key');
         $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ??
             abort(500, 'Unknown csv_primary_key');
 
