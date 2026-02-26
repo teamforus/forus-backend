@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Events\PrevalidationRequests\PrevalidationRequestRecordsUpdatedEvent;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
 use App\Models\PrevalidationRequest;
@@ -9,6 +10,7 @@ use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Throwable;
 
@@ -26,7 +28,7 @@ class IConnectCliCommand extends BaseCommand
      *
      * @var string
      */
-    protected $description = 'Process prevalidations with new records from IConnect';
+    protected $description = 'Update prevalidation request records from IConnect and sync prevalidations';
 
     /**
      * @var bool
@@ -38,7 +40,10 @@ class IConnectCliCommand extends BaseCommand
      */
     protected array $stats = [
         'updated' => 0,
-        'skipped' => 0,
+        'skipped_no_diff' => 0,
+        'skipped_manual' => 0,
+        'skipped_invalid_link' => 0,
+        'skipped_records_mismatch' => 0,
         'failed' => 0,
     ];
 
@@ -99,52 +104,71 @@ class IConnectCliCommand extends BaseCommand
      */
     protected function updatePrevalidations(string $state): void
     {
-        $hours = $this->ask('Select prevalidations older than number of hours:', 5);
+        $hours = $this->ask('Select prevalidation requests older than number of hours:', 5);
 
-        $prevalidations = Prevalidation::query()
-            ->with(['prevalidation_request', 'records.record_type'])
-            ->where('state', $state)
-            ->whereHas('prevalidation_request', function (Builder $builder) use ($hours) {
-                $builder->where('state', PrevalidationRequest::STATE_SUCCESS);
-                $builder->where('fetched_date', '<=', now()->subHours($hours));
-            })
+        $requests = PrevalidationRequest::query()
+            ->with(['prevalidation.records.record_type', 'records', 'fund'])
+            ->where('state', PrevalidationRequest::STATE_SUCCESS)
+            ->where('fetched_date', '<=', now()->subHours($hours))
+            ->whereHas('prevalidation', fn (Builder $builder) => $builder->where('state', $state))
             ->get();
 
-        if ($prevalidations->isEmpty()) {
-            $this->printText('No prevalidations found!');
+        if ($requests->isEmpty()) {
+            $this->printText('No prevalidation requests found!');
             $this->printSeparator();
             $this->askAction();
 
             return;
         }
 
-        $proceed = $this->ask("{$prevalidations->count()} prevalidations found, proceed?", 'yes');
+        $proceed = $this->ask("{$requests->count()} prevalidation requests found, proceed?", 'yes');
 
         if ($proceed === 'yes') {
-            $this->processPrevalidations($prevalidations, $state);
+            $this->processPrevalidations($requests, $state);
             $this->printStats();
         }
     }
 
     /**
-     * @param Collection $prevalidations
+     * @param Collection $requests
      * @param string $state
      * @throws Throwable
      * @return void
      */
-    protected function processPrevalidations(Collection $prevalidations, string $state): void
+    protected function processPrevalidations(Collection $requests, string $state): void
     {
         $this->printText('Progress:');
-        $bar = $this->output->createProgressBar($prevalidations->count());
+        $bar = $this->output->createProgressBar($requests->count());
         $bar->start();
 
-        $prevalidations->each(function (Prevalidation $prevalidation) use ($bar, $state) {
+        $requests->each(function (PrevalidationRequest $request) use ($bar, $state) {
+            $prevalidations = Prevalidation::where('prevalidation_request_id', $request->id)->get();
+            $prevalidations_count = $prevalidations->count();
+
+            if ($prevalidations_count !== 1) {
+                $this->newLine();
+                $this->printText("Request #$request->id has $prevalidations_count linked prevalidations, skipping.");
+                $this->stats['skipped_invalid_link']++;
+                $this->addStatistic(prevalidationRequestId: $request->id, failed: 'invalid_link');
+                $bar->advance();
+
+                return;
+            }
+
+            $prevalidation = $prevalidations->first();
+
+            if ($this->recordsMismatch($request, $prevalidation)) {
+                $bar->advance();
+
+                return;
+            }
+
             if ($state === $prevalidation::STATE_PENDING) {
-                $this->updatePendingPrevalidation($prevalidation, $bar);
+                $this->updatePendingPrevalidation($request, $prevalidation, $bar);
             }
 
             if ($state === $prevalidation::STATE_USED) {
-                $this->updateUsedPrevalidation($prevalidation, $bar);
+                $this->updateUsedPrevalidation($request, $prevalidation, $bar);
             }
         });
 
@@ -154,14 +178,18 @@ class IConnectCliCommand extends BaseCommand
     }
 
     /**
+     * @param PrevalidationRequest $request
      * @param Prevalidation $prevalidation
      * @param ProgressBar $bar
      * @return void
      */
-    protected function updatePendingPrevalidation(Prevalidation $prevalidation, ProgressBar $bar): void
-    {
+    protected function updatePendingPrevalidation(
+        PrevalidationRequest $request,
+        Prevalidation $prevalidation,
+        ProgressBar $bar
+    ): void {
         $existingData = $this->getExistingRecordData($prevalidation);
-        $newData = $this->getNewRecordData($prevalidation);
+        $newData = $this->getNewRecordData($request, $prevalidation);
 
         if (!$newData) {
             $bar->advance();
@@ -173,7 +201,6 @@ class IConnectCliCommand extends BaseCommand
         // compare records
         $added = array_diff_key($newData, $existingData);
         $deleted = array_diff_key($existingData, $newData);
-
         $updated = [];
 
         foreach ($newData as $key => $value) {
@@ -187,7 +214,7 @@ class IConnectCliCommand extends BaseCommand
 
         if (!count($added) && !count($deleted) && !count($updated)) {
             $bar->advance();
-            $this->stats['skipped']++;
+            $this->stats['skipped_no_diff']++;
 
             return;
         }
@@ -196,34 +223,48 @@ class IConnectCliCommand extends BaseCommand
 
         // print difference between data
         if (count($added)) {
-            $this->printText("Found new records for prevalidation #$prevalidation->id:");
+            $this->printText("Found new records for request #$request->id, prevalidation #$prevalidation->id:");
             $this->table(['Record', 'Value'], $this->diffArrayToTableValues($added));
             $this->newLine();
         }
 
         if (count($updated)) {
-            $this->printText("Next records will be updated for prevalidation #$prevalidation->id:");
+            $this->printText("Records to update for request #$request->id, prevalidation #$prevalidation->id:");
             $this->table(['Record', 'Old value', 'New value'], $this->diffArrayToTableValues($updated, true));
             $this->newLine();
         }
 
         if (count($deleted)) {
-            $this->printText("Next records will be deleted for prevalidation #$prevalidation->id:");
+            $this->printText("Records to delete for request #$request->id, prevalidation #$prevalidation->id:");
             $this->table(['Record', 'Value'], $this->diffArrayToTableValues($deleted));
             $this->newLine();
         }
 
         $this->newLine();
 
-        $accepted = $this->acceptChangesPendingPrevalidation($prevalidation, $newData);
+        if ($this->acceptChangesPendingPrevalidation($request, $prevalidation, $newData)) {
+            Event::dispatch(new PrevalidationRequestRecordsUpdatedEvent(
+                $request,
+                $prevalidation->id,
+                $prevalidation->state,
+                'replace',
+                $added,
+                $updated,
+                $deleted,
+            ));
 
-        if ($accepted) {
             // add to stats
             $addedText = $this->diffArrayToString($added);
             $deletedText = $this->diffArrayToString($deleted);
             $updatedText = $this->diffArrayToString($updated, true);
 
-            $this->addStatistic($prevalidation->id, added: $addedText, updated: $updatedText, deleted: $deletedText);
+            $this->addStatistic(
+                prevalidationRequestId: $request->id,
+                prevalidationId: $prevalidation->id,
+                added: $addedText,
+                updated: $updatedText,
+                deleted: $deletedText
+            );
         }
 
         $this->newLine();
@@ -231,14 +272,18 @@ class IConnectCliCommand extends BaseCommand
     }
 
     /**
+     * @param PrevalidationRequest $request
      * @param Prevalidation $prevalidation
      * @param ProgressBar $bar
      * @return void
      */
-    protected function updateUsedPrevalidation(Prevalidation $prevalidation, ProgressBar $bar): void
-    {
+    protected function updateUsedPrevalidation(
+        PrevalidationRequest $request,
+        Prevalidation $prevalidation,
+        ProgressBar $bar
+    ): void {
         $existingData = $this->getExistingRecordData($prevalidation);
-        $newData = $this->getNewRecordData($prevalidation);
+        $newData = $this->getNewRecordData($request, $prevalidation);
 
         if (!$newData) {
             $bar->advance();
@@ -251,22 +296,31 @@ class IConnectCliCommand extends BaseCommand
 
         if (!count($added)) {
             $bar->advance();
-            $this->stats['skipped']++;
+            $this->stats['skipped_no_diff']++;
 
             return;
         }
 
         $this->newLine(2);
 
-        $this->printText("Found new records for prevalidation #$prevalidation->id:");
+        $this->printText("Found new records for request #$request->id, prevalidation #$prevalidation->id:");
         $this->table(['Record', 'Value'], $this->diffArrayToTableValues($added));
-
         $this->newLine();
 
-        $accepted = $this->acceptChangesUsedPrevalidation($prevalidation, $added);
+        $accepted = $this->acceptChangesUsedPrevalidation($request, $prevalidation, $added);
 
         if ($accepted) {
-            $this->addStatistic($prevalidation->id, added: $this->diffArrayToString($added));
+            Event::dispatch(new PrevalidationRequestRecordsUpdatedEvent(
+                $request,
+                $prevalidation->id,
+                $prevalidation->state,
+                'add',
+                $added,
+                [],
+                [],
+            ));
+
+            $this->addStatistic($request->id, $prevalidation->id, added: $this->diffArrayToString($added));
         }
 
         $this->newLine();
@@ -274,20 +328,19 @@ class IConnectCliCommand extends BaseCommand
     }
 
     /**
+     * @param PrevalidationRequest $request
      * @param Prevalidation $prevalidation
      * @return array|null
      */
-    protected function getNewRecordData(Prevalidation $prevalidation): ?array
+    protected function getNewRecordData(PrevalidationRequest $request, Prevalidation $prevalidation): ?array
     {
-        $request = $prevalidation->prevalidation_request;
-
         $fundPrefills = IConnectPrefill::getBsnApiPrefills($request->fund, $request->bsn, withResponseData: true);
 
         if (is_array($fundPrefills['error'])) {
             $this->newLine();
-            $this->printText("Prevalidation #$prevalidation->id:");
+            $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id:");
             $this->printText($this->red('Fetch from BRP failed: ' . Arr::get($fundPrefills, 'error.key')));
-            $this->addStatistic($prevalidation->id, failed: Arr::get($fundPrefills, 'error.key'));
+            $this->addStatistic($request->id, $prevalidation->id, failed: Arr::get($fundPrefills, 'error.key'));
 
             return null;
         }
@@ -296,14 +349,14 @@ class IConnectCliCommand extends BaseCommand
 
         if (!$request->recordsIsValid($request->fund, $newData)) {
             $this->newLine();
-            $this->printText("Prevalidation #$prevalidation->id:");
+            $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id:");
             $this->printText($this->red('Fetch from BRP failed: Invalid records for the fund'));
-            $this->addStatistic($prevalidation->id, failed: 'Invalid records for the fund');
+            $this->addStatistic($request->id, $prevalidation->id, failed: 'Invalid records for the fund');
 
             return null;
         }
 
-        $prevalidation->prevalidation_request->update(['fetched_date' => now()]);
+        $request->update(['fetched_date' => now()]);
 
         return $this->normalizeData($newData);
     }
@@ -320,12 +373,51 @@ class IConnectCliCommand extends BaseCommand
     }
 
     /**
+     * @param PrevalidationRequest $request
+     * @return array
+     */
+    protected function getRequestRecordData(PrevalidationRequest $request): array
+    {
+        return $this->normalizeData($request->records->pluck('value', 'record_type_key')->toArray());
+    }
+
+    /**
+     * @param PrevalidationRequest $request
+     * @param Prevalidation $prevalidation
+     * @return bool
+     */
+    protected function recordsMismatch(PrevalidationRequest $request, Prevalidation $prevalidation): bool
+    {
+        $requestData = $this->getRequestRecordData($request);
+        $existingData = $this->getExistingRecordData($prevalidation);
+
+        foreach ($existingData as $key => $value) {
+            if (!array_key_exists($key, $requestData) || $requestData[$key] != $value) {
+                $this->newLine();
+                $this->printText(
+                    "Request #$request->id, prevalidation #$prevalidation->id records mismatch, skipping."
+                );
+                $this->stats['skipped_records_mismatch']++;
+                $this->addStatistic($request->id, $prevalidation->id, failed: 'records_mismatch');
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param PrevalidationRequest $request
      * @param Prevalidation $prevalidation
      * @param array $newData
      * @return bool
      */
-    protected function acceptChangesPendingPrevalidation(Prevalidation $prevalidation, array $newData): bool
-    {
+    protected function acceptChangesPendingPrevalidation(
+        PrevalidationRequest $request,
+        Prevalidation $prevalidation,
+        array $newData
+    ): bool {
         if ($this->acceptAll) {
             $accept = 1;
         } else {
@@ -336,42 +428,48 @@ class IConnectCliCommand extends BaseCommand
                 '[3] Skip.',
             ]);
 
-            $accept = $this->ask('Would you like to update the prevalidation?', 1);
+            $accept = $this->ask('Would you like to update the prevalidation request?', 1);
         }
 
         switch ($accept) {
             case 1:
                 $prevalidation->updatePrevalidationRecords($newData);
-                $this->printText("Prevalidation #$prevalidation->id updated.");
+                $this->updatePrevalidationRequestRecords($request, $newData);
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id updated.");
                 $this->stats['updated']++;
 
                 return true;
             case 2:
                 $this->acceptAll = true;
                 $prevalidation->updatePrevalidationRecords($newData);
-                $this->printText("Prevalidation #$prevalidation->id updated.");
+                $this->updatePrevalidationRequestRecords($request, $newData);
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id updated.");
                 $this->stats['updated']++;
 
                 return true;
             case 3:
-                $this->printText("Prevalidation #$prevalidation->id skipped.");
-                $this->stats['skipped']++;
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id skipped.");
+                $this->stats['skipped_manual']++;
 
                 return false;
             default:
                 $this->printText("Invalid input!\nPlease try again:\n");
 
-                return $this->acceptChangesPendingPrevalidation($prevalidation, $newData);
+                return $this->acceptChangesPendingPrevalidation($request, $prevalidation, $newData);
         }
     }
 
     /**
+     * @param PrevalidationRequest $request
      * @param Prevalidation $prevalidation
      * @param array $addedData
      * @return bool
      */
-    protected function acceptChangesUsedPrevalidation(Prevalidation $prevalidation, array $addedData): bool
-    {
+    protected function acceptChangesUsedPrevalidation(
+        PrevalidationRequest $request,
+        Prevalidation $prevalidation,
+        array $addedData
+    ): bool {
         if ($this->acceptAll) {
             $accept = 1;
         } else {
@@ -382,33 +480,56 @@ class IConnectCliCommand extends BaseCommand
                 '[3] Skip.',
             ]);
 
-            $accept = $this->ask('Would you like to update the prevalidation?', 1);
+            $accept = $this->ask('Would you like to update the prevalidation request?', 1);
         }
 
         switch ($accept) {
             case 1:
                 $prevalidation->addPrevalidationRecords($addedData);
-                $this->printText("Prevalidation #$prevalidation->id updated.");
+                $this->addPrevalidationRequestRecords($request, $addedData);
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id updated.");
                 $this->stats['updated']++;
 
                 return true;
             case 2:
                 $this->acceptAll = true;
                 $prevalidation->addPrevalidationRecords($addedData);
-                $this->printText("Prevalidation #$prevalidation->id updated.");
+                $this->addPrevalidationRequestRecords($request, $addedData);
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id updated.");
                 $this->stats['updated']++;
 
                 return true;
             case 3:
-                $this->printText("Prevalidation #$prevalidation->id skipped.");
-                $this->stats['skipped']++;
+                $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id skipped.");
+                $this->stats['skipped_manual']++;
 
                 return false;
             default:
                 $this->printText("Invalid input!\nPlease try again:\n");
 
-                return $this->acceptChangesUsedPrevalidation($prevalidation, $addedData);
+                return $this->acceptChangesUsedPrevalidation($request, $prevalidation, $addedData);
         }
+    }
+
+    /**
+     * @param PrevalidationRequest $request
+     * @param array $records
+     * @return void
+     */
+    protected function updatePrevalidationRequestRecords(PrevalidationRequest $request, array $records): void
+    {
+        $request->records()->delete();
+        $request->records()->createMany($this->mapRequestRecords($records));
+    }
+
+    /**
+     * @param PrevalidationRequest $request
+     * @param array $records
+     * @return void
+     */
+    protected function addPrevalidationRequestRecords(PrevalidationRequest $request, array $records): void
+    {
+        $request->records()->createMany($this->mapRequestRecords($records));
     }
 
     /**
@@ -420,21 +541,27 @@ class IConnectCliCommand extends BaseCommand
 
         $this->printListWithValues([
             'Updated:' => $this->stats['updated'],
-            'Skipped:' => $this->stats['skipped'],
+            'Skipped (no changes):' => $this->stats['skipped_no_diff'],
+            'Skipped (manual):' => $this->stats['skipped_manual'],
+            'Skipped (invalid link):' => $this->stats['skipped_invalid_link'],
+            'Skipped (records mismatch):' => $this->stats['skipped_records_mismatch'],
             'Failed:' => $this->stats['failed'],
         ]);
 
         if (count($this->statsDetails)) {
             $this->newLine();
             $this->printHeader('Stats details:');
-            $this->table(['ID', 'Added', 'Updated', 'Deleted', 'Failed'], $this->statsDetails);
+            $this->table([
+                'Prevalidation request ID', 'Prevalidation ID', 'Added', 'Updated', 'Deleted', 'Failed',
+            ], $this->statsDetails);
         }
 
         $this->printSeparator();
     }
 
     /**
-     * @param int $id
+     * @param int $prevalidationRequestId
+     * @param int|null $prevalidationId
      * @param string $added
      * @param string $updated
      * @param string $deleted
@@ -442,19 +569,33 @@ class IConnectCliCommand extends BaseCommand
      * @return void
      */
     private function addStatistic(
-        int $id,
+        int $prevalidationRequestId,
+        ?int $prevalidationId = null,
         string $added = '',
         string $updated = '',
         string $deleted = '',
         string $failed = ''
     ): void {
         $this->statsDetails[] = [
-            'id' => $id,
+            'prevalidation_request_id' => $prevalidationRequestId,
+            'prevalidation_id' => $prevalidationId ?? '',
             'added' => $added,
             'updated' => $updated,
             'deleted' => $deleted,
             'failed' => $failed,
         ];
+    }
+
+    /**
+     * @param array $records
+     * @return array
+     */
+    private function mapRequestRecords(array $records): array
+    {
+        return array_map(fn ($value, $key) => [
+            'record_type_key' => $key,
+            'value' => is_null($value) ? '' : $value,
+        ], $records, array_keys($records));
     }
 
     /**

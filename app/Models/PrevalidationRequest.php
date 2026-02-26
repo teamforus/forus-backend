@@ -62,6 +62,7 @@ class PrevalidationRequest extends Model
     public const string EVENT_DELETED = 'deleted';
     public const string EVENT_RESUBMITTED = 'resubmitted';
     public const string EVENT_FAILED = 'failed';
+    public const string EVENT_RECORDS_UPDATED = 'records_updated';
 
     public const string STATE_PENDING = 'pending';
     public const string STATE_SUCCESS = 'success';
