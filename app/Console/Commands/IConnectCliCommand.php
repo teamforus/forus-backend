@@ -80,6 +80,7 @@ class IConnectCliCommand extends BaseCommand
      */
     protected function askAction(): void
     {
+        $this->resetStats();
         $this->printHeader('Select next action:');
         $this->printList($this->askActionList());
         $action = $this->ask('Please select next step:', 1);
@@ -637,5 +638,14 @@ class IConnectCliCommand extends BaseCommand
 
             return $value;
         })->toArray();
+    }
+
+    /**
+     * @return void
+     */
+    private function resetStats(): void
+    {
+        $this->stats = array_map(fn () => 0, $this->stats);
+        $this->statsDetails = [];
     }
 }
