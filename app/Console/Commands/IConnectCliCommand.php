@@ -189,7 +189,7 @@ class IConnectCliCommand extends BaseCommand
         Prevalidation $prevalidation,
         ProgressBar $bar
     ): void {
-        $existingData = $this->getExistingRecordData($prevalidation);
+        $existingData = $this->getPrevalidationRecordData($prevalidation);
         $newData = $this->getNewRecordData($request, $prevalidation);
 
         if (!$newData) {
@@ -283,7 +283,7 @@ class IConnectCliCommand extends BaseCommand
         Prevalidation $prevalidation,
         ProgressBar $bar
     ): void {
-        $existingData = $this->getExistingRecordData($prevalidation);
+        $existingData = $this->getPrevalidationRecordData($prevalidation);
         $newData = $this->getNewRecordData($request, $prevalidation);
 
         if (!$newData) {
@@ -366,7 +366,7 @@ class IConnectCliCommand extends BaseCommand
      * @param Prevalidation $prevalidation
      * @return array
      */
-    protected function getExistingRecordData(Prevalidation $prevalidation): array
+    protected function getPrevalidationRecordData(Prevalidation $prevalidation): array
     {
         return $this->normalizeData($prevalidation->records->mapWithKeys(fn (PrevalidationRecord $record) => [
             $record->record_type->key => $record->value,
@@ -390,10 +390,10 @@ class IConnectCliCommand extends BaseCommand
     protected function recordsMismatch(PrevalidationRequest $request, Prevalidation $prevalidation): bool
     {
         $requestData = $this->getRequestRecordData($request);
-        $existingData = $this->getExistingRecordData($prevalidation);
+        $existingData = $this->getPrevalidationRecordData($prevalidation);
 
-        foreach ($existingData as $key => $value) {
-            if (!array_key_exists($key, $requestData) || $requestData[$key] != $value) {
+        foreach ($requestData as $key => $value) {
+            if (!array_key_exists($key, $existingData) || $existingData[$key] != $value) {
                 $this->newLine();
                 $this->printText(
                     "Request #$request->id, prevalidation #$prevalidation->id records mismatch, skipping."
