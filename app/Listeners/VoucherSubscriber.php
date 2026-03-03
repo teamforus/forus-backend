@@ -12,14 +12,17 @@ use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Events\Vouchers\VoucherLimitUpdated;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
+use App\Events\Vouchers\VoucherSendToEmailBySponsorEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
-use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedByEmailNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
+use App\Notifications\Identities\Voucher\IdentitySponsorProductVoucherSharedByEmailNotification;
+use App\Notifications\Identities\Voucher\IdentitySponsorVoucherSharedByEmailNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedProductNotification;
@@ -271,31 +274,60 @@ class VoucherSubscriber
     }
 
     /**
-     * @param VoucherSendToEmailEvent $event
+     * @param VoucherSendToEmailBySponsorEvent $event
      * @noinspection PhpUnused
      */
-    public function onVoucherSendToEmail(VoucherSendToEmailEvent $event): void
+    public function onVoucherSendToEmailBySponsor(VoucherSendToEmailBySponsorEvent $event): void
     {
         $email = $event->getEmail();
         $voucher = $event->getVoucher();
 
         $eventLog = $voucher->log($voucher::EVENT_SHARED_BY_EMAIL, [
             'fund' => $voucher->fund,
+            'product' => $voucher->product,
             'sponsor' => $voucher->fund->organization,
+            'provider' => $voucher->product?->organization,
+            'implementation' => $voucher->fund->getImplementation(),
+        ], [
+            'email' => $email,
+            'qr_token' => $voucher->fund->fund_config->show_qr_code
+                ? $voucher->token_without_confirmation->address
+                : null,
+            'expiration_date' => format_date_locale($voucher->last_active_day),
+        ]);
+
+        if ($voucher->product) {
+            IdentitySponsorProductVoucherSharedByEmailNotification::send($eventLog);
+        } else {
+            IdentitySponsorVoucherSharedByEmailNotification::send($eventLog);
+        }
+    }
+
+    /**
+     * @param VoucherSendToEmailEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onVoucherSendToEmailByIdentity(VoucherSendToEmailEvent $event): void
+    {
+        $voucher = $event->getVoucher();
+
+        $eventLog = $voucher->log($voucher::EVENT_SHARED_BY_EMAIL, [
+            'fund' => $voucher->fund,
+            'product' => $voucher->product,
+            'sponsor' => $voucher->fund->organization,
+            'provider' => $voucher->product?->organization,
             'implementation' => $voucher->fund->getImplementation(),
         ], [
             'qr_token' => $voucher->fund->fund_config->show_qr_code
                 ? $voucher->token_without_confirmation->address
                 : null,
-            'voucher_product_or_fund_name' => $voucher->product->name ?? $voucher->fund->name,
         ]);
 
-        IdentityVoucherSharedByEmailNotification::send($eventLog);
-
-        resolve('forus.services.notification')->sendSystemMail($email, new SendVoucherMail(
-            $eventLog->data,
-            $voucher->fund->getEmailFrom()
-        ));
+        if ($voucher->product) {
+            IdentityProductVoucherSharedByEmailNotification::send($eventLog);
+        } else {
+            IdentityVoucherSharedByEmailNotification::send($eventLog);
+        }
     }
 
     /**
@@ -350,7 +382,8 @@ class VoucherSubscriber
         $events->listen(VoucherExpireSoon::class, "$class@onVoucherExpireSoon");
         $events->listen(VoucherExpired::class, "$class@onVoucherExpired");
         $events->listen(VoucherDeactivated::class, "$class@onVoucherDeactivated");
-        $events->listen(VoucherSendToEmailEvent::class, "$class@onVoucherSendToEmail");
+        $events->listen(VoucherSendToEmailEvent::class, "$class@onVoucherSendToEmailByIdentity");
+        $events->listen(VoucherSendToEmailBySponsorEvent::class, "$class@onVoucherSendToEmailBySponsor");
         $events->listen(VoucherPhysicalCardRequestedEvent::class, "$class@onVoucherPhysicalCardRequested");
     }
 }

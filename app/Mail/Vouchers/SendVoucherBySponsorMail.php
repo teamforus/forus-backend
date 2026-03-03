@@ -6,9 +6,9 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-class SendVoucherMail extends ImplementationMail
+class SendVoucherBySponsorMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = 'notifications_identities.voucher_shared_by_email';
+    public ?string $notificationTemplateKey = 'notifications_identities.sponsor_voucher_shared_by_email';
 
     /**
      * @throws CommonMarkException

@@ -188,7 +188,18 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             'address', 'city', 'fund_name', 'house', 'house_addition',
             'postcode', 'sponsor_email', 'sponsor_phone',
         ],
-        'notifications_identities.voucher_shared_by_email' => [],
+        'notifications_identities.voucher_shared_by_email' => [
+            'fund_name',
+        ],
+        'notifications_identities.product_voucher_shared_by_email' => [
+            'fund_name', 'product_name', 'provider_name',
+        ],
+        'notifications_identities.sponsor_voucher_shared_by_email' => [
+            'fund_name',
+        ],
+        'notifications_identities.sponsor_product_voucher_shared_by_email' => [
+            'fund_name', 'product_name', 'provider_name',
+        ],
         'notifications_identities.voucher_budget_transaction' => [
             'amount', 'fund_name', 'voucher_amount_locale',
         ],
