@@ -1,8 +1,9 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\MailTests;
 
 use App\Events\Vouchers\VoucherSendToEmailBySponsorEvent;
+use App\Mail\Vouchers\SendProductVoucherBySponsorMail;
 use App\Mail\Vouchers\SendVoucherBySponsorMail;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Traits\DoesTesting;
@@ -14,6 +15,7 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestVouchers;
 
 class VoucherSharedMailTest extends TestCase
 {
@@ -23,6 +25,7 @@ class VoucherSharedMailTest extends TestCase
     use MakesTestIdentities;
     use DatabaseTransactions;
     use MakesTestOrganizations;
+    use MakesTestVouchers;
 
     /**
      * Test voucher share email send.
@@ -71,5 +74,50 @@ class VoucherSharedMailTest extends TestCase
 
         $this->assertMailableNotSent($email, SendVoucherBySponsorMail::class, $startDate);
         $this->assertMailableSent($identity->email, SendVoucherBySponsorMail::class, $startDate);
+    }
+
+    /**
+     * @return void
+     */
+    public function testSponsorVoucherShareMailReplacesAmountAndExpirationDate(): void
+    {
+        $startDate = now();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, fundConfigsData: [
+            'show_qr_code' => true,
+        ]);
+
+        $voucher = $fund->makeVoucher();
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        Event::dispatch(new VoucherSendToEmailBySponsorEvent($voucher, $identity->email));
+
+        $emailLog = $this->findEmailLog($identity, SendVoucherBySponsorMail::class, $startDate);
+
+        $this->assertStringNotContainsString(':voucher_amount_locale', $emailLog->content);
+        $this->assertStringNotContainsString(':expiration_date', $emailLog->content);
+    }
+
+    /**
+     * @return void
+     */
+    public function testSponsorProductVoucherShareMailIncludesProductAndProvider(): void
+    {
+        $startDate = now();
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, fundConfigsData: [
+            'show_qr_code' => true,
+        ]);
+
+        $product = $this->makeTestProviderWithProducts(1)[0];
+        $voucher = $this->makeTestProductVoucher($fund, productId: $product->id);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        Event::dispatch(new VoucherSendToEmailBySponsorEvent($voucher, $identity->email));
+
+        $emailLog = $this->findEmailLog($identity, SendProductVoucherBySponsorMail::class, $startDate);
+
+        $this->assertStringContainsString($product->name, $emailLog->content);
+        $this->assertStringContainsString($product->organization->name, $emailLog->content);
     }
 }

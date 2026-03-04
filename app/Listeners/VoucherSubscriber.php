@@ -284,6 +284,7 @@ class VoucherSubscriber
 
         $eventLog = $voucher->log($voucher::EVENT_SHARED_BY_EMAIL, [
             'fund' => $voucher->fund,
+            'voucher' => $voucher,
             'product' => $voucher->product,
             'sponsor' => $voucher->fund->organization,
             'provider' => $voucher->product?->organization,
