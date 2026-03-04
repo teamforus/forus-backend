@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\PrevalidationRequests\PrevalidationRequestCreatedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestDeletedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestFailedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestRecordsUpdatedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmittedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdatedEvent;
 use App\Models\PrevalidationRequest;
@@ -83,6 +84,35 @@ class PrevalidationRequestSubscriber
     }
 
     /**
+     * @param PrevalidationRequestRecordsUpdatedEvent $event
+     * @throws Exception
+     * @noinspection PhpUnused
+     */
+    public function onPrevalidationRequestRecordsUpdated(PrevalidationRequestRecordsUpdatedEvent $event): void
+    {
+        $prevalidationRequest = $event->getPrevalidationRequest();
+        $addedKeys = array_keys($event->getAdded());
+        $updatedKeys = array_keys($event->getUpdated());
+        $deletedKeys = array_keys($event->getDeleted());
+
+        $prevalidationRequest->log(PrevalidationRequest::EVENT_RECORDS_UPDATED, [
+            'prevalidation_request' => $prevalidationRequest,
+            'organization' => $prevalidationRequest->organization,
+        ], [
+            'prevalidation_id' => $event->getPrevalidationId(),
+            'prevalidation_state' => $event->getPrevalidationState(),
+            'prevalidation_request_update_source' => 'cli',
+            'prevalidation_request_records_mode' => $event->getMode(),
+            'prevalidation_request_records_added_keys' => $addedKeys,
+            'prevalidation_request_records_updated_keys' => $updatedKeys,
+            'prevalidation_request_records_deleted_keys' => $deletedKeys,
+            'prevalidation_request_records_added_count' => count($addedKeys),
+            'prevalidation_request_records_updated_count' => count($updatedKeys),
+            'prevalidation_request_records_deleted_count' => count($deletedKeys),
+        ]);
+    }
+
+    /**
      * @param PrevalidationRequestDeletedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
@@ -114,5 +144,6 @@ class PrevalidationRequestSubscriber
         $events->listen(PrevalidationRequestFailedEvent::class, "$class@onPrevalidationRequestFailed");
         $events->listen(PrevalidationRequestDeletedEvent::class, "$class@onPrevalidationRequestDeleted");
         $events->listen(PrevalidationRequestStateResubmittedEvent::class, "$class@onPrevalidationRequestResubmitted");
+        $events->listen(PrevalidationRequestRecordsUpdatedEvent::class, "$class@onPrevalidationRequestRecordsUpdated");
     }
 }
