@@ -23,8 +23,7 @@ class SendVoucherRequest extends BaseFormRequest
     {
         return
             $this->organization->identityCan($this->identity(), Permission::MANAGE_VOUCHERS) &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->granted;
+            $this->voucher->fund->organization_id === $this->organization->id;
     }
 
     /**
@@ -36,7 +35,7 @@ class SendVoucherRequest extends BaseFormRequest
     {
         return [
             'email' => [
-                'required',
+                $this->voucher->granted ? 'nullable' : 'required',
                 new IdentityEmailExistsRule(),
                 ...$this->emailRules(),
             ],

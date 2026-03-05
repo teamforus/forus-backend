@@ -80,7 +80,10 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.voucher_expire_soon_budget' => ['database', 'mail'],
         'notifications_identities.voucher_expire_soon_product' => [], // TODO can database notifications be removed
         'notifications_identities.voucher_physical_card_requested' => ['database', 'mail'],
-        'notifications_identities.voucher_shared_by_email' => ['database'],
+        'notifications_identities.voucher_shared_by_email' => ['mail'],
+        'notifications_identities.product_voucher_shared_by_email' => ['mail'],
+        'notifications_identities.sponsor_voucher_shared_by_email' => ['mail'],
+        'notifications_identities.sponsor_product_voucher_shared_by_email' => ['mail'],
         'notifications_identities.voucher_budget_transaction' => ['database', 'mail', 'push'],
         'notifications_identities.product_voucher_transaction' => ['database', 'push'],
 
@@ -149,6 +152,11 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.product_voucher_transaction',
         'notifications_identities.voucher_budget_transaction',
 
+        'notifications_identities.voucher_shared_by_email',
+        'notifications_identities.product_voucher_shared_by_email',
+        'notifications_identities.sponsor_voucher_shared_by_email',
+        'notifications_identities.sponsor_product_voucher_shared_by_email',
+
         'notifications_fund_providers.bunq_transaction_success',
     ];
 
@@ -174,6 +182,11 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.voucher_expire_soon_budget',
         'notifications_identities.voucher_expire_soon_product',
         'notifications_identities.voucher_physical_card_requested',
+
+        'notifications_identities.voucher_shared_by_email',
+        'notifications_identities.product_voucher_shared_by_email',
+        'notifications_identities.sponsor_voucher_shared_by_email',
+        'notifications_identities.sponsor_product_voucher_shared_by_email',
     ];
 
     protected array $notificationGroups = [
@@ -199,6 +212,10 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_identities.voucher_expire_soon_product',
             'notifications_identities.product_voucher_expired',
             'notifications_identities.voucher_physical_card_requested',
+            'notifications_identities.voucher_shared_by_email',
+            'notifications_identities.product_voucher_shared_by_email',
+            'notifications_identities.sponsor_voucher_shared_by_email',
+            'notifications_identities.sponsor_product_voucher_shared_by_email',
         ],
         'requester_transactions' => [
             'notifications_identities.requester_provider_approved_products',
@@ -210,7 +227,6 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_identities.product_voucher_shared',
             'notifications_identities.product_reservation_rejected',
             'notifications_identities.product_reservation_canceled',
-            'notifications_identities.voucher_shared_by_email',
             'notifications_identities.voucher_budget_transaction',
             'notifications_identities.product_voucher_transaction',
         ],

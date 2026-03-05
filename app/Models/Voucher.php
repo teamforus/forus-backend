@@ -787,11 +787,11 @@ class Voucher extends Model
     }
 
     /**
-     * @param string|null $email
+     * @return void
      */
-    public function sendToEmail(string $email = null): void
+    public function sendToEmail(): void
     {
-        VoucherSendToEmailEvent::dispatch($this, $email);
+        Event::dispatch(new VoucherSendToEmailEvent($this));
     }
 
     /**
