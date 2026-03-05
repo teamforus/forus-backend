@@ -216,6 +216,7 @@ class FundResource extends BaseJsonResource
                     'help_description_html', 'criteria_label_requirement_show',
                     'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
                     'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
+                    'hide_voucher_amount',
                 ]),
                 ...$fund->fund_config->translateColumns($fund->fund_config->only([
                     'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
