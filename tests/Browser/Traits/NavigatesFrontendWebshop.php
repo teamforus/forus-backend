@@ -69,4 +69,17 @@ trait NavigatesFrontendWebshop
         $browser->waitFor('@userVouchers');
         $browser->element('@userVouchers')->click();
     }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function goToReimbursementsPage(Browser $browser): void
+    {
+        $browser->waitFor('@userVouchers');
+        $browser->press('@userVouchers');
+        $browser->waitFor('@menuBtnReimbursements');
+        $browser->press('@menuBtnReimbursements');
+    }
 }
