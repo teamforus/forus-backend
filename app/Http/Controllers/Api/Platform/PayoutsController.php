@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Helpers\Number;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Payouts\IndexPayoutsRequest;
 use App\Http\Requests\Api\Platform\Payouts\StorePayoutRequest;
@@ -87,7 +88,17 @@ class PayoutsController extends Controller
                 }
             }
 
-            if (VoucherPayoutAmountRule::exceedsBalance($amount, (float) $voucher->amount_available)) {
+            $partialAmounts = $voucher->getPayoutPartialAmounts();
+
+            if (is_array($partialAmounts)) {
+                $allowedCents = array_map(fn (string $amount) => Number::toCents((float) $amount), $partialAmounts);
+
+                if (!in_array(Number::toCents($amount), $allowedCents, true)) {
+                    throw ValidationException::withMessages([
+                        'amount' => [trans('validation.payout.amount_partial')],
+                    ]);
+                }
+            } elseif (VoucherPayoutAmountRule::exceedsBalance($amount, (float) $voucher->amount_available)) {
                 throw ValidationException::withMessages([
                     'amount' => [VoucherPayoutAmountRule::balanceExceededMessage($voucher)],
                 ]);
