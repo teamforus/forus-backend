@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\Funds\FundVouchersExportedEvent;
 use App\Events\Vouchers\VoucherLimitUpdated;
+use App\Events\Vouchers\VoucherSendToEmailBySponsorEvent;
 use App\Exports\VoucherExport;
 use App\Helpers\Arr;
 use App\Http\Controllers\Controller;
@@ -481,7 +482,10 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('sendByEmailSponsor', [$voucher, $organization]);
 
-        $voucher->sendToEmail($request->post('email'));
+        Event::dispatch(new VoucherSendToEmailBySponsorEvent(
+            $voucher,
+            $voucher->granted ? null : $request->post('email')
+        ));
 
         return SponsorVoucherResource::create($voucher);
     }
