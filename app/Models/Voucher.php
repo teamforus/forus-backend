@@ -14,6 +14,7 @@ use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
+use App\Helpers\Number;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -457,6 +458,61 @@ class Voucher extends Model
             ->hasMany(VoucherTransaction::class)
             ->where('target', VoucherTransaction::TARGET_PAYOUT)
             ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getPayoutPartialAmounts(): ?array
+    {
+        // check that voucher payouts and allowed and partial payouts enabled
+        if (!$this->fund?->fund_config?->allow_voucher_payouts ||
+            !$this->fund?->fund_config?->allow_voucher_payouts_partial) {
+            return null;
+        }
+
+        // check that has exactly one payout formula and is of multiply type
+        if ($this->fund?->fund_payout_formulas?->count() !== 1 ||
+            $this->fund->fund_payout_formulas[0]->type !== FundPayoutFormula::TYPE_MULTIPLY) {
+            return null;
+        }
+
+        $formula = $this->fund->fund_payout_formulas[0];
+        $unitCents = Number::toCents((float) $formula->amount);
+
+        if ($unitCents <= 0) {
+            return [];
+        }
+
+        $recordValue = 0;
+
+        if ($formula->record_type_key && $this->identity) {
+            $record = $this->fund->getTrustedRecordOfType($this->identity, $formula->record_type_key);
+            $recordValue = is_numeric($record?->value) ? (int) $record->value : 0;
+        }
+
+        $amountCents = Number::toCents(((float) $formula->amount) * $recordValue);
+        $maxCents = Number::toCents($formula->getMaxAmount());
+        $totalCents = $maxCents <= 0 ? 0 : min($amountCents, $maxCents);
+
+        $requesterPayoutsAmount = (float) $this->requester_payouts()
+            ->selectRaw('IFNULL(SUM(IFNULL(amount_voucher, amount)), 0) as total')
+            ->value('total');
+
+        $totalCents = max(0, $totalCents);
+        $remainingCents = max(0, $totalCents - Number::toCents($requesterPayoutsAmount));
+
+        $balanceCents = Number::toCents((float) $this->amount_available);
+        $remainingCents = min($remainingCents, $balanceCents);
+
+        if ($remainingCents < $unitCents) {
+            return [];
+        }
+
+        return array_map(
+            fn (int $count) => currency_format(($unitCents * $count) / 100),
+            range(1, intdiv($remainingCents, $unitCents)),
+        );
     }
 
     /**
