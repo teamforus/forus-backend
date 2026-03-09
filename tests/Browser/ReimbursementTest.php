@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\NavigatesFrontendWebshop;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestVouchers;
@@ -25,6 +26,7 @@ class ReimbursementTest extends DuskTestCase
     use AssertsSentEmails;
     use HasFrontendActions;
     use MakesTestIdentities;
+    use NavigatesFrontendWebshop;
 
     /**
      * @throws Throwable
@@ -615,19 +617,6 @@ class ReimbursementTest extends DuskTestCase
         $browser->element('@reimbursementAssign')->click();
 
         $this->assertAndCloseSuccessNotification($browser);
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws TimeOutException
-     * @return void
-     */
-    private function goToReimbursementsPage(Browser $browser): void
-    {
-        $browser->waitFor('@userVouchers');
-        $browser->press('@userVouchers');
-        $browser->waitFor('@menuBtnReimbursements');
-        $browser->press('@menuBtnReimbursements');
     }
 
     /**
