@@ -7,7 +7,10 @@ use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Prevalidation;
+use App\Models\Record;
 use App\Models\RecordType;
+use App\Models\RecordValidation;
 use App\Models\Voucher;
 
 trait MakesRequesterVoucherPayouts
@@ -121,5 +124,82 @@ trait MakesRequesterVoucherPayouts
     private function getPayoutIbanRecordKeys(): array
     {
         return ['iban_requester_payout', 'iban_name_requester_payout'];
+    }
+
+    /**
+     * @param Organization $organization
+     * @param string $recordTypeKey
+     * @return RecordType
+     */
+    protected function ensureNumberRecordType(Organization $organization, string $recordTypeKey): RecordType
+    {
+        $recordType = RecordType::query()
+            ->where('organization_id', $organization->id)
+            ->where('key', $recordTypeKey)
+            ->first();
+
+        if ($recordType) {
+            if (!$recordType->criteria) {
+                $recordType->forceFill(['criteria' => true])->save();
+            }
+
+            return $recordType;
+        }
+
+        return RecordType::create([
+            'organization_id' => $organization->id,
+            'criteria' => true,
+            'type' => RecordType::TYPE_NUMBER,
+            'key' => $recordTypeKey,
+        ]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param FundRequest $fundRequest
+     * @param string $recordTypeKey
+     * @param string|float $value
+     * @return void
+     */
+    protected function createTrustedRecord(
+        Identity $identity,
+        Fund $fund,
+        FundRequest $fundRequest,
+        string $recordTypeKey,
+        string|float $value,
+    ): void {
+        $recordType = $this->ensureNumberRecordType($fund->organization, $recordTypeKey);
+
+        Record::where('identity_address', $identity->address)
+            ->where('record_type_id', $recordType->id)
+            ->forceDelete();
+
+        $record = Record::create([
+            'identity_address' => $identity->address,
+            'record_type_id' => $recordType->id,
+            'fund_request_id' => $fundRequest->id,
+            'organization_id' => $fund->organization_id,
+            'value' => (string) $value,
+            'order' => 0,
+        ]);
+
+        $prevalidation = Prevalidation::create([
+            'uid' => token_generator()->generate(32),
+            'identity_address' => $identity->address,
+            'fund_id' => $fund->id,
+            'organization_id' => $fund->organization_id,
+            'state' => Prevalidation::STATE_PENDING,
+            'validated_at' => now(),
+        ]);
+
+        RecordValidation::create([
+            'record_id' => $record->id,
+            'state' => RecordValidation::STATE_APPROVED,
+            'uuid' => token_generator()->generate(64),
+            'identity_address' => $identity->address,
+            'organization_id' => $fund->organization_id,
+            'prevalidation_id' => $prevalidation->id,
+        ]);
     }
 }
