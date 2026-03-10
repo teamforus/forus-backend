@@ -249,7 +249,12 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $this->assignSponsor($identity, $voucher, $organization);
+        return
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS) &&
+            $voucher->fund->organization_id === $organization->id &&
+            $voucher->fund->isConfigured() &&
+            !$voucher->fund->external &&
+            !$voucher->deactivated;
     }
 
     /**

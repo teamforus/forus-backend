@@ -28,7 +28,7 @@ class FundRequestApprovedMail extends ImplementationMail
         return [
             'app_link' => $this->makeLink($data['app_link'], 'download de Me-app'),
             'webshop_link' => $this->makeLink($data['webshop_link'], 'hier'),
-            'webshop_button' => $this->makeButton($data['webshop_link'], 'Activeer tegoed'),
+            'webshop_button' => $this->makeButton($data['webshop_link'], 'Ga naar webshop'),
         ];
     }
 }
