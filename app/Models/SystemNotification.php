@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\SystemNotification.
@@ -88,10 +89,11 @@ class SystemNotification extends Model
         if ($implementation) {
             $databaseTemplates = $databaseTemplates
                 ->where('implementation_id', $implementation->id)
-                ->where('formal', !$implementation->informal_communication)
-                ->whereIn('fund_id', [null, $fund_id]);
+                ->where('formal', !$implementation->informal_communication);
 
-            if (!$implementation->allow_per_fund_notification_templates) {
+            if ($this->usesFundTemplate($implementation, $fund_id)) {
+                $databaseTemplates = $databaseTemplates->whereIn('fund_id', [null, $fund_id]);
+            } else {
                 $databaseTemplates = $databaseTemplates->where('fund_id', null);
             }
 
@@ -174,20 +176,146 @@ class SystemNotification extends Model
     }
 
     /**
-     * @param int|null $implementationId
+     * @param Implementation|null $implementation
+     * @param int|null $fundId
      * @return array
      */
-    public function channels(int $implementationId = null): array
+    public function channels(?Implementation $implementation = null, ?int $fundId = null): array
     {
-        /** @var SystemNotificationConfig|null $configs */
-        $configs = $this->optional ? $this->system_notification_configs : null;
-        $config = $configs?->where('implementation_id', $implementationId)->first();
+        $config = $this->getConfig($implementation);
+        $fundConfig = $this->usesFundConfig($implementation, $fundId) ? $this->getConfig($implementation, $fundId) : null;
 
-        return ($config && !$config->enable_all) ? [] : array_filter([
-            ($this->database && (!$config || $config->enable_database)) ? 'database' : false,
-            ($this->mail && (!$config || $config->enable_mail)) ? 'mail' : false,
-            ($this->push && (!$config || $config->enable_push)) ? 'push' : false,
+        $implementationEnabled = $config?->enable_all ?? true;
+        $fundEnabled = $fundConfig?->enable_all ?? true;
+        $enableAll = $implementationEnabled && $fundEnabled;
+
+        return !$enableAll ? [] : array_filter([
+            ($this->database && ($config?->enable_database ?? true) && ($fundConfig?->enable_database ?? true)) ? 'database' : false,
+            ($this->mail && ($config?->enable_mail ?? true) && ($fundConfig?->enable_mail ?? true)) ? 'mail' : false,
+            ($this->push && ($config?->enable_push ?? true) && ($fundConfig?->enable_push ?? true)) ? 'push' : false,
         ]);
+    }
+
+    /**
+     * @param Implementation|null $implementation
+     * @param int|null $fundId
+     * @return SystemNotificationConfig|null
+     */
+    public function getConfig(?Implementation $implementation, ?int $fundId = null): ?SystemNotificationConfig
+    {
+        if (!$this->optional || !$implementation) {
+            return null;
+        }
+
+        $configs = $this->system_notification_configs->where('implementation_id', $implementation->id);
+
+        return is_null($fundId)
+            ? $configs->whereNull('fund_id')->first()
+            : $configs->where('fund_id', $fundId)->first();
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $values
+     * @param int|null $fundId
+     * @return SystemNotificationConfig
+     */
+    public function updateConfig(Implementation $implementation, array $values, ?int $fundId = null): SystemNotificationConfig
+    {
+        $query = $this->system_notification_configs()->where('implementation_id', $implementation->id);
+        $configFundId = $this->usesFundConfig($implementation, $fundId) ? $fundId : null;
+
+        if (is_null($configFundId)) {
+            $configs = $query->whereNull('fund_id')->orderBy('id')->get();
+
+            if ($configs->count() > 1) {
+                $configs->slice(1)->each->delete();
+            }
+        }
+
+        return $this->system_notification_configs()->updateOrCreate([
+            'implementation_id' => $implementation->id,
+            'fund_id' => $configFundId,
+        ], $values);
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $templates
+     * @param int|null $fundId
+     * @return void
+     */
+    public function syncTemplates(Implementation $implementation, array $templates, ?int $fundId = null): void
+    {
+        foreach ($templates as $template) {
+            $templateFundId = $this->resolveTemplateFundId($implementation, $template, $fundId);
+
+            $this->templates()->updateOrCreate([
+                'implementation_id' => $implementation->id,
+                'fund_id' => $templateFundId,
+                'type' => $template['type'],
+                'formal' => $template['formal'],
+            ], Arr::only($template, [
+                'title', 'content',
+            ]));
+        }
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $templates
+     * @param int|null $fundId
+     * @return void
+     */
+    public function removeTemplates(Implementation $implementation, array $templates, ?int $fundId = null): void
+    {
+        foreach ($templates as $template) {
+            $templateFundId = $this->resolveTemplateFundId($implementation, $template, $fundId);
+
+            $this->templates()->where([
+                'implementation_id' => $implementation->id,
+                'fund_id' => $templateFundId,
+                'type' => $template['type'],
+                'formal' => $template['formal'],
+            ])->delete();
+        }
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $template
+     * @param int|null $fundId
+     * @return int|null
+     */
+    public function resolveTemplateFundId(Implementation $implementation, array $template, ?int $fundId): ?int
+    {
+        $templateFundId = Arr::get($template, 'fund_id');
+
+        if ($this->usesFundTemplate($implementation, $fundId)) {
+            return $fundId;
+        }
+
+        return $this->usesFundTemplate($implementation, $templateFundId) ? $templateFundId : null;
+    }
+
+    /**
+     * @param Implementation|null $implementation
+     * @param int|null $fundId
+     * @return bool
+     */
+    public function usesFundConfig(?Implementation $implementation, ?int $fundId): bool
+    {
+        return $this->optional && $this->usesFundTemplate($implementation, $fundId);
+    }
+
+    /**
+     * @param Implementation|null $implementation
+     * @param int|null $fundId
+     * @return bool
+     */
+    public function usesFundTemplate(?Implementation $implementation, ?int $fundId): bool
+    {
+        return $implementation?->allow_per_fund_notification_templates && !is_null($fundId);
     }
 
     /**

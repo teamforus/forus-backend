@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Implementations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\IndexSystemNotificationsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\ShowSystemNotificationRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications\UpdateSystemNotificationsRequest;
 use App\Http\Resources\SystemNotificationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\SystemNotification;
+use App\Models\SystemNotificationConfig;
 use App\Services\Forus\Notification\Repositories\NotificationRepo;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Arr;
 
 class SystemNotificationsController extends Controller
 {
@@ -43,14 +42,12 @@ class SystemNotificationsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param ShowSystemNotificationRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @param SystemNotification $systemNotification
      * @return SystemNotificationResource
      */
     public function show(
-        ShowSystemNotificationRequest $request,
         Organization $organization,
         Implementation $implementation,
         SystemNotification $systemNotification
@@ -59,10 +56,8 @@ class SystemNotificationsController extends Controller
         $this->authorize('viewAny', [Implementation::class, $organization]);
         $this->authorize('view', [$implementation, $organization]);
 
-        $funds = $organization->funds;
-
         return SystemNotificationResource::create($systemNotification, [
-            'fundIds' => (array) $request->get('fund_id') ?: $funds->pluck('id')->toArray(),
+            'withLastSentData' => true,
         ]);
     }
 
@@ -87,34 +82,21 @@ class SystemNotificationsController extends Controller
         $this->authorize('view', [$implementation, $organization]);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $systemNotification->system_notification_configs()->updateOrCreate([
-            'implementation_id' => $implementation->id,
-        ], $request->only('enable_all', 'enable_mail', 'enable_push', 'enable_database'));
+        $fundId = $request->input('fund_id');
 
-        foreach ($request->input('templates', []) as $template) {
-            $systemNotification->templates()->updateOrCreate(array_merge([
-                'implementation_id' => $implementation->id,
-                'fund_id' => null,
-                'type' => $template['type'],
-                'formal' => $template['formal'],
-            ], $implementation->allow_per_fund_notification_templates ? [
-                'fund_id' => $template['fund_id'] ?? null,
-            ] : []), Arr::only($template, [
-                'title', 'content',
-            ]));
+        if ($systemNotification->optional && $request->hasAny(SystemNotificationConfig::ENABLE_FIELDS)) {
+            $systemNotification->updateConfig(
+                $implementation,
+                $request->only(SystemNotificationConfig::ENABLE_FIELDS),
+                $fundId,
+            );
         }
 
-        foreach ($request->input('templates_remove', []) as $template) {
-            $systemNotification->templates()->where(array_merge([
-                'implementation_id' => $implementation->id,
-                'fund_id' => null,
-                'type' => $template['type'],
-                'formal' => $template['formal'],
-            ], $implementation->allow_per_fund_notification_templates ? [
-                'fund_id' => $template['fund_id'] ?? null,
-            ] : []))->delete();
-        }
+        $systemNotification->syncTemplates($implementation, $request->input('templates', []), $fundId);
+        $systemNotification->removeTemplates($implementation, $request->input('templates_remove', []), $fundId);
 
-        return SystemNotificationResource::create($systemNotification);
+        return SystemNotificationResource::create($systemNotification, [
+            'withLastSentData' => true,
+        ]);
     }
 }
