@@ -1046,12 +1046,22 @@ class Fund extends Model
                         return 0.0;
                     }
 
-                    $record = $identity
-                        ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)
+                    $value = $identity
+                        ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)?->value
                         : null;
-                    $value = $record?->value;
 
-                    return is_numeric($value) ? (float) $formula->amount * (float) $value : 0.0;
+                    if (!is_numeric($value)) {
+                        return 0.0;
+                    }
+
+                    $amount = (float) $formula->amount * (float) $value;
+                    $maxAmount = $formula->getMaxAmount();
+
+                    if ($maxAmount <= 0) {
+                        return 0.0;
+                    }
+
+                    return min($amount, $maxAmount);
                 default:
                     return 0.0;
             }
