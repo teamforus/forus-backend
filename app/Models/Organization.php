@@ -302,6 +302,9 @@ class Organization extends Model
     use HasMarkdownFields;
     use HasOnDemandTranslations;
 
+    public const string EVENT_CREATED = 'created';
+    public const string EVENT_UPDATED = 'updated';
+
     public const string GENERIC_KVK = '00000000';
 
     public const string FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
