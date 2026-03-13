@@ -263,4 +263,17 @@ trait NavigatesFrontendDashboard
         $browser->waitFor('@eventLogsPage');
         $browser->element('@eventLogsPage')->click();
     }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToNotificationsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupWebsites');
+        $browser->element('@asideMenuGroupWebsites')->click();
+        $browser->waitFor('@implementationNotificationsPage');
+        $browser->element('@implementationNotificationsPage')->click();
+    }
 }
