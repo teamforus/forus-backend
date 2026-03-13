@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Throwable;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
@@ -281,11 +282,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function getChannels(): array
     {
-        $systemNotification = SystemNotification::findByKey(static::$key);
-
-        return $systemNotification ? $systemNotification->channels(
-            $this->implementation->id ?? Implementation::general()?->id
-        ) : [];
+        return SystemNotification::findByKey(static::$key)
+            ?->channels($this->getImplementation(Implementation::general()), $this->getFundId()) ?? [];
     }
 
     /**
@@ -330,7 +328,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             $channels[] = MailChannel::class;
         }
 
-        if (in_array('push', $channelKeys) && !env('DISABLE_PUSH', false)) {
+        if (in_array('push', $channelKeys) && !Config::get('forus.notifications.disable_push', false)) {
             $channels[] = PushChannel::class;
         }
 
@@ -345,11 +343,12 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function toDatabase(): array
     {
-        return array_merge([
+        return [
             'key' => static::$key,
             'scope' => static::$scope,
             'event_id' => $this->eventLog->id,
-        ], $this->meta);
+            ...$this->meta,
+        ];
     }
 
     /**
@@ -371,8 +370,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public function toPush(Identity $identity): void
     {
         $template = SystemNotification::findByKey(static::getKey())->findTemplate(
-            $this->implementation ?? Implementation::general(),
-            $this->eventLog?->data['fund_id'] ?? null,
+            $this->getImplementation(Implementation::general()),
+            $this->getFundId(),
             'push',
         );
 
@@ -382,6 +381,23 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             str_var_replace($template->content, $this->eventLog->data),
             static::getPushKey()
         );
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getFundId(): ?int
+    {
+        return $this->eventLog?->data['fund_id'] ?? null;
+    }
+
+    /**
+     * @param Implementation $fallback
+     * @return Implementation|null
+     */
+    public function getImplementation(Implementation $fallback): ?Implementation
+    {
+        return $this->implementation ?? $fallback;
     }
 
     /**
