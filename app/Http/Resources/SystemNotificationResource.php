@@ -52,10 +52,10 @@ class SystemNotificationResource extends BaseJsonResource
             'variables' => BaseNotification::getVariables($notification->key),
             'channels' => $notification->baseChannels(),
             'templates' => NotificationTemplateResource::collection(
-                $this->getTemplates($notification, $templates, $implementation, $formal),
+                $this->getTemplates($templates, $implementation, $formal),
             ),
             'templates_default' => NotificationTemplateResource::collection(
-                $this->getTemplates($notification, $templates, Implementation::general(), $formal),
+                $this->getTemplates($templates, Implementation::general(), $formal),
             ),
             ...($this->withLastSentData
                 ? $this->getLastSentData($notification, $implementation->funds->pluck('id')->toArray())
@@ -83,17 +83,15 @@ class SystemNotificationResource extends BaseJsonResource
     }
 
     /**
-     * @param SystemNotification $notification
      * @param Collection|NotificationTemplate $templates
      * @param Implementation|null $implementation
      * @param bool $formalCommunication
      * @return Collection
      */
     public function getTemplates(
-        SystemNotification $notification,
         Collection|NotificationTemplate $templates,
         ?Implementation $implementation,
-        bool $formalCommunication
+        bool $formalCommunication,
     ): Collection {
         if (!$implementation) {
             return new Collection();
@@ -123,20 +121,25 @@ class SystemNotificationResource extends BaseJsonResource
         Collection|SystemNotificationConfig $configs,
         bool $withLastSentData,
     ): array {
-        return $implementation->funds->map(function (Fund $fund) use ($notification, $configs, $withLastSentData) {
-            $fundConfig = $notification->optional
-                ? $configs->where('fund_id', $fund->id)->first()
-                : null;
+        return $implementation
+            ->funds
+            ->sortBy('id')
+            ->map(function (Fund $fund) use ($notification, $configs, $withLastSentData) {
+                $fundConfig = $notification->optional
+                    ? $configs->where('fund_id', $fund->id)->first()
+                    : null;
 
-            return [
-                'id' => $fund->id,
-                'name' => $fund->name,
-                'enable_all' => $fundConfig?->enable_all ?? true,
-                'enable_mail' => $fundConfig?->enable_mail ?? true,
-                'enable_push' => $fundConfig?->enable_push ?? true,
-                'enable_database' => $fundConfig?->enable_database ?? true,
-                ...($withLastSentData ? $this->getLastSentData($notification, [$fund->id]) : []),
-            ];
-        })->values()->all();
+                return [
+                    'id' => $fund->id,
+                    'name' => $fund->name,
+                    'enable_all' => $fundConfig?->enable_all ?? true,
+                    'enable_mail' => $fundConfig?->enable_mail ?? true,
+                    'enable_push' => $fundConfig?->enable_push ?? true,
+                    'enable_database' => $fundConfig?->enable_database ?? true,
+                    ...($withLastSentData ? $this->getLastSentData($notification, [$fund->id]) : []),
+                ];
+            })
+            ->values()
+            ->all();
     }
 }
