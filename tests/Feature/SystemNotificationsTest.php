@@ -4,25 +4,27 @@ namespace Tests\Feature;
 
 use App\Helpers\Arr;
 use App\Models\Fund;
-use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Notification;
 use App\Models\SystemNotification;
 use App\Models\Voucher;
-use App\Services\MediaService\Traits\UsesMediaService;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Collection;
+use App\Services\EventLogService\Models\EventLog;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestVouchers;
 
 class SystemNotificationsTest extends TestCase
 {
     use WithFaker;
-    use UsesMediaService;
     use MakesTestVouchers;
+    use MakesTestFunds;
+    use MakesTestOrganizations;
     use DatabaseTransactions;
 
     protected array $templateStructure = [
@@ -30,7 +32,8 @@ class SystemNotificationsTest extends TestCase
     ];
 
     protected array $systemNotificationStructure = [
-        'editable', 'enable_all', 'enable_database', 'enable_mail', 'enable_push', 'group', 'key', 'optional', 'order',
+        'editable', 'enable_all', 'enable_database', 'enable_mail', 'enable_push', 'group', 'key',
+        'optional', 'order', 'funds',
         'channels' => [],
     ];
 
@@ -39,18 +42,11 @@ class SystemNotificationsTest extends TestCase
      */
     public function testCustomMailNotificationTemplateFormal()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $notifications = $this->getCleanSystemNotifications([
-            'notifications_identities.identity_voucher_assigned_budget',
-        ]);
-
-        $implementation->update([
-            'informal_communication' => false,
-        ]);
-
-        foreach ($notifications as $notification) {
-            $this->startCustomTemplate($implementation, $notification, 'mail');
-        }
+        $this->startCustomTemplate(
+            $this->makeTestNotificationImplementation(),
+            SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget'),
+            'mail',
+        );
     }
 
     /**
@@ -58,18 +54,11 @@ class SystemNotificationsTest extends TestCase
      */
     public function testCustomDatabaseNotificationTemplateFormal()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $notifications = $this->getCleanSystemNotifications([
-            'notifications_identities.identity_voucher_assigned_budget',
-        ]);
-
-        $implementation->update([
-            'informal_communication' => false,
-        ]);
-
-        foreach ($notifications as $notification) {
-            $this->startCustomTemplate($implementation, $notification, 'database');
-        }
+        $this->startCustomTemplate(
+            $this->makeTestNotificationImplementation(),
+            SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget'),
+            'database',
+        );
     }
 
     /**
@@ -77,18 +66,11 @@ class SystemNotificationsTest extends TestCase
      */
     public function testCustomMailNotificationTemplateInformal()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $notifications = $this->getCleanSystemNotifications([
-            'notifications_identities.identity_voucher_assigned_budget',
-        ]);
-
-        $implementation->update([
-            'informal_communication' => true,
-        ]);
-
-        foreach ($notifications as $notification) {
-            $this->startCustomTemplate($implementation, $notification, 'mail');
-        }
+        $this->startCustomTemplate(
+            $this->makeTestNotificationImplementation(true),
+            SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget'),
+            'mail',
+        );
     }
 
     /**
@@ -96,18 +78,387 @@ class SystemNotificationsTest extends TestCase
      */
     public function testCustomDatabaseNotificationTemplateInformal()
     {
-        $implementation = Implementation::byKey('nijmegen');
-        $notifications = $this->getCleanSystemNotifications([
-            'notifications_identities.identity_voucher_assigned_budget',
+        $this->startCustomTemplate(
+            $this->makeTestNotificationImplementation(true),
+            SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget'),
+            'database',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundScopedNotificationConfigOverridesSelectedFundOnly()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget');
+        $funds = $implementation->funds->take(2)->values();
+
+        $notification->system_notification_configs()
+            ->where('implementation_id', $implementation->id)
+            ->delete();
+
+        $this->assertCount(2, $funds);
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_database' => false,
         ]);
 
-        $implementation->update([
-            'informal_communication' => true,
+        $this->updateNotification($implementation, $notification, [
+            'enable_database' => true,
+            'enable_mail' => false,
+        ], $funds[0]->id);
+
+        $notification = $notification->fresh([
+            'system_notification_configs',
         ]);
 
-        foreach ($notifications as $notification) {
-            $this->startCustomTemplate($implementation, $notification, 'database');
+        $this->assertFalse($notification->getConfig($implementation, $funds[0]->id)?->enable_mail ?? true);
+        $this->assertTrue($notification->getConfig($implementation, $funds[0]->id)?->enable_database ?? false);
+
+        $response = $this->fetchCustomTemplate($implementation, $notification);
+        $fundStates = collect($response->json('data.funds'))->keyBy('id');
+
+        $this->assertTrue($response->json('data.enable_mail'));
+        $this->assertFalse($response->json('data.enable_database'));
+        $this->assertTrue($fundStates->has($funds[0]->id));
+        $this->assertTrue($fundStates->has($funds[1]->id));
+        $this->assertSame($funds[0]->name, $fundStates[$funds[0]->id]['name']);
+        $this->assertFalse($fundStates[$funds[0]->id]['enable_mail']);
+        $this->assertTrue($fundStates[$funds[0]->id]['enable_database']);
+        $this->assertTrue($fundStates[$funds[1]->id]['enable_mail']);
+        $this->assertTrue($fundStates[$funds[1]->id]['enable_database']);
+        $this->assertSame(['mail', 'push'], array_values($notification->channels($implementation)));
+        $this->assertSame(['push'], array_values($notification->channels($implementation, $funds[0]->id)));
+        $this->assertSame(['mail', 'push'], array_values($notification->channels($implementation, $funds[1]->id)));
+    }
+
+    /**
+     * @return void
+     */
+    public function testEditableNotificationUsesFundSpecificTemplateContext()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.fund_request_created');
+        $fund = $implementation->funds->first();
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'title' => 'Fund scoped :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $notification = $notification->fresh('templates');
+        $implementationTemplate = $notification->templates
+            ->where('implementation_id', $implementation->id)
+            ->whereNull('fund_id')
+            ->where('formal', !$implementation->informal_communication)
+            ->where('type', 'mail')
+            ->first();
+
+        $this->assertSame(1, $notification->templates->where('fund_id', $fund->id)->count());
+        $this->assertNull($implementationTemplate);
+        $this->assertSame('Fund scoped :fund_name', $notification->findTemplate($implementation, $fund->id, 'mail')?->title);
+        $this->assertNotSame('Fund scoped :fund_name', $notification->findTemplate($implementation, null, 'mail')?->title);
+    }
+
+    /**
+     * @return void
+     */
+    public function testNonOptionalNotificationUsesFundSpecificTemplateButIgnoresConfig()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.fund_request_created');
+        $fund = $implementation->funds->first();
+
+        $this->assertFalse($notification->optional);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'title' => 'Scoped :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_mail' => false,
+        ], $fund->id);
+
+        $notification = $notification->fresh([
+            'templates',
+            'system_notification_configs',
+        ]);
+
+        $configsCount = $notification->system_notification_configs
+            ->where('implementation_id', $implementation->id)
+            ->where('fund_id', $fund->id)
+            ->count();
+
+        $this->assertSame(0, $configsCount);
+        $this->assertSame(['database', 'mail'], array_values($notification->channels($implementation, $fund->id)));
+        $this->assertSame('Scoped :fund_name', $notification->findTemplate($implementation, $fund->id, 'mail')?->title);
+        $this->assertNotSame('Scoped :fund_name', $notification->findTemplate($implementation, null, 'mail')?->title);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundTemplateResetOnNonOptionalNotification()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.fund_request_created');
+        $fund = $implementation->funds->first();
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => null,
+                'title' => 'Implementation :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ]);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'title' => 'Fund :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates_remove' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $notification = $notification->fresh('templates');
+
+        $this->assertSame(
+            0,
+            $notification->templates
+                ->where('implementation_id', $implementation->id)
+                ->where('fund_id', $fund->id)
+                ->where('type', 'mail')
+                ->count(),
+        );
+        $this->assertSame('Implementation :fund_name', $notification->findTemplate($implementation, null, 'mail')?->title);
+        $this->assertSame('Implementation :fund_name', $notification->findTemplate($implementation, $fund->id, 'mail')?->title);
+    }
+
+    /**
+     * @return void
+     */
+    public function testImplementationLevelUpdateDoesNotModifyFundScopedConfigOrTemplates()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget');
+        $fund = $implementation->funds->first();
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_database' => false,
+        ]);
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_mail' => false,
+        ], $fund->id);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => null,
+                'title' => 'Implementation :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ]);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'title' => 'Fund :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'enable_push' => false,
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => null,
+                'title' => 'Implementation updated :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ]);
+
+        $notification = $notification->fresh([
+            'templates',
+            'system_notification_configs',
+        ]);
+
+        $this->assertFalse($notification->getConfig($implementation)?->enable_database ?? true);
+        $this->assertFalse($notification->getConfig($implementation)?->enable_push ?? true);
+        $this->assertFalse($notification->getConfig($implementation, $fund->id)?->enable_mail ?? true);
+
+        $this->assertSame(
+            'Implementation updated :fund_name',
+            $notification->findTemplate($implementation, null, 'mail')?->title,
+        );
+
+        $this->assertSame(
+            'Fund :fund_name',
+            $notification->findTemplate($implementation, $fund->id, 'mail')?->title,
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testShowIncludesFundsForNonOptionalNotification()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.fund_request_created');
+
+        $response = $this->fetchCustomTemplate($implementation, $notification);
+        $funds = collect($response->json('data.funds'));
+
+        $this->assertCount(2, $funds);
+        $this->assertTrue($response->json('data.enable_all'));
+        $this->assertTrue($response->json('data.enable_mail'));
+        $this->assertTrue($response->json('data.enable_database'));
+        $this->assertTrue($funds->every(fn (array $fund) => $fund['enable_all']));
+        $this->assertTrue($funds->every(fn (array $fund) => $fund['enable_mail']));
+        $this->assertTrue($funds->every(fn (array $fund) => $fund['enable_push']));
+        $this->assertTrue($funds->every(fn (array $fund) => $fund['enable_database']));
+    }
+
+    /**
+     * @return void
+     */
+    public function testMissingFundIdFallsBackToImplementationScope()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget');
+        $fund = $implementation->funds->first();
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_mail' => false,
+        ]);
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_database' => false,
+        ], $fund->id);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => null,
+                'title' => 'Implementation :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ]);
+
+        $this->setCustomTemplate($implementation, $notification, [
+            'templates' => [[
+                'formal' => !$implementation->informal_communication,
+                'fund_id' => $fund->id,
+                'title' => 'Fund :fund_name',
+                'content' => 'Ipsum',
+                'type' => 'mail',
+            ]],
+        ], $fund->id);
+
+        $notification = $notification->fresh([
+            'templates',
+            'system_notification_configs',
+        ]);
+
+        $this->assertSame(['database', 'push'], array_values($notification->channels($implementation)));
+        $this->assertSame(['push'], array_values($notification->channels($implementation, $fund->id)));
+        $this->assertSame('Implementation :fund_name', $notification->findTemplate($implementation, null, 'mail')?->title);
+        $this->assertSame('Fund :fund_name', $notification->findTemplate($implementation, $fund->id, 'mail')?->title);
+    }
+
+    /**
+     * @return void
+     */
+    public function testUpdateNormalizesDuplicateImplementationScopeConfigs()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.identity_voucher_assigned_budget');
+
+        $notification->system_notification_configs()
+            ->where('implementation_id', $implementation->id)
+            ->delete();
+
+        foreach (range(1, 2) as $index) {
+            $notification->system_notification_configs()->create([
+                'implementation_id' => $implementation->id,
+                'fund_id' => null,
+                'enable_all' => true,
+                'enable_mail' => $index === 1,
+                'enable_push' => true,
+                'enable_database' => true,
+            ]);
         }
+
+        $this->updateNotification($implementation, $notification, [
+            'enable_mail' => false,
+        ]);
+
+        $notification = $notification->fresh('system_notification_configs');
+        $configs = $notification->system_notification_configs
+            ->where('implementation_id', $implementation->id)
+            ->whereNull('fund_id');
+
+        $this->assertCount(1, $configs);
+        $this->assertFalse($configs->first()->enable_mail);
+    }
+
+    /**
+     * @return void
+     */
+    public function testShowIncludesLastSentMetadataWhileIndexDoesNot()
+    {
+        $implementation = $this->makeTestNotificationImplementation();
+        $notification = SystemNotification::firstWhere('key', 'notifications_identities.voucher_expire_soon_budget');
+        $funds = $implementation->funds->take(2)->values();
+
+        $date1 = now()->subDays(2)->startOfDay();
+        $date2 = now()->subDay()->startOfDay();
+
+        $this->seedLastSentData($notification, $funds[0], $date1);
+        $this->seedLastSentData($notification, $funds[1], $date2);
+
+        $showResponse = $this->fetchCustomTemplate($implementation, $notification);
+        $showFunds = collect($showResponse->json('data.funds'))->keyBy('id');
+
+        $this->assertSame($date2->format('Y-m-d'), $showResponse->json('data.last_sent_date'));
+        $this->assertSame($date1->format('Y-m-d'), $showFunds[$funds[0]->id]['last_sent_date']);
+        $this->assertSame($date2->format('Y-m-d'), $showFunds[$funds[1]->id]['last_sent_date']);
+
+        $listResponse = $this->fetchNotificationsList($implementation);
+        $indexNotification = collect($listResponse->json('data'))->where('key', $notification->key)->first();
+
+        $this->assertIsArray($indexNotification['funds']);
+        $this->assertArrayNotHasKey('last_sent_date', $indexNotification);
+        $this->assertArrayNotHasKey('last_sent_date', $indexNotification['funds'][0]);
     }
 
     /**
@@ -122,7 +473,7 @@ class SystemNotificationsTest extends TestCase
         string $channel,
     ): void {
         // Test default email template
-        $funds = $this->getFunds($implementation)->take(2);
+        $funds = $implementation->funds->take(2);
         $response = $this->fetchCustomTemplate($implementation, $notification);
         $this->assertSystemNotificationTemplates($response, 3, 0);
         $templateDefault = collect($response->json('data.templates_default'))->where('type', $channel)->first();
@@ -130,7 +481,7 @@ class SystemNotificationsTest extends TestCase
 
         // Assert default email template is being used on implementation level
         foreach ($funds as $fund) {
-            $this->assertNotifications($fund, $this->replaceVars($templateDefault['title'], $fund));
+            $this->assertNotifications($fund, $this->replaceVars($templateDefault['title'], $fund), $channel);
         }
 
         // Test custom implementation level template
@@ -173,7 +524,7 @@ class SystemNotificationsTest extends TestCase
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
             ]],
-        ]);
+        ], $funds[0]->id);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
         $this->assertSystemNotificationTemplates($response, 3, 2);
@@ -191,7 +542,7 @@ class SystemNotificationsTest extends TestCase
                 'fund_id' => $funds[0]->id,
                 'type' => $channel,
             ]],
-        ]);
+        ], $funds[0]->id);
 
         $response = $this->fetchCustomTemplate($implementation, $notification);
         $this->assertSystemNotificationTemplates($response, 3, 1);
@@ -216,6 +567,9 @@ class SystemNotificationsTest extends TestCase
                 'content' => 'Value that should not be ignored',
                 'type' => $channel,
             ]],
+        ], $funds[1]->id);
+
+        $this->setCustomTemplate($implementation, $notification, [
             'templates_remove' => [[
                 'formal' => !$implementation->informal_communication,
                 'fund_id' => null,
@@ -246,13 +600,13 @@ class SystemNotificationsTest extends TestCase
     ): void {
         $responseData = $response->json('data');
 
-        self::assertCount(
+        $this->assertCount(
             $templatesCount,
             $responseData['templates'],
             "There should be $templatesCount custom templates",
         );
 
-        self::assertCount(
+        $this->assertCount(
             $templatesDefaultCount,
             $responseData['templates_default'],
             "There should be $templatesDefaultCount default templates.",
@@ -263,19 +617,24 @@ class SystemNotificationsTest extends TestCase
      * @param Implementation $implementation
      * @param SystemNotification $notification
      * @param array $data
+     * @param int|null $fundId
      * @return TestResponse
      */
     protected function setCustomTemplate(
         Implementation $implementation,
         SystemNotification $notification,
         array $data,
+        ?int $fundId = null,
     ): TestResponse {
         $response = $this->patchJson(sprintf(
             '/api/v1/platform/organizations/%s/implementations/%s/system-notifications/%s',
             $implementation->organization_id,
             $implementation->id,
             $notification->id,
-        ), $data, $this->makeApiHeaders($this->getEmployeeProxy($implementation)));
+        ), [
+            ...$data,
+            ...$fundId ? ['fund_id' => $fundId] : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($implementation->organization->identity)));
 
         $response->assertSuccessful();
         $response->assertJsonStructure([
@@ -295,14 +654,14 @@ class SystemNotificationsTest extends TestCase
      */
     protected function fetchCustomTemplate(
         Implementation $implementation,
-        SystemNotification $notification
+        SystemNotification $notification,
     ): TestResponse {
         $response = $this->getJson(sprintf(
             '/api/v1/platform/organizations/%s/implementations/%s/system-notifications/%s',
             $implementation->organization_id,
             $implementation->id,
             $notification->id,
-        ), $this->makeApiHeaders($this->getEmployeeProxy($implementation)));
+        ), $this->makeApiHeaders($this->makeIdentityProxy($implementation->organization->identity)));
 
         $response->assertSuccessful();
         $response->assertJsonStructure([
@@ -313,6 +672,39 @@ class SystemNotificationsTest extends TestCase
         ]);
 
         return $response;
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @return TestResponse
+     */
+    protected function fetchNotificationsList(Implementation $implementation): TestResponse
+    {
+        $response = $this->getJson(sprintf(
+            '/api/v1/platform/organizations/%s/implementations/%s/system-notifications',
+            $implementation->organization_id,
+            $implementation->id,
+        ), $this->makeApiHeaders($this->makeIdentityProxy($implementation->organization->identity)));
+
+        $response->assertSuccessful();
+
+        return $response;
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param SystemNotification $notification
+     * @param array $data
+     * @param int|null $fundId
+     * @return TestResponse
+     */
+    protected function updateNotification(
+        Implementation $implementation,
+        SystemNotification $notification,
+        array $data,
+        ?int $fundId = null,
+    ): TestResponse {
+        return $this->setCustomTemplate($implementation, $notification, $data, $fundId);
     }
 
     /**
@@ -328,20 +720,23 @@ class SystemNotificationsTest extends TestCase
     }
 
     /**
-     * @param array $keys
-     * @return Collection|SystemNotification
+     * @param bool $informalCommunication
+     * @return Implementation
      */
-    protected function getCleanSystemNotifications(array $keys): Collection|Arrayable
+    protected function makeTestNotificationImplementation(bool $informalCommunication = false): Implementation
     {
-        $notifications = SystemNotification::whereIn('key', $keys)->get();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $implementation = $this->makeTestImplementation($organization);
 
-        $notifications->each(function (SystemNotification $notification) {
-            $notification->templates()
-                ->whereRelation('implementation', 'key', '!=', Implementation::KEY_GENERAL)
-                ->delete();
-        });
+        $implementation->forceFill([
+            'allow_per_fund_notification_templates' => true,
+            'informal_communication' => $informalCommunication,
+        ])->save();
 
-        return $notifications;
+        $this->makeTestFund($organization, implementation: $implementation);
+        $this->makeTestFund($organization, implementation: $implementation);
+
+        return $implementation->refresh();
     }
 
     /**
@@ -356,21 +751,40 @@ class SystemNotificationsTest extends TestCase
     }
 
     /**
-     * @param Implementation $implementation
-     * @return IdentityProxy
+     * @param SystemNotification $notification
+     * @param Fund $fund
+     * @param \Illuminate\Support\Carbon $createdAt
+     * @return void
      */
-    protected function getEmployeeProxy(Implementation $implementation): IdentityProxy
+    protected function seedLastSentData(SystemNotification $notification, Fund $fund, Carbon $createdAt): void
     {
-        return $this->makeIdentityProxy($implementation->organization->identity);
-    }
+        $voucher = $this->makeVoucher($fund);
 
-    /**
-     * @param Implementation $implementation
-     * @return Collection|Fund[]
-     */
-    protected function getFunds(Implementation $implementation): Collection|Arrayable
-    {
-        return $implementation->funds;
+        $eventLog = EventLog::forceCreate([
+            'loggable_type' => $voucher->getMorphClass(),
+            'loggable_id' => $voucher->id,
+            'event' => 'test',
+            'identity_address' => $voucher->identity->address,
+            'original' => false,
+            'data' => ['fund_id' => $fund->id],
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ]);
+
+        EmailLog::forceCreate([
+            'event_log_id' => $eventLog->id,
+            'system_notification_key' => $notification->key,
+            'from_name' => 'Test',
+            'from_address' => 'test@example.test',
+            'to_name' => 'Test',
+            'to_address' => $voucher->identity->email,
+            'subject' => 'Test',
+            'content' => 'Test',
+            'headers' => '{}',
+            'mailable' => 'TestMail',
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ]);
     }
 
     /**
@@ -437,7 +851,7 @@ class SystemNotificationsTest extends TestCase
                 $notification['type'] == 'notifications_identities.identity_voucher_assigned_budget';
         });
 
-        self::assertCount(1, $notifications, 'Only 1 database notification expected.');
+        $this->assertCount(1, $notifications, 'Only 1 database notification expected.');
         $this->assertStringContainsString($subject, Arr::first($notifications)['title']);
     }
 }

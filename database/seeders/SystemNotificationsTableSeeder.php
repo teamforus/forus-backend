@@ -281,7 +281,7 @@ class SystemNotificationsTableSeeder extends Seeder
         foreach ($this->systemNotifications as $key => $notificationChannels) {
             $group = array_reduce(array_keys($this->notificationGroups), function ($value, $groupKey) use ($key) {
                 return $value ?: (in_array($key, $this->notificationGroups[$groupKey]) ? $groupKey : null);
-            }, null);
+            });
 
             SystemNotification::updateOrCreate(compact('key'), [
                 'push' => in_array('push', $notificationChannels),
