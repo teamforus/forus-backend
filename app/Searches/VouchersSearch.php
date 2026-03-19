@@ -88,10 +88,10 @@ class VouchersSearch extends BaseSearch
             $builder = VoucherQuery::whereSearchSponsorQuery($builder, $q);
         }
 
+        $builder = $this->filterByAmount($builder);
         $this->filterByImplementation($builder);
         $this->filterByGranted($builder);
         $this->filterByDates($builder);
-        $this->filterByAmount($builder);
         $this->filterByUnassigned($builder);
         $this->filterByTypeAndSource($builder);
         $this->filterByInUse($builder);

@@ -11,12 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $system_notification_id
  * @property int $implementation_id
+ * @property int|null $fund_id
  * @property bool $enable_all
  * @property bool $enable_mail
  * @property bool $enable_push
  * @property bool $enable_database
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Implementation $implementation
  * @property-read \App\Models\SystemNotification $system_notification
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig newModelQuery()
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnableDatabase($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnableMail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereEnablePush($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SystemNotificationConfig whereSystemNotificationId($value)
@@ -35,11 +38,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class SystemNotificationConfig extends Model
 {
+    public const array ENABLE_FIELDS = [
+        'enable_all', 'enable_mail', 'enable_push', 'enable_database',
+    ];
+
     /**
      * @var string[]
      */
     protected $fillable = [
-        'system_notification_id', 'implementation_id',
+        'system_notification_id', 'implementation_id', 'fund_id',
         'enable_all', 'enable_mail', 'enable_push', 'enable_database',
     ];
 
@@ -60,6 +67,15 @@ class SystemNotificationConfig extends Model
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund(): BelongsTo
+    {
+        return $this->belongsTo(Fund::class);
     }
 
     /**
