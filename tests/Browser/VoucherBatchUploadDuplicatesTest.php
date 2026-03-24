@@ -42,7 +42,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      */
     public function testUploadBatchClientUIDDuplicates(): void
     {
-        $this->doUploadBatch('client_uid');
+        $this->runSingleDuplicateTypeCancelThenApproveFlow('client_uid');
     }
 
     /**
@@ -50,7 +50,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      */
     public function testUploadBatchBSNDuplicates(): void
     {
-        $this->doUploadBatch('bsn');
+        $this->runSingleDuplicateTypeCancelThenApproveFlow('bsn');
     }
 
     /**
@@ -58,15 +58,41 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      */
     public function testUploadBatchEmailDuplicates(): void
     {
-        $this->doUploadBatch('email');
+        $this->runSingleDuplicateTypeCancelThenApproveFlow('email');
     }
 
     /**
      * @throws Throwable
      */
-    public function testUploadBatchALlDuplicateTypes(): void
+    public function testUploadBatchAllDuplicateTypes(): void
     {
-        $this->doUploadBatchWithAllDuplicateTypesAndPartialApprove();
+        $this->runAllDuplicateTypesPartialApprovalUploadFlow();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testUploadBatchAllDuplicateTypesFromSameVoucher(): void
+    {
+        $startDate = Carbon::now();
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $fund = $this->makeTestFund($organization);
+        $data = $this->seedExistingVouchersAndBuildCsvRowsForAllDuplicateTypes($fund, count: 1);
+
+        $this->assertDuplicateUploadApproveOnlyFlow($fund, $startDate, $data);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testUploadBatchClientUIDDuplicatesCaseInsensitive(): void
+    {
+        $startDate = Carbon::now();
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $fund = $this->makeTestFund($organization);
+        $data = $this->seedExistingVouchersAndBuildCsvRowsForClientUid($fund, count: 2, lowercaseCsvValue: true);
+
+        $this->assertDuplicateUploadCancelThenApproveFlow($fund, $startDate, $data);
     }
 
     /**
@@ -75,66 +101,59 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws TimeOutException
      * @return void
      */
-    protected function doUploadBatch(string $type): void
+    protected function runSingleDuplicateTypeCancelThenApproveFlow(string $type): void
     {
         $startDate = Carbon::now();
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
 
         $fund = $this->makeTestFund($organization);
 
-        // prepare data for each case and create vouchers in db so in data will be duplicate values
-        // and count($data) is same as created vouchers
+        // Seed existing vouchers so each uploaded row matches an existing duplicate value.
+        // The number of CSV rows matches the number of seeded vouchers.
         $data = match ($type) {
-            'client_uid' => $this->prepareDataForClientUid($fund, count: 2),
-            'bsn' => $this->prepareDataForBsn($fund, count: 2),
-            'email' => $this->prepareDataForEmail($fund, count: 2),
+            'client_uid' => $this->seedExistingVouchersAndBuildCsvRowsForClientUid($fund, count: 2),
+            'bsn' => $this->seedExistingVouchersAndBuildCsvRowsForBsn($fund, count: 2),
+            'email' => $this->seedExistingVouchersAndBuildCsvRowsForEmail($fund, count: 2),
         };
 
-        $this->assertVoucherBatchUploadWithDuplicates($implementation, $fund, $startDate, $data);
+        $this->assertDuplicateUploadCancelThenApproveFlow($fund, $startDate, $data);
     }
 
     /**
-     * @param Implementation $implementation
      * @param Fund $fund
      * @param Carbon $startDate
      * @param array $data
      * @throws Throwable
      * @return void
      */
-    protected function assertVoucherBatchUploadWithDuplicates(
-        Implementation $implementation,
-        Fund $fund,
-        Carbon $startDate,
-        array $data,
-    ): void {
-        $this->rollbackModels([], function () use ($implementation, $data, $fund, $startDate) {
-            $this->browse(function (Browser $browser) use ($implementation, $data, $fund, $startDate) {
+    protected function assertDuplicateUploadCancelThenApproveFlow(Fund $fund, Carbon $startDate, array $data): void
+    {
+        $this->rollbackModels([], function () use ($data, $fund, $startDate) {
+            $this->browse(function (Browser $browser) use ($data, $fund, $startDate) {
+                $implementation = Implementation::general();
                 $identity = $fund->organization->identity;
                 $browser->visit($implementation->urlSponsorDashboard());
 
-                // Authorize identity
+                // Log in as the sponsor identity.
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
-                $this->selectDashboardOrganization($browser, $implementation->organization);
-
+                $this->selectDashboardOrganization($browser, $fund->organization);
                 $this->goToVouchersPage($browser);
 
-                // assert that count vouchers before upload is same as created when prepare data
+                // Confirm the seeded voucher count matches the CSV rows we will upload.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data), $vouchers->count());
 
-                // create file with vouchers and upload it
+                // Upload once and cancel on the duplicate picker.
                 $this->createFile($fund, $data);
-                $this->uploadVouchersBatch($browser, false);
+                $this->uploadBatchAndHandleDuplicatePickers($browser, false);
 
-                // assert that after cancel duplicate approval vouchers count still same
+                // Canceling the duplicate picker must not create any extra vouchers.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data), $vouchers->count());
+                $this->uploadBatchAndHandleDuplicatePickers($browser, true);
 
-                $this->uploadVouchersBatch($browser, true);
-
-                // assert that after duplicate approval count of vouchers becomes x2
+                // Approving the duplicates should create the same number of new vouchers.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data) * 2, $vouchers->count());
 
@@ -152,51 +171,45 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws TimeOutException
      * @return void
      */
-    protected function doUploadBatchWithAllDuplicateTypesAndPartialApprove(): void
+    protected function runAllDuplicateTypesPartialApprovalUploadFlow(): void
     {
         $startDate = Carbon::now();
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
         $fund = $this->makeTestFund($organization);
 
-        // prepare data for each case and create vouchers in db so in data will be duplicate values
-        // and count($data) is same as created vouchers
-        $data = $this->prepareDataForAllTypes($fund, count: 2);
-        $this->assertVoucherBatchUploadWithPartialApproveDuplicates($implementation, $fund, $startDate, $data);
+        // Seed existing vouchers so each uploaded row matches an existing duplicate value.
+        // The number of CSV rows matches the number of seeded vouchers.
+        $data = $this->seedExistingVouchersAndBuildCsvRowsForAllDuplicateTypes($fund, count: 2);
+        $this->assertDuplicateUploadPartialApprovalFlow($fund, $startDate, $data);
     }
 
     /**
-     * @param Implementation $implementation
      * @param Fund $fund
      * @param Carbon $startDate
      * @param array $data
      * @throws Throwable
      * @return void
      */
-    protected function assertVoucherBatchUploadWithPartialApproveDuplicates(
-        Implementation $implementation,
-        Fund $fund,
-        Carbon $startDate,
-        array $data,
-    ): void {
-        $this->rollbackModels([], function () use ($implementation, $data, $fund, $startDate) {
-            $this->browse(function (Browser $browser) use ($implementation, $data, $fund, $startDate) {
+    protected function assertDuplicateUploadPartialApprovalFlow(Fund $fund, Carbon $startDate, array $data): void
+    {
+        $this->rollbackModels([], function () use ($data, $fund, $startDate) {
+            $this->browse(function (Browser $browser) use ($data, $fund, $startDate) {
+                $implementation = Implementation::general();
                 $identity = $fund->organization->identity;
                 $browser->visit($implementation->urlSponsorDashboard());
 
-                // Authorize identity
+                // Log in as the sponsor identity.
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
-                $this->selectDashboardOrganization($browser, $implementation->organization);
+                $this->selectDashboardOrganization($browser, $fund->organization);
 
                 $this->goToVouchersPage($browser);
 
-                // assert that count vouchers before upload is same as created when prepare data
+                // Confirm the seeded voucher count matches the CSV rows we will upload.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data), $vouchers->count());
 
-                // take first item to upload and build values for manual approve only this first row
+                // Approve only the first duplicate item in each picker.
                 $first = $data[0];
 
                 $partialApprove = [
@@ -205,22 +218,59 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
                     'client_uid' => [$first['client_uid']],
                 ];
 
-                // create file with vouchers and upload it
+                // Upload once and cancel after opening the duplicate pickers.
                 $this->createFile($fund, $data);
-                // pass $partialApprove for understanding how many duplicate modals we must skip
-                $this->uploadVouchersBatchAndApprovePartial($browser, false, $partialApprove);
+                // Pass the values we want to approve so the helper can select them in each picker.
+                $this->uploadBatchAndPartiallyApproveDuplicates($browser, false, $partialApprove);
 
-                // assert that after cancel duplicate approval vouchers count still same
+                // Canceling the duplicate picker must not create any extra vouchers.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data), $vouchers->count());
 
-                $this->uploadVouchersBatchAndApprovePartial($browser, true, $partialApprove);
+                $this->uploadBatchAndPartiallyApproveDuplicates($browser, true, $partialApprove);
 
-                // assert that after duplicate approval count of vouchers becomes x2
+                // Only the approved duplicate rows should be created.
                 $vouchers = $this->getVouchers($fund, $startDate);
                 $this->assertEquals(count($data) + 1, $vouchers->count());
 
-                // Logout
+                // Log out to keep the browser state clean for the next run.
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+            Storage::delete($this->csvPath);
+        });
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Carbon $startDate
+     * @param array $data
+     * @throws Throwable
+     * @return void
+     */
+    protected function assertDuplicateUploadApproveOnlyFlow(Fund $fund, Carbon $startDate, array $data): void
+    {
+        $this->rollbackModels([], function () use ($data, $fund, $startDate) {
+            $this->browse(function (Browser $browser) use ($data, $fund, $startDate) {
+                $implementation = Implementation::general();
+                $identity = $fund->organization->identity;
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $identity);
+                $this->selectDashboardOrganization($browser, $fund->organization);
+                $this->goToVouchersPage($browser);
+
+                $vouchers = $this->getVouchers($fund, $startDate);
+                $this->assertEquals(count($data), $vouchers->count());
+
+                $this->createFile($fund, $data);
+                $this->uploadBatchAndHandleDuplicatePickers($browser, true);
+
+                $vouchers = $this->getVouchers($fund, $startDate);
+                $this->assertEquals(count($data) * 2, $vouchers->count());
+
                 $this->logout($browser);
             });
         }, function () use ($fund) {
@@ -250,12 +300,12 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws NoSuchElementException
      * @return void
      */
-    private function uploadVouchersBatch(Browser $browser, bool $approveDuplicates): void
+    private function uploadBatchAndHandleDuplicatePickers(Browser $browser, bool $approveDuplicates): void
     {
         $this->openUploadModal($browser);
         $this->skipSelectFund($browser);
         $this->attachFile($browser);
-        $this->processDuplicates($browser, $approveDuplicates);
+        $this->handleDuplicatePickers($browser, $approveDuplicates);
 
         $approveDuplicates && $browser->waitFor('@successUploadIcon');
 
@@ -273,7 +323,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    private function uploadVouchersBatchAndApprovePartial(
+    private function uploadBatchAndPartiallyApproveDuplicates(
         Browser $browser,
         bool $approveDuplicates,
         array $toggleItems = []
@@ -281,7 +331,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
         $this->openUploadModal($browser);
         $this->skipSelectFund($browser);
         $this->attachFile($browser);
-        $this->processPartialDuplicates($browser, $approveDuplicates, $toggleItems);
+        $this->handleDuplicatePickersWithManualSelection($browser, $approveDuplicates, $toggleItems);
 
         $approveDuplicates && $browser->waitFor('@successUploadIcon');
 
@@ -336,17 +386,24 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    private function processDuplicates(Browser $browser, bool $approveDuplicates): void
+    private function handleDuplicatePickers(Browser $browser, bool $approveDuplicates): void
     {
         $browser->waitFor('@modalDuplicatesPicker');
 
-        if ($approveDuplicates) {
-            $browser->waitFor('@modalDuplicatesPickerToggleAllOn');
-            $browser->element('@modalDuplicatesPickerToggleAllOn')->click();
-        }
+        // The upload flow can show multiple duplicate pickers in sequence for email, BSN, and client UID.
+        // Keep confirming until none remain.
+        for ($i = 0; $i < 5 && count($browser->elements('@modalDuplicatesPicker')) > 0; $i++) {
+            if ($approveDuplicates && count($browser->elements('@modalDuplicatesPickerToggleAllOn')) > 0) {
+                // Some pickers require explicitly selecting all rows before confirming.
+                $browser->element('@modalDuplicatesPickerToggleAllOn')->click();
+            }
 
-        $browser->waitFor('@modalDuplicatesPickerConfirm');
-        $browser->element('@modalDuplicatesPickerConfirm')->click();
+            $browser->waitFor('@modalDuplicatesPickerConfirm');
+            $browser->element('@modalDuplicatesPickerConfirm')->click();
+
+            // Give the next picker a moment to replace the current one.
+            $browser->pause(300);
+        }
 
         $browser->waitUntilMissing('@modalDuplicatesPicker');
     }
@@ -360,7 +417,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws TimeoutException
      * @return void
      */
-    private function processPartialDuplicates(
+    private function handleDuplicatePickersWithManualSelection(
         Browser $browser,
         bool $approveDuplicates,
         array $toggleItems = []
@@ -453,22 +510,26 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
     /**
      * @param Fund $fund
      * @param int $count
+     * @param bool $lowercaseCsvValue
      * @return array
      */
-    private function prepareDataForClientUid(Fund $fund, int $count): array
-    {
+    private function seedExistingVouchersAndBuildCsvRowsForClientUid(
+        Fund $fund,
+        int $count,
+        bool $lowercaseCsvValue = false
+    ): array {
         $data = [];
         $employee = $fund->organization->employees->first();
 
         for ($i = 0; $i < $count; $i++) {
-            $uid = Str::random();
+            $uid = strtoupper(Str::random());
 
             $this->makeTestVoucher($fund, voucherFields: [
                 'client_uid' => $uid,
                 'employee_id' => $employee->id,
             ]);
 
-            $data[] = ['client_uid' => $uid];
+            $data[] = ['client_uid' => $lowercaseCsvValue ? strtolower($uid) : $uid];
         }
 
         return $data;
@@ -480,11 +541,8 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws Throwable
      * @return array
      */
-    private function prepareDataForBsn(Fund $fund, int $count): array
+    private function seedExistingVouchersAndBuildCsvRowsForBsn(Fund $fund, int $count): array
     {
-        // configure organization for bsn
-        $fund->organization->update(['bsn_enabled' => true]);
-
         $data = [];
         $employee = $fund->organization->employees->first();
 
@@ -503,7 +561,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @param int $count
      * @return array
      */
-    private function prepareDataForEmail(Fund $fund, int $count): array
+    private function seedExistingVouchersAndBuildCsvRowsForEmail(Fund $fund, int $count): array
     {
         $data = [];
         $employee = $fund->organization->employees->first();
@@ -523,7 +581,7 @@ class VoucherBatchUploadDuplicatesTest extends DuskTestCase
      * @throws Throwable
      * @return array
      */
-    private function prepareDataForAllTypes(Fund $fund, int $count): array
+    private function seedExistingVouchersAndBuildCsvRowsForAllDuplicateTypes(Fund $fund, int $count): array
     {
         $data = [];
         $employee = $fund->organization->employees->first();
