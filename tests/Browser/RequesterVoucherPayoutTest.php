@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use App\Models\FundPayoutFormula;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
+use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -51,14 +52,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->waitFor('@openVoucherPayoutModal');
-                $browser->press('@openVoucherPayoutModal');
+                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
@@ -116,14 +110,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->waitFor('@openVoucherPayoutModal');
-                $browser->press('@openVoucherPayoutModal');
+                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
@@ -181,14 +168,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->waitFor('@openVoucherPayoutModal');
-                $browser->press('@openVoucherPayoutModal');
+                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
 
                 $browser->waitFor('.block-warning');
                 $browser->assertMissing('@voucherPayoutAmount');
@@ -242,14 +222,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->waitFor('@openVoucherPayoutModal');
-                $browser->press('@openVoucherPayoutModal');
+                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
 
                 $options = ['€ 50,-', '€ 100,-', '€ 150,-'];
 
@@ -297,14 +270,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->waitFor('@openVoucherPayoutModal');
-                $browser->press('@openVoucherPayoutModal');
+                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutFundRequestSelect');
@@ -338,44 +304,6 @@ class RequesterVoucherPayoutTest extends DuskTestCase
         }, function () use ($fund1, $fund2) {
             $fund1 && $this->deleteFund($fund1);
             $fund2 && $this->deleteFund($fund2);
-        });
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRequesterVoucherPayoutHiddenWithoutFundRequests(): void
-    {
-        $implementation = Implementation::byKey('nijmegen');
-        $organization = $implementation->organization;
-        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
-
-        $organization->forceFill(['allow_profiles' => true])->save();
-        $fund = $this->makePayoutEnabledFund($organization, $implementation);
-
-        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $voucher = $fund->makeVoucher(identity: $identity, amount: 100);
-
-        $this->rollbackModels([
-            [$organization, $organizationState],
-        ], function () use ($implementation, $identity, $voucher) {
-            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
-                $browser->visit($implementation->urlWebshop());
-
-                $this->loginIdentity($browser, $identity);
-                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-
-                $this->goToIdentityVouchers($browser);
-                $browser->waitFor("@listVouchersRow$voucher->id");
-                $browser->click("@listVouchersRow$voucher->id");
-
-                $browser->waitFor('@voucherTitle');
-                $browser->assertMissing('@openVoucherPayoutModal');
-
-                $this->logout($browser);
-            });
-        }, function () use ($fund) {
-            $fund && $this->deleteFund($fund);
         });
     }
 
@@ -540,4 +468,30 @@ class RequesterVoucherPayoutTest extends DuskTestCase
         });
     }
 
+    /**
+     * @param Browser $browser
+     * @param Implementation $implementation
+     * @param int $voucherId
+     * @return void
+     * @throws TimeoutException
+     */
+    private function openVoucherPayoutModalFromPayoutsPage(
+        Browser $browser,
+        Implementation $implementation,
+        int $voucherId,
+    ): void {
+        $browser->visit($implementation->urlWebshop('payouts'));
+
+        $browser->waitFor('@payoutsEmptyBlock');
+        $browser->within('@payoutsEmptyBlock', fn (Browser $browser) => $browser->press('@btnEmptyBlock'));
+        $browser->waitFor('@voucherPayoutForm');
+
+        $browser->within('@voucherPayoutForm', function (Browser $browser) use ($voucherId) {
+            $browser->waitFor('@voucherPayoutVoucherSelect');
+            $browser->click('@voucherPayoutVoucherSelect');
+            $browser->waitFor('@voucherSelectorOptions');
+            $browser->waitFor("@voucherSelectorOption$voucherId");
+            $browser->click("@voucherSelectorOption$voucherId");
+        });
+    }
 }
