@@ -43,6 +43,102 @@ class PaymentDescriptionTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testPaymentDescriptionForDirectPaymentsRespectsMaxLength(): void
+    {
+        $transaction = $this->makeVoucherTransaction();
+
+        $transaction->update([
+            'target' => VoucherTransaction::TARGET_IBAN,
+        ]);
+
+        self::assertLessThanOrEqual(10, strlen($transaction->makePaymentDescription(10)));
+    }
+
+    /**
+     * @return void
+     */
+    public function testPaymentDescriptionForSponsorPayouts(): void
+    {
+        $transaction = $this->makeVoucherTransaction();
+
+        $transaction->update([
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+
+        static::assertEquals(
+            "$transaction->id - {$transaction->voucher->fund->name}",
+            $transaction->makePaymentDescription(),
+            'Bank payment description for sponsor payouts does not match the expected.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testPaymentDescriptionForRequesterPayoutsWithConfiguredNote(): void
+    {
+        $transaction = $this->makeVoucherTransaction();
+        $transaction->voucher->fund->fund_config->forceFill([
+            'allow_voucher_payout_note' => 'Voor belevingsactiviteit',
+        ]);
+
+        $transaction->update([
+            'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+
+        static::assertEquals(
+            "$transaction->id - {$transaction->voucher->fund->name} - Voor belevingsactiviteit",
+            $transaction->makePaymentDescription(),
+            'Bank payment description for requester payouts with note does not match the expected.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testPaymentDescriptionForRequesterPayoutsWithoutConfiguredNote(): void
+    {
+        $transaction = $this->makeVoucherTransaction();
+
+        $transaction->voucher->fund->fund_config->forceFill([
+            'allow_voucher_payout_note' => '',
+        ]);
+
+        $transaction->update([
+            'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+
+        static::assertEquals(
+            "$transaction->id - {$transaction->voucher->fund->name}",
+            $transaction->makePaymentDescription(),
+            'Bank payment description for requester payouts without note does not match the expected.',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testPaymentDescriptionForRequesterPayoutsRespectsMaxLength(): void
+    {
+        $transaction = $this->makeVoucherTransaction();
+
+        $transaction->voucher->fund->fund_config->forceFill([
+            'allow_voucher_payout_note' => str_repeat('x', 200),
+        ]);
+
+        $transaction->update([
+            'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+        ]);
+
+        self::assertLessThanOrEqual(140, strlen($transaction->makePaymentDescription(140)));
+    }
+
+    /**
      * @throws Throwable
      * @return void
      */

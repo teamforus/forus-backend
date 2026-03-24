@@ -49,6 +49,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_voucher_payouts
  * @property bool $allow_voucher_payouts_partial
  * @property int|null $allow_voucher_payout_count
+ * @property string|null $allow_voucher_payout_note
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
@@ -131,6 +132,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayouts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherTopUps($value)

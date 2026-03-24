@@ -105,7 +105,6 @@ class PayoutsController extends Controller
             }
 
             $fundRequest = $request->fundRequest();
-
             $fundRequest?->loadMissing('records');
 
             $transaction = $voucher->makeTransaction([
