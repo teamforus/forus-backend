@@ -199,6 +199,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
                 $this->openVoucherPage($browser, $voucher->id);
 
+                $browser->waitFor('@openVoucherPayoutModal');
                 $browser->assertPresent('@openVoucherPayoutModal');
 
                 $this->logout($browser);
