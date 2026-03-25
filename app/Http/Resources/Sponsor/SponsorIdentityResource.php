@@ -75,7 +75,7 @@ class SponsorIdentityResource extends BaseJsonResource
             'profile' => $profile?->only([
                 'id', 'identity_id', 'organization_id',
             ]),
-            ...((!$identity->creator_organization_id || ($identity->creator_organization_id === $this->organization->id)) ? [
+            ...((!$identity->creator_organization_id || ($identity->creator_organization_id === $this->organization?->id)) ? [
                 'type' => $identity->type,
                 'type_locale' => $identity->type_locale,
                 'employee_id' => $identity->creator_employee_id,
