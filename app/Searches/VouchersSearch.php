@@ -342,6 +342,10 @@ class VouchersSearch extends BaseSearch
             });
         }
 
+        if ($this->hasFilter('client_uid') && $client_uid = $this->getFilter('client_uid')) {
+            $builder->where('client_uid', $client_uid);
+        }
+
         return $builder;
     }
 
