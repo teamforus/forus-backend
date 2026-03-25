@@ -435,15 +435,7 @@ class Product extends Model
      */
     public function getReservationPhoneIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields_enabled) {
-            return false;
-        }
-
-        if ($this->reservation_phone === self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_phone === self::RESERVATION_FIELD_REQUIRED;
-        }
-
-        return $this->reservation_phone === self::RESERVATION_FIELD_REQUIRED;
+        return $this->getReservationPhoneField() === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -452,15 +444,7 @@ class Product extends Model
      */
     public function getReservationAddressIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields_enabled) {
-            return false;
-        }
-
-        if ($this->reservation_address === self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_address === self::RESERVATION_FIELD_REQUIRED;
-        }
-
-        return $this->reservation_address === self::RESERVATION_FIELD_REQUIRED;
+        return $this->getReservationAddressField() === self::RESERVATION_FIELD_REQUIRED;
     }
 
     /**
@@ -469,15 +453,55 @@ class Product extends Model
      */
     public function getReservationBirthDateIsRequiredAttribute(): bool
     {
-        if (!$this->reservation_fields_enabled) {
-            return false;
-        }
+        return $this->getReservationBirthDateField() === self::RESERVATION_FIELD_REQUIRED;
+    }
 
-        if ($this->reservation_birth_date === self::RESERVATION_FIELD_GLOBAL) {
-            return $this->organization->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
-        }
+    /**
+     * @return string
+     */
+    public function getReservationPhoneField(): string
+    {
+        return $this->getReservationRequesterFieldValue('phone');
+    }
 
-        return $this->reservation_birth_date === self::RESERVATION_FIELD_REQUIRED;
+    /**
+     * @return bool
+     */
+    public function isReservationPhoneFieldRequested(): bool
+    {
+        return $this->getReservationPhoneField() !== self::RESERVATION_FIELD_NO;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReservationAddressField(): string
+    {
+        return $this->getReservationRequesterFieldValue('address');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isReservationAddressFieldRequested(): bool
+    {
+        return $this->getReservationAddressField() !== self::RESERVATION_FIELD_NO;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReservationBirthDateField(): string
+    {
+        return $this->getReservationRequesterFieldValue('birth_date');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isReservationBirthDateFieldRequested(): bool
+    {
+        return $this->getReservationBirthDateField() !== self::RESERVATION_FIELD_NO;
     }
 
     /**
@@ -992,6 +1016,29 @@ class Product extends Model
     public function getReservationFieldsForProvider(): Collection|array
     {
         return $this->reservation_fields->filter(fn (ReservationField $field) => $field->isFillableByProvider())->values();
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    protected function getReservationRequesterFieldValue(string $field): string
+    {
+        if (!$this->reservation_fields_enabled) {
+            return self::RESERVATION_FIELD_NO;
+        }
+
+        return match ($field) {
+            'phone' => $this->reservation_phone === self::RESERVATION_FIELD_GLOBAL
+                ? $this->organization->reservation_phone
+                : $this->reservation_phone,
+            'address' => $this->reservation_address === self::RESERVATION_FIELD_GLOBAL
+                ? $this->organization->reservation_address
+                : $this->reservation_address,
+            'birth_date' => $this->reservation_birth_date === self::RESERVATION_FIELD_GLOBAL
+                ? $this->organization->reservation_birth_date
+                : $this->reservation_birth_date,
+        };
     }
 
     /**
