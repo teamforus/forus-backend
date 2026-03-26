@@ -134,7 +134,6 @@ trait MakesRequesterVoucherPayouts
     protected function ensureNumberRecordType(Organization $organization, string $recordTypeKey): RecordType
     {
         $recordType = RecordType::query()
-            ->where('organization_id', $organization->id)
             ->where('key', $recordTypeKey)
             ->first();
 
