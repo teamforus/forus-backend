@@ -33,6 +33,7 @@ class UpdateSystemNotificationsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'fund_id' => $this->fundIdRules($this->implementation),
             'enable_all' => 'nullable|boolean',
             'enable_mail' => 'nullable|boolean',
             'enable_push' => 'nullable|boolean',

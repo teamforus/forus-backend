@@ -20,7 +20,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string|null $iban_name_record_key
  * @property bool $hide_meta
  * @property bool $voucher_amount_visible
- * @property string|null $auth_2fa_policy
+ * @property string $auth_2fa_policy
  * @property bool $auth_2fa_remember_ip
  * @property bool $auth_2fa_restrict_emails
  * @property bool $auth_2fa_restrict_auth_sessions
@@ -47,7 +47,10 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_reservations
  * @property bool $allow_reimbursements
  * @property bool $allow_voucher_payouts
+ * @property bool $allow_voucher_payouts_partial
  * @property int|null $allow_voucher_payout_count
+ * @property string|null $allow_voucher_payout_note
+ * @property string|null $allow_voucher_payout_buttons
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
@@ -59,8 +62,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_provider_sign_up
  * @property bool $fund_request_physical_card_enable
  * @property int|null $fund_request_physical_card_type_id
- * @property string|null $custom_amount_min
- * @property string|null $custom_amount_max
+ * @property numeric|null $custom_amount_min
+ * @property numeric|null $custom_amount_max
  * @property bool $employee_can_see_product_vouchers
  * @property string $vouchers_type
  * @property bool $is_configured
@@ -103,6 +106,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $help_show_website
  * @property bool $help_show_chat
  * @property string $criteria_label_requirement_show
+ * @property bool $hide_voucher_amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -128,8 +132,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowProviderSignUp($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutButtons($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayouts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherTopUps($value)
@@ -183,6 +188,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHelpWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHideMeta($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereHideVoucherAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanNameRecordKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereIbanRecordKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereId($value)
@@ -243,6 +249,16 @@ class FundConfig extends Model
     public const array OUTCOME_TYPES = [
         self::OUTCOME_TYPE_PAYOUT,
         self::OUTCOME_TYPE_VOUCHER,
+    ];
+
+    public const string VOUCHER_PAYOUT_BUTTON_VOUCHERS = 'vouchers';
+    public const string VOUCHER_PAYOUT_BUTTON_PAYOUTS = 'payouts';
+    public const string VOUCHER_PAYOUT_BUTTON_PRODUCTS = 'products';
+
+    public const array VOUCHER_PAYOUT_BUTTONS = [
+        self::VOUCHER_PAYOUT_BUTTON_VOUCHERS,
+        self::VOUCHER_PAYOUT_BUTTON_PAYOUTS,
+        self::VOUCHER_PAYOUT_BUTTON_PRODUCTS,
     ];
 
     protected $fillable = [
@@ -318,6 +334,7 @@ class FundConfig extends Model
         'allow_reservations' => 'boolean',
         'allow_reimbursements' => 'boolean',
         'allow_voucher_payouts' => 'boolean',
+        'allow_voucher_payouts_partial' => 'boolean',
         'limit_generator_amount' => 'string',
         'limit_voucher_top_up_amount' => 'string',
         'limit_voucher_total_amount' => 'string',
@@ -342,6 +359,7 @@ class FundConfig extends Model
         'allow_provider_sign_up' => 'boolean',
         'fund_request_physical_card_enable' => 'boolean',
         'filters_visible_products' => 'boolean',
+        'hide_voucher_amount' => 'boolean',
     ];
 
     /**
@@ -402,6 +420,35 @@ class FundConfig extends Model
     public function isPayoutOutcome(): bool
     {
         return $this->outcome_type === self::OUTCOME_TYPE_PAYOUT;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllowedVoucherPayoutButtons(): array
+    {
+        if ($this->allow_voucher_payout_buttons === null) {
+            return self::VOUCHER_PAYOUT_BUTTONS;
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map('trim', explode(',', $this->allow_voucher_payout_buttons)),
+            fn (string $button) => in_array($button, self::VOUCHER_PAYOUT_BUTTONS, true),
+        )));
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllowedVoucherPayoutButtonsMap(): array
+    {
+        $allowedButtons = $this->getAllowedVoucherPayoutButtons();
+
+        return array_reduce(self::VOUCHER_PAYOUT_BUTTONS, function (array $map, string $button) use ($allowedButtons) {
+            $map[$button] = in_array($button, $allowedButtons, true);
+
+            return $map;
+        }, []);
     }
 
     /**

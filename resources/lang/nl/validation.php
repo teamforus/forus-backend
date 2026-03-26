@@ -188,6 +188,7 @@ return [
     'payout' => [
         'amount_between' => 'Het uitbetalingsbedrag moet tussen :min en :max liggen.',
         'amount_exact' => 'Het uitbetalingsbedrag moet precies :amount zijn.',
+        'amount_partial' => 'Het uitbetalingsbedrag moet overeenkomen met een beschikbare deeluitbetaling.',
         'count_reached' => 'Het maximale aantal uitbetalingen voor dit tegoed (:count) is bereikt.',
     ],
     'voucher' => [

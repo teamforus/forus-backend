@@ -6,14 +6,10 @@ use App\Models\Fund;
 use App\Models\FundPayoutFormula;
 use App\Models\FundRequest;
 use App\Models\Identity;
-use App\Models\Organization;
-use App\Models\Prevalidation;
-use App\Models\Record;
-use App\Models\RecordType;
-use App\Models\RecordValidation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesRequesterVoucherPayouts;
@@ -39,11 +35,7 @@ class RequesterVoucherPayoutTest extends TestCase
      */
     public function testRequesterCanCreatePayoutFromVoucher(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
 
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $voucher = $result['voucher'];
@@ -93,11 +85,7 @@ class RequesterVoucherPayoutTest extends TestCase
      */
     public function testProfileIncludesFundRequestBankAccount(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $fundRequest = $result['fund_request'];
         $iban = $result['iban'];
@@ -123,11 +111,7 @@ class RequesterVoucherPayoutTest extends TestCase
      */
     public function testRequesterCannotCreatePayoutWhenFundDisallowsVoucherPayouts(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
         $fund->fund_config->forceFill([
             'allow_voucher_payouts' => false,
         ])->save();
@@ -151,17 +135,13 @@ class RequesterVoucherPayoutTest extends TestCase
      */
     public function testRequesterCannotCreatePayoutWhenProfilesDisabled(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
 
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $fundRequest = $result['fund_request'];
         $voucher = $result['voucher'];
 
-        $sponsorOrganization->forceFill(['allow_profiles' => false])->save();
+        $fund->organization->forceFill(['allow_profiles' => false])->save();
 
         $res = $this->apiMakePayoutRequest([
             'voucher_id' => $voucher->id,
@@ -178,11 +158,7 @@ class RequesterVoucherPayoutTest extends TestCase
      */
     public function testRequesterCannotCreatePayoutWithoutIbanOrName(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $fundRequest = $result['fund_request'];
         $voucher = $result['voucher'];
@@ -327,6 +303,294 @@ class RequesterVoucherPayoutTest extends TestCase
             ],
             [$keyA => 4, $keyB => 2],
         );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountsAreCalculated(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $this->ensureNumberRecordType($fund->organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, $recordKey, 3);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+            '100.00',
+            '150.00',
+        ]);
+
+        $this->apiMakePayout([
+            'voucher_id' => $voucher->id,
+            'amount' => '100.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $requester);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+        ]);
+
+        $this->apiMakePayoutRequest([
+            'voucher_id' => $voucher->id,
+            'amount' => '150.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $requester)->assertJsonValidationErrorFor('amount');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountsLabelTypeIsPersonsForPartnersSameAddress(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $this->ensureNumberRecordType($fund->organization, Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS, 2);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+            '100.00',
+        ]);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', Voucher::PAYOUT_PARTIAL_AMOUNTS_LABEL_TYPE_PERSONS);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountsLabelTypeIsNullWhenPartialDoesNotApply(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', null);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountCapApplied(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $this->ensureNumberRecordType($fund->organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'max_amount' => 200,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, $recordKey, 10);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+            '100.00',
+            '150.00',
+            '200.00',
+        ]);
+
+        $this->apiMakePayoutRequest([
+            'voucher_id' => $voucher->id,
+            'amount' => '250.00',
+            'fund_request_id' => $fundRequest->id,
+        ], $requester)->assertJsonValidationErrorFor('amount');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountDefaultCapApplied(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $this->ensureNumberRecordType($fund->organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 1000,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, $recordKey, 100);
+        $voucher->forceFill(['amount' => 10000])->save();
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonCount(5, 'data.voucher_payout_partial_amounts');
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts.4', '5000.00');
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountZeroMaxReturnsEmpty(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $this->ensureNumberRecordType($fund->organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'max_amount' => 0,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, $recordKey, 3);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', []);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountCappedByVoucherBalance(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $this->ensureNumberRecordType($fund->organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, $recordKey, 3);
+        $voucher->forceFill(['amount' => 120])->save();
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+            '100.00',
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountsLabelTypeIsNullForChildrenSameAddress(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $this->ensureNumberRecordType($fund->organization, Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $this->createTrustedRecord($requester, $fund, $fundRequest, Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS, 2);
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', [
+            '50.00',
+            '100.00',
+        ]);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutPartialAmountsLabelTypeIsNullForUnsupportedPartialFormulaShape(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPartialPayoutFund();
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_FIXED,
+            'amount' => 50,
+        ]);
+
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $voucher = $result['voucher'];
+
+        $voucherRes = $this->getVoucherShowResponse($requester, $voucher);
+        $voucherRes->assertSuccessful();
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts', null);
+        $voucherRes->assertJsonPath('data.voucher_payout_partial_amounts_label_type', null);
     }
 
     /**
@@ -602,16 +866,12 @@ class RequesterVoucherPayoutTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws Throwable
+     * @return void
      */
     public function testRequesterPayoutRequiresEligibleFundRequest(): void
     {
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
-        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
-        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
-
-        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
         $voucher = $this->makeTestVoucher($fund, $requester, amount: 100);
 
         $this->assertNull($voucher->fund_request_id);
@@ -621,6 +881,44 @@ class RequesterVoucherPayoutTest extends TestCase
             'amount' => '50.00',
             'fund_request_id' => 0,
         ], $requester)->assertForbidden();
+    }
+
+    /**
+     * @throws Throwable
+     * @return array{Identity, Fund}
+     */
+    protected function makeRequesterWithPayoutFund(): array
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        return [$requester, $this->makePayoutEnabledFund($sponsorOrganization)];
+    }
+
+    /**
+     * @throws Throwable
+     * @return array{Identity, Fund}
+     */
+    protected function makeRequesterWithPartialPayoutFund(): array
+    {
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
+
+        $fund->fund_config->forceFill([
+            'allow_voucher_payouts_partial' => true,
+        ])->save();
+
+        return [$requester, $fund->refresh()];
+    }
+
+    /**
+     * @param Identity $requester
+     * @param Voucher $voucher
+     * @return TestResponse
+     */
+    protected function getVoucherShowResponse(Identity $requester, Voucher $voucher): TestResponse
+    {
+        return $this->getJson("/api/v1/platform/vouchers/$voucher->number", $this->makeApiHeaders($requester));
     }
 
     /**
@@ -701,87 +999,16 @@ class RequesterVoucherPayoutTest extends TestCase
                 }
 
                 $value = isset($recordValues[$key]) ? (float) $recordValues[$key] : 0.0;
-                $total += (float) $formula['amount'] * $value;
+                $amount = (float) $formula['amount'] * $value;
+
+                if (isset($formula['max_amount'])) {
+                    $amount = min($amount, (float) $formula['max_amount']);
+                }
+
+                $total += $amount;
             }
         }
 
         return $total;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param string $recordTypeKey
-     * @return RecordType
-     */
-    private function ensureNumberRecordType(Organization $organization, string $recordTypeKey): RecordType
-    {
-        $recordType = RecordType::query()
-            ->where('organization_id', $organization->id)
-            ->where('key', $recordTypeKey)
-            ->first();
-
-        if ($recordType) {
-            if (!$recordType->criteria) {
-                $recordType->forceFill(['criteria' => true])->save();
-            }
-
-            return $recordType;
-        }
-
-        return RecordType::create([
-            'organization_id' => $organization->id,
-            'criteria' => true,
-            'type' => RecordType::TYPE_NUMBER,
-            'key' => $recordTypeKey,
-        ]);
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @param FundRequest $fundRequest
-     * @param string $recordTypeKey
-     * @param string|float $value
-     * @return void
-     */
-    private function createTrustedRecord(
-        Identity $identity,
-        Fund $fund,
-        FundRequest $fundRequest,
-        string $recordTypeKey,
-        string|float $value,
-    ): void {
-        $recordType = $this->ensureNumberRecordType($fund->organization, $recordTypeKey);
-
-        Record::where('identity_address', $identity->address)
-            ->where('record_type_id', $recordType->id)
-            ->forceDelete();
-
-        $record = Record::create([
-            'identity_address' => $identity->address,
-            'record_type_id' => $recordType->id,
-            'fund_request_id' => $fundRequest->id,
-            'organization_id' => $fund->organization_id,
-            'value' => (string) $value,
-            'order' => 0,
-        ]);
-
-        $prevalidation = Prevalidation::create([
-            'uid' => token_generator()->generate(32),
-            'identity_address' => $identity->address,
-            'fund_id' => $fund->id,
-            'organization_id' => $fund->organization_id,
-            'state' => Prevalidation::STATE_PENDING,
-            'validated_at' => now(),
-        ]);
-
-        RecordValidation::create([
-            'record_id' => $record->id,
-            'state' => RecordValidation::STATE_APPROVED,
-            'uuid' => token_generator()->generate(64),
-            'identity_address' => $identity->address,
-            'organization_id' => $fund->organization_id,
-            'prevalidation_id' => $prevalidation->id,
-        ]);
     }
 }

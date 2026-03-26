@@ -239,22 +239,15 @@ class ProductResource extends BaseJsonResource
      */
     private function productReservationFieldSettings(Product $product): array
     {
-        $global = $product::RESERVATION_FIELD_GLOBAL;
         $request = BaseFormRequest::createFromBase(request());
         $organization = $product->organization;
 
         if ($request->isWebshop()) {
             return [
                 'reservation' => $product->reservation_fields_enabled ? [
-                    'phone' => $product->reservation_phone === $global ?
-                        $organization->reservation_phone :
-                        $product->reservation_phone,
-                    'address' => $product->reservation_address === $global ?
-                        $organization->reservation_address :
-                        $product->reservation_address,
-                    'birth_date' => $product->reservation_birth_date === $global ?
-                        $organization->reservation_birth_date :
-                        $product->reservation_birth_date,
+                    'phone' => $product->getReservationPhoneField(),
+                    'address' => $product->getReservationAddressField(),
+                    'birth_date' => $product->getReservationBirthDateField(),
                     'note' => $organization->reservation_user_note,
                     'fields' => ReservationFieldResource::collection(
                         $product->getAvailableReservationFieldsForRequester(),

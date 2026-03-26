@@ -1,11 +1,14 @@
-# Je :fund_name aanvraag is ontvangen
+# Je aanvraag is verstuurd
 
-Beste aanvrager,
+Beste deelnemer,
 &nbsp;
 
-:sponsor_name heeft je :fund_name aanvraag ontvangen. 
-Je aanvraag is in behandeling. Je ontvangt zo snel mogelijk een reactie.
+:sponsor_name heeft je aanvraag voor het terugvragen van kosten ontvangen.
+We bekijken je aanvraag. Je krijgt zo snel mogelijk een reactie van ons.
 &nbsp;  
+
+Wil je zien wat de status is van je aanvraag? Klik dan op de knop hieronder.
+&nbsp;   
 &nbsp;
 
 :webshop_button

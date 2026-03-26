@@ -16,6 +16,10 @@ use App\Mail\Reimbursements\ReimbursementSubmittedMail;
 use App\Mail\Vouchers\DeactivationVoucherMail;
 use App\Mail\Vouchers\PaymentSuccessBudgetMail;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
+use App\Mail\Vouchers\SendProductVoucherBySponsorMail;
+use App\Mail\Vouchers\SendProductVoucherMail;
+use App\Mail\Vouchers\SendVoucherBySponsorMail;
+use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Mail\Vouchers\VoucherAssignedProductMail;
 use App\Mail\Vouchers\VoucherExpireSoonBudgetMail;
@@ -80,6 +84,10 @@ class EmailLogQuery
             VoucherExpireSoonBudgetMail::class,
             RequestPhysicalCardMail::class,
             PaymentSuccessBudgetMail::class,
+            SendVoucherMail::class,
+            SendProductVoucherMail::class,
+            SendVoucherBySponsorMail::class,
+            SendProductVoucherBySponsorMail::class,
 
             // ProductReservation
             ProductReservationAcceptedMail::class,

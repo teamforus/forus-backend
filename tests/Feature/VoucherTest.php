@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\Vouchers\SendProductVoucherMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\Fund;
@@ -114,6 +115,42 @@ class VoucherTest extends TestCase
     public function testVoucherCaseBudgetVouchersExcludedFields(): void
     {
         $this->processVoucherTestCase(VoucherTestCases::$featureTestCaseBudgetVouchersExcludedFields);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testSponsorVouchersIndexFiltersByClientUid(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $employee = $organization->employees()->first();
+        $matchingVoucher = $this->makeTestVoucher($fund, voucherFields: [
+            'client_uid' => 'client-uid-1',
+            'employee_id' => $employee->id,
+        ]);
+
+        $otherVoucher = $this->makeTestVoucher($fund, voucherFields: [
+            'client_uid' => 'client-uid-2',
+            'employee_id' => $employee->id,
+        ]);
+
+        $response = $this->getJson(
+            sprintf($this->apiUrl, $organization->id) . '?' . http_build_query([
+                'fund_id' => $fund->id,
+                'type' => 'fund_voucher',
+                'source' => 'all',
+                'client_uid' => $matchingVoucher->client_uid,
+            ]),
+            $this->makeApiHeaders($organization->identity),
+        );
+
+        $response->assertSuccessful();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.id', $matchingVoucher->id);
+        $response->assertJsonMissingPath('data.1.id');
+
+        $this->assertNotEquals($matchingVoucher->id, $otherVoucher->id);
     }
 
     /**
@@ -995,7 +1032,8 @@ class VoucherTest extends TestCase
             $response = $this->post($url, [], $headers);
             $response->assertSuccessful();
 
-            $this->assertMailableSent($voucher->identity->email, SendVoucherMail::class, $startDate);
+            $mailable = $voucher->product ? SendProductVoucherMail::class : SendVoucherMail::class;
+            $this->assertMailableSent($voucher->identity->email, $mailable, $startDate);
         }
     }
 

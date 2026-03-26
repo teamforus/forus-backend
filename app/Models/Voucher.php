@@ -14,6 +14,7 @@ use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherExport;
+use App\Helpers\Number;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -206,6 +207,8 @@ class Voucher extends Model
 
     public const string VOUCHER_TYPE_PAYOUT = 'payout';
     public const string VOUCHER_TYPE_VOUCHER = 'voucher';
+
+    public const string PAYOUT_PARTIAL_AMOUNTS_LABEL_TYPE_PERSONS = 'persons';
 
     public const string STATE_ACTIVE = 'active';
     public const string STATE_PENDING = 'pending';
@@ -457,6 +460,66 @@ class Voucher extends Model
             ->hasMany(VoucherTransaction::class)
             ->where('target', VoucherTransaction::TARGET_PAYOUT)
             ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getPayoutPartialAmounts(): ?array
+    {
+        $formula = $this->getPayoutPartialFormula();
+
+        if (!$formula) {
+            return null;
+        }
+
+        $unitCents = Number::toCents((float) $formula->amount);
+
+        if ($unitCents <= 0) {
+            return [];
+        }
+
+        $recordValue = 0;
+
+        if ($formula->record_type_key && $this->identity) {
+            $record = $this->fund->getTrustedRecordOfType($this->identity, $formula->record_type_key);
+            $recordValue = is_numeric($record?->value) ? (int) $record->value : 0;
+        }
+
+        $amountCents = Number::toCents(((float) $formula->amount) * $recordValue);
+        $maxCents = Number::toCents($formula->getMaxAmount());
+        $totalCents = $maxCents <= 0 ? 0 : min($amountCents, $maxCents);
+
+        $requesterPayoutsAmount = (float) $this->requester_payouts()
+            ->selectRaw('IFNULL(SUM(IFNULL(amount_voucher, amount)), 0) as total')
+            ->value('total');
+
+        $totalCents = max(0, $totalCents);
+        $remainingCents = max(0, $totalCents - Number::toCents($requesterPayoutsAmount));
+
+        $balanceCents = Number::toCents((float) $this->amount_available);
+        $remainingCents = min($remainingCents, $balanceCents);
+
+        if ($remainingCents < $unitCents) {
+            return [];
+        }
+
+        return array_map(
+            fn (int $count) => currency_format(($unitCents * $count) / 100),
+            range(1, intdiv($remainingCents, $unitCents)),
+        );
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPayoutPartialAmountsLabelType(): ?string
+    {
+        $formula = $this->getPayoutPartialFormula();
+
+        return $formula && $formula->record_type_key === Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS
+            ? self::PAYOUT_PARTIAL_AMOUNTS_LABEL_TYPE_PERSONS
+            : null;
     }
 
     /**
@@ -787,11 +850,11 @@ class Voucher extends Model
     }
 
     /**
-     * @param string|null $email
+     * @return void
      */
-    public function sendToEmail(string $email = null): void
+    public function sendToEmail(): void
     {
-        VoucherSendToEmailEvent::dispatch($this, $email);
+        Event::dispatch(new VoucherSendToEmailEvent($this));
     }
 
     /**
@@ -1710,6 +1773,24 @@ class Voucher extends Model
             ->where('fund_id', $this->fund_id)
             ->where('physical_card_type_id', $physicalCardType->id)
             ->first();
+    }
+
+    /**
+     * @return FundPayoutFormula|null
+     */
+    protected function getPayoutPartialFormula(): ?FundPayoutFormula
+    {
+        if (!$this->fund?->fund_config?->allow_voucher_payouts ||
+            !$this->fund?->fund_config?->allow_voucher_payouts_partial) {
+            return null;
+        }
+
+        if ($this->fund?->fund_payout_formulas?->count() !== 1 ||
+            $this->fund->fund_payout_formulas[0]->type !== FundPayoutFormula::TYPE_MULTIPLY) {
+            return null;
+        }
+
+        return $this->fund->fund_payout_formulas[0];
     }
 
     /**

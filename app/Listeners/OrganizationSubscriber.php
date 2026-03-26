@@ -37,6 +37,12 @@ class OrganizationSubscriber
             }
         } catch (Throwable) {
         }
+
+        $organization->log($organization::EVENT_CREATED, compact('organization'), [
+            'organization_kvk' => $organization->kvk,
+            'organization_iban' => $organization->iban,
+            'organization_email' => $organization->email,
+        ]);
     }
 
     /**
@@ -46,7 +52,14 @@ class OrganizationSubscriber
      */
     public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated): void
     {
-        $organizationUpdated->getOrganization()->syncMarkdownTexts();
+        $organization = $organizationUpdated->getOrganization();
+        $organization->syncMarkdownTexts();
+
+        $organization->log($organization::EVENT_UPDATED, compact('organization'), [
+            'organization_kvk' => $organization->kvk,
+            'organization_iban' => $organization->iban,
+            'organization_email' => $organization->email,
+        ]);
     }
 
     /**

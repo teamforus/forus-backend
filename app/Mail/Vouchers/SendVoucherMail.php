@@ -8,7 +8,7 @@ use League\CommonMark\Exception\CommonMarkException;
 
 class SendVoucherMail extends ImplementationMail
 {
-    public $subject = 'Hierbij ontvangt u uw :fund_name';
+    public ?string $notificationTemplateKey = 'notifications_identities.voucher_shared_by_email';
 
     /**
      * @throws CommonMarkException
@@ -16,7 +16,7 @@ class SendVoucherMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return parent::buildSystemMail('voucher_send_to_email');
+        return $this->buildNotificationTemplatedMail();
     }
 
     /**

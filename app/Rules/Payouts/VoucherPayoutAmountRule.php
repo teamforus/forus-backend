@@ -2,6 +2,7 @@
 
 namespace App\Rules\Payouts;
 
+use App\Helpers\Number;
 use App\Models\Voucher;
 use App\Rules\BaseRule;
 
@@ -29,13 +30,25 @@ class VoucherPayoutAmountRule extends BaseRule
             return true;
         }
 
+        $partialAmounts = $this->voucher->getPayoutPartialAmounts();
+
+        if (is_array($partialAmounts)) {
+            $allowedCents = array_map(fn (string $amount) => Number::toCents((float) $amount), $partialAmounts);
+
+            if (!in_array(Number::toCents((float) $value), $allowedCents, true)) {
+                return $this->reject(trans('validation.payout.amount_partial'));
+            }
+
+            return true;
+        }
+
         $fixedAmount = $this->voucher->fund?->voucherPayoutAmountForIdentity($this->voucher->identity);
         $balance = (float) $this->voucher->amount_available;
-        $balanceCents = self::toCents($balance);
-        $amountCents = self::toCents((float) $value);
+        $balanceCents = Number::toCents($balance);
+        $amountCents = Number::toCents((float) $value);
 
         if ($fixedAmount !== null) {
-            $fixedAmountCents = self::toCents($fixedAmount);
+            $fixedAmountCents = Number::toCents($fixedAmount);
 
             if ($amountCents !== $fixedAmountCents) {
                 return $this->reject(trans('validation.payout.amount_exact', [
@@ -50,7 +63,7 @@ class VoucherPayoutAmountRule extends BaseRule
             return true;
         }
 
-        $minAmountCents = self::toCents($minAmount);
+        $minAmountCents = Number::toCents($minAmount);
 
         if ($amountCents < $minAmountCents || $amountCents > $balanceCents) {
             return $this->reject(trans('validation.payout.amount_between', [
@@ -64,21 +77,12 @@ class VoucherPayoutAmountRule extends BaseRule
 
     /**
      * @param float $amount
-     * @return int
-     */
-    public static function toCents(float $amount): int
-    {
-        return (int) round($amount * 100);
-    }
-
-    /**
-     * @param float $amount
      * @param float $balance
      * @return bool
      */
     public static function exceedsBalance(float $amount, float $balance): bool
     {
-        return self::toCents($amount) > self::toCents($balance);
+        return Number::toCents($amount) > Number::toCents($balance);
     }
 
     /**

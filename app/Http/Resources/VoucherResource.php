@@ -107,6 +107,8 @@ class VoucherResource extends BaseJsonResource
                 'iban' => $voucher->fund_request->getIban(false),
                 'iban_name' => $voucher->fund_request->getIbanName(false),
             ] : null,
+            'voucher_payout_partial_amounts' => $voucher->getPayoutPartialAmounts(),
+            'voucher_payout_partial_amounts_label_type' => $voucher->getPayoutPartialAmountsLabelType(),
             ...$this->getRecords($voucher),
             ...$this->timestamps($voucher, 'created_at'),
         ];
@@ -232,9 +234,11 @@ class VoucherResource extends BaseJsonResource
 
         return [
             'used' => $used,
-            'amount' => currency_format($amount),
-            'amount_locale' => currency_format_locale($amount),
             'product' => $productResource,
+            'amount' => currency_format($amount),
+            'amount_locale' => $voucher->fund->fund_config->hide_voucher_amount
+                ? null
+                : currency_format_locale($amount),
         ];
     }
 
@@ -274,8 +278,10 @@ class VoucherResource extends BaseJsonResource
             'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
             ...$fund->fund_config->only([
                 'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
-                'allow_voucher_payouts', 'allow_voucher_payout_count',
+                'allow_voucher_payouts', 'allow_voucher_payouts_partial', 'allow_voucher_payout_count',
+                'hide_voucher_amount',
             ]),
+            'allow_voucher_payout_buttons' => $fund->fund_config->getAllowedVoucherPayoutButtonsMap(),
             'voucher_payout_fixed_amount' => $payoutAmount === null ? null : currency_format($payoutAmount),
         ];
     }

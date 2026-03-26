@@ -91,6 +91,7 @@ class SponsorVoucherResource extends BaseJsonResource
                 'url_webshop' => $voucher->fund->fund_config->implementation->url_webshop ?? null,
                 'show_subsidies' => $voucher->fund->fund_config->show_subsidies ?? false,
                 'show_qr_limits' => $voucher->fund->fund_config->show_qr_limits ?? false,
+                'show_qr_code' => $voucher->fund->fund_config->show_qr_code ?? false,
                 'show_requester_limits' => $voucher->fund->fund_config->show_requester_limits ?? false,
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
                 'allow_voucher_records' => $voucher->fund->fund_config->allow_voucher_records ?? false,

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property string $type
  * @property string $amount
+ * @property string|null $max_amount
  * @property string|null $record_type_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -35,9 +36,10 @@ class FundPayoutFormula extends Model
 {
     public const string TYPE_FIXED = 'fixed';
     public const string TYPE_MULTIPLY = 'multiply';
+    public const float MULTIPLY_MAX_AMOUNT = 5000.0;
 
     protected $fillable = [
-        'id', 'fund_id', 'type', 'amount', 'record_type_key',
+        'id', 'fund_id', 'type', 'amount', 'max_amount', 'record_type_key',
     ];
 
     /**
@@ -77,5 +79,13 @@ class FundPayoutFormula extends Model
     public function record_type(): BelongsTo
     {
         return $this->belongsTo(RecordType::class, 'record_type_key', 'key');
+    }
+
+    /**
+     * @return float
+     */
+    public function getMaxAmount(): float
+    {
+        return $this->max_amount !== null ? (float) $this->max_amount : self::MULTIPLY_MAX_AMOUNT;
     }
 }

@@ -592,6 +592,7 @@ class TestData
                 'page_type' => $type,
                 'description' => $length > 1000 ? $generator->generate($length) : $faker->text(rand($length / 2, $length)),
                 'description_alignment' => $type == ImplementationPage::TYPE_HOME ? 'center' : 'left',
+                'blocks_per_row' => 3,
             ]);
         }
 

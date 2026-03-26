@@ -136,8 +136,8 @@ trait HasFrontendActions
      * @param int $count
      * @param bool $waitForItems
      * @param string|null $filePath
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     protected function attachFilesToFileUploader(
         Browser $browser,
@@ -301,6 +301,28 @@ trait HasFrontendActions
         $browser->click("$selector .select-control-search");
 
         $this->findOptionElement($browser, $selector, text: $text, index: $index)->click();
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @param string[] $options
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function assertSelectControlOptionsExists(Browser $browser, string $selector, array $options): void
+    {
+        $browser->waitFor($selector);
+        $browser->assertAttribute($selector, 'role', 'combobox');
+        $browser->click("$selector .select-control-search");
+
+        foreach ($options as $option) {
+            $this->findOptionElement($browser, $selector, text: $option);
+        }
+
+        $browser->click("$selector .select-control-search");
     }
 
     /**

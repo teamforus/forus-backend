@@ -100,6 +100,23 @@ abstract class BaseCommand extends Command
     }
 
     /**
+     * @param string[] $list
+     * @param int $depth
+     * @return void
+     */
+    protected function printListWithValues(array $list = [], int $depth = 0): void
+    {
+        foreach ($list as $title => $value) {
+            if (is_array($value)) {
+                echo str_repeat('    ', $depth) . " - $title  \n";
+                $this->printListWithValues($value, $depth + 1);
+            } else {
+                echo str_repeat('    ', $depth) . " - {$this->green($title)}: $value  \n";
+            }
+        }
+    }
+
+    /**
      * @param string $char
      * @param string $append
      * @return void
