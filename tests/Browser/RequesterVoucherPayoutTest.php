@@ -2,9 +2,12 @@
 
 namespace Tests\Browser;
 
+use App\Models\Fund;
 use App\Models\FundPayoutFormula;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
+use Facebook\WebDriver\Exception\ElementClickInterceptedException;
+use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
@@ -52,7 +55,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
@@ -110,7 +113,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
@@ -120,6 +123,123 @@ class RequesterVoucherPayoutTest extends DuskTestCase
                 $browser->press('@voucherPayoutSubmit');
                 $browser->waitFor('@voucherPayoutSuccess');
                 $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutHiddenWithoutFundRequests(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $voucher = $fund->makeVoucher(identity: $identity, amount: 100);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->assertMissing('@openVoucherPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutButtonVisibleWhenVoucherEntryPointAllowed(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+
+        $fund->fund_config->forceFill([
+            'allow_voucher_payout_buttons' => 'vouchers',
+        ])->save();
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPage($browser, $voucher->id);
+
+                $browser->waitFor('@openVoucherPayoutModal');
+                $browser->assertPresent('@openVoucherPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutButtonHiddenWhenVoucherEntryPointDisallowed(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+
+        $fund->fund_config->forceFill([
+            'allow_voucher_payout_buttons' => 'payouts,products',
+        ])->save();
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPage($browser, $voucher->id);
+
+                $browser->assertMissing('@openVoucherPayoutModal');
 
                 $this->logout($browser);
             });
@@ -168,7 +288,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
 
                 $browser->waitFor('.block-warning');
                 $browser->assertMissing('@voucherPayoutAmount');
@@ -222,12 +342,74 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
 
                 $options = ['€ 50,-', '€ 100,-', '€ 150,-'];
 
                 $this->assertSelectControlOptionsExists($browser, '@voucherPayoutAmount', $options);
                 $this->changeSelectControl($browser, '@voucherPayoutAmount', text: '€ 100,-');
+
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+                $browser->waitFor('@voucherPayoutSuccess');
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterPartialPayoutShowsPersonLabelsForPartnersSameAddress(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_voucher_payouts_partial' => true,
+        ]);
+
+        $this->ensureNumberRecordType($organization, Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS,
+        ]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $voucher->forceFill(['amount' => 200])->save();
+        $this->createTrustedRecord($identity, $fund, $fundRequest, Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS, 3);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $options = [
+                    '€ 50,- (voor 1 persoon)',
+                    '€ 100,- (voor 2 personen)',
+                    '€ 150,- (voor 3 personen)',
+                ];
+
+                $this->assertSelectControlOptionsExists($browser, '@voucherPayoutAmount', $options);
+                $this->changeSelectControl($browser, '@voucherPayoutAmount', text: '€ 100,- (voor 2 personen)');
 
                 $browser->press('@voucherPayoutAcceptRules');
                 $browser->press('@voucherPayoutSubmit');
@@ -270,7 +452,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $this->loginIdentity($browser, $identity);
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
-                $this->openVoucherPayoutModalFromPayoutsPage($browser, $implementation, $voucher->id);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutFundRequestSelect');
@@ -348,6 +530,55 @@ class RequesterVoucherPayoutTest extends DuskTestCase
                 $browser->assertDisabled('@voucherPayoutSubmit');
 
                 $browser->click('.modal-close');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutEntryHiddenOnPayoutsPageWhenPayoutsEntryPointDisallowed(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+
+        $fund->fund_config->forceFill([
+            'allow_voucher_payout_buttons' => 'vouchers,products',
+        ])->save();
+
+        $voucher->makeTransaction([
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
+            'amount' => 10,
+            'target_iban' => $result['iban'],
+            'target_name' => $result['iban_name'],
+            'state' => VoucherTransaction::STATE_SUCCESS,
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $browser->visit($implementation->urlWebshop('payouts'));
+                $browser->waitUntilMissing('@payoutsEmptyBlock');
+                $browser->assertMissing('@payoutsCreateButton');
 
                 $this->logout($browser);
             });
@@ -469,29 +700,82 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     }
 
     /**
-     * @param Browser $browser
-     * @param Implementation $implementation
-     * @param int $voucherId
-     * @return void
-     * @throws TimeoutException
+     * @throws Throwable
      */
-    private function openVoucherPayoutModalFromPayoutsPage(
-        Browser $browser,
-        Implementation $implementation,
-        int $voucherId,
-    ): void {
-        $browser->visit($implementation->urlWebshop('payouts'));
+    public function testProductPayoutButtonHiddenWhenProductsEntryPointDisallowed(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
 
-        $browser->waitFor('@payoutsEmptyBlock');
-        $browser->within('@payoutsEmptyBlock', fn (Browser $browser) => $browser->press('@btnEmptyBlock'));
-        $browser->waitFor('@voucherPayoutForm');
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+        $fund->fund_config->forceFill([
+            'allow_voucher_payout_buttons' => 'vouchers,payouts',
+        ])->save();
 
-        $browser->within('@voucherPayoutForm', function (Browser $browser) use ($voucherId) {
-            $browser->waitFor('@voucherPayoutVoucherSelect');
-            $browser->click('@voucherPayoutVoucherSelect');
-            $browser->waitFor('@voucherSelectorOptions');
-            $browser->waitFor("@voucherSelectorOption$voucherId");
-            $browser->click("@voucherSelectorOption$voucherId");
+        $products = $this->makeTestProviderWithProducts(1);
+        $product = $products[0];
+        $this->addProductToFund($fund, $product, false);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $this->makePayoutVoucherViaApplication($identity, $fund);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+            [$implementation, $implementation->only(['voucher_payout_informational_product_id'])],
+        ], function () use ($implementation, $identity, $product) {
+            $implementation->forceFill([
+                'voucher_payout_informational_product_id' => $product->id,
+            ])->save();
+
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $product) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $browser->visit($implementation->urlWebshop("products/$product->id"));
+                $browser->waitFor('@productName');
+                $browser->assertMissing('@openProductPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
         });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $voucherId
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    private function openVoucherPayoutModalFromVoucherPage(Browser $browser, int $voucherId): void
+    {
+        $this->openVoucherPage($browser, $voucherId);
+        $browser->waitFor('@openVoucherPayoutModal');
+        $browser->press('@openVoucherPayoutModal');
+        $browser->waitFor('@voucherPayoutForm');
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $voucherId
+     * @throws TimeoutException
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @return void
+     */
+    private function openVoucherPage(Browser $browser, int $voucherId): void
+    {
+        $this->goToIdentityVouchers($browser);
+
+        $browser->waitFor("@listVouchersRow$voucherId");
+        $browser->click("@listVouchersRow$voucherId");
+        $browser->waitFor('@voucherTitle');
     }
 }
