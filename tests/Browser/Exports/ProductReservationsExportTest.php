@@ -6,6 +6,8 @@ use App\Exports\ProductReservationsExport;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\ProductReservation;
+use App\Models\ProductReservationFieldValue;
+use App\Models\ReservationField;
 use Exception;
 use Illuminate\Support\Arr;
 use Laravel\Dusk\Browser;
@@ -54,7 +56,7 @@ class ProductReservationsExportTest extends DuskTestCase
                 $this->goToReservationsPage($browser);
                 $this->searchTable($browser, '@tableReservation', $reservation->first_name, $reservation->id);
 
-                $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
+                $fields = $this->getExportFields($reservation);
 
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
@@ -87,19 +89,72 @@ class ProductReservationsExportTest extends DuskTestCase
      */
     protected function prepareData(Fund $fund): ProductReservation
     {
-        $this->makeProviderAndProducts($fund, 1);
-
         $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity(), amount: 1000);
-        $product = $this->findProductForReservation($voucher);
 
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        // update product configs
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        // add reservation fields fillable by provider and requester
+        $field = $provider->reservation_fields()->create([
+            'label' => 'organization custom field text',
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'organization custom field text description',
+            'required' => true,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 0,
+        ]);
+
+        $providerField = $provider->reservation_fields()->create([
+            'label' => 'organization custom field text by provider',
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'organization custom field text description',
+            'required' => false,
+            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
+            'order' => 0,
+        ]);
+
+        // create reservation with custom field
         $reservation = $this->makeReservation($voucher, $product, [
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
+            'custom_fields' => [$field->id => 'custom field'],
+        ]);
+
+        // add custom field filled by provider
+        $reservation->custom_fields()->create([
+            'reservation_field_id' => $providerField->id,
+            'value' => 'custom provider field',
         ]);
 
         $this->assertNotNull($reservation);
 
         return $reservation;
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return array
+     */
+    protected function getExportFields(ProductReservation $reservation): array
+    {
+        $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
+
+        $fields = array_filter($fields, fn ($field) => $field !== ProductReservationsExport::trans('records'));
+
+        $fieldIds = ProductReservationFieldValue::query()
+            ->where('product_reservation_id', $reservation->id)
+            ->pluck('reservation_field_id')
+            ->toArray();
+
+        $fieldList = ReservationField::query()->whereIn('id', $fieldIds)->pluck('label', 'id');
+
+        return [...$fields, ...$fieldList];
     }
 
     /**
