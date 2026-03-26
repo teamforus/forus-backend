@@ -15,6 +15,7 @@ use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -71,13 +72,23 @@ class ProductReservationsController extends Controller
                 $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
             }
 
-            $reservationFields = $product->reservation_fields_enabled ? [
-                ...$request->only([
-                    'phone', 'birth_date', 'custom_fields',
-                    'street', 'house_nr', 'house_nr_addition', 'city',
-                ]),
-                'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
-            ] : [];
+            $reservationFields = [
+                ...($product->isReservationPhoneFieldRequested() ? $request->only([
+                    'phone',
+                ]) : []),
+                ...($product->isReservationBirthDateFieldRequested() ? $request->only([
+                    'birth_date',
+                ]) : []),
+                ...($product->reservation_fields_enabled ? $request->only(['custom_fields']) : []),
+                ...($product->isReservationAddressFieldRequested() ? [
+                    ...$request->only([
+                        'street', 'house_nr', 'house_nr_addition', 'city',
+                    ]),
+                    ...Arr::whereNotNull([
+                        'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
+                    ]),
+                ] : []),
+            ];
 
             $reservation = $voucher->reserveProduct(
                 product: $product,
