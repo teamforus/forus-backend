@@ -119,6 +119,42 @@ class VoucherTest extends TestCase
 
     /**
      * @throws Throwable
+     */
+    public function testSponsorVouchersIndexFiltersByClientUid(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $employee = $organization->employees()->first();
+        $matchingVoucher = $this->makeTestVoucher($fund, voucherFields: [
+            'client_uid' => 'client-uid-1',
+            'employee_id' => $employee->id,
+        ]);
+
+        $otherVoucher = $this->makeTestVoucher($fund, voucherFields: [
+            'client_uid' => 'client-uid-2',
+            'employee_id' => $employee->id,
+        ]);
+
+        $response = $this->getJson(
+            sprintf($this->apiUrl, $organization->id) . '?' . http_build_query([
+                'fund_id' => $fund->id,
+                'type' => 'fund_voucher',
+                'source' => 'all',
+                'client_uid' => $matchingVoucher->client_uid,
+            ]),
+            $this->makeApiHeaders($organization->identity),
+        );
+
+        $response->assertSuccessful();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.id', $matchingVoucher->id);
+        $response->assertJsonMissingPath('data.1.id');
+
+        $this->assertNotEquals($matchingVoucher->id, $otherVoucher->id);
+    }
+
+    /**
+     * @throws Throwable
      * @return void
      */
     public function testVoucherFundFormulaProductMultiplier(): void

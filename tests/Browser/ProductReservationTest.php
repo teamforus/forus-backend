@@ -607,6 +607,181 @@ class ProductReservationTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
+    public function testProductReservationDropsSavedAddressWhenAddressNotRequested(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles']);
+        $fund = $this->makeTestFund($organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $userData = [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ];
+
+            $organization->forceFill([
+                'allow_profiles' => true,
+            ])->save();
+
+            $this->storeProfileAddress($organization, $identity, [
+                'city' => 'Kraigmouth',
+                'street' => 'Hodkiewicz Parks',
+                'house_number' => '8',
+                'house_number_addition' => 'A',
+                'postal_code' => '1234AB',
+            ]);
+
+            $product->forceFill([
+                'reservation_fields_enabled' => true,
+                'reservation_address' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $this->browse(function (Browser $browser) use ($fund, $identity, $product, $userData) {
+                $browser->visit($fund->getImplementation()->urlWebshop());
+
+                $this->loginAndGoToFundVoucher($browser, $identity, $fund);
+                $this->openProductFromAvailableVoucherProductsBlock($browser, $fund, $product);
+
+                $browser->waitFor('@productName');
+                $browser->assertSeeIn('@productName', $product->name);
+
+                $this->openReservationModal($browser, $fund);
+                $this->skipReservationModalEmailAndSelectVoucher($browser, $identity);
+                $this->fillReservationModalNameAndLastName($browser, $userData['first_name'], $userData['last_name']);
+
+                $browser->waitFor('@productReserveNotes');
+                $browser->assertMissing('@productReserveAddress');
+
+                $this->fillReservationModalNote($browser);
+                $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], null, null);
+                $browser->assertMissing('@overviewValueStreet');
+                $browser->assertMissing('@overviewValueHouseNr');
+                $browser->assertMissing('@overviewValueHouseNrAddition');
+                $browser->assertMissing('@overviewValuePostalCode');
+                $browser->assertMissing('@overviewValueCity');
+
+                $this->submitReservationModal($browser);
+
+                $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
+
+                $this->assertReservationCreatedWithProperAcceptanceStatus($reservation);
+                $this->assertNull($reservation->street);
+                $this->assertNull($reservation->house_nr);
+                $this->assertNull($reservation->house_nr_addition);
+                $this->assertNull($reservation->postal_code);
+                $this->assertNull($reservation->city);
+                $this->assertSame('', $reservation->address);
+
+                $this->cancelReservation($browser, $reservation);
+                $this->logout($browser);
+            });
+        } finally {
+            $organization->forceFill($organizationState)->save();
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationDropsSavedAddressWhenAddressIsGlobalAndOrganizationDoesNotRequestIt(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'reservation_address']);
+        $fund = $this->makeTestFund($organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $userData = [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ];
+
+            $organization->forceFill([
+                'allow_profiles' => true,
+                'reservation_address' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            $this->storeProfileAddress($organization, $identity, [
+                'city' => 'Kraigmouth',
+                'street' => 'Hodkiewicz Parks',
+                'house_number' => '8',
+                'house_number_addition' => 'A',
+                'postal_code' => '1234AB',
+            ]);
+
+            $product->forceFill([
+                'reservation_fields_enabled' => true,
+                'reservation_address' => Product::RESERVATION_FIELD_GLOBAL,
+            ])->save();
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $this->browse(function (Browser $browser) use ($fund, $identity, $product, $userData) {
+                $browser->visit($fund->getImplementation()->urlWebshop());
+
+                $this->loginAndGoToFundVoucher($browser, $identity, $fund);
+                $this->openProductFromAvailableVoucherProductsBlock($browser, $fund, $product);
+
+                $browser->waitFor('@productName');
+                $browser->assertSeeIn('@productName', $product->name);
+
+                $this->openReservationModal($browser, $fund);
+                $this->skipReservationModalEmailAndSelectVoucher($browser, $identity);
+                $this->fillReservationModalNameAndLastName($browser, $userData['first_name'], $userData['last_name']);
+
+                $browser->waitFor('@productReserveNotes');
+                $browser->assertMissing('@productReserveAddress');
+
+                $this->fillReservationModalNote($browser);
+                $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], null, null);
+                $browser->assertMissing('@overviewValueStreet');
+                $browser->assertMissing('@overviewValueHouseNr');
+                $browser->assertMissing('@overviewValueHouseNrAddition');
+                $browser->assertMissing('@overviewValuePostalCode');
+                $browser->assertMissing('@overviewValueCity');
+
+                $this->submitReservationModal($browser);
+
+                $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
+
+                $this->assertReservationCreatedWithProperAcceptanceStatus($reservation);
+                $this->assertNull($reservation->street);
+                $this->assertNull($reservation->house_nr);
+                $this->assertNull($reservation->house_nr_addition);
+                $this->assertNull($reservation->postal_code);
+                $this->assertNull($reservation->city);
+                $this->assertSame('', $reservation->address);
+
+                $this->cancelReservation($browser, $reservation);
+                $this->logout($browser);
+            });
+        } finally {
+            $organization->forceFill($organizationState)->save();
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testReservationState(): void
     {
         Cache::clear();
@@ -1399,6 +1574,17 @@ class ProductReservationTest extends DuskTestCase
             $browser->assertSeeIn('@reservationProduct', $reservation->product->name);
             $browser->assertSeeIn('@reservationCode', $reservation->code);
         });
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @param array $records
+     * @return void
+     */
+    private function storeProfileAddress(Organization $organization, Identity $identity, array $records): void
+    {
+        $organization->findOrMakeProfile($identity)->updateRecords($records);
     }
 
     /**

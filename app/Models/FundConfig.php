@@ -49,6 +49,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_voucher_payouts
  * @property bool $allow_voucher_payouts_partial
  * @property int|null $allow_voucher_payout_count
+ * @property string|null $allow_voucher_payout_note
+ * @property string|null $allow_voucher_payout_buttons
  * @property bool $allow_direct_payments
  * @property bool $allow_generator_direct_payments
  * @property bool $allow_voucher_top_ups
@@ -131,6 +133,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReimbursements($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowReservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayoutButtons($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherPayouts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherRecords($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig whereAllowVoucherTopUps($value)
@@ -245,6 +249,16 @@ class FundConfig extends Model
     public const array OUTCOME_TYPES = [
         self::OUTCOME_TYPE_PAYOUT,
         self::OUTCOME_TYPE_VOUCHER,
+    ];
+
+    public const string VOUCHER_PAYOUT_BUTTON_VOUCHERS = 'vouchers';
+    public const string VOUCHER_PAYOUT_BUTTON_PAYOUTS = 'payouts';
+    public const string VOUCHER_PAYOUT_BUTTON_PRODUCTS = 'products';
+
+    public const array VOUCHER_PAYOUT_BUTTONS = [
+        self::VOUCHER_PAYOUT_BUTTON_VOUCHERS,
+        self::VOUCHER_PAYOUT_BUTTON_PAYOUTS,
+        self::VOUCHER_PAYOUT_BUTTON_PRODUCTS,
     ];
 
     protected $fillable = [
@@ -406,6 +420,35 @@ class FundConfig extends Model
     public function isPayoutOutcome(): bool
     {
         return $this->outcome_type === self::OUTCOME_TYPE_PAYOUT;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllowedVoucherPayoutButtons(): array
+    {
+        if ($this->allow_voucher_payout_buttons === null) {
+            return self::VOUCHER_PAYOUT_BUTTONS;
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map('trim', explode(',', $this->allow_voucher_payout_buttons)),
+            fn (string $button) => in_array($button, self::VOUCHER_PAYOUT_BUTTONS, true),
+        )));
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllowedVoucherPayoutButtonsMap(): array
+    {
+        $allowedButtons = $this->getAllowedVoucherPayoutButtons();
+
+        return array_reduce(self::VOUCHER_PAYOUT_BUTTONS, function (array $map, string $button) use ($allowedButtons) {
+            $map[$button] = in_array($button, $allowedButtons, true);
+
+            return $map;
+        }, []);
     }
 
     /**

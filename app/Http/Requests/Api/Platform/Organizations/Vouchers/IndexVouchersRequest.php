@@ -51,6 +51,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'state' => 'nullable|in:' . implode(',', $this->statesList()),
             'email' => ['nullable', ...$this->emailRules()],
             'bsn' => 'nullable|string|max:100',
+            'client_uid' => 'nullable|string|max:20',
             'in_use' => 'nullable|boolean',
             'expired' => 'nullable|boolean',
             'count_per_identity_min' => 'nullable|numeric',

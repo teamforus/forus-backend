@@ -579,20 +579,26 @@ class VoucherTransaction extends Model
      */
     public function makePaymentDescription(int $maxLength = 2000): string
     {
-        if ($this->targetIsIban()) {
-            return trans('bunq.transaction.from_fund', [
-                'fund_name' => $this->voucher->fund->name,
-                'transaction_id' => $this->id,
-            ]);
+        $defaultDescription = trans('bunq.transaction.from_fund', [
+            'fund_name' => $this->voucher->fund->name,
+            'transaction_id' => $this->id,
+        ]);
+
+        if ($this->targetIsPayout() || $this->targetIsIban()) {
+            $payoutDescription = $defaultDescription;
+            $transactionNote = trim((string) $this->voucher->fund?->fund_config?->allow_voucher_payout_note);
+
+            if ($this->targetIsPayout() && $this->initiatedByRequester() && $transactionNote !== '') {
+                $payoutDescription .= " - $transactionNote";
+            }
+
+            return $this->limitPaymentDescription($payoutDescription, $maxLength);
         }
 
         if (!$this->provider) {
             Log::channel('bng')->error("Unexpected transaction without provider found $this->id.");
 
-            return trans('bunq.transaction.from_fund', [
-                'fund_name' => $this->voucher->fund->name,
-                'transaction_id' => $this->id,
-            ]);
+            return $this->limitPaymentDescription($defaultDescription, $maxLength);
         }
 
         $separator = " {$this->provider->bank_separator} ";
@@ -611,7 +617,7 @@ class VoucherTransaction extends Model
             $this->provider->bank_note ? $this->notes_provider->first()?->message : null,
         ])));
 
-        return strlen($description) <= $maxLength ? $description : Str::limit($description, $maxLength - 3);
+        return $this->limitPaymentDescription($description, $maxLength);
     }
 
     /**
@@ -672,7 +678,7 @@ class VoucherTransaction extends Model
      */
     public function targetIsIban(): bool
     {
-        return in_array($this->target, [self::TARGET_IBAN, self::TARGET_PAYOUT]);
+        return $this->target === self::TARGET_IBAN;
     }
 
     /**
@@ -699,6 +705,15 @@ class VoucherTransaction extends Model
     public function isIncoming(): bool
     {
         return in_array($this->target, self::TARGETS_INCOMING);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function initiatedByRequester(): bool
+    {
+        return $this->initiator === self::INITIATOR_REQUESTER;
     }
 
     /**
@@ -812,6 +827,16 @@ class VoucherTransaction extends Model
             'type' => $type,
             'value' => $value,
         ]);
+    }
+
+    /**
+     * @param string $description
+     * @param int $maxLength
+     * @return string
+     */
+    protected function limitPaymentDescription(string $description, int $maxLength): string
+    {
+        return strlen($description) <= $maxLength ? $description : Str::limit($description, $maxLength - 3);
     }
 
     /**
