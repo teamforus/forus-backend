@@ -53,10 +53,11 @@ class IdentitiesController extends Controller
             'without_email' => $fund->activeIdentityQuery(false, false)->count(),
         ];
 
-        return SponsorIdentityResource::queryCollection($query)->additional([
-            'meta' => compact('counts'),
+        return SponsorIdentityResource::queryCollection($query, $request, [
             'detailed' => false,
             'organization' => $organization,
+        ])->additional([
+            'meta' => compact('counts'),
         ]);
     }
 

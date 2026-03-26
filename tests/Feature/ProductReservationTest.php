@@ -220,6 +220,98 @@ class ProductReservationTest extends TestCase
     }
 
     /**
+     * @throws Exception
+     * @return void
+     */
+    public function testReservationDropsNonRequestedRequesterFields(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $this->makeProviderAndProducts($fund, 1);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $product = $this->findProductForReservation($voucher);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_phone' => Product::RESERVATION_FIELD_NO,
+            'reservation_address' => Product::RESERVATION_FIELD_NO,
+            'reservation_birth_date' => Product::RESERVATION_FIELD_NO,
+        ]);
+
+        $response = $this->makeReservationStoreRequest($voucher, $product, [
+            'phone' => '0612345678',
+            'birth_date' => '1980-01-10',
+            'street' => 'Sesame Street',
+            'house_nr' => '12',
+            'house_nr_addition' => 'A',
+            'postal_code' => '1234ab',
+            'city' => 'Utrecht',
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
+
+        $reservation = ProductReservation::find($response->json('data.id'));
+
+        $this->assertNotNull($reservation);
+        $this->assertNull($reservation->phone);
+        $this->assertNull($reservation->birth_date);
+        $this->assertNull($reservation->street);
+        $this->assertNull($reservation->house_nr);
+        $this->assertNull($reservation->house_nr_addition);
+        $this->assertNull($reservation->postal_code);
+        $this->assertNull($reservation->city);
+        $this->assertSame('', $reservation->address);
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function testReservationDropsNonRequestedRequesterFieldsWhenAddressIsGlobalAndOrganizationDisablesIt(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $this->makeProviderAndProducts($fund, 1);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $product = $this->findProductForReservation($voucher);
+
+        $organization->update([
+            'reservation_address' => Product::RESERVATION_FIELD_NO,
+        ]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_address' => Product::RESERVATION_FIELD_GLOBAL,
+        ]);
+
+        $response = $this->makeReservationStoreRequest($voucher, $product, [
+            'street' => 'Sesame Street',
+            'house_nr' => '12',
+            'house_nr_addition' => 'A',
+            'postal_code' => '1234ab',
+            'city' => 'Utrecht',
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['data' => $this->productReservationResourceStructure]);
+
+        $reservation = ProductReservation::find($response->json('data.id'));
+
+        $this->assertNotNull($reservation);
+        $this->assertNull($reservation->street);
+        $this->assertNull($reservation->house_nr);
+        $this->assertNull($reservation->house_nr_addition);
+        $this->assertNull($reservation->postal_code);
+        $this->assertNull($reservation->city);
+        $this->assertSame('', $reservation->address);
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Carbon $startTime
      * @return EmailLog

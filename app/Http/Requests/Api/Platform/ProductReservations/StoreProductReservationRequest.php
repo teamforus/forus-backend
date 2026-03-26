@@ -65,6 +65,16 @@ class StoreProductReservationRequest extends BaseProductReservationFieldRequest
      */
     public function addressRules(?Product $product): array
     {
+        if ($product && !$product->isReservationAddressFieldRequested()) {
+            return array_merge(parent::rules(), [
+                'city' => ['nullable'],
+                'street' => ['nullable'],
+                'house_nr' => ['nullable'],
+                'house_nr_addition' => ['nullable'],
+                'postal_code' => ['nullable'],
+            ]);
+        }
+
         $isPartiallyFilled = !empty(array_filter($this->only([
             'city', 'street', 'house_nr_addition', 'postal_code',
         ])));
@@ -124,23 +134,24 @@ class StoreProductReservationRequest extends BaseProductReservationFieldRequest
      */
     protected function fieldsRules(?Product $product): array
     {
+        $phoneRequested = $product?->isReservationPhoneFieldRequested() ?: false;
+        $birthDateRequested = $product?->isReservationBirthDateFieldRequested() ?: false;
+
         return [
             'first_name' => 'required|string|max:20',
             'last_name' => 'required|string|max:20',
             'user_note' => [
-                $product->reservation_user_note_is_required ? 'required' : 'nullable',
+                $product?->reservation_user_note_is_required ? 'required' : 'nullable',
                 'string',
                 'max:400',
             ],
             'phone' => [
-                $product->reservation_phone_is_required ? 'required' : 'nullable',
-                'string',
-                'max:50',
+                $phoneRequested && $product?->reservation_phone_is_required ? 'required' : 'nullable',
+                ...$phoneRequested ? ['string', 'max:50'] : [],
             ],
             'birth_date' => [
-                $product->reservation_birth_date_is_required ? 'required' : 'nullable',
-                'date_format:Y-m-d',
-                'before:today',
+                $birthDateRequested && $product?->reservation_birth_date_is_required ? 'required' : 'nullable',
+                ...$birthDateRequested ? ['date_format:Y-m-d', 'before:today'] : [],
             ],
         ];
     }

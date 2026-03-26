@@ -108,6 +108,7 @@ class VoucherResource extends BaseJsonResource
                 'iban_name' => $voucher->fund_request->getIbanName(false),
             ] : null,
             'voucher_payout_partial_amounts' => $voucher->getPayoutPartialAmounts(),
+            'voucher_payout_partial_amounts_label_type' => $voucher->getPayoutPartialAmountsLabelType(),
             ...$this->getRecords($voucher),
             ...$this->timestamps($voucher, 'created_at'),
         ];
@@ -280,6 +281,7 @@ class VoucherResource extends BaseJsonResource
                 'allow_voucher_payouts', 'allow_voucher_payouts_partial', 'allow_voucher_payout_count',
                 'hide_voucher_amount',
             ]),
+            'allow_voucher_payout_buttons' => $fund->fund_config->getAllowedVoucherPayoutButtonsMap(),
             'voucher_payout_fixed_amount' => $payoutAmount === null ? null : currency_format($payoutAmount),
         ];
     }
