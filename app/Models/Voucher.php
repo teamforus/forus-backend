@@ -208,6 +208,8 @@ class Voucher extends Model
     public const string VOUCHER_TYPE_PAYOUT = 'payout';
     public const string VOUCHER_TYPE_VOUCHER = 'voucher';
 
+    public const string PAYOUT_PARTIAL_AMOUNTS_LABEL_TYPE_PERSONS = 'persons';
+
     public const string STATE_ACTIVE = 'active';
     public const string STATE_PENDING = 'pending';
     public const string STATE_DEACTIVATED = 'deactivated';
@@ -465,19 +467,12 @@ class Voucher extends Model
      */
     public function getPayoutPartialAmounts(): ?array
     {
-        // check that voucher payouts and allowed and partial payouts enabled
-        if (!$this->fund?->fund_config?->allow_voucher_payouts ||
-            !$this->fund?->fund_config?->allow_voucher_payouts_partial) {
+        $formula = $this->getPayoutPartialFormula();
+
+        if (!$formula) {
             return null;
         }
 
-        // check that has exactly one payout formula and is of multiply type
-        if ($this->fund?->fund_payout_formulas?->count() !== 1 ||
-            $this->fund->fund_payout_formulas[0]->type !== FundPayoutFormula::TYPE_MULTIPLY) {
-            return null;
-        }
-
-        $formula = $this->fund->fund_payout_formulas[0];
         $unitCents = Number::toCents((float) $formula->amount);
 
         if ($unitCents <= 0) {
@@ -513,6 +508,18 @@ class Voucher extends Model
             fn (int $count) => currency_format(($unitCents * $count) / 100),
             range(1, intdiv($remainingCents, $unitCents)),
         );
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPayoutPartialAmountsLabelType(): ?string
+    {
+        $formula = $this->getPayoutPartialFormula();
+
+        return $formula && $formula->record_type_key === Fund::RECORD_TYPE_KEY_PARTNERS_SAME_ADDRESS
+            ? self::PAYOUT_PARTIAL_AMOUNTS_LABEL_TYPE_PERSONS
+            : null;
     }
 
     /**
@@ -1766,6 +1773,24 @@ class Voucher extends Model
             ->where('fund_id', $this->fund_id)
             ->where('physical_card_type_id', $physicalCardType->id)
             ->first();
+    }
+
+    /**
+     * @return FundPayoutFormula|null
+     */
+    protected function getPayoutPartialFormula(): ?FundPayoutFormula
+    {
+        if (!$this->fund?->fund_config?->allow_voucher_payouts ||
+            !$this->fund?->fund_config?->allow_voucher_payouts_partial) {
+            return null;
+        }
+
+        if ($this->fund?->fund_payout_formulas?->count() !== 1 ||
+            $this->fund->fund_payout_formulas[0]->type !== FundPayoutFormula::TYPE_MULTIPLY) {
+            return null;
+        }
+
+        return $this->fund->fund_payout_formulas[0];
     }
 
     /**
