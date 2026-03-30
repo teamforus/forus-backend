@@ -107,7 +107,9 @@ class FundRequestSearch extends BaseSearch
                 ->select('email')
                 ->limit(1),
             'requester_email' => IdentityEmail::query()
-                ->whereColumn('identity_address', 'fund_requests.identity_address')
+                ->whereHas('identity', function (Builder|Identity $builder) {
+                    $builder->whereColumn('id', 'fund_requests.identity_id');
+                })
                 ->where('verified', true)
                 ->where('primary', true)
                 ->select('email')

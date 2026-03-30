@@ -7,7 +7,6 @@ use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\Role;
 use App\Models\VoucherTransaction;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
@@ -16,10 +15,13 @@ use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Dusk\Browser;
+use Tests\Traits\MakesTestProducts;
 use Throwable;
 
 class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
 {
+    use MakesTestProducts;
+
     /**
      * @return string
      */
@@ -221,26 +223,6 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         ]);
 
         return $products;
-    }
-
-    /**
-     * @param int|null $parentId
-     * @return ProductCategory
-     */
-    protected function makeProductCategory(?int $parentId = null): ProductCategory
-    {
-        $name = $this->faker->name();
-
-        $category = ProductCategory::create([
-            'key' => Str::slug($name),
-            'parent_id' => $parentId,
-        ]);
-
-        $category->translateOrNew(app()->getLocale())->fill([
-            'name' => $name,
-        ])->save();
-
-        return $category;
     }
 
     /**

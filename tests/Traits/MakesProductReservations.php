@@ -7,13 +7,18 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationExtraPayment;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\MollieService\Interfaces\MollieServiceInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Throwable;
 
 trait MakesProductReservations
@@ -158,5 +163,30 @@ trait MakesProductReservations
         }
 
         return $product;
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param string $status
+     * @param float $amount
+     * @param array $fields
+     * @return ReservationExtraPayment|Model
+     */
+    protected function makeTestExtraPayment(
+        ProductReservation $reservation,
+        string $status = ReservationExtraPayment::STATE_PENDING,
+        float $amount = 10,
+        array $fields = []
+    ): Model|ReservationExtraPayment {
+        return $reservation->extra_payment()->create([
+            'type' => ReservationExtraPayment::TYPE_MOLLIE,
+            'state' => $status,
+            'amount' => $amount,
+            'currency' => 'EUR',
+            'method' => MollieServiceInterface::PAYMENT_METHOD_IDEAL,
+            'expires_at' => Carbon::now()->addDays(5)->format('Y-m-d H:i:s'),
+            'payment_id' => Str::random(),
+            ...$fields,
+        ]);
     }
 }

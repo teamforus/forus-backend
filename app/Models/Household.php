@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\HouseholdProfile[] $household_profiles
  * @property-read int|null $household_profiles_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Identity[] $profiles
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Profile[] $profiles
  * @property-read int|null $profiles_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Household newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Household newQuery()
@@ -136,10 +136,10 @@ class Household extends Model
     public function profiles(): BelongsToMany
     {
         return $this->belongsToMany(
-            Identity::class,
+            Profile::class,
             HouseholdProfile::class,
             'household_id',
-            'identity_id',
+            'profile_id',
         );
     }
 }
