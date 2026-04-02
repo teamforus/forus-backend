@@ -3,6 +3,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -113,6 +114,62 @@ class IdentityQuery
             $builder->orWhere(function (Builder $builder) use ($organizationId) {
                 $builder->where('type', Identity::TYPE_PROFILE);
                 $builder->where('creator_organization_id', (array) $organizationId);
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return Builder|Relation|Identity
+     */
+    public static function whereHasPartnerBsnRecord(
+        Builder|Relation|Identity $builder,
+        Identity $identity,
+        Fund $fund,
+    ): Builder|Relation|Identity {
+        return $builder->whereHas('records', function (Builder $builder) use ($identity, $fund) {
+            $builder->where(function (Builder $builder) use ($identity, $fund) {
+                $builder->whereRelation('record_type', 'record_types.key', '=', 'partner_bsn');
+                $builder->whereIn('value', array_filter([$identity?->bsn]));
+
+                $builder->whereHas('validations', function (Builder $query) use ($fund) {
+                    $startDate = $fund->fund_config?->record_validity_start_date;
+                    $trustedDays = $fund->getTrustedDays('partner_bsn');
+
+                    RecordValidationQuery::whereStillTrustedQuery($query, $trustedDays, $startDate);
+                    RecordValidationQuery::whereTrustedByQuery($query, $fund);
+                });
+            });
+
+            $builder->orWhere(function (Builder $builder) use ($identity, $fund) {
+                $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
+                $builder->whereIn('value', array_filter([
+                    $fund->getTrustedRecordOfType($identity, 'partner_bsn')?->value,
+                ]));
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Identity $builder
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return Builder|Relation|Identity
+     */
+    public static function whereHasPendingFundRequestPartnerBsnRecord(
+        Builder|Relation|Identity $builder,
+        Identity $identity,
+        Fund $fund,
+    ): Builder|Relation|Identity {
+        return $builder->whereHas('fund_requests', function (Builder $builder) use ($identity, $fund) {
+            $builder->where('fund_id', $fund->id);
+            $builder->where('state', FundRequest::STATE_PENDING);
+
+            $builder->whereHas('records', function (Builder $builder) use ($identity) {
+                $builder->where('record_type_key', 'partner_bsn');
+                $builder->where('value', $identity->bsn);
             });
         });
     }
