@@ -121,4 +121,12 @@ class ReservationField extends Model
     {
         return $this->fillable_by === self::FILLABLE_BY_REQUESTER;
     }
+
+    /**
+     * @return bool
+     */
+    public function isTypeFile(): bool
+    {
+        return $this->type === self::TYPE_FILE;
+    }
 }

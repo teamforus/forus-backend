@@ -24,6 +24,6 @@ class BIVoucherTransactionsExporter extends BaseBIExporter
             VoucherTransactionsSponsorExport::getExportFieldsRaw(),
         );
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

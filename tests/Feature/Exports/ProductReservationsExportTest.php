@@ -6,6 +6,7 @@ use App\Exports\ProductReservationsExport;
 use App\Models\ProductReservation;
 use App\Models\ProductReservationFieldValue;
 use App\Models\ReservationField;
+use App\Services\FileService\Models\File;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -90,7 +91,7 @@ class ProductReservationsExportTest extends TestCase
         );
 
         $fields = $this->getExportFields($reservation);
-        $this->assertFields($response, $reservation, $fields);
+        $this->assertExportedData($response, $reservation, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $provider->id) . '?' . http_build_query([
@@ -99,7 +100,7 @@ class ProductReservationsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $reservation, $fields);
+        $this->assertExportedData($response, $reservation, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $provider->id) . '?' . http_build_query([
@@ -109,9 +110,313 @@ class ProductReservationsExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $reservation, [
+        $this->assertExportedData($response, $reservation, [
             ProductReservationsExport::trans('code'),
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsExportKeepsColumnsWithSameVisibleLabel(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsorOrganization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        $emailLabel = ProductReservationsExport::trans('email');
+        $customValue = 'custom email field value';
+
+        $field = $provider->reservation_fields()->create([
+            'label' => $emailLabel,
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'organization custom field text description',
+            'required' => true,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 0,
+        ]);
+
+        $reservation = $this->makeReservation($voucher, $product, [
+            'custom_fields' => [$field->id => $customValue],
+        ]);
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $provider->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $indexes = array_keys($rows[0], $emailLabel, true);
+
+        $this->assertCount(2, $indexes);
+        $this->assertEquals($reservation->voucher->identity?->email, $rows[1][$indexes[0]]);
+        $this->assertEquals($customValue, $rows[1][$indexes[1]]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsExportKeepsDeletedCustomFieldColumns(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsorOrganization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        $deletedFieldLabel = 'deleted reservation field';
+        $deletedFieldValue = 'historical field value';
+
+        $field = $provider->reservation_fields()->create([
+            'label' => $deletedFieldLabel,
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'organization custom field text description',
+            'required' => true,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 0,
+        ]);
+
+        $reservation = $this->makeReservation($voucher, $product, [
+            'custom_fields' => [$field->id => $deletedFieldValue],
+        ]);
+
+        $field->delete();
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $provider->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $index = array_search($deletedFieldLabel, $rows[0], true);
+
+        $this->assertNotFalse($index);
+        $this->assertEquals($deletedFieldValue, $rows[1][$index]);
+        $this->assertNotNull($reservation->custom_fields()->firstWhere('reservation_field_id', $field->id));
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsExportKeepsConfiguredCustomFieldOrder(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsorOrganization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        $secondField = $provider->reservation_fields()->create([
+            'label' => 'second field',
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'second field description',
+            'required' => true,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 2,
+        ]);
+
+        $firstField = $provider->reservation_fields()->create([
+            'label' => 'first field',
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'first field description',
+            'required' => true,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 1,
+        ]);
+
+        $reservation = $this->makeReservation($voucher, $product, [
+            'custom_fields' => [
+                $firstField->id => 'first value',
+                $secondField->id => 'second value',
+            ],
+        ]);
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $provider->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $indexes = array_map(fn (string $label) => array_search($label, $rows[0], true), ['first field', 'second field']);
+
+        $this->assertNotFalse($indexes[0]);
+        $this->assertNotFalse($indexes[1]);
+        $this->assertLessThan($indexes[1], $indexes[0]);
+        $this->assertEquals('first value', $rows[1][$indexes[0]]);
+        $this->assertEquals('second value', $rows[1][$indexes[1]]);
+        $this->assertEquals($reservation->code, $rows[1][0]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsExportUsesTextValueForNonFileFieldEvenWhenFileIsAttached(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsorOrganization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        $field = $provider->reservation_fields()->create([
+            'label' => 'text field with attachment',
+            'type' => ReservationField::TYPE_TEXT,
+            'description' => 'text field description',
+            'required' => false,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 1,
+        ]);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $fieldValue = $reservation->custom_fields()->firstWhere('reservation_field_id', $field->id);
+
+        $this->assertNotNull($fieldValue);
+
+        $fieldValue->update([
+            'value' => 'text export value',
+        ]);
+
+        $file = File::create([
+            'identity_address' => $provider->identity_address,
+            'original_name' => 'attached-file.pdf',
+            'ext' => 'pdf',
+            'uid' => File::makeUid(),
+            'path' => 'product-reservation-export-test.pdf',
+            'size' => '1',
+            'type' => 'product_reservation_custom_field',
+            'order' => 0,
+        ]);
+
+        $fieldValue->appendFilesByUid($file->uid);
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $provider->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $index = array_search($field->label, $rows[0], true);
+
+        $this->assertNotFalse($index);
+        $this->assertEquals('text export value', $rows[1][$index]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsExportJoinsAttachedFileNamesForFileField(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsorOrganization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($sponsorOrganization);
+
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => $product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        $field = $provider->reservation_fields()->create([
+            'label' => 'file field',
+            'type' => ReservationField::TYPE_FILE,
+            'description' => 'file field description',
+            'required' => false,
+            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
+            'order' => 1,
+        ]);
+
+        $reservation = $this->makeReservation($voucher, $product);
+        $fieldValue = $reservation->custom_fields()->firstWhere('reservation_field_id', $field->id);
+
+        $this->assertNotNull($fieldValue);
+
+        $firstFile = File::create([
+            'identity_address' => $provider->identity_address,
+            'original_name' => 'first-file.pdf',
+            'ext' => 'pdf',
+            'uid' => File::makeUid(),
+            'path' => 'product-reservation-first-file.pdf',
+            'size' => '1',
+            'type' => 'product_reservation_custom_field',
+            'order' => 0,
+        ]);
+
+        $secondFile = File::create([
+            'identity_address' => $provider->identity_address,
+            'original_name' => 'second-file.pdf',
+            'ext' => 'pdf',
+            'uid' => File::makeUid(),
+            'path' => 'product-reservation-second-file.pdf',
+            'size' => '1',
+            'type' => 'product_reservation_custom_field',
+            'order' => 0,
+        ]);
+
+        $fieldValue->appendFilesByUid([$firstFile->uid, $secondFile->uid]);
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $provider->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($provider->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $index = array_search($field->label, $rows[0], true);
+
+        $this->assertNotFalse($index);
+        $this->assertEquals('first-file.pdf, second-file.pdf', $rows[1][$index]);
     }
 
     /**
@@ -129,7 +434,11 @@ class ProductReservationsExportTest extends TestCase
             ->pluck('reservation_field_id')
             ->toArray();
 
-        $fieldList = ReservationField::query()->whereIn('id', $fieldIds)->pluck('label', 'id');
+        $fieldList = ReservationField::withTrashed()
+            ->whereIn('id', $fieldIds)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->pluck('label', 'id');
 
         return [...$fields, ...$fieldList];
     }
@@ -140,20 +449,14 @@ class ProductReservationsExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         ProductReservation $reservation,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert specific fields
-        $this->assertEquals($reservation->code, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $reservation->code, 0);
     }
 }

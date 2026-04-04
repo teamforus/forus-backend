@@ -46,7 +46,7 @@ class VoucherTransactionsSponsorExportTest extends TestCase
         );
 
         $fields = Arr::pluck(VoucherTransactionsSponsorExport::getExportFields(), 'name');
-        $this->assertFields($response, $transaction, $fields);
+        $this->assertExportedData($response, $transaction, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -55,7 +55,7 @@ class VoucherTransactionsSponsorExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $transaction, $fields);
+        $this->assertExportedData($response, $transaction, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -65,7 +65,7 @@ class VoucherTransactionsSponsorExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $transaction, [
+        $this->assertExportedData($response, $transaction, [
             VoucherTransactionsSponsorExport::trans('id'),
         ]);
     }
@@ -108,20 +108,14 @@ class VoucherTransactionsSponsorExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         VoucherTransaction $transaction,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert specific fields
-        $this->assertEquals($transaction->id, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $transaction->id, 0);
     }
 }

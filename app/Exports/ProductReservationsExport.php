@@ -9,13 +9,15 @@ use App\Models\ReservationField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class ProductReservationsExport extends BaseExport
 {
-    protected static string $transKey = 'reservations';
     protected Collection $fieldList;
+    protected static string $transKey = 'reservations';
+
+    protected const string DYNAMIC_FIELD_RECORDS = 'records';
+    protected const array DYNAMIC_FIELDS_KEYS = [self::DYNAMIC_FIELD_RECORDS];
 
     /**
      * @var array|string[][]
@@ -44,48 +46,33 @@ class ProductReservationsExport extends BaseExport
      * @var array|string[]
      */
     protected array $builderWithArray = [
+        'product',
+        'voucher.identity.primary_email',
+        'voucher_transaction',
         'custom_fields.files',
+        'custom_fields.reservation_field',
     ];
 
     /**
      * @param Builder|Relation|ProductReservation $builder
      * @param array $fields
      */
-    public function __construct(Builder|Relation|ProductReservation $builder, protected array $fields)
+    public function __construct(Builder|Relation|ProductReservation $builder, array $fields)
     {
-        $fieldIds = ProductReservationFieldValue::query()
-            ->whereIn('product_reservation_id', (clone $builder)->select('id'))
-            ->pluck('reservation_field_id')
-            ->toArray();
+        $fieldIds = in_array(static::DYNAMIC_FIELD_RECORDS, $fields, true)
+            ? ProductReservationFieldValue::query()
+                ->whereIn('product_reservation_id', (clone $builder)->select('id'))
+                ->pluck('reservation_field_id')
+                ->toArray()
+            : [];
 
-        $this->fieldList = ReservationField::query()->whereIn('id', $fieldIds)->pluck('label', 'id');
+        $this->fieldList = ReservationField::withTrashed()
+            ->whereIn('id', $fieldIds)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->pluck('label', 'id');
 
         parent::__construct($builder, $fields);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
-
-        return $data->map(function (ProductReservation $reservation) use ($fieldLabels) {
-            $row = Arr::only($this->getRow($reservation), $this->fields);
-
-            $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $row[$key],
-            ]), []);
-
-            $records = (array) $this->fieldList->reduce(fn ($records, $value, $key) => [
-                ...$records, $value => $reservation->custom_fields->firstWhere('reservation_field_id', $key),
-            ], []);
-
-            $records = in_array('records', $this->fields) ? static::getRecords($records) : [];
-
-            return [...$row, ...$records];
-        })->values();
     }
 
     /**
@@ -120,10 +107,46 @@ class ProductReservationsExport extends BaseExport
      */
     protected static function getRecords(Collection|array $records): array
     {
-        return array_map(function (?ProductReservationFieldValue $record = null) {
-            $file = $record?->files[0] ?? null;
+        return array_map(function (ProductReservationFieldValue|null $record) {
+            if ($record?->reservation_field?->isTypeFile()) {
+                return $record->files->pluck('original_name')->join(', ') ?: ($record->value ?: '-');
+            }
 
-            return $file ? $file->original_name : ($record?->value ?: '-');
+            return $record?->value ?: '-';
         }, $records);
+    }
+
+    protected function getDynamicColumnDefinitionsFor(string $fieldKey): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        return $this->fieldList->map(fn (string $label, int $id) => [
+            'key' => static::makeDynamicColumnKey($id, 'reservation_field'),
+            'label' => $label,
+        ])->values()->all();
+    }
+
+    /**
+     * @param string $fieldKey
+     * @param Model|ProductReservation $model
+     * @return array
+     */
+    protected function getDynamicRowValuesFor(string $fieldKey, Model|ProductReservation $model): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        $records = $this->fieldList->mapWithKeys(fn (string $label, int $id) => [
+            $id => $model->custom_fields->firstWhere('reservation_field_id', $id),
+        ])->all();
+
+        $records = static::getRecords($records);
+
+        return $this->fieldList->mapWithKeys(fn (string $label, int $id) => [
+            static::makeDynamicColumnKey($id, 'reservation_field') => $records[$id] ?? null,
+        ])->all();
     }
 }

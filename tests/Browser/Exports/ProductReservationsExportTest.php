@@ -62,13 +62,13 @@ class ProductReservationsExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($reservation, $data, $fields);
+                    $data && $this->assertExportedData($reservation, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
 
-                    $data && $this->assertFields($reservation, $data, [
+                    $data && $this->assertExportedData($reservation, $data, [
                         ProductReservationsExport::trans('code'),
                     ]);
                 }
@@ -163,13 +163,12 @@ class ProductReservationsExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         ProductReservation $reservation,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($reservation->code, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $reservation->code, 0);
     }
 }

@@ -48,11 +48,11 @@ class EmployeesExportTest extends DuskTestCase
             foreach (static::FORMATS as $format) {
                 // assert all fields exported
                 $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                $data && $this->assertFields($employee, $data, $fields);
+                $data && $this->assertExportedData($employee, $data, $fields);
 
                 // assert specific fields exported
                 $data = $this->fillExportModalAndDownloadFile($browser, $format, ['email']);
-                $data && $this->assertFields($employee, $data, [EmployeesExport::trans('email')]);
+                $data && $this->assertExportedData($employee, $data, [EmployeesExport::trans('email')]);
             }
 
             // Logout
@@ -79,13 +79,12 @@ class EmployeesExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Employee $employee,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($employee->identity->email, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $employee->identity->email, 0);
     }
 }

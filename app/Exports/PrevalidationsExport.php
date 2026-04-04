@@ -5,14 +5,19 @@ namespace App\Exports;
 use App\Exports\Base\BaseExport;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class PrevalidationsExport extends BaseExport
 {
     protected static string $transKey = 'prevalidations';
+    protected Collection $recordTypeList;
+
+    protected const string DYNAMIC_FIELD_RECORDS = 'records';
+    protected const array DYNAMIC_FIELDS_KEYS = [self::DYNAMIC_FIELD_RECORDS];
 
     /**
      * @var array|string[]
@@ -31,24 +36,14 @@ class PrevalidationsExport extends BaseExport
     ];
 
     /**
-     * @param Collection $data
-     * @return Collection
+     * @param Builder|Relation|Prevalidation $builder
+     * @param array $fields
      */
-    protected function exportTransform(Collection $data): Collection
+    public function __construct(Builder|Relation|Prevalidation $builder, array $fields)
     {
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
+        $this->recordTypeList = $this->makeRecordTypeList($builder, $fields);
 
-        return $data->map(function (Prevalidation $prevalidation) use ($fieldLabels) {
-            $row = Arr::only($this->getRow($prevalidation), $this->fields);
-
-            $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $row[$key],
-            ]), []);
-
-            $records = in_array('records', $this->fields) ? static::getRecords($prevalidation) : [];
-
-            return [...$row, ...$records];
-        })->values();
+        parent::__construct($builder, $fields);
     }
 
     /**
@@ -71,6 +66,61 @@ class PrevalidationsExport extends BaseExport
     {
         return $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
             return !Str::endsWith($record->record_type->key, '_eligible');
-        })->pluck('value', 'record_type.name')->toArray();
+        })->pluck('value', 'record_type.key')->toArray();
+    }
+
+    /**
+     * @param string $fieldKey
+     * @return array
+     */
+    protected function getDynamicColumnDefinitionsFor(string $fieldKey): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        return $this->recordTypeList->map(fn ($label, string $key) => [
+            'key' => static::makeDynamicColumnKey($key, 'prevalidation_record'),
+            'label' => $label,
+        ])->values()->all();
+    }
+
+    /**
+     * @param string $fieldKey
+     * @param Model|Prevalidation $model
+     * @return array
+     */
+    protected function getDynamicRowValuesFor(string $fieldKey, Model|Prevalidation $model): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        return collect(static::getRecords($model))->mapWithKeys(fn (string $value, string $key) => [
+            static::makeDynamicColumnKey($key, 'prevalidation_record') => $value,
+        ])->all();
+    }
+
+    /**
+     * @param Builder|Relation|Prevalidation $builder
+     * @param array $fields
+     * @return Collection
+     */
+    protected function makeRecordTypeList(Builder|Relation|Prevalidation $builder, array $fields): Collection
+    {
+        if (!in_array(static::DYNAMIC_FIELD_RECORDS, $fields, true)) {
+            return collect();
+        }
+
+        return PrevalidationRecord::query()
+            ->whereIn('prevalidation_id', (clone $builder)->select('id'))
+            ->with('record_type.translations')
+            ->get()
+            ->filter(fn (PrevalidationRecord $record) => !Str::endsWith($record->record_type->key, '_eligible'))
+            ->mapWithKeys(fn (PrevalidationRecord $record) => [
+                $record->record_type->key => trim((string) $record->record_type->name) !== ''
+                    ? $record->record_type->name
+                    : $record->record_type->key,
+            ]);
     }
 }

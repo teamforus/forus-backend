@@ -66,13 +66,13 @@ class ReimbursementsExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($reimbursement, $data, $fields);
+                    $data && $this->assertExportedData($reimbursement, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'code']);
 
-                    $data && $this->assertFields($reimbursement, $data, [
+                    $data && $this->assertExportedData($reimbursement, $data, [
                         ReimbursementsSponsorExport::trans('id'),
                         ReimbursementsSponsorExport::trans('code'),
                     ]);
@@ -92,13 +92,12 @@ class ReimbursementsExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Reimbursement $reimbursement,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals('#' . $reimbursement->code, $rows[1][1]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, '#' . $reimbursement->code, 1);
     }
 }

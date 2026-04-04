@@ -50,7 +50,7 @@ class VoucherTransactionBulksExportTest extends TestCase
         );
 
         $fields = Arr::pluck(VoucherTransactionBulksExport::getExportFields(), 'name');
-        $this->assertFields($response, $bulk, $fields);
+        $this->assertExportedData($response, $bulk, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -59,7 +59,7 @@ class VoucherTransactionBulksExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $bulk, $fields);
+        $this->assertExportedData($response, $bulk, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -69,7 +69,7 @@ class VoucherTransactionBulksExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $bulk, [
+        $this->assertExportedData($response, $bulk, [
             VoucherTransactionBulksExport::trans('id'),
             VoucherTransactionBulksExport::trans('quantity'),
         ]);
@@ -116,21 +116,15 @@ class VoucherTransactionBulksExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         VoucherTransactionBulk $bulk,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert specific fields
-        $this->assertEquals($bulk->id, $rows[1][0]);
-        $this->assertEquals($bulk->voucher_transactions()->count(), $rows[1][1]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $bulk->id, 0);
+        $this->assertExportCell($rows, $bulk->voucher_transactions()->count(), 1);
     }
 }

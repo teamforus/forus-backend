@@ -21,6 +21,6 @@ class BIFundRequestsExporter extends BaseBIExporter
         $search = (new FundRequestSearch([], FundRequest::query()))->setEmployee($employee);
         $export = new FundRequestsExport($search->query(), FundRequestsExport::getExportFieldsRaw());
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }
