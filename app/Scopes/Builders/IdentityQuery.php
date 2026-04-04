@@ -169,7 +169,7 @@ class IdentityQuery
 
             $builder->whereHas('records', function (Builder $builder) use ($identity) {
                 $builder->where('record_type_key', 'partner_bsn');
-                $builder->where('value', $identity->bsn);
+                $builder->whereIn('value', array_filter([$identity->bsn]));
             });
         });
     }

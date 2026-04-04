@@ -2,10 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Models\RecordType;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\DB;
 use Tests\CreatesApplication;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
@@ -24,37 +22,133 @@ class FundTakenByPartnerTest extends TestCase
      * @throws Throwable
      * @return void
      */
-    public function testFundTakenByPartnerPendingFundRequest(): void
+    public function testFundTakenByPartnerPendingFundRequestMatchesByPendingRequestRecord(): void
     {
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
-        $identity1 = $this->makeIdentity($this->makeUniqueEmail());
-        $identity2 = $this->makeIdentity($this->makeUniqueEmail());
+        $partnerWithPendingRequest = $this->makeIdentity($this->makeUniqueEmail());
+        $requester = $this->makeIdentity($this->makeUniqueEmail());
+        $this->makeFundRequestWithRecord($partnerWithPendingRequest, $fund, 'partner_bsn', '123456789');
 
-        // make pending fund request and add partner_bsn record
-        // and assert that partner (identity2) in this fund is taken by partner with pending fund request
-        DB::beginTransaction();
-        $fundRequest = $this->setCriteriaAndMakeFundRequest($identity1, $fund, ['children_nth' => 3]);
+        $this->assertFalse(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity dont have partner with pending fund request',
+        );
 
-        $fundRequest->records()->create([
-            'record_type_key' => 'partner_bsn',
-            'value' => 123456789,
-        ]);
+        $requester->setBsnRecord(123456789);
 
-        $this->assertFalse($fund->isTakenByPartnerPendingFundRequest($identity2), 'Identity dont have partner with pending fund request');
-        $identity2->setBsnRecord(123456789);
-        $this->assertTrue($fund->isTakenByPartnerPendingFundRequest($identity2), 'Identity have partner with pending fund request');
-        DB::rollBack();
+        $this->assertTrue(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity have partner with pending fund request',
+        );
+    }
 
-        // add to identity1 partner_bsn record and make fund request - then assert that partner bsn
-        // can be found by record and found it's pending fund request
-        DB::beginTransaction();
-        $identity1
-            ->makeRecord(RecordType::where('key', 'partner_bsn')->first(), 123456789)
-            ->makeValidationRequest()
-            ->approve($fund->organization->identity, $fund->organization);
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundTakenByPartnerPendingFundRequestMatchesByValidatedPartnerRecord(): void
+    {
+        $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), '123456789');
+        $partnerWithValidatedRecord = $this->makeIdentity($this->makeUniqueEmail());
 
-        $this->setCriteriaAndMakeFundRequest($identity1, $fund, ['children_nth' => 3]);
-        $this->assertTrue($fund->isTakenByPartnerPendingFundRequest($identity2), 'Identity have partner with pending fund request');
-        DB::rollBack();
+        $this->makeValidatedIdentityRecordForFund($partnerWithValidatedRecord, $fund, 'partner_bsn', '123456789');
+        $this->setCriteriaAndMakeFundRequest($partnerWithValidatedRecord, $fund, ['children_nth' => 3]);
+
+        $this->assertTrue(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity have partner with pending fund request',
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundTakenByPartnerPendingFundRequestChecksAllMatchingPartners(): void
+    {
+        $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), '123456789');
+        $partnerWithVoucher = $this->makeIdentity($this->makeUniqueEmail());
+        $partnerWithPendingRequest = $this->makeIdentity($this->makeUniqueEmail());
+
+        $this->makeValidatedIdentityRecordForFund($partnerWithVoucher, $fund, 'partner_bsn', '123456789');
+        $this->makeFundRequestWithRecord($partnerWithPendingRequest, $fund, 'partner_bsn', '123456789');
+
+        $this->assertTrue(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity have partner with pending fund request among multiple matches',
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundTakenByPartnerApprovedRequestChecksAllMatchingPartners(): void
+    {
+        $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), '123456789');
+        $staleMatch = $this->makeIdentity($this->makeUniqueEmail());
+        $partnerWithApprovedRequest = $this->makeIdentity($this->makeUniqueEmail());
+
+        $this->makeValidatedIdentityRecordForFund($staleMatch, $fund, 'partner_bsn', '123456789');
+        $this->makeValidatedIdentityRecordForFund($partnerWithApprovedRequest, $fund, 'partner_bsn', '123456789');
+
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($partnerWithApprovedRequest, $fund, ['children_nth' => 3]);
+        $employee = $fund->organization->employees()->first();
+        $fundRequest->assignEmployee($employee)->approve();
+        $fund->makeVoucher($partnerWithApprovedRequest, ['amount' => 100]);
+
+        $this->assertTrue(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity have partner with approved request and active voucher among multiple matches',
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundTakenByPartnerApprovedRequestDoesNotCombineDifferentMatchingPartners(): void
+    {
+        $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()));
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), '123456789');
+        $partnerWithVoucher = $this->makeIdentity($this->makeUniqueEmail());
+        $partnerWithApprovedRequest = $this->makeIdentity($this->makeUniqueEmail());
+
+        $this->makeValidatedIdentityRecordForFund($partnerWithVoucher, $fund, 'partner_bsn', '123456789');
+        $this->makeValidatedIdentityRecordForFund($partnerWithApprovedRequest, $fund, 'partner_bsn', '123456789');
+
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($partnerWithApprovedRequest, $fund, ['children_nth' => 3]);
+        $employee = $fund->organization->employees()->first();
+
+        $fundRequest->assignEmployee($employee)->approve();
+        $fund->makeVoucher($partnerWithVoucher, ['amount' => 100]);
+
+        $this->assertFalse(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity approved request and active voucher should match the same partner',
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundTakenByPartnerPendingFundRequestIgnoresOtherFunds(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $otherFund = $this->makeTestFund($organization);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), '123456789');
+        $partner = $this->makeIdentity($this->makeUniqueEmail());
+
+        $this->makeFundRequestWithRecord($partner, $otherFund, 'partner_bsn', '123456789');
+
+        $this->assertFalse(
+            $fund->isTakenByPartnerPendingFundRequest($requester),
+            'Identity partner on other fund should not block current fund',
+        );
     }
 }

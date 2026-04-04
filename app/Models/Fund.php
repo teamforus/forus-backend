@@ -1804,7 +1804,7 @@ class Fund extends Model
      */
     public function isTakenByPartnerPendingFundRequest(Identity $identity): bool
     {
-        $partnerIdentity = Identity::query()
+        $partnerIds = Identity::query()
             ->where(function (Builder $builder) use ($identity) {
                 $builder->where(function (Builder $builder) use ($identity) {
                     IdentityQuery::whereHasPartnerBsnRecord($builder, $identity, $this);
@@ -1814,10 +1814,11 @@ class Fund extends Model
                     IdentityQuery::whereHasPendingFundRequestPartnerBsnRecord($builder, $identity, $this);
                 });
             })
-            ->first();
+            ->pluck('id')
+            ->all();
 
-        return $partnerIdentity && $this->fund_requests()->where(function (Builder $builder) use ($partnerIdentity) {
-            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $partnerIdentity->id);
+        return count($partnerIds) > 0 && $this->fund_requests()->where(function (Builder $builder) use ($partnerIds) {
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $partnerIds);
         })->exists();
     }
 
