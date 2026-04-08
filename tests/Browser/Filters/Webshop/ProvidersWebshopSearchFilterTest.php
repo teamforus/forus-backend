@@ -138,9 +138,9 @@ class ProvidersWebshopSearchFilterTest extends BaseWebshopSearchFilter
             'branch_id' => $this->faker->numberBetween(100000, 1000000),
             'branch_name' => $this->faker->name(),
             'branch_number' => $this->faker->numberBetween(100000, 1000000),
+            'postcode' => '9721 AN',
             'lat' => 53.1935717,
             'lon' => 6.5825892,
-            'postcode' => $this->faker->postcode(),
         ]);
 
         $employee->update(['office_id' => $office->id]);
