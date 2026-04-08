@@ -49,6 +49,28 @@ trait ExportTrait
     }
 
     /**
+     * @param array $rows
+     * @param array $fields
+     * @return void
+     */
+    protected function assertExportHeaders(array $rows, array $fields): void
+    {
+        $this->assertEquals($fields, $rows[0]);
+    }
+
+    /**
+     * @param array $rows
+     * @param mixed $expected
+     * @param int $column
+     * @param int $row
+     * @return void
+     */
+    protected function assertExportCell(array $rows, mixed $expected, int $column, int $row = 1): void
+    {
+        $this->assertEquals($expected, $rows[$row][$column]);
+    }
+
+    /**
      * @param string $format
      * @return array|null
      */

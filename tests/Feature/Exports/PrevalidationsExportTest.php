@@ -5,6 +5,7 @@ namespace Tests\Feature\Exports;
 use App\Exports\PrevalidationsExport;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
+use App\Models\RecordType;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -39,7 +40,7 @@ class PrevalidationsExportTest extends TestCase
         // Assert export without fields - must be all fields by default
         $response = $this->getJson("/api/v1/platform/organizations/$organization->id/prevalidations/export?data_format=csv", $apiHeaders);
         $fields = $this->getExportFields($prevalidation);
-        $this->assertFields($response, $prevalidation, $fields);
+        $this->assertExportedData($response, $prevalidation, $fields);
 
         // Assert with passed all fields
         $url = "/api/v1/platform/organizations/$organization->id/prevalidations/export?" . http_build_query([
@@ -48,7 +49,7 @@ class PrevalidationsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $prevalidation, $fields);
+        $this->assertExportedData($response, $prevalidation, $fields);
 
         // Assert specific fields
         $url = "/api/v1/platform/organizations/$organization->id/prevalidations/export?" . http_build_query([
@@ -58,9 +59,146 @@ class PrevalidationsExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $prevalidation, [
+        $this->assertExportedData($response, $prevalidation, [
             PrevalidationsExport::trans('code'),
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPrevalidationsExportFallsBackToRecordKeyWhenVisibleLabelIsEmpty(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($organization);
+
+        $this->addTestCriteriaToFund($fund);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+
+        $response = $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidations/export?data_format=csv",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $blankNamedRecords = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
+            return !str_contains($record->record_type->key, '_eligible') &&
+                ($record->record_type->name === null || $record->record_type->name === '');
+        })->values();
+
+        $this->assertGreaterThan(1, $blankNamedRecords->count());
+
+        $blankNamedRecords->each(function (PrevalidationRecord $record) use ($rows) {
+            $index = array_search($record->record_type->key, $rows[0], true);
+
+            $this->assertNotFalse($index);
+            $this->assertEquals($record->value, $rows[1][$index]);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPrevalidationsExportFallsBackToRecordKeyWhenVisibleLabelIsWhitespaceOnly(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($organization);
+
+        $this->addTestCriteriaToFund($fund);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+
+        $recordType = RecordType::create([
+            'key' => 'whitespace_label_' . token_generator()->generate(12),
+            'type' => RecordType::TYPE_STRING,
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
+            'organization_id' => $organization->id,
+        ]);
+
+        $recordType->translations()->forceCreate([
+            'locale' => app()->getLocale(),
+            'name' => '   ',
+        ]);
+
+        $prevalidation->prevalidation_records()->create([
+            'record_type_id' => $recordType->id,
+            'value' => 'whitespace label value',
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidations/export?data_format=csv",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $index = array_search($recordType->key, $rows[0], true);
+
+        $this->assertNotFalse($index);
+        $this->assertEquals('whitespace label value', $rows[1][$index]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPrevalidationsExportKeepsColumnsWithBuiltInFieldKey(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($organization);
+
+        $this->addTestCriteriaToFund($fund);
+        $prevalidation = $this->makePrevalidationForTestCriteria($organization, $fund);
+
+        $recordTypeKey = RecordType::where('key', 'code')->doesntExist() ? 'code' : 'used';
+        $recordLabel = "custom $recordTypeKey";
+        $recordValue = "custom $recordTypeKey value";
+
+        $recordType = RecordType::create([
+            'key' => $recordTypeKey,
+            'type' => RecordType::TYPE_STRING,
+            'control_type' => RecordType::CONTROL_TYPE_TEXT,
+            'organization_id' => $organization->id,
+        ]);
+
+        $recordType->translations()->forceCreate([
+            'locale' => app()->getLocale(),
+            'name' => $recordLabel,
+        ]);
+
+        $prevalidation->prevalidation_records()->create([
+            'record_type_id' => $recordType->id,
+            'value' => $recordValue,
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidations/export?data_format=csv",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $builtInIndex = array_search(PrevalidationsExport::trans($recordTypeKey), $rows[0], true);
+
+        $this->assertNotFalse($builtInIndex);
+        $this->assertEquals(
+            $recordTypeKey === 'code'
+                ? $prevalidation->uid
+                : trans('export.prevalidations.used_' . ($prevalidation->state === Prevalidation::STATE_USED ? 'yes' : 'no')),
+            $rows[1][$builtInIndex],
+        );
+        $this->assertContains($recordValue, $rows[1]);
     }
 
     /**
@@ -72,11 +210,15 @@ class PrevalidationsExportTest extends TestCase
         $fields = Arr::pluck(PrevalidationsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== PrevalidationsExport::trans('records'));
 
-        $records = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
+        $recordLabels = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
             return !str_contains($record->record_type->key, '_eligible');
-        })->pluck('value', 'record_type.name')->toArray();
+        })->map(function (PrevalidationRecord $record) {
+            return trim((string) $record->record_type->name) !== ''
+                ? $record->record_type->name
+                : $record->record_type->key;
+        })->values()->all();
 
-        return [...$fields, ...array_keys($records)];
+        return [...$fields, ...$recordLabels];
     }
 
     /**
@@ -85,20 +227,14 @@ class PrevalidationsExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         Prevalidation $prevalidation,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert specific fields
-        $this->assertEquals($prevalidation->uid, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $prevalidation->uid, 0);
     }
 }

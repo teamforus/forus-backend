@@ -51,7 +51,7 @@ class FundRequestsExportTest extends TestCase
 
         // Filter headers except records header and add all record keys
         $fields = $this->getExportFields($fundRequest);
-        $this->assertFields($response, $fundRequest, $fields);
+        $this->assertExportedData($response, $fundRequest, $fields);
 
         // Assert with passed all fields
         $url = $apiExportUrl . '?' . http_build_query([
@@ -60,7 +60,7 @@ class FundRequestsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $fundRequest, $fields);
+        $this->assertExportedData($response, $fundRequest, $fields);
 
         // Assert specific fields
         $url = $apiExportUrl . '?' . http_build_query([
@@ -70,10 +70,57 @@ class FundRequestsExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $fundRequest, [
+        $this->assertExportedData($response, $fundRequest, [
             FundRequestsExport::trans('bsn'),
             FundRequestsExport::trans('fund_name'),
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestsExportKeepsColumnsWithBuiltInFieldKey(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $fund = $this->makeTestFund($organization);
+
+        $records = [[
+            'fund_criterion_id' => $fund->criteria[0]?->id,
+            'value' => 5,
+            'files' => [],
+        ]];
+
+        $this->makeFundRequest($identity, $fund, $records, false)->assertSuccessful();
+        $fundRequest = $fund->fund_requests()->first();
+        $this->assertNotNull($fundRequest);
+
+        $recordValue = 'custom fund name record';
+        $fundRequest->records()->create([
+            'fund_request_id' => $fundRequest->id,
+            'record_type_key' => 'fund_name',
+            'value' => $recordValue,
+            'source' => FundRequestRecord::SOURCE_FORM,
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/export?data_format=csv",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $builtInIndex = array_search(FundRequestsExport::trans('fund_name'), $rows[0], true);
+        $recordIndex = array_search('fund_name', $rows[0], true);
+
+        $this->assertNotFalse($builtInIndex);
+        $this->assertNotFalse($recordIndex);
+        $this->assertNotEquals($builtInIndex, $recordIndex);
+        $this->assertEquals($fund->name, $rows[1][$builtInIndex]);
+        $this->assertEquals($recordValue, $rows[1][$recordIndex]);
     }
 
     /**
@@ -99,20 +146,14 @@ class FundRequestsExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         FundRequest $fundRequest,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert values
-        $this->assertEquals($fundRequest->fund->name, $rows[1][1]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $fundRequest->fund->name, 1);
     }
 }

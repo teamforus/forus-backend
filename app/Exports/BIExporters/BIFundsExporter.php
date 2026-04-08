@@ -27,6 +27,6 @@ class BIFundsExporter extends BaseBIExporter
             now()->endOfYear(),
         );
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

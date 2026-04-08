@@ -21,7 +21,7 @@ class BIFundIdentitiesExporter extends BaseBIExporter
             $search = new FundIdentitiesSearch([], $fund);
             $export = new FundIdentitiesExport($search->query(), FundIdentitiesExport::getExportFieldsRaw());
 
-            return array_merge($list, $export->collection()->toArray());
+            return array_merge($list, $this->transformExportRows($export));
         }, []);
     }
 }

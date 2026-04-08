@@ -19,20 +19,22 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     protected Collection $data;
     protected static string $transKey = '';
     protected static array $exportFields = [];
+    protected const array DYNAMIC_FIELDS_KEYS = [];
+
+    protected array $headings = [];
+    protected array $columnKeys = [];
+    protected array $resolvedColumns = [];
 
     protected array $builderWithArray = [];
     protected array $builderWithCountArray = [];
 
     /**
-     * @param Builder|Relation|Model $builder
+     * @param Builder|Relation|Model|null $builder
      * @param array $fields
      */
-    public function __construct(Builder|Relation|Model $builder, protected array $fields = [])
+    public function __construct(Builder|Relation|Model|null $builder, protected array $fields = [])
     {
-        $data = $this->export($builder);
-        $totals = $this->getTotals();
-
-        $this->data = !empty($totals) ? $data->push($totals) : $data;
+        $this->initialize($builder);
     }
 
     /**
@@ -46,13 +48,19 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     /**
      * @return array
      */
+    public function collectionWithHeadings(): array
+    {
+        return $this->data
+            ->map(fn (array $row) => $this->buildAssociativeRow($row, $this->headings))
+            ->toArray();
+    }
+
+    /**
+     * @return array
+     */
     public function headings(): array
     {
-        $collection = $this->collection();
-
-        return $collection->isNotEmpty()
-            ? array_keys($collection->first())
-            : array_map(fn ($key) => static::trans($key), $this->fields);
+        return $this->headings;
     }
 
     /**
@@ -86,28 +94,289 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param Builder|Relation|Model|null $builder
+     * @return void
+     */
+    protected function initialize(Builder|Relation|Model|null $builder): void
+    {
+        $this->initializeFromRowValues($this->collectRowValues($builder));
+    }
+
+    /**
+     * @param Collection $rowValues
+     * @return void
+     */
+    protected function initializeFromRowValues(Collection $rowValues): void
+    {
+        $this->initializeColumnDefinitions($rowValues);
+
+        $data = $this->formatRowValues($rowValues, $this->resolvedColumns);
+        $totals = $this->formatTotalsRow();
+
+        $this->data = $totals !== null ? $data->push($totals) : $data;
+    }
+
+    /**
+     * @param Builder|Relation|Model $builder
      * @return Collection
      */
-    protected function export(Builder|Relation $builder): Collection
+    protected function collectRowValues(Builder|Relation|Model $builder): Collection
     {
-        return $this->exportTransform(
-            $builder
-                ->with($this->getBuilderWithArray())
-                ->withCount($this->getBuilderWithCountArray())
-                ->get()
+        if ($builder instanceof Model) {
+            $builder->loadMissing($this->getBuilderWithArray());
+
+            if (!empty($this->getBuilderWithCountArray())) {
+                $builder->loadCount($this->getBuilderWithCountArray());
+            }
+
+            return collect([$builder])->map(fn (Model $model) => $this->getRowValues($model))->values();
+        }
+
+        return $builder
+            ->with($this->getBuilderWithArray())
+            ->withCount($this->getBuilderWithCountArray())
+            ->get()
+            ->map(fn (Model $model) => $this->getRowValues($model))
+            ->values();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFieldLabels(): array
+    {
+        return Arr::pluck(static::getExportFields(), 'name', 'key');
+    }
+
+    /**
+     * @return array
+     */
+    protected function getSelectedFieldKeys(): array
+    {
+        $selectedFields = array_fill_keys($this->fields, true);
+
+        return array_values(array_filter(
+            array_keys($this->getFieldLabels()),
+            fn (string $key) => array_key_exists($key, $selectedFields),
+        ));
+    }
+
+    /**
+     * @return array
+     */
+    protected function getBaseFieldKeys(): array
+    {
+        return $this->getBaseFieldKeysWithout($this->getDynamicFieldKeys());
+    }
+
+    /**
+     * @param array|string $excludedFields
+     * @return array
+     */
+    protected function getBaseFieldKeysWithout(array|string $excludedFields): array
+    {
+        $excludedFields = Arr::wrap($excludedFields);
+
+        return array_values(array_filter(
+            $this->getSelectedFieldKeys(),
+            fn (string $key) => !in_array($key, $excludedFields, true),
+        ));
+    }
+
+    /**
+     * @param string $field
+     * @return bool
+     */
+    protected function hasSelectedField(string $field): bool
+    {
+        return in_array($field, $this->fields, true);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getDynamicFieldKeys(): array
+    {
+        return static::DYNAMIC_FIELDS_KEYS;
+    }
+
+    /**
+     * @param string $field
+     * @return bool
+     */
+    protected function isDynamicFieldKey(string $field): bool
+    {
+        return in_array($field, $this->getDynamicFieldKeys(), true);
+    }
+
+    /**
+     * @param string $field
+     * @return bool
+     */
+    protected function shouldExpandDynamicField(string $field): bool
+    {
+        return $this->isDynamicFieldKey($field) && $this->hasSelectedField($field);
+    }
+
+    /**
+     * @param string|int $id
+     * @param string $prefix
+     * @return string
+     */
+    protected static function makeDynamicColumnKey(string|int $id, string $prefix): string
+    {
+        return "{$prefix}_$id";
+    }
+
+    /**
+     * @return array
+     */
+    protected function getBaseColumnDefinitions(): array
+    {
+        $fieldLabels = $this->getFieldLabels();
+
+        return array_map(fn (string $key) => [
+            'key' => $key,
+            'label' => $fieldLabels[$key] ?? static::trans($key),
+        ], $this->getBaseFieldKeys());
+    }
+
+    /**
+     * @param string $fieldKey
+     * @return array
+     */
+    protected function getDynamicColumnDefinitionsFor(string $fieldKey): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getColumnDefinitions(): array
+    {
+        $baseColumns = array_column($this->getBaseColumnDefinitions(), null, 'key');
+
+        return array_reduce($this->getSelectedFieldKeys(), function (array $columns, string $field) use ($baseColumns) {
+            if ($this->shouldExpandDynamicField($field)) {
+                return [...$columns, ...$this->getDynamicColumnDefinitionsFor($field)];
+            }
+
+            if (array_key_exists($field, $baseColumns)) {
+                $columns[] = $baseColumns[$field];
+            }
+
+            return $columns;
+        }, []);
+    }
+
+    /**
+     * @param Collection $rowValues
+     * @param array $columns
+     * @return array
+     */
+    protected function filterColumnDefinitions(Collection $rowValues, array $columns): array
+    {
+        return $columns;
+    }
+
+    /**
+     * @param string $fieldKey
+     * @param Model $model
+     * @return array
+     */
+    protected function getDynamicRowValuesFor(string $fieldKey, Model $model): array
+    {
+        return [];
+    }
+
+    /**
+     * @param Model $model
+     * @return array
+     */
+    protected function getRowValues(Model $model): array
+    {
+        $baseValues = Arr::only($this->getRow($model), $this->getBaseFieldKeys());
+
+        return array_reduce($this->getSelectedFieldKeys(), function (array $rowValues, string $field) use ($model, $baseValues) {
+            if ($this->shouldExpandDynamicField($field)) {
+                return [...$rowValues, ...$this->getDynamicRowValuesFor($field, $model)];
+            }
+
+            if (array_key_exists($field, $baseValues)) {
+                $rowValues[$field] = $baseValues[$field];
+            }
+
+            return $rowValues;
+        }, []);
+    }
+
+    /**
+     * @param Collection $rowValues
+     * @return void
+     */
+    protected function initializeColumnDefinitions(Collection $rowValues): void
+    {
+        $columns = $this->filterColumnDefinitions($rowValues, $this->getColumnDefinitions());
+
+        $this->resolvedColumns = $columns;
+        $this->columnKeys = array_column($columns, 'key');
+        $this->headings = array_column($columns, 'label');
+    }
+
+    /**
+     * @param Collection $rowValues
+     * @param array $columns
+     * @return Collection
+     */
+    protected function formatRowValues(Collection $rowValues, array $columns): Collection
+    {
+        return $rowValues->map(fn (array $values) => $this->buildRowFromColumns($values, $columns))->values();
+    }
+
+    /**
+     * @param array $rowValues
+     * @param array $columns
+     * @return array
+     */
+    protected function buildRowFromColumns(array $rowValues, array $columns): array
+    {
+        return array_map(
+            fn (array $column) => array_key_exists($column['key'], $rowValues) ? $rowValues[$column['key']] : null,
+            $columns,
         );
     }
 
     /**
-     * @param Collection $data
-     * @return Collection
+     * @param array $rowValues
+     * @param array $keys
+     * @return array
      */
-    protected function exportTransform(Collection $data): Collection
+    protected function buildAssociativeRow(array $rowValues, array $keys): array
     {
-        return $this->transformKeys(
-            $data->map(fn (Model $model) => Arr::only($this->getRow($model), $this->fields))
-        );
+        return array_combine($keys, $rowValues);
+    }
+
+    /**
+     * @return array|null
+     */
+    protected function getTotalsRowValues(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * @return array|null
+     */
+    protected function formatTotalsRow(): ?array
+    {
+        $totals = $this->getTotalsRowValues();
+
+        if ($totals !== null) {
+            return $this->buildRowFromColumns($totals, $this->resolvedColumns);
+        }
+
+        return null;
     }
 
     /**
@@ -130,28 +399,5 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     protected function getBuilderWithCountArray(): array
     {
         return $this->builderWithCountArray;
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function transformKeys(Collection $data): Collection
-    {
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
-
-        return $data->map(function ($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $item[$key],
-            ]), []);
-        });
-    }
-
-    /**
-     * @return array|null
-     */
-    protected function getTotals(): ?array
-    {
-        return null;
     }
 }

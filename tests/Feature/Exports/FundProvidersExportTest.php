@@ -46,7 +46,7 @@ class FundProvidersExportTest extends TestCase
         );
 
         $fields = Arr::pluck(FundProvidersExport::getExportFields(), 'name');
-        $this->assertFields($response, $fundProvider, $fields);
+        $this->assertExportedData($response, $fundProvider, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
@@ -55,7 +55,7 @@ class FundProvidersExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $fundProvider, $fields);
+        $this->assertExportedData($response, $fundProvider, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id, $fund->id) . '?' . http_build_query([
@@ -65,7 +65,7 @@ class FundProvidersExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $fundProvider, [
+        $this->assertExportedData($response, $fundProvider, [
             FundProvidersExport::trans('fund'),
             FundProvidersExport::trans('implementation'),
             FundProvidersExport::trans('provider'),
@@ -78,21 +78,15 @@ class FundProvidersExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         FundProvider $fundProvider,
         array $fields,
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert values
-        $this->assertEquals($fundProvider->fund->name, $rows[1][0]);
-        $this->assertEquals($fundProvider->organization->name, $rows[1][2]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $fundProvider->fund->name, 0);
+        $this->assertExportCell($rows, $fundProvider->organization->name, 2);
     }
 }
