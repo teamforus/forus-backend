@@ -217,4 +217,48 @@ trait MakesTestFundRequests
 
         return $fundRequest;
     }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param string $recordTypeKey
+     * @param string|int $value
+     * @param array $criteria
+     * @return FundRequest
+     */
+    protected function makeFundRequestWithRecord(
+        Identity $identity,
+        Fund $fund,
+        string $recordTypeKey,
+        string|int $value,
+        array $criteria = ['children_nth' => 3],
+    ): FundRequest {
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($identity, $fund, $criteria);
+
+        $fundRequest->records()->create([
+            'record_type_key' => $recordTypeKey,
+            'value' => $value,
+        ]);
+
+        return $fundRequest;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param string $recordTypeKey
+     * @param string|int $value
+     * @return void
+     */
+    protected function makeValidatedIdentityRecordForFund(
+        Identity $identity,
+        Fund $fund,
+        string $recordTypeKey,
+        string|int $value,
+    ): void {
+        $identity
+            ->makeRecord(RecordType::findByKey($recordTypeKey), $value)
+            ->makeValidationRequest()
+            ->approve($fund->organization->identity, $fund->organization);
+    }
 }

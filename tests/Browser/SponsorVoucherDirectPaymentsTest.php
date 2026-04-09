@@ -315,7 +315,7 @@ class SponsorVoucherDirectPaymentsTest extends DuskTestCase
             $browser->assertInputValue('@voucherTransactionTargetName', $name);
         }
 
-        $browser->typeSlowly('@voucherTransactionAmount', '25.00', 20);
+        $this->typeSearchInput($browser, '@voucherTransactionAmount', '25.00');
         $browser->click('@voucherTransactionSubmit');
 
         $browser->waitFor('@voucherTransactionPreviewSubmit');

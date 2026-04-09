@@ -14,57 +14,50 @@ class FundRequestQuery
 {
     /**
      * @param Builder|Relation|FundRequest $builder
-     * @param int $identity_id
+     * @param array|int $identityIds
      * @return Builder|Relation|FundRequest
      */
     public static function whereApprovedAndVoucherIsActive(
         Builder|Relation|FundRequest $builder,
-        int $identity_id,
+        array|int $identityIds,
     ): Builder|Relation|FundRequest {
-        return $builder->where(function (Builder $builder) use ($identity_id) {
-            $builder->whereHas('fund', static function (Builder $builder) use ($identity_id) {
-                $builder->whereHas('vouchers', static function (Builder $builder) use ($identity_id) {
-                    $builder->where('identity_id', $identity_id);
+        return $builder->where(function (Builder $builder) use ($identityIds) {
+            $builder
+                ->whereHas('fund.vouchers', static function (Builder $builder) {
+                    $builder->whereColumn('vouchers.identity_id', 'fund_requests.identity_id');
                     VoucherQuery::whereNotExpired($builder);
-                });
-            })->where([
-                'state' => FundRequest::STATE_APPROVED,
-                'identity_id' => $identity_id,
-            ]);
+                })
+                ->where('state', FundRequest::STATE_APPROVED)
+                ->whereIn('identity_id', (array) $identityIds);
         });
     }
 
     /**
      * @param Builder|Relation|FundRequest $builder
-     * @param int $identity_id
+     * @param array|int $identityIds
      * @return Builder|Relation|FundRequest
      */
     public static function whereIsPending(
         Builder|Relation|FundRequest $builder,
-        int $identity_id,
+        array|int $identityIds,
     ): Builder|Relation|FundRequest {
         return $builder
             ->where('state', FundRequest::STATE_PENDING)
-            ->whereRelation('identity', 'id', $identity_id);
+            ->whereIn('identity_id', (array) $identityIds);
     }
 
     /**
      * @param Builder|Relation|FundRequest $builder
-     * @param int $identity_id
+     * @param array|int $identityIds
      * @return Builder|Relation|FundRequest
      */
     public static function wherePendingOrApprovedAndVoucherIsActive(
         Builder|Relation|FundRequest $builder,
-        int $identity_id,
+        array|int $identityIds,
     ): Builder|Relation|FundRequest {
-        return $builder->where(function (Builder $builder) use ($identity_id) {
-            $builder->where(function (Builder $builder) use ($identity_id) {
-                static::whereApprovedAndVoucherIsActive($builder, $identity_id);
-            });
-
-            $builder->orWhere(function (Builder $builder) use ($identity_id) {
-                static::whereIsPending($builder, $identity_id);
-            });
+        return $builder->where(function (Builder $builder) use ($identityIds) {
+            $builder->where(fn (Builder $builder) => static::whereApprovedAndVoucherIsActive($builder, $identityIds));
+            $builder->orWhere(fn (Builder $builder) => static::whereIsPending($builder, $identityIds));
         });
     }
 
