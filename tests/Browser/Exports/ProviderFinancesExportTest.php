@@ -55,12 +55,12 @@ class ProviderFinancesExportTest extends DuskTestCase
                 foreach (static::FORMATS as $format) {
                     // assert all fields exported
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($providerOrganization, $data, $fields);
+                    $data && $this->assertExportedData($providerOrganization, $data, $fields);
 
                     // assert specific fields exported
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['provider']);
 
-                    $data && $this->assertFields($providerOrganization, $data, [
+                    $data && $this->assertExportedData($providerOrganization, $data, [
                         ProviderFinancesExport::trans('provider'),
                     ]);
                 }
@@ -109,13 +109,12 @@ class ProviderFinancesExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Organization $organization,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
+        $this->assertExportHeaders($rows, $fields);
 
         $item = Arr::first(Arr::where($rows, fn ($row) => $row[0] === $organization->name));
         $this->assertEquals($organization->name, $item[0] ?? null);

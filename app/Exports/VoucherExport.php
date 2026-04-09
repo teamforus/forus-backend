@@ -2,14 +2,11 @@
 
 namespace App\Exports;
 
-use App\Exports\Base\BaseExport;
-use App\Models\Voucher;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Exports\Base\BaseArrayExport;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-class VoucherExport extends BaseExport
+class VoucherExport extends BaseArrayExport
 {
     protected static string $transKey = 'vouchers';
 
@@ -49,15 +46,6 @@ class VoucherExport extends BaseExport
     ];
 
     /**
-     * @param array $voucherData
-     * @param array $fields
-     */
-    public function __construct(protected array $voucherData, protected array $fields)
-    {
-        parent::__construct(Voucher::query()->whereRaw('FALSE'), $fields);
-    }
-
-    /**
      * @param string $type
      * @return array
      */
@@ -92,30 +80,35 @@ class VoucherExport extends BaseExport
     }
 
     /**
-     * @param Builder|Relation $builder
+     * @param array $rows
      * @return Collection
      */
-    protected function export(Builder|Relation $builder): Collection
+    protected function collectArrayRowValues(array $rows): Collection
     {
-        return $this->exportTransform(collect($this->voucherData));
+        return collect($rows)
+            ->map(fn (array $row) => Arr::only($row, $this->getBaseFieldKeys()))
+            ->values();
+    }
+
+    protected function getFieldLabels(): array
+    {
+        return Arr::pluck(static::getExportFields('product'), 'name', 'key');
     }
 
     /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        return $this->transformKeys($data);
-    }
-
-    /**
-     * @param Model $model
+     * @param Collection $rowValues
+     * @param array $columns
      * @return array
      */
-    protected function getRow(Model $model): array
+    protected function filterColumnDefinitions(Collection $rowValues, array $columns): array
     {
-        return [];
+        if ($rowValues->isEmpty()) {
+            return $columns;
+        }
+
+        return array_values(array_filter($columns, fn (array $column) => $rowValues->contains(
+            fn (array $rowValues) => array_key_exists($column['key'], $rowValues),
+        )));
     }
 
     /**

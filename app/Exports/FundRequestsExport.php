@@ -8,13 +8,15 @@ use App\Models\FundRequestRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class FundRequestsExport extends BaseExport
 {
     protected static string $transKey = 'fund_requests';
     protected Collection $recordKeyList;
+
+    protected const string DYNAMIC_FIELD_RECORDS = 'records';
+    protected const array DYNAMIC_FIELDS_KEYS = [self::DYNAMIC_FIELD_RECORDS];
 
     /**
      * @var array|string[]
@@ -36,6 +38,7 @@ class FundRequestsExport extends BaseExport
      */
     protected array $builderWithArray = [
         'identity.record_bsn',
+        'employee.identity.primary_email',
         'records',
         'fund',
     ];
@@ -44,38 +47,17 @@ class FundRequestsExport extends BaseExport
      * @param Builder|Relation|FundRequest $builder
      * @param array $fields
      */
-    public function __construct(Builder|Relation|FundRequest $builder, protected array $fields)
+    public function __construct(Builder|Relation|FundRequest $builder, array $fields)
     {
-        $this->recordKeyList = FundRequestRecord::query()
-            ->whereIn('fund_request_id', (clone $builder)->select('id'))
-            ->pluck('record_type_key');
+        $this->recordKeyList = in_array(static::DYNAMIC_FIELD_RECORDS, $fields, true)
+            ? FundRequestRecord::query()
+                ->whereIn('fund_request_id', (clone $builder)->select('id'))
+                ->pluck('record_type_key')
+                ->unique()
+                ->values()
+            : collect();
 
         parent::__construct($builder, $fields);
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
-
-        return $data->map(function (FundRequest $request) use ($fieldLabels) {
-            $row = Arr::only($this->getRow($request), $this->fields);
-
-            $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $row[$key],
-            ]), []);
-
-            $records = (array) $this->recordKeyList->reduce(fn ($records, $key) => [
-                ...$records, $key => $request->records->firstWhere('record_type_key', $key),
-            ], []);
-
-            $requestRecords = in_array('records', $this->fields) ? static::getRecords($records) : [];
-
-            return [...$row, ...$requestRecords];
-        })->values();
     }
 
     /**
@@ -102,6 +84,44 @@ class FundRequestsExport extends BaseExport
      */
     protected static function getRecords(Collection|array $records): array
     {
-        return array_map(fn (?FundRequestRecord $record = null) => $record?->value ?: '-', $records);
+        return array_map(fn (FundRequestRecord|null $record = null) => $record?->value ?: '-', $records);
+    }
+
+    /**
+     * @param string $fieldKey
+     * @return array
+     */
+    protected function getDynamicColumnDefinitionsFor(string $fieldKey): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        return $this->recordKeyList->map(fn (string $key) => [
+            'key' => static::makeDynamicColumnKey($key, 'fund_request_record'),
+            'label' => $key,
+        ])->all();
+    }
+
+    /**
+     * @param string $fieldKey
+     * @param Model|FundRequest $model
+     * @return array
+     */
+    protected function getDynamicRowValuesFor(string $fieldKey, Model|FundRequest $model): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_RECORDS || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        $records = $this->recordKeyList->mapWithKeys(fn (string $key) => [
+            $key => $model->records->firstWhere('record_type_key', $key),
+        ])->all();
+
+        $records = static::getRecords($records);
+
+        return $this->recordKeyList->mapWithKeys(fn (string $key) => [
+            static::makeDynamicColumnKey($key, 'fund_request_record') => $records[$key] ?? null,
+        ])->all();
     }
 }

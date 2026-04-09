@@ -27,12 +27,12 @@ class PhysicalCardRequestsExport extends BaseExport
      */
     protected function getRow(Model|PhysicalCardRequest $model): array
     {
-        return [
-            ...$model->only([
-                'address', 'house', 'house_addition', 'postcode', 'city',
-                'physical_card_type_id', 'fund_request_id', 'voucher_id',
-            ]),
-            'physical_card_type_name' => $model->physical_card_type?->name,
-        ];
+        return $model->only([
+            'address',
+            'house',
+            'house_addition',
+            'postcode',
+            'city',
+        ]);
     }
 }

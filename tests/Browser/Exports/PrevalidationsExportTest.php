@@ -56,12 +56,12 @@ class PrevalidationsExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($prevalidation, $data, $fields);
+                    $data && $this->assertExportedData($prevalidation, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['code']);
-                    $data && $this->assertFields($prevalidation, $data, [PrevalidationsExport::trans('code')]);
+                    $data && $this->assertExportedData($prevalidation, $data, [PrevalidationsExport::trans('code')]);
                 }
 
                 // Logout
@@ -81,11 +81,15 @@ class PrevalidationsExportTest extends DuskTestCase
         $fields = Arr::pluck(PrevalidationsExport::getExportFields(), 'name');
         $fields = array_filter($fields, fn ($field) => $field !== PrevalidationsExport::trans('records'));
 
-        $records = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
+        $recordLabels = $prevalidation->prevalidation_records->filter(function (PrevalidationRecord $record) {
             return !str_contains($record->record_type->key, '_eligible');
-        })->pluck('value', 'record_type.name')->toArray();
+        })->map(function (PrevalidationRecord $record) {
+            return trim((string) $record->record_type->name) !== ''
+                ? $record->record_type->name
+                : $record->record_type->key;
+        })->values()->all();
 
-        return [...$fields, ...array_keys($records)];
+        return [...$fields, ...$recordLabels];
     }
 
     /**
@@ -94,13 +98,12 @@ class PrevalidationsExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Prevalidation $prevalidation,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($prevalidation->uid, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $prevalidation->uid, 0);
     }
 }

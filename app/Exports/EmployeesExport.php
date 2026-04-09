@@ -5,14 +5,19 @@ namespace App\Exports;
 use App\Exports\Base\BaseExport;
 use App\Models\Employee;
 use App\Models\Role;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
 class EmployeesExport extends BaseExport
 {
     protected static string $transKey = 'employees';
+    protected Collection $roleList;
+
+    protected const string DYNAMIC_FIELD_ROLES = 'roles';
+    protected const array DYNAMIC_FIELDS_KEYS = [self::DYNAMIC_FIELD_ROLES];
 
     /**
      * @var array|string[]
@@ -31,43 +36,34 @@ class EmployeesExport extends BaseExport
     ];
 
     /**
+     * @param Builder|Relation|Employee $builder
+     * @param array $fields
+     */
+    public function __construct(Builder|Relation|Employee $builder, array $fields)
+    {
+        $this->roleList = in_array(static::DYNAMIC_FIELD_ROLES, $fields, true)
+            ? Role::with('translations')->get()
+            : collect();
+
+        parent::__construct($builder, $fields);
+    }
+
+    /**
      * @return array
      */
     protected function getBuilderWithArray(): array
     {
         return [
-            'identity.emails',
             'identity.session_last_activity',
             'identity.primary_email',
             'identity.identity_2fa_active',
             'roles.translations',
             'organization',
+            'office',
             'logs' => fn (MorphMany $builder) => $builder->where([
                 'event' => Employee::EVENT_UPDATED,
             ])->take(1)->latest(),
         ];
-    }
-
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        $roles = Role::with('translations')->get();
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
-
-        return $data->map(function (Employee $employee) use ($fieldLabels, $roles) {
-            $row = Arr::only($this->getRow($employee), $this->fields);
-
-            $row = array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $row[$key],
-            ]), []);
-
-            $employeeRoles = in_array('roles', $this->fields) ? static::getRoles($employee, $roles) : [];
-
-            return [...$row, ...$employeeRoles];
-        })->values();
     }
 
     /**
@@ -93,16 +89,36 @@ class EmployeesExport extends BaseExport
     }
 
     /**
-     * @param Employee $employee
-     * @param Collection $roles
+     * @param string $fieldKey
      * @return array
      */
-    protected static function getRoles(Employee $employee, Collection $roles): array
+    protected function getDynamicColumnDefinitionsFor(string $fieldKey): array
     {
-        $employeeRoles = $employee->roles->pluck('id')->toArray();
+        if ($fieldKey !== static::DYNAMIC_FIELD_ROLES || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
 
-        return $roles->mapWithKeys(fn (Role $role) => [
-            $role->name => in_array($role->id, $employeeRoles) ? 'ja' : 'nee',
+        return $this->roleList->map(fn (Role $role) => [
+            'key' => static::makeDynamicColumnKey($role->id, 'role'),
+            'label' => $role->name,
+        ])->values()->all();
+    }
+
+    /**
+     * @param string $fieldKey
+     * @param Model|Employee $model
+     * @return array
+     */
+    protected function getDynamicRowValuesFor(string $fieldKey, Model|Employee $model): array
+    {
+        if ($fieldKey !== static::DYNAMIC_FIELD_ROLES || !$this->shouldExpandDynamicField($fieldKey)) {
+            return [];
+        }
+
+        $employeeRoles = $model->roles->pluck('id')->toArray();
+
+        return $this->roleList->mapWithKeys(fn (Role $role) => [
+            static::makeDynamicColumnKey($role->id, 'role') => in_array($role->id, $employeeRoles) ? 'ja' : 'nee',
         ])->toArray();
     }
 }

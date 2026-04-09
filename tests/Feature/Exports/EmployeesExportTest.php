@@ -45,7 +45,7 @@ class EmployeesExportTest extends TestCase
 
         // Filter headers except roles header and add all roles
         $fields = $this->getExportFields();
-        $this->assertFields($response, $employee, $fields);
+        $this->assertExportedData($response, $employee, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -54,7 +54,7 @@ class EmployeesExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $employee, $fields);
+        $this->assertExportedData($response, $employee, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -63,7 +63,83 @@ class EmployeesExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $employee, [EmployeesExport::trans('email')]);
+        $this->assertExportedData($response, $employee, [EmployeesExport::trans('email')]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testEmployeesExportKeepsColumnsWithSameVisibleLabel(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $employee = $organization->employees()->first();
+        $this->assertNotNull($employee);
+
+        $duplicateLabel = 'duplicate role';
+        $locale = app()->getLocale();
+
+        $roleA = Role::create(['key' => token_generator()->generate(16)]);
+        $roleA->translations()->create([
+            'locale' => $locale,
+            'name' => $duplicateLabel,
+            'description' => $duplicateLabel,
+        ]);
+
+        $roleB = Role::create(['key' => token_generator()->generate(16)]);
+        $roleB->translations()->create([
+            'locale' => $locale,
+            'name' => $duplicateLabel,
+            'description' => $duplicateLabel,
+        ]);
+
+        $employee->roles()->syncWithoutDetaching([$roleA->id]);
+        $employee->load('roles');
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $organization->id) . '?data_format=csv',
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+        $indexes = array_keys($rows[0], $duplicateLabel, true);
+        $values = array_map(fn (int $index) => $rows[1][$index], $indexes);
+
+        $this->assertCount(2, $indexes);
+        $this->assertEqualsCanonicalizing(['ja', 'nee'], $values);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testEmployeesExportKeepsCanonicalFieldOrderWhenSelectedFieldsAreReordered(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity);
+        $employee = $organization->employees()->first();
+        $this->assertNotNull($employee);
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
+                'data_format' => 'csv',
+                'fields' => ['roles', 'owner', 'email'],
+            ]),
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+        $response->assertDownload();
+
+        $rows = $this->getCsvData($response);
+
+        $this->assertEquals(EmployeesExport::trans('email'), $rows[0][0]);
+        $this->assertEquals(EmployeesExport::trans('owner'), $rows[0][1]);
+        $this->assertEquals($employee->identity->email, $rows[1][0]);
     }
 
     /**
@@ -84,20 +160,14 @@ class EmployeesExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         Employee $employee,
         array $fields
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert that email in file equals to employee email
-        $this->assertEquals($employee->identity->email, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $employee->identity->email, 0);
     }
 }

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 
 class IdentityProfilesExport extends BaseExport
 {
@@ -44,7 +43,7 @@ class IdentityProfilesExport extends BaseExport
      */
     public function __construct(
         Builder|Relation|Model $builder,
-        protected array $fields,
+        array $fields,
         protected Organization $organization,
     ) {
         parent::__construct($builder, $fields);
@@ -68,25 +67,6 @@ class IdentityProfilesExport extends BaseExport
         }, []);
     }
 
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function transformKeys(Collection $data): Collection
-    {
-        $fieldLabels = Arr::pluck(static::getExportFields($this->organization), 'name', 'key');
-
-        return $data->map(function ($item) use ($fieldLabels) {
-            return array_reduce(array_keys($item), fn ($obj, $key) => array_merge($obj, [
-                $fieldLabels[$key] => $item[$key],
-            ]), []);
-        });
-    }
-
-    /**
-     * @param Model|Identity $model
-     * @return array
-     */
     protected function getRow(Model|Identity $model): array
     {
         $profile = $model->profiles?->firstWhere('organization_id', $this->organization->id);
@@ -106,10 +86,14 @@ class IdentityProfilesExport extends BaseExport
             'house_number' => Arr::get($records, 'house_number.0.value_locale', '-'),
             'house_number_addition' => Arr::get($records, 'house_number_addition.0.value_locale', '-'),
             'postal_code' => Arr::get($records, 'postal_code.0.value_locale', '-'),
-            'amount_extra_cash' => Arr::get($records, 'amount_extra_cash.0.value_locale', '-'),
             'municipality_name' => Arr::get($records, 'municipality_name.0.value_locale', '-'),
             'neighborhood_name' => Arr::get($records, 'neighborhood_name.0.value_locale', '-'),
         ];
+    }
+
+    protected function getFieldLabels(): array
+    {
+        return Arr::pluck(static::getExportFields($this->organization), 'name', 'key');
     }
 
     /**
