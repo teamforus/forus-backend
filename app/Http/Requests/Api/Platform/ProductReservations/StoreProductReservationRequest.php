@@ -172,6 +172,10 @@ class StoreProductReservationRequest extends BaseProductReservationFieldRequest
 
         foreach ($product->getAvailableReservationFieldsForRequester() as $field) {
             $rules["custom_fields.$field->id"] = $this->getCustomFieldRules($field, true);
+
+            if ($field->type === ReservationField::TYPE_FILE) {
+                $rules["custom_fields.$field->id.*"] = $this->getFileRule();
+            }
         }
 
         return $rules;

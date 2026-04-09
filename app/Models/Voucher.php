@@ -1103,11 +1103,11 @@ class Voucher extends Model
                 'value' => $field->type === ReservationField::TYPE_FILE ? null : $value,
             ]);
 
-            if ($field->type === ReservationField::TYPE_FILE && $value) {
-                $fieldValue->appendFilesByUid($value);
+            if ($field->type === ReservationField::TYPE_FILE && is_array($value)) {
+                $fieldValue->syncFilesByUid($value);
 
                 $fieldValue->update([
-                    'value' => $fieldValue->files[0]?->original_name ?? $value,
+                    'value' => $fieldValue->files[0]?->original_name ?? $value[0],
                 ]);
             }
         }

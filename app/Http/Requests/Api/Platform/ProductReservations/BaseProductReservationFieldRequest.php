@@ -22,15 +22,7 @@ class BaseProductReservationFieldRequest extends BaseFormRequest
             ...match ($field->type) {
                 ReservationField::TYPE_TEXT => ['string', 'max:200'],
                 ReservationField::TYPE_NUMBER => ['int'],
-                ReservationField::TYPE_FILE => [
-                    'string',
-                    'max:255',
-                    Rule::exists('files', 'uid')
-                        ->whereNull('fileable_id')
-                        ->whereNull('fileable_type')
-                        ->where('type', 'product_reservation_custom_field')
-                        ->where('identity_address', $this->auth_address()),
-                ],
+                ReservationField::TYPE_FILE => ['array', 'max:5'],
                 default => ['string'],
             },
             ...[$byRequester && !$field->isFillableByRequester() ? 'in:' : null],
@@ -38,5 +30,22 @@ class BaseProductReservationFieldRequest extends BaseFormRequest
         ];
 
         return array_filter($fieldRules);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFileRule(): array
+    {
+        return [
+            'required',
+            'string',
+            'max:255',
+            Rule::exists('files', 'uid')
+                ->whereNull('fileable_id')
+                ->whereNull('fileable_type')
+                ->where('type', 'product_reservation_custom_field')
+                ->where('identity_address', $this->auth_address()),
+        ];
     }
 }

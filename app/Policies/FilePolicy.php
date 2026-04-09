@@ -6,9 +6,11 @@ use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Permission;
+use App\Models\ProductReservationFieldValue;
 use App\Models\Reimbursement;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Gate;
 
 class FilePolicy
 {
@@ -107,10 +109,18 @@ class FilePolicy
             return false;
         }
 
+        if ($file->fileable && $file->type === 'product_reservation_custom_field') {
+            $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
+
+            return Gate::allows('update', [
+                $fieldValue?->product_reservation,
+                $fieldValue?->product_reservation?->product?->organization,
+            ]);
+        }
+
         if ($file->fileable && in_array($file->type, [
             'fund_request_record_proof',
             'fund_request_clarification_proof',
-            'product_reservation_custom_field',
         ])) {
             return false;
         }
