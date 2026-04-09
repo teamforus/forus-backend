@@ -116,7 +116,7 @@ class SponsorPayoutsTest extends DuskTestCase
 
                 $browser->waitFor('@payoutCreateModal');
                 $browser->waitFor('@payoutAmount');
-                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
                 $browser->type('@payoutTargetIban', $iban);
                 $browser->type('@payoutTargetName', $ibanName);
                 $browser->press('@payoutSubmit');
@@ -178,7 +178,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
 
                 $browser->waitFor('@payoutAmount');
-                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
                 $browser->press('@payoutSubmit');
                 $browser->waitUntilMissing('@payoutCreateModal');
 
@@ -245,7 +245,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
 
                 $browser->waitFor('@payoutAmount');
-                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
                 $browser->press('@payoutSubmit');
                 $browser->waitUntilMissing('@payoutCreateModal');
 
@@ -316,7 +316,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
 
                 $browser->waitFor('@payoutAmount');
-                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
                 $browser->press('@payoutSubmit');
                 $browser->waitUntilMissing('@payoutCreateModal');
 
@@ -389,7 +389,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
 
                 $browser->waitFor('@payoutAmount');
-                $browser->typeSlowly('@payoutAmount', '100.00', 20);
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
                 $browser->press('@payoutSubmit');
                 $browser->waitUntilMissing('@payoutCreateModal');
 

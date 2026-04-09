@@ -143,7 +143,7 @@ class FundPreCheckWebshopSearchFilterTest extends BaseWebshopSearchFilter
             };
 
             $browser->waitFor($selector);
-            $browser->typeSlowly($selector, 0);
+            $this->typeSearchInput($browser, $selector, 0);
         }
 
         $browser->click('@submitBtn');

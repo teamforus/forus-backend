@@ -124,7 +124,7 @@ abstract class DuskTestCase extends BaseTestCase
      * @param string|int|float $value
      * @return Browser
      */
-    protected function typeDuskInput(Browser $browser, string $field, string|int|float $value): Browser
+    protected function typeSearchInput(Browser $browser, string $field, string|int|float $value): Browser
     {
         $value = (string) $value;
 
