@@ -90,10 +90,7 @@ class FundRequestPolicy
         }
 
         // has approved fund requests where voucher is not expired
-        if (FundRequestQuery::whereApprovedAndVoucherIsActive(
-            $fund->fund_requests(),
-            $identity->id
-        )->exists()) {
+        if (FundRequestQuery::whereApprovedAndVoucherIsActive($fund->fund_requests(), $identity->id)->exists()) {
             return $this->deny(__('policies.fund_requests.approved_request_exists'));
         }
 
@@ -290,10 +287,7 @@ class FundRequestPolicy
         }
 
         // has other approved requests
-        if (FundRequestQuery::whereApprovedAndVoucherIsActive(
-            (clone $query),
-            $fundRequest->identity->id,
-        )->exists()) {
+        if (FundRequestQuery::whereApprovedAndVoucherIsActive((clone $query), $fundRequest->identity->id)->exists()) {
             return $this->deny(__('policies.fund_requests.approved_request_exists'));
         }
 
