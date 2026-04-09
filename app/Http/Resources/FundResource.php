@@ -251,12 +251,25 @@ class FundResource extends BaseJsonResource
      * @param BaseFormRequest $request
      * @return bool
      */
-    protected function isTakenByPartner(Fund $fund, BaseFormRequest $request): bool
+    protected function isTakenByPartnerVoucher(Fund $fund, BaseFormRequest $request): bool
     {
         $identity = $request->identity();
         $partnerDeny = $fund->fund_config->partner_deny ?? false;
 
-        return $identity && $partnerDeny && $fund->isTakenByPartner($identity);
+        return $identity && $partnerDeny && $fund->isTakenByPartnerVoucher($identity);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param BaseFormRequest $request
+     * @return bool
+     */
+    protected function isTakenByPartnerPendingFundRequest(Fund $fund, BaseFormRequest $request): bool
+    {
+        $identity = $request->identity();
+        $partnerDeny = $fund->fund_config->partner_deny ?? false;
+
+        return $identity && $partnerDeny && $fund->isTakenByPartnerPendingFundRequest($identity);
     }
 
     /**
@@ -284,9 +297,18 @@ class FundResource extends BaseJsonResource
      */
     protected function getCriteriaData(Fund $fund, BaseFormRequest $baseRequest): array
     {
-        return $baseRequest->get('check_criteria', false) ? [
-            'taken_by_partner' => $this->isTakenByPartner($fund, $baseRequest),
-        ] : [];
+        if ($baseRequest->get('check_criteria', false)) {
+            $byVoucher = $this->isTakenByPartnerVoucher($fund, $baseRequest);
+            $byPendingFundRequest = $this->isTakenByPartnerPendingFundRequest($fund, $baseRequest);
+
+            return [
+                'taken_by_partner' => $byVoucher || $byPendingFundRequest,
+                'taken_by_partner_voucher' => $byVoucher,
+                'taken_by_partner_pending_fund_request' => $byPendingFundRequest,
+            ];
+        }
+
+        return [];
     }
 
     /**
