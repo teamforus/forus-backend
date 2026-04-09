@@ -266,7 +266,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceFrom');
-        $browser->typeSlowly('@inputPriceFrom', $product->price + 1, 0);
+        $this->typeDuskInput($browser, '@inputPriceFrom', $product->price + 1);
 
         $this->assertListVisibility($browser, $product->id, false);
         $this->assertWebshopRowsCount($browser, 1, '@listProductsContent');
@@ -276,7 +276,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceFrom');
-        $browser->typeSlowly('@inputPriceFrom', $product->price - 1, 0);
+        $this->typeDuskInput($browser, '@inputPriceFrom', $product->price - 1);
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->assertWebshopRowsCount($browser, 2, '@listProductsContent');
@@ -286,7 +286,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceTo');
-        $browser->typeSlowly('@inputPriceTo', $product->price - 1, 0);
+        $this->typeDuskInput($browser, '@inputPriceTo', $product->price - 1);
 
         $this->assertListVisibility($browser, $product->id, false);
         $this->assertWebshopRowsCount($browser, 0, '@listProductsContent');
@@ -296,7 +296,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceTo');
-        $browser->typeSlowly('@inputPriceTo', $product->price + 1, 0);
+        $this->typeDuskInput($browser, '@inputPriceTo', $product->price + 1);
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->assertWebshopRowsCount($browser, 1, '@listProductsContent');
