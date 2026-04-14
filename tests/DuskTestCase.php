@@ -117,4 +117,21 @@ abstract class DuskTestCase extends BaseTestCase
         return isset($_SERVER['DUSK_START_MAXIMIZED']) ||
                isset($_ENV['DUSK_START_MAXIMIZED']);
     }
+
+    /**
+     * @param Browser $browser
+     * @param string $field
+     * @param string|int|float $value
+     * @return Browser
+     */
+    protected function typeSearchInput(Browser $browser, string $field, string|int|float $value): Browser
+    {
+        $value = (string) $value;
+
+        if (Config::get('tests.dusk_type_slowly')) {
+            return $browser->typeSlowly($field, $value, (int) Config::get('tests.dusk_type_slowly_pause', 10));
+        }
+
+        return $browser->type($field, $value);
+    }
 }

@@ -296,7 +296,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
     {
         $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupDistance');
         $browser->waitFor('@inputPostcode');
-        $browser->typeSlowly('@inputPostcode', $postCode, 0);
+        $this->typeSearchInput($browser, '@inputPostcode', $postCode);
 
         $this->changeSelectControl($browser, '@selectControlDistances', text: '< 5 km');
         $this->assertListVisibility($browser, $id, true);
