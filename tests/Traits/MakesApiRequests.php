@@ -15,11 +15,14 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\FileService\Models\File;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Testing\TestResponse;
 
 trait MakesApiRequests
@@ -473,6 +476,63 @@ trait MakesApiRequests
 
     /**
      * @param Organization $organization
+     * @param ProductReservation $reservation
+     * @param ReservationField $field
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiUpdateProductReservationFieldByProviderRequest(
+        Organization $organization,
+        ProductReservation $reservation,
+        ReservationField $field,
+        array $data = [],
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/product-reservations/$reservation->id/fields/$field->id",
+            $data,
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param ProductReservation $reservation
+     * @param ReservationField $field
+     * @param array $data
+     * @return ProductReservation
+     */
+    public function apiUpdateProductReservationFieldByProvider(
+        Organization $organization,
+        ProductReservation $reservation,
+        ReservationField $field,
+        array $data = [],
+    ): ProductReservation {
+        $response = $this
+            ->apiUpdateProductReservationFieldByProviderRequest($organization, $reservation, $field, $data)
+            ->assertSuccessful();
+
+        return ProductReservation::findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetProductReservationsByProviderRequest(
+        Organization $organization,
+        array $query = [],
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/product-reservations$queryString",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
      * @param Fund $fund
      * @param string|null $primaryKey
      * @return TestResponse
@@ -885,6 +945,38 @@ trait MakesApiRequests
         array $data,
     ): TestResponse {
         return $this->postJson('/api/v1/files', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiUploadProductReservationCustomFieldFileRequest(
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->apiUploadFileRequest($identity, [
+            'file' => UploadedFile::fake()->image('reservation-custom-field-file.png'),
+            'type' => 'product_reservation_custom_field',
+            ...$data,
+        ]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $data
+     * @return File
+     */
+    protected function apiUploadProductReservationCustomFieldFile(
+        Identity $identity,
+        array $data = [],
+    ): File {
+        $response = $this
+            ->apiUploadProductReservationCustomFieldFileRequest($identity, $data)
+            ->assertSuccessful();
+
+        return File::where('uid', $response->json('data.uid'))->firstOrFail();
     }
 
     /**
