@@ -111,11 +111,13 @@ class FilePolicy
 
         if ($file->fileable && $file->type === 'product_reservation_custom_field') {
             $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
+            $reservation = $fieldValue?->product_reservation;
+            $field = $fieldValue?->reservation_field;
+            $organization = $reservation?->product?->organization;
 
-            return Gate::allows('update', [
-                $fieldValue?->product_reservation,
-                $fieldValue?->product_reservation?->product?->organization,
-            ]);
+            return $reservation && $field && $organization
+                ? Gate::forUser($identity)->allows('updateCustomField', [$reservation, $organization, $field])
+                : false;
         }
 
         if ($file->fileable && in_array($file->type, [

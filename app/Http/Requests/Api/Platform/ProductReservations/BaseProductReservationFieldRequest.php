@@ -15,21 +15,32 @@ class BaseProductReservationFieldRequest extends BaseFormRequest
      */
     protected function getCustomFieldRules(ReservationField $field, bool $byRequester): array
     {
-        $fieldRules = [$field->isFillableByRequester() && $field->required ? 'required' : 'nullable'];
+        $fieldRules = [$field->required && $this->isFieldFillableBySide($field, $byRequester) ? 'required' : 'nullable'];
 
         $fieldRules = [
             ...$fieldRules,
             ...match ($field->type) {
                 ReservationField::TYPE_TEXT => ['string', 'max:200'],
                 ReservationField::TYPE_NUMBER => ['int'],
+                ReservationField::TYPE_BOOLEAN => ['string', Rule::in(ReservationField::BOOLEAN_VALUES)],
                 ReservationField::TYPE_FILE => ['array', 'max:5'],
-                default => ['string'],
+                default => ['in:'],
             },
             ...[$byRequester && !$field->isFillableByRequester() ? 'in:' : null],
             ...[!$byRequester && !$field->isFillableByProvider() ? 'in:' : null],
         ];
 
         return array_filter($fieldRules);
+    }
+
+    /**
+     * @param ReservationField $field
+     * @param bool $byRequester
+     * @return bool
+     */
+    protected function isFieldFillableBySide(ReservationField $field, bool $byRequester): bool
+    {
+        return $byRequester ? $field->isFillableByRequester() : $field->isFillableByProvider();
     }
 
     /**
