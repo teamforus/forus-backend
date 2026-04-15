@@ -599,7 +599,7 @@ class VoucherTest extends TestCase
     protected function makeDirectTransaction(Voucher $voucher, bool $assert = true): void
     {
         $startDate = now();
-        $amount = random_int(1, round($voucher->amount_available / 2));
+        $amount = $this->makeTransactionAmount((float) $voucher->amount_available);
         $organization = $voucher->fund->organization;
 
         $headers = $this->makeApiHeaders($organization->identity);
@@ -636,7 +636,7 @@ class VoucherTest extends TestCase
     protected function makeTransactionToProvider(Voucher $voucher): void
     {
         $startDate = now();
-        $amount = random_int(1, round($voucher->amount_available / 2));
+        $amount = $this->makeTransactionAmount((float) $voucher->amount_available);
         $organization = $voucher->fund->organization;
         $fundProvider = FundProviderQuery::whereApprovedForFundsFilter(
             FundProvider::query(),
@@ -703,7 +703,7 @@ class VoucherTest extends TestCase
             $voucher->fund->fund_config->limit_voucher_top_up_amount,
             $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
         ]);
-        $amount = random_int(1, round($maxAmount / 2));
+        $amount = $this->makeTransactionAmount((float) $maxAmount);
 
         $headers = $this->makeApiHeaders($organization->identity);
         $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
@@ -735,6 +735,15 @@ class VoucherTest extends TestCase
         } else {
             $response->assertJsonValidationErrors(['target']);
         }
+    }
+
+    /**
+     * @param float $maxAmount
+     * @return float
+     */
+    protected function makeTransactionAmount(float $maxAmount): float
+    {
+        return max(0.02, floor(($maxAmount / 4) * 100) / 100);
     }
 
     /**
