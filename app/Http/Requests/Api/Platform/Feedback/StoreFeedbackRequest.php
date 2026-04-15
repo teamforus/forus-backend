@@ -28,7 +28,7 @@ class StoreFeedbackRequest extends BaseFormRequest
             'content' => 'required|string|min:2|max:4000',
             'urgency' => 'nullable|in:low,medium,high',
             'customer_email' => [
-                'nullable',
+                'required',
                 ...$this->emailRules(),
             ],
         ];
