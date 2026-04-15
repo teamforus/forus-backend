@@ -23,9 +23,10 @@ class IConnectServiceProvider extends ServiceProvider
                     $url = parse_url($request->url());
                     $segments = explode('/', trim($url['path'], '/'));
                     $bsn = last($segments);
+                    $testProfile = Config::get('forus.person_bsn.test_response_profile');
 
-                    return Config::get("forus.person_bsn.test_response_data.$bsn")
-                        ? Http::response(Config::get("forus.person_bsn.test_response_data.$bsn", []))
+                    return Config::get("forus.person_bsn.test_response_data.$testProfile.$bsn")
+                        ? Http::response(Config::get("forus.person_bsn.test_response_data.$testProfile.$bsn", []))
                         : Http::response(null, 404);
                 },
             ]);
