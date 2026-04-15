@@ -133,7 +133,7 @@ class FundRequestClarificationTest extends DuskTestCase
 
                 // fill text
                 $text = $this->faker->sentence();
-                $browser->typeSlowly('@answerInput', $text, 10);
+                $this->typeSearchInput($browser, '@answerInput', $text);
 
                 $browser->click('@submitBtn');
 

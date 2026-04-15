@@ -90,10 +90,14 @@ class RequesterVoucherPayoutTest extends TestCase
         $fundRequest = $result['fund_request'];
         $iban = $result['iban'];
         $ibanName = $result['iban_name'];
+        $implementation = $fund->getImplementation();
+
+        $this->assertFalse($implementation->isGeneral());
+        $this->assertTrue((bool) $implementation->organization?->allow_profiles);
 
         $profileRes = $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders(
             $requester,
-            ['Client-Key' => $fund->getImplementation()->key],
+            ['Client-Key' => $implementation->key],
         ));
 
         $profileRes->assertSuccessful();

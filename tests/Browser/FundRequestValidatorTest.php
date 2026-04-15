@@ -167,7 +167,7 @@ class FundRequestValidatorTest extends DuskTestCase
                 $this->goToFundRequestsPage($browser, true);
 
                 $browser->waitFor('@tableFundRequestSearch');
-                $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
+                $this->typeSearchInput($browser, '@tableFundRequestSearch', $fundRequest->identity->email);
                 $this->assertRowsCount($browser, 0, '@fundRequestsPageContent');
             });
         }, function () use ($fund) {
@@ -230,7 +230,7 @@ class FundRequestValidatorTest extends DuskTestCase
         $this->rollbackModels([], function () use ($fundRequest, $organization) {
             $this->browse(function (Browser $browser) use ($fundRequest, $organization) {
                 $this->signInAndOpenFundRequestsPage($browser, $organization, $organization->identity);
-                $browser->typeSlowly('@tableFundRequestSearch', $fundRequest->identity->email, 1);
+                $this->typeSearchInput($browser, '@tableFundRequestSearch', $fundRequest->identity->email);
                 $this->assertExistInList($browser, $fundRequest, 'all', true);
 
                 // pending
