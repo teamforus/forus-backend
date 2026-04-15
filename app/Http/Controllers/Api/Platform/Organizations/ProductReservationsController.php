@@ -405,15 +405,7 @@ class ProductReservationsController extends Controller
         ]);
 
         if ($field->type === ReservationField::TYPE_FILE) {
-            if ($value) {
-                $fieldValue->appendFilesByUid($value);
-
-                $fieldValue->update([
-                    'value' => $fieldValue->files[0]?->original_name ?? $value,
-                ]);
-            } else {
-                $fieldValue->files()->delete();
-            }
+            $fieldValue->syncFieldFilesByUid(is_array($value) ? $value : []);
         }
 
         return ProductReservationResource::create($productReservation);
