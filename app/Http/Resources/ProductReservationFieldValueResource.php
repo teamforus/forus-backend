@@ -29,7 +29,7 @@ class ProductReservationFieldValueResource extends BaseJsonResource
             ...$this->resource->only([
                 'id', 'value',
             ]),
-            'file' => new FileResource($this->resource->files[0] ?? null),
+            'files' => FileResource::collection($this->resource->files),
             'reservation_field' => new ReservationFieldResource($this->resource->reservation_field),
         ];
     }
