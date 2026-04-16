@@ -7,8 +7,8 @@ use App\Models\ReservationExtraPayment;
 use App\Scopes\Builders\ReservationExtraPaymentQuery;
 use App\Searches\ReservationExtraPaymentsSearch;
 use App\Traits\DoesTesting;
-use Illuminate\Support\Carbon;;
 use Exception;
+use Illuminate\Support\Carbon;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -38,18 +38,24 @@ class ReservationExtraPaymentsSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $fundNamePart1 = 'match';
+        $fundNamePart2 = 'other';
+
+        $productNamePart1 = 'first';
+        $productNamePart2 = 'last';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
-        $fund1 = $this->makeTestFund($organization, ['name' => 'match fund']);
-        $fund2 = $this->makeTestFund($organization, ['name' => 'other fund']);
+        $fund1 = $this->makeTestFund($organization, ['name' => "$fundNamePart1 fund"]);
+        $fund2 = $this->makeTestFund($organization, ['name' => "$fundNamePart2 fund"]);
 
         $voucher1 = $this->makeTestVoucher($fund1, identity: $this->makeIdentity());
         $voucher2 = $this->makeTestVoucher($fund2, identity: $this->makeIdentity());
 
         $product1 = $this->findProductForReservation($voucher1);
-        $product1->update(['name' => 'unique product name']);
+        $product1->update(['name' => "$productNamePart1 product name"]);
 
         $product2 = $this->findProductForReservation($voucher2);
-        $product2->update(['name' => 'any product name']);
+        $product2->update(['name' => "$productNamePart2 product name"]);
 
         $reservation1 = $this->makeReservation($voucher1, $product1);
         $reservation2 = $this->makeReservation($voucher2, $product2);
@@ -58,12 +64,12 @@ class ReservationExtraPaymentsSearchTest extends SearchTestCase
         $extra2 = $this->makeTestExtraPayment($reservation2);
 
         // assert by fund name
-        $this->assertSearchIds(['q' => 'match'], [$extra1->id], $organization);
-        $this->assertSearchIds(['q' => 'other'], [$extra2->id], $organization);
+        $this->assertSearchIds(['q' => $fundNamePart1], [$extra1->id], $organization);
+        $this->assertSearchIds(['q' => $fundNamePart2], [$extra2->id], $organization);
 
         // assert by product name
-        $this->assertSearchIds(['q' => 'unique'], [$extra1->id], $organization);
-        $this->assertSearchIds(['q' => 'any'], [$extra2->id], $organization);
+        $this->assertSearchIds(['q' => $productNamePart1], [$extra1->id], $organization);
+        $this->assertSearchIds(['q' => $productNamePart2], [$extra2->id], $organization);
     }
 
     /**
@@ -163,11 +169,8 @@ class ReservationExtraPaymentsSearchTest extends SearchTestCase
         $voucher1 = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $voucher2 = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
 
-        $product1 = $this->createProductForReservation($organization, [$fund]);
-        $product1->update(['price' => 5]);
-
+        $product1 = $this->createProductForReservation($organization, [$fund], 5);
         $product2 = $this->createProductForReservation($organization, [$fund]);
-        $product2->update(['price' => 10]);
 
         $reservation1 = $this->makeReservation($voucher1, $product1);
         $reservation2 = $this->makeReservation($voucher2, $product2);

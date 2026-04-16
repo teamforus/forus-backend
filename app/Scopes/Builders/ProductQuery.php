@@ -421,10 +421,9 @@ class ProductQuery
             'reservations_count' => ProductReservation::whereIn('state', [
                 ProductReservation::STATE_WAITING,
                 ProductReservation::STATE_PENDING,
-            ])->where('product_id', 'products.id')->selectRaw('COUNT(*)'),
-            'transactions_count' => VoucherTransaction::where([
-                'product_id' => 'products.id',
-            ])->selectRaw('COUNT(*)'),
+            ])->whereColumn('product_id', 'products.id')->selectRaw('COUNT(*)'),
+            'transactions_count' => VoucherTransaction::whereColumn('product_id', 'products.id')
+                ->selectRaw('COUNT(*)'),
         ])->getQuery();
 
         return Product::query()->fromSub(Product::fromSub($query, 'products')->selectRaw(

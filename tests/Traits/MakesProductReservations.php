@@ -131,11 +131,15 @@ trait MakesProductReservations
     /**
      * @param Organization $organization
      * @param Collection|Fund[] $funds
+     * @param float $price
      * @return Product
      */
-    protected function createProductForReservation(Organization $organization, Collection|array $funds): Product
-    {
-        $product = $this->makeTestProduct($organization);
+    protected function createProductForReservation(
+        Organization $organization,
+        Collection|array $funds,
+        float $price = 10
+    ): Product {
+        $product = $this->makeTestProduct($organization, $price);
 
         foreach ($funds as $fund) {
             $product->fund_providers()->firstOrCreate([

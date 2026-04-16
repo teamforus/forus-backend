@@ -316,9 +316,15 @@ class ProductSearch extends BaseSearch
             ProductQuery::addSelectLastMonitoredChangedDate($builder);
         }
 
-        return Product::query()
+        $builder = Product::query()
             ->fromSub($builder, 'products')
             ->orderBy($orderBy, $orderDir)
             ->latest('created_at');
+
+        if ($this->hasFilter('source') && $this->getFilter('source') === 'archive') {
+            $builder = TrashedQuery::onlyTrashed($builder);
+        }
+
+        return $builder;
     }
 }

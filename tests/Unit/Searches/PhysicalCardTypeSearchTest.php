@@ -33,27 +33,31 @@ class PhysicalCardTypeSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $namePart1 = 'match';
+        $namePart2 = 'other';
+
+        $descriptionPart1 = 'first';
+        $descriptionPart2 = 'second';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
 
         $type1 = $this->makeTestPhysicalCardType(
             $organization,
-            name: 'match type',
-            description: 'unique description'
+            name: "$namePart1 type",
+            description: "$descriptionPart1 description"
         );
 
         $type2 = $this->makeTestPhysicalCardType(
             $organization,
-            name: 'other type',
-            description: 'second description'
+            name: "$namePart2 type",
+            description: "$descriptionPart2 description"
         );
 
-        // match name
-        $this->assertSearchIds(['q' => 'match'], [$type1->id], $organization);
-        $this->assertSearchIds(['q' => 'type'], [$type1->id, $type2->id], $organization);
+        $this->assertSearchIds(['q' => $namePart1], [$type1->id], $organization);
+        $this->assertSearchIds(['q' => $descriptionPart1], [$type1->id], $organization);
 
-        // match description
-        $this->assertSearchIds(['q' => 'unique'], [$type1->id], $organization);
-        $this->assertSearchIds(['q' => 'description'], [$type1->id, $type2->id], $organization);
+        $this->assertSearchIds(['q' => $namePart2], [$type2->id], $organization);
+        $this->assertSearchIds(['q' => $descriptionPart2], [$type2->id], $organization);
     }
 
     /**

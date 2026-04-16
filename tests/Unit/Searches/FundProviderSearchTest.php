@@ -8,10 +8,12 @@ use App\Models\Organization;
 use App\Searches\FundProviderSearch;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestBusinessType;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class FundProviderSearchTest extends SearchTestCase
 {
@@ -143,16 +145,19 @@ class FundProviderSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesFundProviderByOrganizationName(): void
     {
-        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'Match organization']);
-        $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'Other organization']);
+        $namePart1 = 'match';
+        $namePart2 = 'other';
+
+        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart1 name"]);
+        $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart2 name"]);
 
         $fund = $this->sponsor->funds()->first();
 
         $fundProvider1 = $this->makeTestFundProvider($provider1, $fund);
         $fundProvider2 = $this->makeTestFundProvider($provider2, $fund);
 
-        $this->assertSearchIds(['q' => 'Match'], [$fundProvider1->id], $this->sponsor);
-        $this->assertSearchIds(['q' => 'organization'], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $namePart1], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $namePart2], [$fundProvider2->id], $this->sponsor);
     }
 
     /**
@@ -160,31 +165,29 @@ class FundProviderSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByOrganizationContact(): void
     {
-        $email1 = 'test@mail.com';
-        $email2 = 'test@test.com';
+        $emailPart1 = 'unique';
+        $emailPart2 = 'other';
 
-        $phone1 = '222333444';
-        $phone2 = '555666444';
+        $phonePart1 = '222333';
+        $phonePart2 = '555666';
 
-        $kvk1 = '99998888';
-        $kvk2 = '77778888';
+        $kvkPart1 = '9999';
+        $kvkPart2 = '7777';
 
         $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'email' => $email1,
+            'email' => $this->makeUniqueEmail($emailPart1),
             'email_public' => true,
-            'phone' => $phone1,
+            'phone' => "{$phonePart1}444",
             'phone_public' => true,
-            'kvk' => $kvk1,
+            'kvk' => "{$kvkPart1}8888",
         ]);
 
         $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'email' => $email2,
+            'email' => $this->makeUniqueEmail($emailPart2),
             'email_public' => true,
-            'phone' => $phone2,
+            'phone' => "{$phonePart2}444",
             'phone_public' => true,
-            'kvk' => $kvk2,
+            'kvk' => "{$kvkPart2}8888",
         ]);
 
         $fund = $this->sponsor->funds()->first();
@@ -192,14 +195,17 @@ class FundProviderSearchTest extends SearchTestCase
         $fundProvider1 = $this->makeTestFundProvider($provider1, $fund);
         $fundProvider2 = $this->makeTestFundProvider($provider2, $fund);
 
-        $this->assertSearchIds(['q' => '@mail.com'], [$fundProvider1->id], $this->sponsor);
-        $this->assertSearchIds(['q' => 'test@'], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
+        // by email
+        $this->assertSearchIds(['q' => $emailPart1], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $emailPart2], [$fundProvider2->id], $this->sponsor);
 
-        $this->assertSearchIds(['q' => '222333'], [$fundProvider1->id], $this->sponsor);
-        $this->assertSearchIds(['q' => '444'], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
+        // by phone
+        $this->assertSearchIds(['q' => $phonePart1], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $phonePart2], [$fundProvider2->id], $this->sponsor);
 
-        $this->assertSearchIds(['q' => '9999'], [$fundProvider1->id], $this->sponsor);
-        $this->assertSearchIds(['q' => '8888'], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
+        // by kvk
+        $this->assertSearchIds(['q' => $kvkPart1], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $kvkPart2], [$fundProvider2->id], $this->sponsor);
     }
 
     /**
@@ -207,16 +213,19 @@ class FundProviderSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesFundProviderByFundName(): void
     {
-        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'Test organization']);
+        $namePart1 = 'unique';
+        $namePart2 = 'other';
 
-        $fund1 = $this->makeTestFund($this->sponsor, ['name' => 'Match fund']);
-        $fund2 = $this->makeTestFund($this->sponsor, ['name' => 'Other fund']);
+        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity());
+
+        $fund1 = $this->makeTestFund($this->sponsor, ['name' => "$namePart1 fund name"]);
+        $fund2 = $this->makeTestFund($this->sponsor, ['name' => "$namePart2 fund name"]);
 
         $fundProvider1 = $this->makeTestFundProvider($provider1, $fund1);
         $fundProvider2 = $this->makeTestFundProvider($provider1, $fund2);
 
-        $this->assertSearchIds(['q' => 'Match'], [$fundProvider1->id], $this->sponsor);
-        $this->assertSearchIds(['q' => 'fund'], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $namePart1], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => $namePart2], [$fundProvider2->id], $this->sponsor);
     }
 
     /**
@@ -311,7 +320,8 @@ class FundProviderSearchTest extends SearchTestCase
         $fundProvider2 = $this->makeTestFundProvider($this->provider, $fund2);
 
         // create product
-        $this->createProductForReservation($this->provider, [$fund1, $fund2]);
+        $this->createProductForReservation($this->provider, [$fund1]);
+        $product2 = $this->createProductForReservation($this->provider, [$fund2]);
 
         // assert that both fund providers without filters are visible
         $this->assertSearchIds([], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
@@ -327,9 +337,15 @@ class FundProviderSearchTest extends SearchTestCase
         // but fund provider has product
         $this->assertSearchIds(['allow_products' => true], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
         $this->assertSearchIds(['allow_products' => false], [$fundProvider2->id], $this->sponsor);
+
+        // delete product from fund provider products and assert filter by allow_products = true
+        // return only first provider
+        $product2->fund_provider_products()->delete();
+        $this->assertSearchIds(['allow_products' => true], [$fundProvider1->id], $this->sponsor);
     }
 
     /**
+     * @throws Throwable
      * @return void
      */
     public function testFiltersByHasProducts(): void
@@ -339,10 +355,11 @@ class FundProviderSearchTest extends SearchTestCase
 
         // create fund providers with allow_products is true by default
         $fundProvider1 = $this->makeTestFundProvider($this->provider, $fund1);
-        $fundProvider2 = $this->makeTestFundProvider($this->provider, $fund2);
+        $fundProvider2 = $this->makeTestFundProvider($this->otherProvider, $fund2);
 
-        // create product
-        $product = $this->createProductForReservation($this->provider, [$fund1, $fund2]);
+        // create products
+        $product1 = $this->createProductForReservation($this->provider, [$fund1]);
+        $this->createProductForReservation($this->otherProvider, [$fund2]);
 
         // assert that both fund providers without filters are visible
         $this->assertSearchIds([], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
@@ -351,12 +368,20 @@ class FundProviderSearchTest extends SearchTestCase
         $this->assertSearchIds(['has_products' => true], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
         $this->assertSearchIds(['has_products' => false], [], $this->sponsor);
 
-        // make product expired
-        $product->update(['expire_at' => Carbon::now()->subDay()]);
+        // make first product expired
+        DB::beginTransaction();
+        $product1->update(['expire_at' => Carbon::now()->subDay()]);
+        $this->assertSearchIds(['has_products' => true], [$fundProvider2->id], $this->sponsor);
+        DB::rollBack();
 
-        $this->assertSearchIds(['has_products' => true], [], $this->sponsor);
+        $this->assertSearchIds(['has_products' => true], [$fundProvider1->id, $fundProvider2->id], $this->sponsor);
 
-        // todo product_exclusions
+        $fundProvider1->product_exclusions()->firstOrCreate([
+            'product_id' => $product1->id,
+        ]);
+
+        $this->assertSearchIds(['has_products' => true], [$fundProvider2->id], $this->sponsor);
+        $this->assertSearchIds(['has_products' => false], [$fundProvider1->id], $this->sponsor);
     }
 
     /**

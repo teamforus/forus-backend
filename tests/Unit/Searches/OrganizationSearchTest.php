@@ -8,7 +8,7 @@ use App\Models\Organization;
 use App\Models\ProductReservation;
 use App\Searches\OrganizationSearch;
 use App\Traits\DoesTesting;
-use Illuminate\Support\Carbon;;
+use Illuminate\Support\Carbon;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -40,55 +40,61 @@ class OrganizationSearchTest extends SearchTestCase
     {
         $identity = $this->makeIdentity();
 
-        $email1 = 'test@mail.com';
-        $email2 = 'test@test.com';
+        $namePart1 = 'match';
+        $namePart2 = 'other';
 
-        $phone1 = '222333444';
-        $phone2 = '555666444';
+        $descriptionPart1 = 'unique';
+        $descriptionPart2 = 'secondary';
 
-        $website1 = 'https://forus.io';
-        $website2 = 'https://forus.com';
+        $emailPart1 = 'something_un';
+        $emailPart2 = 'any_un';
+
+        $phonePart1 = '22233';
+        $phonePart2 = '55566';
+
+        $websitePart1 = 'forus';
+        $websitePart2 = 'dashboard';
 
         $organization1 = $this->makeTestOrganization($this->makeIdentity(), [
-            'name' => 'match organization name',
-            'description_text' => 'unique description text',
-            'email' => $email1,
+            'name' => "$namePart1 name",
+            'description_text' => "$descriptionPart1 description text",
+            'email' => $this->makeUniqueEmail($emailPart1),
             'email_public' => true,
-            'phone' => $phone1,
+            'phone' => "{$phonePart1}444",
             'phone_public' => true,
-            'website' => $website1,
+            'website' => "https://$websitePart1.example.com",
             'website_public' => true,
         ]);
 
         $organization1->addEmployee($identity);
 
         $organization2 = $this->makeTestOrganization($this->makeIdentity(), [
-            'name' => 'other organization name',
-            'description_text' => 'same description text',
-            'email' => $email2,
+            'name' => "$namePart2 name",
+            'description_text' => "$descriptionPart2 description text",
+            'email' => $this->makeUniqueEmail($emailPart2),
             'email_public' => true,
-            'phone' => $phone2,
+            'phone' => "{$phonePart2}444",
             'phone_public' => true,
-            'website' => $website2,
+            'website' => "https://$websitePart2.example.com",
             'website_public' => true,
         ]);
 
         $organization2->addEmployee($identity);
 
-        $this->assertSearchIds(['q' => 'match'], [$organization1->id], $identity);
-        $this->assertSearchIds(['q' => 'organization'], [$organization1->id, $organization2->id], $identity);
+        $this->assertSearchIds(['q' => $namePart1], [$organization1->id], $identity);
+        $this->assertSearchIds(['q' => $namePart2], [$organization2->id], $identity);
 
-        $this->assertSearchIds(['q' => 'unique'], [$organization1->id], $identity);
-        $this->assertSearchIds(['q' => 'description text'], [$organization1->id, $organization2->id], $identity);
+        $this->assertSearchIds(['q' => $descriptionPart1], [$organization1->id], $identity);
+        $this->assertSearchIds(['q' => $descriptionPart2], [$organization2->id], $identity);
 
-        $this->assertSearchIds(['q' => '@mail.com'], [$organization1->id], $identity);
-        $this->assertSearchIds(['q' => 'test@'], [$organization1->id, $organization2->id], $identity);
+        $this->assertSearchIds(['q' => $emailPart1], [$organization1->id], $identity);
+        $this->assertSearchIds(['q' => $emailPart2], [$organization2->id], $identity);
 
-        $this->assertSearchIds(['q' => '222333'], [$organization1->id], $identity);
-        $this->assertSearchIds(['q' => '444'], [$organization1->id, $organization2->id], $identity);
+        $this->assertSearchIds(['q' => $phonePart1], [$organization1->id], $identity);
+        $this->assertSearchIds(['q' => $phonePart2], [$organization2->id], $identity);
 
-        $this->assertSearchIds(['q' => 'forus.io'], [$organization1->id], $identity);
-        $this->assertSearchIds(['q' => 'https://forus'], [$organization1->id, $organization2->id], $identity);
+        $this->assertSearchIds(['q' => $websitePart1], [$organization1->id], $identity);
+        $this->assertSearchIds(['q' => $websitePart2], [$organization2->id], $identity);
     }
 
     /**

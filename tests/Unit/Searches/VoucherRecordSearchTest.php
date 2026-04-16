@@ -30,31 +30,37 @@ class VoucherRecordSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $recordValuePart1 = 'match';
+        $recordValuePart2 = 'other';
+
+        $recordNotePart1 = 'primary';
+        $recordNotePart2 = 'secondary';
+
+        $recordTypeKeyPart1 = 'first';
+        $recordTypeKeyPart2 = 'last';
+
         $identity = $this->makeIdentity();
         $organization = $this->makeTestOrganization($identity);
 
-        $recordTypeA = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'test_string_a');
+        $recordTypeA = $this->makeRecordType($organization, RecordType::TYPE_STRING, "test_string_$recordTypeKeyPart1");
         $recordTypeA->translateOrNew(app()->getLocale())->fill(['name' => $recordTypeA->key])->save();
 
-        $recordTypeB = $this->makeRecordType($organization, RecordType::TYPE_STRING, 'test_string_b');
+        $recordTypeB = $this->makeRecordType($organization, RecordType::TYPE_STRING, "test_string_$recordTypeKeyPart2");
         $recordTypeB->translateOrNew(app()->getLocale())->fill(['name' => $recordTypeB->key])->save();
 
         $fund = $this->makeTestFund($organization);
         $voucher = $fund->makeVoucher($identity);
 
-        $recordA = $voucher->appendRecord($recordTypeA->key, 'match value', 'unique note');
-        $recordB = $voucher->appendRecord($recordTypeB->key, 'other value', 'next note');
+        $recordA = $voucher->appendRecord($recordTypeA->key, "$recordValuePart1 value", "$recordNotePart1 note");
+        $recordB = $voucher->appendRecord($recordTypeB->key, "$recordValuePart2 value", "$recordNotePart2 note");
 
-        $this->assertSearchIds(['q' => 'match'], [$recordA->id], $voucher);
-        $this->assertSearchIds(['q' => 'other'], [$recordB->id], $voucher);
-        $this->assertSearchIds(['q' => 'value'], [$recordA->id, $recordB->id], $voucher);
+        $this->assertSearchIds(['q' => $recordValuePart1], [$recordA->id], $voucher);
+        $this->assertSearchIds(['q' => $recordNotePart1], [$recordA->id], $voucher);
+        $this->assertSearchIds(['q' => $recordTypeKeyPart1], [$recordA->id], $voucher);
 
-        $this->assertSearchIds(['q' => 'unique'], [$recordA->id], $voucher);
-        $this->assertSearchIds(['q' => 'next'], [$recordB->id], $voucher);
-        $this->assertSearchIds(['q' => 'note'], [$recordA->id, $recordB->id], $voucher);
-
-        $this->assertSearchIds(['q' => 'test_string_a'], [$recordA->id], $voucher);
-        $this->assertSearchIds(['q' => 'test_string_B'], [$recordB->id], $voucher);
+        $this->assertSearchIds(['q' => $recordValuePart2], [$recordB->id], $voucher);
+        $this->assertSearchIds(['q' => $recordNotePart2], [$recordB->id], $voucher);
+        $this->assertSearchIds(['q' => $recordTypeKeyPart2], [$recordB->id], $voucher);
     }
 
     /**

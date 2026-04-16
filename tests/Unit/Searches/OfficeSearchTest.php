@@ -48,14 +48,17 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeAddress(): void
     {
+        $addressPart1 = 'match';
+        $addressPart2 = 'other';
+
         $organization = $this->makeTestProviderOrganization($this->makeIdentity());
 
-        $office1 = $this->makeOrganizationOffice($organization, ['address' => 'Match address']);
-        $office2 = $this->makeOrganizationOffice($organization, ['address' => 'Other address']);
+        $office1 = $this->makeOrganizationOffice($organization, ['address' => "$addressPart1 address"]);
+        $office2 = $this->makeOrganizationOffice($organization, ['address' => "$addressPart2 address"]);
         $this->makeOrganizationOffice($organization, ['address' => 'Missing']);
 
-        $this->assertSearchIds(['q' => 'Match'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'address'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $addressPart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $addressPart2], [$office2->id]);
     }
 
     /**
@@ -63,14 +66,17 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByOrganizationName(): void
     {
-        $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'Match organization']);
+        $namePart1 = 'match';
+        $namePart2 = 'other';
+
+        $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart1 name"]);
         $office1 = $this->makeOrganizationOffice($organization1, ['address' => 'address']);
 
-        $organization2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'Other organization']);
+        $organization2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart2 name"]);
         $office2 = $this->makeOrganizationOffice($organization2, ['address' => 'address']);
 
-        $this->assertSearchIds(['q' => 'Match'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'organization'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $namePart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $namePart2], [$office2->id]);
     }
 
     /**
@@ -78,22 +84,23 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByBusinessTypeName(): void
     {
+        $typePart1 = 'match';
+        $typePart2 = 'other';
+
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'business_type_id' => $this->makeTestBusinessType('Match business type')->id,
+            'business_type_id' => $this->makeTestBusinessType("$typePart1 business type")->id,
         ]);
 
         $office1 = $this->makeOrganizationOffice($organization1, ['address' => 'address']);
 
         $organization2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'business_type_id' => $this->makeTestBusinessType('Missed business type')->id,
+            'business_type_id' => $this->makeTestBusinessType("$typePart2 business type")->id,
         ]);
 
         $office2 = $this->makeOrganizationOffice($organization2, ['address' => 'address']);
 
-        $this->assertSearchIds(['q' => 'Match'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'business type'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $typePart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $typePart2], [$office2->id]);
     }
 
     /**
@@ -101,47 +108,44 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByOrganizationContact(): void
     {
-        $email1 = 'test@mail.com';
-        $email2 = 'test@test.com';
+        $emailPart1 = 'something_un';
+        $emailPart2 = 'any_un';
 
-        $phone1 = '222333444';
-        $phone2 = '555666444';
+        $phonePart1 = '22233';
+        $phonePart2 = '55566';
 
-        $website1 = 'https://forus.io';
-        $website2 = 'https://forus.com';
+        $websitePart1 = 'forus';
+        $websitePart2 = 'dashboard';
 
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'email' => $email1,
+            'email' => $this->makeUniqueEmail($emailPart1),
             'email_public' => true,
-            'phone' => $phone1,
+            'phone' => "{$phonePart1}444",
             'phone_public' => true,
-            'website' => $website1,
+            'website' => "https://$websitePart1.example.com",
             'website_public' => true,
         ]);
-
-        $office1 = $this->makeOrganizationOffice($organization1, ['address' => 'address']);
 
         $organization2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'organization',
-            'email' => $email2,
+            'email' => $this->makeUniqueEmail($emailPart2),
             'email_public' => true,
-            'phone' => $phone2,
+            'phone' => "{$phonePart2}444",
             'phone_public' => true,
-            'website' => $website2,
+            'website' => "https://$websitePart2.example.com",
             'website_public' => true,
         ]);
 
-        $office2 = $this->makeOrganizationOffice($organization2, ['address' => 'address']);
+        $office1 = $this->makeOrganizationOffice($organization1);
+        $office2 = $this->makeOrganizationOffice($organization2);
 
-        $this->assertSearchIds(['q' => '@mail.com'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'test@'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $emailPart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $emailPart2], [$office2->id]);
 
-        $this->assertSearchIds(['q' => '222333'], [$office1->id]);
-        $this->assertSearchIds(['q' => '444'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $phonePart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $phonePart2], [$office2->id]);
 
-        $this->assertSearchIds(['q' => 'forus.io'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'https://forus'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $websitePart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $websitePart2], [$office2->id]);
     }
 
     /**
@@ -149,32 +153,41 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeBranch(): void
     {
-        $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'organization']);
+        $branchIdPart1 = '1111';
+        $branchIdPart2 = '3333';
+
+        $branchNamePart1 = 'match';
+        $branchNamePart2 = 'unique';
+
+        $branchNumberPart1 = '4444';
+        $branchNumberPart2 = '5555';
+
+        $organization1 = $this->makeTestProviderOrganization($this->makeIdentity());
 
         $office1 = $this->makeOrganizationOffice($organization1, [
             'address' => 'address',
-            'branch_id' => '11112222',
-            'branch_name' => 'AAAADDDD',
-            'branch_number' => '666666777777',
+            'branch_id' => "{$branchIdPart1}2222",
+            'branch_name' => "$branchNamePart1 name",
+            'branch_number' => "{$branchNumberPart1}777777",
         ]);
 
-        $organization2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => 'organization']);
+        $organization2 = $this->makeTestProviderOrganization($this->makeIdentity());
 
         $office2 = $this->makeOrganizationOffice($organization2, [
             'address' => 'address',
-            'branch_id' => '33332222',
-            'branch_name' => 'BBBBDDDD',
-            'branch_number' => '7777788888',
+            'branch_id' => "{$branchIdPart2}2222",
+            'branch_name' => "$branchNamePart2 name",
+            'branch_number' => "{$branchNumberPart2}777777",
         ]);
 
-        $this->assertSearchIds(['q' => '1111'], [$office1->id]);
-        $this->assertSearchIds(['q' => '2222'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $branchIdPart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $branchIdPart2], [$office2->id]);
 
-        $this->assertSearchIds(['q' => 'AAAA'], [$office1->id]);
-        $this->assertSearchIds(['q' => 'DDDD'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $branchNamePart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $branchNamePart2], [$office2->id]);
 
-        $this->assertSearchIds(['q' => '66666'], [$office1->id]);
-        $this->assertSearchIds(['q' => '77777'], [$office1->id, $office2->id]);
+        $this->assertSearchIds(['q' => $branchNumberPart1], [$office1->id]);
+        $this->assertSearchIds(['q' => $branchNumberPart2], [$office2->id]);
     }
 
     /**

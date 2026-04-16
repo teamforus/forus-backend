@@ -29,10 +29,10 @@ class FundRequestPayoutBankAccountSearch extends BasePayoutBankAccountSearch
         if ($q) {
             $builder->where(function ($builder) use ($q, $bsnEnabled) {
                 $builder->whereHas('identity', function ($identityBuilder) use ($q, $bsnEnabled) {
-                    $identityBuilder->where('email', 'LIKE', '%' . $q . '%');
+                    $identityBuilder->whereRelation('primary_email', 'email', 'LIKE', "%$q%");
 
                     if ($bsnEnabled) {
-                        $identityBuilder->orWhere('bsn', 'LIKE', '%' . $q . '%');
+                        $identityBuilder->orWhereRelation('record_bsn', 'value', 'LIKE', "%$q%");
                     }
                 });
 
@@ -44,7 +44,7 @@ class FundRequestPayoutBankAccountSearch extends BasePayoutBankAccountSearch
                     $voucherBuilder->where('number', 'LIKE', '%' . $q . '%');
 
                     if (is_numeric($q)) {
-                        $voucherBuilder->orWhereKey($q);
+                        $voucherBuilder->orWhere('id', $q);
                     }
                 });
             });

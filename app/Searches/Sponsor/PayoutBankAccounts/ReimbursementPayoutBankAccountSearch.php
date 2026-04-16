@@ -32,10 +32,10 @@ class ReimbursementPayoutBankAccountSearch extends BasePayoutBankAccountSearch
                     ->where('iban', 'LIKE', '%' . $q . '%')
                     ->orWhere('iban_name', 'LIKE', '%' . $q . '%')
                     ->orWhereHas('voucher.identity', function ($identityQuery) use ($q, $bsnEnabled) {
-                        $identityQuery->where('email', 'LIKE', '%' . $q . '%');
+                        $identityQuery->whereRelation('primary_email', 'email', 'LIKE', "%$q%");
 
                         if ($bsnEnabled) {
-                            $identityQuery->orWhere('bsn', 'LIKE', '%' . $q . '%');
+                            $identityQuery->orWhereRelation('record_bsn', 'value', 'LIKE', "%$q%");
                         }
                     });
             });

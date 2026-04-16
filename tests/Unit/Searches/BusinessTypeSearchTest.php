@@ -16,6 +16,9 @@ class BusinessTypeSearchTest extends SearchTestCase
     use MakesTestFunds;
     use MakesTestOrganizations;
 
+    /**
+     * @return void
+     */
     public function testQueryBuilds(): void
     {
         $search = new BusinessTypeSearch([], BusinessType::query());
@@ -23,6 +26,9 @@ class BusinessTypeSearchTest extends SearchTestCase
         $this->assertQueryBuilds($search->query());
     }
 
+    /**
+     * @return void
+     */
     public function testFiltersByUsed(): void
     {
         $identity = $this->makeIdentity();

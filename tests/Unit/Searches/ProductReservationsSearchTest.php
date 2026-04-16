@@ -100,6 +100,12 @@ class ProductReservationsSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryProduct(): void
     {
+        $namePart1 = 'first';
+        $namePart2 = 'last';
+
+        $descriptionPart1 = 'unique';
+        $descriptionPart2 = 'common';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization);
 
@@ -109,27 +115,25 @@ class ProductReservationsSearchTest extends SearchTestCase
         $product1 = $this->createProductForReservation($organization, [$fund]);
 
         $product1->update([
-            'name' => 'match product name',
-            'description' => 'unique product description',
+            'name' => "$namePart1 product name",
+            'description' => "$descriptionPart1 product description",
         ]);
 
         $product2 = $this->createProductForReservation($organization, [$fund]);
 
         $product2->update([
-            'name' => 'other product name',
-            'description' => 'second product description',
+            'name' => "$namePart2 product name",
+            'description' => "$descriptionPart2 product description",
         ]);
 
         $reservation1 = $this->makeReservation($voucher1, $product1);
         $reservation2 = $this->makeReservation($voucher2, $product2);
 
-        // assert by product name
-        $this->assertSearchIds(['q' => 'match'], [$reservation1->id]);
-        $this->assertSearchIds(['q' => 'other'], [$reservation2->id]);
+        $this->assertSearchIds(['q' => $namePart1], [$reservation1->id]);
+        $this->assertSearchIds(['q' => $descriptionPart1], [$reservation1->id]);
 
-        // assert by product description
-        $this->assertSearchIds(['q' => 'unique'], [$reservation1->id]);
-        $this->assertSearchIds(['q' => 'second'], [$reservation2->id]);
+        $this->assertSearchIds(['q' => $namePart2], [$reservation2->id]);
+        $this->assertSearchIds(['q' => $descriptionPart2], [$reservation2->id]);
     }
 
     /**
@@ -997,11 +1001,8 @@ class ProductReservationsSearchTest extends SearchTestCase
         $voucher1 = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $voucher2 = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
 
-        $product1 = $this->createProductForReservation($organization, [$fund]);
-        $product1->update(['price' => 5]);
-
+        $product1 = $this->createProductForReservation($organization, [$fund], 5);
         $product2 = $this->createProductForReservation($organization, [$fund]);
-        $product2->update(['price' => 10]);
 
         $reservationA = $this->makeReservation($voucher1, $product1);
         $reservationB = $this->makeReservation($voucher2, $product2);

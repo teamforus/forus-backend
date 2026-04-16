@@ -37,6 +37,12 @@ class FundTopUpTransactionSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $ibanPart1 = 'unique';
+        $ibanPart2 = 'other';
+
+        $codePart1 = 'first';
+        $codePart2 = 'second';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
 
         $fund1 = $this->makeTestFund($organization);
@@ -45,22 +51,23 @@ class FundTopUpTransactionSearchTest extends SearchTestCase
         $fund2 = $this->makeTestFund($organization);
         $fund2->top_ups()->delete();
 
-        $matchBankConnection = $this->makeBankConnection($organization);
-        $matchAccount = $matchBankConnection->bank_connection_accounts()->first();
-        $matchAccount->update(['monetary_account_iban' => 'match iban']);
+        $bankConnection1 = $this->makeBankConnection($organization);
+        $account1 = $bankConnection1->bank_connection_accounts()->first();
+        $account1->update(['monetary_account_iban' => "$ibanPart1 iban"]);
 
-        $matchTransaction = $this->prepareTopUpTransaction($fund1, $matchAccount, 'topup_code');
+        $transaction1 = $this->prepareTopUpTransaction($fund1, $account1, "{$codePart1}_code");
 
-        $otherBankConnection = $this->makeBankConnection($organization);
-        $otherAccount = $otherBankConnection->bank_connection_accounts()->first();
-        $otherAccount->update(['monetary_account_iban' => 'other iban']);
+        $bankConnection2 = $this->makeBankConnection($organization);
+        $account2 = $bankConnection2->bank_connection_accounts()->first();
+        $account2->update(['monetary_account_iban' => "$ibanPart2 iban"]);
 
-        $otherTransaction = $this->prepareTopUpTransaction($fund2, $otherAccount, 'other_code');
+        $transaction2 = $this->prepareTopUpTransaction($fund2, $account2, "{$codePart2}_code");
 
-        $this->assertSearchIds(['q' => 'match'], [$matchTransaction->id], $organization);
-        $this->assertSearchIds(['q' => 'topup'], [$matchTransaction->id], $organization);
+        $this->assertSearchIds(['q' => $ibanPart1], [$transaction1->id], $organization);
+        $this->assertSearchIds(['q' => $codePart1], [$transaction1->id], $organization);
 
-        $this->assertSearchIds(['q' => 'other'], [$otherTransaction->id], $organization);
+        $this->assertSearchIds(['q' => $ibanPart2], [$transaction2->id], $organization);
+        $this->assertSearchIds(['q' => $codePart2], [$transaction2->id], $organization);
     }
 
     /**

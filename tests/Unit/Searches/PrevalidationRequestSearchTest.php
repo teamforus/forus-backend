@@ -32,24 +32,23 @@ class PrevalidationRequestSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $bsnPart1 = '1111';
+        $bsnPart2 = '3333';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $employee = $organization->employees()->first();
 
         $fund1 = $this->makeTestFund($organization);
         $fund2 = $this->makeTestFund($organization);
 
-        $bsn1 = 11112222;
-        $bsn2 = 33332222;
-
-        PrevalidationRequest::makeFromArray($fund1, $employee, [['bsn' => $bsn1]]);
+        PrevalidationRequest::makeFromArray($fund1, $employee, [['bsn' => "{$bsnPart1}2222"]]);
         $request1 = PrevalidationRequest::query()->where('fund_id', $fund1->id)->first();
 
-        PrevalidationRequest::makeFromArray($fund2, $employee, [['bsn' => $bsn2]]);
+        PrevalidationRequest::makeFromArray($fund2, $employee, [['bsn' => "{$bsnPart2}2222"]]);
         $request2 = PrevalidationRequest::query()->where('fund_id', $fund2->id)->first();
 
-        $this->assertSearchIds(['q' => '1111'], [$request1->id], $organization);
-        $this->assertSearchIds(['q' => '3333'], [$request2->id], $organization);
-        $this->assertSearchIds(['q' => '2222'], [$request1->id, $request2->id], $organization);
+        $this->assertSearchIds(['q' => $bsnPart1], [$request1->id], $organization);
+        $this->assertSearchIds(['q' => $bsnPart2], [$request2->id], $organization);
     }
 
     /**

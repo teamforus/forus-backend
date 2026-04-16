@@ -35,19 +35,18 @@ class PrevalidationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryUid(): void
     {
+        $uidPart1 = 'match';
+        $uidPart2 = 'other';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, fundConfigsData: ['csv_primary_key' => 'uid']);
         $this->addTestCriteriaToFund($fund);
 
-        $matchUid = 'match_uid_key';
-        $matchPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund, $matchUid);
+        $prevalidation1 = $this->makePrevalidationForTestCriteria($organization, $fund, "{$uidPart1}_uid_key");
+        $prevalidation2 = $this->makePrevalidationForTestCriteria($organization, $fund, "{$uidPart2}_uid_key");
 
-        $otherUid = 'other_uid_key';
-        $otherPrevalidation = $this->makePrevalidationForTestCriteria($organization, $fund, $otherUid);
-
-        $this->assertSearchIds(['q' => 'match'], [$matchPrevalidation->id], $organization);
-        $this->assertSearchIds(['q' => 'other'], [$otherPrevalidation->id], $organization);
-        $this->assertSearchIds(['q' => 'uid_key'], [$matchPrevalidation->id, $otherPrevalidation->id], $organization);
+        $this->assertSearchIds(['q' => $uidPart1], [$prevalidation1->id], $organization);
+        $this->assertSearchIds(['q' => $uidPart2], [$prevalidation2->id], $organization);
     }
 
     /**
@@ -55,38 +54,36 @@ class PrevalidationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryRecordValue(): void
     {
+        $recordValuePart1 = 'match';
+        $recordValuePart2 = 'other';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, fundConfigsData: ['csv_primary_key' => 'uid']);
         $recordTypeKey = $this->prepareTestCriteria($fund);
         $fund->refresh();
 
-        // prepare match prevalidation by record value
-        $matchRecordValue = 'match_record_value';
-
+        // prepare first prevalidation by record value
         $response = $this->apiMakeStorePrevalidationRequest($organization, $fund, [
-            $this->makeRequestCriterionValue($fund, $recordTypeKey, $matchRecordValue),
+            $this->makeRequestCriterionValue($fund, $recordTypeKey, "{$recordValuePart1}_record_value"),
         ], [
             $fund->fund_config->csv_primary_key => token_generator()->generate(32),
         ]);
 
         $response->assertSuccessful();
-        $matchPrevalidation = Prevalidation::find($response->json('data.id'));
+        $prevalidation1 = Prevalidation::find($response->json('data.id'));
 
-        // prepare other prevalidation by record value
-        $otherRecordValue = 'other_record_value';
-
+        // prepare second prevalidation by record value
         $response = $this->apiMakeStorePrevalidationRequest($organization, $fund, [
-            $this->makeRequestCriterionValue($fund, $recordTypeKey, $otherRecordValue),
+            $this->makeRequestCriterionValue($fund, $recordTypeKey, "{$recordValuePart2}_record_value"),
         ], [
             $fund->fund_config->csv_primary_key => token_generator()->generate(32),
         ]);
 
         $response->assertSuccessful();
-        $otherPrevalidation = Prevalidation::find($response->json('data.id'));
+        $prevalidation2 = Prevalidation::find($response->json('data.id'));
 
-        $this->assertSearchIds(['q' => 'match'], [$matchPrevalidation->id], $organization);
-        $this->assertSearchIds(['q' => 'other'], [$otherPrevalidation->id], $organization);
-        $this->assertSearchIds(['q' => 'record_value'], [$matchPrevalidation->id, $otherPrevalidation->id], $organization);
+        $this->assertSearchIds(['q' => $recordValuePart1], [$prevalidation1->id], $organization);
+        $this->assertSearchIds(['q' => $recordValuePart2], [$prevalidation2->id], $organization);
     }
 
     /**

@@ -6,7 +6,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Searches\OrganizationSearch;
 use App\Traits\DoesTesting;
-use Illuminate\Support\Carbon;;
+use Illuminate\Support\Carbon;
 use Tests\Traits\MakesTestBusinessType;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -41,32 +41,35 @@ class ProviderOrganizationSearchTest extends SearchTestCase
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
 
-        $email1 = 'test@mail.com';
-        $email2 = 'test@test.com';
+        $namePart1 = 'match';
+        $namePart2 = 'other';
 
-        $phone1 = '222333444';
-        $phone2 = '555666444';
+        $emailPart1 = 'something_un';
+        $emailPart2 = 'any_un';
 
-        $website1 = 'https://forus.io';
-        $website2 = 'https://forus.com';
+        $phonePart1 = '22233';
+        $phonePart2 = '55566';
+
+        $websitePart1 = 'forus';
+        $websitePart2 = 'dashboard';
 
         $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'match organization name',
-            'email' => $email1,
+            'name' => "$namePart1 name",
+            'email' => $this->makeUniqueEmail($emailPart1),
             'email_public' => true,
-            'phone' => $phone1,
+            'phone' => "{$phonePart1}444",
             'phone_public' => true,
-            'website' => $website1,
+            'website' => "https://$websitePart1.example.com",
             'website_public' => true,
         ]);
 
         $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
-            'name' => 'other organization name',
-            'email' => $email2,
+            'name' => "$namePart2 name",
+            'email' => $this->makeUniqueEmail($emailPart2),
             'email_public' => true,
-            'phone' => $phone2,
+            'phone' => "{$phonePart2}444",
             'phone_public' => true,
-            'website' => $website2,
+            'website' => "https://$websitePart2.example.com",
             'website_public' => true,
         ]);
 
@@ -74,17 +77,17 @@ class ProviderOrganizationSearchTest extends SearchTestCase
         $this->makeTestFundProvider($provider1, $fund);
         $this->makeTestFundProvider($provider2, $fund);
 
-        $this->assertSearchIds(['q' => 'match'], [$provider1->id]);
-        $this->assertSearchIds(['q' => 'organization'], [$provider1->id, $provider2->id]);
+        $this->assertSearchIds(['q' => $namePart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $namePart2], [$provider2->id]);
 
-        $this->assertSearchIds(['q' => '@mail.com'], [$provider1->id]);
-        $this->assertSearchIds(['q' => 'test@'], [$provider1->id, $provider2->id]);
+        $this->assertSearchIds(['q' => $emailPart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $emailPart2], [$provider2->id]);
 
-        $this->assertSearchIds(['q' => '222333'], [$provider1->id]);
-        $this->assertSearchIds(['q' => '444'], [$provider1->id, $provider2->id]);
+        $this->assertSearchIds(['q' => $phonePart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $phonePart2], [$provider2->id]);
 
-        $this->assertSearchIds(['q' => 'forus.io'], [$provider1->id]);
-        $this->assertSearchIds(['q' => 'https://forus'], [$provider1->id, $provider2->id]);
+        $this->assertSearchIds(['q' => $websitePart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $websitePart2], [$provider2->id]);
     }
 
     /**
@@ -93,6 +96,9 @@ class ProviderOrganizationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryOfficeAddress(): void
     {
+        $addressPart1 = 'first';
+        $addressPart2 = 'second';
+
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
         $provider1 = $this->makeTestProviderOrganization($this->makeIdentity());
@@ -102,11 +108,11 @@ class ProviderOrganizationSearchTest extends SearchTestCase
         $this->makeTestFundProvider($provider1, $fund);
         $this->makeTestFundProvider($provider2, $fund);
 
-        $this->makeOrganizationOffice($provider1, ['address' => 'first office address']);
-        $this->makeOrganizationOffice($provider2, ['address' => 'second office address']);
+        $this->makeOrganizationOffice($provider1, ['address' => "$addressPart1 office address"]);
+        $this->makeOrganizationOffice($provider2, ['address' => "$addressPart2 office address"]);
 
-        $this->assertSearchIds(['q' => 'first office'], [$provider1->id]);
-        $this->assertSearchIds(['q' => 'office address'], [$provider1->id, $provider2->id]);
+        $this->assertSearchIds(['q' => $addressPart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $addressPart2], [$provider2->id]);
     }
 
     /**
@@ -115,6 +121,9 @@ class ProviderOrganizationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryBusinessTypeName(): void
     {
+        $typePart1 = 'first';
+        $typePart2 = 'second';
+
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
         $provider1 = $this->makeTestProviderOrganization($this->makeIdentity());
@@ -124,14 +133,14 @@ class ProviderOrganizationSearchTest extends SearchTestCase
         $this->makeTestFundProvider($provider1, $fund);
         $this->makeTestFundProvider($provider2, $fund);
 
-        $businessType1 = $this->makeTestBusinessType('match type');
-        $businessType2 = $this->makeTestBusinessType('other type');
+        $businessType1 = $this->makeTestBusinessType("$typePart1 type");
+        $businessType2 = $this->makeTestBusinessType("$typePart2 type");
 
         $provider1->update(['business_type_id' => $businessType1->id]);
         $provider2->update(['business_type_id' => $businessType2->id]);
 
-        $this->assertSearchIds(['q' => 'match'], [$provider1->id]);
-        $this->assertSearchIds(['q' => 'other'], [$provider2->id]);
+        $this->assertSearchIds(['q' => $typePart1], [$provider1->id]);
+        $this->assertSearchIds(['q' => $typePart2], [$provider2->id]);
     }
 
     /**

@@ -3,12 +3,10 @@
 namespace Tests\Unit\Searches;
 
 use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\Identity;
 use App\Searches\FundRequestSearch;
 use App\Traits\DoesTesting;
-use Illuminate\Support\Carbon;;
+use Illuminate\Support\Carbon;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -36,26 +34,37 @@ class FundRequestSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $emailPart1 = 'unique';
+        $emailPart2 = 'other';
+
+        $fundNamePart1 = 'first';
+        $fundNamePart2 = 'second';
+
+        $bsnPart1 = '11111';
+        $bsnPart2 = '22222';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $employee = $organization->employees()->first();
-        $fund = $this->makeTestFund($organization, ['name' => 'Other fund']);
 
-        $matchIdentity = $this->makeIdentity('match@test.com', 555555);
-        $otherIdentity = $this->makeIdentity('other@test.com', 777777);
+        $fund1 = $this->makeTestFund($organization, ['name' => "$fundNamePart1 fund name"]);
+        $fund2 = $this->makeTestFund($organization, ['name' => "$fundNamePart2 fund name"]);
 
-        $fundRequest1 = $this->makeFundRequestForIdentity($fund, $matchIdentity);
-        $fundRequest2 = $this->makeFundRequestForIdentity($fund, $otherIdentity);
+        $identity1 = $this->makeIdentity($this->makeUniqueEmail($emailPart1), bsn: "{$bsnPart1}8888");
+        $identity2 = $this->makeIdentity($this->makeUniqueEmail($emailPart2), bsn: "{$bsnPart2}8888");
+
+        $fundRequest1 = $this->makeFundRequestForIdentity($fund1, $identity1);
+        $fundRequest2 = $this->makeFundRequestForIdentity($fund2, $identity2);
 
         // assert filter by email, bsn, request ID
-        $this->assertSearchIds(['q' => 'match@'], [$fundRequest1->id], $employee);
-        $this->assertSearchIds(['q' => '777777'], [$fundRequest2->id], $employee);
+        $this->assertSearchIds(['q' => $emailPart1], [$fundRequest1->id], $employee);
+        $this->assertSearchIds(['q' => $bsnPart1], [$fundRequest1->id], $employee);
+        $this->assertSearchIds(['q' => $fundNamePart1], [$fundRequest1->id], $employee);
+        $this->assertSearchIds(['q' => $fundRequest1->id], [$fundRequest1->id], $employee);
+
+        $this->assertSearchIds(['q' => $emailPart2], [$fundRequest2->id], $employee);
+        $this->assertSearchIds(['q' => $bsnPart2], [$fundRequest2->id], $employee);
+        $this->assertSearchIds(['q' => $fundNamePart2], [$fundRequest2->id], $employee);
         $this->assertSearchIds(['q' => $fundRequest2->id], [$fundRequest2->id], $employee);
-
-        // create second fund and assert filter by fund name
-        $fund2 = $this->makeTestFund($organization, ['name' => 'Visible fund']);
-        $fundRequestFund2 = $this->makeFundRequestForIdentity($fund2, $matchIdentity);
-
-        $this->assertSearchIds(['q' => 'visible'], [$fundRequestFund2->id], $employee);
     }
 
     /**
@@ -417,28 +426,6 @@ class FundRequestSearchTest extends SearchTestCase
             'order_by' => 'note',
             'order_dir' => 'desc',
         ], [$fundRequestB->id, $fundRequestA->id], $employee);
-    }
-
-    /**
-     * @param Fund $fund
-     * @param Identity $identity
-     * @return FundRequest
-     */
-    protected function makeFundRequestForIdentity(Fund $fund, Identity $identity): FundRequest
-    {
-        $records = [[
-            'fund_criterion_id' => $fund->criteria[0]?->id,
-            'value' => 5,
-            'files' => [],
-        ]];
-
-        $response = $this->makeFundRequest($identity, $fund, $records, false);
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-
-        return $fundRequest;
     }
 
     /**

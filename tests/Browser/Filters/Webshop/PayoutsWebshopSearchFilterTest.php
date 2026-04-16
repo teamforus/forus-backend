@@ -97,26 +97,4 @@ class PayoutsWebshopSearchFilterTest extends BaseWebshopSearchFilter
 
         return $payout;
     }
-
-    /**
-     * @param Fund $fund
-     * @param Identity $identity
-     * @return FundRequest
-     */
-    protected function makeFundRequestForIdentity(Fund $fund, Identity $identity): FundRequest
-    {
-        $records = [[
-            'fund_criterion_id' => $fund->criteria[0]?->id,
-            'value' => 5,
-            'files' => [],
-        ]];
-
-        $response = $this->makeFundRequest($identity, $fund, $records, false);
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-
-        return $fundRequest;
-    }
 }

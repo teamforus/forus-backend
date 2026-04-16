@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
-use App\Models\ReservationField;
 use App\Models\Product;
+use App\Models\ReservationField;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -89,24 +89,6 @@ class ProductReservationFieldsConfigTest extends TestCase
         ]);
 
         $this->assertFieldsAvailableOnWebshop($provider, $product, []);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Product $product
-     * @param array $params
-     * @return TestResponse
-     */
-    protected function makeProductUpdateRequest(
-        Organization $organization,
-        Product $product,
-        array $params
-    ): TestResponse {
-        return $this->patchJson(
-            "/api/v1/platform/organizations/$organization->id/products/$product->id",
-            $params,
-            $this->makeApiHeaders($organization->identity),
-        );
     }
 
     /**

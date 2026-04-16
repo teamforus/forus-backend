@@ -29,11 +29,14 @@ class ProductCategorySearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
-        $category1 = $this->makeProductCategory(name: 'match category');
-        $category2 = $this->makeProductCategory(name: 'other category');
+        $namePart1 = 'first';
+        $namePart2 = 'last';
 
-        $this->assertSearchIds(['q' => 'match'], [$category1->id]);
-        $this->assertSearchIds(['q' => 'category'], [$category1->id, $category2->id]);
+        $category1 = $this->makeProductCategory(name: "$namePart1 category");
+        $category2 = $this->makeProductCategory(name: "$namePart2 category");
+
+        $this->assertSearchIds(['q' => $namePart1], [$category1->id]);
+        $this->assertSearchIds(['q' => $namePart2], [$category2->id]);
     }
 
     /**
@@ -42,8 +45,8 @@ class ProductCategorySearchTest extends SearchTestCase
     public function testFiltersByParentId(): void
     {
         $parent = $this->makeProductCategory();
-        $category1 = $this->makeProductCategory(parentId: $parent->id, name: 'match category');
-        $this->makeProductCategory(name: 'other category');
+        $category1 = $this->makeProductCategory(parentId: $parent->id);
+        $this->makeProductCategory();
 
         $this->assertSearchIds(['parent_id' => $parent->id], [$category1->id]);
     }

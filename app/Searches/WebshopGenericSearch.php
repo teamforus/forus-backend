@@ -8,6 +8,7 @@ use App\Models\Product;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 
 class WebshopGenericSearch
 {
@@ -55,7 +56,10 @@ class WebshopGenericSearch
             $query = $query ? $query->union($subQuery->getQuery()) : $subQuery;
         }
 
-        return $query ?: Product::query()->whereRaw('0');
+        return $query ? $query->orderBy(
+            Arr::get($this->getFilters(), 'order_by', 'created_at'),
+            Arr::get($this->getFilters(), 'order_dir', 'desc'),
+        ) : Product::query()->whereRaw('0');
     }
 
     /**

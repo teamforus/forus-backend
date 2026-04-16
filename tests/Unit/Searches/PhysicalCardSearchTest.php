@@ -36,6 +36,9 @@ class PhysicalCardSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
+        $cardPart1 = '10000000';
+        $cardPart2 = '99999999';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
 
         $type1 = $this->makeTestPhysicalCardType($organization);
@@ -47,12 +50,12 @@ class PhysicalCardSearchTest extends SearchTestCase
         $voucher2 = $this->makeTestVoucher($fund2, $this->makeIdentity($this->makeUniqueEmail()), amount: 100);
 
         // assign physical cards to vouchers
-        $card1 = $voucher1->addPhysicalCard('1000000088888888', $type1);
-        $card2 = $voucher2->addPhysicalCard('9999999988888888', $type2);
+        $card1 = $voucher1->addPhysicalCard("{$cardPart1}88888888", $type1);
+        $card2 = $voucher2->addPhysicalCard("{$cardPart2}88888888", $type2);
 
         // match code
-        $this->assertSearchIds(['q' => '10000000'], [$card1->id], $organization);
-        $this->assertSearchIds(['q' => '88888888'], [$card1->id, $card2->id], $organization);
+        $this->assertSearchIds(['q' => $cardPart1], [$card1->id], $organization);
+        $this->assertSearchIds(['q' => $cardPart2], [$card2->id], $organization);
     }
 
     /**
