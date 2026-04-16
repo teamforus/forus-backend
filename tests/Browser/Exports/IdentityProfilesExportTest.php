@@ -54,7 +54,7 @@ class IdentityProfilesExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($identity, $data, $fields);
+                    $data && $this->assertExportedData($identity, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
@@ -62,7 +62,7 @@ class IdentityProfilesExportTest extends DuskTestCase
                         'id', 'given_name', 'family_name', 'email',
                     ]);
 
-                    $data && $this->assertFields($identity, $data, [
+                    $data && $this->assertExportedData($identity, $data, [
                         IdentityProfilesExport::trans('id'),
                         IdentityProfilesExport::trans('given_name'),
                         IdentityProfilesExport::trans('family_name'),
@@ -84,13 +84,12 @@ class IdentityProfilesExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Identity $identity,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($identity->email, $rows[1][3]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $identity->email, 3);
     }
 }

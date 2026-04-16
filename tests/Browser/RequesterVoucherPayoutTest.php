@@ -59,7 +59,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
 
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
-                $browser->typeSlowly('@voucherPayoutAmount', '50.00', 20);
+                $this->typeSearchInput($browser, '@voucherPayoutAmount', '50.00');
                 $browser->press('@voucherPayoutAcceptRules');
                 $browser->press('@voucherPayoutSubmit');
 
@@ -118,7 +118,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
                 $browser->waitFor('@voucherPayoutForm');
                 $browser->waitFor('@voucherPayoutAmount');
                 $browser->assertAttribute('@voucherPayoutAmount', 'type', 'number');
-                $browser->typeSlowly('@voucherPayoutAmount', '50.00', 20);
+                $this->typeSearchInput($browser, '@voucherPayoutAmount', '50.00');
                 $browser->press('@voucherPayoutAcceptRules');
                 $browser->press('@voucherPayoutSubmit');
                 $browser->waitFor('@voucherPayoutSuccess');
@@ -463,7 +463,7 @@ class RequesterVoucherPayoutTest extends DuskTestCase
                 });
 
                 $browser->waitFor('@voucherPayoutAmount');
-                $browser->typeSlowly('@voucherPayoutAmount', '50.00', 20);
+                $this->typeSearchInput($browser, '@voucherPayoutAmount', '50.00');
                 $browser->press('@voucherPayoutAcceptRules');
                 $browser->press('@voucherPayoutSubmit');
 

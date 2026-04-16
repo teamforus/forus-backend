@@ -57,7 +57,7 @@ class EventLogsExportTest extends DuskTestCase
                 // assert all fields exported
                 $this->openFilterDropdown($browser);
                 $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                $data && $this->assertFields($employee, $newEmployee, $data, $fields);
+                $data && $this->assertExportedData($employee, $newEmployee, $data, $fields);
 
                 // assert specific fields exported
                 $this->openFilterDropdown($browser);
@@ -66,7 +66,7 @@ class EventLogsExportTest extends DuskTestCase
                     'created_at', 'loggable', 'event', 'identity_email',
                 ]);
 
-                $data && $this->assertFields($employee, $newEmployee, $data, [
+                $data && $this->assertExportedData($employee, $newEmployee, $data, [
                     EventLogsExport::trans('created_at'),
                     EventLogsExport::trans('loggable'),
                     EventLogsExport::trans('event'),
@@ -85,18 +85,15 @@ class EventLogsExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         Employee $employee,
         Employee $newEmployee,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert that employee exists in logs
+        $this->assertExportHeaders($rows, $fields);
         $this->assertStringContainsString("#$newEmployee->id", $rows[1][1]);
         $this->assertStringContainsString($newEmployee->identity->email, $rows[1][2]);
-        $this->assertEquals($employee->identity->email, $rows[1][3]);
+        $this->assertExportCell($rows, $employee->identity->email, 3);
     }
 }

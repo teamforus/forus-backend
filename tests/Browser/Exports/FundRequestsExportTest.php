@@ -57,13 +57,13 @@ class FundRequestsExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($fundRequest, $data, $fields);
+                    $data && $this->assertExportedData($fundRequest, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['bsn', 'fund_name']);
 
-                    $data && $this->assertFields($fundRequest, $data, [
+                    $data && $this->assertExportedData($fundRequest, $data, [
                         FundRequestsExport::trans('bsn'),
                         FundRequestsExport::trans('fund_name'),
                     ]);
@@ -120,13 +120,12 @@ class FundRequestsExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         FundRequest $fundRequest,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($fundRequest->fund->name, $rows[1][1]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $fundRequest->fund->name, 1);
     }
 }

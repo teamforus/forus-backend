@@ -41,6 +41,9 @@ class ProductReservationQuery
                 $builder->orWhere('invoice_number', 'like', "%$q%");
                 $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
                 $builder->orWhereRelation('custom_fields', 'value', 'like', "%$q%");
+                $builder->orWhereHas('custom_fields.files', function (Builder $builder) use ($q) {
+                    $builder->where('original_name', 'like', "%$q%");
+                });
             }
         });
     }

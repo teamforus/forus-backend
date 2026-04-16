@@ -54,7 +54,7 @@ class ReimbursementsExportTest extends TestCase
         );
 
         $fields = Arr::pluck(ReimbursementsSponsorExport::getExportFields(), 'name');
-        $this->assertReimbursementsFields($response, $reimbursement, $fields);
+        $this->assertExportedData($response, $reimbursement, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -63,7 +63,7 @@ class ReimbursementsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertReimbursementsFields($response, $reimbursement, $fields);
+        $this->assertExportedData($response, $reimbursement, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -73,7 +73,7 @@ class ReimbursementsExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertReimbursementsFields($response, $reimbursement, [
+        $this->assertExportedData($response, $reimbursement, [
             ReimbursementsSponsorExport::trans('id'),
             ReimbursementsSponsorExport::trans('code'),
         ]);
@@ -85,7 +85,7 @@ class ReimbursementsExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertReimbursementsFields(
+    protected function assertExportedData(
         TestResponse $response,
         Reimbursement $reimbursement,
         array $fields,

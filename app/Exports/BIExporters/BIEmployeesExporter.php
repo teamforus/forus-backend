@@ -18,6 +18,6 @@ class BIEmployeesExporter extends BaseBIExporter
         $query = $this->organization->employees();
         $export = new EmployeesExport($query, EmployeesExport::getExportFieldsRaw());
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

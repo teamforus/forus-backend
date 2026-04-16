@@ -26,6 +26,6 @@ class BIReimbursementsExporter extends BaseBIExporter
             ReimbursementsSponsorExport::getExportFieldsRaw(),
         );
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

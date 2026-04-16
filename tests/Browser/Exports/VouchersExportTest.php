@@ -86,7 +86,7 @@ class VouchersExportTest extends DuskTestCase
                             fillCallback: fn (Browser $browser) => $browser->click("@toggle_qr_format_$qrFormat"),
                         );
 
-                        $data && $this->assertExportedDataHasRequestedFields($voucher, $data, $fields);
+                        $data && $this->assertExportedData($voucher, $data, $fields);
 
                         // assert specific fields exported
                         $this->openFilterDropdown($browser);
@@ -98,7 +98,7 @@ class VouchersExportTest extends DuskTestCase
                             fillCallback: fn (Browser $browser) => $browser->click("@toggle_qr_format_$qrFormat"),
                         );
 
-                        $data && $this->assertExportedDataHasRequestedFields($voucher, $data, [
+                        $data && $this->assertExportedData($voucher, $data, [
                             VoucherExport::trans('number'),
                         ]);
                     }
@@ -223,10 +223,9 @@ class VouchersExportTest extends DuskTestCase
      * @param array $rows An array of rows containing the exported data.
      * @param array $fields An array of expected field names in the first row (header).
      */
-    protected function assertExportedDataHasRequestedFields(Voucher $voucher, array $rows, array $fields): void
+    protected function assertExportedData(Voucher $voucher, array $rows, array $fields): void
     {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($voucher->number, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $voucher->number, 0);
     }
 }

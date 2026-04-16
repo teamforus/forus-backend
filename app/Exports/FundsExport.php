@@ -57,7 +57,7 @@ class FundsExport extends BaseExport
      */
     public function __construct(
         Builder|Relation|Fund $builder,
-        protected array $fields,
+        array $fields,
         protected Carbon $from,
         protected Carbon $to,
     ) {
@@ -99,23 +99,14 @@ class FundsExport extends BaseExport
         $this->totals['total_top_up'] += $total;
     }
 
-    /**
-     * @return array|array[]
-     */
-    protected function getTotals(): array
+    protected function getTotalsRowValues(): ?array
     {
-        $fieldLabels = Arr::pluck(static::getExportFields(), 'name', 'key');
-
-        $row = Arr::only([
+        return Arr::only([
             'name' => static::trans('total'),
             'balance' => currency_format($this->totals['balance']),
             'expenses' => currency_format($this->totals['expenses']),
             'transactions' => currency_format($this->totals['transactions']),
             'total_top_up' => currency_format($this->totals['total_top_up']),
-        ], $this->fields);
-
-        return array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-            $fieldLabels[$key] => $row[$key],
-        ]), []);
+        ], $this->getBaseFieldKeys());
     }
 }
