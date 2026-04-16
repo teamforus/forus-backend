@@ -204,8 +204,8 @@ class WebshopGenericSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryAllTypesByName(): void
     {
-        $namePart1 = 'first';
-        $namePart2 = 'second';
+        $namePart1 = 'primary';
+        $namePart2 = 'secondary';
 
         $sponsor = $this->makeTestOrganization($this->makeIdentity());
 
@@ -216,15 +216,10 @@ class WebshopGenericSearchTest extends SearchTestCase
         $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart2 organization"]);
 
         $product1 = $this->createProductForReservation($provider1, [$fund1]);
+        $product1->update(['name' => "$namePart1 product name"]);
+
         $product2 = $this->createProductForReservation($provider2, [$fund2]);
-
-        $product1->update([
-            'name' => "$namePart1 product name",
-        ]);
-
-        $product2->update([
-            'name' => "$namePart2 product name",
-        ]);
+        $product2->update(['name' => "$namePart2 product name"]);
 
         $this->assertSearchIds(['q' => $namePart1], [
             $fund1->id,

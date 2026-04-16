@@ -96,8 +96,8 @@ class ProviderOrganizationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryOfficeAddress(): void
     {
-        $addressPart1 = 'first';
-        $addressPart2 = 'second';
+        $addressPart1 = 'primary';
+        $addressPart2 = 'secondary';
 
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
@@ -121,8 +121,8 @@ class ProviderOrganizationSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryBusinessTypeName(): void
     {
-        $typePart1 = 'first';
-        $typePart2 = 'second';
+        $typePart1 = 'primary';
+        $typePart2 = 'secondary';
 
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
