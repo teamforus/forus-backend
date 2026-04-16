@@ -58,7 +58,7 @@ class EventLogsExportTest extends TestCase
         );
 
         $fields = Arr::pluck(EventLogsExport::getExportFields(), 'name');
-        $this->assertFields($response, $employee, $newEmployee, $fields);
+        $this->assertExportedData($response, $employee, $newEmployee, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -67,7 +67,7 @@ class EventLogsExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $employee, $newEmployee, $fields);
+        $this->assertExportedData($response, $employee, $newEmployee, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -77,7 +77,7 @@ class EventLogsExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $employee, $newEmployee, [
+        $this->assertExportedData($response, $employee, $newEmployee, [
             EventLogsExport::trans('created_at'),
             EventLogsExport::trans('loggable'),
             EventLogsExport::trans('event'),
@@ -92,23 +92,17 @@ class EventLogsExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         Employee $employee,
         Employee $newEmployee,
         array $fields
     ): void {
-        $response->assertStatus(200);
-        $response->assertDownload();
+        $rows = $this->assertCsvExportResponse($response);
 
-        $rows = $this->getCsvData($response);
-
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert that employee exists in logs
+        $this->assertExportHeaders($rows, $fields);
         $this->assertStringContainsString("#$newEmployee->id", $rows[1][1]);
         $this->assertStringContainsString($newEmployee->identity->email, $rows[1][2]);
-        $this->assertEquals($employee->identity->email, $rows[1][3]);
+        $this->assertExportCell($rows, $employee->identity->email, 3);
     }
 }

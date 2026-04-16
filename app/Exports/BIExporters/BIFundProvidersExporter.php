@@ -20,6 +20,6 @@ class BIFundProvidersExporter extends BaseBIExporter
         $search = new FundProviderSearch([], FundProvider::query(), $this->organization);
         $export = new FundProvidersExport($search->query(), FundProvidersExport::getExportFieldsRaw());
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

@@ -55,12 +55,19 @@ class ReservationField extends Model
     public const string TYPE_FILE = 'file';
     public const string TYPE_NUMBER = 'number';
     public const string TYPE_BOOLEAN = 'boolean';
+    public const string BOOLEAN_VALUE_NO = 'Nee';
+    public const string BOOLEAN_VALUE_YES = 'Ja';
 
     public const array TYPES = [
         self::TYPE_TEXT,
         self::TYPE_FILE,
         self::TYPE_NUMBER,
         self::TYPE_BOOLEAN,
+    ];
+
+    public const array BOOLEAN_VALUES = [
+        self::BOOLEAN_VALUE_NO,
+        self::BOOLEAN_VALUE_YES,
     ];
 
     public const string FILLABLE_BY_PROVIDER = 'provider';
@@ -120,5 +127,13 @@ class ReservationField extends Model
     public function isFillableByRequester(): bool
     {
         return $this->fillable_by === self::FILLABLE_BY_REQUESTER;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeFile(): bool
+    {
+        return $this->type === self::TYPE_FILE;
     }
 }

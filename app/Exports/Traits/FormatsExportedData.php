@@ -9,7 +9,7 @@ trait FormatsExportedData
      */
     public function columnFormats(): array
     {
-        $keys = array_keys($this->data->first() ?: []);
+        $keys = $this->columnKeys;
         $alphabet = range('A', 'Z');
 
         return array_reduce($keys, function ($list, string $key) use ($keys, $alphabet) {

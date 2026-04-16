@@ -25,6 +25,6 @@ class BIEventLogsExporter extends BaseBIExporter
 
         $export = new EventLogsExport($search->query(), EventLogsExport::getExportFieldsRaw(), $employee);
 
-        return $export->collection()->toArray();
+        return $this->transformExportRows($export);
     }
 }

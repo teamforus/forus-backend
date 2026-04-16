@@ -51,13 +51,17 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $this->assertProductsSearchIsWorking($browser, $products[0]);
 
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByOrganization($browser, $provider, $products[0]->id, count($products));
+                $this->assertListFilterByOrganization($browser, $provider, $products[0]->id, count($products), true);
 
                 $this->fillListSearchForEmptyResults($browser);
                 $this->assertListFilterByProductCategory($browser, $products[0]->id, $products[0]->product_category);
 
+                // filter and assert active filter label is visible and reset filter using this label
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByFund($browser, $fund, $products[0]->id, count($products), true);
+                $this->assertListFilterByProductCategory($browser, $products[0]->id, $products[0]->product_category, true);
+
+                $this->fillListSearchForEmptyResults($browser);
+                $this->assertListFilterByFund($browser, $fund, $products[0]->id, count($products), true, true);
 
                 $this->fillListSearchForEmptyResults($browser);
                 $this->assertListFilterByDistance($browser, $provider->offices[0]->postcode, $products[0]->id);
@@ -266,7 +270,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceFrom');
-        $browser->typeSlowly('@inputPriceFrom', $product->price + 1, 0);
+        $this->typeSearchInput($browser, '@inputPriceFrom', $product->price + 1);
 
         $this->assertListVisibility($browser, $product->id, false);
         $this->assertWebshopRowsCount($browser, 1, '@listProductsContent');
@@ -276,7 +280,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceFrom');
-        $browser->typeSlowly('@inputPriceFrom', $product->price - 1, 0);
+        $this->typeSearchInput($browser, '@inputPriceFrom', $product->price - 1);
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->assertWebshopRowsCount($browser, 2, '@listProductsContent');
@@ -286,7 +290,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceTo');
-        $browser->typeSlowly('@inputPriceTo', $product->price - 1, 0);
+        $this->typeSearchInput($browser, '@inputPriceTo', $product->price - 1);
 
         $this->assertListVisibility($browser, $product->id, false);
         $this->assertWebshopRowsCount($browser, 0, '@listProductsContent');
@@ -296,7 +300,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->fillListSearchForEmptyResults($browser);
 
         $browser->clear('@inputPriceTo');
-        $browser->typeSlowly('@inputPriceTo', $product->price + 1, 0);
+        $this->typeSearchInput($browser, '@inputPriceTo', $product->price + 1);
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->assertWebshopRowsCount($browser, 1, '@listProductsContent');
@@ -305,10 +309,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->clearField($browser, '@listProductsSearch');
         $this->fillListSearchForEmptyResults($browser);
 
-        $this->clearField($browser, '@inputPriceFrom');
-        $browser->pause(1000);
-        $browser->type('@inputPriceTo', 20);
-        $browser->pause(1000);
+        $this->assertActiveFilterLabelAndReset($browser, 'price');
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->assertWebshopRowsCount($browser, 3, '@listProductsContent');
@@ -348,17 +349,20 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->fillListSearchForEmptyResults($browser);
+        $this->assertActiveFilterLabelAndReset($browser, 'qr');
 
         $browser->waitFor('@paymentOptionReservation');
         $browser->click('@paymentOptionReservation');
 
         $this->assertListVisibility($browser, $product->id, true);
         $this->fillListSearchForEmptyResults($browser);
+        $this->assertActiveFilterLabelAndReset($browser, 'reservation');
 
         $browser->waitFor('@paymentOptionIdeal');
         $browser->click('@paymentOptionIdeal');
 
         $this->assertWebshopRowsCount($browser, 0, '@listProductsContent');
+        $this->assertActiveFilterLabelAndReset($browser, 'extra_payment');
 
         $this->changeSelectControl($browser, '@selectControlOrganizations', index: 0);
     }

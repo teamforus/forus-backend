@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\ProductReservations\BaseProductReservationFie
 use App\Models\Organization;
 use App\Models\ProductReservation;
 use App\Models\ReservationField;
+use App\Rules\FileUidRule;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -32,8 +33,17 @@ class UpdateProductReservationFieldRequest extends BaseProductReservationFieldRe
      */
     public function rules(): array
     {
+        $value = $this->product_reservation->custom_fields()->where('reservation_field_id', $this->field->id)->first();
+
         return [
             'value' => $this->getCustomFieldRules($this->field, false),
+            ...$this->field->type === ReservationField::TYPE_FILE ? [
+                'value.*' => $value ? [
+                    'required',
+                    'string',
+                    new FileUidRule('product_reservation_custom_field', $value),
+                ] : $this->getFileRule(),
+            ] : [],
         ];
     }
 }

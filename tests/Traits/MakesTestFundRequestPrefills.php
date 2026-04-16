@@ -96,7 +96,8 @@ trait MakesTestFundRequestPrefills
      */
     protected function fakePersonBsnApiResponses(array $overrides = []): void
     {
-        $defaultData = Config::get('forus.person_bsn.test_response_data', []);
+        $testProfile = Config::get('forus.person_bsn.test_response_profile');
+        $defaultData = Config::get("forus.person_bsn.test_response_data.$testProfile", []);
 
         Http::fake([
             Str::finish(IConnect::URL_SANDBOX, '/') . '*' => function (Request $request) use ($defaultData, $overrides) {

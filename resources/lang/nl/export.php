@@ -168,6 +168,7 @@ return [
         'ean' => 'EAN',
         'sku' => 'SKU',
         'transaction_id' => 'Transactie ID',
+        'records' => 'Gegevens',
     ],
 
     'reimbursements' => [

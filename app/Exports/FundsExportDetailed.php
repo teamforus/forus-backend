@@ -21,6 +21,13 @@ class FundsExportDetailed extends BaseExport
     /**
      * @var array|string[]
      */
+    protected array $builderWithArray = [
+        'fund_formulas',
+    ];
+
+    /**
+     * @var array|string[]
+     */
     protected static array $exportFields = [
         'name',
         'budget_amount_per_voucher',
@@ -98,7 +105,7 @@ class FundsExportDetailed extends BaseExport
      */
     public function __construct(
         Builder|Relation|Fund $builder,
-        protected array $fields,
+        array $fields,
         protected Carbon $from,
         protected Carbon $to,
     ) {
@@ -128,29 +135,6 @@ class FundsExportDetailed extends BaseExport
             : array_filter(static::$exportFields, fn (string $item) => !in_array($item, static::$exportFieldsPayouts));
     }
 
-    /**
-     * @param Collection $data
-     * @return Collection
-     */
-    protected function exportTransform(Collection $data): Collection
-    {
-        $data = $data->map(fn (Fund $fund) => Arr::only($this->getRow($fund), $this->fields));
-
-        if (!$data->first(fn (array $item) => ($item['budget_children_count'] ?? 0) > 0)) {
-            $data = $data->map(function (array $item) {
-                unset($item['budget_children_count']);
-
-                return $item;
-            });
-        }
-
-        return $this->transformKeys($data);
-    }
-
-    /**
-     * @param Model|Fund $model
-     * @return array
-     */
     protected function getRow(Model|Fund $model): array
     {
         $detailsByType = [
@@ -211,5 +195,19 @@ class FundsExportDetailed extends BaseExport
         }
 
         return $voucherData;
+    }
+
+    /**
+     * @param Collection $rowValues
+     * @param array $columns
+     * @return array
+     */
+    protected function filterColumnDefinitions(Collection $rowValues, array $columns): array
+    {
+        if ($rowValues->first(fn (array $item) => ($item['budget_children_count'] ?? 0) > 0)) {
+            return $columns;
+        }
+
+        return array_values(array_filter($columns, fn (array $column) => $column['key'] !== 'budget_children_count'));
     }
 }
