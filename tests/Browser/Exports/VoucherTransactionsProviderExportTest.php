@@ -59,13 +59,13 @@ class VoucherTransactionsProviderExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($transaction, $data, $fields);
+                    $data && $this->assertExportedData($transaction, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['id']);
 
-                    $data && $this->assertFields($transaction, $data, [
+                    $data && $this->assertExportedData($transaction, $data, [
                         VoucherTransactionsProviderExport::trans('id'),
                     ]);
                 }
@@ -115,13 +115,12 @@ class VoucherTransactionsProviderExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         VoucherTransaction $transaction,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-        $this->assertEquals($transaction->id, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $transaction->id, 0);
     }
 }

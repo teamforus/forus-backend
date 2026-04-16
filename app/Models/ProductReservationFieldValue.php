@@ -63,4 +63,22 @@ class ProductReservationFieldValue extends Model
     {
         return $this->belongsTo(ProductReservation::class);
     }
+
+    /**
+     * Sync attached files and keep the field value null for file fields.
+     *
+     * @param array $uids
+     * @return static
+     */
+    public function syncFieldFilesByUid(array $uids = []): static
+    {
+        $uids = array_values(array_filter($uids, fn (mixed $uid) => is_string($uid) && $uid !== ''));
+
+        $this->syncFilesByUid($uids);
+        $this->update([
+            'value' => null,
+        ]);
+
+        return $this;
+    }
 }

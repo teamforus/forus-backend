@@ -10,6 +10,8 @@ use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundRequestQuery;
+use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\RecordValidationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\RecordSearch;
@@ -1781,30 +1783,43 @@ class Fund extends Model
      */
     public function isTakenByPartner(Identity $identity): bool
     {
-        return Identity::query()
-            ->whereHas('vouchers', fn (Builder $q) => VoucherQuery::whereNotExpired($q->where('fund_id', $this->id)))
-            ->whereHas('records', function (Builder $builder) use ($identity) {
+        return $this->isTakenByPartnerVoucher($identity) || $this->isTakenByPartnerPendingFundRequest($identity);
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     */
+    public function isTakenByPartnerVoucher(Identity $identity): bool
+    {
+        $builder = Identity::query()
+            ->whereHas('vouchers', fn (Builder $q) => VoucherQuery::whereNotExpired($q->where('fund_id', $this->id)));
+
+        return IdentityQuery::whereHasPartnerBsnRecord($builder, $identity, $this)->exists();
+    }
+
+    /**
+     * @param Identity $identity
+     * @return bool
+     */
+    public function isTakenByPartnerPendingFundRequest(Identity $identity): bool
+    {
+        $partnerIds = Identity::query()
+            ->where(function (Builder $builder) use ($identity) {
                 $builder->where(function (Builder $builder) use ($identity) {
-                    $builder->whereRelation('record_type', 'record_types.key', '=', 'partner_bsn');
-                    $builder->whereIn('value', array_filter([$identity?->bsn]));
-
-                    $builder->whereHas('validations', function (Builder $query) {
-                        $startDate = $this->fund_config?->record_validity_start_date;
-                        $trustedDays = $this->getTrustedDays('partner_bsn');
-
-                        RecordValidationQuery::whereStillTrustedQuery($query, $trustedDays, $startDate);
-                        RecordValidationQuery::whereTrustedByQuery($query, $this);
-                    });
+                    IdentityQuery::whereHasPartnerBsnRecord($builder, $identity, $this);
                 });
 
                 $builder->orWhere(function (Builder $builder) use ($identity) {
-                    $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
-                    $builder->whereIn('value', array_filter([
-                        $this->getTrustedRecordOfType($identity, 'partner_bsn')?->value,
-                    ]));
+                    IdentityQuery::whereHasPendingFundRequestPartnerBsnRecord($builder, $identity, $this);
                 });
             })
-            ->exists();
+            ->pluck('id')
+            ->all();
+
+        return count($partnerIds) > 0 && $this->fund_requests()->where(function (Builder $builder) use ($partnerIds) {
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, $partnerIds);
+        })->exists();
     }
 
     /**

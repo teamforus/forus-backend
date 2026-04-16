@@ -105,18 +105,29 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param Organization $provider
      * @param int $id
      * @param int $total
+     * @param bool $hasActiveFilters
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
-     * @throws TimeOutException
+     * @throws TimeoutException
      * @return void
      */
-    protected function assertListFilterByOrganization(Browser $browser, Organization $provider, int $id, int $total): void
-    {
+    protected function assertListFilterByOrganization(
+        Browser $browser,
+        Organization $provider,
+        int $id,
+        int $total,
+        bool $hasActiveFilters = false
+    ): void {
         $this->uncollapseWebshopFilterGroup($browser, '@productFiltersGroupProviders');
         $this->changeSelectControl($browser, '@selectControlOrganizations', text: $provider->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
-        $this->changeSelectControl($browser, '@selectControlOrganizations', index: 0);
+
+        if ($hasActiveFilters) {
+            $this->assertActiveFilterLabelAndReset($browser, 'organization', $provider->id);
+        } else {
+            $this->changeSelectControl($browser, '@selectControlOrganizations', index: 0);
+        }
     }
 
     /**
@@ -141,13 +152,18 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param Browser $browser
      * @param int $id
      * @param ProductCategory $category
+     * @param bool $hasActiveFilters
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
-     * @throws TimeoutException
+     * @throws TimeOutException
      * @return void
      */
-    protected function assertListFilterByProductCategory(Browser $browser, int $id, ProductCategory $category): void
-    {
+    protected function assertListFilterByProductCategory(
+        Browser $browser,
+        int $id,
+        ProductCategory $category,
+        bool $hasActiveFilters = false
+    ): void {
         $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupProductCategories');
         $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
 
@@ -160,7 +176,11 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
 
-        $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
+        if ($hasActiveFilters) {
+            $this->assertActiveFilterLabelAndReset($browser, 'category', $baseCategory->id);
+        } else {
+            $this->clearCategoryFilterItems($browser, '@productFilterGroupProductCategories');
+        }
     }
 
     /**
@@ -185,9 +205,10 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      * @param int $id
      * @param int|null $total
      * @param bool $listControl
+     * @param bool $hasActiveFilters
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
-     * @throws TimeoutException
+     * @throws TimeOutException
      */
     protected function assertListFilterByFund(
         Browser $browser,
@@ -195,8 +216,8 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         int $id,
         int $total = null,
         bool $listControl = false,
+        bool $hasActiveFilters = false
     ): void {
-
         if ($listControl) {
             $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupFunds');
             $browser->waitFor('@productFilterFundItem' . $fund->id);
@@ -205,8 +226,12 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
 
             $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
 
-            $browser->waitFor('@productFilterFundItem' . $fund->id);
-            $browser->click('@productFilterFundItem' . $fund->id);
+            if ($hasActiveFilters) {
+                $this->assertActiveFilterLabelAndReset($browser, 'fund', $fund->id);
+            } else {
+                $browser->waitFor('@productFilterFundItem' . $fund->id);
+                $browser->click('@productFilterFundItem' . $fund->id);
+            }
 
             return;
         }
@@ -214,7 +239,12 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->changeSelectControl($browser, '@selectControlFunds', text: $fund->name);
         $this->assertListVisibility($browser, $id, true, $total);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
-        $this->changeSelectControl($browser, '@selectControlFunds', index: 0);
+
+        if ($hasActiveFilters) {
+            $this->assertActiveFilterLabelAndReset($browser, 'fund', $fund->id);
+        } else {
+            $this->changeSelectControl($browser, '@selectControlFunds', index: 0);
+        }
     }
 
     /**
@@ -233,7 +263,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->changeSelectControl($browser, '@selectControlBusinessTypes', text: $businessType->name);
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
-        $this->changeSelectControl($browser, '@selectControlBusinessTypes', index: 0);
+        $this->assertActiveFilterLabelAndReset($browser, 'business_type', $businessType->id);
     }
 
     /**
@@ -266,13 +296,12 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
     {
         $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupDistance');
         $browser->waitFor('@inputPostcode');
-        $browser->typeSlowly('@inputPostcode', $postCode, 0);
+        $this->typeSearchInput($browser, '@inputPostcode', $postCode);
 
         $this->changeSelectControl($browser, '@selectControlDistances', text: '< 5 km');
         $this->assertListVisibility($browser, $id, true);
 
-        $browser->clear('@inputPostcode');
-        $this->changeSelectControl($browser, '@selectControlDistances', index: 0);
+        $this->assertActiveFilterLabelAndReset($browser, 'postcode');
     }
 
     /**
@@ -301,5 +330,20 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->searchWebshopList($browser, $listSelector, $text, $id, $total);
         $this->clearField($browser, $listSelector . 'Search');
         $this->fillListSearchForEmptyResults($browser);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $type
+     * @param string|int|null $key
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function assertActiveFilterLabelAndReset(Browser $browser, string $type, string|int $key = null): void
+    {
+        $selector = "@activeFilter_{$type}_$key";
+        $browser->waitFor($selector);
+        $browser->within($selector, fn (Browser $b) => $b->click('@closeActiveFilter'));
+        $browser->waitUntilMissing($selector);
     }
 }

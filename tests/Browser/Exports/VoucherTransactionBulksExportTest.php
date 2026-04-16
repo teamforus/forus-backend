@@ -58,13 +58,13 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
                     // assert all fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format);
-                    $data && $this->assertFields($bulk, $data, $fields);
+                    $data && $this->assertExportedData($bulk, $data, $fields);
 
                     // assert specific fields exported
                     $this->openFilterDropdown($browser);
                     $data = $this->fillExportModalAndDownloadFile($browser, $format, ['id', 'quantity']);
 
-                    $data && $this->assertFields($bulk, $data, [
+                    $data && $this->assertExportedData($bulk, $data, [
                         VoucherTransactionBulksExport::trans('id'),
                         VoucherTransactionBulksExport::trans('quantity'),
                     ]);
@@ -123,15 +123,13 @@ class VoucherTransactionBulksExportTest extends DuskTestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         VoucherTransactionBulk $bulk,
         array $rows,
         array $fields
     ): void {
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        $this->assertEquals($bulk->id, $rows[1][0]);
-        $this->assertEquals($bulk->voucher_transactions()->count(), $rows[1][1]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $bulk->id, 0);
+        $this->assertExportCell($rows, $bulk->voucher_transactions()->count(), 1);
     }
 }

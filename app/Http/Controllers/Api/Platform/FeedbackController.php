@@ -33,8 +33,7 @@ class FeedbackController extends Controller
     {
         $this->throttleWithKey('to_many_attempts', $request, 'feedback_form');
 
-        $data = array_merge($request->only('title', 'content'), [
-            'customer_email' => $request->input('customer_email') ?: '-',
+        $data = array_merge($request->only('title', 'content', 'customer_email'), [
             'urgency' => $request->input('urgency') ?: '-',
         ]);
 

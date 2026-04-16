@@ -33,7 +33,7 @@ class EventLogsExport extends BaseExport
      */
     public function __construct(
         Builder|Relation|EventLog $builder,
-        protected array $fields,
+        array $fields,
         protected Employee $employee,
     ) {
         parent::__construct($builder, $fields);

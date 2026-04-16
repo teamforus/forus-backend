@@ -54,7 +54,7 @@ class VouchersExportTest extends TestCase
             'name'
         );
 
-        $this->assertFields($response, $voucher, $fields);
+        $this->assertExportedData($response, $voucher, $fields);
 
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -65,7 +65,7 @@ class VouchersExportTest extends TestCase
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
-        $this->assertFields($response, $voucher, $fields);
+        $this->assertExportedData($response, $voucher, $fields);
 
         // Assert specific fields
         $url = sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
@@ -77,9 +77,42 @@ class VouchersExportTest extends TestCase
 
         $response = $this->getJson($url, $apiHeaders);
 
-        $this->assertFields($response, $voucher, [
+        $this->assertExportedData($response, $voucher, [
             VoucherExport::trans('number'),
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testVoucherExportKeepsCanonicalFieldOrderWhenSelectedFieldsAreReordered(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($identity, ['bsn_enabled' => true]);
+        $fund = $this->makeTestFund($organization, fundConfigsData: ['allow_voucher_records' => false]);
+        $voucher = $this->makeTestVoucher($fund, $this->makeIdentity($this->makeUniqueEmail()));
+
+        $response = $this->getJson(
+            sprintf($this->apiExportUrl, $organization->id) . '?' . http_build_query([
+                'data_format' => 'csv',
+                'source' => 'all',
+                'type' => 'all',
+                'fields' => ['fund_name', 'number', 'amount'],
+            ]),
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertStatus(200);
+
+        $rows = array_map('str_getcsv', explode("\n", trim(base64_decode($response->json('files')['csv']))));
+
+        $this->assertEquals([
+            VoucherExport::trans('number'),
+            VoucherExport::trans('amount'),
+            VoucherExport::trans('fund_name'),
+        ], $rows[0]);
+        $this->assertEquals($voucher->number, $rows[1][0]);
     }
 
     /**
@@ -88,7 +121,7 @@ class VouchersExportTest extends TestCase
      * @param array $fields
      * @return void
      */
-    protected function assertFields(
+    protected function assertExportedData(
         TestResponse $response,
         Voucher $voucher,
         array $fields,
@@ -96,10 +129,7 @@ class VouchersExportTest extends TestCase
         $response->assertStatus(200);
         $rows = array_map('str_getcsv', explode("\n", trim(base64_decode($response->json('files')['csv']))));
 
-        // Assert that the first row (header) contains expected columns
-        $this->assertEquals($fields, $rows[0]);
-
-        // Assert specific fields
-        $this->assertEquals($voucher->number, $rows[1][0]);
+        $this->assertExportHeaders($rows, $fields);
+        $this->assertExportCell($rows, $voucher->number, 0);
     }
 }

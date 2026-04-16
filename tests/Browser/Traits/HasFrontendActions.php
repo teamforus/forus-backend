@@ -457,7 +457,7 @@ trait HasFrontendActions
         int $expected = 1,
     ): void {
         $browser->waitFor($selector . 'Search');
-        $browser->typeSlowly($selector . 'Search', $value, 50);
+        $this->typeSearchInput($browser, $selector . 'Search', $value);
 
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");
@@ -484,7 +484,7 @@ trait HasFrontendActions
         int $expected = 1,
     ): void {
         $browser->waitFor($selector . 'Search');
-        $browser->typeSlowly($selector . 'Search', $value, 50);
+        $this->typeSearchInput($browser, $selector . 'Search', $value);
 
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");

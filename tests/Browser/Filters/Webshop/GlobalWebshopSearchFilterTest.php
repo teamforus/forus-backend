@@ -237,7 +237,7 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
     protected function assertMainSearchFundIsWorking(Browser $browser, Fund $fund): void
     {
         $browser->waitFor('@searchListSearch');
-        $browser->typeSlowly('@searchListSearch', $fund->name, 0);
+        $this->typeSearchInput($browser, '@searchListSearch', $fund->name);
 
         $browser->waitFor("@listFundsRow$fund->id");
         $browser->assertVisible("@listFundsRow$fund->id");
@@ -257,7 +257,7 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
     protected function assertMainSearchProviderIsWorking(Browser $browser, Organization $provider): void
     {
         $browser->waitFor('@searchListSearch');
-        $browser->typeSlowly('@searchListSearch', $provider->name, 0);
+        $this->typeSearchInput($browser, '@searchListSearch', $provider->name);
 
         $browser->waitFor("@listProvidersRow$provider->id");
         $browser->assertVisible("@listProvidersRow$provider->id");
@@ -278,7 +278,7 @@ class GlobalWebshopSearchFilterTest extends BaseWebshopSearchFilter
     protected function assertMainSearchProductIsWorking(Browser $browser, Product $product): void
     {
         $browser->waitFor('@searchListSearch');
-        $browser->typeSlowly('@searchListSearch', $product->name, 0);
+        $this->typeSearchInput($browser, '@searchListSearch', $product->name);
 
         $browser->waitFor("@listProductsRow$product->id");
         $browser->assertVisible("@listProductsRow$product->id");

@@ -999,8 +999,8 @@ class ProductReservationTest extends DuskTestCase
                     ->waitFor('@invoiceNumberInput');
 
                 // assert validation errors
+                $this->typeSearchInput($browser, '@invoiceNumberInput', Str::random(50));
                 $browser
-                    ->typeSlowly('@invoiceNumberInput', Str::random(50), 20)
                     ->click('@submitBtn')
                     ->waitFor('.form-error');
 
@@ -1009,8 +1009,8 @@ class ProductReservationTest extends DuskTestCase
                 // assert valid value saved
                 $validInvoiceNumber = Str::random(30);
 
+                $this->typeSearchInput($browser, '@invoiceNumberInput', $validInvoiceNumber);
                 $browser
-                    ->typeSlowly('@invoiceNumberInput', $validInvoiceNumber, 20)
                     ->click('@submitBtn')
                     ->waitUntilMissing('@modalReservationInvoiceNumberEdit')
                     ->waitForTextIn('@reservationAdditionalDetails', $validInvoiceNumber);

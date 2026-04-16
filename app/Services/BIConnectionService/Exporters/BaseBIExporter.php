@@ -2,12 +2,14 @@
 
 namespace App\Services\BIConnectionService\Exporters;
 
+use App\Exports\Base\BaseExport;
 use App\Models\Organization;
 
 abstract class BaseBIExporter
 {
     protected string $key;
     protected string $name;
+    protected bool $makeExportRowsUnique = true;
 
     /**
      * @param Organization $organization
@@ -38,16 +40,50 @@ abstract class BaseBIExporter
     }
 
     /**
-     * @param array $data
-     * @param array $fields
+     * @param BaseExport $export
      * @return array
      */
-    protected function transformKeys(array $data, array $fields): array
+    protected function transformExportRows(BaseExport $export): array
     {
-        return array_map(function ($row) use ($fields) {
-            return array_reduce(array_keys($row), fn ($obj, $key) => array_merge($obj, [
-                $fields[$key] => (string) $row[$key],
-            ]), []);
-        }, $data);
+        return $this->transformRowsWithHeadings($export->headings(), $export->collection()->toArray());
+    }
+
+    /**
+     * @param array $headings
+     * @param array $rows
+     * @return array
+     */
+    protected function transformRowsWithHeadings(array $headings, array $rows): array
+    {
+        if (!$this->makeExportRowsUnique) {
+            return array_map(fn (array $row) => array_combine($headings, $row), $rows);
+        }
+
+        $uniqueHeadings = $this->makeUniqueHeadings($headings);
+
+        return array_map(fn (array $row) => array_combine($uniqueHeadings, $row), $rows);
+    }
+
+    /**
+     * @param array $headings
+     * @return array
+     */
+    protected function makeUniqueHeadings(array $headings): array
+    {
+        $usedHeadings = [];
+
+        return array_map(function (string $heading) use (&$usedHeadings) {
+            $suffix = 1;
+            $uniqueHeading = $heading;
+
+            while (array_key_exists($uniqueHeading, $usedHeadings)) {
+                $suffix++;
+                $uniqueHeading = "$heading ($suffix)";
+            }
+
+            $usedHeadings[$uniqueHeading] = true;
+
+            return $uniqueHeading;
+        }, $headings);
     }
 }
