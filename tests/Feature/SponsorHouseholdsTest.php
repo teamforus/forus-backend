@@ -300,6 +300,55 @@ class SponsorHouseholdsTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testSponsorCanOrderHouseholdMembersByCreatedAtAsc(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles_households' => true]);
+        $identity1 = $this->makeIdentity($this->makeUniqueEmail());
+        $identity2 = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->makeTestFund($organization);
+
+        $this->apiMakeVoucherAsSponsorRequest($organization, $fund, [
+            'amount' => 100,
+            'email' => $identity1->email,
+            'assign_by_type' => 'email',
+        ], $organization->identity)->assertSuccessful();
+
+        $this->apiMakeVoucherAsSponsorRequest($organization, $fund, [
+            'amount' => 100,
+            'email' => $identity2->email,
+            'assign_by_type' => 'email',
+        ], $organization->identity)->assertSuccessful();
+
+        $householdId = $this
+            ->apiMakeHouseholdRequest($organization->id, ['uid' => Str::random(20)], $organization->identity)
+            ->assertSuccessful()
+            ->json('data.id');
+
+        $householdProfileId1 = $this
+            ->apiCreateHouseholdMemberRequest($organization->id, $householdId, ['identity_id' => $identity1->id], $organization->identity)
+            ->assertCreated()
+            ->json('data.id');
+
+        $this->travelTo(now()->addDays(5));
+
+        $householdProfileId2 = $this
+            ->apiCreateHouseholdMemberRequest($organization->id, $householdId, ['identity_id' => $identity2->id], $organization->identity)
+            ->assertCreated()
+            ->json('data.id');
+
+        $this
+            ->apiListHouseholdMembersRequest($organization->id, $householdId, $organization->identity, [
+                'order_by' => 'created_at',
+                'order_dir' => 'asc',
+            ])
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.id', $householdProfileId1)
+            ->assertJsonPath('data.1.id', $householdProfileId2);
+    }
+
+    /**
      * Verifies that a sponsor cannot add the same member to a household more than once.
      *
      * @return void
@@ -514,6 +563,28 @@ class SponsorHouseholdsTest extends TestCase
         return $this->postJson(
             "/api/v1/platform/organizations/$organizationId/sponsor/households/$householdId/household-profiles",
             $payload,
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * Sends a GET request to list household members within a sponsor organization.
+     *
+     * @param int $organizationId
+     * @param int $householdId
+     * @param Identity $authIdentity
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiListHouseholdMembersRequest(
+        int $organizationId,
+        int $householdId,
+        Identity $authIdentity,
+        array $query = [],
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/households/$householdId/household-profiles" .
+            ($query ? '?' . http_build_query($query) : ''),
             $this->makeApiHeaders($authIdentity),
         );
     }

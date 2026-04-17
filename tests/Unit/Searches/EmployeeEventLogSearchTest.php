@@ -2,7 +2,11 @@
 
 namespace Tests\Unit\Searches;
 
+use App\Models\BankConnection;
+use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Searches\EmployeeEventLogSearch;
@@ -143,6 +147,39 @@ class EmployeeEventLogSearchTest extends SearchTestCase
     /**
      * @return void
      */
+    public function testVoucherExportedLogsDoNotLeakIntoNonVoucherSearches(): void
+    {
+        [$organization, $employee, $employeeIdentity] = $this->makeOrganizationEmployee();
+        ['permissions' => $permissions] = $this->getEventConfig('bank_connection');
+
+        $fund = $this->makeTestFund($organization);
+        $missingBankConnectionId = BankConnection::query()->max('id') + 1;
+
+        $leakedLog = $fund->logs()->create([
+            'event' => Fund::EVENT_VOUCHERS_EXPORTED,
+            'data' => ['fund_export_voucher_ids' => [$missingBankConnectionId]],
+            'identity_address' => $employeeIdentity->address,
+        ]);
+
+        $role = $this->attachRoleToEmployee($employee);
+        $role->permissions()->sync(Permission::whereIn('key', [
+            ...$permissions,
+            Permission::MANAGE_VOUCHERS,
+        ])->pluck('id')->toArray());
+
+        $search = new EmployeeEventLogSearch($employee, [
+            'loggable' => ['bank_connection'],
+            'loggable_id' => $missingBankConnectionId,
+        ], EventLog::query());
+
+        $actual = collect($search->query()->pluck('id')->toArray())->sort()->values()->toArray();
+        $this->assertSame([], $actual);
+        $this->assertNotContains($leakedLog->id, $actual);
+    }
+
+    /**
+     * @return void
+     */
     public function testFiltersByLoggableTypeBankConnection(): void
     {
         [$organization, $employee, $employeeIdentity] = $this->makeOrganizationEmployee();
@@ -208,7 +245,7 @@ class EmployeeEventLogSearchTest extends SearchTestCase
     }
 
     /**
-     * @return array
+     * @return array{0: Organization, 1: Employee, 2: Identity}
      */
     private function makeOrganizationEmployee(): array
     {
@@ -233,7 +270,7 @@ class EmployeeEventLogSearchTest extends SearchTestCase
 
     /**
      * @param string $key
-     * @return array
+     * @return array{events: array<int, string>, permissions: array<int, string>}
      */
     private function getEventConfig(string $key): array
     {
@@ -253,7 +290,7 @@ class EmployeeEventLogSearchTest extends SearchTestCase
      * @param $loggable
      * @param array $events
      * @param string $identityAddress
-     * @return array
+     * @return array<int, EventLog>
      */
     private function createLogs($loggable, array $events, string $identityAddress): array
     {

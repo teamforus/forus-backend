@@ -15,6 +15,7 @@ use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Lang;
 
 class ProductQuery
@@ -418,17 +419,22 @@ class ProductQuery
         Builder|Relation|Product $query,
     ): Builder|Relation|Product {
         $query->addSelect([
-            'reservations_count' => ProductReservation::whereIn('state', [
-                ProductReservation::STATE_WAITING,
-                ProductReservation::STATE_PENDING,
-            ])->whereColumn('product_id', 'products.id')->selectRaw('COUNT(*)'),
-            'transactions_count' => VoucherTransaction::whereColumn('product_id', 'products.id')
+            'reservations_count' => ProductReservation::query()
+                ->whereIn('state', [
+                    ProductReservation::STATE_WAITING,
+                    ProductReservation::STATE_PENDING,
+                ])
+                ->whereColumn('product_id', 'products.id')
                 ->selectRaw('COUNT(*)'),
-        ])->getQuery();
+            'transactions_count' => VoucherTransaction::query()
+                ->whereColumn('product_id', 'products.id')
+                ->selectRaw('COUNT(*)'),
+        ]);
 
-        return Product::query()->fromSub(Product::fromSub($query, 'products')->selectRaw(
-            '*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`'
-        ), 'products');
+        return Product::query()
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->fromSub($query, 'products')
+            ->selectRaw('*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`');
     }
 
     /**
@@ -438,12 +444,16 @@ class ProductQuery
     public static function addSelectLastMonitoredChangedDate(
         Builder|Relation|Product $query
     ): Builder|Relation|Product {
-        $subQuery = EventLog::where([
-            'loggable_type' => 'product',
-            'event' => Product::EVENT_MONITORED_FIELDS_UPDATED,
-        ])->whereColumn([
-            'loggable_id' => 'products.id',
-        ])->select('event_logs.created_at')->limit(1);
+        $subQuery = EventLog::query()
+            ->where([
+                'loggable_type' => 'product',
+                'event' => Product::EVENT_MONITORED_FIELDS_UPDATED,
+            ])
+            ->whereColumn([
+                'loggable_id' => 'products.id',
+            ])
+            ->select('event_logs.created_at')
+            ->limit(1);
 
         return $query->addSelect([
             'last_monitored_change_at' => $subQuery,

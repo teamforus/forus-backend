@@ -76,7 +76,7 @@ class EmployeeEventLogSearch extends BaseSearch
      */
     public function whereVoucherExported(Builder|Relation|EventLog $builder): void
     {
-        if (!$this->hasFilter('loggable_id') || $this->hasFilter('loggable' !== 'voucher')) { // todo ask
+        if (!$this->hasFilter('loggable_id') || !in_array('voucher', $this->getFilter('loggable', []), true)) {
             return;
         }
 

@@ -566,6 +566,37 @@ class ProductSearchTest extends SearchTestCase
     }
 
     /**
+     * @return void
+     */
+    public function testOrdersArchivedProductsByStockAmount(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $productA = $this->createProductForReservation($organization, [$fund]);
+        $productB = $this->createProductForReservation($organization, [$fund]);
+
+        // add one more active product to assert that archive filter does not leak non-archived rows
+        $this->createProductForReservation($organization, [$fund]);
+        $this->makeReservation($this->makeTestVoucher($fund, identity: $this->makeIdentity()), $productA);
+
+        $productA->delete();
+        $productB->delete();
+
+        $this->assertSearchOrder([
+            'source' => 'archive',
+            'order_by' => 'stock_amount',
+            'order_dir' => 'asc',
+        ], [$productA->id, $productB->id]);
+
+        $this->assertSearchOrder([
+            'source' => 'archive',
+            'order_by' => 'stock_amount',
+            'order_dir' => 'desc',
+        ], [$productB->id, $productA->id]);
+    }
+
+    /**
      * @param array $filters
      * @return ProductSearch
      */
