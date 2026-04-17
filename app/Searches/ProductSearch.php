@@ -10,6 +10,7 @@ use App\Scopes\Builders\TrashedQuery;
 use App\Services\MollieService\Models\MollieConnection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 
 class ProductSearch extends BaseSearch
@@ -316,15 +317,10 @@ class ProductSearch extends BaseSearch
             ProductQuery::addSelectLastMonitoredChangedDate($builder);
         }
 
-        $builder = Product::query()
+        return Product::query()
+            ->withoutGlobalScope(SoftDeletingScope::class)
             ->fromSub($builder, 'products')
             ->orderBy($orderBy, $orderDir)
             ->latest('created_at');
-
-        if ($this->hasFilter('source') && $this->getFilter('source') === 'archive') {
-            $builder = TrashedQuery::onlyTrashed($builder);
-        }
-
-        return $builder;
     }
 }
