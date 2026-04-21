@@ -31,7 +31,7 @@ class HouseholdProfilesSearch extends BaseSearch
         }
 
         return $builder
-            ->orderBy($this->getFilter('sort_by', 'created_at'), $this->getFilter('sort_dir', 'desc'))
+            ->orderBy($this->getFilter('order_by', 'created_at'), $this->getFilter('order_dir', 'desc'))
             ->orderBy('id');
     }
 }

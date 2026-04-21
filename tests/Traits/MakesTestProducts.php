@@ -51,14 +51,17 @@ trait MakesTestProducts
     }
 
     /**
+     * @param int|null $parentId
+     * @param string|null $name
      * @return ProductCategory
      */
-    protected function makeProductCategory(): ProductCategory
+    protected function makeProductCategory(?int $parentId = null, string $name = null): ProductCategory
     {
-        $name = $this->faker->sentence(5);
+        $name = $name ?? $this->faker->sentence(5);
 
         $category = ProductCategory::create([
             'key' => Str::slug($name),
+            'parent_id' => $parentId,
         ]);
 
         $category->translateOrNew(app()->getLocale())->fill([
