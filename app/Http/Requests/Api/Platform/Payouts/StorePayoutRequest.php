@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Payouts;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
+use App\Models\ProfileBankAccount;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Rules\Payouts\VoucherPayoutAmountRule;
@@ -37,6 +38,7 @@ class StorePayoutRequest extends BaseFormRequest
     {
         $voucher = $this->voucher();
         $fundRequestsQuery = $this->eligibleFundRequestsQuery($voucher);
+        $profile = $this->identity()?->profiles?->firstWhere('organization_id', $voucher?->fund?->organization_id);
 
         return [
             'voucher_id' => [
@@ -51,7 +53,8 @@ class StorePayoutRequest extends BaseFormRequest
                 new VoucherPayoutAmountRule($voucher),
             ],
             'fund_request_id' => [
-                'required',
+                'required_without:profile_bank_account_id',
+                'nullable',
                 'integer',
                 Rule::exists('fund_requests', 'id')->where(function (QueryBuilder $q) use ($fundRequestsQuery) {
                     return $q->whereIn('fund_requests.id', (clone $fundRequestsQuery)->select('fund_requests.id'));
@@ -68,6 +71,12 @@ class StorePayoutRequest extends BaseFormRequest
                     }
                 },
             ],
+            'profile_bank_account_id' => [
+                'required_without:fund_request_id',
+                'nullable',
+                'integer',
+                Rule::exists('profile_bank_accounts', 'id')->where('profile_id', $profile?->id),
+            ],
         ];
     }
 
@@ -81,6 +90,22 @@ class StorePayoutRequest extends BaseFormRequest
         }
 
         return $this->voucher = Voucher::find($this->input('voucher_id'));
+    }
+
+    /**
+     * @return ProfileBankAccount|null
+     */
+    public function profileBankAccount(): ?ProfileBankAccount
+    {
+        $profileBankAccountId = $this->input('profile_bank_account_id');
+        $voucher = $this->voucher();
+        $profile = $this->identity()?->profiles?->firstWhere('organization_id', $voucher?->fund?->organization_id);
+
+        if (!$voucher || !$profileBankAccountId || !$profile) {
+            return null;
+        }
+
+        return $profile->profile_bank_accounts()->find($profileBankAccountId);
     }
 
     /**

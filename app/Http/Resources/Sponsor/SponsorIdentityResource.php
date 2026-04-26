@@ -3,8 +3,8 @@
 namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\BaseJsonResource;
-use App\Models\Identity;
 use App\Models\FundRequest;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Profile;
 use App\Models\ProfileBankAccount;
@@ -16,6 +16,7 @@ use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 /**
@@ -128,7 +129,7 @@ class SponsorIdentityResource extends BaseJsonResource
             return $list->merge($voucher->transactions);
         }, collect());
 
-        return [
+        return Arr::sortDesc([
             ...$profile?->profile_bank_accounts->map(fn (ProfileBankAccount $profileBankAccount) => [
                 'id' => $profileBankAccount->id,
                 'iban' => $profileBankAccount->iban,
@@ -183,7 +184,7 @@ class SponsorIdentityResource extends BaseJsonResource
                     'updated_at' => $fundRequest->updated_at,
                 ]),
             ]),
-        ];
+        ], 'created_at');
     }
 
     /**
