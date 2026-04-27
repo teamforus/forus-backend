@@ -3,18 +3,21 @@
 namespace App\Exports;
 
 use App\Exports\Base\BaseExport;
+use App\Models\Organization;
 use App\Models\ProductReservation;
 use App\Models\ProductReservationFieldValue;
 use App\Models\ReservationField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class ProductReservationsExport extends BaseExport
 {
     protected Collection $fieldList;
     protected static string $transKey = 'reservations';
+    protected bool $canViewExtraPayment = false;
 
     protected const string DYNAMIC_FIELD_RECORDS = 'records';
     protected const array DYNAMIC_FIELDS_KEYS = [self::DYNAMIC_FIELD_RECORDS];
@@ -26,6 +29,7 @@ class ProductReservationsExport extends BaseExport
         'code',
         'product_name',
         'amount',
+        'amount_extra',
         'email',
         'first_name',
         'last_name',
@@ -56,9 +60,13 @@ class ProductReservationsExport extends BaseExport
     /**
      * @param Builder|Relation|ProductReservation $builder
      * @param array $fields
+     * @param Organization $organization
      */
-    public function __construct(Builder|Relation|ProductReservation $builder, array $fields)
-    {
+    public function __construct(
+        Builder|Relation|ProductReservation $builder,
+        array $fields,
+        protected Organization $organization
+    ) {
         $fieldIds = in_array(static::DYNAMIC_FIELD_RECORDS, $fields, true)
             ? ProductReservationFieldValue::query()
                 ->whereIn('product_reservation_id', (clone $builder)->select('id'))
@@ -72,7 +80,51 @@ class ProductReservationsExport extends BaseExport
             ->orderBy('id')
             ->pluck('label', 'id');
 
+        $this->canViewExtraPayment = $organization->canViewExtraPaymentsAsProvider();
+
         parent::__construct($builder, $fields);
+    }
+
+    /**
+     * @param Organization|null $organization
+     * @return array
+     */
+    public static function getExportFields(Organization $organization = null): array
+    {
+        $canViewExtraPayment = $organization?->canViewExtraPaymentsAsProvider();
+
+        return array_reduce(static::$exportFields, function ($list, $key) use ($canViewExtraPayment) {
+            if (!$canViewExtraPayment && $key === 'amount_extra') {
+                return $list;
+            }
+
+            return [...$list, [
+                'key' => $key,
+                'name' => static::trans($key),
+            ]];
+        }, []);
+    }
+
+    /**
+     * @param Organization|null $organization
+     * @return array
+     */
+    public static function getExportFieldsRaw(Organization $organization = null): array
+    {
+        $canViewExtraPayment = $organization?->canViewExtraPaymentsAsProvider();
+
+        return array_filter(
+            static::$exportFields,
+            fn ($value) => $value !== 'amount_extra' || $canViewExtraPayment
+        );
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFieldLabels(): array
+    {
+        return Arr::pluck(static::getExportFields($this->organization), 'name', 'key');
     }
 
     /**
@@ -98,6 +150,7 @@ class ProductReservationsExport extends BaseExport
             'ean' => $model->product->ean,
             'sku' => $model->product->sku,
             'transaction_id' => $model->voucher_transaction?->id,
+            ...$this->canViewExtraPayment ? ['amount_extra' => currency_format($model->amount_extra)] : [],
         ];
     }
 

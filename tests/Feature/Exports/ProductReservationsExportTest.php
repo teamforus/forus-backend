@@ -96,7 +96,7 @@ class ProductReservationsExportTest extends TestCase
         // Assert with passed all fields
         $url = sprintf($this->apiExportUrl, $provider->id) . '?' . http_build_query([
             'data_format' => 'csv',
-            'fields' => ProductReservationsExport::getExportFieldsRaw(),
+            'fields' => ProductReservationsExport::getExportFieldsRaw($provider),
         ]);
 
         $response = $this->getJson($url, $apiHeaders);
@@ -425,7 +425,7 @@ class ProductReservationsExportTest extends TestCase
      */
     protected function getExportFields(ProductReservation $reservation): array
     {
-        $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(ProductReservationsExport::getExportFields($reservation->product->organization), 'name');
 
         $fields = array_filter($fields, fn ($field) => $field !== ProductReservationsExport::trans('records'));
 
