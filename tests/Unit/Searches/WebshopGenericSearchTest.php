@@ -38,23 +38,28 @@ class WebshopGenericSearchTest extends SearchTestCase
      */
     public function testFiltersByProductQuery(): void
     {
-        $productNamePart1 = 'match';
-        $productNamePart2 = 'other';
+        $productNamePart1 = 'webshopgenericproductnameone';
+        $productNamePart2 = 'webshopgenericproductnametwo';
 
-        $productDescriptionTextPart1 = 'second';
-        $productDescriptionTextPart2 = 'third';
+        $productDescriptionTextPart1 = 'webshopgenericproductdescriptionone';
+        $productDescriptionTextPart2 = 'webshopgenericproductdescriptiontwo';
 
-        $categoryNamePart1 = 'next';
-        $categoryNamePart2 = 'previous';
+        $categoryNamePart1 = 'webshopgenericproductcategoryone';
+        $categoryNamePart2 = 'webshopgenericproductcategorytwo';
 
-        $organizationNamePart1 = 'first';
-        $organizationNamePart2 = 'last';
+        $organizationNamePart1 = 'webshopgenericproductorganizationone';
+        $organizationNamePart2 = 'webshopgenericproductorganizationtwo';
 
         $sponsor = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($sponsor);
 
-        $organization1 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart1 organization"]);
-        $organization2 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart2 organization"]);
+        $organization1 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart1 organization",
+        ]);
+
+        $organization2 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart2 organization",
+        ]);
 
         $category1 = $this->makeProductCategory(name: "$categoryNamePart1 category");
         $category2 = $this->makeProductCategory(name: "$categoryNamePart2 category");
@@ -97,17 +102,17 @@ class WebshopGenericSearchTest extends SearchTestCase
      */
     public function testFiltersByFundQuery(): void
     {
-        $orgNamePart1 = 'unique';
-        $orgNamePart2 = 'other';
+        $orgNamePart1 = 'webshopgenericfundorganizationone';
+        $orgNamePart2 = 'webshopgenericfundorganizationtwo';
 
-        $namePart1 = 'first';
-        $namePart2 = 'second';
+        $namePart1 = 'webshopgenericfundnameone';
+        $namePart2 = 'webshopgenericfundnametwo';
 
-        $descriptionTextPart1 = 'something';
-        $descriptionTextPart2 = 'different';
+        $descriptionTextPart1 = 'webshopgenericfunddescriptionone';
+        $descriptionTextPart2 = 'webshopgenericfunddescriptiontwo';
 
-        $descriptionShortPart1 = 'interesting';
-        $descriptionShortPart2 = 'shorter';
+        $descriptionShortPart1 = 'webshopgenericfundshortone';
+        $descriptionShortPart2 = 'webshopgenericfundshorttwo';
 
         $organization1 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "Organization $orgNamePart1"]);
         $organization2 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "Organization $orgNamePart2"]);
@@ -147,17 +152,17 @@ class WebshopGenericSearchTest extends SearchTestCase
      */
     public function testFiltersByProviderQuery(): void
     {
-        $namePart1 = 'match';
-        $namePart2 = 'other';
+        $namePart1 = 'webshopprovidernameone';
+        $namePart2 = 'webshopprovidernametwo';
 
-        $emailPart1 = 'something_un';
-        $emailPart2 = 'any_un';
+        $emailPart1 = 'webshopprovideremailone';
+        $emailPart2 = 'webshopprovideremailtwo';
 
-        $phonePart1 = '22233';
-        $phonePart2 = '55566';
+        $phonePart1 = '9922334411';
+        $phonePart2 = '9955667711';
 
-        $websitePart1 = 'forus';
-        $websitePart2 = 'dashboard';
+        $websitePart1 = 'webshopprovidersiteone';
+        $websitePart2 = 'webshopprovidersitetwo';
 
         $sponsor = $this->makeTestOrganization($this->makeIdentity());
 
@@ -204,8 +209,8 @@ class WebshopGenericSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryAllTypesByName(): void
     {
-        $namePart1 = 'primary';
-        $namePart2 = 'secondary';
+        $namePart1 = 'webshopgenericallnameone';
+        $namePart2 = 'webshopgenericallnametwo';
 
         $sponsor = $this->makeTestOrganization($this->makeIdentity());
 
