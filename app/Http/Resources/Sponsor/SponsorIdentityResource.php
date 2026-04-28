@@ -129,7 +129,7 @@ class SponsorIdentityResource extends BaseJsonResource
             return $list->merge($voucher->transactions);
         }, collect());
 
-        return Arr::sortDesc([
+        return array_values(Arr::sortDesc([
             ...$profile?->profile_bank_accounts->map(fn (ProfileBankAccount $profileBankAccount) => [
                 'id' => $profileBankAccount->id,
                 'iban' => $profileBankAccount->iban,
@@ -184,7 +184,7 @@ class SponsorIdentityResource extends BaseJsonResource
                     'updated_at' => $fundRequest->updated_at,
                 ]),
             ]),
-        ], 'created_at');
+        ], 'created_at'));
     }
 
     /**

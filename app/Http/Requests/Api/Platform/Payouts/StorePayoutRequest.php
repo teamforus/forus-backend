@@ -54,6 +54,7 @@ class StorePayoutRequest extends BaseFormRequest
             ],
             'fund_request_id' => [
                 'required_without:profile_bank_account_id',
+                'prohibits:profile_bank_account_id',
                 'nullable',
                 'integer',
                 Rule::exists('fund_requests', 'id')->where(function (QueryBuilder $q) use ($fundRequestsQuery) {
@@ -73,6 +74,7 @@ class StorePayoutRequest extends BaseFormRequest
             ],
             'profile_bank_account_id' => [
                 'required_without:fund_request_id',
+                'prohibits:fund_request_id',
                 'nullable',
                 'integer',
                 Rule::exists('profile_bank_accounts', 'id')->where('profile_id', $profile?->id),
