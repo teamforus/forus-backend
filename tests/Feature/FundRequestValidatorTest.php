@@ -440,6 +440,11 @@ class FundRequestValidatorTest extends TestCase
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $noteDescription = $this->faker->text();
 
+        $supervisor = $fund->organization->addEmployee(
+            $this->makeIdentity(),
+            Role::where('key', 'supervisor_validator')->pluck('id')->toArray(),
+        );
+
         // assign fund request
         $this->apiFundRequestAssignRequest($fundRequest, $employee)->assertSuccessful();
 
@@ -451,6 +456,12 @@ class FundRequestValidatorTest extends TestCase
 
         // assert the note visible in a list
         $this->apiGetFundRequestNotesRequest($fund->organization, $employee, $fundRequest)
+            ->assertSuccessful()
+            ->assertJsonPath('data', fn ($notes) => count($notes) === 1)
+            ->assertJsonPath('data.0.id', $fundRequest->fresh()->notes[0]?->id);
+
+        // assert supervisor validators can view notes without full validator permissions
+        $this->apiGetFundRequestNotesRequest($fund->organization, $supervisor, $fundRequest)
             ->assertSuccessful()
             ->assertJsonPath('data', fn ($notes) => count($notes) === 1)
             ->assertJsonPath('data.0.id', $fundRequest->fresh()->notes[0]?->id);
