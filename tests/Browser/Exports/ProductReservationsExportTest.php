@@ -143,7 +143,7 @@ class ProductReservationsExportTest extends DuskTestCase
      */
     protected function getExportFields(ProductReservation $reservation): array
     {
-        $fields = Arr::pluck(ProductReservationsExport::getExportFields(), 'name');
+        $fields = Arr::pluck(ProductReservationsExport::getExportFields($reservation->product->organization), 'name');
 
         $fields = array_filter($fields, fn ($field) => $field !== ProductReservationsExport::trans('records'));
 

@@ -233,7 +233,7 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
-        return ExportFieldArrResource::collection(ProductReservationsExport::getExportFields());
+        return ExportFieldArrResource::collection(ProductReservationsExport::getExportFields($organization));
     }
 
     /**
@@ -257,8 +257,8 @@ class ProductReservationsController extends Controller
 
         $exportType = $request->input('data_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $exportType;
-        $fields = $request->input('fields', ProductReservationsExport::getExportFieldsRaw());
-        $exportData = new ProductReservationsExport($search->query(), $fields);
+        $fields = $request->input('fields', ProductReservationsExport::getExportFieldsRaw($organization));
+        $exportData = new ProductReservationsExport($search->query(), $fields, $organization);
 
         return resolve('excel')->download($exportData, $fileName);
     }
