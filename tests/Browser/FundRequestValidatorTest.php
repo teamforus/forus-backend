@@ -673,6 +673,8 @@ class FundRequestValidatorTest extends DuskTestCase
     protected function assignFundRequestAsValidatorAsManager(Browser $browser, Employee $employee): void
     {
         $browser->waitFor('@fundRequestAssignAsSupervisorBtn');
+        $this->closeDangerNotificationIfPresent($browser);
+
         $browser->click('@fundRequestAssignAsSupervisorBtn');
 
         $browser->waitFor('@modalAssignValidator');
@@ -692,9 +694,25 @@ class FundRequestValidatorTest extends DuskTestCase
     protected function resignEmployee(Browser $browser): void
     {
         $browser->waitFor('@fundRequestResignBtn');
+        $this->closeDangerNotificationIfPresent($browser);
         $browser->click('@fundRequestResignBtn');
 
         $this->assertAndCloseSuccessNotification($browser);
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function closeDangerNotificationIfPresent(Browser $browser): void
+    {
+        if ($browser->element('@dangerNotification')) {
+            $browser->click('@dangerNotification @notificationCloseBtn');
+            $browser->waitUntilMissing('@dangerNotification');
+        }
     }
 
     /**
