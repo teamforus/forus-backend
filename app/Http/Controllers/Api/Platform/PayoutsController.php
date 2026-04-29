@@ -104,14 +104,23 @@ class PayoutsController extends Controller
                 ]);
             }
 
-            $fundRequest = $request->fundRequest();
-            $fundRequest?->loadMissing('records');
+            $target_iban = null;
+            $target_name = null;
+
+            if ($fundRequest = $request->fundRequest()) {
+                $fundRequest->loadMissing('records');
+                $target_iban = $fundRequest->getIban(false);
+                $target_name = $fundRequest->getIbanName(false);
+            } elseif ($profileBankAccount = $request->profileBankAccount()) {
+                $target_iban = $profileBankAccount->iban;
+                $target_name = $profileBankAccount->name;
+            }
 
             $transaction = $voucher->makeTransaction([
                 'initiator' => VoucherTransaction::INITIATOR_REQUESTER,
                 'target' => VoucherTransaction::TARGET_PAYOUT,
-                'target_iban' => $fundRequest?->getIban(false),
-                'target_name' => $fundRequest?->getIbanName(false),
+                'target_iban' => $target_iban,
+                'target_name' => $target_name,
                 'amount' => $amount,
             ]);
 
