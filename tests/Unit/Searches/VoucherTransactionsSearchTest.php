@@ -120,52 +120,54 @@ class VoucherTransactionsSearchTest extends SearchTestCase
         $transaction2->update(['uid' => $uid2]);
         $transaction2->addNote('provider', "$notePart2 note");
 
+        $scopeIds = [$transaction1->id, $transaction2->id];
+
         // assert search by fund name
-        $this->assertSearchIds(['q' => $fundNamePart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $fundNamePart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $fundNamePart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $fundNamePart2], [$transaction2->id], $scopeIds);
 
         // assert search by provider name
-        $this->assertSearchIds(['q' => $providerNamePart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $providerNamePart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $providerNamePart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $providerNamePart2], [$transaction2->id], $scopeIds);
 
         // assert search by product name
-        $this->assertSearchIds(['q' => $productNamePart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $productNamePart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $productNamePart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $productNamePart2], [$transaction2->id], $scopeIds);
 
         // assert search by branch name
-        $this->assertSearchIds(['q' => $branchNamePart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $branchNamePart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $branchNamePart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $branchNamePart2], [$transaction2->id], $scopeIds);
 
         // assert search by branch number
-        $this->assertSearchIds(['q' => $branchNumberPart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $branchNumberPart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $branchNumberPart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $branchNumberPart2], [$transaction2->id], $scopeIds);
 
         // assert search by branch id
-        $this->assertSearchIds(['q' => $branchIdPart1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $branchIdPart2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $branchIdPart1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $branchIdPart2], [$transaction2->id], $scopeIds);
 
         // assert search by uid
-        $this->assertSearchIds(['q' => $uid1], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $uid2], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $uid1], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $uid2], [$transaction2->id], $scopeIds);
 
         // assert search by transaction id
-        $this->assertSearchIds(['q' => $transaction1->id], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $transaction2->id], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $transaction1->id], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $transaction2->id], [$transaction2->id], $scopeIds);
 
         // assert search by product id
-        $this->assertSearchIds(['q' => $product1->id], [$transaction1->id]);
-        $this->assertSearchIds(['q' => $product2->id], [$transaction2->id]);
+        $this->assertSearchIds(['q' => $product1->id], [$transaction1->id], $scopeIds);
+        $this->assertSearchIds(['q' => $product2->id], [$transaction2->id], $scopeIds);
 
         // assert search by provider note
         $this->assertSearchIds([
             'q' => $notePart1,
             'q_type' => 'provider',
-        ], [$transaction1->id]);
+        ], [$transaction1->id], $scopeIds);
 
         $this->assertSearchIds([
             'q' => $notePart2,
             'q_type' => 'provider',
-        ], [$transaction2->id]);
+        ], [$transaction2->id], $scopeIds);
     }
 
     /**
@@ -1309,12 +1311,19 @@ class VoucherTransactionsSearchTest extends SearchTestCase
     /**
      * @param array $filters
      * @param array $expectedIds
+     * @param array $scopeIds
      * @return void
      */
-    private function assertSearchIds(array $filters, array $expectedIds): void
+    private function assertSearchIds(array $filters, array $expectedIds, array $scopeIds = []): void
     {
         $expected = collect($expectedIds)->sort()->values()->toArray();
-        $search = $this->makeSearch($filters);
+        $query = VoucherTransaction::query();
+
+        if ($scopeIds) {
+            $query->whereIn('id', $scopeIds);
+        }
+
+        $search = new VoucherTransactionsSearch($filters, $query);
         $actual = collect($search->query()->pluck('id')->toArray())->sort()->values()->toArray();
 
         $this->assertSame($expected, $actual);

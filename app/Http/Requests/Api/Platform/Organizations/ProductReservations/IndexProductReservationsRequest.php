@@ -45,7 +45,7 @@ class IndexProductReservationsRequest extends BaseFormRequest
             'product_id' => 'nullable|exists:products,id|in:' . $products->join(','),
             'organization_id' => 'nullable|exists:organizations,id',
             'archived' => 'nullable|boolean',
-            ...$this->exportableResourceRules(ProductReservationsExport::getExportFieldsRaw()),
+            ...$this->exportableResourceRules(ProductReservationsExport::getExportFieldsRaw($this->organization)),
             ...$this->sortableResourceRules(columns: [
                 'created_at', 'code', 'product', 'price', 'amount_extra', 'customer',
                 'created_at', 'state',

@@ -48,8 +48,8 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeAddress(): void
     {
-        $addressPart1 = 'match';
-        $addressPart2 = 'other';
+        $addressPart1 = 'officesearchaddressone';
+        $addressPart2 = 'officesearchaddresstwo';
 
         $organization = $this->makeTestProviderOrganization($this->makeIdentity());
 
@@ -66,8 +66,8 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByOrganizationName(): void
     {
-        $namePart1 = 'match';
-        $namePart2 = 'other';
+        $namePart1 = 'officesearchorganizationone';
+        $namePart2 = 'officesearchorganizationtwo';
 
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), ['name' => "$namePart1 name"]);
         $office1 = $this->makeOrganizationOffice($organization1, ['address' => 'address']);
@@ -84,8 +84,8 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByBusinessTypeName(): void
     {
-        $typePart1 = 'match';
-        $typePart2 = 'other';
+        $typePart1 = 'officesearchbusinesstypeone';
+        $typePart2 = 'officesearchbusinesstypetwo';
 
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
             'business_type_id' => $this->makeTestBusinessType("$typePart1 business type")->id,
@@ -108,14 +108,14 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeByOrganizationContact(): void
     {
-        $emailPart1 = 'something_un';
-        $emailPart2 = 'any_un';
+        $emailPart1 = 'officesearchemailone';
+        $emailPart2 = 'officesearchemailtwo';
 
-        $phonePart1 = '22233';
-        $phonePart2 = '55566';
+        $phonePart1 = '8822334411';
+        $phonePart2 = '8855667711';
 
-        $websitePart1 = 'forus';
-        $websitePart2 = 'dashboard';
+        $websitePart1 = 'officesearchsiteone';
+        $websitePart2 = 'officesearchsitetwo';
 
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
             'email' => $this->makeUniqueEmail($emailPart1),
@@ -153,14 +153,14 @@ class OfficeSearchTest extends SearchTestCase
      */
     public function testFiltersByQueryMatchesOfficeBranch(): void
     {
-        $branchIdPart1 = '1111';
-        $branchIdPart2 = '3333';
+        $branchIdPart1 = '881122';
+        $branchIdPart2 = '884455';
 
-        $branchNamePart1 = 'match';
-        $branchNamePart2 = 'unique';
+        $branchNamePart1 = 'officesearchbranchone';
+        $branchNamePart2 = 'officesearchbranchtwo';
 
-        $branchNumberPart1 = '4444';
-        $branchNumberPart2 = '5555';
+        $branchNumberPart1 = '887788';
+        $branchNumberPart2 = '889900';
 
         $organization1 = $this->makeTestProviderOrganization($this->makeIdentity());
 
