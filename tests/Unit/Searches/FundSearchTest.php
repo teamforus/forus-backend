@@ -34,17 +34,17 @@ class FundSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
-        $orgNamePart1 = 'unique';
-        $orgNamePart2 = 'other';
+        $orgNamePart1 = 'fundsearchorganizationone';
+        $orgNamePart2 = 'fundsearchorganizationtwo';
 
-        $namePart1 = 'first';
-        $namePart2 = 'second';
+        $namePart1 = 'fundsearchnameone';
+        $namePart2 = 'fundsearchnametwo';
 
-        $descriptionTextPart1 = 'something';
-        $descriptionTextPart2 = 'different';
+        $descriptionTextPart1 = 'fundsearchdescriptionone';
+        $descriptionTextPart2 = 'fundsearchdescriptiontwo';
 
-        $descriptionShortPart1 = 'interesting';
-        $descriptionShortPart2 = 'shorter';
+        $descriptionShortPart1 = 'fundsearchshortone';
+        $descriptionShortPart2 = 'fundsearchshorttwo';
 
         $organization1 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "Organization $orgNamePart1"]);
         $organization2 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "Organization $orgNamePart2"]);
