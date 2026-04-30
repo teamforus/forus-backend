@@ -61,7 +61,7 @@ class IdentitiesSearch extends BaseSearch
         }
 
         if ($householdId = $this->getFilter('household_id')) {
-            $builder->whereRelation('households', 'households.id', $householdId);
+            $builder->whereRelation('profiles.households', 'households.id', $householdId);
         }
 
         if ($excludeHouseholdId = $this->getFilter('exclude_household_id')) {
@@ -91,7 +91,7 @@ class IdentitiesSearch extends BaseSearch
             }
         }
 
-        if ($birthDateFrom = $this->getFilter('birth_date_to')) {
+        if ($birthDateFrom = $this->getFilter('birth_date_from')) {
             $builder->whereHas('profiles', function (Builder $builder) use ($birthDateFrom, $organizationId) {
                 $builder->where('organization_id', $organizationId);
 

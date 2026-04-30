@@ -48,7 +48,7 @@ class HouseholdSearch extends BaseSearch
                 'organization_id' => $this->getFilter('organization_id'),
             ], IdentityQuery::relatedToOrganization(Identity::query(), $this->getFilter('organization_id')));
 
-            $builder->whereHas('identity', function (Builder $query) use ($search) {
+            $builder->whereHas('profiles.identity', function (Builder $query) use ($search) {
                 $query->whereIn('id', $search->query()->select('id'));
             });
         }

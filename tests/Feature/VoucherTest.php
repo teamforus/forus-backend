@@ -30,6 +30,7 @@ use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesVoucherTransaction;
 use Tests\Traits\TestsReservations;
 use Tests\Traits\VoucherTestTrait;
 use Throwable;
@@ -41,6 +42,7 @@ class VoucherTest extends TestCase
     use TestsReservations;
     use DatabaseTransactions;
     use MakesTestOrganizations;
+    use MakesVoucherTransaction;
     use MakesProductReservations;
     use MakesRequesterVoucherPayouts;
 
@@ -687,63 +689,6 @@ class VoucherTest extends TestCase
 
         $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
         $this->makeTopUp($voucher);
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @param bool $assert
-     * @throws Exception
-     * @return void
-     */
-    protected function makeTopUp(Voucher $voucher, bool $assert = true): void
-    {
-        $startDate = now();
-        $organization = $voucher->fund->organization;
-        $maxAmount = min([
-            $voucher->fund->fund_config->limit_voucher_top_up_amount,
-            $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
-        ]);
-        $amount = $this->makeTransactionAmount((float) $maxAmount);
-
-        $headers = $this->makeApiHeaders($organization->identity);
-        $url = sprintf($this->apiOrganizationUrl . '/sponsor/transactions', $organization->id);
-        $params = [
-            'voucher_id' => $voucher->id,
-            'target' => VoucherTransaction::TARGET_TOP_UP,
-            'amount' => $amount,
-        ];
-
-        // test wrong amount
-        $response = $this->post($url, array_merge($params, [
-            'amount' => $amount + $maxAmount,
-        ]), $headers);
-
-        $response->assertJsonValidationErrors(array_merge(['amount'], $assert ? [] : ['target']));
-
-        $response = $this->post($url, $params, $headers);
-
-        if ($assert) {
-            $response->assertSuccessful();
-
-            $transaction = VoucherTransaction::query()
-                ->where('voucher_id', $voucher->id)
-                ->where('created_at', '>=', $startDate)
-                ->where('amount', $amount)
-                ->first();
-
-            $this->assertNotNull($transaction, 'Voucher top up did not created');
-        } else {
-            $response->assertJsonValidationErrors(['target']);
-        }
-    }
-
-    /**
-     * @param float $maxAmount
-     * @return float
-     */
-    protected function makeTransactionAmount(float $maxAmount): float
-    {
-        return max(0.02, floor(($maxAmount / 4) * 100) / 100);
     }
 
     /**

@@ -89,12 +89,12 @@ class VouchersSearch extends BaseSearch
         }
 
         $builder = $this->filterByAmount($builder);
+        $builder = $this->filterByInUse($builder);
         $this->filterByImplementation($builder);
         $this->filterByGranted($builder);
         $this->filterByDates($builder);
         $this->filterByUnassigned($builder);
         $this->filterByTypeAndSource($builder);
-        $this->filterByInUse($builder);
         $this->filterByHasPayouts($builder);
         $this->filterByCountPerIdentity($builder);
         $this->filterByStateAndExpired($builder);
