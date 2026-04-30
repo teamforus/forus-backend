@@ -18,7 +18,7 @@ class SearchController extends Controller
      * @throws Exception
      * @return JsonResponse|AnonymousResourceCollection
      */
-    public function index(SearchRequest $request)
+    public function index(SearchRequest $request): JsonResponse|AnonymousResourceCollection
     {
         $overview = $request->get('overview', false);
         $search = new WebshopGenericSearch($request->only([
@@ -27,21 +27,16 @@ class SearchController extends Controller
         ]));
 
         if (!$overview) {
-            $query = $search->query(
-                $request->input('search_item_types', ['funds', 'providers', 'products'])
-            )->orderBy(
-                $request->input('order_by', 'created_at'),
-                $request->input('order_dir', 'desc'),
-            );
-
-            return SearchResource::queryCollection($query, $request);
+            return SearchResource::queryCollection($search->query($request->input('search_item_types', [
+                'funds', 'providers', 'products',
+            ])), $request);
         }
 
         $providers = $search->query('providers');
         $products = $search->query('products');
         $funds = $search->query('funds');
 
-        return response()->json([
+        return new JsonResponse([
             'data' => [
                 'products' => [
                     'items' => SearchLiteResource::createCollection((clone $products)->take(3)->get()),

@@ -396,11 +396,12 @@ trait MakesTestFunds
 
     /**
      * @param Fund $fund
+     * @param string|null $name
      * @return Tag
      */
-    protected function makeAndAppendTestFundTag(Fund $fund): Tag
+    protected function makeAndAppendTestFundTag(Fund $fund, string $name = null): Tag
     {
-        $tagName = $this->faker->name();
+        $tagName = $name ?? $this->faker->name();
 
         $tag = $fund->tags()->firstOrCreate([
             'key' => Str::slug($tagName),

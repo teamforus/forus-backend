@@ -33,6 +33,8 @@ class HouseholdProfilesController extends Controller
 
         $search = new HouseholdProfilesSearch([
             'q' => $request->input('q'),
+            'order_by' => $request->input('order_by'),
+            'order_dir' => $request->input('order_dir'),
             'organization_id' => $organization->id,
         ], $household->household_profiles());
 

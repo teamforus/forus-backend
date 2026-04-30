@@ -7,7 +7,7 @@ return [
         'permissions' => [
             Permission::MANAGE_BANK_CONNECTIONS,
         ],
-        'events' => array_merge([
+        'events' => [
             'disabled',
             'monetary_account_changed',
             'replaced',
@@ -16,7 +16,7 @@ return [
 
             // 'created',
             // 'rejected',
-        ]),
+        ],
     ],
 
     'voucher' => [

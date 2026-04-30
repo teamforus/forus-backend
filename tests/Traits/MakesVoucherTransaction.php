@@ -3,6 +3,7 @@
 namespace Tests\Traits;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
@@ -11,6 +12,7 @@ use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Random\RandomException;
 
 trait MakesVoucherTransaction
 {
@@ -44,18 +46,24 @@ trait MakesVoucherTransaction
     /**
      * @param Fund $fund
      * @param int $count
+     * @param float $price
+     * @param Identity|null $identity
      * @return Collection|Voucher[]
      */
-    protected function makeProductVouchers(Fund $fund, int $count): Collection|Arrayable
-    {
+    protected function makeProductVouchers(
+        Fund $fund,
+        int $count,
+        float $price = 5,
+        Identity $identity = null,
+    ): Collection|Arrayable {
         $vouchers = collect();
-        $products = $this->makeTestProviderWithProducts($count, 5);
+        $products = $this->makeTestProviderWithProducts($count, $price);
 
         for ($i = 1; $i <= $count; $i++) {
             $product = $products[$i - 1];
             $this->addProductToFund($fund, $product, false);
 
-            $voucher = $this->makeTestProductVoucher($fund, $this->makeIdentity(), [], $product->id);
+            $voucher = $this->makeTestProductVoucher($fund, $identity ?? $this->makeIdentity(), [], $product->id);
             $vouchers->push($voucher);
         }
 
@@ -65,12 +73,17 @@ trait MakesVoucherTransaction
     /**
      * @param Fund $fund
      * @param int $count
+     * @param float $price
      * @return Collection|VoucherTransaction[]
      */
-    protected function makeTransactions(Fund $fund, int $count = 5): Collection|Arrayable
-    {
+    protected function makeTransactions(
+        Fund $fund,
+        int $count = 5,
+        float $price = 5,
+        Identity $identity = null
+    ): Collection|Arrayable {
         return $this
-            ->makeProductVouchers($fund, $count)
+            ->makeProductVouchers($fund, $count, $price, $identity)
             ->map(function (Voucher $voucher) use ($fund) {
                 $employee = $fund->organization->employees[0];
 
@@ -87,5 +100,69 @@ trait MakesVoucherTransaction
 
                 return $voucher->makeTransaction($params);
             });
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param bool $assert
+     * @throws RandomException
+     * @return VoucherTransaction|null
+     */
+    protected function makeTopUp(Voucher $voucher, bool $assert = true): ?VoucherTransaction
+    {
+        $startDate = now();
+        $organization = $voucher->fund->organization;
+        $maxAmount = min([
+            $voucher->fund->fund_config->limit_voucher_top_up_amount,
+            $voucher->fund->fund_config->limit_voucher_total_amount - $voucher->amount_total,
+        ]);
+
+        $amount = $this->makeTransactionAmount((float) $maxAmount);
+
+        $headers = $this->makeApiHeaders($organization->identity);
+
+        $url = "/api/v1/platform/organizations/$organization->id/sponsor/transactions";
+
+        $params = [
+            'voucher_id' => $voucher->id,
+            'target' => VoucherTransaction::TARGET_TOP_UP,
+            'amount' => $amount,
+        ];
+
+        // test wrong amount
+        $response = $this->post($url, array_merge($params, [
+            'amount' => $amount + $maxAmount,
+        ]), $headers);
+
+        $response->assertJsonValidationErrors(array_merge(['amount'], $assert ? [] : ['target']));
+
+        $response = $this->post($url, $params, $headers);
+
+        if ($assert) {
+            $response->assertSuccessful();
+
+            $transaction = VoucherTransaction::query()
+                ->where('voucher_id', $voucher->id)
+                ->where('created_at', '>=', $startDate)
+                ->where('amount', $amount)
+                ->first();
+
+            $this->assertNotNull($transaction, 'Voucher top up did not created');
+
+            return $transaction;
+        }
+
+        $response->assertJsonValidationErrors(['target']);
+
+        return null;
+    }
+
+    /**
+     * @param float $maxAmount
+     * @return float
+     */
+    protected function makeTransactionAmount(float $maxAmount): float
+    {
+        return max(0.02, floor(($maxAmount / 4) * 100) / 100);
     }
 }

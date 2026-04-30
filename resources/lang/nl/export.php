@@ -155,6 +155,7 @@ return [
         'code' => 'Code',
         'product_name' => 'Aanbod',
         'amount' => 'Bedrag',
+        'amount_extra' => 'Bijbetaald',
         'email' => 'E-mailadres',
         'first_name' => 'Voornaam',
         'last_name' => 'Achternaam',

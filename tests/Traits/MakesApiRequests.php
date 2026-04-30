@@ -1103,4 +1103,22 @@ trait MakesApiRequests
 
         return VoucherTransaction::findOrFail($response->json('data.id'));
     }
+
+    /**
+     * @param Organization $organization
+     * @param Product $product
+     * @param array $params
+     * @return TestResponse
+     */
+    protected function makeProductUpdateRequest(
+        Organization $organization,
+        Product $product,
+        array $params
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/products/$product->id",
+            $params,
+            $this->makeApiHeaders($organization->identity),
+        );
+    }
 }
