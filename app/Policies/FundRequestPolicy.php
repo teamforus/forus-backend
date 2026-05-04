@@ -366,7 +366,7 @@ class FundRequestPolicy
     }
 
     /**
-     * Determine whether the user can view reimbursement notes.
+     * Determine whether the user can view fund request notes.
      *
      * @param Identity $identity
      * @param FundRequest $fundRequest
@@ -383,11 +383,7 @@ class FundRequestPolicy
             return $this->deny(__('policies.fund_requests.invalid_endpoint'));
         }
 
-        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return false;
-        }
-
-        return true;
+        return $this->viewAnyAsValidator($identity, $organization);
     }
 
     /**

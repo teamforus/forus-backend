@@ -492,6 +492,76 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     /**
      * @throws Throwable
      */
+    public function testRequesterVoucherPayoutSelectsProfileBankAccount(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $result['fund_request']->forceFill(['created_at' => now()->subDays(2)])->save();
+        $voucher = $result['voucher'];
+
+        // create manual bank account, it must be first in list as newest
+        $profileBankAccount = $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $profileBankAccount) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $profileBankAccount) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $browser->waitFor('@voucherPayoutForm');
+                $browser->waitFor('@voucherPayoutFundRequestSelect');
+                $browser->click('@voucherPayoutFundRequestSelect');
+                $browser->waitFor('@voucherPayoutFundRequestSelectOptions');
+
+                // select first option (manual bank account)
+                $browser->within('@voucherPayoutFundRequestSelectOptions', function (Browser $browser) {
+                    $browser->click('.select-control-option:first-child');
+                });
+
+                $browser->waitFor('@voucherPayoutAmount');
+                $this->typeSearchInput($browser, '@voucherPayoutAmount', '50.00');
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+
+                $browser->waitFor('@voucherPayoutSuccess');
+
+                $transaction = VoucherTransaction::where('voucher_id', $voucher->id)
+                    ->where('target', VoucherTransaction::TARGET_PAYOUT)
+                    ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER)
+                    ->latest('id')
+                    ->first();
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($profileBankAccount->iban, $transaction->target_iban);
+                $this->assertEquals($profileBankAccount->name, $transaction->target_name);
+
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testRequesterVoucherPayoutFromPayoutsTabShowsAmountWarning(): void
     {
         $implementation = Implementation::byKey('nijmegen');

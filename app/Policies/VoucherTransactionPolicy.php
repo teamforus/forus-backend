@@ -4,13 +4,10 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\Identity;
-use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Scopes\Builders\VoucherQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -257,16 +254,6 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        $hasEligibleFundRequest = FundRequest::query()
-            ->where('identity_id', $identity->id)
-            ->where('state', FundRequest::STATE_APPROVED)
-            ->whereRelation('fund', 'organization_id', $voucher->fund?->organization_id)
-            ->whereHas('fund.vouchers', function (Builder $builder) use ($identity) {
-                $builder->where('identity_id', $identity->id);
-                VoucherQuery::whereNotExpiredAndActive($builder);
-            })
-            ->exists();
-
-        return $hasEligibleFundRequest && $voucher->fund?->fund_config?->allow_voucher_payouts === true;
+        return $voucher->fund?->fund_config?->allow_voucher_payouts === true;
     }
 }
