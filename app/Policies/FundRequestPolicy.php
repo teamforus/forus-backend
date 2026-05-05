@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestMissedRecord;
 use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Organization;
@@ -217,6 +218,22 @@ class FundRequestPolicy
      * @noinspection PhpUnused
      */
     public function approveAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+    ): Response|bool {
+        return $this->resolveAsValidator($identity, $fundRequest, $organization, true) &&
+            (!$this->hasWarningMissedRecords($fundRequest) || $fundRequest->missing_records_approved);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function approveMissedRecords(
         Identity $identity,
         FundRequest $fundRequest,
         Organization $organization,
@@ -444,6 +461,15 @@ class FundRequestPolicy
         }
 
         return true;
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    protected function hasWarningMissedRecords(FundRequest $fundRequest): bool
+    {
+        return $fundRequest->missed_records()->where(['type' => FundRequestMissedRecord::TYPE_WARNING])->exists();
     }
 
     /**

@@ -1634,6 +1634,16 @@ class Fund extends Model
                     'source' => FundRequestRecord::SOURCE_BRP,
                 ]);
             }
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_INFO,
+                Arr::get($iConnectPrefills, 'missed_fields.info', []),
+            );
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_WARNING,
+                Arr::get($iConnectPrefills, 'missed_fields.warning', []),
+            );
         }
 
         return $fundRequest;
