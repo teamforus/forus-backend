@@ -41,17 +41,17 @@ class ProviderOrganizationSearchTest extends SearchTestCase
         $identity = $this->makeIdentity();
         $sponsor = $this->makeTestOrganization($identity);
 
-        $namePart1 = 'match';
-        $namePart2 = 'other';
+        $namePart1 = 'providersearchnameone';
+        $namePart2 = 'providersearchnametwo';
 
-        $emailPart1 = 'something_un';
-        $emailPart2 = 'any_un';
+        $emailPart1 = 'providersearchemailone';
+        $emailPart2 = 'providersearchemailtwo';
 
-        $phonePart1 = '22233';
-        $phonePart2 = '55566';
+        $phonePart1 = '8822334411';
+        $phonePart2 = '8855667711';
 
-        $websitePart1 = 'forus';
-        $websitePart2 = 'dashboard';
+        $websitePart1 = 'providersearchsiteone';
+        $websitePart2 = 'providersearchsitetwo';
 
         $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
             'name' => "$namePart1 name",

@@ -35,20 +35,25 @@ class ProductSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
-        $productNamePart1 = 'match';
-        $productNamePart2 = 'other';
+        $productNamePart1 = 'productsearchnameone';
+        $productNamePart2 = 'productsearchnametwo';
 
-        $productDescriptionTextPart1 = 'second';
-        $productDescriptionTextPart2 = 'third';
+        $productDescriptionTextPart1 = 'productsearchdescriptionone';
+        $productDescriptionTextPart2 = 'productsearchdescriptiontwo';
 
-        $categoryNamePart1 = 'next';
-        $categoryNamePart2 = 'previous';
+        $categoryNamePart1 = 'productsearchcategoryone';
+        $categoryNamePart2 = 'productsearchcategorytwo';
 
-        $organizationNamePart1 = 'first';
-        $organizationNamePart2 = 'last';
+        $organizationNamePart1 = 'productsearchorganizationone';
+        $organizationNamePart2 = 'productsearchorganizationtwo';
 
-        $organization1 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart1 organization"]);
-        $organization2 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart2 organization"]);
+        $organization1 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart1 organization",
+        ]);
+
+        $organization2 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart2 organization",
+        ]);
 
         $category1 = $this->makeProductCategory(name: "$categoryNamePart1 category");
         $category2 = $this->makeProductCategory(name: "$categoryNamePart2 category");

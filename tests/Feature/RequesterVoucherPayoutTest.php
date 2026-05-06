@@ -113,6 +113,44 @@ class RequesterVoucherPayoutTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testProfileBankAccountsAreReturnedAsListAfterSorting(): void
+    {
+        [$requester, $fund] = $this->makeRequesterWithPayoutFund();
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $fundRequest = $result['fund_request'];
+        $implementation = $fund->getImplementation();
+        $profile = $implementation->organization->findOrMakeProfile($requester);
+
+        $profileBankAccount = $profile->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $profileBankAccount->forceFill([
+            'created_at' => $fundRequest->created_at->copy()->subDay(),
+            'updated_at' => $fundRequest->created_at->copy()->subDay(),
+        ])->save();
+
+        $profileRes = $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders(
+            $requester,
+            ['Client-Key' => $implementation->key],
+        ));
+
+        $profileRes->assertSuccessful();
+
+        $bankAccounts = $profileRes->json('bank_accounts');
+        $this->assertIsArray($bankAccounts);
+        $this->assertTrue(array_is_list($bankAccounts));
+        $this->assertEquals('fund_request', $bankAccounts[0]['type']);
+        $this->assertEquals($fundRequest->id, $bankAccounts[0]['type_id']);
+        $this->assertEquals('profile_bank_account', $bankAccounts[1]['type']);
+        $this->assertEquals($profileBankAccount->id, $bankAccounts[1]['type_id']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testRequesterCannotCreatePayoutWhenFundDisallowsVoucherPayouts(): void
     {
         [$requester, $fund] = $this->makeRequesterWithPayoutFund();
@@ -746,6 +784,67 @@ class RequesterVoucherPayoutTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testRequesterPayoutCanUseProfileBankAccountWithoutFundRequest(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $voucher = $this->makeTestVoucher($fund, $requester, amount: 100);
+        $profileBankAccount = $sponsorOrganization->findOrMakeProfile($requester)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->assertNull($voucher->fund_request_id);
+        $this->assertFalse($requester->fund_requests()->exists());
+
+        $transaction = $this->apiMakePayout([
+            'voucher_id' => $voucher->id,
+            'amount' => '50.00',
+            'profile_bank_account_id' => $profileBankAccount->id,
+        ], $requester);
+
+        $this->assertEquals(VoucherTransaction::TARGET_PAYOUT, $transaction->target);
+        $this->assertEquals(VoucherTransaction::INITIATOR_REQUESTER, $transaction->initiator);
+        $this->assertEquals($voucher->id, $transaction->voucher_id);
+        $this->assertEquals($profileBankAccount->iban, $transaction->target_iban);
+        $this->assertEquals($profileBankAccount->name, $transaction->target_name);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRequesterPayoutRequiresSingleBankAccountSource(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization);
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+        $profileBankAccount = $sponsorOrganization->findOrMakeProfile($requester)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $response = $this->apiMakePayoutRequest([
+            'voucher_id' => $result['voucher']->id,
+            'amount' => '50.00',
+            'fund_request_id' => $result['fund_request']->id,
+            'profile_bank_account_id' => $profileBankAccount->id,
+        ], $requester);
+
+        $response->assertJsonValidationErrorFor('fund_request_id');
+        $response->assertJsonValidationErrorFor('profile_bank_account_id');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testRequesterPayoutRequiresEligibleFundRequestId(): void
     {
         $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
@@ -873,18 +972,20 @@ class RequesterVoucherPayoutTest extends TestCase
      * @throws Throwable
      * @return void
      */
-    public function testRequesterPayoutRequiresEligibleFundRequest(): void
+    public function testRequesterPayoutRequiresBankAccountSource(): void
     {
         [$requester, $fund] = $this->makeRequesterWithPayoutFund();
         $voucher = $this->makeTestVoucher($fund, $requester, amount: 100);
 
         $this->assertNull($voucher->fund_request_id);
 
-        $this->apiMakePayoutRequest([
+        $response = $this->apiMakePayoutRequest([
             'voucher_id' => $voucher->id,
             'amount' => '50.00',
-            'fund_request_id' => 0,
-        ], $requester)->assertForbidden();
+        ], $requester);
+
+        $response->assertJsonValidationErrorFor('fund_request_id');
+        $response->assertJsonValidationErrorFor('profile_bank_account_id');
     }
 
     /**

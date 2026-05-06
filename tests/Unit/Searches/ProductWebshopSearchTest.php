@@ -46,23 +46,28 @@ class ProductWebshopSearchTest extends SearchTestCase
      */
     public function testFiltersByQuery(): void
     {
-        $productNamePart1 = 'match';
-        $productNamePart2 = 'other';
+        $productNamePart1 = 'productwebshopnameone';
+        $productNamePart2 = 'productwebshopnametwo';
 
-        $productDescriptionTextPart1 = 'second';
-        $productDescriptionTextPart2 = 'third';
+        $productDescriptionTextPart1 = 'productwebshopdescriptionone';
+        $productDescriptionTextPart2 = 'productwebshopdescriptiontwo';
 
-        $categoryNamePart1 = 'next';
-        $categoryNamePart2 = 'previous';
+        $categoryNamePart1 = 'productwebshopcategoryone';
+        $categoryNamePart2 = 'productwebshopcategorytwo';
 
-        $organizationNamePart1 = 'first';
-        $organizationNamePart2 = 'last';
+        $organizationNamePart1 = 'productwebshoporganizationone';
+        $organizationNamePart2 = 'productwebshoporganizationtwo';
 
         $sponsor = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($sponsor);
 
-        $organization1 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart1 organization"]);
-        $organization2 = $this->makeTestOrganization($this->makeIdentity(), ['name' => "$organizationNamePart2 organization"]);
+        $organization1 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart1 organization",
+        ]);
+
+        $organization2 = $this->makeTestOrganization($this->makeIdentity(), [
+            'name' => "$organizationNamePart2 organization",
+        ]);
 
         $category1 = $this->makeProductCategory(name: "$categoryNamePart1 category");
         $category2 = $this->makeProductCategory(name: "$categoryNamePart2 category");
