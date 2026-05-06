@@ -254,6 +254,10 @@ class VoucherTransactionPolicy
             return false;
         }
 
+        if (!$voucher->identityHasValidRecordsForPayout()) {
+            return false;
+        }
+
         return $voucher->fund?->fund_config?->allow_voucher_payouts === true;
     }
 }

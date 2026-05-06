@@ -39,6 +39,7 @@ class VoucherResource extends BaseJsonResource
         'last_deactivation_log',
         'top_up_transactions',
         'fund_request.records',
+        'fund.fund_payout_formulas',
     ];
 
     public const array LOAD_NESTED = [
@@ -109,6 +110,7 @@ class VoucherResource extends BaseJsonResource
             ] : null,
             'voucher_payout_partial_amounts' => $voucher->getPayoutPartialAmounts(),
             'voucher_payout_partial_amounts_label_type' => $voucher->getPayoutPartialAmountsLabelType(),
+            'voucher_payout_has_valid_records' => $voucher->identityHasValidRecordsForPayout(),
             ...$this->getRecords($voucher),
             ...$this->timestamps($voucher, 'created_at'),
         ];
@@ -261,7 +263,7 @@ class VoucherResource extends BaseJsonResource
     protected function getFundResource(Voucher $voucher): array
     {
         $fund = $voucher->fund;
-        $payoutAmount = $fund->voucherPayoutAmountForIdentityCached($voucher->identity);
+        $payoutAmount = $fund->voucherPayoutAmountForIdentityCached($voucher->identity, $voucher);
 
         return  [
             ...$fund->only('id', 'state', 'type'),
