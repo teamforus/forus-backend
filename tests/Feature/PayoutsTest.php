@@ -291,16 +291,12 @@ class PayoutsTest extends TestCase
         $voucher = $result['voucher'];
         $fundRequest = $result['fund_request'];
 
-        $payoutRes = $this->postJson('/api/v1/platform/payouts', [
+        $transaction = $this->apiMakePayout([
             'voucher_id' => $voucher->id,
             'amount' => '50.00',
             'fund_request_id' => $fundRequest->id,
-        ], $this->makeApiHeaders($requester));
+        ], $requester);
 
-        $payoutRes->assertSuccessful();
-
-        $transaction = VoucherTransaction::find($payoutRes->json('data.id'));
-        $this->assertNotNull($transaction);
         $this->assertEquals(VoucherTransaction::INITIATOR_REQUESTER, $transaction->initiator);
 
         $listRes = $this->getJson(
@@ -335,10 +331,7 @@ class PayoutsTest extends TestCase
         $otherRequester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
         $otherResult = $this->makePayoutVoucherViaApplication($otherRequester, $otherFund);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, ['type' => 'fund_request']);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -366,10 +359,7 @@ class PayoutsTest extends TestCase
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $fundRequest = $result['fund_request'];
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, ['type' => 'fund_request']);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonMissing([
@@ -396,10 +386,10 @@ class PayoutsTest extends TestCase
         $result = $this->makePayoutVoucherViaApplication($requester, $fund);
         $otherResult = $this->makePayoutVoucherViaApplication($otherRequester, $fund);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=fund_request&identity_id=$requester->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, [
+            'type' => 'fund_request',
+            'identity_id' => $requester->id,
+        ]);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -435,11 +425,10 @@ class PayoutsTest extends TestCase
             'name' => $this->makeIbanName(),
         ]);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
-            "?type=profile_bank_account&identity_id=$identity->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, [
+            'type' => 'profile_bank_account',
+            'identity_id' => $identity->id,
+        ]);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -472,11 +461,10 @@ class PayoutsTest extends TestCase
         $otherVoucher = $this->makeTestVoucher($fund, $otherIdentity, amount: 100);
         $otherReimbursement = $this->makeReimbursement($otherVoucher, submit: true);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
-            "?type=reimbursement&identity_id=$identity->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, [
+            'type' => 'reimbursement',
+            'identity_id' => $identity->id,
+        ]);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -519,11 +507,10 @@ class PayoutsTest extends TestCase
             'amount' => '50.00',
         ]);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts" .
-            "?type=payout&identity_id=$identity->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, [
+            'type' => 'payout',
+            'identity_id' => $identity->id,
+        ]);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -609,10 +596,9 @@ class PayoutsTest extends TestCase
             'name' => $this->makeIbanName(),
         ]);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=profile_bank_account",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, [
+            'type' => 'profile_bank_account',
+        ]);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -648,10 +634,7 @@ class PayoutsTest extends TestCase
         $otherVoucher = $this->makeTestVoucher($otherFund, $otherIdentity, amount: 100);
         $otherReimbursement = $this->makeReimbursement($otherVoucher, submit: true);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=reimbursement",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, ['type' => 'reimbursement']);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -704,10 +687,7 @@ class PayoutsTest extends TestCase
             'amount' => '50.00',
         ]);
 
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=payout",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, ['type' => 'payout']);
 
         $listRes->assertSuccessful();
         $listRes->assertJsonFragment([
@@ -1047,18 +1027,12 @@ class PayoutsTest extends TestCase
         $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
 
         // Test missing type parameter
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization);
 
         $listRes->assertJsonValidationErrorFor('type');
 
         // Test invalid type value
-        $listRes = $this->getJson(
-            "/api/v1/platform/organizations/$sponsorOrganization->id/sponsor/payouts/bank-accounts?type=invalid",
-            $this->makeApiHeaders($this->makeIdentityProxy($sponsorOrganization->identity)),
-        );
+        $listRes = $this->apiGetSponsorPayoutBankAccountsRequest($sponsorOrganization, ['type' => 'invalid']);
 
         $listRes->assertJsonValidationErrorFor('type');
     }
@@ -1288,10 +1262,18 @@ class PayoutsTest extends TestCase
 
         $this->apiMakePayoutRequest($data, $requester)->assertForbidden();
 
+        $this->apiGetVoucherRequest($requester, $voucher)
+            ->assertSuccessful()
+            ->assertJsonPath('data.voucher_payout_has_valid_records', false);
+
         $voucher->voucher_records()->create([
             'record_type_id' => $recordType->id,
             'value' => 3,
         ]);
+
+        $this->apiGetVoucherRequest($requester, $voucher)
+            ->assertSuccessful()
+            ->assertJsonPath('data.voucher_payout_has_valid_records', true);
 
         $this->apiMakePayout($data, $requester);
     }
