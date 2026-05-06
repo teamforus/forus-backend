@@ -241,6 +241,7 @@ return [
         'extra_records' => 'Er zijn extra records ingediend die niet zijn toegestaan.',
         'invalid_prefill_value' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
         'group_required' => 'Fill at least one of records',
+        'record_edit_forbidden' => 'You can not edit record',
     ],
     'attributes' => [
         'pin_code' => 'pincode',
