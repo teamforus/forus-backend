@@ -481,9 +481,9 @@ class Voucher extends Model
 
         $recordValue = 0;
 
-        if ($formula->record_type_key && $this->identity) {
-            $record = $this->fund->getTrustedRecordOfType($this->identity, $formula->record_type_key);
-            $recordValue = is_numeric($record?->value) ? (int) $record->value : 0;
+        if ($formula->record_type_key) {
+            $value = $this->fund->getRecordValueForPayout($this->identity, $this, $formula->record_type_key);
+            $recordValue = is_numeric($value) ? (int) $value : 0;
         }
 
         $amountCents = Number::toCents(((float) $formula->amount) * $recordValue);
@@ -508,6 +508,21 @@ class Voucher extends Model
             fn (int $count) => currency_format(($unitCents * $count) / 100),
             range(1, intdiv($remainingCents, $unitCents)),
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function identityHasValidRecordsForPayout(): bool
+    {
+        return $this
+            ->fund
+            ->fund_payout_formulas
+            ->filter(fn (FundPayoutFormula $formula) => $formula->type === $formula::TYPE_MULTIPLY)
+            ->filter(fn (FundPayoutFormula $formula) => !$formula->record_type_key || !is_numeric(
+                $this->fund->getRecordValueForPayout($this->identity, $this, $formula->record_type_key)
+            ))
+            ->isEmpty();
     }
 
     /**
