@@ -42,7 +42,7 @@ class VoucherPayoutAmountRule extends BaseRule
             return true;
         }
 
-        $fixedAmount = $this->voucher->fund?->voucherPayoutAmountForIdentity($this->voucher->identity);
+        $fixedAmount = $this->voucher->fund?->voucherPayoutAmountForIdentity($this->voucher->identity, $this->voucher);
         $balance = (float) $this->voucher->amount_available;
         $balanceCents = Number::toCents($balance);
         $amountCents = Number::toCents((float) $value);
@@ -91,7 +91,7 @@ class VoucherPayoutAmountRule extends BaseRule
      */
     public static function balanceExceededMessage(Voucher $voucher): string
     {
-        $fixedAmount = $voucher->fund?->voucherPayoutAmountForIdentity($voucher->identity);
+        $fixedAmount = $voucher->fund?->voucherPayoutAmountForIdentity($voucher->identity, $voucher);
         $balance = (float) $voucher->amount_available;
 
         if ($fixedAmount !== null) {

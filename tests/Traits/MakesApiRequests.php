@@ -1064,6 +1064,31 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Identity $identity
+     * @param Voucher $voucher
+     * @return TestResponse
+     */
+    protected function apiGetVoucherRequest(Identity $identity, Voucher $voucher): TestResponse
+    {
+        return $this->getJson("/api/v1/platform/vouchers/$voucher->number", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiGetSponsorPayoutBankAccountsRequest(Organization $organization, array $query = []): TestResponse
+    {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/bank-accounts$queryString",
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Organization $providerOrganization
      * @param array $data
