@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundAmountPreset;
 use App\Models\FundConfig;
 use App\Models\FundFormula;
+use App\Models\FundPayoutFormula;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Organization;
@@ -1247,6 +1248,52 @@ class PayoutsTest extends TestCase
         $transaction->refresh();
 
         self::assertEquals(VoucherTransaction::STATE_CANCELED, $transaction->state);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPayoutAmountWithoutAnyValidRecords(): void
+    {
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $sponsorOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $sponsorOrganization->forceFill(['allow_profiles' => true])->save();
+
+        $fund = $this->makePayoutEnabledFund($sponsorOrganization, fundConfigsData: [
+            'allow_voucher_records' => true,
+            'allow_voucher_payouts_partial' => true,
+        ]);
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $recordType = $this->ensureNumberRecordType($sponsorOrganization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $voucher = $fund->makeVoucher(identity: $requester, amount: 200);
+
+        $bankAccount = $sponsorOrganization->findOrMakeProfile($requester)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $data = [
+            'voucher_id' => $voucher->id,
+            'amount' => '50.00',
+            'profile_bank_account_id' => $bankAccount->id,
+        ];
+
+        $this->apiMakePayoutRequest($data, $requester)->assertForbidden();
+
+        $voucher->voucher_records()->create([
+            'record_type_id' => $recordType->id,
+            'value' => 3,
+        ]);
+
+        $this->apiMakePayout($data, $requester);
     }
 
     /**
