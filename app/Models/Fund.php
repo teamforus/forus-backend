@@ -1028,10 +1028,11 @@ class Fund extends Model
 
     /**
      * @param Identity|null $identity
+     * @param Voucher|null $voucher
      * @param bool $fresh
      * @return float|null
      */
-    public function voucherPayoutAmountForIdentity(?Identity $identity, bool $fresh = true): ?float
+    public function voucherPayoutAmountForIdentity(?Identity $identity, ?Voucher $voucher = null, bool $fresh = true): ?float
     {
         $formulas = $fresh ? $this->fund_payout_formulas()->get() : $this->fund_payout_formulas;
 
@@ -1039,7 +1040,7 @@ class Fund extends Model
             return null;
         }
 
-        return $formulas->map(function (FundPayoutFormula $formula) use ($identity) {
+        return $formulas->map(function (FundPayoutFormula $formula) use ($identity, $voucher) {
             switch ($formula->type) {
                 case FundPayoutFormula::TYPE_FIXED:
                     return (float) $formula->amount;
@@ -1048,9 +1049,7 @@ class Fund extends Model
                         return 0.0;
                     }
 
-                    $value = $identity
-                        ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)?->value
-                        : null;
+                    $value = $this->getRecordValueForPayout($identity, $voucher, $formula->record_type_key);
 
                     if (!is_numeric($value)) {
                         return 0.0;
@@ -1072,11 +1071,35 @@ class Fund extends Model
 
     /**
      * @param Identity|null $identity
+     * @param Voucher|null $voucher
      * @return float|null
      */
-    public function voucherPayoutAmountForIdentityCached(?Identity $identity): ?float
+    public function voucherPayoutAmountForIdentityCached(?Identity $identity, ?Voucher $voucher = null): ?float
     {
-        return $this->voucherPayoutAmountForIdentity($identity, false);
+        return $this->voucherPayoutAmountForIdentity($identity, $voucher, false);
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @param Voucher|null $voucher
+     * @param string $record_type_key
+     * @return string|null
+     */
+    public function getRecordValueForPayout(?Identity $identity, ?Voucher $voucher, string $record_type_key): ?string
+    {
+        $value = null;
+
+        if ($this->fund_config?->allow_voucher_records) {
+            $voucher->loadMissing('voucher_records.record_type');
+
+            $value = $voucher->voucher_records
+                ->first(fn (VoucherRecord $record) => $record->record_type->key === $record_type_key)
+                ?->value;
+        }
+
+        return !is_numeric($value) && $identity
+            ? $this->getTrustedRecordOfType($identity, $record_type_key)?->value
+            : $value;
     }
 
     /**
