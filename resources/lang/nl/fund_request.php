@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'missed_records_approved' => 'Fund request missing records approved.',
+    'missed_records_approved' => 'Ontbrekende gegevens bij de aanvraag goedgekeurd.',
 ];

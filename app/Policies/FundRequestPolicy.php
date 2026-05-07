@@ -222,8 +222,13 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization,
     ): Response|bool {
-        return $this->resolveAsValidator($identity, $fundRequest, $organization, true) &&
-            (!$this->hasWarningMissedRecords($fundRequest) || $fundRequest->missing_records_approved);
+        $response = $this->resolveAsValidator($identity, $fundRequest, $organization, true);
+
+        if ($response !== true) {
+            return $response;
+        }
+
+        return !$this->hasWarningMissedRecords($fundRequest) || $fundRequest->missing_records_approved;
     }
 
     /**
