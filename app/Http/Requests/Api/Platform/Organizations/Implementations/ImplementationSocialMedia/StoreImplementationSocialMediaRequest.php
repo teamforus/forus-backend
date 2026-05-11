@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationSocialMedia;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Implementation;
 use App\Models\ImplementationSocialMedia;
 use App\Models\Organization;
 use Illuminate\Database\Query\Builder;
@@ -11,7 +10,6 @@ use Illuminate\Validation\Rule;
 
 /**
  * @property Organization $organization
- * @property Implementation $implementation
  */
 class StoreImplementationSocialMediaRequest extends BaseFormRequest
 {
@@ -37,7 +35,7 @@ class StoreImplementationSocialMediaRequest extends BaseFormRequest
                 'required',
                 'in:' . implode(',', ImplementationSocialMedia::TYPES),
                 Rule::unique('implementation_social_media', 'type')->where(fn (Builder $q) => $q->where([
-                    'implementation_id' => $this->implementation->id,
+                    'implementation_id' => $this->getRouteImplementation()->id,
                 ])),
             ],
             'url' => 'required|string|url|min:5|max:200',

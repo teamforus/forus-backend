@@ -152,6 +152,27 @@ class ImplementationPolicy
     }
 
     /**
+     * Determine whether the user can update the implementation auth page.
+     *
+     * @param Identity $identity
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updateAuthPage(
+        Identity $identity,
+        Implementation $implementation,
+        Organization $organization
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS);
+    }
+
+    /**
      * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization

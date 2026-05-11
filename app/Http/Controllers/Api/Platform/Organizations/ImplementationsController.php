@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\IndexImplementationRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationAuthPageRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationCmsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailBrandingRequest;
@@ -132,6 +133,41 @@ class ImplementationsController extends Controller
         $implementation->update($request->only([
             'digid_enabled', 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server',
         ]));
+
+        return ImplementationPrivateResource::create($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateImplementationAuthPageRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws Throwable
+     * @return ImplementationPrivateResource
+     * @noinspection PhpUnused
+     */
+    public function updateAuthPage(
+        UpdateImplementationAuthPageRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ): ImplementationPrivateResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateAuthPage', [$implementation, $organization]);
+
+        $implementation->update($request->only([
+            'auth_page_title',
+            'auth_page_login_title',
+            'auth_page_login_email',
+            'auth_page_login_digid',
+            'auth_page_login_qr',
+            'auth_page_info_enabled',
+            'auth_page_info_title',
+            'auth_page_info_description',
+        ]));
+
+        $implementation->syncMarkdownMedia('cms_media', 'auth_page_info_description');
 
         return ImplementationPrivateResource::create($implementation);
     }

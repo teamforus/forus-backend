@@ -135,6 +135,7 @@ class FundsController extends Controller
 
         $vouchers = Voucher::assignAvailableToIdentityByBsn($request->identity());
         $prevalidations = Prevalidation::assignAvailableToIdentityByBsn($request->identity());
+
         $prevalidation_vouchers = $prevalidations > 0
             ? VoucherResource::createCollection(
                 $request->implementation()->makeVouchersInApplicableFunds($request->identity())
