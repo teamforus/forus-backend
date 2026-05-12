@@ -28,6 +28,7 @@ class UpdateImplementationAuthPageRequest extends BaseFormRequest
             'auth_page_login_title' => 'required|string|max:100',
             'auth_page_login_email' => 'required|boolean',
             'auth_page_login_digid' => 'required|boolean',
+            'auth_page_login_openid' => 'required|boolean',
             'auth_page_login_qr' => 'required|boolean',
             'auth_page_info_enabled' => 'required|boolean',
             'auth_page_info_title' => 'nullable|string|max:100',
@@ -52,6 +53,7 @@ class UpdateImplementationAuthPageRequest extends BaseFormRequest
             'auth_page_login_options' => [
                 'email' => $this->boolean('auth_page_login_email'),
                 'digid' => $this->boolean('auth_page_login_digid'),
+                'openid' => $this->boolean('auth_page_login_openid'),
                 'qr' => $this->boolean('auth_page_login_qr'),
             ],
         ]);
