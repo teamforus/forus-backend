@@ -9,6 +9,11 @@ use App\Rules\BaseRule;
 abstract class SponsorBaseRecordTypeRule extends BaseRule
 {
     /**
+     * @var string
+     */
+    protected string $dateFormat = 'd-m-Y';
+
+    /**
      * @param RecordType $recordType
      * @param string|null $label
      */

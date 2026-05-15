@@ -19,6 +19,7 @@ use App\Rules\FundRequests\RecordTypes\RecordTypeSelectNumberRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
 use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorBaseRecordTypeRule;
+use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeDateRule;
 use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeNumericRule;
 use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeStringRule;
 use Illuminate\Validation\Rule;
@@ -104,6 +105,7 @@ abstract class BaseFundRequestRule extends BaseRule
     {
         return match ($recordType->type) {
             $recordType::TYPE_STRING => new SponsorRecordTypeStringRule($recordType, $label),
+            $recordType::TYPE_DATE => new SponsorRecordTypeDateRule($recordType, $label),
             $recordType::TYPE_NUMBER => new SponsorRecordTypeNumericRule($recordType, $label),
             default => null,
         };
