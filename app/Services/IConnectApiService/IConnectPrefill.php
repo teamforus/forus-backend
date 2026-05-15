@@ -284,26 +284,28 @@ class IConnectPrefill
 
                 $this->checkMissedFields($personChild, "child_$i");
 
-                foreach ($configs as $config) {
-                    $recordKey = Arr::get($config, 'record_type_key');
-                    $minAge = Arr::get($config, 'from');
-                    $maxAge = Arr::get($config, 'to');
-                    $gender = Arr::get($config, 'gender');
+                if (!empty($personChild->getAge()) && is_numeric($personChild->getAge())) {
+                    foreach ($configs as $config) {
+                        $recordKey = Arr::get($config, 'record_type_key');
+                        $minAge = Arr::get($config, 'from');
+                        $maxAge = Arr::get($config, 'to');
+                        $gender = Arr::get($config, 'gender');
+
+                        if (
+                            (int) $personChild->getAge() >= $minAge &&
+                            (int) $personChild->getAge() <= $maxAge &&
+                            (!$gender || $gender === $personChild->getGender())
+                        ) {
+                            $groups[$recordKey] = $groups[$recordKey] + 1;
+                        }
+                    }
 
                     if (
-                        (int) $personChild->getAge() >= $minAge &&
-                        (int) $personChild->getAge() <= $maxAge &&
-                        (!$gender || $gender === $personChild->getGender())
+                        (int) $personChild->getAge() >= $baseMinAge &&
+                        (int) $personChild->getAge() <= $baseMaxAge
                     ) {
-                        $groups[$recordKey] = $groups[$recordKey] + 1;
+                        $childrenCount++;
                     }
-                }
-
-                if (
-                    (int) $personChild->getAge() >= $baseMinAge &&
-                    (int) $personChild->getAge() <= $baseMaxAge
-                ) {
-                    $childrenCount++;
                 }
             }
 
