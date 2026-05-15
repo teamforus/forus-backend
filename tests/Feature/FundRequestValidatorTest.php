@@ -91,8 +91,7 @@ class FundRequestValidatorTest extends TestCase
 
         // assert success when the correct fund_amount_preset_id is used for a fund where employees can use presets
         $fund1->updateFundsConfig(['allow_preset_amounts_validator' => true]);
-        $this->apiFundRequestApproveRequest($fundRequest, $employee, ['fund_amount_preset_id' => $preset1->id])
-            ->assertSuccessful();
+        $this->apiFundRequestApproveRequest($fundRequest, $employee, ['fund_amount_preset_id' => $preset1->id])->assertSuccessful();
 
         $this->assertEquals(FundRequest::STATE_APPROVED, $fundRequest->fresh()->state);
         $this->assertEquals($preset1->amount, $fundRequest->vouchers()->first()->amount);
