@@ -1456,21 +1456,10 @@ class PayoutsTest extends TestCase
      */
     protected function approveFundRequest(FundRequest $fundRequest, array $data = []): FundRequest
     {
-        $res = $this->patchJson(
-            "/api/v1/platform/organizations/{$fundRequest->fund->organization_id}/fund-requests/$fundRequest->id/assign",
-            [],
-            $this->makeApiHeaders($this->makeIdentityProxy($fundRequest->fund->organization->identity)),
-        );
+        $employee = $fundRequest->fund->organization->employees[0];
 
-        $res->assertSuccessful();
-
-        $res = $this->patchJson(
-            "/api/v1/platform/organizations/{$fundRequest->fund->organization_id}/fund-requests/$fundRequest->id/approve",
-            $data,
-            $this->makeApiHeaders($this->makeIdentityProxy($fundRequest->fund->organization->identity)),
-        );
-
-        $res->assertSuccessful();
+        $this->apiFundRequestAssignRequest($fundRequest, $employee)->assertSuccessful();
+        $this->apiFundRequestApproveRequest($fundRequest, $employee, $data)->assertSuccessful();
 
         return $fundRequest;
     }
