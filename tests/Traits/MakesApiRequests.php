@@ -982,14 +982,17 @@ trait MakesApiRequests
     /**
      * @param Organization $organization
      * @param array $query
+     * @param array $headers
      * @return TestResponse
      */
-    protected function apiGetOrganizationEmailLogsRequest(Organization $organization, array $query): TestResponse
-    {
-        // assert email log exists
+    protected function apiGetOrganizationEmailLogsRequest(
+        Organization $organization,
+        array $query,
+        array $headers = [],
+    ): TestResponse {
         return $this->getJson(
             "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query($query),
-            $this->makeApiHeaders($organization->identity),
+            $this->makeApiHeaders($organization->identity, $headers),
         );
     }
 

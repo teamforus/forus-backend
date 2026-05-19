@@ -18,6 +18,10 @@ use App\Rules\FundRequests\RecordTypes\RecordTypeNumericRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeSelectNumberRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeSelectRule;
 use App\Rules\FundRequests\RecordTypes\RecordTypeStringRule;
+use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorBaseRecordTypeRule;
+use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeDateRule;
+use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeNumericRule;
+use App\Rules\FundRequests\Sponsor\RecordTypes\SponsorRecordTypeStringRule;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use LogicException;
@@ -73,6 +77,38 @@ abstract class BaseFundRequestRule extends BaseRule
         }
 
         return Validation::check('', ['required', Rule::in([])]);
+    }
+
+    /**
+     * @param RecordType $recordType
+     * @param mixed $value
+     * @param string|null $label
+     * @return Validator
+     */
+    public static function validateSponsorRecordValueByType(RecordType $recordType, mixed $value, ?string $label = null): Validator
+    {
+        $rule = self::sponsorRecordTypeRule($recordType, $label);
+
+        if ($rule) {
+            return Validation::check($value, $rule);
+        }
+
+        return Validation::check('', ['required', Rule::in([])]);
+    }
+
+    /**
+     * @param RecordType $recordType
+     * @param ?string $label
+     * @return SponsorBaseRecordTypeRule|null
+     */
+    public static function sponsorRecordTypeRule(RecordType $recordType, string $label = null): ?SponsorBaseRecordTypeRule
+    {
+        return match ($recordType->type) {
+            $recordType::TYPE_STRING => new SponsorRecordTypeStringRule($recordType, $label),
+            $recordType::TYPE_DATE => new SponsorRecordTypeDateRule($recordType, $label),
+            $recordType::TYPE_NUMBER => new SponsorRecordTypeNumericRule($recordType, $label),
+            default => null,
+        };
     }
 
     /**
