@@ -18,21 +18,21 @@ use Illuminate\Support\Facades\Cache;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Organization|null $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecordGroupRecord[] $records
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecordGroupKey[] $records
  * @property-read int|null $records_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestRecordGroup whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundRequestRecordGroup extends Model
+class RecordGroup extends Model
 {
     /**
      * @var string[]
@@ -62,7 +62,7 @@ class FundRequestRecordGroup extends Model
      */
     public function records(): HasMany
     {
-        return $this->hasMany(FundRequestRecordGroupRecord::class);
+        return $this->hasMany(RecordGroupKey::class);
     }
 
     /**

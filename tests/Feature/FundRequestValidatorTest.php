@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
-use App\Models\FundRequestRecordGroup;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\RecordGroup;
 use App\Models\RecordType;
 use App\Models\Role;
 use App\Services\MediaService\Traits\UsesMediaService;
@@ -607,7 +607,7 @@ class FundRequestValidatorTest extends TestCase
             $recordTypeFlag->key => 'yes',
         ]);
 
-        $globalGroup = FundRequestRecordGroup::create([
+        $globalGroup = RecordGroup::create([
             'title' => 'Global',
             'organization_id' => null,
             'fund_id' => null,
@@ -615,7 +615,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $globalGroup->records()->create(['record_type_key' => $recordTypeText->key]);
 
-        $orgGroup = FundRequestRecordGroup::create([
+        $orgGroup = RecordGroup::create([
             'title' => 'Org',
             'organization_id' => $organization->id,
             'fund_id' => null,
@@ -623,7 +623,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $orgGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
 
-        $fundGroup = FundRequestRecordGroup::create([
+        $fundGroup = RecordGroup::create([
             'title' => 'Fund',
             'organization_id' => $organization->id,
             'fund_id' => $fund->id,
@@ -631,7 +631,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $fundGroup->records()->create(['record_type_key' => $recordTypeFlag->key]);
 
-        $otherOrgGroup = FundRequestRecordGroup::create([
+        $otherOrgGroup = RecordGroup::create([
             'title' => 'Other org',
             'organization_id' => $otherOrganization->id,
             'fund_id' => null,
@@ -639,7 +639,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $otherOrgGroup->records()->create(['record_type_key' => $recordTypeText->key]);
 
-        $otherFundGroup = FundRequestRecordGroup::create([
+        $otherFundGroup = RecordGroup::create([
             'title' => 'Other fund',
             'organization_id' => $organization->id,
             'fund_id' => $otherFundSameOrg->id,
@@ -647,7 +647,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $otherFundGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
 
-        $otherOrgFundGroup = FundRequestRecordGroup::create([
+        $otherOrgFundGroup = RecordGroup::create([
             'title' => 'Other org fund',
             'organization_id' => $otherOrganization->id,
             'fund_id' => $otherFundOtherOrg->id,
@@ -693,7 +693,7 @@ class FundRequestValidatorTest extends TestCase
             $recordType->key => 'foo',
         ]);
 
-        $globalGroup = FundRequestRecordGroup::create([
+        $globalGroup = RecordGroup::create([
             'title' => 'Global',
             'organization_id' => null,
             'fund_id' => null,
@@ -701,7 +701,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $globalGroup->records()->create(['record_type_key' => $recordType->key]);
 
-        $orgGroup = FundRequestRecordGroup::create([
+        $orgGroup = RecordGroup::create([
             'title' => 'Org',
             'organization_id' => $organization->id,
             'fund_id' => null,
@@ -709,7 +709,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $orgGroup->records()->create(['record_type_key' => $recordType->key]);
 
-        $fundGroup = FundRequestRecordGroup::create([
+        $fundGroup = RecordGroup::create([
             'title' => 'Fund',
             'organization_id' => $organization->id,
             'fund_id' => $fund->id,
@@ -761,7 +761,7 @@ class FundRequestValidatorTest extends TestCase
             $recordTypeB->key => 'bar',
         ]);
 
-        $groupA = FundRequestRecordGroup::create([
+        $groupA = RecordGroup::create([
             'title' => 'Group A',
             'organization_id' => null,
             'fund_id' => null,
@@ -780,7 +780,7 @@ class FundRequestValidatorTest extends TestCase
             $fundRequest->records->firstWhere('record_type_key', $recordTypeB->key)->id,
         ], $ungrouped['record_ids']);
 
-        $groupB = FundRequestRecordGroup::create([
+        $groupB = RecordGroup::create([
             'title' => 'Group B',
             'organization_id' => null,
             'fund_id' => null,
@@ -834,7 +834,7 @@ class FundRequestValidatorTest extends TestCase
             'partner_bsn' => '987654321',
         ]);
 
-        $groupBsn = FundRequestRecordGroup::create([
+        $groupBsn = RecordGroup::create([
             'title' => 'BSN Group',
             'organization_id' => null,
             'fund_id' => null,
@@ -842,7 +842,7 @@ class FundRequestValidatorTest extends TestCase
         ]);
         $groupBsn->records()->create(['record_type_key' => 'bsn']);
 
-        $groupPartnerBsn = FundRequestRecordGroup::create([
+        $groupPartnerBsn = RecordGroup::create([
             'title' => 'Partner BSN Group',
             'organization_id' => null,
             'fund_id' => null,
@@ -917,7 +917,7 @@ class FundRequestValidatorTest extends TestCase
             'partner_bsn' => '987654321',
         ]);
 
-        $groupText = FundRequestRecordGroup::create([
+        $groupText = RecordGroup::create([
             'title' => 'Text Group',
             'organization_id' => null,
             'fund_id' => null,

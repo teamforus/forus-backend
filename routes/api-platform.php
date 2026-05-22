@@ -1103,6 +1103,13 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 
+    // Prevalidation requests notes
+    $router->group(['prefix' => 'organizations/{organization}/prevalidation-requests/{prevalidation_request}'], function () use ($router) {
+        $router->get('notes', "Api\Platform\Organizations\PrevalidationRequestController@notes");
+        $router->post('notes', "Api\Platform\Organizations\PrevalidationRequestController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\PrevalidationRequestController@destroyNote");
+    });
+
     $router->post('organizations/{organization}/prevalidation-requests/collection', 'Api\Platform\Organizations\PrevalidationRequestController@storeCollection');
     $router->post(
         'organizations/{organization}/prevalidation-requests/collection/validate',
@@ -1120,7 +1127,24 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     );
 
     $router->resource('organizations/{organization}/prevalidation-requests', 'Api\Platform\Organizations\PrevalidationRequestController')
-        ->only('index', 'destroy');
+        ->only('index', 'show', 'destroy');
+
+    $router->patch(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/approve-missed-records',
+        "Api\Platform\Organizations\PrevalidationRequestController@approveMissedRecords"
+    );
+
+    $router->get(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/person',
+        "Api\Platform\Organizations\PrevalidationRequestController@person"
+    );
+
+    $router->resource(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/records',
+        "Api\Platform\Organizations\PrevalidationRequestRecordsController"
+    )->parameters([
+        'records' => 'record',
+    ])->only('update');
 
     $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');

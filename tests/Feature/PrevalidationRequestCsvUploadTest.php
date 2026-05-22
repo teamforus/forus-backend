@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\FundCriterion;
-use App\Models\Identity;
 use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestMissedRecord;
 use App\Models\RecordType;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -565,5 +565,202 @@ class PrevalidationRequestCsvUploadTest extends TestCase
         )->assertSuccessful();
 
         $this->assertNull(PrevalidationRequest::find($request->id));
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestMissingRecords(): void
+    {
+        Config::set('forus.person_bsn.test_response_profile', 'missed_records');
+
+        // prepare fake responses
+        $this->fakePersonBsnApiResponses();
+
+        // create organization and fund with prefills enabled
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $this->enablePersonBsnApiForOrganization($organization);
+        $this->enablePrevalidationRequestForOrganization($organization);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+            'key' => 'nijmegen-vi',
+        ]);
+
+        // create record types and person-field mapping for prefills
+        $this->makeRecordTypeForKey(
+            $organization,
+            Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $criteria = [[
+            'title' => 'Children count',
+            'value' => 1,
+            'operator' => '>=',
+            'optional' => true,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            'show_attachment' => false,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        $requestDataPrefill = [
+            'bsn' => '999993112',
+            'uid' => token_generator()->generate(32),
+        ];
+
+        $requestData = [
+            'fund_id' => $fund->id,
+            'data' => [$requestDataPrefill],
+        ];
+
+        $response = $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
+            $requestData,
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertSuccessful();
+
+        $prevalidationRequest = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefill);
+        $prevalidationRequest->makePrevalidation();
+
+        // assert request has missed records and state 'missing_records'
+        $missedRecords = $prevalidationRequest->missed_records()->get();
+        $this->assertNull($prevalidationRequest->prevalidation);
+        $this->assertNotEmpty($missedRecords);
+        $this->assertEquals($prevalidationRequest::STATE_MISSING_RECORDS, $prevalidationRequest->state);
+        $this->assertFalse($prevalidationRequest->missing_records_approved);
+
+        // assert person birth_date as missed record presents
+        $personBirthDate = $missedRecords->first(fn (PrevalidationRequestMissedRecord $record) => $record->group === 'person' && $record->field === 'birth_date');
+        $this->assertNotNull($personBirthDate);
+        $this->assertEquals($personBirthDate::TYPE_WARNING, $personBirthDate->type);
+
+        // approve missed records and create prevalidation
+        $response = $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/approve-missed-records",
+            ['note' => 'test note'],
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertSuccessful();
+        $prevalidationRequest->refresh();
+
+        $this->assertEquals($prevalidationRequest::STATE_SUCCESS, $prevalidationRequest->state);
+        $this->assertNotNull($prevalidationRequest->prevalidation);
+        $this->assertTrue($prevalidationRequest->missing_records_approved);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestRecordEditWithMissingRecords(): void
+    {
+        Config::set('forus.person_bsn.test_response_profile', 'missed_records');
+
+        // prepare fake responses
+        $this->fakePersonBsnApiResponses();
+
+        // create organization and fund with prefills enabled
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $this->enablePersonBsnApiForOrganization($organization);
+        $this->enablePrevalidationRequestForOrganization($organization);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+            'key' => 'nijmegen-vi',
+        ]);
+
+        // create record types and person-field mapping for prefills
+        $this->makeRecordTypeForKey(
+            $organization,
+            Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $criteria = [[
+            'title' => 'Children count',
+            'value' => 1,
+            'operator' => '>=',
+            'optional' => true,
+            'record_type_key' => Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS,
+            'show_attachment' => false,
+            'fill_type' => FundCriterion::FILL_TYPE_PREFILL,
+        ]];
+
+        $this->makeFundCriteria($fund, $criteria);
+
+        $requestDataPrefill = [
+            'bsn' => '999993112',
+            'uid' => token_generator()->generate(32),
+        ];
+
+        $requestData = [
+            'fund_id' => $fund->id,
+            'data' => [$requestDataPrefill],
+        ];
+
+        $response = $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
+            $requestData,
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertSuccessful();
+
+        $prevalidationRequest = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefill);
+        $prevalidationRequest->makePrevalidation();
+
+        // assert request has missed records and state 'missing_records'
+        $missedRecords = $prevalidationRequest->missed_records()->get();
+        $this->assertNull($prevalidationRequest->prevalidation);
+        $this->assertNotEmpty($missedRecords);
+        $this->assertEquals($prevalidationRequest::STATE_MISSING_RECORDS, $prevalidationRequest->state);
+        $this->assertFalse($prevalidationRequest->missing_records_approved);
+
+        // find record and assert sponsor can edit this record while request state not success
+        $record = $prevalidationRequest->records()->where('record_type_key', Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS)->first();
+        $this->assertNotNull($record);
+        $this->assertEquals(2, $record->value);
+
+        $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/records/$record->id",
+            ['value' => 3],
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertSuccessful();
+
+        $this->assertEquals(3, $record->refresh()->value);
+
+        // approve missed records and create prevalidation
+        $response = $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/approve-missed-records",
+            ['note' => 'test note'],
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        );
+
+        $response->assertSuccessful();
+        $prevalidationRequest->refresh();
+
+        $this->assertEquals($prevalidationRequest::STATE_SUCCESS, $prevalidationRequest->state);
+        $this->assertNotNull($prevalidationRequest->prevalidation);
+        $this->assertTrue($prevalidationRequest->missing_records_approved);
+
+        // assert you can not edit record if prevalidation request already processed
+        $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/records/$record->id",
+            ['value' => 3],
+            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)),
+        )->assertForbidden();
     }
 }

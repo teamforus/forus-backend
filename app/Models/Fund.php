@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -2107,6 +2108,82 @@ class Fund extends Model
             'fund_id' => $this->id,
             ...$data,
         ]));
+    }
+
+    /**
+     * @param SupportCollection $records
+     * @return array
+     */
+    public function getRecordGroups(SupportCollection $records): array
+    {
+        $groups = RecordGroup::getCachedList()
+            ->filter(function (RecordGroup $group) {
+                return
+                    // global scope
+                    (!$group->organization_id && !$group->fund_id) ||
+                    // organization scope
+                    ($group->organization_id === $this->organization_id && !$group->fund_id) ||
+                    // organization and fund scope
+                    ($group->organization_id === $this->organization_id && $group->fund_id === $this->id);
+            })
+            ->values();
+
+        $groupsPriority = $groups
+            ->sortBy(fn (RecordGroup $group) => $group->fund_id ? 0 : ($group->organization_id ? 1 : 2))
+            ->values();
+
+        $groupRecordTypes = $groupsPriority
+            ->mapWithKeys(fn (RecordGroup $group) => [
+                $group->id => $group->records->pluck('record_type_key')->values()->toArray(),
+            ])
+            ->toArray();
+
+        $recordIdsByGroup = $groupsPriority
+            ->pluck('id')
+            ->mapWithKeys(fn (int $groupId) => [$groupId => []])
+            ->toArray();
+
+        $ungroupedRecordIds = [];
+
+        foreach ($records as $record) {
+            $assigned = false;
+
+            foreach ($groupsPriority as $group) {
+                if (in_array($record->record_type_key, $groupRecordTypes[$group->id] ?? [], true)) {
+                    $recordIdsByGroup[$group->id][] = $record->id;
+                    $assigned = true;
+                    break;
+                }
+            }
+
+            if (!$assigned) {
+                $ungroupedRecordIds[] = $record->id;
+            }
+        }
+
+        $recordGroups = $groups
+            ->map(fn (RecordGroup $group) => [
+                ...$group->only([
+                    'id', 'title', 'organization_id', 'fund_id', 'order',
+                ]),
+                'record_ids' => $recordIdsByGroup[$group->id] ?? [],
+            ])
+            ->filter(fn (array $group) => count($group['record_ids']) > 0)
+            ->values()
+            ->toArray();
+
+        if (!empty($ungroupedRecordIds)) {
+            $recordGroups[] = [
+                'id' => 0,
+                'title' => 'Overige gegevens',
+                'organization_id' => null,
+                'fund_id' => null,
+                'order' => 999,
+                'record_ids' => $ungroupedRecordIds,
+            ];
+        }
+
+        return $recordGroups;
     }
 
     /**
