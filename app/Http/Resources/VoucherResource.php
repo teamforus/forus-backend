@@ -39,6 +39,7 @@ class VoucherResource extends BaseJsonResource
         'last_deactivation_log',
         'top_up_transactions',
         'fund_request.records',
+        'fund.fund_payout_formulas',
     ];
 
     public const array LOAD_NESTED = [
@@ -109,6 +110,7 @@ class VoucherResource extends BaseJsonResource
             ] : null,
             'voucher_payout_partial_amounts' => $voucher->getPayoutPartialAmounts(),
             'voucher_payout_partial_amounts_label_type' => $voucher->getPayoutPartialAmountsLabelType(),
+            'voucher_payout_has_valid_records' => $voucher->identityHasValidRecordsForPayout(),
             ...$this->getRecords($voucher),
             ...$this->timestamps($voucher, 'created_at'),
         ];
@@ -261,7 +263,7 @@ class VoucherResource extends BaseJsonResource
     protected function getFundResource(Voucher $voucher): array
     {
         $fund = $voucher->fund;
-        $payoutAmount = $fund->voucherPayoutAmountForIdentityCached($voucher->identity);
+        $payoutAmount = $fund->voucherPayoutAmountForIdentityCached($voucher->identity, $voucher);
 
         return  [
             ...$fund->only('id', 'state', 'type'),
@@ -279,7 +281,7 @@ class VoucherResource extends BaseJsonResource
             ...$fund->fund_config->only([
                 'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
                 'allow_voucher_payouts', 'allow_voucher_payouts_partial', 'allow_voucher_payout_count',
-                'hide_voucher_amount',
+                'hide_voucher_amount', 'allow_voucher_payout_note',
             ]),
             'allow_voucher_payout_buttons' => $fund->fund_config->getAllowedVoucherPayoutButtonsMap(),
             'voucher_payout_fixed_amount' => $payoutAmount === null ? null : currency_format($payoutAmount),

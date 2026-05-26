@@ -11,6 +11,7 @@ use App\Http\Resources\FundCriterionResource;
 use App\Http\Resources\FundFormulaProductResource;
 use App\Http\Resources\FundFormulaResource;
 use App\Http\Resources\FundRequestClarificationResource;
+use App\Http\Resources\FundRequestMissedRecordResource;
 use App\Http\Resources\TagResource;
 use App\Models\Employee;
 use App\Models\Fund;
@@ -42,6 +43,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.record_type.record_type_options.translations',
         'identity.primary_email',
         'fund.fund_config',
+        'missed_records',
     ];
 
     public const array LOAD_NESTED = [
@@ -77,6 +79,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
             ...$fundRequest->only([
                 'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
                 'contact_information', 'state_locale', 'employee_id', 'identity_id',
+                'missing_records_approved',
             ]),
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest->fund),
@@ -85,6 +88,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 ->map(fn (FundRequestRecord $record) => static::recordToArray($record, $employee))
                 ->toArray(),
             'record_groups' => $this->getRecordGroups($fundRequest, $visibleRecords),
+            'missed_records' => FundRequestMissedRecordResource::collection($fundRequest->missed_records),
             'replaced' => $this->isReplaced($fundRequest),
             'employee' => new EmployeeResource($fundRequest->employee),
             'allowed_employees' => $allowedEmployees->map(fn (Employee $employee) => [

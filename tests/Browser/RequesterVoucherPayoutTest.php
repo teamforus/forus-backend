@@ -364,6 +364,298 @@ class RequesterVoucherPayoutTest extends DuskTestCase
     /**
      * @throws Throwable
      */
+    public function testRequesterPartialPayoutWithVoucherRecords(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_voucher_records' => true,
+            'allow_voucher_payouts_partial' => true,
+        ]);
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $recordType = $this->ensureNumberRecordType($organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $voucher->forceFill(['amount' => 200])->save();
+        $this->createTrustedRecord($identity, $fund, $fundRequest, $recordKey, 2);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $recordType) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $recordType) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                // assert available options with fund request record value
+                $options = ['€ 50,-', '€ 100,-'];
+
+                $this->assertSelectControlOptionsExists($browser, '@voucherPayoutAmount', $options);
+
+                // create voucher record with greater value and assert new available options
+                $voucher->voucher_records()->create([
+                    'record_type_id' => $recordType->id,
+                    'value' => 3,
+                ]);
+
+                $browser->refresh();
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $options = ['€ 50,-', '€ 100,-', '€ 150,-'];
+
+                $this->assertSelectControlOptionsExists($browser, '@voucherPayoutAmount', $options);
+
+                $this->changeSelectControl($browser, '@voucherPayoutAmount', text: '€ 100,-');
+
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+                $browser->waitFor('@voucherPayoutSuccess');
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterPayoutAmountWithVoucherRecords(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_voucher_records' => true,
+        ]);
+
+        $recordKey = 'payout_multiply_' . token_generator()->generate(6);
+        $recordType = $this->ensureNumberRecordType($organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_FIXED,
+            'amount' => 50,
+        ]);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $voucher = $result['voucher'];
+        $fundRequest = $result['fund_request'];
+
+        $voucher->forceFill(['amount' => 200])->save();
+        $this->createTrustedRecord($identity, $fund, $fundRequest, $recordKey, 2);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $recordType) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $recordType) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                // assert available amount depends on fund request record value
+                $browser->waitFor('@voucherPayoutAmount');
+                $browser->assertValue('@voucherPayoutAmount', '€ 150,-');
+
+                // create voucher record with greater value and assert new available value
+                $voucher->voucher_records()->create([
+                    'record_type_id' => $recordType->id,
+                    'value' => 3,
+                ]);
+
+                $browser->refresh();
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $browser->waitFor('@voucherPayoutAmount');
+                $browser->assertValue('@voucherPayoutAmount', '€ 200,-');
+
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+                $browser->waitFor('@voucherPayoutSuccess');
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterPayoutAmountWithoutAnyValidRecords(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_voucher_records' => true,
+            'allow_voucher_payouts_partial' => true,
+        ]);
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $recordType = $this->ensureNumberRecordType($organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $voucher = $fund->makeVoucher(identity: $identity, amount: 200);
+
+        $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $recordType) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $recordType) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->assertMissing('@openVoucherPayoutModal');
+
+                // create voucher record and assert button is visible
+                $voucher->voucher_records()->create([
+                    'record_type_id' => $recordType->id,
+                    'value' => 3,
+                ]);
+
+                $browser->refresh();
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $options = ['€ 50,-', '€ 100,-', '€ 150,-'];
+                $this->assertSelectControlOptionsExists($browser, '@voucherPayoutAmount', $options);
+                $this->changeSelectControl($browser, '@voucherPayoutAmount', text: '€ 100,-');
+
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+                $browser->waitFor('@voucherPayoutSuccess');
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterPayoutAmountWithInvalidRecords(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_voucher_records' => true,
+            'allow_voucher_payouts_partial' => true,
+        ]);
+
+        $recordKey = 'payout_partial_' . token_generator()->generate(6);
+        $recordType = $this->ensureNumberRecordType($organization, $recordKey);
+
+        $fund->fund_payout_formulas()->create([
+            'type' => FundPayoutFormula::TYPE_MULTIPLY,
+            'amount' => 50,
+            'record_type_key' => $recordKey,
+        ]);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $voucher = $fund->makeVoucher(identity: $identity, amount: 200);
+
+        $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $recordType) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $recordType) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->assertMissing('@openVoucherPayoutModal');
+
+                // create voucher record with invalid value and assert payout button is missing
+                $voucher->voucher_records()->create([
+                    'record_type_id' => $recordType->id,
+                    'value' => 'invalid',
+                ]);
+
+                $browser->refresh();
+                $this->goToIdentityVouchers($browser);
+                $browser->waitFor("@listVouchersRow$voucher->id");
+                $browser->click("@listVouchersRow$voucher->id");
+
+                $browser->waitFor('@voucherTitle');
+                $browser->assertMissing('@openVoucherPayoutModal');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testRequesterPartialPayoutShowsPersonLabelsForPartnersSameAddress(): void
     {
         $implementation = Implementation::byKey('nijmegen');
@@ -486,6 +778,76 @@ class RequesterVoucherPayoutTest extends DuskTestCase
         }, function () use ($fund1, $fund2) {
             $fund1 && $this->deleteFund($fund1);
             $fund2 && $this->deleteFund($fund2);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRequesterVoucherPayoutSelectsProfileBankAccount(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['fund_request_resolve_policy', 'allow_profiles']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+
+        $result = $this->makePayoutVoucherViaApplication($identity, $fund);
+        $result['fund_request']->forceFill(['created_at' => now()->subDays(2)])->save();
+        $voucher = $result['voucher'];
+
+        // create manual bank account, it must be first in list as newest
+        $profileBankAccount = $organization->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $this->makeIban(),
+            'name' => $this->makeIbanName(),
+        ]);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $identity, $voucher, $profileBankAccount) {
+            $this->browse(function (Browser $browser) use ($implementation, $identity, $voucher, $profileBankAccount) {
+                $browser->visit($implementation->urlWebshop());
+
+                $this->loginIdentity($browser, $identity);
+                $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+                $this->openVoucherPayoutModalFromVoucherPage($browser, $voucher->id);
+
+                $browser->waitFor('@voucherPayoutForm');
+                $browser->waitFor('@voucherPayoutFundRequestSelect');
+                $browser->click('@voucherPayoutFundRequestSelect');
+                $browser->waitFor('@voucherPayoutFundRequestSelectOptions');
+
+                // select first option (manual bank account)
+                $browser->within('@voucherPayoutFundRequestSelectOptions', function (Browser $browser) {
+                    $browser->click('.select-control-option:first-child');
+                });
+
+                $browser->waitFor('@voucherPayoutAmount');
+                $this->typeSearchInput($browser, '@voucherPayoutAmount', '50.00');
+                $browser->press('@voucherPayoutAcceptRules');
+                $browser->press('@voucherPayoutSubmit');
+
+                $browser->waitFor('@voucherPayoutSuccess');
+
+                $transaction = VoucherTransaction::where('voucher_id', $voucher->id)
+                    ->where('target', VoucherTransaction::TARGET_PAYOUT)
+                    ->where('initiator', VoucherTransaction::INITIATOR_REQUESTER)
+                    ->latest('id')
+                    ->first();
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($profileBankAccount->iban, $transaction->target_iban);
+                $this->assertEquals($profileBankAccount->name, $transaction->target_name);
+
+                $browser->press('@voucherPayoutSuccessClose');
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
         });
     }
 
