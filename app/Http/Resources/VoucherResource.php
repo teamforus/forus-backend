@@ -281,7 +281,7 @@ class VoucherResource extends BaseJsonResource
             ...$fund->fund_config->only([
                 'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
                 'allow_voucher_payouts', 'allow_voucher_payouts_partial', 'allow_voucher_payout_count',
-                'hide_voucher_amount',
+                'hide_voucher_amount', 'allow_voucher_payout_note',
             ]),
             'allow_voucher_payout_buttons' => $fund->fund_config->getAllowedVoucherPayoutButtonsMap(),
             'voucher_payout_fixed_amount' => $payoutAmount === null ? null : currency_format($payoutAmount),

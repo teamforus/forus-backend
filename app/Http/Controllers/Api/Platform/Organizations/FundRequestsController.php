@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Exports\FundRequestsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\ApproveMissedRecordsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
@@ -382,5 +383,31 @@ class FundRequestsController extends Controller
         $note->delete();
 
         return new JsonResponse();
+    }
+
+    /**
+     * @param ApproveMissedRecordsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     */
+    public function approveMissedRecords(
+        ApproveMissedRecordsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+    ): ValidatorFundRequestResource {
+        $this->authorize('approveMissedRecords', [$fundRequest, $organization]);
+
+        $fundRequest->update(['missing_records_approved' => true]);
+
+        $note = trans('fund_request.missed_records_approved');
+
+        if ($request->input('note')) {
+            $note .= "\n\n" . $request->input('note');
+        }
+
+        $fundRequest->addNote($note, $request->employee($organization));
+
+        return ValidatorFundRequestResource::create($fundRequest);
     }
 }

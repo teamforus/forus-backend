@@ -20,6 +20,9 @@ class IConnectPrefill
 
     public const string GENDER_FEMALE = 'vrouw';
 
+    protected array $infoMissedFields = [];
+    protected array $warningMissedFields = [];
+
     /**
      * @param Fund $fund
      * @param string $bsn
@@ -101,8 +104,15 @@ class IConnectPrefill
             );
         }
 
+        $this->checkMissedFields($person, 'person');
+        $this->checkMissedPersonApiFields($personPrefills);
+
         return [
             'error' => null,
+            'missed_fields' => [
+                'info' => $this->infoMissedFields,
+                'warning' => $this->warningMissedFields,
+            ],
             'response' => $withResponseData ? $person->getResponseData() : null,
             'person' => [
                 ...$personPrefills,
@@ -192,6 +202,8 @@ class IConnectPrefill
                     throw new PersonBsnApiIsTakenByPartnerException();
                 }
 
+                $this->checkMissedFields($partnerApi, 'partner');
+
                 return [[
                     'record_type_key' => 'partner_bsn',
                     'value' => $partnerApi->getBSN(),
@@ -270,26 +282,30 @@ class IConnectPrefill
                     'value' => $personChild->getGender(),
                 ]];
 
-                foreach ($configs as $config) {
-                    $recordKey = Arr::get($config, 'record_type_key');
-                    $minAge = Arr::get($config, 'from');
-                    $maxAge = Arr::get($config, 'to');
-                    $gender = Arr::get($config, 'gender');
+                $this->checkMissedFields($personChild, "child_$i");
+
+                if (!empty($personChild->getAge()) && is_numeric($personChild->getAge())) {
+                    foreach ($configs as $config) {
+                        $recordKey = Arr::get($config, 'record_type_key');
+                        $minAge = Arr::get($config, 'from');
+                        $maxAge = Arr::get($config, 'to');
+                        $gender = Arr::get($config, 'gender');
+
+                        if (
+                            (int) $personChild->getAge() >= $minAge &&
+                            (int) $personChild->getAge() <= $maxAge &&
+                            (!$gender || $gender === $personChild->getGender())
+                        ) {
+                            $groups[$recordKey] = $groups[$recordKey] + 1;
+                        }
+                    }
 
                     if (
-                        (int) $personChild->getAge() >= $minAge &&
-                        (int) $personChild->getAge() <= $maxAge &&
-                        (!$gender || $gender === $personChild->getGender())
+                        (int) $personChild->getAge() >= $baseMinAge &&
+                        (int) $personChild->getAge() <= $baseMaxAge
                     ) {
-                        $groups[$recordKey] = $groups[$recordKey] + 1;
+                        $childrenCount++;
                     }
-                }
-
-                if (
-                    (int) $personChild->getAge() >= $baseMinAge &&
-                    (int) $personChild->getAge() <= $baseMaxAge
-                ) {
-                    $childrenCount++;
                 }
             }
 
@@ -353,12 +369,22 @@ class IConnectPrefill
         $partner = $person->getRelated('partners')[0] ?? null;
         $address = $person->getAddress();
 
-        if ($partner && ($bsn = $partner->getBSN())) {
+        if ($partner) {
+            if (!($bsn = $partner->getBSN())) {
+                $this->addWarningMissedFields('partner', 'bsn');
+
+                return null;
+            }
+
             $personPartner = $bsnService->getPerson($bsn);
 
-            return $personPartner?->response()?->success() && $address === $personPartner->getAddress()
-                ? $personPartner
-                : null;
+            if (!$personPartner?->response()?->success()) {
+                return null;
+            }
+
+            $this->checkMissedFields($personPartner, 'partner', 'address');
+
+            return $address === $personPartner->getAddress() ? $personPartner : null;
         }
 
         return null;
@@ -379,12 +405,137 @@ class IConnectPrefill
             if ($bsn = $child->getBSN()) {
                 $personChild = $bsnService->getPerson($bsn);
 
-                if ($personChild?->response()?->success() && $address === $personChild->getAddress()) {
+                if (!$personChild?->response()?->success()) {
+                    continue;
+                }
+
+                $this->checkMissedFields($personChild, 'children', 'address');
+
+                if ($address === $personChild->getAddress()) {
                     $children[] = $personChild;
                 }
+            } else {
+                $this->addWarningMissedFields('children', 'bsn');
             }
         }
 
         return $children;
+    }
+
+    /**
+     * @param Person $person
+     * @param string $key
+     * @param string|null $onlyKey
+     * @return void
+     */
+    protected function checkMissedFields(
+        Person $person,
+        string $key,
+        ?string $onlyKey = null
+    ): void {
+        $infoMissedFields = [];
+        $warningMissedFields = [];
+
+        if ($onlyKey) {
+            $value = match ($onlyKey) {
+                'bsn' => $person->getBSN(),
+                'address' => $person->getAddress(),
+            };
+
+            $this->checkMissedField($value, $onlyKey, $warningMissedFields);
+        } else {
+            $this->checkMissedField($person->getGender(), 'gender', $warningMissedFields);
+            $this->checkMissedField($person->getBirthDate(), 'birth_date', $warningMissedFields);
+
+            $this->checkMissedField($person->getFirstName(), 'first_name', $infoMissedFields);
+            $this->checkMissedField($person->getLastName(), 'last_name', $infoMissedFields);
+        }
+
+        if (count($warningMissedFields)) {
+            $this->addWarningMissedFields($key, $warningMissedFields);
+        }
+
+        if (count($infoMissedFields)) {
+            $this->addInfoMissedFields($key, $infoMissedFields);
+        }
+    }
+
+    /**
+     * @param array $fields
+     * @return void
+     */
+    protected function checkMissedPersonApiFields(array $fields): void
+    {
+        $key = 'person';
+        $infoMissedFields = [];
+        $warningMissedFields = [];
+
+        $trackInfoFields = [
+            'street',
+            'house_number',
+        ];
+
+        $trackWarningInfoFields = [
+            'postal_code',
+        ];
+
+        $infoFields = array_filter($fields, fn ($field) => in_array($field['record_type_key'], $trackInfoFields));
+
+        foreach ($infoFields as $field) {
+            $this->checkMissedField($field['value'], $field['record_type_key'], $infoMissedFields);
+        }
+
+        $warningFields = array_filter($fields, fn ($field) => in_array($field['record_type_key'], $trackWarningInfoFields));
+
+        foreach ($warningFields as $field) {
+            $this->checkMissedField($field['value'], $field['record_type_key'], $warningMissedFields);
+        }
+
+        if (count($infoMissedFields)) {
+            $this->addInfoMissedFields($key, $infoMissedFields);
+        }
+
+        if (count($warningMissedFields)) {
+            $this->addWarningMissedFields($key, $warningMissedFields);
+        }
+    }
+
+    /**
+     * @param string $key
+     * @param string|array $values
+     * @return void
+     */
+    protected function addWarningMissedFields(string $key, string|array $values): void
+    {
+        $this->warningMissedFields[$key] = [
+            ...Arr::get($this->warningMissedFields, $key, []),
+            ...(array) $values,
+        ];
+    }
+
+    /**
+     * @param string $key
+     * @param string|array $values
+     * @return void
+     */
+    protected function addInfoMissedFields(string $key, string|array $values): void
+    {
+        $this->infoMissedFields[$key] = [
+            ...Arr::get($this->infoMissedFields, $key, []),
+            ...(array) $values,
+        ];
+    }
+
+    /**
+     * @param string|null $value
+     * @param string $key
+     * @param array $missedFields
+     * @return void
+     */
+    protected function checkMissedField(?string $value, string $key, array &$missedFields): void
+    {
+        if (empty(trim($value ?? ''))) {
+            $missedFields[] = $key;
+        }
     }
 }

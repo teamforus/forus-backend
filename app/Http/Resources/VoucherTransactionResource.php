@@ -15,7 +15,7 @@ class VoucherTransactionResource extends BaseJsonResource
      * @var array
      */
     public const array LOAD = [
-        'voucher_transaction_bulk',
+        'voucher_transaction_bulk', 'reimbursement',
     ];
 
     public const array LOAD_NESTED = [
@@ -37,6 +37,7 @@ class VoucherTransactionResource extends BaseJsonResource
         return [
             ...$transaction->only([
                 'id', 'organization_id', 'product_id', 'address', 'state', 'state_locale', 'payment_id', 'target',
+                'initiator',
             ]),
             'cancelable' => $transaction->isCancelable(),
             'transfer_in' => $transaction->daysBeforeTransaction(),
@@ -54,6 +55,11 @@ class VoucherTransactionResource extends BaseJsonResource
                 ...$transaction->voucher->fund->only(['id', 'name', 'organization_id']),
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
             ],
+            'reimbursement' => $transaction->reimbursement ? [
+                ...$transaction->reimbursement->only([
+                    'id', 'title', 'amount', 'amount_locale', 'code', 'state', 'state_locale',
+                ]),
+            ] : null,
             ...$this->timestamps($transaction, 'created_at', 'updated_at', 'transfer_at'),
         ];
     }
