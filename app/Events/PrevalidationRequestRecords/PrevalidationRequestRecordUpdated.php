@@ -5,7 +5,7 @@ namespace App\Events\PrevalidationRequestRecords;
 use App\Models\Employee;
 use App\Models\PrevalidationRequestRecord;
 
-class PrevalidationRequestRecordUpdated extends BasePrevalidationRequestRecordsEvent
+class PrevalidationRequestRecordUpdated extends BasePrevalidationRequestRecordEvent
 {
     protected string $previousValue;
 

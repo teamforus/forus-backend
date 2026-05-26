@@ -2134,7 +2134,7 @@ class Fund extends Model
 
         $groupRecordTypes = $groupsPriority
             ->mapWithKeys(fn (RecordGroup $group) => [
-                $group->id => $group->records->pluck('record_type_key')->values()->toArray(),
+                $group->id => $group->record_group_record_types->pluck('record_type_key')->values()->toArray(),
             ])
             ->toArray();
 

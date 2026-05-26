@@ -8,6 +8,7 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\PrevalidationRequest;
+use App\Scopes\Builders\PrevalidationRequestQuery;
 use Illuminate\Auth\Access\Response;
 
 class PrevalidationRequestPolicy extends BasePolicy
@@ -40,7 +41,7 @@ class PrevalidationRequestPolicy extends BasePolicy
      */
     public function view(Identity $identity, PrevalidationRequest $request, Organization $organization): bool
     {
-        return $organization->id === $request->organization_id && $this->viewAsSponsor($identity, $organization);
+        return $this->requestVisibleToIdentity($identity, $request, $organization);
     }
 
     /**
@@ -52,8 +53,7 @@ class PrevalidationRequestPolicy extends BasePolicy
     public function resubmit(Identity $identity, PrevalidationRequest $request, Organization $organization): bool
     {
         return
-            $organization->id === $request->organization_id &&
-            $this->viewAsSponsor($identity, $organization) &&
+            $this->requestVisibleToIdentity($identity, $request, $organization) &&
             $request->state == PrevalidationRequest::STATE_FAIL;
     }
 
@@ -66,10 +66,27 @@ class PrevalidationRequestPolicy extends BasePolicy
     public function approveMissedRecords(Identity $identity, PrevalidationRequest $request, Organization $organization): bool
     {
         return
-            $organization->id === $request->organization_id &&
-            $this->viewAsSponsor($identity, $organization) &&
+            $this->requestVisibleToIdentity($identity, $request, $organization) &&
             $request->state == PrevalidationRequest::STATE_MISSING_RECORDS &&
             !$request->missing_records_approved;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param PrevalidationRequest $request
+     * @param Organization $organization
+     * @return bool
+     */
+    public function finalize(Identity $identity, PrevalidationRequest $request, Organization $organization): bool
+    {
+        return
+            $this->requestVisibleToIdentity($identity, $request, $organization) &&
+            $request->missing_records_approved &&
+            in_array($request->state, [
+                PrevalidationRequest::STATE_MISSING_RECORDS,
+                PrevalidationRequest::STATE_FAIL,
+            ], true) &&
+            !$request->prevalidation()->exists();
     }
 
     /**
@@ -89,8 +106,7 @@ class PrevalidationRequestPolicy extends BasePolicy
         }
 
         return
-            $organization->id === $request->organization_id &&
-            $this->viewAsSponsor($identity, $organization);
+            $this->requestVisibleToIdentity($identity, $request, $organization);
     }
 
     /**
@@ -107,7 +123,7 @@ class PrevalidationRequestPolicy extends BasePolicy
         PrevalidationRequest $request,
         Organization $organization,
     ): Response|bool {
-        return $organization->id === $request->organization_id && $this->viewAsSponsor($identity, $organization);
+        return $this->requestVisibleToIdentity($identity, $request, $organization);
     }
 
     /**
@@ -148,6 +164,10 @@ class PrevalidationRequestPolicy extends BasePolicy
             return $this->deny(__('policies.prevalidation_requests.invalid_endpoint'));
         }
 
+        if (!$request->notes()->whereKey($note->id)->exists()) {
+            return $this->deny(__('policies.prevalidation_requests.invalid_endpoint'));
+        }
+
         if ($note->employee?->identity_address !== $identity->address) {
             return $this->deny(__('policies.prevalidation_requests.not_note_author'));
         }
@@ -174,8 +194,7 @@ class PrevalidationRequestPolicy extends BasePolicy
     public function destroy(Identity $identity, PrevalidationRequest $request, Organization $organization): bool
     {
         return
-            $organization->id === $request->organization_id &&
-            $this->viewAsSponsor($identity, $organization) &&
+            $this->requestVisibleToIdentity($identity, $request, $organization) &&
             $request->state == PrevalidationRequest::STATE_FAIL;
     }
 
@@ -192,6 +211,26 @@ class PrevalidationRequestPolicy extends BasePolicy
                 Permission::VALIDATE_RECORDS,
                 Permission::MANAGE_ORGANIZATION,
             ], false);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param PrevalidationRequest $request
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function requestVisibleToIdentity(
+        Identity $identity,
+        PrevalidationRequest $request,
+        Organization $organization,
+    ): bool {
+        return
+            $organization->allow_prevalidation_requests &&
+            $organization->id === $request->organization_id &&
+            PrevalidationRequestQuery::whereVisibleToIdentity(
+                $organization->prevalidation_requests(),
+                $identity->address,
+            )->whereKey($request->id)->exists();
     }
 
     /**

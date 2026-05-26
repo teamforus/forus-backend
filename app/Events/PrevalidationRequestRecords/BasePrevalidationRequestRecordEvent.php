@@ -7,7 +7,7 @@ use App\Models\PrevalidationRequestRecord;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-abstract class BasePrevalidationRequestRecordsEvent
+abstract class BasePrevalidationRequestRecordEvent
 {
     use Dispatchable;
     use SerializesModels;

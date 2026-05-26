@@ -24,7 +24,7 @@ class ApproveMissedRecordsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'note' => 'nullable|string|between:0,2000',
+            'note' => $this->noteRules(),
         ];
     }
 }

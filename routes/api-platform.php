@@ -1134,6 +1134,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\PrevalidationRequestController@approveMissedRecords"
     );
 
+    $router->patch(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/finalize',
+        "Api\Platform\Organizations\PrevalidationRequestController@finalize"
+    );
+
     $router->get(
         'organizations/{organization}/prevalidation-requests/{prevalidation_request}/person',
         "Api\Platform\Organizations\PrevalidationRequestController@person"

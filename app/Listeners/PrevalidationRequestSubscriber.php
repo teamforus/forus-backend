@@ -123,7 +123,7 @@ class PrevalidationRequestSubscriber
     {
         $requestRecord = $event->getPrevalidationRequestRecord();
 
-        $eventModels = $this->getFundRequestRecordLogModels($requestRecord, [
+        $eventModels = $this->getPrevalidationRequestRecordLogModels($requestRecord, [
             'employee' => $event->getEmployee(),
         ]);
 
@@ -191,7 +191,7 @@ class PrevalidationRequestSubscriber
      * @param array $extraModels
      * @return array
      */
-    private function getFundRequestRecordLogModels(
+    private function getPrevalidationRequestRecordLogModels(
         PrevalidationRequestRecord $requestRecord,
         array $extraModels = []
     ): array {

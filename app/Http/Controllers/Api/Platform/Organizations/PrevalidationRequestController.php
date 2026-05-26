@@ -52,8 +52,10 @@ class PrevalidationRequestController extends Controller
 
         return PrevalidationRequestResource::queryCollection($search->query(), $request)->additional([
             'meta' => [
-                'failed_count' => $organization
-                    ->prevalidation_requests()
+                'failed_count' => PrevalidationRequestQuery::whereVisibleToIdentity(
+                    $organization->prevalidation_requests(),
+                    $request->auth_address(),
+                )
                     ->where('state', PrevalidationRequest::STATE_FAIL)
                     ->whereRelation(
                         'latest_failed_log',
@@ -146,8 +148,10 @@ class PrevalidationRequestController extends Controller
 
         $reason = $request->input('reason', IConnectPrefill::PREFILL_ERROR_CONNECTION_ERROR);
 
-        $organization
-            ->prevalidation_requests()
+        PrevalidationRequestQuery::whereVisibleToIdentity(
+            $organization->prevalidation_requests(),
+            $request->auth_address(),
+        )
             ->where('state', PrevalidationRequest::STATE_FAIL)
             ->whereRelation('latest_failed_log', 'data->prevalidation_request_fail_reason', $reason)
             ->get()
@@ -255,10 +259,23 @@ class PrevalidationRequestController extends Controller
     ): PrevalidationRequestResource {
         $this->authorize('approveMissedRecords', [$prevalidationRequest, $organization]);
 
-        $prevalidationRequest->approveMissedRecordsAndMakePrevalidation(
-            $request->employee($organization),
-            $request->input('note')
-        );
+        $prevalidationRequest->approveMissedRecords($request->employee($organization), $request->input('note'));
+
+        return PrevalidationRequestResource::create($prevalidationRequest);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @return PrevalidationRequestResource
+     */
+    public function finalize(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+    ): PrevalidationRequestResource {
+        $this->authorize('finalize', [$prevalidationRequest, $organization]);
+
+        $prevalidationRequest->finalizeFromApprovedMissedRecords();
 
         return PrevalidationRequestResource::create($prevalidationRequest);
     }

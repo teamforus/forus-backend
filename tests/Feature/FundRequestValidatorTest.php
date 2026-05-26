@@ -613,7 +613,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 1,
         ]);
-        $globalGroup->records()->create(['record_type_key' => $recordTypeText->key]);
+        $globalGroup->record_group_record_types()->create(['record_type_key' => $recordTypeText->key]);
 
         $orgGroup = RecordGroup::create([
             'title' => 'Org',
@@ -621,7 +621,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 2,
         ]);
-        $orgGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
+        $orgGroup->record_group_record_types()->create(['record_type_key' => $recordTypeNumber->key]);
 
         $fundGroup = RecordGroup::create([
             'title' => 'Fund',
@@ -629,7 +629,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => $fund->id,
             'order' => 3,
         ]);
-        $fundGroup->records()->create(['record_type_key' => $recordTypeFlag->key]);
+        $fundGroup->record_group_record_types()->create(['record_type_key' => $recordTypeFlag->key]);
 
         $otherOrgGroup = RecordGroup::create([
             'title' => 'Other org',
@@ -637,7 +637,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 4,
         ]);
-        $otherOrgGroup->records()->create(['record_type_key' => $recordTypeText->key]);
+        $otherOrgGroup->record_group_record_types()->create(['record_type_key' => $recordTypeText->key]);
 
         $otherFundGroup = RecordGroup::create([
             'title' => 'Other fund',
@@ -645,7 +645,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => $otherFundSameOrg->id,
             'order' => 5,
         ]);
-        $otherFundGroup->records()->create(['record_type_key' => $recordTypeNumber->key]);
+        $otherFundGroup->record_group_record_types()->create(['record_type_key' => $recordTypeNumber->key]);
 
         $otherOrgFundGroup = RecordGroup::create([
             'title' => 'Other org fund',
@@ -653,7 +653,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => $otherFundOtherOrg->id,
             'order' => 6,
         ]);
-        $otherOrgFundGroup->records()->create(['record_type_key' => $recordTypeFlag->key]);
+        $otherOrgFundGroup->record_group_record_types()->create(['record_type_key' => $recordTypeFlag->key]);
 
         Cache::store('array')->flush();
 
@@ -699,7 +699,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 1,
         ]);
-        $globalGroup->records()->create(['record_type_key' => $recordType->key]);
+        $globalGroup->record_group_record_types()->create(['record_type_key' => $recordType->key]);
 
         $orgGroup = RecordGroup::create([
             'title' => 'Org',
@@ -707,7 +707,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 2,
         ]);
-        $orgGroup->records()->create(['record_type_key' => $recordType->key]);
+        $orgGroup->record_group_record_types()->create(['record_type_key' => $recordType->key]);
 
         $fundGroup = RecordGroup::create([
             'title' => 'Fund',
@@ -715,7 +715,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => $fund->id,
             'order' => 3,
         ]);
-        $fundGroup->records()->create(['record_type_key' => $recordType->key]);
+        $fundGroup->record_group_record_types()->create(['record_type_key' => $recordType->key]);
 
         Cache::store('array')->flush();
 
@@ -767,7 +767,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 1,
         ]);
-        $groupA->records()->create(['record_type_key' => $recordTypeA->key]);
+        $groupA->record_group_record_types()->create(['record_type_key' => $recordTypeA->key]);
 
         Cache::store('array')->flush();
 
@@ -786,7 +786,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 2,
         ]);
-        $groupB->records()->create(['record_type_key' => $recordTypeB->key]);
+        $groupB->record_group_record_types()->create(['record_type_key' => $recordTypeB->key]);
 
         Cache::store('array')->flush();
 
@@ -840,7 +840,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 1,
         ]);
-        $groupBsn->records()->create(['record_type_key' => 'bsn']);
+        $groupBsn->record_group_record_types()->create(['record_type_key' => 'bsn']);
 
         $groupPartnerBsn = RecordGroup::create([
             'title' => 'Partner BSN Group',
@@ -848,7 +848,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 2,
         ]);
-        $groupPartnerBsn->records()->create(['record_type_key' => 'partner_bsn']);
+        $groupPartnerBsn->record_group_record_types()->create(['record_type_key' => 'partner_bsn']);
 
         Cache::store('array')->flush();
 
@@ -923,7 +923,7 @@ class FundRequestValidatorTest extends TestCase
             'fund_id' => null,
             'order' => 1,
         ]);
-        $groupText->records()->create(['record_type_key' => $recordTypeText->key]);
+        $groupText->record_group_record_types()->create(['record_type_key' => $recordTypeText->key]);
 
         Cache::store('array')->flush();
         $organization->update(['bsn_enabled' => false]);

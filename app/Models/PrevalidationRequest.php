@@ -8,6 +8,7 @@ use App\Events\PrevalidationRequests\PrevalidationRequestMissingRecordsEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmittedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdatedEvent;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
+use App\Models\Traits\ApprovesMissedRecords;
 use App\Models\Traits\HasNotes;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -63,6 +64,7 @@ use Illuminate\Support\Facades\Validator;
  */
 class PrevalidationRequest extends Model
 {
+    use ApprovesMissedRecords;
     use HasLogs;
     use HasNotes;
 
@@ -83,6 +85,7 @@ class PrevalidationRequest extends Model
         self::STATE_PENDING,
         self::STATE_SUCCESS,
         self::STATE_FAIL,
+        self::STATE_MISSING_RECORDS,
     ];
 
     public const string FAILED_REASON_INVALID_RECORDS = 'invalid_records';
@@ -222,38 +225,18 @@ class PrevalidationRequest extends Model
         $fundPrefills = IConnectPrefill::getBsnApiPrefills($this->fund, $this->bsn, withResponseData: true);
 
         if (is_array($fundPrefills['error'])) {
-            $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailedEvent(
-                $this,
-                Arr::get($fundPrefills, 'response'),
-                Arr::get($fundPrefills, 'error.key'),
-            ));
+            $this->failWithReason($fundPrefills, Arr::get($fundPrefills, 'error.key'));
 
             return;
         }
 
-        // store all prefill records
-        $prefillRecords = $this->preparePrefillRecords($fundPrefills);
-
-        foreach ($prefillRecords as $record_type_key => $value) {
-            $this->records()->firstOrCreate([
-                ...compact('record_type_key'),
-                'source' => PrevalidationRequestRecord::SOURCE_BRP,
-            ], [
-                'value' => is_null($value) ? '' : $value,
-            ]);
-        }
+        $this->syncBrpRecords($fundPrefills);
 
         // prepare prefill records
         $data = $this->prepareRecords($fundPrefills);
 
         if (!$this->recordsIsValid($this->fund, $data)) {
-            $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailedEvent(
-                $this,
-                Arr::get($fundPrefills, 'response'),
-                $this::FAILED_REASON_INVALID_RECORDS,
-            ));
+            $this->failWithReason($fundPrefills, $this::FAILED_REASON_INVALID_RECORDS);
 
             return;
         }
@@ -372,22 +355,10 @@ class PrevalidationRequest extends Model
     }
 
     /**
-     * @param Employee $employee
-     * @param string|null $note
      * @return void
      */
-    public function approveMissedRecordsAndMakePrevalidation(Employee $employee, ?string $note): void
+    public function finalizeFromApprovedMissedRecords(): void
     {
-        $this->update(['missing_records_approved' => true]);
-
-        $noteText = trans('fund_request.missed_records_approved');
-
-        if ($note) {
-            $noteText .= "\n\n" . $note;
-        }
-
-        $this->addNote($noteText, $employee);
-
         // fetch response from brp to store in logs
         $fundPrefills = IConnectPrefill::getBsnApiPrefills($this->fund, $this->bsn, withResponseData: true);
 
@@ -396,13 +367,7 @@ class PrevalidationRequest extends Model
 
         // double check records
         if (!$this->recordsIsValid($this->fund, $data)) {
-            $this->update(['state' => $this::STATE_FAIL]);
-
-            Event::dispatch(new PrevalidationRequestFailedEvent(
-                $this,
-                Arr::get($fundPrefills, 'response'),
-                $this::FAILED_REASON_INVALID_RECORDS,
-            ));
+            $this->failWithReason($fundPrefills, $this::FAILED_REASON_INVALID_RECORDS);
 
             return;
         }
@@ -411,12 +376,45 @@ class PrevalidationRequest extends Model
     }
 
     /**
+     * @param array $fundPrefills
+     * @return void
+     */
+    protected function syncBrpRecords(array $fundPrefills): void
+    {
+        $records = $this->records()
+            ->with('logs')
+            ->where('source', PrevalidationRequestRecord::SOURCE_BRP)
+            ->get()
+            ->keyBy('record_type_key');
+
+        foreach ($this->preparePrefillRecords($fundPrefills) as $record_type_key => $value) {
+            /** @var PrevalidationRequestRecord $record */
+            $record = $records->get($record_type_key);
+
+            if ($record?->historyLogs()->isNotEmpty()) {
+                continue;
+            }
+
+            $this->records()->updateOrCreate([
+                'record_type_key' => $record_type_key,
+                'source' => PrevalidationRequestRecord::SOURCE_BRP,
+            ], [
+                'value' => is_null($value) ? '' : $value,
+            ]);
+        }
+
+        $this->unsetRelation('records');
+    }
+
+    /**
      * @param array $data
      * @param array $fundPrefills
      * @return void
      */
-    protected function createPrevalidation(array $data, array $fundPrefills = []): void
-    {
+    protected function createPrevalidation(
+        array $data,
+        array $fundPrefills = []
+    ): void {
         $prevState = $this->state;
 
         $prevalidations = Prevalidation::storePrevalidations(
@@ -428,12 +426,7 @@ class PrevalidationRequest extends Model
         );
 
         if ($prevalidations->count() === 0) {
-            $this->update(['state' => $this::STATE_FAIL]);
-            Event::dispatch(new PrevalidationRequestFailedEvent(
-                $this,
-                Arr::get($fundPrefills, 'response'),
-                $this::FAILED_REASON_EMPTY_PREVALIDATIONS,
-            ));
+            $this->failWithReason($fundPrefills, $this::FAILED_REASON_EMPTY_PREVALIDATIONS);
 
             return;
         }
@@ -451,6 +444,22 @@ class PrevalidationRequest extends Model
             $this,
             Arr::get($fundPrefills, 'response'),
             $prevState,
+        ));
+    }
+
+    /**
+     * @param array $fundPrefills
+     * @param string|null $reason
+     * @return void
+     */
+    protected function failWithReason(array $fundPrefills, ?string $reason): void
+    {
+        $this->update(['state' => $this::STATE_FAIL]);
+
+        Event::dispatch(new PrevalidationRequestFailedEvent(
+            $this,
+            Arr::get($fundPrefills, 'response'),
+            $reason,
         ));
     }
 }

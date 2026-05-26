@@ -26,19 +26,20 @@ class PrevalidationRequestRecordResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
+        $recordType = $this->resource->record_type;
+
         return [
             ...$this->resource->only([
                 'id', 'record_type_key', 'prevalidation_request_id', 'value', 'source',
             ]),
             'record_type' => [
-                ...$this->resource->record_type->only([
-                    'key', 'name', 'type',
-                ]),
-                'name' => $this->resource->record_type?->name ?: $this->resource->record_type?->key,
-                'options' => $this->resource->record_type?->getOptions(),
+                'key' => $recordType?->key ?: $this->resource->record_type_key,
+                'name' => $recordType?->name ?: $this->resource->record_type_key,
+                'type' => $recordType?->type,
+                'options' => $recordType?->getOptions() ?: [],
             ],
             'history' => $this->getHistory()->values(),
-            $this->makeTimestamps($this->resource->only([
+            ...$this->makeTimestamps($this->resource->only([
                 'created_at', 'updated_at',
             ])),
         ];

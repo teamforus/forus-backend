@@ -162,6 +162,22 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
+     * @param bool $required
+     * @param int $min
+     * @param int $max
+     * @return array
+     */
+    public function noteRules(bool $required = false, int $min = 0, int $max = 2000): array
+    {
+        return array_values(array_filter([
+            $required ? 'required' : 'nullable',
+            'string',
+            $min > 0 ? "min:$min" : null,
+            "max:$max",
+        ]));
+    }
+
+    /**
      * @return array
      */
     public function bsnRules(): array

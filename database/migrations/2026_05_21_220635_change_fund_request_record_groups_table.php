@@ -11,9 +11,9 @@ return new class () extends Migration {
     public function up(): void
     {
         Schema::rename('fund_request_record_groups', 'record_groups');
-        Schema::rename('fund_request_record_group_records', 'record_group_keys');
+        Schema::rename('fund_request_record_group_records', 'record_group_record_types');
 
-        Schema::table('record_group_keys', function (Blueprint $table) {
+        Schema::table('record_group_record_types', function (Blueprint $table) {
             $table->dropForeign('group_records_record_group_id_foreign');
             $table->renameColumn('fund_request_record_group_id', 'record_group_id');
 
@@ -31,10 +31,10 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::rename('record_groups', 'fund_request_record_groups');
-        Schema::rename('record_group_keys', 'fund_request_record_group_records');
+        Schema::rename('record_group_record_types', 'fund_request_record_group_records');
 
         Schema::table('fund_request_record_group_records', function (Blueprint $table) {
-            $table->dropForeign('record_group_keys_record_group_id_foreign');
+            $table->dropForeign('record_group_record_types_record_group_id_foreign');
             $table->renameColumn('record_group_id', 'fund_request_record_group_id');
 
             $table

@@ -12,6 +12,8 @@ use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestRecord;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
@@ -1042,6 +1044,240 @@ trait MakesApiRequests
             'data' => $data,
             'overwrite' => $overwrite,
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakePrevalidationRequestCollectionRequest(
+        Organization $organization,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestsRequest(
+        Organization $organization,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestPersonRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/person",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestNotesRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestResubmitRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/resubmit",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestResubmitFailedRequest(
+        Organization $organization,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/resubmit-failed",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestDeleteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestApproveMissedRecordsRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/approve-missed-records",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestFinalizeRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/finalize",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiStorePrevalidationRequestNoteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Note $note
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiDeletePrevalidationRequestNoteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        Note $note,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes/$note->id",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param PrevalidationRequestRecord $record
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiUpdatePrevalidationRequestRecordRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        PrevalidationRequestRecord $record,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/records/$record->id",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
     }
 
     /**

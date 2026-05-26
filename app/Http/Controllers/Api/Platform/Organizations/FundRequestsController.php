@@ -398,15 +398,7 @@ class FundRequestsController extends Controller
     ): ValidatorFundRequestResource {
         $this->authorize('approveMissedRecords', [$fundRequest, $organization]);
 
-        $fundRequest->update(['missing_records_approved' => true]);
-
-        $note = trans('fund_request.missed_records_approved');
-
-        if ($request->input('note')) {
-            $note .= "\n\n" . $request->input('note');
-        }
-
-        $fundRequest->addNote($note, $request->employee($organization));
+        $fundRequest->approveMissedRecords($request->employee($organization), $request->input('note'));
 
         return ValidatorFundRequestResource::create($fundRequest);
     }

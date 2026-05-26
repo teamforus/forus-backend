@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Cache;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $fund
  * @property-read \App\Models\Organization|null $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecordGroupKey[] $records
- * @property-read int|null $records_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecordGroupRecordType[] $record_group_record_types
+ * @property-read int|null $record_group_record_types_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RecordGroup query()
@@ -60,9 +60,9 @@ class RecordGroup extends Model
     /**
      * @return HasMany
      */
-    public function records(): HasMany
+    public function record_group_record_types(): HasMany
     {
-        return $this->hasMany(RecordGroupKey::class);
+        return $this->hasMany(RecordGroupRecordType::class);
     }
 
     /**
@@ -70,11 +70,11 @@ class RecordGroup extends Model
      */
     public static function getCachedList(): Collection
     {
-        $cacheKey = 'fund_request_record_groups';
+        $cacheKey = 'record_groups';
         $cacheDuration = 60 * 5;
 
         return Cache::store('array')->remember($cacheKey, $cacheDuration, function () {
-            return static::with('records')->get();
+            return static::with('record_group_record_types')->get();
         });
     }
 }

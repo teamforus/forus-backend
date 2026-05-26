@@ -24,7 +24,7 @@ abstract class StoreNoteRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'description' => 'required|string|min:5,max:2000',
+            'description' => $this->noteRules(required: true, min: 5),
         ];
     }
 }
