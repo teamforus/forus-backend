@@ -1122,6 +1122,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->resource('organizations/{organization}/prevalidation-requests', 'Api\Platform\Organizations\PrevalidationRequestController')
         ->only('index', 'destroy');
 
+    $router->resource('organizations/{organization}/fund-product-limits', 'Api\Platform\Organizations\FundProductLimitController')
+        ->only('index', 'show', 'store', 'update', 'destroy');
+
     $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');
 
