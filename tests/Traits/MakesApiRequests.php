@@ -10,6 +10,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Implementation;
 use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Product;
@@ -63,6 +64,28 @@ trait MakesApiRequests
             ->assertSuccessful();
 
         return $identity->organizations()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateImplementationAuthPageRequest(
+        Implementation $implementation,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            sprintf(
+                '/api/v1/platform/organizations/%s/implementations/%s/auth-page',
+                $implementation->organization_id,
+                $implementation->id,
+            ),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**

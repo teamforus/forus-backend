@@ -349,6 +349,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\ImplementationsController@updateDigiD",
     );
 
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/auth-page',
+        "Api\Platform\Organizations\ImplementationsController@updateAuthPage",
+    );
+
     $router->resource(
         'organizations/{organization}/implementations',
         "Api\Platform\Organizations\ImplementationsController"
