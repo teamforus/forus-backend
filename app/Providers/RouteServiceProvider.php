@@ -23,6 +23,7 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\OpenIdService\Models\OpenIdSession;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -181,6 +182,15 @@ class RouteServiceProvider extends ServiceProvider
             return DigIdSession::where([
                 'state' => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid' => $digid_session_uid,
+            ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
+        });
+
+        $router->bind('openid_session_uid', static function ($openid_session_uid) {
+            $sessionExpireTime = now()->subSeconds(OpenIdSession::SESSION_EXPIRATION_TIME);
+
+            return OpenIdSession::where([
+                'session_state' => OpenIdSession::STATE_PENDING,
+                'session_uid' => $openid_session_uid,
             ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
         });
 

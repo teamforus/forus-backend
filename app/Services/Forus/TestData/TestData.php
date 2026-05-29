@@ -528,6 +528,8 @@ class TestData
         $blockGenerator = new MarkdownBlockGenerator($faker);
 
         $urlData = $this->makeImplementationUrlData($key);
+        $authPageData = $this->makeImplementationAuthPageData();
+        $openidData = $this->makeOpenidData();
         $samlData = $this->makeImplementationSamlData();
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
@@ -555,6 +557,8 @@ class TestData
             'pre_check_banner_description' => $faker->text(rand(400, 600)),
             ...$this->config('default.implementations', []),
             ...$urlData,
+            ...$authPageData,
+            ...$openidData,
             ...$samlData,
             ...$cgiCertData,
             ...$configData,
@@ -1341,6 +1345,35 @@ class TestData
             'url_provider' => str_var_replace($this->config('url_provider'), compact('key')),
             'url_validator' => str_var_replace($this->config('url_validator'), compact('key')),
             'url_app' => str_var_replace($this->config('url_app'), compact('key')),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationAuthPageData(): array
+    {
+        return [
+            'auth_page_title' => 'Inloggen',
+            'auth_page_login_title' => 'Kies hoe u wilt inloggen of registreren',
+            'auth_page_login_email' => true,
+            'auth_page_login_digid' => true,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => true,
+            'auth_page_info_enabled' => false,
+            'auth_page_info_title' => null,
+            'auth_page_info_description' => null,
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeOpenidData(): array
+    {
+        return [
+            'openid_verid_enabled' => $this->config('openid_verid_enabled', false),
+            'openid_verid_context' => $this->config('openid_verid_context'),
         ];
     }
 

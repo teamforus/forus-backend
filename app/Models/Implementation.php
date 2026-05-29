@@ -23,6 +23,7 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\OpenIdService\OpenIdService;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Builder;
@@ -91,12 +92,15 @@ use Illuminate\Support\Facades\Gate;
  * @property string $auth_page_login_title
  * @property bool $auth_page_login_email
  * @property bool $auth_page_login_digid
+ * @property bool $auth_page_login_openid
  * @property bool $auth_page_login_qr
  * @property bool $auth_page_info_enabled
  * @property string|null $auth_page_info_title
  * @property string|null $auth_page_info_description
  * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
+ * @property bool $openid_verid_enabled
+ * @property array|null $openid_verid_context
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
@@ -271,6 +275,7 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+        'openid_verid_enabled', 'openid_verid_context',
         'overlay_enabled', 'overlay_type', 'overlay_opacity',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
@@ -282,15 +287,16 @@ class Implementation extends Model
         'banner_button_url', 'banner_button_text', 'banner_button_target', 'banner_button_type',
         'banner_background', 'banner_background_mobile', 'products_default_sorting',
         'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
-        'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title', 'auth_page_info_description',
+        'auth_page_login_openid', 'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title',
+        'auth_page_info_description',
     ];
 
     /**
      * @var string[]
      */
     protected $hidden = [
-        'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server',
+        'digid_enabled', 'openid_verid_enabled', 'openid_verid_context', 'digid_env', 'digid_app_id',
+        'digid_shared_secret', 'digid_a_select_server',
     ];
 
     /**
@@ -300,6 +306,8 @@ class Implementation extends Model
         'lon' => 'float',
         'lat' => 'float',
         'digid_enabled' => 'boolean',
+        'openid_verid_enabled' => 'boolean',
+        'openid_verid_context' => 'json',
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
@@ -320,6 +328,7 @@ class Implementation extends Model
         'show_terms_checkbox' => 'boolean',
         'auth_page_login_email' => 'boolean',
         'auth_page_login_digid' => 'boolean',
+        'auth_page_login_openid' => 'boolean',
         'auth_page_login_qr' => 'boolean',
         'auth_page_info_enabled' => 'boolean',
         'banner_wide' => 'boolean',
@@ -685,6 +694,44 @@ class Implementation extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function openidVeridEnabled(): bool
+    {
+        return (bool) $this->openid_verid_enabled;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function openidVeridContext(): ?array
+    {
+        return is_array($this->openid_verid_context) ? $this->openid_verid_context : null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function openidVeridConfigured(): bool
+    {
+        return OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->openidVeridContext()
+        );
+    }
+
+    /**
+     * @return bool
+     */
+    public function openidVeridAvailable(): bool
+    {
+        return !$this->isGeneral() &&
+            ($this->organization?->allow_openid ?? false) &&
+            $this->openidVeridEnabled() &&
+            $this->openidVeridConfigured();
+    }
+
+    /**
      * @throws DigIdException
      * @return DigIdRepo|null
      */
@@ -788,39 +835,59 @@ class Implementation extends Model
     }
 
     /**
+     * @param array|null $openidProviders
      * @return array
      */
-    public function authPageLoginOptions(): array
+    public function authPageLoginOptions(?array $openidProviders = null): array
     {
         return $this->authPageUsableLoginOptions([
             'email' => $this->auth_page_login_email,
             'digid' => $this->auth_page_login_digid,
+            'openid' => $this->auth_page_login_openid,
             'qr' => $this->auth_page_login_qr,
-        ]);
+        ], $openidProviders);
     }
 
     /**
      * @param array $loginFlags
+     * @param array|null $openidProviders
      * @return array
      */
-    public function authPageUsableLoginOptions(array $loginFlags): array
+    public function authPageUsableLoginOptions(array $loginFlags, ?array $openidProviders = null): array
     {
         return array_keys(array_filter([
             'email' => $loginFlags['email'] ?? false,
             'digid' => ($loginFlags['digid'] ?? false) && $this->digidEnabled(),
+            'openid' => ($loginFlags['openid'] ?? false) && $this->openidAvailable($openidProviders),
             'qr' => $loginFlags['qr'] ?? false,
         ]));
     }
 
     /**
+     * @param array|null $openidProviders
+     * @return bool
+     */
+    public function openidAvailable(?array $openidProviders = null): bool
+    {
+        return OpenIdService::enabled() &&
+            $this->openidVeridAvailable() &&
+            in_array(
+                OpenIdService::PROVIDER_VERID,
+                $openidProviders ?? OpenIdService::enabledProviderKeys($this),
+                true
+            );
+    }
+
+    /**
+     * @param array|null $openidProviders
      * @return array
      */
-    public function authPageConfig(): array
+    public function authPageConfig(?array $openidProviders = null): array
     {
         return [
             'title' => $this->auth_page_title,
             'login_title' => $this->auth_page_login_title,
-            'login_options' => $this->authPageLoginOptions(),
+            'login_options' => $this->authPageLoginOptions($openidProviders),
             'info_enabled' => $this->auth_page_info_enabled,
             'info_title' => $this->auth_page_info_title,
             'info_description' => $this->auth_page_info_description,
@@ -857,6 +924,9 @@ class Implementation extends Model
         $request = BaseFormRequest::createFromBase(request());
         $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
+        $openidProviders = OpenIdService::enabledProviderKeys($implementation);
+        $openidEnabled = $configKey === self::FRONTEND_WEBSHOP && $implementation->openidAvailable($openidProviders);
+
         return [
             ...$config,
             'media' => self::getPlatformMediaConfig(),
@@ -871,8 +941,13 @@ class Implementation extends Model
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
             ], Announcement::query()))->query()->get())->toArray($request),
+            'openid' => $openidEnabled,
+            'openid_config' => [
+                'default_provider' => $openidEnabled ? ($openidProviders[0] ?? null) : null,
+                'providers' => $openidEnabled ? $openidProviders : [],
+            ],
             ...($configKey === self::FRONTEND_WEBSHOP ? [
-                'auth_page' => $implementation->authPageConfig(),
+                'auth_page' => $implementation->authPageConfig($openidProviders),
             ] : []),
             'digid' => $implementation->digidEnabled(),
             'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,

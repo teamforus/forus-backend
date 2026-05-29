@@ -158,6 +158,13 @@ $router->group([], static function () use ($router) {
         ],
     );
 
+    $router->post('/openid/{provider}/auth', 'Api\Platform\OpenIdController@auth')->name('openidAuth');
+    $router->get(
+        '/openid/{openid_session_uid}/redirect',
+        'Api\Platform\OpenIdController@redirect',
+    )->name('openidRedirect');
+    $router->get('/openid/{provider}/callback', 'Api\Platform\OpenIdController@callback')->name('openidCallback');
+
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
         $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
@@ -347,6 +354,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD",
+    );
+
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/openid',
+        "Api\Platform\Organizations\ImplementationsController@updateOpenId",
     );
 
     $router->patch(

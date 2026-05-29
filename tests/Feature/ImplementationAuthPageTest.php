@@ -4,17 +4,28 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
+use Tests\Traits\MakesOpenIdTestData;
 use Tests\Traits\MakesTestFunds;
-use Tests\Traits\MakesTestOrganizations;
 use Throwable;
 
 class ImplementationAuthPageTest extends TestCase
 {
     use WithFaker;
+    use MakesOpenIdTestData;
     use MakesTestFunds;
-    use MakesTestOrganizations;
     use DatabaseTransactions;
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Config::set('openid.enabled', true);
+    }
 
     /**
      * @throws Throwable
@@ -42,6 +53,31 @@ class ImplementationAuthPageTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testUpdateImplementationAuthPageAllowsAvailableOpenIdSelectedOption(): void
+    {
+        $implementation = $this->makeOpenIdImplementation();
+
+        $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_digid' => false,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => false,
+        ]), $implementation->organization->identity);
+
+        $request->assertSuccessful();
+        $implementation->refresh();
+
+        $this->assertFalse($implementation->auth_page_login_email);
+        $this->assertFalse($implementation->auth_page_login_digid);
+        $this->assertTrue($implementation->auth_page_login_openid);
+        $this->assertFalse($implementation->auth_page_login_qr);
+        $this->assertEquals(['openid'], $implementation->authPageConfig()['login_options']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testUpdateImplementationAuthPageRejectsDisabledLoginOptions(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
@@ -50,6 +86,47 @@ class ImplementationAuthPageTest extends TestCase
         $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
             'auth_page_login_email' => false,
             'auth_page_login_digid' => false,
+            'auth_page_login_qr' => false,
+        ]), $implementation->organization->identity);
+
+        $request->assertJsonValidationErrors(['auth_page_login_options']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdateImplementationAuthPageRejectsDisabledProviderOpenIdSelectedOption(): void
+    {
+        $implementation = $this->makeOpenIdImplementation([
+            'openid_verid_enabled' => false,
+        ]);
+
+        $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_digid' => false,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => false,
+        ]), $implementation->organization->identity);
+
+        $request->assertJsonValidationErrors(['auth_page_login_options']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdateImplementationAuthPageRejectsUnavailableOpenIdSelectedOption(): void
+    {
+        Config::set('openid.enabled', false);
+
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
+
+        $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_digid' => false,
+            'auth_page_login_openid' => true,
             'auth_page_login_qr' => false,
         ]), $implementation->organization->identity);
 
@@ -80,6 +157,61 @@ class ImplementationAuthPageTest extends TestCase
 
         $this->assertFalse($implementation->auth_page_login_email);
         $this->assertTrue($implementation->auth_page_login_digid);
+        $this->assertTrue($implementation->auth_page_login_qr);
+        $this->assertEquals(['qr'], $implementation->authPageConfig()['login_options']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdateImplementationAuthPageKeepsDisabledProviderOpenIdButFiltersEffectiveOptions(): void
+    {
+        $implementation = $this->makeOpenIdImplementation([
+            'openid_verid_enabled' => false,
+        ]);
+
+        $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_digid' => false,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => true,
+        ]), $implementation->organization->identity);
+
+        $request->assertSuccessful();
+        $implementation->refresh();
+
+        $this->assertFalse($implementation->auth_page_login_email);
+        $this->assertFalse($implementation->auth_page_login_digid);
+        $this->assertTrue($implementation->auth_page_login_openid);
+        $this->assertTrue($implementation->auth_page_login_qr);
+        $this->assertEquals(['qr'], $implementation->authPageConfig()['login_options']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdateImplementationAuthPageKeepsUnavailableOpenIdButFiltersEffectiveOptions(): void
+    {
+        Config::set('openid.enabled', false);
+
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($organization);
+
+        $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_digid' => false,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => true,
+        ]), $implementation->organization->identity);
+
+        $request->assertSuccessful();
+        $implementation->refresh();
+
+        $this->assertFalse($implementation->auth_page_login_email);
+        $this->assertFalse($implementation->auth_page_login_digid);
+        $this->assertTrue($implementation->auth_page_login_openid);
         $this->assertTrue($implementation->auth_page_login_qr);
         $this->assertEquals(['qr'], $implementation->authPageConfig()['login_options']);
     }
@@ -161,6 +293,7 @@ class ImplementationAuthPageTest extends TestCase
             'auth_page_login_title' => $this->faker->text(50),
             'auth_page_login_email' => true,
             'auth_page_login_digid' => false,
+            'auth_page_login_openid' => false,
             'auth_page_login_qr' => true,
             'auth_page_info_enabled' => false,
             'auth_page_info_title' => $this->faker->text(50),

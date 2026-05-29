@@ -9,14 +9,17 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplement
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailBrandingRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationOpenIdRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdatePreCheckBannerRequest;
 use App\Http\Resources\ImplementationPrivateResource;
 use App\Http\Resources\ImplementationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
+use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class ImplementationsController extends Controller
@@ -140,6 +143,31 @@ class ImplementationsController extends Controller
     /**
      * Update the specified resource in storage.
      *
+     * @param UpdateImplementationOpenIdRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return ImplementationPrivateResource
+     * @noinspection PhpUnused
+     */
+    public function updateOpenId(
+        UpdateImplementationOpenIdRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ): ImplementationPrivateResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateOpenId', [$implementation, $organization]);
+
+        $implementation->update([
+            'openid_verid_enabled' => $request->boolean('openid_verid_enabled'),
+        ]);
+
+        return ImplementationPrivateResource::create($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
      * @param UpdateImplementationAuthPageRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
@@ -161,6 +189,7 @@ class ImplementationsController extends Controller
             'auth_page_login_title',
             'auth_page_login_email',
             'auth_page_login_digid',
+            'auth_page_login_openid',
             'auth_page_login_qr',
             'auth_page_info_enabled',
             'auth_page_info_title',
