@@ -87,6 +87,14 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_product_map
  * @property bool $show_privacy_checkbox
  * @property bool $show_terms_checkbox
+ * @property string $auth_page_title
+ * @property string $auth_page_login_title
+ * @property bool $auth_page_login_email
+ * @property bool $auth_page_login_digid
+ * @property bool $auth_page_login_qr
+ * @property bool $auth_page_info_enabled
+ * @property string|null $auth_page_info_title
+ * @property string|null $auth_page_info_description
  * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
  * @property bool $digid_required
@@ -120,6 +128,7 @@ use Illuminate\Support\Facades\Gate;
  * @property-read EloquentCollection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read string $auth_page_info_description_html
  * @property-read EloquentCollection|\App\Models\ImplementationLanguage[] $implementation_languages
  * @property-read int|null $implementation_languages_count
  * @property-read EloquentCollection|\App\Models\Language[] $languages
@@ -272,6 +281,8 @@ class Implementation extends Model
         'banner_color', 'banner_position', 'banner_wide', 'banner_collapse', 'banner_button',
         'banner_button_url', 'banner_button_text', 'banner_button_target', 'banner_button_type',
         'banner_background', 'banner_background_mobile', 'products_default_sorting',
+        'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
+        'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title', 'auth_page_info_description',
     ];
 
     /**
@@ -307,6 +318,10 @@ class Implementation extends Model
         'pre_check_enabled' => 'boolean',
         'show_privacy_checkbox' => 'boolean',
         'show_terms_checkbox' => 'boolean',
+        'auth_page_login_email' => 'boolean',
+        'auth_page_login_digid' => 'boolean',
+        'auth_page_login_qr' => 'boolean',
+        'auth_page_info_enabled' => 'boolean',
         'banner_wide' => 'boolean',
         'banner_button' => 'boolean',
         'banner_collapse' => 'boolean',
@@ -752,6 +767,68 @@ class Implementation extends Model
     }
 
     /**
+     * @return array
+     */
+    public static function getMarkdownKeys(): array
+    {
+        return [
+            'description',
+            'auth_page_info_description',
+        ];
+    }
+
+    /**
+     * @throws \League\CommonMark\Exception\CommonMarkException
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getAuthPageInfoDescriptionHtmlAttribute(): string
+    {
+        return $this->markdownToHtml('auth_page_info_description');
+    }
+
+    /**
+     * @return array
+     */
+    public function authPageLoginOptions(): array
+    {
+        return $this->authPageUsableLoginOptions([
+            'email' => $this->auth_page_login_email,
+            'digid' => $this->auth_page_login_digid,
+            'qr' => $this->auth_page_login_qr,
+        ]);
+    }
+
+    /**
+     * @param array $loginFlags
+     * @return array
+     */
+    public function authPageUsableLoginOptions(array $loginFlags): array
+    {
+        return array_keys(array_filter([
+            'email' => $loginFlags['email'] ?? false,
+            'digid' => ($loginFlags['digid'] ?? false) && $this->digidEnabled(),
+            'qr' => $loginFlags['qr'] ?? false,
+        ]));
+    }
+
+    /**
+     * @return array
+     */
+    public function authPageConfig(): array
+    {
+        return [
+            'title' => $this->auth_page_title,
+            'login_title' => $this->auth_page_login_title,
+            'login_options' => $this->authPageLoginOptions(),
+            'info_enabled' => $this->auth_page_info_enabled,
+            'info_title' => $this->auth_page_info_title,
+            'info_description' => $this->auth_page_info_description,
+            'info_description_html' => $this->auth_page_info_description_html,
+        ];
+    }
+
+    /**
      * @param string $configKey
      * @return array
      */
@@ -794,6 +871,9 @@ class Implementation extends Model
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
             ], Announcement::query()))->query()->get())->toArray($request),
+            ...($configKey === self::FRONTEND_WEBSHOP ? [
+                'auth_page' => $implementation->authPageConfig(),
+            ] : []),
             'digid' => $implementation->digidEnabled(),
             'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
             'digid_mandatory' => $implementation->digid_required ?? true,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesRouteModels;
 use App\Models\Employee;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
@@ -20,6 +21,7 @@ use Illuminate\Validation\Rule;
 class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 {
     use ThrottleWithMeta;
+    use ResolvesRouteModels;
 
     protected string $message;
 
