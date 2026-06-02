@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations;
+namespace App\Http\Requests\Api\Platform\Organizations\PrevalidationRequests;
 
 use App\Http\Requests\BaseFormRequest;
 
-abstract class StoreNoteRequest extends BaseFormRequest
+class ApproveMissedRecordsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ abstract class StoreNoteRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'description' => $this->noteRules(required: true, min: 5),
+            'note' => $this->noteRules(),
         ];
     }
 }
