@@ -1350,7 +1350,7 @@ class TestData
     protected function makeImplementationSamlData(): array
     {
         return [
-            'digid_enabled' => $this->config('digid_enabled'),
+            'digid_enabled' => $this->config('digid_enabled', false),
             'digid_required' => true,
             'digid_sign_up_allowed' => true,
             'digid_app_id' => $this->config('digid_app_id'),

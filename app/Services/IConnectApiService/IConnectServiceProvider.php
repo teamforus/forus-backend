@@ -3,6 +3,7 @@
 namespace App\Services\IConnectApiService;
 
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
@@ -24,9 +25,10 @@ class IConnectServiceProvider extends ServiceProvider
                     $segments = explode('/', trim($url['path'], '/'));
                     $bsn = last($segments);
                     $testProfile = Config::get('forus.person_bsn.test_response_profile');
+                    $testProfileData = Arr::get(Config::get('forus.person_bsn.test_response_data'), "$testProfile.$bsn");
 
-                    return Config::get("forus.person_bsn.test_response_data.$testProfile.$bsn")
-                        ? Http::response(Config::get("forus.person_bsn.test_response_data.$testProfile.$bsn", []))
+                    return $testProfileData
+                        ? Http::response($testProfileData)
                         : Http::response(null, 404);
                 },
             ]);

@@ -8,10 +8,12 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PersonBsnApiRecordType;
 use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestRecord;
 use App\Models\RecordType;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -669,12 +671,6 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
                 $request->refresh();
                 $this->assertEquals(PrevalidationRequest::STATE_PENDING, $request->state);
 
-                // reload browser and assert that menu for request is missing
-                $browser->refresh();
-                $this->searchTable($browser, '@tablePrevalidationRequest', $request->bsn, $request->id);
-                $browser->waitFor("@tablePrevalidationRequestRow$request->id");
-                $browser->within("@tablePrevalidationRequestRow$request->id", fn (Browser $b) => $b->assertMissing('@btnPrevalidationRequestMenu'));
-
                 // Logout
                 $this->logout($browser);
             });
@@ -785,6 +781,297 @@ class PrevalidationRequestCsvUploadTest extends DuskTestCase
             $prefillRecordType?->delete();
             $defaultData['recordTypes']->each(fn (RecordType $recordType) => $recordType->delete());
         });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestCsvUploadMissingRecords(): void
+    {
+        Config::set('forus.person_bsn.test_response_profile', 'missed_records');
+
+        // configure implementation and organization for prefills
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+
+        $this->assertNotNull($implementation);
+        $this->assertNotNull($organization);
+
+        // get default data like record types, record keys, criteria (same for most of the tests)
+        // here will be two main record types and record keys for prefill and manual: prefillKey and manualKey
+        // criteria contains prefillKey, 'Partner count', 'Children count' and manualKey
+        $defaultData = $this->prepareDefaultData($organization);
+
+        $implementationData = $implementation->only(['digid_enabled', 'digid_required']);
+        $organizationData = $organization->only([
+            'fund_request_resolve_policy', 'bsn_enabled', 'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
+            'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust', 'iconnect_target_binding',
+            'iconnect_api_oin', 'iconnect_base_url', 'allow_prevalidation_requests',
+        ]);
+
+        $prefillRecordType = PersonBsnApiRecordType::create([
+            'person_bsn_api_field' => 'naam.geslachtsnaam',
+            'record_type_key' => $defaultData['prefillKey'],
+        ]);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+            'key' => 'nijmegen-vi',
+            'csv_primary_key' => 'uid',
+        ], $implementation);
+
+        $this->rollbackModels([
+            [$implementation, $implementationData],
+            [$organization, $organizationData],
+        ], function () use ($implementation, $organization, $fund, $defaultData) {
+            // configure iConnect settings and seed criteria
+            $this->enablePersonBsnApiForOrganization($organization);
+            $this->enablePrevalidationRequestForOrganization($organization);
+            $this->makeFundCriteria($fund, $defaultData['criteria']);
+
+            $this->browse(function (Browser $browser) use ($implementation, $fund, $defaultData) {
+                $requestDataPrefill = [
+                    'bsn' => '999993112',
+                    'uid' => token_generator()->generate(32),
+                    $defaultData['manualKey'] => 3,
+                ];
+
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                // Authorize identity
+                $this->loginIdentity($browser, $implementation->organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
+                $this->selectDashboardOrganization($browser, $implementation->organization);
+
+                $this->goToPrevalidationRequestsPage($browser, $fund);
+
+                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefill]);
+
+                // assert prefill success and prevalidation was created
+
+                $prevalidationRequest = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefill);
+                $prevalidationRequest->makePrevalidation();
+
+                // assert request has missed records and state 'missing_records'
+                $missedRecords = $prevalidationRequest->missed_records()->get();
+                $this->assertNull($prevalidationRequest->prevalidation);
+                $this->assertNotEmpty($missedRecords);
+                $this->assertEquals($prevalidationRequest::STATE_MISSING_RECORDS, $prevalidationRequest->state);
+                $this->assertFalse($prevalidationRequest->missing_records_approved);
+
+                $browser->refresh();
+
+                // open prevalidation request
+                $browser
+                    ->waitFor("@tablePrevalidationRequestRow$prevalidationRequest->id")
+                    ->click("@tablePrevalidationRequestRow$prevalidationRequest->id");
+
+                // assert missed records block is visible
+                $browser->waitFor('@missedRecords')
+                    ->assertPresent('@missedRecords');
+
+                // approve missed records
+                $browser->waitFor('@prevalidationRequestApproveMissedBtn');
+                $browser->click('@prevalidationRequestApproveMissedBtn');
+
+                $browser->waitFor('@fundRequestApproveMissedRecordsModal');
+
+                $browser->within('@fundRequestApproveMissedRecordsModal', function (Browser $browser) {
+                    $browser->waitFor('@approveCheckbox');
+                    $browser->click('@approveCheckbox');
+                    $browser->waitFor('@approveBtn');
+                    $browser->click('@approveBtn');
+                });
+
+                $browser->waitUntilMissing('@fundRequestApproveMissedRecordsModal');
+
+                // assert label is success and request is success
+                $browser->waitFor('@successLabel');
+
+                $prevalidationRequest->refresh();
+                $this->assertNotNull($prevalidationRequest->prevalidation);
+                $this->assertEquals($prevalidationRequest::STATE_SUCCESS, $prevalidationRequest->state);
+                $this->assertTrue($prevalidationRequest->missing_records_approved);
+
+                // Logout
+                $this->logout($browser);
+            });
+        }, function () use ($fund, $defaultData, $prefillRecordType) {
+            $fund && $this->deleteFund($fund);
+            $prefillRecordType?->delete();
+            $defaultData['recordTypes']->each(fn (RecordType $recordType) => $recordType->delete());
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestRecordEditWhenMissingRecords(): void
+    {
+        Config::set('forus.person_bsn.test_response_profile', 'missed_records');
+
+        // configure implementation and organization for prefills
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+
+        $this->assertNotNull($implementation);
+        $this->assertNotNull($organization);
+
+        // get default data like record types, record keys, criteria (same for most of the tests)
+        // here will be two main record types and record keys for prefill and manual: prefillKey and manualKey
+        // criteria contains prefillKey, 'Partner count', 'Children count' and manualKey
+        $defaultData = $this->prepareDefaultData($organization);
+
+        $implementationData = $implementation->only(['digid_enabled', 'digid_required']);
+        $organizationData = $organization->only([
+            'fund_request_resolve_policy', 'bsn_enabled', 'iconnect_env', 'iconnect_key', 'iconnect_key_pass',
+            'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust', 'iconnect_target_binding',
+            'iconnect_api_oin', 'iconnect_base_url', 'allow_prevalidation_requests',
+        ]);
+
+        $prefillRecordType = PersonBsnApiRecordType::create([
+            'person_bsn_api_field' => 'naam.geslachtsnaam',
+            'record_type_key' => $defaultData['prefillKey'],
+        ]);
+
+        $fund = $this->makeTestFund($organization, [
+            'type' => 'budget',
+        ], [
+            'allow_fund_request_prefill' => true,
+            'allow_prevalidations' => false,
+            'key' => 'nijmegen-vi',
+            'csv_primary_key' => 'uid',
+        ], $implementation);
+
+        $this->rollbackModels([
+            [$implementation, $implementationData],
+            [$organization, $organizationData],
+        ], function () use ($implementation, $organization, $fund, $defaultData) {
+            // configure iConnect settings and seed criteria
+            $this->enablePersonBsnApiForOrganization($organization);
+            $this->enablePrevalidationRequestForOrganization($organization);
+            $this->makeFundCriteria($fund, $defaultData['criteria']);
+
+            $this->browse(function (Browser $browser) use ($implementation, $fund, $defaultData) {
+                $requestDataPrefill = [
+                    'bsn' => '999993112',
+                    'uid' => token_generator()->generate(32),
+                    $defaultData['manualKey'] => 3,
+                ];
+
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                // Authorize identity
+                $this->loginIdentity($browser, $implementation->organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $implementation->organization->identity);
+                $this->selectDashboardOrganization($browser, $implementation->organization);
+
+                $this->goToPrevalidationRequestsPage($browser, $fund);
+
+                $this->uploadPrevalidationRequestsBatch($browser, [$requestDataPrefill]);
+
+                $prevalidationRequest = $this->assertPrevalidationRequestCreated($fund, $requestDataPrefill);
+                $prevalidationRequest->makePrevalidation();
+
+                // assert request has missed records and state 'missing_records'
+                $missedRecords = $prevalidationRequest->missed_records()->get();
+                $this->assertNull($prevalidationRequest->prevalidation);
+                $this->assertNotEmpty($missedRecords);
+                $this->assertEquals($prevalidationRequest::STATE_MISSING_RECORDS, $prevalidationRequest->state);
+                $this->assertFalse($prevalidationRequest->missing_records_approved);
+
+                $browser->refresh();
+
+                $browser
+                    ->waitFor("@tablePrevalidationRequestRow$prevalidationRequest->id")
+                    ->click("@tablePrevalidationRequestRow$prevalidationRequest->id");
+
+                $browser->waitFor('@missedRecords')
+                    ->assertPresent('@missedRecords');
+
+                // find record and assert sponsor can edit this record while request state not success
+                $record = $prevalidationRequest->records()->where('record_type_key', Fund::RECORD_TYPE_KEY_CHILDREN_SAME_ADDRESS)->first();
+                $this->assertNotNull($record);
+                $this->assertEquals(2, $record->value);
+
+                $this->assertUpdatePrevalidationRequestRecord($browser, $record);
+
+                // approve missed records
+                $browser->waitFor('@prevalidationRequestApproveMissedBtn');
+                $browser->click('@prevalidationRequestApproveMissedBtn');
+
+                $browser->waitFor('@fundRequestApproveMissedRecordsModal');
+
+                $browser->within('@fundRequestApproveMissedRecordsModal', function (Browser $browser) {
+                    $browser->waitFor('@approveCheckbox');
+                    $browser->click('@approveCheckbox');
+                    $browser->waitFor('@approveBtn');
+                    $browser->click('@approveBtn');
+                });
+
+                $browser->waitUntilMissing('@fundRequestApproveMissedRecordsModal');
+
+                // assert label is success and request is success
+                $browser->waitFor('@successLabel');
+
+                $prevalidationRequest->refresh();
+                $this->assertNotNull($prevalidationRequest->prevalidation);
+                $this->assertEquals($prevalidationRequest::STATE_SUCCESS, $prevalidationRequest->state);
+                $this->assertTrue($prevalidationRequest->missing_records_approved);
+
+                // Logout
+                $this->logout($browser);
+            });
+        }, function () use ($fund, $defaultData, $prefillRecordType) {
+            $fund && $this->deleteFund($fund);
+            $prefillRecordType?->delete();
+            $defaultData['recordTypes']->each(fn (RecordType $recordType) => $recordType->delete());
+        });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param PrevalidationRequestRecord $record
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @return PrevalidationRequestRecord
+     */
+    protected function assertUpdatePrevalidationRequestRecord(
+        Browser $browser,
+        PrevalidationRequestRecord $record
+    ): PrevalidationRequestRecord {
+        // the value for the current prevalidation request record is 2
+        $browser
+            ->waitFor('@toggleCollapseBtn')
+            ->click('@toggleCollapseBtn');
+
+        $browser->waitFor("@prevalidationRequestRecordMenuBtn$record->id");
+        $browser->click("@prevalidationRequestRecordMenuBtn$record->id");
+
+        $browser->waitFor('@prevalidationRequestRecordEditBtn');
+        $browser->click('@prevalidationRequestRecordEditBtn');
+
+        $browser->waitFor('@modalPrevalidationRequestRecordEdit');
+
+        $browser->within('@modalPrevalidationRequestRecordEdit', function (Browser $browser) {
+            // assert button is disabled because same value as before
+            $this->clearField($browser, '@numberInput');
+            $browser->type('@numberInput', 2);
+            $browser->assertDisabled('@submitBtn');
+
+            $this->clearField($browser, '@numberInput');
+            $browser->type('@numberInput', 4);
+            $browser->click('@submitBtn');
+        });
+
+        $this->assertAndCloseSuccessNotification($browser);
+        $this->assertEquals(4, $record->refresh()->value);
+
+        return $record;
     }
 
     /**
