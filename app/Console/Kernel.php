@@ -195,12 +195,6 @@ class Kernel extends ConsoleKernel
         }
 
         /**
-         * DigIdSessionsCleanupCommand.
-         */
-        $schedule->command('digid:session-clean')
-            ->everyMinute()->withoutOverlapping()->onOneServer();
-
-        /**
          * Digests.
          */
         $schedule->command(SendValidatorDigestCommand::class)
@@ -314,6 +308,12 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping()
             ->onOneServer();
+
+        /**
+         * DigIdSessionsCleanupCommand.
+         */
+        $schedule->command('digid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);

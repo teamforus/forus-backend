@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesRouteModels;
 use App\Models\Employee;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
@@ -20,6 +21,7 @@ use Illuminate\Validation\Rule;
 class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 {
     use ThrottleWithMeta;
+    use ResolvesRouteModels;
 
     protected string $message;
 
@@ -159,6 +161,22 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
             'max:191',
             'email:strict,filter_unicode',
         ];
+    }
+
+    /**
+     * @param bool $required
+     * @param int $min
+     * @param int $max
+     * @return array
+     */
+    public function noteRules(bool $required = false, int $min = 0, int $max = 2000): array
+    {
+        return array_values(array_filter([
+            $required ? 'required' : 'nullable',
+            'string',
+            $min > 0 ? "min:$min" : null,
+            "max:$max",
+        ]));
     }
 
     /**

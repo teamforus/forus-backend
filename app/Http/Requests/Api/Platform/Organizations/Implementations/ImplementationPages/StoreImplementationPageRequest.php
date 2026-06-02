@@ -2,16 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages;
 
-use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Rules\MediaUidRule;
 use App\Traits\ValidatesFaq;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
-/**
- * @property-read Implementation $implementation
- */
 class StoreImplementationPageRequest extends ValidateImplementationPageBlocksRequest
 {
     use ValidatesFaq;
@@ -68,7 +64,7 @@ class StoreImplementationPageRequest extends ValidateImplementationPageBlocksReq
         return [
             'required',
             Rule::in(Arr::pluck(ImplementationPage::PAGE_TYPES, 'key')),
-            Rule::notIn($this->implementation->pages()->pluck('page_type')->toArray()),
+            Rule::notIn($this->getRouteImplementation()->pages()->pluck('page_type')->toArray()),
         ];
     }
 
