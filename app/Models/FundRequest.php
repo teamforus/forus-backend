@@ -7,6 +7,7 @@ use App\Events\FundRequests\FundRequestPhysicalCardRequestEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
+use App\Models\Traits\ApprovesMissedRecords;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -84,6 +85,7 @@ use Throwable;
  */
 class FundRequest extends Model
 {
+    use ApprovesMissedRecords;
     use HasLogs;
     use HasNotes;
 

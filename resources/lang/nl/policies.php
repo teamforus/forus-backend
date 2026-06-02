@@ -70,6 +70,10 @@ return [
             ]),
         ],
     ],
+    'prevalidation_requests' => [
+        'not_note_author' => 'Alleen de auteur kan notities verwijderen.',
+        'invalid_endpoint' => 'Ongeldige endpoint.',
+    ],
     'reimbursements' => [
         'not_draft' => 'Alleen conceptverzoeken kunnen worden geannuleerd.',
         'not_pending' => [

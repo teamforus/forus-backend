@@ -3,13 +3,11 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations\PreChecks;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Implementation;
 use App\Models\Organization;
 use Illuminate\Validation\Rule;
 
 /**
  * @property-read Organization $organization
- * @property-read Implementation $implementation
  */
 class SyncPreCheckRequest extends BaseFormRequest
 {
