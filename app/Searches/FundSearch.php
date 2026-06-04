@@ -50,8 +50,16 @@ class FundSearch extends BaseSearch
             $builder->whereHas('tags_webshop', fn (Builder $q) => $q->where('tags.id', $tagId));
         }
 
-        if ($this->getFilter('organization_id')) {
-            $builder->where('organization_id', $this->getFilter('organization_id'));
+        if ($tagIds = $this->getFilter('tag_ids')) {
+            $builder->whereHas('tags_webshop', fn (Builder $q) => $q->whereIn('tags.id', $tagIds));
+        }
+
+        if ($organizationId = $this->getFilter('organization_id')) {
+            $builder->where('organization_id', $organizationId);
+        }
+
+        if ($organizationIds = $this->getFilter('organization_ids')) {
+            $builder->whereIn('organization_id', $organizationIds);
         }
 
         if ($this->getFilter('physical_card_type_id')) {

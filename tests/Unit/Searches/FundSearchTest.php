@@ -91,6 +91,9 @@ class FundSearchTest extends SearchTestCase
 
         $this->assertSearchIds(['organization_id' => $organization1->id], [$fund1->id]);
         $this->assertSearchIds(['organization_id' => $organization2->id], [$fund2->id]);
+
+        $this->assertSearchIds(['organization_ids' => [$organization1->id]], [$fund1->id]);
+        $this->assertSearchIds(['organization_ids' => [$organization2->id]], [$fund2->id]);
     }
 
     /**
@@ -239,6 +242,9 @@ class FundSearchTest extends SearchTestCase
 
         $this->assertSearchIds(['tag_id' => $tag1->id], [$fund1->id]);
         $this->assertSearchIds(['tag_id' => $tag2->id], [$fund2->id]);
+
+        $this->assertSearchIds(['tag_ids' => [$tag1->id]], [$fund1->id]);
+        $this->assertSearchIds(['tag_ids' => [$tag2->id]], [$fund2->id]);
     }
 
     /**
