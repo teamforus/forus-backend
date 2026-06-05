@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "05545c60a2861d134135c975b262156c",
+    "content-hash": "1babce67ada1f0a85dcee2fc26ac2d92",
     "packages": [
         {
             "name": "astrotomic/laravel-translatable",
@@ -1750,24 +1750,24 @@
         },
         {
             "name": "dusterio/laravel-aws-worker",
-            "version": "v1.0.04",
+            "version": "v2.0.00",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dusterio/laravel-aws-worker.git",
-                "reference": "67e893db965119c2b65c9c3912a693c18ababd95"
+                "reference": "ac672627286d94587fcfef822fcc859eb51dabd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/67e893db965119c2b65c9c3912a693c18ababd95",
-                "reference": "67e893db965119c2b65c9c3912a693c18ababd95",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/ac672627286d94587fcfef822fcc859eb51dabd4",
+                "reference": "ac672627286d94587fcfef822fcc859eb51dabd4",
                 "shasum": ""
             },
             "require": {
                 "aws/aws-sdk-php": "~3.0",
-                "illuminate/bus": "5.*|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-                "illuminate/http": "5.*|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-                "illuminate/queue": "5.*|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "5.*|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+                "illuminate/bus": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/http": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/queue": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^5.5|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": ">=5.5.0"
             },
             "require-dev": {
@@ -1804,9 +1804,9 @@
             ],
             "support": {
                 "issues": "https://github.com/dusterio/laravel-aws-worker/issues",
-                "source": "https://github.com/dusterio/laravel-aws-worker/tree/v1.0.04"
+                "source": "https://github.com/dusterio/laravel-aws-worker/tree/v2.0.00"
             },
-            "time": "2025-03-27T15:27:01+00:00"
+            "time": "2026-05-20T03:27:26+00:00"
         },
         {
             "name": "edamov/pushok",
@@ -9078,16 +9078,16 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v7.4.9",
+            "version": "v7.4.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "dcd8f96bcdc0f128ec406c765cc066c6035d1be3"
+                "reference": "d721ea61b4a5fba8c5b6e7c1feda19efea144b50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/dcd8f96bcdc0f128ec406c765cc066c6035d1be3",
-                "reference": "dcd8f96bcdc0f128ec406c765cc066c6035d1be3",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/d721ea61b4a5fba8c5b6e7c1feda19efea144b50",
+                "reference": "d721ea61b4a5fba8c5b6e7c1feda19efea144b50",
                 "shasum": ""
             },
             "require": {
@@ -9124,7 +9124,7 @@
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/filesystem/tree/v7.4.9"
+                "source": "https://github.com/symfony/filesystem/tree/v7.4.11"
             },
             "funding": [
                 {
@@ -9144,7 +9144,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-18T13:18:21+00:00"
+            "time": "2026-05-11T16:38:44+00:00"
         },
         {
             "name": "symfony/finder",
