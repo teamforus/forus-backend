@@ -161,7 +161,11 @@ class OpenIdSession extends Model
             'nonce' => $authorization['nonce'],
             'code_verifier' => $authorization['code_verifier'],
             'target' => $sessionRequest === self::REQUEST_AUTH ? $target : null,
-            'meta' => self::makeSessionMeta($sessionRequest, $fund),
+            'meta' => self::makeSessionMeta(
+                $sessionRequest,
+                $fund,
+                is_array($authorization['meta'] ?? null) ? $authorization['meta'] : []
+            ),
         ]);
     }
 
@@ -286,16 +290,22 @@ class OpenIdSession extends Model
     /**
      * @param string $sessionRequest
      * @param Fund|null $fund
+     * @param array $authorizationMeta
      * @return array
      */
-    protected static function makeSessionMeta(string $sessionRequest, ?Fund $fund = null): array
-    {
+    protected static function makeSessionMeta(
+        string $sessionRequest,
+        ?Fund $fund = null,
+        array $authorizationMeta = []
+    ): array {
+        $authorizationMeta = array_filter($authorizationMeta, static fn ($value) => $value !== null);
+
         if ($sessionRequest === self::REQUEST_FUND_REQUEST) {
-            return [
+            return array_merge($authorizationMeta, [
                 'fund_id' => $fund?->id,
-            ];
+            ]);
         }
 
-        return [];
+        return $authorizationMeta;
     }
 }

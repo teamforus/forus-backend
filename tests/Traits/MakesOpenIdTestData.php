@@ -40,6 +40,10 @@ trait MakesOpenIdTestData
             'code_challenge_method' => 'S256',
             'id_token_signed_response_alg' => 'ES384',
             'token_endpoint_auth_method' => 'client_secret_basic',
+            'authentication_intent' => [
+                'enabled' => false,
+                'brand_uuid' => '',
+            ],
             ...$overrides,
         ];
     }
@@ -151,6 +155,7 @@ trait MakesOpenIdTestData
      * @param array|null $callbackPayload
      * @param OpenIdException|null $authorizationException
      * @param OpenIdException|null $callbackException
+     * @param array $authorizationData
      * @return void
      */
     protected function fakeOpenIdService(
@@ -158,9 +163,11 @@ trait MakesOpenIdTestData
         ?array $callbackPayload = null,
         ?OpenIdException $authorizationException = null,
         ?OpenIdException $callbackException = null,
+        array $authorizationData = [],
     ): void {
         $authorization = $this->makeOpenIdAuthorization([
             'state' => static::FAKE_STATE,
+            ...$authorizationData,
         ]);
 
         $this->app->instance(OpenIdService::class, new class (

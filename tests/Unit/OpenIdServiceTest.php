@@ -6,8 +6,17 @@ use App\Models\Implementation;
 use App\Services\OpenIdService\Models\OpenIdSession;
 use App\Services\OpenIdService\OpenIdException;
 use App\Services\OpenIdService\OpenIdService;
+use App\Services\OpenIdService\VerId\VerIdIntentCreationException;
+use Facile\JoseVerifier\JWK\MemoryJwksProvider;
+use Facile\OpenIDClient\Client\Client;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
+use Facile\OpenIDClient\Issuer\Issuer;
+use Facile\OpenIDClient\Issuer\Metadata\IssuerMetadata;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use Tests\Traits\MakesOpenIdTestData;
 use Tests\Traits\MakesTestFunds;
@@ -120,6 +129,122 @@ class OpenIdServiceTest extends TestCase
             OpenIdService::PROVIDER_VERID,
             $this->makeVeridContext(['issuer' => ['https://issuer.example']])
         ));
+    }
+
+    /**
+     * @return void
+     */
+    public function testProviderContextSupportsOptionalAuthenticationIntentConfig(): void
+    {
+        $this->assertTrue(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext(['authentication_intent' => null])
+        ));
+
+        $this->assertTrue(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext(['authentication_intent' => 'invalid'])
+        ));
+
+        $this->assertTrue(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext([
+                'authentication_intent' => [
+                    'enabled' => false,
+                    'brand_uuid' => '',
+                ],
+            ])
+        ));
+
+        $this->assertFalse(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext([
+                'authentication_intent' => [
+                    'enabled' => true,
+                    'brand_uuid' => '',
+                ],
+            ])
+        ));
+
+        $this->assertTrue(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext([
+                'authentication_intent' => [
+                    'enabled' => true,
+                    'brand_uuid' => 'brand-uuid',
+                ],
+            ])
+        ));
+    }
+
+    /**
+     * @throws OpenIdException
+     * @return void
+     */
+    public function testBuildAuthorizationUrlCreatesVeridIntentWhenEnabled(): void
+    {
+        Http::fake([
+            'https://issuer.example/intent' => Http::response([
+                'intent_id' => 'intent-123',
+            ]),
+        ]);
+
+        $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', 'openid-code-verifier', true)), '+/', '-_'), '=');
+        $service = $this->makeOpenIdServiceWithClient($this->makeOpenIdClient());
+        $authorization = $service->buildAuthorizationUrl(new Implementation([
+            'openid_verid_context' => $this->makeVeridContext([
+                'authentication_intent' => [
+                    'enabled' => true,
+                    'brand_uuid' => 'brand-123',
+                ],
+            ]),
+        ]), OpenIdService::PROVIDER_VERID);
+
+        parse_str((string) parse_url($authorization['redirect_url'], PHP_URL_QUERY), $query);
+
+        $this->assertSame('intent-123', $query['intent_id']);
+        $this->assertSame('intent-123', $authorization['meta']['intent_id']);
+
+        Http::assertSent(fn (Request $request) => $request->url() === 'https://issuer.example/intent' &&
+            $request->method() === 'POST' &&
+            $request->hasHeader('Authorization', 'Basic ' . base64_encode('verid-client:verid-secret')) &&
+            $request->data() === [
+                'scope' => 'openid',
+                'client_id' => 'verid-client',
+                'code_challenge' => $codeChallenge,
+                'brandUuid' => 'brand-123',
+            ]);
+
+        $this->assertArrayNotHasKey('intent_challenge_hash', $authorization['meta']);
+        $this->assertArrayNotHasKey('intent_challenge_length', $authorization['meta']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testBuildAuthorizationUrlFailsWhenVeridIntentFails(): void
+    {
+        Http::fake([
+            'https://issuer.example/intent' => Http::response([
+                'error' => 'invalid_request',
+                'error_description' => 'Invalid brand.',
+            ], 400),
+        ]);
+
+        try {
+            $this->makeOpenIdServiceWithClient($this->makeOpenIdClient())->buildAuthorizationUrl(new Implementation([
+                'openid_verid_context' => $this->makeVeridContext([
+                    'authentication_intent' => [
+                        'enabled' => true,
+                        'brand_uuid' => 'brand-123',
+                    ],
+                ]),
+            ]), OpenIdService::PROVIDER_VERID);
+
+            $this->fail('Expected OpenIdException.');
+        } catch (OpenIdException $exception) {
+            $this->assertInstanceOf(VerIdIntentCreationException::class, $exception->getPrevious());
+        }
     }
 
     /**
@@ -323,6 +448,73 @@ class OpenIdServiceTest extends TestCase
     }
 
     /**
+     * @param ClientInterface $client
+     * @return OpenIdService
+     */
+    protected function makeOpenIdServiceWithClient(ClientInterface $client): OpenIdService
+    {
+        return new class ($client) extends OpenIdService {
+            /**
+             * @param ClientInterface $client
+             */
+            public function __construct(protected ClientInterface $client)
+            {
+            }
+
+            /**
+             * @param Implementation $implementation
+             * @param string $provider
+             * @return ClientInterface
+             */
+            public function makeClient(Implementation $implementation, string $provider): ClientInterface
+            {
+                return $this->client;
+            }
+
+            /**
+             * @return string
+             */
+            protected function makeRandomToken(): string
+            {
+                return 'openid-random-token';
+            }
+
+            /**
+             * @return string
+             */
+            protected function makeCodeVerifier(): string
+            {
+                return 'openid-code-verifier';
+            }
+        };
+    }
+
+    /**
+     * @param string|null $intentEndpoint
+     * @return ClientInterface
+     */
+    protected function makeOpenIdClient(?string $intentEndpoint = 'https://issuer.example/intent'): ClientInterface
+    {
+        return new Client(
+            new Issuer(IssuerMetadata::fromArray(array_filter([
+                'issuer' => 'https://issuer.example',
+                'authorization_endpoint' => 'https://issuer.example/authorize',
+                'jwks_uri' => 'https://issuer.example/jwks',
+                'intent_endpoint' => $intentEndpoint,
+            ], static fn ($value) => $value !== null)), new MemoryJwksProvider()),
+            ClientMetadata::fromArray([
+                'client_id' => 'verid-client',
+                'client_secret' => 'verid-secret',
+                'redirect_uris' => [
+                    url('/api/v1/platform/openid/verid/callback'),
+                ],
+                'id_token_signed_response_alg' => 'ES384',
+                'token_endpoint_auth_method' => 'client_secret_basic',
+            ]),
+        );
+    }
+
+    /**
      * @param array $overrides
      * @return array
      */
@@ -340,6 +532,10 @@ class OpenIdServiceTest extends TestCase
             'code_challenge_method' => 'S256',
             'id_token_signed_response_alg' => 'ES384',
             'token_endpoint_auth_method' => 'client_secret_basic',
+            'authentication_intent' => [
+                'enabled' => false,
+                'brand_uuid' => '',
+            ],
             ...$overrides,
         ];
     }

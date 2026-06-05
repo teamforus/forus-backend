@@ -33,7 +33,11 @@ class OpenIdAuthStartTest extends TestCase
      */
     public function testStartAuthCreatesPendingSessionForUnauthenticatedWebshopUser(): void
     {
-        $this->fakeOpenIdService();
+        $this->fakeOpenIdService(authorizationData: [
+            'meta' => [
+                'intent_id' => 'intent-123',
+            ],
+        ]);
 
         $implementation = $this->makeOpenIdImplementation();
         $sessionCount = OpenIdSession::count();
@@ -59,6 +63,7 @@ class OpenIdAuthStartTest extends TestCase
         $this->assertSame(static::FAKE_STATE, $session->state);
         $this->assertSame(static::FAKE_NONCE, $session->nonce);
         $this->assertSame(static::FAKE_CODE_VERIFIER, $session->code_verifier);
+        $this->assertSame('intent-123', $session->meta['intent_id']);
     }
 
     /**
@@ -66,7 +71,12 @@ class OpenIdAuthStartTest extends TestCase
      */
     public function testStartFundRequestCreatesPendingSessionForAuthenticatedUser(): void
     {
-        $this->fakeOpenIdService();
+        $this->fakeOpenIdService(authorizationData: [
+            'meta' => [
+                'fund_id' => PHP_INT_MAX,
+                'intent_id' => 'intent-123',
+            ],
+        ]);
 
         $implementation = $this->makeOpenIdImplementation();
         $fund = $this->makeTestFund($implementation->organization, implementation: $implementation);
@@ -88,6 +98,7 @@ class OpenIdAuthStartTest extends TestCase
         $this->assertSame($requester->address, $session->identity_address);
         $this->assertNull($session->target);
         $this->assertSame($fund->id, $session->meta['fund_id']);
+        $this->assertSame('intent-123', $session->meta['intent_id']);
         $this->assertSame(OpenIdSession::REQUEST_FUND_REQUEST, $session->session_request);
         $this->assertSame(OpenIdSession::STATE_PENDING, $session->session_state);
         $this->assertSame($fund->urlWebshop(sprintf('/fondsen/%s/activeer', $fund->id)), $session->session_final_url);
@@ -259,6 +270,31 @@ class OpenIdAuthStartTest extends TestCase
         $this->fakeFailingOpenIdService();
 
         $implementation = $this->makeOpenIdImplementation();
+        $sessionCount = OpenIdSession::count();
+
+        $this
+            ->apiStartOpenIdAuthRequest($implementation)
+            ->assertStatus(503)
+            ->assertHeader('Error-Code', 'openid_unknown_error');
+
+        $this->assertSame($sessionCount, OpenIdSession::count());
+    }
+
+    /**
+     * @return void
+     */
+    public function testStartAuthReturnsServiceUnavailableWhenVeridIntentFails(): void
+    {
+        $this->fakeFailingOpenIdService();
+
+        $implementation = $this->makeOpenIdImplementation([
+            'openid_verid_context' => $this->makeOpenIdContext([
+                'authentication_intent' => [
+                    'enabled' => true,
+                    'brand_uuid' => 'brand-123',
+                ],
+            ]),
+        ]);
         $sessionCount = OpenIdSession::count();
 
         $this

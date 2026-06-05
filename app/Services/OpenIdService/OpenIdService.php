@@ -6,6 +6,8 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Rules\BsnRule;
 use App\Services\OpenIdService\Models\OpenIdSession;
+use App\Services\OpenIdService\VerId\VerIdAuthenticationIntent;
+use App\Services\OpenIdService\VerId\VerIdIntentCreationException;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
@@ -50,6 +52,11 @@ class OpenIdService
     protected const array BSN_CLAIM_SOURCES = [
         self::BSN_CLAIM_SOURCE_CLAIMS,
         self::BSN_CLAIM_SOURCE_USER_INFO,
+    ];
+
+    protected const array AUTHENTICATION_INTENT_DEFAULTS = [
+        'enabled' => false,
+        'brand_uuid' => '',
     ];
 
     /**
@@ -125,7 +132,7 @@ class OpenIdService
             $value = $context[$key] ?? null;
 
             if (!match ($key) {
-                'scopes' => is_array($value) && (bool) array_filter(
+                'scopes' => is_array($value) && array_filter(
                     $value,
                     fn ($scope) => is_string($scope) && trim($scope) !== ''
                 ),
@@ -133,6 +140,12 @@ class OpenIdService
             }) {
                 return false;
             }
+        }
+
+        $intent = self::normalizeAuthenticationIntentConfig($context['authentication_intent'] ?? null);
+
+        if ($intent['enabled'] && !$intent['brand_uuid']) {
+            return false;
         }
 
         return true;
@@ -213,6 +226,16 @@ class OpenIdService
             $state = $this->makeRandomToken();
             $nonce = $this->makeRandomToken();
             $codeVerifier = $this->makeCodeVerifier();
+            $codeChallenge = $this->makeCodeChallenge($codeVerifier);
+            $client = $this->makeClient($implementation, $provider);
+
+            $intentMeta = $this->resolveAuthenticationIntentMeta(
+                $provider,
+                $implementation,
+                $config,
+                $client,
+                $codeChallenge
+            );
 
             $redirectUrlParms = array_merge(
                 $config['auth_params'],
@@ -220,14 +243,17 @@ class OpenIdService
                     'scope' => $this->scopeString($config['scopes']),
                     'state' => $state,
                     'nonce' => $nonce,
-                    'code_challenge' => $this->makeCodeChallenge($codeVerifier),
+                    'code_challenge' => $codeChallenge,
                     'code_challenge_method' => $config['code_challenge_method'],
-                ]
+                ],
+                isset($intentMeta['intent_id']) ? [
+                    'intent_id' => $intentMeta['intent_id'],
+                ] : [],
             );
 
             $authorizationService = (new AuthorizationServiceBuilder())->build();
             $redirectUrl = $authorizationService->getAuthorizationUri(
-                $this->makeClient($implementation, $provider),
+                $client,
                 $redirectUrlParms
             );
 
@@ -236,6 +262,7 @@ class OpenIdService
                 'state' => $state,
                 'nonce' => $nonce,
                 'code_verifier' => $codeVerifier,
+                'meta' => $intentMeta,
             ];
         } catch (Throwable $exception) {
             static::logger()->error('OpenID authorization URL build failed.', [
@@ -378,7 +405,7 @@ class OpenIdService
                 ->first() : null;
 
             throw OpenIdException::withOpenIdError(
-                'not_enabled',
+                OpenIdException::ERROR_NOT_ENABLED,
                 'OpenID provider is not enabled.',
                 null,
                 $session,
@@ -386,7 +413,10 @@ class OpenIdService
         }
 
         if (!$state) {
-            throw OpenIdException::withOpenIdError('session_expired', 'OpenID callback state is missing.');
+            throw OpenIdException::withOpenIdError(
+                OpenIdException::ERROR_SESSION_EXPIRED,
+                'OpenID callback state is missing.'
+            );
         }
 
         $session = OpenIdSession::query()
@@ -395,12 +425,15 @@ class OpenIdService
             ->first();
 
         if (!$session) {
-            throw OpenIdException::withOpenIdError('session_expired', 'OpenID callback session was not found.');
+            throw OpenIdException::withOpenIdError(
+                OpenIdException::ERROR_SESSION_EXPIRED,
+                'OpenID callback session was not found.'
+            );
         }
 
         if (!$session->isPending()) {
             throw OpenIdException::withOpenIdError(
-                'session_expired',
+                OpenIdException::ERROR_SESSION_EXPIRED,
                 'OpenID callback session is not pending.',
                 null,
                 $session
@@ -409,7 +442,7 @@ class OpenIdService
 
         if (!$session->implementation?->openidAvailable([$provider])) {
             throw OpenIdException::withOpenIdError(
-                'not_enabled',
+                OpenIdException::ERROR_NOT_ENABLED,
                 'OpenID is not enabled for this implementation.',
                 null,
                 $session
@@ -420,7 +453,7 @@ class OpenIdService
             $session->markExpired();
 
             throw OpenIdException::withOpenIdError(
-                'session_expired',
+                OpenIdException::ERROR_SESSION_EXPIRED,
                 'OpenID callback session is expired.',
                 null,
                 $session
@@ -445,7 +478,7 @@ class OpenIdService
             if (!$session->implementation->digid_sign_up_allowed) {
                 $this->throwMappedSessionError(
                     $session,
-                    'uid_not_found',
+                    OpenIdException::ERROR_UID_NOT_FOUND,
                     'OpenID BSN identity was not found and signup is disabled.'
                 );
             }
@@ -521,7 +554,75 @@ class OpenIdService
             $config['auth_params'] = [];
         }
 
+        $config['authentication_intent'] = self::normalizeAuthenticationIntentConfig(
+            $config['authentication_intent'] ?? null
+        );
+
         return $config;
+    }
+
+    /**
+     * @param mixed $config
+     * @return array
+     */
+    protected static function normalizeAuthenticationIntentConfig(mixed $config): array
+    {
+        if (!is_array($config)) {
+            return self::AUTHENTICATION_INTENT_DEFAULTS;
+        }
+
+        return [
+            'enabled' => ($config['enabled'] ?? false) === true,
+            'brand_uuid' => is_string($config['brand_uuid'] ?? null) ? trim($config['brand_uuid']) : '',
+        ];
+    }
+
+    /**
+     * @param string $provider
+     * @param Implementation $implementation
+     * @param array $config
+     * @param ClientInterface $client
+     * @param string $codeChallenge
+     * @throws OpenIdException
+     * @return array
+     */
+    protected function resolveAuthenticationIntentMeta(
+        string $provider,
+        Implementation $implementation,
+        array $config,
+        ClientInterface $client,
+        string $codeChallenge
+    ): array {
+        if ($provider !== self::PROVIDER_VERID || !($config['authentication_intent']['enabled'] ?? false)) {
+            return [];
+        }
+
+        $intent = new VerIdAuthenticationIntent(
+            $config,
+            $codeChallenge,
+            $client->getIssuer()->getMetadata()->get('intent_endpoint'),
+        );
+
+        $response = $intent->send();
+
+        if ($response->successful()) {
+            return [
+                'intent_id' => $response->id(),
+            ];
+        }
+
+        static::logger()->warning('Ver.id authentication intent creation failed.', [
+            'provider' => $provider,
+            'implementation_id' => $implementation->id,
+            'brand_uuid' => $intent->brandUuid(),
+            'intent_endpoint' => $intent->endpoint(),
+            ...$response->logContext(
+                (bool) Config::get('openid.log_raw_response', false),
+                (bool) Config::get('openid.log_exception_messages', false),
+            ),
+        ]);
+
+        throw new VerIdIntentCreationException($response->exception());
     }
 
     /**
@@ -555,11 +656,14 @@ class OpenIdService
             'provider' => $provider,
             'bsn_claim' => $claim,
             'bsn_claim_source' => $source,
-            'openid_error' => 'missing_claims',
+            'openid_error' => OpenIdException::ERROR_MISSING_CLAIMS,
             'reason' => $reason,
         ]);
 
-        throw OpenIdException::withOpenIdError('missing_claims', 'OpenID BSN claim missing or invalid.');
+        throw OpenIdException::withOpenIdError(
+            OpenIdException::ERROR_MISSING_CLAIMS,
+            'OpenID BSN claim missing or invalid.'
+        );
     }
 
     /**
@@ -577,7 +681,7 @@ class OpenIdService
                 $session->implementation
             );
         } catch (OpenIdException $exception) {
-            $openIdError = $exception->getOpenIdError() ?: 'callback_failed';
+            $openIdError = $exception->getOpenIdError() ?: OpenIdException::ERROR_CALLBACK_FAILED;
 
             static::logger()->warning('OpenID BSN callback mapped to error response.', [
                 'provider' => $session->provider,
@@ -610,7 +714,7 @@ class OpenIdService
         if (!$sessionIdentity) {
             $this->throwMappedSessionError(
                 $session,
-                'session_expired',
+                OpenIdException::ERROR_SESSION_EXPIRED,
                 'OpenID callback session identity was not found.'
             );
         }
@@ -622,7 +726,7 @@ class OpenIdService
         if ($sessionIdentityBsn && $sessionIdentityBsn !== $bsn) {
             $this->throwMappedSessionError(
                 $session,
-                'uid_dont_match',
+                OpenIdException::ERROR_UID_DONT_MATCH,
                 'OpenID BSN differs from the session identity BSN.'
             );
         }
@@ -630,7 +734,7 @@ class OpenIdService
         if ($bsnIdentity && $bsnIdentity->address !== $sessionIdentity->address) {
             $this->throwMappedSessionError(
                 $session,
-                'uid_used',
+                OpenIdException::ERROR_UID_USED,
                 'OpenID BSN belongs to another identity.'
             );
         }
@@ -638,7 +742,7 @@ class OpenIdService
         if (!$organization) {
             $this->throwMappedSessionError(
                 $session,
-                'callback_failed',
+                OpenIdException::ERROR_CALLBACK_FAILED,
                 'OpenID callback session organization was not found.'
             );
         }

@@ -42,7 +42,7 @@ class OpenIdController extends Controller
             $authorization = $service->buildAuthorizationUrl($request->implementation(), $provider);
         } catch (OpenIdException) {
             return new Response('Unable to handle the request at the moment.', 503, [
-                'Error-Code' => 'openid_unknown_error',
+                'Error-Code' => OpenIdException::ERROR_UNKNOWN,
             ]);
         }
 
@@ -71,7 +71,10 @@ class OpenIdController extends Controller
         if (!$session->implementation?->openidAvailable([$session->provider])) {
             $session->markError();
 
-            return $this->makeRedirectErrorResponse($session->session_final_url, 'not_enabled');
+            return $this->makeRedirectErrorResponse(
+                $session->session_final_url,
+                OpenIdException::ERROR_NOT_ENABLED
+            );
         }
 
         return redirect($session->openid_auth_redirect_url);
@@ -99,7 +102,7 @@ class OpenIdController extends Controller
 
             return $this->makeRedirectErrorResponse(
                 $failedSession?->session_final_url ?: $fallbackUrl,
-                $exception->getOpenIdError() ?: 'session_expired'
+                $exception->getOpenIdError() ?: OpenIdException::ERROR_SESSION_EXPIRED
             );
         }
 
@@ -120,7 +123,7 @@ class OpenIdController extends Controller
             }
 
             throw OpenIdException::withOpenIdError(
-                'unknown_session_type',
+                OpenIdException::ERROR_UNKNOWN_SESSION_TYPE,
                 'Unknown OpenID session request.',
                 null,
                 $session
@@ -130,7 +133,7 @@ class OpenIdController extends Controller
 
             return $this->makeRedirectErrorResponse(
                 $exception->getOpenIdSession()?->session_final_url ?: $session->session_final_url,
-                $exception->getOpenIdError() ?: 'callback_failed'
+                $exception->getOpenIdError() ?: OpenIdException::ERROR_CALLBACK_FAILED
             );
         }
     }
