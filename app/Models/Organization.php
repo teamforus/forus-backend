@@ -84,15 +84,16 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_profiles_households
  * @property bool $allow_translations
  * @property bool $allow_product_updates
- * @property int $allow_prevalidation_requests
+ * @property bool $allow_prevalidation_requests
+ * @property int $allow_fund_product_limits
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property string|null $bank_cron_time
- * @property string|null $auth_2fa_policy
- * @property bool|null $auth_2fa_remember_ip
+ * @property string $auth_2fa_policy
+ * @property bool $auth_2fa_remember_ip
  * @property string $auth_2fa_funds_policy
  * @property bool $auth_2fa_funds_remember_ip
  * @property bool $auth_2fa_funds_restrict_emails
@@ -207,6 +208,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder<static>|Organization whereAllowBiConnection($value)
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowFundProductLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
