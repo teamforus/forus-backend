@@ -12,6 +12,7 @@ return [
         'invalid_provider' => 'Ongeldige provider.',
         'invalid_implementation' => 'Ongeldige implementatie.',
         'not_enabled' => 'OpenID is niet ingeschakeld voor deze implementatie.',
+        'unavailable' => 'Het OpenID-verzoek kan op dit moment niet worden verwerkt.',
         'already_authenticated' => 'U bent al ingelogd.',
         'sign_in_first' => 'Log eerst in.',
     ],

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Implementation;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\Models\OpenIdSession;
 use App\Services\OpenIdService\OpenIdException;
 use App\Services\OpenIdService\OpenIdService;
@@ -41,7 +42,7 @@ class OpenIdServiceTest extends TestCase
      * @throws OpenIdException
      * @return void
      */
-    public function testProviderConfigUsesImplementationContextOnly(): void
+    public function testProviderConfigUsesFlowContextOnly(): void
     {
         Config::set('openid.providers', [
             OpenIdService::PROVIDER_VERID => [
@@ -60,10 +61,7 @@ class OpenIdServiceTest extends TestCase
         ]);
 
         $config = (new OpenIdService())->getProviderConfig(
-            OpenIdService::PROVIDER_VERID,
-            new Implementation([
-                'openid_verid_context' => $this->makeVeridContext(),
-            ])
+            $this->makeOpenIdFlow(['context' => $this->makeVeridContext()])
         );
 
         $this->assertSame('https://issuer.example', $config['issuer']);
@@ -86,9 +84,8 @@ class OpenIdServiceTest extends TestCase
     public function testProviderConfigNormalizesScopesAndAuthParams(): void
     {
         $config = (new OpenIdService())->getProviderConfig(
-            OpenIdService::PROVIDER_VERID,
-            new Implementation([
-                'openid_verid_context' => $this->makeVeridContext([
+            $this->makeOpenIdFlow([
+                'context' => $this->makeVeridContext([
                     'scopes' => ['openid', '', 'nin'],
                     'auth_params' => 'prompt=login',
                 ]),
@@ -132,52 +129,6 @@ class OpenIdServiceTest extends TestCase
     }
 
     /**
-     * @return void
-     */
-    public function testProviderContextSupportsOptionalAuthenticationIntentConfig(): void
-    {
-        $this->assertTrue(OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->makeVeridContext(['authentication_intent' => null])
-        ));
-
-        $this->assertTrue(OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->makeVeridContext(['authentication_intent' => 'invalid'])
-        ));
-
-        $this->assertTrue(OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->makeVeridContext([
-                'authentication_intent' => [
-                    'enabled' => false,
-                    'brand_uuid' => '',
-                ],
-            ])
-        ));
-
-        $this->assertFalse(OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->makeVeridContext([
-                'authentication_intent' => [
-                    'enabled' => true,
-                    'brand_uuid' => '',
-                ],
-            ])
-        ));
-
-        $this->assertTrue(OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->makeVeridContext([
-                'authentication_intent' => [
-                    'enabled' => true,
-                    'brand_uuid' => 'brand-uuid',
-                ],
-            ])
-        ));
-    }
-
-    /**
      * @throws OpenIdException
      * @return void
      */
@@ -191,14 +142,12 @@ class OpenIdServiceTest extends TestCase
 
         $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', 'openid-code-verifier', true)), '+/', '-_'), '=');
         $service = $this->makeOpenIdServiceWithClient($this->makeOpenIdClient());
-        $authorization = $service->buildAuthorizationUrl(new Implementation([
-            'openid_verid_context' => $this->makeVeridContext([
-                'authentication_intent' => [
-                    'enabled' => true,
-                    'brand_uuid' => 'brand-123',
-                ],
-            ]),
-        ]), OpenIdService::PROVIDER_VERID);
+        $flow = $this->makeOpenIdFlow(['context' => $this->makeVeridContext()]);
+        $implementation = $this->makeOpenIdImplementation([
+            'openid_verid_brand_uuid' => '00000000-0000-0000-0000-000000000001',
+        ], openidFlow: $flow);
+
+        $authorization = $service->buildAuthorizationUrl($implementation, $flow);
 
         parse_str((string) parse_url($authorization['redirect_url'], PHP_URL_QUERY), $query);
 
@@ -212,11 +161,8 @@ class OpenIdServiceTest extends TestCase
                 'scope' => 'openid',
                 'client_id' => 'verid-client',
                 'code_challenge' => $codeChallenge,
-                'brandUuid' => 'brand-123',
+                'brandUuid' => '00000000-0000-0000-0000-000000000001',
             ]);
-
-        $this->assertArrayNotHasKey('intent_challenge_hash', $authorization['meta']);
-        $this->assertArrayNotHasKey('intent_challenge_length', $authorization['meta']);
     }
 
     /**
@@ -232,14 +178,13 @@ class OpenIdServiceTest extends TestCase
         ]);
 
         try {
-            $this->makeOpenIdServiceWithClient($this->makeOpenIdClient())->buildAuthorizationUrl(new Implementation([
-                'openid_verid_context' => $this->makeVeridContext([
-                    'authentication_intent' => [
-                        'enabled' => true,
-                        'brand_uuid' => 'brand-123',
-                    ],
-                ]),
-            ]), OpenIdService::PROVIDER_VERID);
+            $flow = $this->makeOpenIdFlow(['context' => $this->makeVeridContext()]);
+            $implementation = $this->makeOpenIdImplementation([
+                'openid_verid_brand_uuid' => '00000000-0000-0000-0000-000000000001',
+            ], openidFlow: $flow);
+
+            $this->makeOpenIdServiceWithClient($this->makeOpenIdClient())
+                ->buildAuthorizationUrl($implementation, $flow);
 
             $this->fail('Expected OpenIdException.');
         } catch (OpenIdException $exception) {
@@ -263,14 +208,15 @@ class OpenIdServiceTest extends TestCase
         $this->assertSame([], OpenIdService::enabledProviderKeys($implementation));
 
         Config::set('openid.enabled', true);
-        $implementation->forceFill(['openid_verid_enabled' => false])->save();
+        $implementation->forceFill(['openid_enabled' => false])->save();
 
         $this->assertFalse(OpenIdService::providerEnabled(OpenIdService::PROVIDER_VERID, $implementation->refresh()));
         $this->assertSame([], OpenIdService::enabledProviderKeys($implementation));
 
-        $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_context' => null,
-        ]);
+        $implementation = $this->makeOpenIdImplementation(openidFlow: $this->makeOpenIdFlow([
+            'key' => 'datakeeper',
+            'context' => null,
+        ]));
 
         $this->assertFalse(OpenIdService::providerEnabled(OpenIdService::PROVIDER_VERID, $implementation));
 
@@ -288,7 +234,6 @@ class OpenIdServiceTest extends TestCase
     public function testResolveBsnFromPayloadExtractsDigitOnlyClaim(): void
     {
         $bsn = (new OpenIdService())->resolveBsnFromPayload(
-            OpenIdService::PROVIDER_VERID,
             [
                 'claims' => [
                     'nin' => [
@@ -296,9 +241,7 @@ class OpenIdServiceTest extends TestCase
                     ],
                 ],
             ],
-            new Implementation([
-                'openid_verid_context' => $this->makeVeridContext(),
-            ])
+            $this->makeOpenIdFlow(['context' => $this->makeVeridContext()])
         );
 
         $this->assertSame('569657222', $bsn);
@@ -311,7 +254,6 @@ class OpenIdServiceTest extends TestCase
     public function testResolveBsnFromPayloadCanUseUserInfoSource(): void
     {
         $bsn = (new OpenIdService())->resolveBsnFromPayload(
-            OpenIdService::PROVIDER_VERID,
             [
                 'claims' => [],
                 'user_info' => [
@@ -320,8 +262,8 @@ class OpenIdServiceTest extends TestCase
                     ],
                 ],
             ],
-            new Implementation([
-                'openid_verid_context' => $this->makeVeridContext([
+            $this->makeOpenIdFlow([
+                'context' => $this->makeVeridContext([
                     'bsn_claim' => 'profile.bsn',
                     'bsn_claim_source' => 'user_info',
                 ]),
@@ -336,16 +278,14 @@ class OpenIdServiceTest extends TestCase
      */
     public function testResolveBsnFromPayloadRejectsInvalidClaims(): void
     {
-        $implementation = new Implementation([
-            'openid_verid_context' => $this->makeVeridContext(),
-        ]);
+        $flow = $this->makeOpenIdFlow(['context' => $this->makeVeridContext()]);
 
-        $this->assertBsnPayloadOpenIdError([], $implementation);
-        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => 569657222]]], $implementation);
-        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '12345']]], $implementation);
-        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569.657.222']]], $implementation);
-        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569 657 222']]], $implementation);
-        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569-657-222']]], $implementation);
+        $this->assertBsnPayloadOpenIdError([], $flow);
+        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => 569657222]]], $flow);
+        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '12345']]], $flow);
+        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569.657.222']]], $flow);
+        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569 657 222']]], $flow);
+        $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569-657-222']]], $flow);
 
         $this->assertBsnPayloadOpenIdError([
             'claims' => [
@@ -353,8 +293,9 @@ class OpenIdServiceTest extends TestCase
                     'identifier' => '569657222',
                 ],
             ],
-        ], new Implementation([
-            'openid_verid_context' => $this->makeVeridContext([
+        ], $this->makeOpenIdFlow([
+            'key' => 'yivi',
+            'context' => $this->makeVeridContext([
                 'bsn_claim_source' => 'unsupported',
             ]),
         ]));
@@ -374,6 +315,48 @@ class OpenIdServiceTest extends TestCase
         );
 
         $this->assertSame($session->id, $resolvedSession->id);
+    }
+
+    /**
+     * @return void
+     */
+    public function testResolveCallbackSessionRejectsMismatchedProvider(): void
+    {
+        $implementation = $this->makeOpenIdImplementation();
+        $session = $this->makeOpenIdSession($implementation, [
+            'openid_flow' => $this->makeOpenIdFlow([
+                'provider' => 'other',
+                'key' => 'other_wallet',
+            ]),
+        ]);
+
+        try {
+            (new OpenIdService())->resolveCallbackSession(OpenIdService::PROVIDER_VERID, $session->state);
+            $this->fail('Expected OpenIdException.');
+        } catch (OpenIdException $exception) {
+            $this->assertSame(OpenIdException::ERROR_SESSION_EXPIRED, $exception->getOpenIdError());
+            $this->assertNull($exception->getOpenIdSession());
+            $this->assertSame(OpenIdSession::STATE_PENDING, $session->refresh()->session_state);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testResolveCallbackSessionRejectsWhenSessionFlowIsDisabled(): void
+    {
+        $implementation = $this->makeOpenIdImplementation();
+        $session = $this->makeOpenIdSession($implementation);
+
+        $implementation->openid_flows()->detach();
+
+        try {
+            (new OpenIdService())->resolveCallbackSession(OpenIdService::PROVIDER_VERID, $session->state);
+            $this->fail('Expected OpenIdException.');
+        } catch (OpenIdException $exception) {
+            $this->assertSame('not_enabled', $exception->getOpenIdError());
+            $this->assertSame($session->id, $exception->getOpenIdSession()?->id);
+        }
     }
 
     /**
@@ -434,13 +417,13 @@ class OpenIdServiceTest extends TestCase
 
     /**
      * @param array $payload
-     * @param Implementation $implementation
+     * @param OpenIdFlow $flow
      * @return void
      */
-    protected function assertBsnPayloadOpenIdError(array $payload, Implementation $implementation): void
+    protected function assertBsnPayloadOpenIdError(array $payload, OpenIdFlow $flow): void
     {
         try {
-            (new OpenIdService())->resolveBsnFromPayload(OpenIdService::PROVIDER_VERID, $payload, $implementation);
+            (new OpenIdService())->resolveBsnFromPayload($payload, $flow);
             $this->fail('Expected OpenIdException.');
         } catch (OpenIdException $exception) {
             $this->assertSame('missing_claims', $exception->getOpenIdError());
@@ -463,10 +446,10 @@ class OpenIdServiceTest extends TestCase
 
             /**
              * @param Implementation $implementation
-             * @param string $provider
+             * @param OpenIdFlow $flow
              * @return ClientInterface
              */
-            public function makeClient(Implementation $implementation, string $provider): ClientInterface
+            public function makeClient(Implementation $implementation, OpenIdFlow $flow): ClientInterface
             {
                 return $this->client;
             }
@@ -532,10 +515,6 @@ class OpenIdServiceTest extends TestCase
             'code_challenge_method' => 'S256',
             'id_token_signed_response_alg' => 'ES384',
             'token_endpoint_auth_method' => 'client_secret_basic',
-            'authentication_intent' => [
-                'enabled' => false,
-                'brand_uuid' => '',
-            ],
             ...$overrides,
         ];
     }

@@ -14,7 +14,7 @@ use InvalidArgumentException;
 
 /**
  * @property int $id
- * @property string $provider
+ * @property int $openid_flow_id
  * @property int $implementation_id
  * @property string $client_type
  * @property string|null $identity_address
@@ -34,6 +34,7 @@ use InvalidArgumentException;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read Identity|null $identity
  * @property-read Implementation $implementation
+ * @property-read OpenIdFlow|null $openid_flow
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession onlyTrashed()
@@ -47,7 +48,7 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereNonce($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereProvider($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereOpenidFlowId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereResolvedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereSessionFinalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OpenIdSession whereOpenidAuthRedirectUrl($value)
@@ -99,7 +100,7 @@ class OpenIdSession extends Model
      * @var string[]
      */
     protected $fillable = [
-        'provider',
+        'openid_flow_id',
         'implementation_id',
         'client_type',
         'identity_address',
@@ -116,11 +117,25 @@ class OpenIdSession extends Model
         'resolved_at',
     ];
 
+    /**
+     * @return BelongsTo
+     */
     public function implementation(): BelongsTo
     {
         return $this->belongsTo(Implementation::class);
     }
 
+    /**
+     * @return BelongsTo
+     */
+    public function openid_flow(): BelongsTo
+    {
+        return $this->belongsTo(OpenIdFlow::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
@@ -128,9 +143,9 @@ class OpenIdSession extends Model
 
     /**
      * @param Implementation $implementation
+     * @param OpenIdFlow $flow
      * @param string $clientType
      * @param string|null $target
-     * @param string $provider
      * @param array $authorization
      * @param string $sessionRequest
      * @param Fund|null $fund
@@ -139,16 +154,16 @@ class OpenIdSession extends Model
      */
     public static function createSession(
         Implementation $implementation,
+        OpenIdFlow $flow,
         string $clientType,
         ?string $target,
-        string $provider,
         array $authorization,
         string $sessionRequest = self::REQUEST_AUTH,
         ?Fund $fund = null,
         ?string $identityAddress = null
     ): OpenIdSession {
         return self::create([
-            'provider' => $provider,
+            'openid_flow_id' => $flow->id,
             'implementation_id' => $implementation->id,
             'client_type' => $clientType,
             'identity_address' => $identityAddress,
@@ -230,14 +245,6 @@ class OpenIdSession extends Model
     public function sessionIdentity(): ?Identity
     {
         return $this->identity;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function sessionIdentityBsn(): ?string
-    {
-        return $this->identity?->bsn;
     }
 
     /**

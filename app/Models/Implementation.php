@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
+use App\Http\Resources\OpenIdFlowResource;
 use App\Models\Traits\ValidatesValues;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ImplementationQuery;
@@ -23,6 +24,7 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\OpenIdService;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
@@ -88,23 +90,14 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_product_map
  * @property bool $show_privacy_checkbox
  * @property bool $show_terms_checkbox
- * @property string $auth_page_title
- * @property string $auth_page_login_title
- * @property bool $auth_page_login_email
- * @property bool $auth_page_login_digid
- * @property bool $auth_page_login_openid
- * @property bool $auth_page_login_qr
- * @property bool $auth_page_info_enabled
- * @property string|null $auth_page_info_title
- * @property string|null $auth_page_info_description
  * @property bool $allow_per_fund_notification_templates
+ * @property bool $openid_enabled
+ * @property string|null $openid_verid_brand_uuid
  * @property bool $digid_enabled
- * @property bool $openid_verid_enabled
- * @property array|null $openid_verid_context
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
- * @property array|null $digid_saml_context
+ * @property array<array-key, mixed>|null $digid_saml_context
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -121,6 +114,15 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $pre_check_banner_label
  * @property string $pre_check_banner_state
  * @property string $products_default_sorting
+ * @property string $auth_page_title
+ * @property string $auth_page_login_title
+ * @property bool $auth_page_login_email
+ * @property bool $auth_page_login_digid
+ * @property bool $auth_page_login_openid
+ * @property bool $auth_page_login_qr
+ * @property bool $auth_page_info_enabled
+ * @property string|null $auth_page_info_title
+ * @property string|null $auth_page_info_description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
@@ -131,8 +133,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $fund_configs_count
  * @property-read EloquentCollection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @property-read string $description_html
  * @property-read string $auth_page_info_description_html
+ * @property-read string $description_html
  * @property-read EloquentCollection|\App\Models\ImplementationLanguage[] $implementation_languages
  * @property-read int|null $implementation_languages_count
  * @property-read EloquentCollection|\App\Models\Language[] $languages
@@ -141,6 +143,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $mail_templates_count
  * @property-read EloquentCollection|Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read EloquentCollection|OpenIdFlow[] $openid_flows
+ * @property-read int|null $openid_flows_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
  * @property-read \App\Models\ImplementationPage|null $page_explanation
@@ -164,6 +168,15 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation newQuery()
  * @method static Builder<static>|Implementation query()
  * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoDescription($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoEnabled($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoTitle($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginDigid($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginEmail($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginOpenid($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginQr($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginTitle($value)
+ * @method static Builder<static>|Implementation whereAuthPageTitle($value)
  * @method static Builder<static>|Implementation whereBannerBackground($value)
  * @method static Builder<static>|Implementation whereBannerBackgroundMobile($value)
  * @method static Builder<static>|Implementation whereBannerButton($value)
@@ -201,6 +214,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereLat($value)
  * @method static Builder<static>|Implementation whereLon($value)
  * @method static Builder<static>|Implementation whereName($value)
+ * @method static Builder<static>|Implementation whereOpenidVeridBrandUuid($value)
+ * @method static Builder<static>|Implementation whereOpenidEnabled($value)
  * @method static Builder<static>|Implementation whereOrganizationId($value)
  * @method static Builder<static>|Implementation whereOverlayEnabled($value)
  * @method static Builder<static>|Implementation whereOverlayOpacity($value)
@@ -275,7 +290,7 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
-        'openid_verid_enabled', 'openid_verid_context',
+        'openid_enabled', 'openid_verid_brand_uuid',
         'overlay_enabled', 'overlay_type', 'overlay_opacity',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
@@ -295,7 +310,7 @@ class Implementation extends Model
      * @var string[]
      */
     protected $hidden = [
-        'digid_enabled', 'openid_verid_enabled', 'openid_verid_context', 'digid_env', 'digid_app_id',
+        'digid_enabled', 'openid_enabled', 'openid_verid_brand_uuid', 'digid_env', 'digid_app_id',
         'digid_shared_secret', 'digid_a_select_server',
     ];
 
@@ -306,8 +321,7 @@ class Implementation extends Model
         'lon' => 'float',
         'lat' => 'float',
         'digid_enabled' => 'boolean',
-        'openid_verid_enabled' => 'boolean',
-        'openid_verid_context' => 'json',
+        'openid_enabled' => 'boolean',
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
@@ -694,30 +708,47 @@ class Implementation extends Model
     }
 
     /**
-     * @return bool
+     * @return BelongsToMany
      */
-    public function openidVeridEnabled(): bool
+    public function openid_flows(): BelongsToMany
     {
-        return (bool) $this->openid_verid_enabled;
+        return $this->belongsToMany(
+            OpenIdFlow::class,
+            'implementation_openid_flows',
+            'implementation_id',
+            'openid_flow_id',
+        )->withTimestamps();
     }
 
     /**
-     * @return array|null
+     * @return string|null
      */
-    public function openidVeridContext(): ?array
+    public function openidVeridBrandUuid(): ?string
     {
-        return is_array($this->openid_verid_context) ? $this->openid_verid_context : null;
+        $uuid = trim((string) $this->openid_verid_brand_uuid);
+
+        return $uuid === '' ? null : $uuid;
     }
 
     /**
-     * @return bool
+     * @return Collection|OpenIdFlow[]
      */
-    public function openidVeridConfigured(): bool
+    public function availableOpenIdFlows(): Collection|array
     {
-        return OpenIdService::providerContextConfigured(
-            OpenIdService::PROVIDER_VERID,
-            $this->openidVeridContext()
-        );
+        return $this->openid_flows
+            ->filter(fn (OpenIdFlow $flow) => $flow->configured())
+            ->values();
+    }
+
+    /**
+     * @param string $provider
+     * @return Collection
+     */
+    public function availableOpenIdFlowsForProvider(string $provider): Collection
+    {
+        return $this->availableOpenIdFlows()
+            ->where('provider', $provider)
+            ->values();
     }
 
     /**
@@ -727,8 +758,8 @@ class Implementation extends Model
     {
         return !$this->isGeneral() &&
             ($this->organization?->allow_openid ?? false) &&
-            $this->openidVeridEnabled() &&
-            $this->openidVeridConfigured();
+            $this->openid_enabled &&
+            $this->availableOpenIdFlowsForProvider(OpenIdService::PROVIDER_VERID)->isNotEmpty();
     }
 
     /**
@@ -924,6 +955,7 @@ class Implementation extends Model
         $request = BaseFormRequest::createFromBase(request());
         $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
+        $openidFlows = $implementation->availableOpenIdFlowsForProvider(OpenIdService::PROVIDER_VERID);
         $openidProviders = OpenIdService::enabledProviderKeys($implementation);
         $openidEnabled = $configKey === self::FRONTEND_WEBSHOP && $implementation->openidAvailable($openidProviders);
 
@@ -945,6 +977,7 @@ class Implementation extends Model
             'openid_config' => [
                 'default_provider' => $openidEnabled ? ($openidProviders[0] ?? null) : null,
                 'providers' => $openidEnabled ? $openidProviders : [],
+                'flows' => $openidEnabled ? OpenIdFlowResource::createCollection($openidFlows)->toArray($request) : [],
             ],
             ...($configKey === self::FRONTEND_WEBSHOP ? [
                 'auth_page' => $implementation->authPageConfig($openidProviders),

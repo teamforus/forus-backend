@@ -14,7 +14,7 @@ return new class () extends Migration {
     {
         Schema::create('openid_sessions', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('provider', 100);
+            $table->unsignedBigInteger('openid_flow_id')->index();
             $table->unsignedInteger('implementation_id')->index();
             $table->string('client_type', 50);
             $table->string('identity_address', 200)->nullable();
@@ -35,7 +35,12 @@ return new class () extends Migration {
             $table->foreign('implementation_id')
                 ->references('id')
                 ->on('implementations')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
+
+            $table->foreign('openid_flow_id')
+                ->references('id')
+                ->on('openid_flows')
+                ->onDelete('restrict');
         });
     }
 

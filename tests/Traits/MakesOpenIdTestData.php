@@ -5,6 +5,7 @@ namespace Tests\Traits;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\Models\OpenIdSession;
 use App\Services\OpenIdService\OpenIdException;
 use App\Services\OpenIdService\OpenIdService;
@@ -20,6 +21,7 @@ trait MakesOpenIdTestData
     public const string FAKE_STATE = 'openid-state';
     public const string FAKE_NONCE = 'openid-nonce';
     public const string FAKE_CODE_VERIFIER = 'openid-code-verifier';
+    public const string FAKE_FLOW_KEY = 'nl_wallet';
     protected const string OPENID_FALLBACK_COOKIE = 'openid_fallback_url';
 
     /**
@@ -40,37 +42,58 @@ trait MakesOpenIdTestData
             'code_challenge_method' => 'S256',
             'id_token_signed_response_alg' => 'ES384',
             'token_endpoint_auth_method' => 'client_secret_basic',
-            'authentication_intent' => [
-                'enabled' => false,
-                'brand_uuid' => '',
-            ],
             ...$overrides,
         ];
     }
 
     /**
+     * @param array $data
+     * @return OpenIdFlow
+     */
+    protected function makeOpenIdFlow(array $data = []): OpenIdFlow
+    {
+        $provider = $data['provider'] ?? OpenIdService::PROVIDER_VERID;
+        $key = $data['key'] ?? static::FAKE_FLOW_KEY;
+
+        $flow = OpenIdFlow::query()->updateOrCreate([
+            'provider' => $provider,
+            'key' => $key,
+        ], [
+            'context' => array_key_exists('context', $data) ? $data['context'] : $this->makeOpenIdContext(),
+            'name' => $data['name'] ?? 'NL Wallet',
+        ]);
+
+        return $flow->refresh();
+    }
+
+    /**
      * @param array $implementationData
      * @param array $organizationData
+     * @param OpenIdFlow|null $openidFlow
      * @return Implementation
      */
     protected function makeOpenIdImplementation(
         array $implementationData = [],
         array $organizationData = [],
+        ?OpenIdFlow $openidFlow = null,
     ): Implementation {
+        $openidFlow ??= $this->makeOpenIdFlow();
+
         $organization = $this->makeTestOrganization($this->makeIdentity(), [
             'allow_openid' => true,
             ...$organizationData,
         ]);
 
         $implementation = $this->makeTestImplementation($organization, [
-            'openid_verid_enabled' => true,
-            'openid_verid_context' => $this->makeOpenIdContext(),
+            'openid_enabled' => true,
             ...$implementationData,
         ]);
 
         if ($implementationData) {
             $implementation->forceFill($implementationData)->save();
         }
+
+        $implementation->openid_flows()->syncWithoutDetaching([$openidFlow->id]);
 
         return $implementation->refresh();
     }
@@ -86,6 +109,7 @@ trait MakesOpenIdTestData
             'state' => token_generator()->generate(40),
             'nonce' => static::FAKE_NONCE,
             'code_verifier' => static::FAKE_CODE_VERIFIER,
+            'meta' => [],
             ...$overrides,
         ];
     }
@@ -109,11 +133,17 @@ trait MakesOpenIdTestData
         $authorization = $data['authorization'] ?? $this->makeOpenIdAuthorization();
         unset($data['authorization']);
 
+        /** @var OpenIdFlow $flow */
+        $flow = $data['openid_flow'] ?? $implementation
+            ->availableOpenIdFlowsForProvider($data['provider'] ?? OpenIdService::PROVIDER_VERID)
+            ->first();
+        unset($data['openid_flow'], $data['provider']);
+
         $session = OpenIdSession::createSession(
             $implementation,
+            $flow,
             $data['client_type'] ?? Implementation::FRONTEND_WEBSHOP,
             $data['target'] ?? null,
-            $data['provider'] ?? OpenIdService::PROVIDER_VERID,
             $authorization,
             $sessionRequest,
             $fund,
@@ -195,24 +225,27 @@ trait MakesOpenIdTestData
 
             /**
              * @param Implementation $implementation
-             * @param string $provider
-             * @throws OpenIdException
+             * @param OpenIdFlow $flow
              * @return array
              */
-            public function buildAuthorizationUrl(Implementation $implementation, string $provider): array
+            public function buildAuthorizationUrl(Implementation $implementation, OpenIdFlow $flow): array
             {
                 if ($this->authorizationException) {
                     throw $this->authorizationException;
                 }
 
-                return $this->authorization;
+                return [
+                    ...$this->authorization,
+                    'meta' => [
+                        ...($this->authorization['meta'] ?? []),
+                    ],
+                ];
             }
 
             /**
              * @param string $provider
              * @param OpenIdSession $session
              * @param Request $request
-             * @throws OpenIdException
              * @return array
              */
             public function resolveCallback(string $provider, OpenIdSession $session, Request $request): array

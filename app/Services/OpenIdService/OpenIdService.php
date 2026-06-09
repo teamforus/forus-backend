@@ -5,6 +5,7 @@ namespace App\Services\OpenIdService;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Rules\BsnRule;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\Models\OpenIdSession;
 use App\Services\OpenIdService\VerId\VerIdAuthenticationIntent;
 use App\Services\OpenIdService\VerId\VerIdIntentCreationException;
@@ -52,11 +53,6 @@ class OpenIdService
     protected const array BSN_CLAIM_SOURCES = [
         self::BSN_CLAIM_SOURCE_CLAIMS,
         self::BSN_CLAIM_SOURCE_USER_INFO,
-    ];
-
-    protected const array AUTHENTICATION_INTENT_DEFAULTS = [
-        'enabled' => false,
-        'brand_uuid' => '',
     ];
 
     /**
@@ -142,34 +138,26 @@ class OpenIdService
             }
         }
 
-        $intent = self::normalizeAuthenticationIntentConfig($context['authentication_intent'] ?? null);
-
-        if ($intent['enabled'] && !$intent['brand_uuid']) {
-            return false;
-        }
-
         return true;
     }
 
     /**
-     * @param string $provider
-     * @param Implementation $implementation
+     * @param OpenIdFlow $flow
      * @throws OpenIdException
      * @return array
      */
-    public function getProviderConfig(string $provider, Implementation $implementation): array
+    public function getProviderConfig(OpenIdFlow $flow): array
     {
+        $provider = $flow->provider;
+
         if (!static::providerConfigured($provider)) {
             abort(404, 'Unknown OIDC provider');
         }
 
-        $context = match ($provider) {
-            self::PROVIDER_VERID => $implementation->openidVeridContext() ?: [],
-            default => [],
-        };
+        $context = $flow->openidContext() ?: [];
 
         if (!static::providerContextConfigured($provider, $context)) {
-            throw new OpenIdException('OpenID provider is not configured for this implementation.');
+            throw new OpenIdException(trans('openid.exceptions.flow_not_configured'));
         }
 
         return $this->normalizeProviderConfig($context);
@@ -177,17 +165,23 @@ class OpenIdService
 
     /**
      * @param Implementation $implementation
-     * @param string $provider
+     * @param OpenIdFlow $flow
      * @throws OpenIdException
      * @return ClientInterface
      */
-    public function makeClient(Implementation $implementation, string $provider): ClientInterface
+    public function makeClient(Implementation $implementation, OpenIdFlow $flow): ClientInterface
     {
+        $provider = $flow->provider;
+
         if (!static::providerEnabled($provider, $implementation)) {
             throw new OpenIdException('OpenID provider is not enabled for this implementation.');
         }
 
-        $config = $this->getProviderConfig($provider, $implementation);
+        if (!$implementation->availableOpenIdFlows()->firstWhere('id', $flow->id)) {
+            throw new OpenIdException(trans('openid.exceptions.flow_not_enabled'));
+        }
+
+        $config = $this->getProviderConfig($flow);
         $issuer = (new IssuerBuilder())->build($config['issuer']);
 
         if (
@@ -215,19 +209,21 @@ class OpenIdService
 
     /**
      * @param Implementation $implementation
-     * @param string $provider
+     * @param OpenIdFlow $flow
      * @throws OpenIdException
      * @return array
      */
-    public function buildAuthorizationUrl(Implementation $implementation, string $provider): array
+    public function buildAuthorizationUrl(Implementation $implementation, OpenIdFlow $flow): array
     {
+        $provider = $flow->provider;
+
         try {
-            $config = $this->getProviderConfig($provider, $implementation);
+            $config = $this->getProviderConfig($flow);
             $state = $this->makeRandomToken();
             $nonce = $this->makeRandomToken();
             $codeVerifier = $this->makeCodeVerifier();
             $codeChallenge = $this->makeCodeChallenge($codeVerifier);
-            $client = $this->makeClient($implementation, $provider);
+            $client = $this->makeClient($implementation, $flow);
 
             $intentMeta = $this->resolveAuthenticationIntentMeta(
                 $provider,
@@ -267,6 +263,7 @@ class OpenIdService
         } catch (Throwable $exception) {
             static::logger()->error('OpenID authorization URL build failed.', [
                 'provider' => $provider,
+                'flow_key' => $flow->key,
                 'implementation_id' => $implementation->id,
                 ...static::exceptionContext($exception),
             ]);
@@ -294,8 +291,9 @@ class OpenIdService
                 throw new OpenIdException('OpenID callback session implementation was not found.');
             }
 
-            $client = $this->makeClient($implementation, $provider);
-            $config = $this->getProviderConfig($provider, $implementation);
+            $flow = $this->resolveSessionFlow($session);
+            $client = $this->makeClient($implementation, $flow);
+            $config = $this->getProviderConfig($flow);
             $authorizationService = (new AuthorizationServiceBuilder())->build();
 
             $authSession = AuthSession::fromArray([
@@ -346,18 +344,17 @@ class OpenIdService
     }
 
     /**
-     * @param string $provider
      * @param array $payload
-     * @param Implementation $implementation
+     * @param OpenIdFlow $flow
      * @throws OpenIdException
      * @return string
      */
     public function resolveBsnFromPayload(
-        string $provider,
         array $payload,
-        Implementation $implementation
+        OpenIdFlow $flow
     ): string {
-        $config = $this->getProviderConfig($provider, $implementation);
+        $provider = $flow->provider;
+        $config = $this->getProviderConfig($flow);
         $claim = trim((string) $config['bsn_claim']);
         $source = strtolower(trim((string) $config['bsn_claim_source']));
 
@@ -391,6 +388,34 @@ class OpenIdService
     }
 
     /**
+     * @param OpenIdSession $session
+     * @return OpenIdFlow|null
+     */
+    public function findSessionFlow(OpenIdSession $session): ?OpenIdFlow
+    {
+        if (!$session->openid_flow) {
+            return null;
+        }
+
+        return $session->implementation?->availableOpenIdFlows()->firstWhere('id', $session->openid_flow->id);
+    }
+
+    /**
+     * @param OpenIdSession $session
+     * @throws OpenIdException
+     * @return OpenIdFlow
+     */
+    public function resolveSessionFlow(OpenIdSession $session): OpenIdFlow
+    {
+        return $this->findSessionFlow($session) ?: throw OpenIdException::withOpenIdError(
+            OpenIdException::ERROR_NOT_ENABLED,
+            trans('openid.exceptions.flow_not_enabled'),
+            null,
+            $session
+        );
+    }
+
+    /**
      * @param string $provider
      * @param string|null $state
      * @throws OpenIdException
@@ -398,12 +423,12 @@ class OpenIdService
      */
     public function resolveCallbackSession(string $provider, ?string $state): OpenIdSession
     {
-        if (!static::enabled() || !static::providerConfigured($provider)) {
-            $session = $state ? OpenIdSession::query()
-                ->where('state', $state)
-                ->where('provider', $provider)
-                ->first() : null;
+        $session = $state ? OpenIdSession::query()
+            ->where('state', $state)
+            ->whereRelation('openid_flow', 'provider', $provider)
+            ->first() : null;
 
+        if (!static::enabled() || !static::providerConfigured($provider)) {
             throw OpenIdException::withOpenIdError(
                 OpenIdException::ERROR_NOT_ENABLED,
                 'OpenID provider is not enabled.',
@@ -418,11 +443,6 @@ class OpenIdService
                 'OpenID callback state is missing.'
             );
         }
-
-        $session = OpenIdSession::query()
-            ->where('state', $state)
-            ->where('provider', $provider)
-            ->first();
 
         if (!$session) {
             throw OpenIdException::withOpenIdError(
@@ -440,7 +460,9 @@ class OpenIdService
             );
         }
 
-        if (!$session->implementation?->openidAvailable([$provider])) {
+        $flow = $this->resolveSessionFlow($session);
+
+        if (!$session->implementation?->openidAvailable([$flow->provider])) {
             throw OpenIdException::withOpenIdError(
                 OpenIdException::ERROR_NOT_ENABLED,
                 'OpenID is not enabled for this implementation.',
@@ -554,27 +576,7 @@ class OpenIdService
             $config['auth_params'] = [];
         }
 
-        $config['authentication_intent'] = self::normalizeAuthenticationIntentConfig(
-            $config['authentication_intent'] ?? null
-        );
-
         return $config;
-    }
-
-    /**
-     * @param mixed $config
-     * @return array
-     */
-    protected static function normalizeAuthenticationIntentConfig(mixed $config): array
-    {
-        if (!is_array($config)) {
-            return self::AUTHENTICATION_INTENT_DEFAULTS;
-        }
-
-        return [
-            'enabled' => ($config['enabled'] ?? false) === true,
-            'brand_uuid' => is_string($config['brand_uuid'] ?? null) ? trim($config['brand_uuid']) : '',
-        ];
     }
 
     /**
@@ -593,7 +595,9 @@ class OpenIdService
         ClientInterface $client,
         string $codeChallenge
     ): array {
-        if ($provider !== self::PROVIDER_VERID || !($config['authentication_intent']['enabled'] ?? false)) {
+        $brandUuid = $implementation->openidVeridBrandUuid();
+
+        if ($provider !== self::PROVIDER_VERID || !$brandUuid) {
             return [];
         }
 
@@ -601,6 +605,7 @@ class OpenIdService
             $config,
             $codeChallenge,
             $client->getIssuer()->getMetadata()->get('intent_endpoint'),
+            $brandUuid,
         );
 
         $response = $intent->send();
@@ -674,17 +679,21 @@ class OpenIdService
      */
     protected function resolveCallbackBsn(OpenIdSession $session, Request $request): string
     {
+        $provider = $session->openid_flow?->provider;
+
         try {
+            $flow = $this->resolveSessionFlow($session);
+            $provider = $flow->provider;
+
             return $this->resolveBsnFromPayload(
-                $session->provider,
-                $this->resolveCallback($session->provider, $session, $request),
-                $session->implementation
+                $this->resolveCallback($provider, $session, $request),
+                $flow
             );
         } catch (OpenIdException $exception) {
             $openIdError = $exception->getOpenIdError() ?: OpenIdException::ERROR_CALLBACK_FAILED;
 
             static::logger()->warning('OpenID BSN callback mapped to error response.', [
-                'provider' => $session->provider,
+                'provider' => $provider,
                 'session_id' => $session->id,
                 'session_uid' => $session->session_uid,
                 'session_request' => $session->session_request,
@@ -769,7 +778,7 @@ class OpenIdService
         ?Throwable $previous = null
     ): never {
         static::logger()->warning('OpenID BSN callback mapped to error response.', [
-            'provider' => $session->provider,
+            'provider' => $session->openid_flow?->provider,
             'session_id' => $session->id,
             'session_uid' => $session->session_uid,
             'session_request' => $session->session_request,

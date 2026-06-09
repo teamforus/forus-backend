@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
+use App\Services\OpenIdService\Models\OpenIdFlow;
+use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateImplementationOpenIdRequest extends FormRequest
 {
@@ -23,8 +26,12 @@ class UpdateImplementationOpenIdRequest extends FormRequest
      */
     public function rules(): array
     {
+        $flowKeys = OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID)->pluck('key')->all();
+
         return [
-            'openid_verid_enabled' => 'required|boolean',
+            'openid_enabled' => 'required|boolean',
+            'openid_flow_keys' => ['present', 'array'],
+            'openid_flow_keys.*' => ['string', Rule::in($flowKeys)],
         ];
     }
 }

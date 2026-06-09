@@ -99,7 +99,7 @@ class ImplementationAuthPageTest extends TestCase
     public function testUpdateImplementationAuthPageRejectsDisabledProviderOpenIdSelectedOption(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
@@ -168,7 +168,7 @@ class ImplementationAuthPageTest extends TestCase
     public function testUpdateImplementationAuthPageKeepsDisabledProviderOpenIdButFiltersEffectiveOptions(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $request = $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([

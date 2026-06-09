@@ -14,8 +14,8 @@ return new class () extends Migration {
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->boolean('auth_page_login_openid')->default(false)->after('auth_page_login_digid');
-            $table->boolean('openid_verid_enabled')->default(false)->after('allow_per_fund_notification_templates');
-            $table->json('openid_verid_context')->nullable()->after('openid_verid_enabled');
+            $table->boolean('openid_enabled')->default(false)->after('allow_per_fund_notification_templates');
+            $table->uuid('openid_verid_brand_uuid')->nullable()->after('openid_enabled');
         });
     }
 
@@ -29,8 +29,8 @@ return new class () extends Migration {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn([
                 'auth_page_login_openid',
-                'openid_verid_enabled',
-                'openid_verid_context',
+                'openid_enabled',
+                'openid_verid_brand_uuid',
             ]);
         });
     }

@@ -35,20 +35,29 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdEnablesVeridForAllowedOrganization(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $response = $this->apiUpdateImplementationOpenIdRequest($implementation, [
-            'openid_verid_enabled' => true,
+            'openid_enabled' => true,
+            'openid_flow_keys' => [static::FAKE_FLOW_KEY],
         ], $implementation->organization->identity);
 
         $response
             ->assertSuccessful()
-            ->assertJsonPath('data.openid_verid_enabled', true)
-            ->assertJsonPath('data.openid_verid_configured', true)
+            ->assertJsonPath('data.openid_enabled', true)
+            ->assertJsonPath('data.openid_configured', true)
             ->assertJsonPath('data.openid_available', true);
 
-        $this->assertTrue($implementation->refresh()->openid_verid_enabled);
+        $this->assertSame([static::FAKE_FLOW_KEY], collect($response->json('data.openid_flows'))->pluck('key')->all());
+        $this->assertContains(
+            static::FAKE_FLOW_KEY,
+            collect($response->json('data.openid_flow_options'))->pluck('key')->all(),
+        );
+
+        $this->assertArrayNotHasKey('enabled', $response->json('data.openid_flows.0'));
+        $this->assertTrue($implementation->refresh()->openid_enabled);
+        $this->assertSame([static::FAKE_FLOW_KEY], $implementation->openid_flows()->pluck('openid_flows.key')->all());
     }
 
     /**
@@ -57,46 +66,46 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdDisablesVerid(): void
     {
         $implementation = $this->makeOpenIdImplementation();
-        $context = $implementation->openid_verid_context;
 
         $response = $this->apiUpdateImplementationOpenIdRequest($implementation, [
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
+            'openid_flow_keys' => [static::FAKE_FLOW_KEY],
         ], $implementation->organization->identity);
 
         $response
             ->assertSuccessful()
-            ->assertJsonPath('data.openid_verid_enabled', false)
-            ->assertJsonPath('data.openid_verid_configured', true)
+            ->assertJsonPath('data.openid_enabled', false)
+            ->assertJsonPath('data.openid_configured', true)
             ->assertJsonPath('data.openid_available', false);
 
         $implementation->refresh();
 
-        $this->assertFalse($implementation->openid_verid_enabled);
-        $this->assertEquals($context, $implementation->openid_verid_context);
+        $this->assertFalse($implementation->openid_enabled);
+        $this->assertSame([static::FAKE_FLOW_KEY], $implementation->openid_flows()->pluck('openid_flows.key')->all());
     }
 
     /**
      * @return void
      */
-    public function testUpdateImplementationOpenIdCanEnableWhenContextIsMissingButProviderRemainsUnavailable(): void
+    public function testUpdateImplementationOpenIdCanEnableWhenNoFlowIsSelectedButProviderRemainsUnavailable(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
-            'openid_verid_context' => null,
-        ]);
+            'openid_enabled' => false,
+        ], openidFlow: $this->makeOpenIdFlow(['key' => 'datakeeper', 'context' => null]));
 
         $response = $this->apiUpdateImplementationOpenIdRequest($implementation, [
-            'openid_verid_enabled' => true,
+            'openid_enabled' => true,
+            'openid_flow_keys' => [],
         ], $implementation->organization->identity);
 
         $response
             ->assertSuccessful()
-            ->assertJsonPath('data.openid_verid_enabled', true)
-            ->assertJsonPath('data.openid_verid_configured', false)
+            ->assertJsonPath('data.openid_enabled', true)
+            ->assertJsonPath('data.openid_configured', true)
             ->assertJsonPath('data.openid_available', false);
 
-        $this->assertTrue($implementation->refresh()->openid_verid_enabled);
-        $this->assertNull($implementation->openid_verid_context);
+        $this->assertTrue($implementation->refresh()->openid_enabled);
+        $this->assertSame([], $implementation->openid_flows()->pluck('openid_flows.key')->all());
     }
 
     /**
@@ -105,14 +114,16 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdRejectsMissingEnabledFlag(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => true,
+            'openid_enabled' => true,
         ]);
 
         $this
-            ->apiUpdateImplementationOpenIdRequest($implementation, [], $implementation->organization->identity)
-            ->assertJsonValidationErrors(['openid_verid_enabled']);
+            ->apiUpdateImplementationOpenIdRequest($implementation, [
+                'openid_flow_keys' => [static::FAKE_FLOW_KEY],
+            ], $implementation->organization->identity)
+            ->assertJsonValidationErrors(['openid_enabled']);
 
-        $this->assertTrue($implementation->refresh()->openid_verid_enabled);
+        $this->assertTrue($implementation->refresh()->openid_enabled);
     }
 
     /**
@@ -121,16 +132,17 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdRejectsInvalidEnabledFlag(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => true,
+            'openid_enabled' => true,
         ]);
 
         $this
             ->apiUpdateImplementationOpenIdRequest($implementation, [
-                'openid_verid_enabled' => 'not-a-boolean',
+                'openid_enabled' => 'not-a-boolean',
+                'openid_flow_keys' => [static::FAKE_FLOW_KEY],
             ], $implementation->organization->identity)
-            ->assertJsonValidationErrors(['openid_verid_enabled']);
+            ->assertJsonValidationErrors(['openid_enabled']);
 
-        $this->assertTrue($implementation->refresh()->openid_verid_enabled);
+        $this->assertTrue($implementation->refresh()->openid_enabled);
     }
 
     /**
@@ -139,18 +151,19 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdRejectsWhenOrganizationDoesNotAllowOpenId(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ], [
             'allow_openid' => false,
         ]);
 
         $this
             ->apiUpdateImplementationOpenIdRequest($implementation, [
-                'openid_verid_enabled' => true,
+                'openid_enabled' => true,
+                'openid_flow_keys' => [static::FAKE_FLOW_KEY],
             ], $implementation->organization->identity)
             ->assertForbidden();
 
-        $this->assertFalse($implementation->refresh()->openid_verid_enabled);
+        $this->assertFalse($implementation->refresh()->openid_enabled);
     }
 
     /**
@@ -159,14 +172,17 @@ class ImplementationOpenIdTest extends TestCase
     public function testUpdateImplementationOpenIdRejectsNonEmployee(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $this
-            ->apiUpdateImplementationOpenIdRequest($implementation, ['openid_verid_enabled' => true], $this->makeIdentity())
+            ->apiUpdateImplementationOpenIdRequest($implementation, [
+                'openid_enabled' => true,
+                'openid_flow_keys' => [static::FAKE_FLOW_KEY],
+            ], $this->makeIdentity())
             ->assertForbidden();
 
-        $this->assertFalse($implementation->refresh()->openid_verid_enabled);
+        $this->assertFalse($implementation->refresh()->openid_enabled);
     }
 
     /**
@@ -177,7 +193,7 @@ class ImplementationOpenIdTest extends TestCase
         $employeeIdentity = $this->makeIdentity();
 
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $implementation->organization->addEmployee($employeeIdentity, [
@@ -185,10 +201,13 @@ class ImplementationOpenIdTest extends TestCase
         ]);
 
         $this
-            ->apiUpdateImplementationOpenIdRequest($implementation, ['openid_verid_enabled' => true], $employeeIdentity)
+            ->apiUpdateImplementationOpenIdRequest($implementation, [
+                'openid_enabled' => true,
+                'openid_flow_keys' => [static::FAKE_FLOW_KEY],
+            ], $employeeIdentity)
             ->assertForbidden();
 
-        $this->assertFalse($implementation->refresh()->openid_verid_enabled);
+        $this->assertFalse($implementation->refresh()->openid_enabled);
     }
 
     /**
@@ -198,19 +217,19 @@ class ImplementationOpenIdTest extends TestCase
     {
         $routeImplementation = $this->makeOpenIdImplementation();
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
 
         $this
             ->apiUpdateImplementationOpenIdForOrganizationRequest(
                 $routeImplementation->organization,
                 $implementation,
-                ['openid_verid_enabled' => true],
+                ['openid_enabled' => true, 'openid_flow_keys' => [static::FAKE_FLOW_KEY]],
                 $routeImplementation->organization->identity,
             )
             ->assertForbidden();
 
-        $this->assertFalse($implementation->refresh()->openid_verid_enabled);
+        $this->assertFalse($implementation->refresh()->openid_enabled);
     }
 
     /**

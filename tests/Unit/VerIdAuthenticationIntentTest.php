@@ -26,6 +26,7 @@ class VerIdAuthenticationIntentTest extends TestCase
             $this->makeConfig(),
             'code-challenge',
             'https://issuer.example/intent',
+            'brand-123',
         ))->send();
 
         $this->assertTrue($response->successful());
@@ -49,7 +50,7 @@ class VerIdAuthenticationIntentTest extends TestCase
     {
         Http::fake();
 
-        $response = (new VerIdAuthenticationIntent($this->makeConfig(), 'code-challenge', null))->send();
+        $response = (new VerIdAuthenticationIntent($this->makeConfig(), 'code-challenge', null, 'brand-123'))->send();
 
         $this->assertFalse($response->successful());
         $this->assertSame(VerIdAuthenticationIntentResponse::ERROR_MISSING_INTENT_ENDPOINT, $response->errorCode());
@@ -70,6 +71,7 @@ class VerIdAuthenticationIntentTest extends TestCase
             $this->makeConfig(),
             'code-challenge',
             'https://issuer.example/intent',
+            'brand-123',
         ))->send();
 
         $this->assertFalse($response->successful());
@@ -91,6 +93,7 @@ class VerIdAuthenticationIntentTest extends TestCase
             $this->makeConfig(),
             'code-challenge',
             'https://issuer.example/intent',
+            'brand-123',
         ))->send();
 
         $this->assertFalse($response->successful());
@@ -123,6 +126,7 @@ class VerIdAuthenticationIntentTest extends TestCase
             $this->makeConfig(),
             'code-challenge',
             'https://issuer.example/intent',
+            'brand-123',
         ))->send();
 
         $this->assertFalse($response->successful());
@@ -139,10 +143,6 @@ class VerIdAuthenticationIntentTest extends TestCase
         return [
             'client_id' => 'verid-client',
             'client_secret' => 'verid-secret',
-            'authentication_intent' => [
-                'enabled' => true,
-                'brand_uuid' => 'brand-123',
-            ],
             ...$overrides,
         ];
     }

@@ -22,7 +22,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Services\FileService\Models\File;
-use App\Services\OpenIdService\OpenIdService;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -116,7 +116,6 @@ trait MakesApiRequests
      * @param Implementation $implementation
      * @param array $data
      * @param IdentityProxy|Identity|bool $authProxy
-     * @param string $provider
      * @param array $headers
      * @return TestResponse
      */
@@ -124,12 +123,17 @@ trait MakesApiRequests
         Implementation $implementation,
         array $data = [],
         IdentityProxy|Identity|bool $authProxy = false,
-        string $provider = OpenIdService::PROVIDER_VERID,
         array $headers = [],
     ): TestResponse {
+        /** @var OpenIdFlow $flow */
+        $flow = $implementation->availableOpenIdFlows()->first();
+
         return $this->postJson(
-            sprintf('/api/v1/platform/openid/%s/auth', $provider),
-            $data,
+            '/api/v1/platform/openid/auth',
+            [
+                'flow_id' => $flow?->id,
+                ...$data,
+            ],
             $this->makeApiHeaders($authProxy, [
                 'Client-Type' => Implementation::FRONTEND_WEBSHOP,
                 'Client-Key' => $implementation->key,

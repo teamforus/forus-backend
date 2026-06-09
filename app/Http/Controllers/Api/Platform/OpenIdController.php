@@ -26,11 +26,11 @@ class OpenIdController extends Controller
 
     /**
      * @param StartOpenIdRequest $request
-     * @param string $provider
      * @return JsonResponse|Response
      */
-    public function auth(StartOpenIdRequest $request, string $provider): JsonResponse|Response
+    public function auth(StartOpenIdRequest $request): JsonResponse|Response
     {
+        $flow = $request->openidFlow();
         $service = resolve(OpenIdService::class);
         $sessionRequest = $request->input('request') ?: OpenIdSession::REQUEST_AUTH;
 
@@ -38,19 +38,25 @@ class OpenIdController extends Controller
             ? Fund::findOrFail($request->input('fund_id'))
             : null;
 
+        if (!$flow) {
+            return new Response(trans('requests.openid.not_enabled'), 403, [
+                'Error-Code' => OpenIdException::ERROR_NOT_ENABLED,
+            ]);
+        }
+
         try {
-            $authorization = $service->buildAuthorizationUrl($request->implementation(), $provider);
+            $authorization = $service->buildAuthorizationUrl($request->implementation(), $flow);
         } catch (OpenIdException) {
-            return new Response('Unable to handle the request at the moment.', 503, [
+            return new Response(trans('requests.openid.unavailable'), 503, [
                 'Error-Code' => OpenIdException::ERROR_UNKNOWN,
             ]);
         }
 
         $session = OpenIdSession::createSession(
             $request->implementation(),
+            $flow,
             $request->client_type(),
             $request->input('target'),
-            $provider,
             $authorization,
             $sessionRequest,
             $fund,
@@ -68,7 +74,9 @@ class OpenIdController extends Controller
      */
     public function redirect(OpenIdSession $session): RedirectResponse
     {
-        if (!$session->implementation?->openidAvailable([$session->provider])) {
+        $flow = resolve(OpenIdService::class)->findSessionFlow($session);
+
+        if (!$flow || !$session->implementation?->openidAvailable([$flow->provider])) {
             $session->markError();
 
             return $this->makeRedirectErrorResponse(

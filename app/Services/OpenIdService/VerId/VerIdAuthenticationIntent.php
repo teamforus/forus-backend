@@ -11,11 +11,13 @@ class VerIdAuthenticationIntent
      * @param array $config
      * @param string $codeChallenge
      * @param mixed $intentEndpoint
+     * @param string $brandUuid
      */
     public function __construct(
         protected array $config,
         protected string $codeChallenge,
         protected mixed $intentEndpoint,
+        protected string $brandUuid,
     ) {
     }
 
@@ -81,6 +83,6 @@ class VerIdAuthenticationIntent
      */
     public function brandUuid(): string
     {
-        return trim((string) data_get($this->config, 'authentication_intent.brand_uuid', ''));
+        return trim($this->brandUuid);
     }
 }

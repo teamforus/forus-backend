@@ -8,12 +8,15 @@ use App\Models\Announcement;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Permission;
+use App\Services\OpenIdService\Models\OpenIdFlow;
+use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Http\Request;
 use League\CommonMark\Exception\CommonMarkException;
 
 class ImplementationPrivateResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'openid_flows',
         'organization',
     ];
 
@@ -66,7 +69,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'digid_available' => $implementation->digidEnabled(),
-            'openid_verid_configured' => $implementation->openidVeridConfigured(),
+            'openid_configured' => OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID)->isNotEmpty(),
             'openid_available' => $implementation->openidAvailable(),
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
@@ -101,11 +104,16 @@ class ImplementationPrivateResource extends BaseJsonResource
         if ($implementation->organization->identityCan($request->identity(), [
             Permission::MANAGE_IMPLEMENTATION,
         ])) {
+            $flowsEnabled = $implementation->availableOpenIdFlowsForProvider(OpenIdService::PROVIDER_VERID);
+            $flowsOptions = OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID);
+
             return [
                 ...$implementation->only([
                     'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
-                    'openid_verid_enabled', 'email_from_address', 'email_from_name',
+                    'openid_enabled', 'email_from_address', 'email_from_name',
                 ]),
+                'openid_flows' => OpenIdFlowResource::collection($flowsEnabled),
+                'openid_flow_options' => OpenIdFlowResource::collection($flowsOptions),
             ];
         }
 

@@ -158,7 +158,7 @@ $router->group([], static function () use ($router) {
         ],
     );
 
-    $router->post('/openid/{provider}/auth', 'Api\Platform\OpenIdController@auth')->name('openidAuth');
+    $router->post('/openid/auth', 'Api\Platform\OpenIdController@auth')->name('openidAuth');
     $router->get(
         '/openid/{openid_session_uid}/redirect',
         'Api\Platform\OpenIdController@redirect',

@@ -142,7 +142,7 @@ class OpenIdCallbackTest extends TestCase
     public function testCallbackRejectsWhenProviderIsDisabledOnImplementation(): void
     {
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
         $session = $this->makeOpenIdSession($implementation);
 

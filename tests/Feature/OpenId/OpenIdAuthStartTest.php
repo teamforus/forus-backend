@@ -4,6 +4,7 @@ namespace Tests\Feature\OpenId;
 
 use App\Models\Fund;
 use App\Models\Implementation;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\Models\OpenIdSession;
 use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -48,10 +49,13 @@ class OpenIdAuthStartTest extends TestCase
         $response->assertSuccessful();
         $this->assertSame($sessionCount + 1, OpenIdSession::count());
 
+        /** @var OpenIdFlow $flow */
         $session = $this->findOpenIdSessionByRedirectUrl($response->json('redirect_url'));
+        $flow = $implementation->availableOpenIdFlows()->first();
 
         $this->assertSame($session->getRedirectUrl(), $response->json('redirect_url'));
-        $this->assertSame(OpenIdService::PROVIDER_VERID, $session->provider);
+        $this->assertSame($flow->id, $session->openid_flow_id);
+        $this->assertSame(OpenIdService::PROVIDER_VERID, $session->openid_flow->provider);
         $this->assertSame($implementation->id, $session->implementation_id);
         $this->assertSame(Implementation::FRONTEND_WEBSHOP, $session->client_type);
         $this->assertNull($session->identity_address);
@@ -92,9 +96,12 @@ class OpenIdAuthStartTest extends TestCase
         $response->assertSuccessful();
         $this->assertSame($sessionCount + 1, OpenIdSession::count());
 
+        /** @var OpenIdFlow $flow */
         $session = $this->findOpenIdSessionByRedirectUrl($response->json('redirect_url'));
+        $flow = $implementation->availableOpenIdFlows()->first();
 
         $this->assertSame($session->getRedirectUrl(), $response->json('redirect_url'));
+        $this->assertSame($flow->id, $session->openid_flow_id);
         $this->assertSame($requester->address, $session->identity_address);
         $this->assertNull($session->target);
         $this->assertSame($fund->id, $session->meta['fund_id']);
@@ -161,23 +168,6 @@ class OpenIdAuthStartTest extends TestCase
     /**
      * @return void
      */
-    public function testStartAuthRejectsUnknownProvider(): void
-    {
-        $this->fakeOpenIdService();
-
-        $implementation = $this->makeOpenIdImplementation();
-        $sessionCount = OpenIdSession::count();
-
-        $this
-            ->apiStartOpenIdAuthRequest($implementation, provider: 'unknown')
-            ->assertForbidden();
-
-        $this->assertSame($sessionCount, OpenIdSession::count());
-    }
-
-    /**
-     * @return void
-     */
     public function testStartAuthRejectsNonWebshopClientType(): void
     {
         $this->fakeOpenIdService();
@@ -218,7 +208,7 @@ class OpenIdAuthStartTest extends TestCase
         $this->fakeOpenIdService();
 
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_enabled' => false,
+            'openid_enabled' => false,
         ]);
         $sessionCount = OpenIdSession::count();
 
@@ -229,16 +219,35 @@ class OpenIdAuthStartTest extends TestCase
     /**
      * @return void
      */
-    public function testStartAuthRejectsWhenProviderContextIsIncomplete(): void
+    public function testStartAuthRejectsWhenFlowContextIsIncomplete(): void
     {
         $this->fakeOpenIdService();
 
-        $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_context' => null,
-        ]);
+        $implementation = $this->makeOpenIdImplementation(openidFlow: $this->makeOpenIdFlow([
+            'context' => null,
+        ]));
         $sessionCount = OpenIdSession::count();
 
         $this->apiStartOpenIdAuthRequest($implementation)->assertForbidden();
+        $this->assertSame($sessionCount, OpenIdSession::count());
+    }
+
+    /**
+     * @return void
+     */
+    public function testStartAuthRejectsUnknownFlowId(): void
+    {
+        $this->fakeOpenIdService();
+
+        $implementation = $this->makeOpenIdImplementation();
+        $sessionCount = OpenIdSession::count();
+
+        $this
+            ->apiStartOpenIdAuthRequest($implementation, [
+                'flow_id' => OpenIdFlow::max('id') + 1,
+            ])
+            ->assertJsonValidationErrors(['flow_id']);
+
         $this->assertSame($sessionCount, OpenIdSession::count());
     }
 
@@ -288,12 +297,7 @@ class OpenIdAuthStartTest extends TestCase
         $this->fakeFailingOpenIdService();
 
         $implementation = $this->makeOpenIdImplementation([
-            'openid_verid_context' => $this->makeOpenIdContext([
-                'authentication_intent' => [
-                    'enabled' => true,
-                    'brand_uuid' => 'brand-123',
-                ],
-            ]),
+            'openid_verid_brand_uuid' => '00000000-0000-0000-0000-000000000001',
         ]);
         $sessionCount = OpenIdSession::count();
 
@@ -303,6 +307,40 @@ class OpenIdAuthStartTest extends TestCase
             ->assertHeader('Error-Code', 'openid_unknown_error');
 
         $this->assertSame($sessionCount, OpenIdSession::count());
+    }
+
+    /**
+     * @return void
+     */
+    public function testRedirectRejectsWhenProviderIsDisabledOnImplementation(): void
+    {
+        $implementation = $this->makeOpenIdImplementation();
+        $session = $this->makeOpenIdSession($implementation);
+
+        $implementation->forceFill(['openid_enabled' => false])->save();
+
+        $response = $this->getJson($session->getRedirectUrl());
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('openid_error=not_enabled', $response->headers->get('Location'));
+        $this->assertSame(OpenIdSession::STATE_ERROR, $session->refresh()->session_state);
+    }
+
+    /**
+     * @return void
+     */
+    public function testRedirectRejectsWhenSessionFlowIsDisabled(): void
+    {
+        $implementation = $this->makeOpenIdImplementation();
+        $session = $this->makeOpenIdSession($implementation);
+
+        $implementation->openid_flows()->detach();
+
+        $response = $this->getJson($session->getRedirectUrl());
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('openid_error=not_enabled', $response->headers->get('Location'));
+        $this->assertSame(OpenIdSession::STATE_ERROR, $session->refresh()->session_state);
     }
 
     /**

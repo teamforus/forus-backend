@@ -16,10 +16,10 @@ use App\Http\Resources\ImplementationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class ImplementationsController extends Controller
@@ -159,8 +159,13 @@ class ImplementationsController extends Controller
         $this->authorize('updateOpenId', [$implementation, $organization]);
 
         $implementation->update([
-            'openid_verid_enabled' => $request->boolean('openid_verid_enabled'),
+            'openid_enabled' => $request->boolean('openid_enabled'),
         ]);
+
+        $implementation->openid_flows()->sync(OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID)
+            ->whereIn('key', $request->input('openid_flow_keys', []))
+            ->pluck('id')
+            ->all());
 
         return ImplementationPrivateResource::create($implementation);
     }
