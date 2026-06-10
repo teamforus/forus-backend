@@ -132,6 +132,30 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @param int $id
+     * @param Organization $organization
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertListFilterByOrganizationsCheckboxes(Browser $browser, int $id, Organization $organization): void
+    {
+        $this->uncollapseWebshopFilterGroup($browser, '@fundFilterGroupOrganizations');
+        $this->clearCheckboxFilterItems($browser, '@fundFilterGroupOrganizations');
+
+        $this->assertListCount($browser, 0, $this->getListSelector() . 'Content');
+        $browser->waitFor('@fundOrganizationFilterOption' . $organization->id);
+        $browser->click('@fundOrganizationFilterOption' . $organization->id);
+
+        $this->assertListVisibility($browser, $id, true);
+        $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
+
+        $this->assertActiveFilterLabelAndReset($browser, 'organization', $organization->id);
+    }
+
+    /**
+     * @param Browser $browser
      * @param Tag $tag
      * @param int $id
      * @param int $total
@@ -146,6 +170,46 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, $total, $this->getListSelector() . 'Content');
         $this->changeSelectControl($browser, '@selectControlTags', index: 0);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param int $id
+     * @param Tag $tag
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertListFilterByTagsCheckboxes(Browser $browser, int $id, Tag $tag): void
+    {
+        $this->uncollapseWebshopFilterGroup($browser, '@fundFilterGroupTags');
+        $this->clearCheckboxFilterItems($browser, '@fundFilterGroupTags');
+
+        $this->assertListCount($browser, 0, $this->getListSelector() . 'Content');
+        $browser->waitFor('@fundTagFilterOption' . $tag->id);
+        $browser->click('@fundTagFilterOption' . $tag->id);
+
+        $this->assertListVisibility($browser, $id, true);
+        $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
+
+        $this->assertActiveFilterLabelAndReset($browser, 'tag', $tag->id);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $selector
+     * @return void
+     */
+    protected function clearCheckboxFilterItems(Browser $browser, string $selector): void
+    {
+        $browser->within($selector, function (Browser $browser) {
+            if ($browser->elements('.showcase-aside-block-option-active')) {
+                $browser->click('.showcase-aside-block-option-active');
+            }
+
+            $browser->waitUntilMissing('.showcase-aside-block-option-active');
+        });
     }
 
     /**

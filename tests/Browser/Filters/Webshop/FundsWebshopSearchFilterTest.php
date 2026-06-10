@@ -26,6 +26,7 @@ class FundsWebshopSearchFilterTest extends BaseWebshopSearchFilter
     {
         $implementation = Implementation::byKey('nijmegen');
         $fund = $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()), implementation: $implementation);
+        $this->makeTestFund($this->makeTestOrganization($this->makeIdentity()), implementation: $implementation);
         $tag = $this->makeAndAppendTestFundTag($fund);
 
         $this->rollbackModels([], function () use ($fund, $tag) {
@@ -36,10 +37,10 @@ class FundsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 $this->assertFundsSearchIsWorking($browser, $fund);
 
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByOrganization($browser, $fund->organization, $fund->id, 1);
+                $this->assertListFilterByOrganizationsCheckboxes($browser, $fund->id, $fund->organization);
 
                 $this->fillListSearchForEmptyResults($browser);
-                $this->assertListFilterByTag($browser, $tag, $fund->id, 1);
+                $this->assertListFilterByTagsCheckboxes($browser, $fund->id, $tag);
             });
         }, function () use ($fund) {
             $fund && $this->deleteFund($fund);
