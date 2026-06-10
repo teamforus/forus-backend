@@ -368,6 +368,38 @@ class FundRequestValidatorTest extends TestCase
     }
 
     /**
+     * Test the functionality of listing fund request clarifications.
+     *
+     * @return void
+     */
+    public function testFundRequestClarificationsIndex(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $fundRequest = $this->makeIdentityAndFundRequest($fund);
+        $employee = $fund->organization->findEmployee($fund->organization->identity);
+
+        $questionData = [
+            'question' => $this->faker()->text(),
+            'text_requirement' => 'required',
+            'files_requirement' => 'required',
+            'fund_request_record_id' => $fundRequest->records[0]->id,
+        ];
+
+        $this->apiMakeFundRequestClarificationRequest($fundRequest, $employee, $questionData)
+            ->assertSuccessful()
+            ->assertJsonPath('data.question', $questionData['question']);
+
+        $this->getJson(
+            "/api/v1/platform/organizations/$fund->organization_id/fund-requests/$fundRequest->id/clarifications?" .
+            http_build_query(['fund_request_record_id' => $fundRequest->records[0]->id]),
+            $this->makeApiHeaders($employee->identity),
+        )
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.question', $questionData['question'])
+            ->assertJsonPath('data.0.fund_request_record_id', $fundRequest->records[0]->id);
+    }
+
+    /**
      * Tests the visibility of fund requests based on different state groups.
      *
      * @return void

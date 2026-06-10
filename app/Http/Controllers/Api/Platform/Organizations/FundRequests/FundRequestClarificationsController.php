@@ -59,9 +59,10 @@ class FundRequestClarificationsController extends Controller
         $record = $fundRequest->records()->findOrFail($request->input('fund_request_record_id'));
         $this->authorize('create', [FundRequestClarification::class, $fundRequest, $record, $organization]);
 
-        $clarification = $fundRequest->clarifications()->create($request->only([
-            'question', 'text_requirement', 'files_requirement', 'fund_request_record_id',
-        ]));
+        $clarification = $fundRequest->clarifications()->create([
+            ...$request->only(['question', 'text_requirement', 'files_requirement']),
+            'fund_request_record_id' => $record->id,
+        ]);
 
         Event::dispatch(new FundRequestClarificationRequested($clarification));
 

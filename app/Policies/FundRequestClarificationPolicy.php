@@ -59,7 +59,7 @@ class FundRequestClarificationPolicy
         FundRequest $request,
         Organization $organization
     ): Response|bool {
-        return $this->create($identity, $request, $organization);
+        return $this->validateValidatorAccess($identity, $organization, $request);
     }
 
     /**
@@ -104,12 +104,10 @@ class FundRequestClarificationPolicy
         FundRequestRecord $record,
         Organization $organization
     ): Response|bool {
-        if (!$this->checkIntegrityValidator($organization, $request)) {
-            return $this->deny(__('policies.fund_requests.invalid_endpoint'));
-        }
+        $access = $this->validateValidatorAccess($identity, $organization, $request);
 
-        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny(__('policies.fund_requests.invalid_validator'));
+        if ($access !== true) {
+            return $access;
         }
 
         if (!$request->identity->email) {
@@ -118,6 +116,30 @@ class FundRequestClarificationPolicy
 
         if (!$record->fund_criterion || !$request->fund->criteria()->where('id', $record->fund_criterion_id)->exists()) {
             return $this->deny(__('policies.fund_requests.record_not_part_fund_criteria'));
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param FundRequest $request
+     * @param FundRequestClarification|null $requestClarification
+     * @return Response|bool
+     */
+    private function validateValidatorAccess(
+        Identity $identity,
+        Organization $organization,
+        FundRequest $request,
+        FundRequestClarification $requestClarification = null,
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $request, $requestClarification)) {
+            return $this->deny(__('policies.fund_requests.invalid_endpoint'));
+        }
+
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
+            return $this->deny(__('policies.fund_requests.invalid_validator'));
         }
 
         return true;
