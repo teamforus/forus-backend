@@ -61,6 +61,6 @@ abstract class MediaImageConfig extends MediaConfig
         $color = $image->reduceColors(1)->scaleDown(1, 1)->pickColor(0, 0);
         unset($image);
 
-        return $color->toHex('#');
+        return preg_replace('/^#([0-9a-f]{6}|[0-9a-f]{3}).*$/i', '#$1', $color->toHex('#'));
     }
 }
