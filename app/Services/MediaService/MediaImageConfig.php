@@ -2,6 +2,7 @@
 
 namespace App\Services\MediaService;
 
+use App\Helpers\Color;
 use App\Services\MediaService\Models\Media;
 use Intervention\Image\ImageManager;
 use Throwable;
@@ -61,6 +62,6 @@ abstract class MediaImageConfig extends MediaConfig
         $color = $image->reduceColors(1)->scaleDown(1, 1)->pickColor(0, 0);
         unset($image);
 
-        return preg_replace('/^#([0-9a-f]{6}|[0-9a-f]{3}).*$/i', '#$1', $color->toHex('#'));
+        return Color::normalizeRgbHex($color->toHex('#'));
     }
 }
