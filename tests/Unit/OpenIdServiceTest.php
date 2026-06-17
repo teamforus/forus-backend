@@ -52,7 +52,7 @@ class OpenIdServiceTest extends TestCase
                 'redirect_url' => '/wrong/callback',
                 'scopes' => ['wrong'],
                 'bsn_claim' => 'wrong.claim',
-                'bsn_claim_source' => 'user_info',
+                'bsn_claim_source' => 'claims',
                 'auth_params' => ['prompt' => 'wrong'],
                 'code_challenge_method' => 'plain',
                 'id_token_signed_response_alg' => 'RS256',
@@ -120,6 +120,11 @@ class OpenIdServiceTest extends TestCase
         $this->assertFalse(OpenIdService::providerContextConfigured(
             OpenIdService::PROVIDER_VERID,
             $this->makeVeridContext(['scopes' => ['']])
+        ));
+
+        $this->assertFalse(OpenIdService::providerContextConfigured(
+            OpenIdService::PROVIDER_VERID,
+            $this->makeVeridContext(['bsn_claim_source' => 'user_info'])
         ));
 
         $this->assertFalse(OpenIdService::providerContextConfigured(
@@ -248,32 +253,6 @@ class OpenIdServiceTest extends TestCase
     }
 
     /**
-     * @throws OpenIdException
-     * @return void
-     */
-    public function testResolveBsnFromPayloadCanUseUserInfoSource(): void
-    {
-        $bsn = (new OpenIdService())->resolveBsnFromPayload(
-            [
-                'claims' => [],
-                'user_info' => [
-                    'profile' => [
-                        'bsn' => '834884148',
-                    ],
-                ],
-            ],
-            $this->makeOpenIdFlow([
-                'context' => $this->makeVeridContext([
-                    'bsn_claim' => 'profile.bsn',
-                    'bsn_claim_source' => 'user_info',
-                ]),
-            ])
-        );
-
-        $this->assertSame('834884148', $bsn);
-    }
-
-    /**
      * @return void
      */
     public function testResolveBsnFromPayloadRejectsInvalidClaims(): void
@@ -286,19 +265,6 @@ class OpenIdServiceTest extends TestCase
         $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569.657.222']]], $flow);
         $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569 657 222']]], $flow);
         $this->assertBsnPayloadOpenIdError(['claims' => ['nin' => ['identifier' => '569-657-222']]], $flow);
-
-        $this->assertBsnPayloadOpenIdError([
-            'claims' => [
-                'nin' => [
-                    'identifier' => '569657222',
-                ],
-            ],
-        ], $this->makeOpenIdFlow([
-            'key' => 'yivi',
-            'context' => $this->makeVeridContext([
-                'bsn_claim_source' => 'unsupported',
-            ]),
-        ]));
     }
 
     /**

@@ -260,8 +260,6 @@ trait MakesOpenIdTestData
                             'identifier' => $this->callbackBsn ?: '999994542',
                         ],
                     ],
-                    'user_info' => null,
-                    'user_info_error' => null,
                     'id_token' => 'openid-id-token',
                     'access_token' => 'openid-access-token',
                 ];

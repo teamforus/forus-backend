@@ -14,7 +14,6 @@ use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
-use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Facile\OpenIDClient\Session\AuthSession;
 use GuzzleHttp\Psr7\ServerRequest;
 use Illuminate\Http\Request;
@@ -49,10 +48,9 @@ class OpenIdService
     ];
 
     protected const string BSN_CLAIM_SOURCE_CLAIMS = 'claims';
-    protected const string BSN_CLAIM_SOURCE_USER_INFO = 'user_info';
+
     protected const array BSN_CLAIM_SOURCES = [
         self::BSN_CLAIM_SOURCE_CLAIMS,
-        self::BSN_CLAIM_SOURCE_USER_INFO,
     ];
 
     /**
@@ -128,6 +126,8 @@ class OpenIdService
             $value = $context[$key] ?? null;
 
             if (!match ($key) {
+                'bsn_claim_source' => is_string($value) &&
+                    in_array(strtolower(trim($value)), self::BSN_CLAIM_SOURCES, true),
                 'scopes' => is_array($value) && array_filter(
                     $value,
                     fn ($scope) => is_string($scope) && trim($scope) !== ''
@@ -281,9 +281,6 @@ class OpenIdService
      */
     public function resolveCallback(string $provider, OpenIdSession $session, Request $request): array
     {
-        $userInfo = null;
-        $userInfoError = null;
-
         try {
             $implementation = $session->implementation;
 
@@ -322,22 +319,8 @@ class OpenIdService
             throw new OpenIdException('Unable to resolve OpenID callback.', 0, $exception);
         }
 
-        try {
-            $userInfo = (new UserInfoServiceBuilder())->build()->getUserInfo($client, $tokenSet);
-        } catch (Throwable $exception) {
-            $userInfoError = static::exceptionContext($exception);
-
-            static::logger()->warning('OpenID userinfo request failed.', [
-                'provider' => $provider,
-                'session_id' => $session->id,
-                ...$userInfoError,
-            ]);
-        }
-
         return [
             'claims' => $tokenSet->claims(),
-            'user_info' => $userInfo,
-            'user_info_error' => $userInfoError,
             'id_token' => $tokenSet->getIdToken(),
             'access_token' => $tokenSet->getAccessToken(),
         ];

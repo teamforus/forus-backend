@@ -250,8 +250,6 @@ class OpenIdCallbackTest extends TestCase
 
         $this->fakeOpenIdService(callbackPayload: [
             'claims' => [],
-            'user_info' => null,
-            'user_info_error' => null,
             'id_token' => 'openid-id-token',
             'access_token' => 'openid-access-token',
         ]);
