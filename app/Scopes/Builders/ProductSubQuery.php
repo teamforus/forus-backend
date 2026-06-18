@@ -381,7 +381,7 @@ class ProductSubQuery
      */
     private static function limitByFundTypeSelected(int $fundId, int $identityId): Builder|FundProductLimit
     {
-        $reservedProductsCount = static::reservationsUniqueCountQuery($identityId)
+        $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
             ->whereIn(
                 'product_reservations.product_id',
                 static::fundProductLimitReservationsSubQuery()
@@ -406,7 +406,7 @@ class ProductSubQuery
      */
     private static function limitByFundTypeAll(int $fundId, int $identityId): Builder|FundProductLimit
     {
-        $reservedProductsCount = static::reservationsUniqueCountQuery($identityId)
+        $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
             ->whereNotIn(
                 'product_reservations.product_id',
                 static::fundProductLimitReservationsSubQuery()
@@ -425,13 +425,15 @@ class ProductSubQuery
     }
 
     /**
+     * @param int $fundId
      * @param int $identityId
      * @return ProductReservation|Builder
      */
-    private static function reservationsUniqueCountQuery(int $identityId): Builder|ProductReservation
+    private static function reservationsUniqueCountQuery(int $fundId, int $identityId): Builder|ProductReservation
     {
         return ProductReservation::query()
             ->selectRaw('COUNT(DISTINCT product_reservations.product_id)')
+            ->whereRelation('voucher', 'fund_id', $fundId)
             ->whereRelation('voucher', 'identity_id', $identityId)
             ->whereNotIn('state', [
                 ...ProductReservation::STATES_CANCELED,
