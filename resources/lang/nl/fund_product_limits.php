@@ -2,7 +2,7 @@
 
 return [
     'types' => [
-        'all' => 'Alle producten',
-        'selected' => 'Selectie producten',
+        'all_except_selected' => 'Alle producten behalve geselecteerde producten',
+        'only_selected' => 'Alleen geselecteerde producten',
     ],
 ];

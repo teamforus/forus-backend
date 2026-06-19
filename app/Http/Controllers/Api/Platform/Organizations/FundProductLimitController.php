@@ -27,7 +27,7 @@ class FundProductLimitController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [FundProductLimit::class, $organization]);
 
-        $funds = FundQuery::whereIsConfiguredByForus($organization->funds())->get();
+        $funds = FundQuery::whereIsInternalConfiguredAndNotClosed($organization->funds())->get();
 
         $search = new FundProductLimitSearch($request->only([
             'q', 'fund_id', 'from', 'to', 'state',
@@ -48,7 +48,7 @@ class FundProductLimitController extends Controller
         $this->authorize('create', [FundProductLimit::class, $organization]);
 
         $fundProductLimit = FundProductLimit::create($request->only(['fund_id', 'state', 'type', 'limit']));
-        $fundProductLimit->updateProducts($request->get('products', []));
+        $fundProductLimit->products()->sync($request->get('products', []));
 
         return FundProductLimitResource::create($fundProductLimit);
     }
@@ -81,7 +81,7 @@ class FundProductLimitController extends Controller
         $this->authorize('update', [$fundProductLimit, $organization]);
 
         $fundProductLimit->update($request->only(['fund_id', 'state', 'type', 'limit']));
-        $fundProductLimit->updateProducts($request->get('products', []));
+        $fundProductLimit->products()->sync($request->get('products', []));
 
         return FundProductLimitResource::create($fundProductLimit);
     }

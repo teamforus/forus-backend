@@ -19,15 +19,19 @@ trait MakesTestFundProductLimits
      * @param array $productIds
      * @return FundProductLimit
      */
-    public function makeFundProductLimit(Fund $fund, string $type = FundProductLimit::TYPE_ALL, int $limit = 1, array $productIds = []): FundProductLimit
-    {
+    public function makeFundProductLimit(
+        Fund $fund,
+        string $type = FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED,
+        int $limit = 1,
+        array $productIds = [],
+    ): FundProductLimit {
         $fundProductLimit = FundProductLimit::create([
             'fund_id' => $fund->id,
             'type' => $type,
             'limit' => $limit,
         ]);
 
-        $fundProductLimit->updateProducts($productIds);
+        $fundProductLimit->products()->sync($productIds);
 
         return $fundProductLimit;
     }

@@ -2,13 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Fund;
 use App\Models\FundProductLimit;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Scopes\Builders\FundQuery;
-use Illuminate\Database\Eloquent\Builder;
 
 class FundProductLimitPolicy extends BasePolicy
 {
@@ -19,7 +17,7 @@ class FundProductLimitPolicy extends BasePolicy
      */
     public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return $this->viewAsSponsor($identity, $organization);
+        return $this->canManageFundProductLimits($identity, $organization);
     }
 
     /**
@@ -29,7 +27,20 @@ class FundProductLimitPolicy extends BasePolicy
      */
     public function create(Identity $identity, Organization $organization): bool
     {
-        return $this->viewAsSponsor($identity, $organization);
+        return $this->canManageFundProductLimits($identity, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundProductLimit $fundProductLimit
+     * @param Organization $organization
+     * @return bool
+     */
+    public function show(Identity $identity, FundProductLimit $fundProductLimit, Organization $organization): bool
+    {
+        return
+            $this->canManageFundProductLimits($identity, $organization) &&
+            $this->ownsAvailableFundProductLimit($fundProductLimit, $organization);
     }
 
     /**
@@ -41,8 +52,8 @@ class FundProductLimitPolicy extends BasePolicy
     public function update(Identity $identity, FundProductLimit $fundProductLimit, Organization $organization): bool
     {
         return
-            $this->viewAsSponsor($identity, $organization) &&
-            in_array($fundProductLimit->fund_id, $this->getAvailableFundIds($organization));
+            $this->canManageFundProductLimits($identity, $organization) &&
+            $this->ownsAvailableFundProductLimit($fundProductLimit, $organization);
     }
 
     /**
@@ -54,8 +65,8 @@ class FundProductLimitPolicy extends BasePolicy
     public function destroy(Identity $identity, FundProductLimit $fundProductLimit, Organization $organization): bool
     {
         return
-            $this->viewAsSponsor($identity, $organization) &&
-            in_array($fundProductLimit->fund_id, $this->getAvailableFundIds($organization));
+            $this->canManageFundProductLimits($identity, $organization) &&
+            $this->ownsAvailableFundProductLimit($fundProductLimit, $organization);
     }
 
     /**
@@ -63,11 +74,23 @@ class FundProductLimitPolicy extends BasePolicy
      * @param Organization $organization
      * @return bool
      */
-    protected function viewAsSponsor(Identity $identity, Organization $organization): bool
+    protected function canManageFundProductLimits(Identity $identity, Organization $organization): bool
     {
         return
             $organization->allow_fund_product_limits &&
             $organization->identityCan($identity, Permission::MANAGE_PROVIDERS);
+    }
+
+    /**
+     * @param FundProductLimit $fundProductLimit
+     * @param Organization $organization
+     * @return bool
+     */
+    protected function ownsAvailableFundProductLimit(
+        FundProductLimit $fundProductLimit,
+        Organization $organization,
+    ): bool {
+        return in_array($fundProductLimit->fund_id, $this->getAvailableFundIds($organization));
     }
 
     /**
@@ -76,12 +99,7 @@ class FundProductLimitPolicy extends BasePolicy
      */
     protected function getAvailableFundIds(Organization $organization): array
     {
-        return $organization->funds()
-            ->where(function (Builder $builder) {
-                FundQuery::whereIsInternal($builder);
-                FundQuery::whereIsConfiguredByForus($builder);
-            })
-            ->where('state', '!=', Fund::STATE_CLOSED)
+        return FundQuery::whereIsInternalConfiguredAndNotClosed($organization->funds())
             ->pluck('id')
             ->all();
     }

@@ -85,7 +85,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_translations
  * @property bool $allow_product_updates
  * @property bool $allow_prevalidation_requests
- * @property int $allow_fund_product_limits
+ * @property bool $allow_fund_product_limits
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -416,6 +416,7 @@ class Organization extends Model
         'reservation_note' => 'boolean',
         'bank_reservation_invoice_number' => 'boolean',
         'allow_prevalidation_requests' => 'boolean',
+        'allow_fund_product_limits' => 'boolean',
     ];
 
     /**

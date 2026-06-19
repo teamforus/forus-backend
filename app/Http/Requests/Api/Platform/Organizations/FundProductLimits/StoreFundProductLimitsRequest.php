@@ -3,11 +3,12 @@
 namespace App\Http\Requests\Api\Platform\Organizations\FundProductLimits;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\FundProductLimit;
 use App\Models\Organization;
-use App\Rules\SponsorProductIdRule;
+use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductQuery;
+use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -36,12 +37,10 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $fundsIds = $this->getAvailableFunds()->pluck('id')->toArray();
-
         return [
             'fund_id' => [
                 'required',
-                Rule::in($fundsIds),
+                Rule::in($this->getAvailableFunds()->pluck('id')->toArray()),
             ],
             'state' => [
                 'required',
@@ -49,7 +48,7 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
             ],
             'type' => [
                 'required',
-                Rule::in([FundProductLimit::TYPE_ALL, FundProductLimit::TYPE_SELECTED]),
+                Rule::in([FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED, FundProductLimit::SCOPE_ONLY_SELECTED]),
             ],
             'limit' => [
                 'required',
@@ -57,26 +56,38 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
                 'min:1',
             ],
             'products' => [
-                'required_if:type,' . FundProductLimit::TYPE_SELECTED,
+                'required_if:type,' . FundProductLimit::SCOPE_ONLY_SELECTED,
                 'array',
             ],
             'products.*' => [
                 'required',
-                new SponsorProductIdRule($fundsIds),
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (!$this->productIsApprovedForFund($value, (int) $this->input('fund_id'))) {
+                        $fail(__('validation.product_voucher.product_not_found'));
+                    }
+                },
             ],
         ];
     }
 
     /**
-     * @return Builder|Relation|Fund[]
+     * @return Builder|Relation|Arrayable
      */
     private function getAvailableFunds(): Builder|Relation|Arrayable
     {
-        return $this->organization->funds()
-            ->where(function (Builder $builder) {
-                FundQuery::whereIsInternal($builder);
-                FundQuery::whereIsConfiguredByForus($builder);
-            })
-            ->where('state', '!=', Fund::STATE_CLOSED);
+        return FundQuery::whereIsInternalConfiguredAndNotClosed($this->organization->funds());
+    }
+
+    /**
+     * @param mixed $productId
+     * @param int $fundId
+     * @return bool
+     */
+    private function productIsApprovedForFund(mixed $productId, int $fundId): bool
+    {
+        return $fundId > 0 && ProductQuery::approvedForFundsFilter(
+            Product::where('id', $productId),
+            $fundId,
+        )->exists();
     }
 }

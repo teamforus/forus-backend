@@ -35,7 +35,7 @@ class IndexFundProductLimitsRequest extends BaseFormRequest
                 Rule::exists('funds', 'id')->where(function (QBuilder $builder) {
                     $builder->addWhereExistsQuery(OrganizationQuery::queryByIdentityPermissions(
                         $this->auth_address(),
-                        Permission::VALIDATE_RECORDS,
+                        Permission::MANAGE_PROVIDERS,
                     )->getQuery());
                 }),
             ],

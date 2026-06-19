@@ -58,14 +58,14 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $limit1 = FundProductLimit::create([
             'fund_id' => $fund1->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
 
         $limit2 = FundProductLimit::create([
             'fund_id' => $fund2->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
@@ -97,14 +97,14 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $limit1 = FundProductLimit::create([
             'fund_id' => $fund1->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
 
         $limit2 = FundProductLimit::create([
             'fund_id' => $fund2->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
@@ -123,14 +123,14 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $limit1 = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
 
         $limit2 = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_INACTIVE,
             'limit' => 1,
         ]);
@@ -149,7 +149,7 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $limit1 = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
@@ -159,7 +159,7 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $limit2 = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_INACTIVE,
             'limit' => 1,
         ]);
@@ -194,7 +194,7 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $olderLimit = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_ACTIVE,
             'limit' => 1,
         ]);
@@ -204,7 +204,7 @@ class FundProductLimitSearchTest extends SearchTestCase
 
         $newerLimit = FundProductLimit::create([
             'fund_id' => $fund->id,
-            'type' => FundProductLimit::TYPE_SELECTED,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
             'state' => FundProductLimit::STATE_INACTIVE,
             'limit' => 1,
         ]);

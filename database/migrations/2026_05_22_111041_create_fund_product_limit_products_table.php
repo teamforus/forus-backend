@@ -24,6 +24,11 @@ return new class () extends Migration {
                 ->references('id')
                 ->on('products')
                 ->onDelete('cascade');
+
+            $table->unique(
+                ['fund_product_limit_id', 'product_id'],
+                'fund_product_limit_products_unique',
+            );
         });
     }
 

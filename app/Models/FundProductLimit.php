@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * @property int $id
@@ -37,8 +37,8 @@ class FundProductLimit extends Model
     public const string STATE_ACTIVE = 'active';
     public const string STATE_INACTIVE = 'inactive';
 
-    public const string TYPE_ALL = 'all';
-    public const string TYPE_SELECTED = 'selected';
+    public const string SCOPE_ALL_EXCEPT_SELECTED = 'all_except_selected';
+    public const string SCOPE_ONLY_SELECTED = 'only_selected';
 
     /**
      * The attributes that are mass assignable.
@@ -66,32 +66,15 @@ class FundProductLimit extends Model
     }
 
     /**
-     * @return HasManyThrough
+     * @return BelongsToMany
      */
-    public function products(): HasManyThrough
+    public function products(): BelongsToMany
     {
-        return $this->hasManyThrough(
+        return $this->belongsToMany(
             Product::class,
-            FundProductLimitProduct::class,
+            'fund_product_limit_products',
             'fund_product_limit_id',
-            'id',
-            'id',
             'product_id',
         );
-    }
-
-    /**
-     * @param array $productIds
-     * @return $this
-     */
-    public function updateProducts(array $productIds = []): self
-    {
-        $this->fund_products()->whereNotIn('product_id', $productIds)->delete();
-
-        foreach ($productIds as $id) {
-            $this->fund_products()->firstOrCreate(['product_id' => $id]);
-        }
-
-        return $this;
     }
 }

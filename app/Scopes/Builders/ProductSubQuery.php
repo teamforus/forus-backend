@@ -39,8 +39,11 @@ class ProductSubQuery
             'limit_total_used' => self::limitTotalUsedSubQuery($options, true),
             'limit_per_identity' => self::limitPerIdentitySubQuery($options),
             'limit_per_identity_used' => self::limitTotalUsedSubQuery($options),
-            'limit_by_fund_type_all' => self::limitByFund($options, FundProductLimit::TYPE_ALL),
-            'limit_by_fund_type_selected' => self::limitByFund($options, FundProductLimit::TYPE_SELECTED),
+            'limit_by_fund_scope_all_except_selected' => self::limitByFund(
+                $options,
+                FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED,
+            ),
+            'limit_by_fund_scope_only_selected' => self::limitByFund($options, FundProductLimit::SCOPE_ONLY_SELECTED),
             'reservations_enabled' => Organization::query()
                 ->whereColumn('id', 'organization_id')
                 ->select('reservations_enabled'),
@@ -49,26 +52,30 @@ class ProductSubQuery
         $query = Product::query()->fromSub($baseQuery, 'products');
 
         $query->selectRaw('*,
-            CAST(limit_by_fund_type_all + limit_by_fund_type_selected AS SIGNED) as limit_by_fund, 
-            
+            CAST(
+                limit_by_fund_scope_all_except_selected + limit_by_fund_scope_only_selected AS SIGNED
+            ) as limit_by_fund,
+
             CAST(IF(
                 ISNULL(`limit_total`),
                 GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
                 GREATEST(`limit_total` - `limit_total_used`, 0)
             ) AS SIGNED) as `limit_total_available`,
-            
+
             CAST(
                 GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0) AS SIGNED
             ) AS `limit_identity_available`,
-            
+
             IF(
-                CAST(limit_by_fund_type_all + limit_by_fund_type_selected AS SIGNED) > 0,
+                CAST(
+                    limit_by_fund_scope_all_except_selected + limit_by_fund_scope_only_selected AS SIGNED
+                ) > 0,
                 0,
                 CAST(GREATEST(
                     LEAST(
                         IF(
-                            ISNULL(`limit_total`), 
-                            GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0), 
+                            ISNULL(`limit_total`),
+                            GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
                             GREATEST(`limit_total` - `limit_total_used`, 0)
                         ),
                         GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)
@@ -92,18 +99,24 @@ class ProductSubQuery
         $limits = FundProductLimit::where('fund_id', $fundId)
             ->where(function (Builder $builder) use ($productId) {
                 $builder->where(function (Builder $builder) use ($productId) {
-                    $builder->where('type', FundProductLimit::TYPE_ALL);
-                    $builder->whereDoesntHave('fund_products', fn (Builder $builder) => $builder->where('product_id', $productId));
+                    $builder->where('type', FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED);
+                    $builder->whereDoesntHave(
+                        'fund_products',
+                        fn (Builder $builder) => $builder->where('product_id', $productId),
+                    );
                 });
                 $builder->orWhere(function (Builder $builder) use ($productId) {
-                    $builder->where('type', FundProductLimit::TYPE_SELECTED);
-                    $builder->whereHas('fund_products', fn (Builder $builder) => $builder->where('product_id', $productId));
+                    $builder->where('type', FundProductLimit::SCOPE_ONLY_SELECTED);
+                    $builder->whereHas(
+                        'fund_products',
+                        fn (Builder $builder) => $builder->where('product_id', $productId),
+                    );
                 });
             })
             ->get();
 
         foreach ($limits as $limit) {
-            if ($limit->type == FundProductLimit::TYPE_ALL) {
+            if ($limit->type == FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED) {
                 $excludedProductIds = [
                     ...$limit->fund_products->pluck('product_id')->toArray(),
                     $productId,
@@ -111,7 +124,10 @@ class ProductSubQuery
 
                 $builder = Product::query()->whereNotIn('id', $excludedProductIds);
             } else {
-                $productIds = $limit->fund_products->pluck('product_id')->filter(fn (int $id) => $id !== $productId)->toArray();
+                $productIds = $limit->fund_products
+                    ->pluck('product_id')
+                    ->filter(fn (int $id) => $id !== $productId)
+                    ->toArray();
                 $builder = Product::query()->whereIn('id', $productIds);
             }
 
@@ -349,10 +365,10 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @param string $type
+     * @param string $scope
      * @return Builder|FundProductLimit
      */
-    private static function limitByFund(array $options, string $type): Builder|FundProductLimit
+    private static function limitByFund(array $options, string $scope): Builder|FundProductLimit
     {
         $voucher = null;
 
@@ -364,9 +380,9 @@ class ProductSubQuery
         $identityId = Arr::get($options, 'identity_id', $voucher?->identity_id);
 
         if ($fundId && $identityId) {
-            return $type === FundProductLimit::TYPE_SELECTED
-                ? static::limitByFundTypeSelected($fundId, $identityId)
-                : static::limitByFundTypeAll($fundId, $identityId);
+            return $scope === FundProductLimit::SCOPE_ONLY_SELECTED
+                ? static::limitByFundScopeOnlySelected($fundId, $identityId)
+                : static::limitByFundScopeAllExceptSelected($fundId, $identityId);
         }
 
         return FundProductLimit::query()
@@ -379,19 +395,12 @@ class ProductSubQuery
      * @param int $identityId
      * @return FundProductLimit|Builder
      */
-    private static function limitByFundTypeSelected(int $fundId, int $identityId): Builder|FundProductLimit
+    private static function limitByFundScopeOnlySelected(int $fundId, int $identityId): Builder|FundProductLimit
     {
         $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
-            ->whereIn(
-                'product_reservations.product_id',
-                static::fundProductLimitReservationsSubQuery()
-            );
+            ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
-        return FundProductLimit::query()
-            ->selectRaw('COUNT(*)')
-            ->where('fund_id', $fundId)
-            ->where('state', FundProductLimit::STATE_ACTIVE)
-            ->where('type', FundProductLimit::TYPE_SELECTED)
+        return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ONLY_SELECTED)
             ->whereHas('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
@@ -404,24 +413,32 @@ class ProductSubQuery
      * @param int $identityId
      * @return FundProductLimit|Builder
      */
-    private static function limitByFundTypeAll(int $fundId, int $identityId): Builder|FundProductLimit
+    private static function limitByFundScopeAllExceptSelected(int $fundId, int $identityId): Builder|FundProductLimit
     {
         $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
-            ->whereNotIn(
-                'product_reservations.product_id',
-                static::fundProductLimitReservationsSubQuery()
-            );
+            ->whereColumn('product_reservations.product_id', '!=', 'products.id')
+            ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
-        return FundProductLimit::query()
-            ->selectRaw('COUNT(*)')
-            ->where('fund_id', $fundId)
-            ->where('state', FundProductLimit::STATE_ACTIVE)
-            ->where('type', FundProductLimit::TYPE_ALL)
+        return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED)
             ->whereDoesntHave('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
             ))
             ->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+    }
+
+    /**
+     * @param int $fundId
+     * @param string $scope
+     * @return FundProductLimit|Builder
+     */
+    private static function activeFundProductLimitQuery(int $fundId, string $scope): Builder|FundProductLimit
+    {
+        return FundProductLimit::query()
+            ->selectRaw('COUNT(*)')
+            ->where('fund_id', $fundId)
+            ->where('state', FundProductLimit::STATE_ACTIVE)
+            ->where('type', $scope);
     }
 
     /**

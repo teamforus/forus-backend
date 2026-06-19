@@ -13,7 +13,7 @@ return new class () extends Migration {
         Schema::create('fund_product_limits', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('fund_id');
-            $table->enum('type', ['all', 'selected']);
+            $table->enum('type', ['all_except_selected', 'only_selected']);
             $table->enum('state', ['active', 'inactive'])->default('active');
             $table->unsignedInteger('limit');
             $table->timestamps();
