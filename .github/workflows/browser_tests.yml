@@ -30,14 +30,14 @@ jobs:
     steps:
       - name: Checkout forus-backend repo develop branch, if it is scheduled build
         if: github.event.schedule == '00 3 * * *'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: forus-backend
           ref: develop
 
       - name: Checkout forus-backend repo
         if: github.event.schedule != '00 3 * * *'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: forus-backend
 
@@ -92,7 +92,7 @@ jobs:
           echo "FRONTEND_BRANCH=$FRONTEND_BRANCH" >> "$GITHUB_ENV"
 
       - name: Check out forus-frontend-react repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: teamforus/forus-frontend-react
           path: forus-frontend
