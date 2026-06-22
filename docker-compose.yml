@@ -23,7 +23,7 @@ services:
       - forus-network
 
   forus-backend-db:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: forus-backend-db
     restart: unless-stopped
     platform: linux/amd64
