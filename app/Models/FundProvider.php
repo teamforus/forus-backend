@@ -206,12 +206,10 @@ class FundProvider extends Model
         }
 
         $query = ImplementationQuery::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED)
-            ->where('external', false)
             ->whereNotIn('id', $fundProviderIds)
             ->whereRelation('fund_config', 'allow_provider_sign_up', true);
 
-        FundQuery::whereIsInternal($query);
-        FundQuery::whereIsConfiguredByForus($query);
+        FundQuery::whereIsInternalAndConfigured($query);
 
         return $query;
     }

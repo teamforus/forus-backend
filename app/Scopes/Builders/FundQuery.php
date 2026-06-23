@@ -199,7 +199,7 @@ class FundQuery
     public static function whereIsInternalConfiguredAndActive(
         Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
-        return self::whereIsInternal(self::whereActiveFilter(self::whereIsConfiguredByForus($query)));
+        return self::whereActiveFilter(self::whereIsInternalAndConfigured($query));
     }
 
     /**
@@ -210,6 +210,17 @@ class FundQuery
         Builder|Relation|Fund $query,
     ): Builder|Relation|Fund {
         return self::whereIsInternal(self::whereIsConfiguredByForus($query));
+    }
+
+    /**
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereIsInternalConfiguredAndNotClosed(
+        Builder|Relation|Fund $query,
+    ): Builder|Relation|Fund {
+        return self::whereIsInternalAndConfigured($query)
+            ->where('state', '!=', Fund::STATE_CLOSED);
     }
 
     /**
