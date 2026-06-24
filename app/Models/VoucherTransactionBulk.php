@@ -479,8 +479,7 @@ class VoucherTransactionBulk extends Model
             $builder->whereTime('bank_cron_time', '>=', $now->clone()->floorMinute());
             $builder->whereTime('bank_cron_time', '<', $now->clone()->ceilMinute());
         })->whereHas('funds', function (Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
+            FundQuery::whereIsInternalAndConfigured($builder);
 
             $builder->whereHas('voucher_transactions', function (Builder $builder) {
                 VoucherTransactionQuery::whereAvailableForBulking($builder);
