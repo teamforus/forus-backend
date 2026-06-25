@@ -5,6 +5,7 @@ namespace Tests\Traits;
 use App\Models\BusinessType;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundProductLimit;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -130,6 +131,98 @@ trait MakesApiRequests
         $this->travelBack();
 
         return $organization->funds()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetFundProductLimitsRequest(
+        Organization $organization,
+        array $query,
+        Identity $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakeFundProductLimitRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiDeleteFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        Identity $identity,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            [],
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
