@@ -342,5 +342,12 @@ return [
         'files' => [
             'required' => 'Om verder te gaan, moet er een bon, factuur of rekening worden toegevoegd. Dit veld is verplicht.',
         ],
+        'amount' => [
+            'min' => 'Vul een :attribute in van :min of hoger. Voorbeeld: 10.',
+            'max' => 'Het :attribute mag niet hoger zijn dan :max.',
+        ],
+        'description' => [
+            'min' => 'De :attribute is te kort. Schrijf minimaal :min tekens. Voorbeeld: Sportschoenen.',
+        ],
     ],
 ];
