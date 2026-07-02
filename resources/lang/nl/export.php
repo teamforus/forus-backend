@@ -43,6 +43,7 @@ return [
             'pending' => 'Wachtend',
             'declined' => 'Geweigerd',
             'approved' => 'Geaccepteerd',
+            'disregarded' => 'Buiten behandeling geplaatst',
         ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
