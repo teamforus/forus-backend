@@ -35,6 +35,7 @@ class IndexFundsRequest extends FormRequest
             'organization_id' => 'nullable|exists:organizations,id',
             'organization_ids' => 'nullable|array',
             'organization_ids.*' => 'nullable|exists:organizations,id',
+            'organization_scope' => 'nullable|in:own,partners',
             'order_by' => 'nullable|in:created_at,name,organization_name,start_date,end_date,order',
             'order_dir' => 'nullable|in:asc,desc',
             'with_external' => 'nullable|bool',

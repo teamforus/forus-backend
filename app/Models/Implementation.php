@@ -85,8 +85,8 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_office_map
  * @property bool $show_voucher_map
  * @property bool $show_product_map
- * @property int $show_fund_image_list
- * @property int $show_fund_partners_page
+ * @property bool $show_fund_image_list
+ * @property bool $show_fund_partners_page
  * @property bool $show_privacy_checkbox
  * @property bool $show_terms_checkbox
  * @property string $auth_page_title
@@ -287,7 +287,6 @@ class Implementation extends Model
         'banner_background', 'banner_background_mobile', 'products_default_sorting',
         'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
         'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title', 'auth_page_info_description',
-        'show_fund_image_list',
     ];
 
     /**
@@ -318,6 +317,8 @@ class Implementation extends Model
         'digid_saml_context' => 'json',
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
+        'show_fund_image_list' => 'boolean',
+        'show_fund_partners_page' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
         'currency_round' => 'boolean',
         'pre_check_enabled' => 'boolean',

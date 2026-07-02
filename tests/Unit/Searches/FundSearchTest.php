@@ -4,6 +4,7 @@ namespace Tests\Unit\Searches;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Implementation;
 use App\Searches\FundSearch;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Carbon;
@@ -94,6 +95,56 @@ class FundSearchTest extends SearchTestCase
 
         $this->assertSearchIds(['organization_ids' => [$organization1->id]], [$fund1->id]);
         $this->assertSearchIds(['organization_ids' => [$organization2->id]], [$fund2->id]);
+        $this->assertSearchIds(['organization_ids' => []], []);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFiltersByOrganizationScope(): void
+    {
+        $ownOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $partnerOrganization = $this->makeTestOrganization($this->makeIdentity());
+        $implementation = $this->makeTestImplementation($ownOrganization);
+
+        $ownFund = $this->makeTestFund($ownOrganization, implementation: $implementation);
+        $partnerFund = $this->makeTestFund($partnerOrganization, implementation: $implementation);
+        $previousClientKey = request()->headers->get('Client-Key');
+
+        request()->headers->set('Client-Key', $implementation->key);
+        Implementation::clearMemo();
+
+        try {
+            $this->assertSearchIds([
+                'implementation_id' => $implementation->id,
+                'organization_scope' => 'own',
+            ], [$ownFund->id]);
+
+            $this->assertSearchIds([
+                'implementation_id' => $implementation->id,
+                'organization_scope' => 'partners',
+            ], [$partnerFund->id]);
+
+            $this->assertSearchIds([
+                'implementation_id' => $implementation->id,
+                'organization_scope' => 'partners',
+                'organization_ids' => [$ownOrganization->id],
+            ], []);
+
+            $this->assertSearchIds([
+                'implementation_id' => $implementation->id,
+                'organization_scope' => 'partners',
+                'organization_ids' => [$partnerOrganization->id],
+            ], [$partnerFund->id]);
+        } finally {
+            if ($previousClientKey) {
+                request()->headers->set('Client-Key', $previousClientKey);
+            } else {
+                request()->headers->remove('Client-Key');
+            }
+
+            Implementation::clearMemo();
+        }
     }
 
     /**

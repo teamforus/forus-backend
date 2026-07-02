@@ -3,7 +3,6 @@
 namespace App\Searches;
 
 use App\Models\Fund;
-use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
@@ -58,7 +57,19 @@ class FundSearch extends BaseSearch
             $builder->where('organization_id', $organizationId);
         }
 
-        if ($organizationIds = $this->getFilter('organization_ids')) {
+        if ($organizationScope = $this->getFilter('organization_scope')) {
+            $organizationId = Implementation::active()?->organization_id;
+
+            if (!$organizationId) {
+                $builder->whereIn('organization_id', []);
+            } elseif ($organizationScope === 'own') {
+                $builder->where('organization_id', $organizationId);
+            } elseif ($organizationScope === 'partners') {
+                $builder->where('organization_id', '!=', $organizationId);
+            }
+        }
+
+        if (is_array($organizationIds = $this->getFilter('organization_ids'))) {
             $builder->whereIn('organization_id', $organizationIds);
         }
 
