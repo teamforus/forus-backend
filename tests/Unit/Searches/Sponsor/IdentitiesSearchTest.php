@@ -50,6 +50,12 @@ class IdentitiesSearchTest extends SearchTestCase
         $notePart1 = 'interesting';
         $notePart2 = 'shorter';
 
+        $profileBankAccountNamePart1 = 'profile_account_name_one';
+        $profileBankAccountNamePart2 = 'profile_account_name_two';
+
+        $profileBankAccountIbanPart1 = '33333';
+        $profileBankAccountIbanPart2 = '44444';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $employee = $organization->employees()->first();
         $fund = $this->makeTestFund($organization);
@@ -58,9 +64,19 @@ class IdentitiesSearchTest extends SearchTestCase
         $identity1->addEmail($this->makeUniqueEmail($emailVerifiedPart1), true);
         $identity1->addNote("$notePart1 identity note", $employee);
 
+        $organization->findOrMakeProfile($identity1)->profile_bank_accounts()->create([
+            'iban' => "{$profileBankAccountIbanPart1}99999",
+            'name' => "$profileBankAccountNamePart1 Bank Account name",
+        ]);
+
         $identity2 = $this->makeIdentity($this->makeUniqueEmail($emailPart2), "{$bsnPart2}555");
         $identity2->addEmail($this->makeUniqueEmail($emailVerifiedPart2), true);
         $identity2->addNote("$notePart2 identity note", $employee);
+
+        $organization->findOrMakeProfile($identity2)->profile_bank_accounts()->create([
+            'iban' => "{$profileBankAccountIbanPart2}99999",
+            'name' => "$profileBankAccountNamePart2 Bank Account name",
+        ]);
 
         $fund->makeVoucher($identity1);
         $fund->makeVoucher($identity2);
@@ -106,6 +122,28 @@ class IdentitiesSearchTest extends SearchTestCase
 
         $this->assertSearchIds([
             'q' => $notePart2,
+            'organization_id' => $organization->id,
+        ], [$identity2->id]);
+
+        // assert by bank account name
+        $this->assertSearchIds([
+            'q' => $profileBankAccountNamePart1,
+            'organization_id' => $organization->id,
+        ], [$identity1->id]);
+
+        $this->assertSearchIds([
+            'q' => $profileBankAccountNamePart2,
+            'organization_id' => $organization->id,
+        ], [$identity2->id]);
+
+        // assert by bank account iban
+        $this->assertSearchIds([
+            'q' => $profileBankAccountIbanPart1,
+            'organization_id' => $organization->id,
+        ], [$identity1->id]);
+
+        $this->assertSearchIds([
+            'q' => $profileBankAccountIbanPart2,
             'organization_id' => $organization->id,
         ], [$identity2->id]);
     }

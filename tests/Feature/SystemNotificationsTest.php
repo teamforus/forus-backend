@@ -8,11 +8,13 @@ use App\Models\Implementation;
 use App\Models\Notification;
 use App\Models\SystemNotification;
 use App\Models\Voucher;
+use App\Services\EventLogService\Events\EventLogCreated;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
@@ -770,6 +772,8 @@ class SystemNotificationsTest extends TestCase
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ]);
+
+        Event::dispatch(new EventLogCreated($eventLog));
 
         EmailLog::forceCreate([
             'event_log_id' => $eventLog->id,
