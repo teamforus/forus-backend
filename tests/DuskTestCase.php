@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Laravel\Dusk\Dusk;
 use Laravel\Dusk\TestCase as BaseTestCase;
+use PHPUnit\Framework\Attributes\BeforeClass;
 use Tests\Traits\MakesApiRequests;
 
 abstract class DuskTestCase extends BaseTestCase
@@ -45,11 +46,7 @@ abstract class DuskTestCase extends BaseTestCase
         }
     }
 
-    /**
-     * Prepare for Dusk test execution.
-     *
-     * @beforeClass
-     */
+    #[BeforeClass]
     public static function prepare(): void
     {
         // Only start the built-in ChromeDriver if we're NOT targeting a remote node
