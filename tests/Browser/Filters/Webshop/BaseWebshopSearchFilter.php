@@ -35,6 +35,15 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
     use MakesTestOrganizationOffices;
 
     /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::closeAll();
+    }
+
+    /**
      * @return string
      */
     abstract public function getListSelector(): string;
@@ -145,8 +154,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->clearCheckboxFilterItems($browser, '@fundFilterGroupOrganizations');
 
         $this->assertListCount($browser, 0, $this->getListSelector() . 'Content');
-        $browser->waitFor('@fundOrganizationFilterOption' . $organization->id);
-        $browser->click('@fundOrganizationFilterOption' . $organization->id);
+        $this->toggleFundOrganizationFilter($browser, $organization);
 
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
@@ -187,8 +195,7 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
         $this->clearCheckboxFilterItems($browser, '@fundFilterGroupTags');
 
         $this->assertListCount($browser, 0, $this->getListSelector() . 'Content');
-        $browser->waitFor('@fundTagFilterOption' . $tag->id);
-        $browser->click('@fundTagFilterOption' . $tag->id);
+        $this->toggleFundTagFilter($browser, $tag);
 
         $this->assertListVisibility($browser, $id, true);
         $this->assertWebshopRowsCount($browser, 1, $this->getListSelector() . 'Content');
@@ -405,9 +412,60 @@ abstract class BaseWebshopSearchFilter extends DuskTestCase
      */
     protected function assertActiveFilterLabelAndReset(Browser $browser, string $type, string|int $key = null): void
     {
-        $selector = "@activeFilter_{$type}_$key";
-        $browser->waitFor($selector);
+        $selector = $this->getActiveFilterLabelSelector($type, $key);
+
+        $this->assertActiveFilterLabelVisible($browser, $type, $key);
         $browser->within($selector, fn (Browser $b) => $b->click('@closeActiveFilter'));
         $browser->waitUntilMissing($selector);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Organization $organization
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function toggleFundOrganizationFilter(Browser $browser, Organization $organization): void
+    {
+        $browser->waitFor('@fundOrganizationFilterOption' . $organization->id);
+        $browser->click('@fundOrganizationFilterOption' . $organization->id);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Tag $tag
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function toggleFundTagFilter(Browser $browser, Tag $tag): void
+    {
+        $browser->waitFor('@fundTagFilterOption' . $tag->id);
+        $browser->click('@fundTagFilterOption' . $tag->id);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param string $type
+     * @param string|int|null $key
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function assertActiveFilterLabelVisible(Browser $browser, string $type, string|int $key = null): void
+    {
+        $browser->waitFor($this->getActiveFilterLabelSelector($type, $key));
+    }
+
+    /**
+     * @param string $type
+     * @param string|int|null $key
+     * @return string
+     */
+    protected function getActiveFilterLabelSelector(string $type, string|int $key = null): string
+    {
+        return "@activeFilter_{$type}_$key";
     }
 }
