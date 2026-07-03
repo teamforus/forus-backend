@@ -275,12 +275,19 @@ class IdentitiesSearch extends BaseSearch
             $builder->orWhereHas('profiles', function (Builder $builder) use ($q, $organizationId) {
                 $builder->where('organization_id', $organizationId);
 
-                $builder->whereHas('profile_records', function (Builder $builder) use ($q) {
-                    $builder->where('value', 'like', "%$q%");
-                    $builder->whereHas('record_type', fn (Builder $q) => $q->whereIn('key', [
-                        'given_name', 'family_name', 'mobile', 'city', 'street', 'house_number', 'postal_code',
-                        'client_number', 'municipality_name', 'neighborhood_name',
-                    ]));
+                $builder->where(function (Builder $builder) use ($q) {
+                    $builder->whereHas('profile_records', function (Builder $builder) use ($q) {
+                        $builder->where('value', 'like', "%$q%");
+                        $builder->whereHas('record_type', fn (Builder $q) => $q->whereIn('key', [
+                            'given_name', 'family_name', 'mobile', 'city', 'street', 'house_number', 'postal_code',
+                            'client_number', 'municipality_name', 'neighborhood_name',
+                        ]));
+                    });
+
+                    $builder->orWhereHas('profile_bank_accounts', function (Builder $builder) use ($q) {
+                        $builder->where('name', 'like', "%$q%");
+                        $builder->orWhere('iban', 'like', "%$q%");
+                    });
                 });
             });
 

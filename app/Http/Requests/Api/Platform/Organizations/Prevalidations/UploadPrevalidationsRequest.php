@@ -78,9 +78,6 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     private function getAvailableFunds(): Builder|Relation
     {
-        return $this->organization->funds()->where(function (Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->where('state', '!=', Fund::STATE_CLOSED);
+        return FundQuery::whereIsInternalConfiguredAndNotClosed($this->organization->funds());
     }
 }

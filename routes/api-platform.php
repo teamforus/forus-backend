@@ -1156,6 +1156,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'records' => 'record',
     ])->only('update');
 
+    $router->resource('organizations/{organization}/fund-product-limits', 'Api\Platform\Organizations\FundProductLimitController')
+        ->only('index', 'show', 'store', 'update', 'destroy');
+
     $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');
 
