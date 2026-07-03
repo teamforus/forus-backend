@@ -7,10 +7,12 @@ use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\ProductReservations\ProductReservationPending;
 use App\Events\ProductReservations\ProductReservationRejected;
+use App\Events\ProductReservations\ProductReservationSendProviderMessage;
 use App\Models\ProductReservation;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
+use App\Notifications\Identities\ProductReservation\IdentityProductReservationProviderMessageNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
 use App\Notifications\Organizations\ProductReservations\ProductReservationCanceledNotification;
 use Illuminate\Events\Dispatcher;
@@ -47,6 +49,7 @@ class ProductReservationSubscriber
         IdentityProductReservationAcceptedNotification::send($productReservation->log(
             $productReservation::EVENT_ACCEPTED,
             $this->getReservationLogModels($productReservation),
+            ['product_reservation_add_note_to_requester_notification' => $event->getAddNoteToRequesterNotification()],
         ));
     }
 
@@ -104,6 +107,23 @@ class ProductReservationSubscriber
     }
 
     /**
+     * @param ProductReservationSendProviderMessage $event
+     * @noinspection PhpUnused
+     */
+    public function onProductReservationSendProviderMessage(ProductReservationSendProviderMessage $event): void
+    {
+        $productReservation = $event->getProductReservation();
+
+        $log = $productReservation->log(
+            $productReservation::EVENT_PROVIDER_MESSAGE_CREATED,
+            $this->getReservationLogModels($productReservation),
+            ['product_reservation_provider_message' => $event->getProviderMessage()->message],
+        );
+
+        IdentityProductReservationProviderMessageNotification::send($log);
+    }
+
+    /**
      * Handle the event.
      *
      * @param Dispatcher $events
@@ -119,6 +139,7 @@ class ProductReservationSubscriber
         $events->listen(ProductReservationPending::class, "$class@onProductReservationPending");
         $events->listen(ProductReservationRejected::class, "$class@onProductReservationRejected");
         $events->listen(ProductReservationCanceled::class, "$class@onProductReservationCanceled");
+        $events->listen(ProductReservationSendProviderMessage::class, "$class@onProductReservationSendProviderMessage");
     }
 
     /**
