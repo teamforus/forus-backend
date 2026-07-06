@@ -46,7 +46,7 @@
         "pragmarx/google2fa": "^9.0",
         "predis/predis": "^3.0",
         "ralouphie/getallheaders": "^3.0",
-        "simplesamlphp/saml2": "^4.6.3",
+        "simplesamlphp/saml2": "^6.2.2",
         "simplesoftwareio/simple-qrcode": "^2.0",
         "twilio/sdk": "^8.3.9",
         "whichbrowser/parser": "^2.0.42",
