@@ -33,7 +33,7 @@ class FileResource extends BaseJsonResource
 
         return [
             ...$this->resource->only([
-                'identity_address', 'original_name', 'type', 'ext', 'uid', 'order',
+                'original_name', 'type', 'ext', 'uid', 'order',
             ]),
             'size' => pretty_file_size($this->resource->size),
             'uses_pdf_preview' => $usesPdfPreviewPages,

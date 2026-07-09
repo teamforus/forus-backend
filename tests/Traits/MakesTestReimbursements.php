@@ -53,7 +53,6 @@ trait MakesTestReimbursements
         ],
         'files' => [
             '*' => [
-                'identity_address',
                 'original_name',
                 'type',
                 'ext',
