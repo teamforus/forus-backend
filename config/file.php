@@ -20,7 +20,7 @@ return [
 
     'allowed_extensions_per_type' => [
         'reimbursement_proof' => ['jpg', 'jpeg', 'png', 'pdf'],
-        'product_reservation_custom_field' => ['jpg', 'jpeg', 'png'],
+        'product_reservation_custom_field' => ['jpg', 'jpeg', 'png', 'pdf'],
     ],
 
     'allowed_size_per_type' => [

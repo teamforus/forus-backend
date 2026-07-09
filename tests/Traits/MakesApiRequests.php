@@ -1055,6 +1055,46 @@ trait MakesApiRequests
 
     /**
      * @param Identity $identity
+     * @param File $file
+     * @return TestResponse
+     */
+    protected function apiGetFileRequest(Identity $identity, File $file): TestResponse
+    {
+        return $this->getJson("/api/v1/files/$file->uid", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return TestResponse
+     */
+    protected function apiDownloadFileRequest(Identity $identity, File $file): TestResponse
+    {
+        return $this->getJson("/api/v1/files/$file->uid/download", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return TestResponse
+     */
+    protected function apiDownloadFileArchiveRequest(Identity $identity, File $file): TestResponse
+    {
+        return $this->getJson("/api/v1/files/$file->uid/download-archive", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return TestResponse
+     */
+    protected function apiDownloadFilePreviewArchiveRequest(Identity $identity, File $file): TestResponse
+    {
+        return $this->getJson("/api/v1/files/$file->uid/download-preview-archive", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity $identity
      * @param array $data
      * @return TestResponse
      */

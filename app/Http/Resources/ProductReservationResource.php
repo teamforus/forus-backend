@@ -25,9 +25,12 @@ class ProductReservationResource extends BaseProductReservationResource
         'voucher_transaction',
         'extra_payment.refunds',
         'extra_payment.refunds_active',
-        'custom_fields.reservation_field',
-        'custom_fields.files',
         'fund_provider_product_with_trashed',
+    ];
+
+    public const array LOAD_NESTED = [
+        ...parent::LOAD_NESTED,
+        'custom_fields' => ProductReservationFieldValueResource::class,
     ];
 
     /**

@@ -8,24 +8,29 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\ReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Services\FileService\Models\File;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\NavigatesFrontendDashboard;
 use Tests\Browser\Traits\RollbackModelsTrait;
 use Tests\DuskTestCase;
+use Tests\Traits\MakesProductReservationPdfFiles;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFunds;
@@ -33,6 +38,7 @@ use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesTestProducts;
 use Tests\Traits\MakesTestVouchers;
+use Tests\Traits\UsesLocalPoppler;
 use Throwable;
 
 class ProductReservationTest extends DuskTestCase
@@ -47,8 +53,10 @@ class ProductReservationTest extends DuskTestCase
     use RollbackModelsTrait;
     use MakesTestOrganizations;
     use MakesTestFundProviders;
+    use MakesProductReservationPdfFiles;
     use MakesProductReservations;
     use NavigatesFrontendDashboard;
+    use UsesLocalPoppler;
 
     /**
      * @throws Throwable
@@ -174,6 +182,149 @@ class ProductReservationTest extends DuskTestCase
             ]);
         } finally {
             $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationPdfCustomFieldCanBeUploadedPreviewedAndSubmitted(): void
+    {
+        $this->skipIfLocalPopplerUnavailable();
+
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $product->forceFill([
+                'reservation_fields_enabled' => true,
+                'reservation_fields_config' => Product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+                'reservation_note' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            $field = $this->makeReservationFileField(
+                $provider,
+                'requester pdf reservation field',
+                ReservationField::FILLABLE_BY_REQUESTER,
+                true,
+            );
+
+            $fieldData = $this->makeReservationFieldBrowserData(
+                $field,
+                filePath: $this->pdfFixturePath(),
+                fileName: 'one-page.pdf',
+            );
+
+            $userData = [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ];
+
+            $this->browse(function (Browser $browser) use ($fund, $identity, $product, $userData, $fieldData, $field) {
+                $browser->visit($fund->getImplementation()->urlWebshop());
+
+                $this->loginAndGoToFundVoucher($browser, $identity, $fund);
+                $this->openProductFromAvailableVoucherProductsBlock($browser, $fund, $product);
+
+                $browser->waitFor('@productName');
+                $browser->assertSeeIn('@productName', $product->name);
+
+                $this->openReservationModal($browser, $fund);
+                $this->skipReservationModalEmailAndSelectVoucher($browser, $identity);
+                $this->fillReservationModalNameAndLastName($browser, $userData['first_name'], $userData['last_name'], true);
+                $this->uploadReservationModalFileCustomField($browser, $fieldData);
+
+                $browser->click('@filePreviewButton');
+                $this->assertFilePdfPreviewModal($browser);
+
+                $browser->within('@productReserveForm', fn (Browser $browser) => $browser->press('@btnSubmit'));
+
+                $this->assertReservationModalConfirmationDetails($browser, $userData['first_name'], null, [$fieldData]);
+                $this->submitReservationModal($browser);
+
+                $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
+                $fieldValue = $reservation->custom_fields()->where('reservation_field_id', $field->id)->first();
+
+                $this->assertReservationCreatedWithProperAcceptanceStatus($reservation);
+                $this->assertSame(1, $fieldValue?->files()->count());
+
+                $this->logout($browser);
+            });
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProviderCanPreviewProductReservationPdfCustomFieldFromDashboard(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $fund = null;
+
+        try {
+            $context = $this->makeDashboardPdfReservationContext($implementation, 'dashboard-preview.pdf');
+            $fund = $context['fund'];
+
+            $this->browse(function (Browser $browser) use ($implementation, $context) {
+                $this->openProviderReservationDashboardPage($browser, $implementation, $context['reservation']);
+
+                $browser
+                    ->waitForText($context['field']->label)
+                    ->waitForText($context['file']->original_name)
+                    ->click('@filePreviewButton');
+
+                $this->assertFilePdfPreviewModal($browser);
+                $this->logout($browser);
+            });
+        } finally {
+            $fund?->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProviderCanDownloadProductReservationPdfArchiveFromDashboard(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $fund = null;
+
+        try {
+            $context = $this->makeDashboardPdfReservationContext($implementation, 'dashboard-archive.pdf');
+            $fund = $context['fund'];
+
+            $this->browse(function (Browser $browser) use ($implementation, $context) {
+                $this->openProviderReservationDashboardPage($browser, $implementation, $context['reservation']);
+
+                $browser
+                    ->waitForText($context['field']->label)
+                    ->waitForText($context['file']->original_name)
+                    ->click('@fileDownloadButton')
+                    ->waitFor('@modalDangerZone')
+                    ->click('@dangerZoneConfirmation')
+                    ->click('@btnDangerZoneSubmit');
+
+                $this->assertZipWasDownloaded();
+                $this->logout($browser);
+            });
+        } finally {
+            $fund?->archive($fund->organization->employees[0]);
         }
     }
 
@@ -840,7 +991,7 @@ class ProductReservationTest extends DuskTestCase
      */
     public function testGeneralReservationNote(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
 
         try {
@@ -877,7 +1028,7 @@ class ProductReservationTest extends DuskTestCase
      */
     public function testGeneralReservationNoteOverrideInProduct(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
 
         try {
@@ -918,7 +1069,7 @@ class ProductReservationTest extends DuskTestCase
      */
     public function testProductCustomReservationNote(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
 
         try {
@@ -1286,14 +1437,24 @@ class ProductReservationTest extends DuskTestCase
                     $browser->assertSee($field['label']);
 
                     if (!empty($field['description'])) {
-                        $browser->click($field['dusk_description_btn']);
-                        $browser->waitForText($field['description']);
-                    } else {
+                        if ($field['type'] === ReservationField::TYPE_FILE) {
+                            $browser->assertSee($field['description']);
+                        } else {
+                            $browser->click($field['dusk_description_btn']);
+                            $browser->waitForText($field['description']);
+                        }
+                    } elseif ($field['type'] !== ReservationField::TYPE_FILE) {
                         $browser->assertMissing($field['dusk_description_btn']);
                     }
                 }
 
                 $browser->waitFor($field['dusk']);
+
+                if ($field['type'] === ReservationField::TYPE_FILE && !empty($field['file_path'])) {
+                    $this->attachFilesToFileUploader($browser, filePath: $field['file_path']);
+
+                    continue;
+                }
 
                 if (!empty($field['value'])) {
                     switch ($field['type']) {
@@ -1313,6 +1474,214 @@ class ProductReservationTest extends DuskTestCase
 
             $browser->press('@btnSubmit');
         });
+    }
+
+    /**
+     * @param Browser $browser
+     * @param array $field
+     * @throws TimeoutException
+     * @return void
+     */
+    private function uploadReservationModalFileCustomField(Browser $browser, array $field): void
+    {
+        $browser->waitFor('@productReserveForm');
+
+        $browser->within('@productReserveForm', function (Browser $browser) use ($field) {
+            if ($field['required']) {
+                $browser->press('@btnSubmit');
+                $browser->waitFor('.form-error');
+            }
+
+            $browser
+                ->assertSee($field['label'])
+                ->assertSee($field['description'])
+                ->waitFor($field['dusk']);
+        });
+
+        $this->attachFilesToFileUploader($browser, filePath: $field['file_path']);
+
+        $browser->waitForText($field['file_name']);
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    private function assertFilePdfPreviewModal(Browser $browser): void
+    {
+        $browser->waitFor('@modalFilePdfPreview');
+
+        $browser->within('@modalFilePdfPreview', function (Browser $browser) {
+            $browser->assertPresent('@pdfPreviewPage');
+        });
+
+        $browser
+            ->waitFor('@modalFilePdfPreviewClose')
+            ->click('@modalFilePdfPreviewClose')
+            ->waitUntilMissing('@modalFilePdfPreview');
+    }
+
+    /**
+     * @param ReservationField $field
+     * @param mixed|null $value
+     * @param string|null $filePath
+     * @param string|null $fileName
+     * @return array
+     */
+    private function makeReservationFieldBrowserData(
+        ReservationField $field,
+        mixed $value = null,
+        ?string $filePath = null,
+        ?string $fileName = null,
+    ): array {
+        return [
+            'id' => $field->id,
+            'label' => $field->label,
+            'type' => $field->type,
+            'description' => $field->description,
+            'required' => $field->required,
+            'value' => $value,
+            'field_type' => 'custom',
+            'dusk' => "@customField$field->id",
+            'dusk_description_btn' => "@customField{$field->id}InfoBtn",
+            'file_path' => $filePath,
+            'file_name' => $fileName,
+        ];
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param string $fileName
+     * @throws Throwable
+     * @return array{
+     *     field: ReservationField,
+     *     file: File,
+     *     fund: Fund,
+     *     provider: Organization,
+     *     reservation: ProductReservation,
+     * }
+     */
+    private function makeDashboardPdfReservationContext(Implementation $implementation, string $fileName): array
+    {
+        $fund = $this->makeTestFund($implementation->organization);
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
+        $product = $this->makeTestProductForReservation($provider);
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $voucher = $this->makeTestVoucher($fund, $identity);
+
+        $this->makeTestFundProvider($provider, $fund);
+        $this->assertFundHasApprovedProviders($fund);
+
+        $product->forceFill([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => Product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+            'reservation_note' => Product::RESERVATION_FIELD_NO,
+        ])->save();
+
+        $field = $this->makeReservationFileField(
+            $provider,
+            'requester pdf dashboard field',
+            ReservationField::FILLABLE_BY_REQUESTER,
+        );
+
+        $reservation = $voucher->reserveProduct(product: $product, extraData: [
+            'first_name' => 'Pdf',
+            'last_name' => 'Requester',
+            'user_note' => '',
+        ]);
+
+        $pdf = $this->pdfFixtureContents();
+        $this->assertIsString($pdf);
+
+        $file = $this->makeProductReservationCustomFieldFile($identity, $fileName, $pdf);
+        $this->attachPdfPreviewPages($file, ['dashboard-preview-page']);
+
+        $fieldValue = $reservation->custom_fields()->where('reservation_field_id', $field->id)->firstOrFail();
+        $fieldValue->appendFilesByUid($file->uid);
+
+        return [
+            'field' => $field,
+            'file' => $file->refresh(),
+            'fund' => $fund,
+            'provider' => $provider,
+            'reservation' => $reservation->refresh(),
+        ];
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Implementation $implementation
+     * @param ProductReservation $reservation
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @return void
+     */
+    private function openProviderReservationDashboardPage(
+        Browser $browser,
+        Implementation $implementation,
+        ProductReservation $reservation,
+    ): void {
+        $provider = $reservation->product->organization;
+
+        $browser->visit($implementation->urlProviderDashboard());
+
+        $this->loginIdentity($browser, $provider->identity);
+        $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $provider->identity);
+        $this->selectDashboardOrganization($browser, $provider);
+        $this->goToReservationsPage($browser);
+
+        $browser
+            ->waitFor("@tableReservationRow$reservation->id td:nth-child(2)")
+            ->click("@tableReservationRow$reservation->id td:nth-child(2)")
+            ->waitForText($reservation->code);
+    }
+
+    /**
+     * @return void
+     */
+    private function assertZipWasDownloaded(): void
+    {
+        if (Config::get('tests.dusk_github_action')) {
+            return;
+        }
+
+        $path = $this->findDownloadedFile('zip', 5000);
+
+        if (!$path || !Storage::exists($path)) {
+            $this->fail('ZIP file was not downloaded.');
+        }
+
+        Storage::delete($path);
+    }
+
+    /**
+     * @param string $extension
+     * @param int $timeout
+     * @return string|null
+     */
+    private function findDownloadedFile(string $extension, int $timeout = 2000): ?string
+    {
+        $timeout = (int) (round($timeout / 100) * 100);
+        $deadline = microtime(true) + ($timeout / 1000);
+
+        do {
+            $file = collect(Storage::files('dusk-downloads'))
+                ->filter(fn (string $file) => str_ends_with($file, ".$extension"))
+                ->sortByDesc(fn (string $file) => Storage::lastModified($file))
+                ->first();
+
+            if ($file !== null) {
+                return $file;
+            }
+
+            usleep(100_000);
+        } while (microtime(true) < $deadline);
+
+        return null;
     }
 
     /**
@@ -1489,6 +1858,21 @@ class ProductReservationTest extends DuskTestCase
         }
 
         foreach ($otherFields ?? [] as $field) {
+            if ($field['type'] === ReservationField::TYPE_FILE) {
+                $browser->waitFor("@overviewValueCustomField{$field['id']}");
+
+                if (empty($field['file_name'])) {
+                    $browser->waitForTextIn("@overviewValueCustomField{$field['id']}", 'Leeg');
+                } else {
+                    $browser->within(
+                        "@overviewValueCustomField{$field['id']}",
+                        fn (Browser $browser) => $browser->assertSee($field['file_name'])
+                    );
+                }
+
+                continue;
+            }
+
             $browser->waitForTextIn(
                 "@overviewValueCustomField{$field['id']}",
                 empty($field['value']) ? 'Leeg' : $field['value']

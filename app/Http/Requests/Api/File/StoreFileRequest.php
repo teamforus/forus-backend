@@ -4,8 +4,11 @@ namespace App\Http\Requests\Api\File;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\FileTypeRule;
+use App\Services\FileService\FilePdfPreviewService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreFileRequest extends BaseFormRequest
 {
@@ -31,6 +34,38 @@ class StoreFileRequest extends BaseFormRequest
             'file' => $this->fileRule(),
             'file_preview' => $this->filePreviewRule(),
         ];
+    }
+
+    /**
+     * @param Validator $validator
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $uploadedFile = $this->file('file');
+            $uploadedFile = $uploadedFile instanceof UploadedFile ? $uploadedFile : null;
+            $filePdfPreviewService = resolve(FilePdfPreviewService::class);
+
+            if (!$filePdfPreviewService->isPdfPreviewUpload($this->input('type'), $uploadedFile)) {
+                return;
+            }
+
+            if (!$filePdfPreviewService->hasPdfClientExtension($uploadedFile)) {
+                $validator->errors()->add('file', trans('validation.file_pdf_preview.extension'));
+
+                return;
+            }
+
+            if (!Config::get('forus.pdf_to_img.enabled')) {
+                $validator->errors()->add('file', trans('validation.file_pdf_preview.disabled'));
+            }
+
+            if ($this->hasFile('file_preview')) {
+                $validator->errors()->add('file_preview', trans('validation.file_pdf_preview.file_preview'));
+            }
+        });
     }
 
     /**
