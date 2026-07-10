@@ -8,9 +8,9 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\ReservationField;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
@@ -536,15 +536,17 @@ class ProductReservationTest extends DuskTestCase
     public function testProductReservationRequiredAddress(): void
     {
         $organization = Implementation::byKey('nijmegen')->organization;
-        $allowProfiles = $organization->allow_profiles;
+        $fund = null;
 
-        $organization->forceFill([
-            'allow_profiles' => true,
-        ])->save();
+        $this->rollbackModels([
+            [$organization, $organization->only(['allow_profiles'])],
+        ], function () use ($organization, &$fund) {
+            $organization->forceFill([
+                'allow_profiles' => true,
+            ])->save();
 
-        $fund = $this->makeTestFund($organization);
+            $fund = $this->makeTestFund($organization);
 
-        try {
             $provider = $this->makeTestProviderOrganization($this->makeIdentity());
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -605,13 +607,9 @@ class ProductReservationTest extends DuskTestCase
                 'first_name' => $this->faker->firstName(),
                 'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => true, 'optional' => true, 'skip' => true]);
-        } finally {
-            $fund->archive($fund->organization->employees[0]);
-
-            $organization->forceFill([
-                'allow_profiles' => $allowProfiles,
-            ])->save();
-        }
+        }, function () use (&$fund) {
+            $fund?->archive($fund->organization->employees[0]);
+        });
     }
 
     /**
@@ -621,15 +619,17 @@ class ProductReservationTest extends DuskTestCase
     public function testProductReservationRequiredAddressWithoutProfile(): void
     {
         $organization = Implementation::byKey('nijmegen')->organization;
-        $allowProfiles = $organization->allow_profiles;
+        $fund = null;
 
-        $organization->forceFill([
-            'allow_profiles' => false,
-        ])->save();
+        $this->rollbackModels([
+            [$organization, $organization->only(['allow_profiles'])],
+        ], function () use ($organization, &$fund) {
+            $organization->forceFill([
+                'allow_profiles' => false,
+            ])->save();
 
-        $fund = $this->makeTestFund($organization);
+            $fund = $this->makeTestFund($organization);
 
-        try {
             $provider = $this->makeTestProviderOrganization($this->makeIdentity());
             $product = $this->makeTestProductForReservation($provider);
             $identity = $this->makeIdentity($this->makeUniqueEmail());
@@ -657,6 +657,29 @@ class ProductReservationTest extends DuskTestCase
                 'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => false, 'optional' => true, 'hidden_controls' => true]);
 
+            $userData = [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ];
+
+            // Test clearing an optional address after entering it
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, $userData, [
+                ...$addressData,
+                'existing' => false,
+                'optional' => true,
+                'hidden_controls' => true,
+                'clear_after_apply' => true,
+            ]);
+
+            $reservation = $this->findProductReservation($identity, $product, $fund, $userData);
+
+            $this->assertNull($reservation->street);
+            $this->assertNull($reservation->house_nr);
+            $this->assertNull($reservation->house_nr_addition);
+            $this->assertNull($reservation->postal_code);
+            $this->assertNull($reservation->city);
+            $this->assertSame('', $reservation->address);
+
             $product->forceFill([
                 'reservation_address' => Product::RESERVATION_FIELD_REQUIRED,
                 'reservation_fields_enabled' => true,
@@ -667,13 +690,9 @@ class ProductReservationTest extends DuskTestCase
                 'first_name' => $this->faker->firstName(),
                 'last_name' => $this->faker->lastName(),
             ], [...$addressData, 'existing' => false, 'hidden_controls' => true]);
-        } finally {
-            $fund->archive($fund->organization->employees[0]);
-
-            $organization->forceFill([
-                'allow_profiles' => $allowProfiles,
-            ])->save();
-        }
+        }, function () use (&$fund) {
+            $fund?->archive($fund->organization->employees[0]);
+        });
     }
 
     /**
@@ -1418,25 +1437,27 @@ class ProductReservationTest extends DuskTestCase
             $optional = $data['optional'] ?? false;
             $existing = $data['existing'] ?? false;
             $hiddenControls = $data['hidden_controls'] ?? false;
+            $clearAfterApply = $data['clear_after_apply'] ?? false;
             $existingUpdate = $data['existing_update'] ?? false;
 
             $apply = fn () => $hiddenControls
                 ? $browser->click('@btnSubmit')
                 : $browser->click('@productReserveAddressFormApply');
 
-            if (!$existing && $optional) {
-                $browser->waitFor('@productReserveAddress');
-                $browser->assertMissing('@btnSkip');
-                $browser->press('@btnSubmit');
-
-                return;
-            }
-
             if (!$existing) {
                 $browser->waitFor('@productReserveAddressForm');
 
-                if (!$hiddenControls) {
+                if ($hiddenControls) {
+                    $browser->assertMissing('@productReserveAddressActions');
+                } else {
                     $browser->assertDisabled('@productReserveAddressFormApply');
+                }
+
+                if ($optional && !$clearAfterApply) {
+                    $browser->assertMissing('@btnSkip');
+                    $browser->press('@btnSubmit');
+
+                    return;
                 }
 
                 // Fill form with data and submit again
@@ -1466,6 +1487,21 @@ class ProductReservationTest extends DuskTestCase
                 $browser->waitFor('@productReserveAddressPreview');
 
                 $browser->assertSeeIn('@productReserveAddressPreviewText', $this->makeAddressString($data));
+
+                if ($clearAfterApply) {
+                    $browser->waitFor('@productReserveAddressPreviewEdit');
+                    $browser->click('@productReserveAddressPreviewEdit');
+                    $browser->waitFor('@productReserveAddressForm');
+
+                    $browser->clear('@productReserveFormStreet');
+                    $browser->clear('@productReserveFormHouseNumber');
+                    $browser->clear('@productReserveFormHouseNumberAddition');
+                    $browser->clear('@productReserveFormPostalCode');
+                    $browser->clear('@productReserveFormCity');
+                    $browser->press('@btnSubmit');
+
+                    return;
+                }
 
                 if (!$hiddenControls) {
                     $browser->waitFor('@productReserveAddressPreviewEdit');
