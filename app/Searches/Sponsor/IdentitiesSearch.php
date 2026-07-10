@@ -2,10 +2,13 @@
 
 namespace App\Searches\Sponsor;
 
+use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
 use App\Models\ProfileRecord;
 use App\Models\Record;
+use App\Models\Reimbursement;
+use App\Models\VoucherTransaction;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\BaseSearch;
 use App\Services\Forus\Session\Models\Session;
@@ -288,6 +291,52 @@ class IdentitiesSearch extends BaseSearch
                         $builder->where('name', 'like', "%$q%");
                         $builder->orWhere('iban', 'like', "%$q%");
                     });
+                });
+            });
+
+            $builder->orWhereHas('fund_requests', function (Builder $builder) use ($q) {
+                $builder->where('fund_requests.state', FundRequest::STATE_APPROVED);
+
+                $builder->where(function (Builder $builder) use ($q) {
+                    $builder->whereHas('records', function (Builder $builder) use ($q) {
+                        $builder
+                            ->whereNotNull('fund_request_records.value')
+                            ->where('fund_request_records.value', 'like', "%$q%")
+                            ->join('fund_configs', 'fund_configs.fund_id', '=', 'fund_requests.fund_id')
+                            ->whereColumn(
+                                'fund_request_records.record_type_key',
+                                'fund_configs.iban_record_key',
+                            );
+                    });
+
+                    $builder->orWhereHas('records', function (Builder $builder) use ($q) {
+                        $builder
+                            ->whereNotNull('fund_request_records.value')
+                            ->where('fund_request_records.value', 'like', "%$q%")
+                            ->join('fund_configs', 'fund_configs.fund_id', '=', 'fund_requests.fund_id')
+                            ->whereColumn(
+                                'fund_request_records.record_type_key',
+                                'fund_configs.iban_name_record_key',
+                            );
+                    });
+                });
+            });
+
+            $builder->orWhereHas('reimbursements', function (Builder $builder) use ($q) {
+                $builder->where('reimbursements.state', Reimbursement::STATE_APPROVED);
+
+                $builder->where(function (Builder $builder) use ($q) {
+                    $builder->where('iban', 'like', "%$q%");
+                    $builder->orWhere('iban_name', 'like', "%$q%");
+                });
+            });
+
+            $builder->orWhereHas('vouchers.transactions', function (Builder $builder) use ($q) {
+                $builder->where('target', VoucherTransaction::TARGET_PAYOUT);
+
+                $builder->where(function (Builder $builder) use ($q) {
+                    $builder->where('target_iban', 'like', "%$q%");
+                    $builder->orWhere('target_name', 'like', "%$q%");
                 });
             });
 
