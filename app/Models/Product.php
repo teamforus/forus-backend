@@ -713,9 +713,7 @@ class Product extends Model
             case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
             case self::PRICE_TYPE_INFORMATIONAL: return trans('prices.informational');
             case self::PRICE_TYPE_DISCOUNT_FIXED:
-            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                return trans('prices.discount', ['amount' => $this->price_discount_locale]);
-            }
+            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: return $this->price_discount_locale;
         }
 
         return '';
@@ -727,18 +725,16 @@ class Product extends Model
      */
     public function getPriceDiscountLocaleAttribute(): string
     {
-        switch ($this->price_type) {
-            case self::PRICE_TYPE_DISCOUNT_FIXED: {
-                return currency_format_locale($this->price_discount);
-            }
-            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
-                $isWhole = ($this->price_discount - round($this->price_discount)) === 0.0;
+        $amount = match ($this->price_type) {
+            self::PRICE_TYPE_DISCOUNT_FIXED => currency_format_locale($this->price_discount),
+            self::PRICE_TYPE_DISCOUNT_PERCENTAGE => currency_format(
+                $this->price_discount,
+                ($this->price_discount - round($this->price_discount)) === 0.0 ? 0 : 2
+            ) . '%',
+            default => null,
+        };
 
-                return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
-            }
-        }
-
-        return '';
+        return !is_null($amount) ? trans('prices.discount', ['amount' => $amount]) : '';
     }
 
     /**
