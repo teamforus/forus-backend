@@ -676,7 +676,7 @@ class ProductReservationTest extends DuskTestCase
             $this->assertNull($reservation->street);
             $this->assertNull($reservation->house_nr);
             $this->assertNull($reservation->house_nr_addition);
-            $this->assertNull($reservation->postal_code);
+            $this->assertSame('', $reservation->postal_code);
             $this->assertNull($reservation->city);
             $this->assertSame('', $reservation->address);
 
@@ -1493,11 +1493,11 @@ class ProductReservationTest extends DuskTestCase
                     $browser->click('@productReserveAddressPreviewEdit');
                     $browser->waitFor('@productReserveAddressForm');
 
-                    $browser->clear('@productReserveFormStreet');
-                    $browser->clear('@productReserveFormHouseNumber');
-                    $browser->clear('@productReserveFormHouseNumberAddition');
-                    $browser->clear('@productReserveFormPostalCode');
-                    $browser->clear('@productReserveFormCity');
+                    $this->clearField($browser, '@productReserveFormStreet');
+                    $this->clearField($browser, '@productReserveFormHouseNumber');
+                    $this->clearField($browser, '@productReserveFormHouseNumberAddition');
+                    $this->clearField($browser, '@productReserveFormPostalCode');
+                    $this->clearField($browser, '@productReserveFormCity');
                     $browser->press('@btnSubmit');
 
                     return;
