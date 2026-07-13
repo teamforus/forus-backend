@@ -38,7 +38,7 @@ class UpdateFundRequestRecordRequest extends BaseFormRequest
                 new FundRequestRecordValueSponsorRule(
                     $this->fund_request_record->fund_request->fund,
                     $this,
-                    $this->fund_request_record->fund_criterion,
+                    $this->fund_request_record,
                     $this->fund_request,
                 ),
             ],

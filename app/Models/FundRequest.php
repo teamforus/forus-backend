@@ -7,6 +7,7 @@ use App\Events\FundRequests\FundRequestPhysicalCardRequestEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
+use App\Models\Traits\ApprovesMissedRecords;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -34,7 +35,8 @@ use Throwable;
  * @property string $disregard_note
  * @property bool $disregard_notify
  * @property string $state
- * @property string|null $amount
+ * @property bool $missing_records_approved
+ * @property numeric|null $amount
  * @property int|null $fund_amount_preset_id
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -50,6 +52,8 @@ use Throwable;
  * @property-read \App\Models\Identity|null $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read Collection|\App\Models\FundRequestMissedRecord[] $missed_records
+ * @property-read int|null $missed_records_count
  * @property-read Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
  * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
@@ -72,6 +76,7 @@ use Throwable;
  * @method static Builder<static>|FundRequest whereId($value)
  * @method static Builder<static>|FundRequest whereIdentityAddress($value)
  * @method static Builder<static>|FundRequest whereIdentityId($value)
+ * @method static Builder<static>|FundRequest whereMissingRecordsApproved($value)
  * @method static Builder<static>|FundRequest whereNote($value)
  * @method static Builder<static>|FundRequest whereResolvedAt($value)
  * @method static Builder<static>|FundRequest whereState($value)
@@ -80,6 +85,7 @@ use Throwable;
  */
 class FundRequest extends Model
 {
+    use ApprovesMissedRecords;
     use HasLogs;
     use HasNotes;
 
@@ -125,11 +131,13 @@ class FundRequest extends Model
     protected $fillable = [
         'fund_id', 'employee_id', 'note', 'state', 'resolved_at',
         'disregard_note', 'disregard_notify', 'identity_id', 'contact_information',
+        'missing_records_approved',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
         'disregard_notify' => 'boolean',
+        'missing_records_approved' => 'boolean',
     ];
 
     /**
@@ -237,6 +245,15 @@ class FundRequest extends Model
             FundRequestClarification::class,
             FundRequestRecord::class
         );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function missed_records(): HasMany
+    {
+        return $this->hasMany(FundRequestMissedRecord::class);
     }
 
     /**
@@ -516,6 +533,24 @@ class FundRequest extends Model
         Event::dispatch(new FundRequestPhysicalCardRequestEvent($this, $cardRequest));
 
         return $cardRequest;
+    }
+
+    /**
+     * @param string $type
+     * @param array $fields
+     * @return void
+     */
+    public function storeMissedFields(string $type, array $fields): void
+    {
+        foreach ($fields as $key => $values) {
+            foreach ($values as $value) {
+                $this->missed_records()->firstOrCreate([
+                    'group' => $key,
+                    'field' => $value,
+                    'type' => $type,
+                ]);
+            }
+        }
     }
 
     /**

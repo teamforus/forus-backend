@@ -40,12 +40,13 @@ class FcmBasicNotification extends Notification implements ShouldQueue
     /**
      * @return FcmMessage
      */
-    public function toFcm()
+    public function toFcm(): FcmMessage
     {
-        return FcmMessage::create()->setNotification(
-            FcmNotification::create()
-                ->setTitle($this->title)
-                ->setBody($this->body)
+        return FcmMessage::create()->notification(
+            FcmNotification::create(
+                title: $this->title,
+                body: $this->body,
+            )
         );
     }
 }

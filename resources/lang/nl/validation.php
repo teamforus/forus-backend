@@ -241,6 +241,7 @@ return [
         'extra_records' => 'Er zijn extra records ingediend die niet zijn toegestaan.',
         'invalid_prefill_value' => 'Het geselecteerde :attribute is niet toegestaan voor deze fondaanvraag.',
         'group_required' => 'Fill at least one of records',
+        'record_edit_forbidden' => 'U kunt dit gegeven niet aanpassen.',
     ],
     'attributes' => [
         'pin_code' => 'pincode',
@@ -340,6 +341,13 @@ return [
     'reimbursement' => [
         'files' => [
             'required' => 'Om verder te gaan, moet er een bon, factuur of rekening worden toegevoegd. Dit veld is verplicht.',
+        ],
+        'amount' => [
+            'min' => 'Vul een :attribute in van :min of hoger. Voorbeeld: 10.',
+            'max' => 'Het :attribute mag niet hoger zijn dan :max.',
+        ],
+        'description' => [
+            'min' => 'De :attribute is te kort. Schrijf minimaal :min tekens. Voorbeeld: Sportschoenen.',
         ],
     ],
 ];

@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1028,10 +1029,11 @@ class Fund extends Model
 
     /**
      * @param Identity|null $identity
+     * @param Voucher|null $voucher
      * @param bool $fresh
      * @return float|null
      */
-    public function voucherPayoutAmountForIdentity(?Identity $identity, bool $fresh = true): ?float
+    public function voucherPayoutAmountForIdentity(?Identity $identity, ?Voucher $voucher = null, bool $fresh = true): ?float
     {
         $formulas = $fresh ? $this->fund_payout_formulas()->get() : $this->fund_payout_formulas;
 
@@ -1039,7 +1041,7 @@ class Fund extends Model
             return null;
         }
 
-        return $formulas->map(function (FundPayoutFormula $formula) use ($identity) {
+        return $formulas->map(function (FundPayoutFormula $formula) use ($identity, $voucher) {
             switch ($formula->type) {
                 case FundPayoutFormula::TYPE_FIXED:
                     return (float) $formula->amount;
@@ -1048,9 +1050,7 @@ class Fund extends Model
                         return 0.0;
                     }
 
-                    $value = $identity
-                        ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)?->value
-                        : null;
+                    $value = $this->getRecordValueForPayout($identity, $voucher, $formula->record_type_key);
 
                     if (!is_numeric($value)) {
                         return 0.0;
@@ -1072,11 +1072,35 @@ class Fund extends Model
 
     /**
      * @param Identity|null $identity
+     * @param Voucher|null $voucher
      * @return float|null
      */
-    public function voucherPayoutAmountForIdentityCached(?Identity $identity): ?float
+    public function voucherPayoutAmountForIdentityCached(?Identity $identity, ?Voucher $voucher = null): ?float
     {
-        return $this->voucherPayoutAmountForIdentity($identity, false);
+        return $this->voucherPayoutAmountForIdentity($identity, $voucher, false);
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @param Voucher|null $voucher
+     * @param string $record_type_key
+     * @return string|null
+     */
+    public function getRecordValueForPayout(?Identity $identity, ?Voucher $voucher, string $record_type_key): ?string
+    {
+        $value = null;
+
+        if ($this->fund_config?->allow_voucher_records) {
+            $voucher->loadMissing('voucher_records.record_type');
+
+            $value = $voucher->voucher_records
+                ->first(fn (VoucherRecord $record) => $record->record_type->key === $record_type_key)
+                ?->value;
+        }
+
+        return !is_numeric($value) && $identity
+            ? $this->getTrustedRecordOfType($identity, $record_type_key)?->value
+            : $value;
     }
 
     /**
@@ -1634,6 +1658,16 @@ class Fund extends Model
                     'source' => FundRequestRecord::SOURCE_BRP,
                 ]);
             }
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_INFO,
+                Arr::get($iConnectPrefills, 'missed_fields.info', []),
+            );
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_WARNING,
+                Arr::get($iConnectPrefills, 'missed_fields.warning', []),
+            );
         }
 
         return $fundRequest;
@@ -2074,6 +2108,82 @@ class Fund extends Model
             'fund_id' => $this->id,
             ...$data,
         ]));
+    }
+
+    /**
+     * @param SupportCollection $records
+     * @return array
+     */
+    public function getRecordGroups(SupportCollection $records): array
+    {
+        $groups = RecordGroup::getCachedList()
+            ->filter(function (RecordGroup $group) {
+                return
+                    // global scope
+                    (!$group->organization_id && !$group->fund_id) ||
+                    // organization scope
+                    ($group->organization_id === $this->organization_id && !$group->fund_id) ||
+                    // organization and fund scope
+                    ($group->organization_id === $this->organization_id && $group->fund_id === $this->id);
+            })
+            ->values();
+
+        $groupsPriority = $groups
+            ->sortBy(fn (RecordGroup $group) => $group->fund_id ? 0 : ($group->organization_id ? 1 : 2))
+            ->values();
+
+        $groupRecordTypes = $groupsPriority
+            ->mapWithKeys(fn (RecordGroup $group) => [
+                $group->id => $group->record_group_record_types->pluck('record_type_key')->values()->toArray(),
+            ])
+            ->toArray();
+
+        $recordIdsByGroup = $groupsPriority
+            ->pluck('id')
+            ->mapWithKeys(fn (int $groupId) => [$groupId => []])
+            ->toArray();
+
+        $ungroupedRecordIds = [];
+
+        foreach ($records as $record) {
+            $assigned = false;
+
+            foreach ($groupsPriority as $group) {
+                if (in_array($record->record_type_key, $groupRecordTypes[$group->id] ?? [], true)) {
+                    $recordIdsByGroup[$group->id][] = $record->id;
+                    $assigned = true;
+                    break;
+                }
+            }
+
+            if (!$assigned) {
+                $ungroupedRecordIds[] = $record->id;
+            }
+        }
+
+        $recordGroups = $groups
+            ->map(fn (RecordGroup $group) => [
+                ...$group->only([
+                    'id', 'title', 'organization_id', 'fund_id', 'order',
+                ]),
+                'record_ids' => $recordIdsByGroup[$group->id] ?? [],
+            ])
+            ->filter(fn (array $group) => count($group['record_ids']) > 0)
+            ->values()
+            ->toArray();
+
+        if (!empty($ungroupedRecordIds)) {
+            $recordGroups[] = [
+                'id' => 0,
+                'title' => 'Overige gegevens',
+                'organization_id' => null,
+                'fund_id' => null,
+                'order' => 999,
+                'record_ids' => $ungroupedRecordIds,
+            ];
+        }
+
+        return $recordGroups;
     }
 
     /**
