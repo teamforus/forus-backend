@@ -212,6 +212,35 @@ class OrganizationQuery
                     $query->whereIn('fund_id', $fundsBuilder->select('id'));
                 });
 
+                static::whereProviderNotRejected($builder, $fundsBuilder);
+            });
+
+            $builder->orWhere(function (Builder $builder) use ($sponsorOrganization) {
+                $builder->whereHas('fund_providers', function (Builder $query) use ($sponsorOrganization) {
+                    $fundsBuilder = clone FundQuery::whereNotActiveFilter($sponsorOrganization->funds());
+
+                    $query->whereIn('fund_id', $fundsBuilder->select('id'));
+                });
+
+                static::whereProviderNotRejected(
+                    $builder,
+                    clone FundQuery::whereActiveFilter($sponsorOrganization->funds())
+                );
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|Organization $builder
+     * @param Builder|Relation|Fund $fundsBuilder
+     * @return Builder|Relation|Organization
+     */
+    public static function whereProviderNotRejected(
+        Builder|Relation|Organization $builder,
+        Builder|Relation|Fund $fundsBuilder,
+    ): Builder|Relation|Organization {
+        return $builder->where(function (Builder $builder) use ($fundsBuilder) {
+            $builder->where(function (Builder $builder) use ($fundsBuilder) {
                 $builder->whereDoesntHave('fund_providers', function (Builder $query) use ($fundsBuilder) {
                     $query->where('state', FundProvider::STATE_UNSUBSCRIBED);
                     $query->whereIn('fund_id', $fundsBuilder->select('id'));
@@ -226,12 +255,6 @@ class OrganizationQuery
                     $query->where('state', FundProvider::STATE_PENDING);
                     $query->whereIn('fund_id', $fundsBuilder->select('id'));
                 });
-            });
-
-            $builder->orWhereHas('fund_providers', function (Builder $query) use ($sponsorOrganization) {
-                $fundsBuilder = clone FundQuery::whereNotActiveFilter($sponsorOrganization->funds());
-
-                $query->whereIn('fund_id', $fundsBuilder->select('id'));
             });
         });
     }
