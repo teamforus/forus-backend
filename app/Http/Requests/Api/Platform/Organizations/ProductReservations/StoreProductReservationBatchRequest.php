@@ -53,6 +53,7 @@ class StoreProductReservationBatchRequest extends BaseFormRequest
                 // validate stock and limitations
                 new ProviderProductReservationBatchItemStockRule($this->organization, $data),
             ]),
+            ...$this->uploadedCSVFileRules(),
         ];
     }
 

@@ -17,6 +17,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesTestFundRequestPrefills;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -34,6 +35,7 @@ class PrevalidationRequestCsvUploadTest extends TestCase
     use MakesTestOrganizations;
     use MakesTestFundRequestPrefills;
     use MakesTestPrevalidationRequests;
+    use MakesAssertStoreUploadedCsvFile;
 
     protected function setUp(): void
     {
@@ -756,6 +758,45 @@ class PrevalidationRequestCsvUploadTest extends TestCase
 
         $this->assertEquals(PrevalidationRequest::STATE_FAIL, $ownerRequest->refresh()->state);
         $this->assertEquals(PrevalidationRequest::STATE_PENDING, $otherValidatorRequest->refresh()->state);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestStoreUploadedCsvFile(): void
+    {
+        [
+            'organization' => $organization,
+            'fund' => $fund,
+            'manualKey' => $manualKey,
+        ] = $this->makePrevalidationRequestCsvFixture([
+            '159835562' => [
+                'status' => 404,
+                'body' => [],
+            ],
+        ]);
+
+        $requestDataPrefillSuccess = $this->makePrevalidationRequestRow($manualKey);
+        $requestDataPrefillFailNotFound = $this->makePrevalidationRequestRow($manualKey, ['bsn' => '159835562']);
+
+        $requestData = [
+            'fund_id' => $fund->id,
+            'data' => [
+                $requestDataPrefillSuccess,
+                $requestDataPrefillFailNotFound,
+            ],
+        ];
+
+        $this->apiMakePrevalidationRequestCollectionRequest(
+            $organization,
+            $requestData,
+            appendFileData: true
+        )->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PREVALIDATION_REQUESTS, 2);
+
+        $this->assertLoggedUploadedFileContent($log, $requestData['data']);
     }
 
     /**

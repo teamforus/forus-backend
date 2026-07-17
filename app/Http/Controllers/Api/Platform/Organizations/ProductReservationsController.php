@@ -117,12 +117,15 @@ class ProductReservationsController extends Controller
     ): array {
         $this->authorize('createProviderBatch', [ProductReservation::class, $organization]);
 
+        $file = $request->post('file');
         $reservations = $request->input('reservations');
         $employee = $organization->findEmployee($request->auth_address());
 
         $index = 0;
         $createdItems = [];
         $errorsItems = [];
+
+        $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_RESERVATIONS, $file, $reservations);
 
         while (count($reservations) > $index) {
             $slice = array_slice($reservations, $index++, 1, true);
@@ -145,6 +148,11 @@ class ProductReservationsController extends Controller
 
         $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
         $reserved = ProductReservationResource::createCollection($reservations);
+
+        $event?->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => $reservations->pluck('id')->toArray(),
+        ])?->update();
 
         return [
             'reserved' => $reserved,

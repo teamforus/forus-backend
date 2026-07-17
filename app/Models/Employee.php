@@ -58,7 +58,9 @@ class Employee extends Model
     public const string EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
     public const string EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
     public const string EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
+    public const string EVENT_UPLOADED_RESERVATIONS = 'uploaded_reservations';
     public const string EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
+    public const string EVENT_UPLOADED_PREVALIDATION_REQUESTS = 'uploaded_prevalidation_requestss';
 
     public const string EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
