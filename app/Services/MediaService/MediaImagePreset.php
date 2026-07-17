@@ -6,6 +6,7 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
 use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 
 class MediaImagePreset extends \App\Services\MediaService\MediaPreset
@@ -161,7 +162,9 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         } else {
             $format = $this->format ?: $media->ext;
             $outPath = $this->makeUniquePath($storage, $storagePath, $format);
-            $image = ImageManager::gd()->read(file_get_contents($sourcePath));
+
+            $manager = ImageManager::usingDriver(Driver::class);
+            $image = $manager->decode(file_get_contents($sourcePath));
 
             $width = $this->upscale ? $this->width : min($this->width, $image->width());
             $height = $this->upscale ? $this->height : min($this->height, $image->height());
@@ -173,18 +176,18 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
             }
 
             if ($format !== 'image/png' || !$this->allow_transparency) {
-                $image = ImageManager::gd()->create(
+                $image = $manager->createImage(
                     $image->width(),
                     $image->height(),
-                )->fill($this->transparent_bg_color)->place($image);
+                )->fill($this->transparent_bg_color)->insert($image);
             }
 
             $storage->put(
                 $outPath,
-                $image->encodeByMediaType(
+                $image->encodeUsingMediaType(
                     "image/$format",
                     quality: $this->quality
-                )->toFilePointer(),
+                )->toStream(),
                 'public',
             );
         }
