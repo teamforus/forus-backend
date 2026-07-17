@@ -146,6 +146,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param Filesystem $storage
      * @param string $storagePath
      * @param Media $media
+     * @param string $visibility
      * @throws Exception
      * @return \Illuminate\Database\Eloquent\Model|mixed
      */
@@ -153,11 +154,12 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         string $sourcePath,
         Filesystem $storage,
         string $storagePath,
-        Media $media
+        Media $media,
+        string $visibility,
     ): mixed {
         if ($this->use_original) {
             $outPath = $this->makeUniquePath($storage, $storagePath, $media->ext);
-            $storage->put($outPath, file_get_contents($sourcePath), 'public');
+            $storage->put($outPath, file_get_contents($sourcePath), $visibility);
         } else {
             $format = $this->format ?: $media->ext;
             $outPath = $this->makeUniquePath($storage, $storagePath, $format);
@@ -185,7 +187,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
                     "image/$format",
                     quality: $this->quality
                 )->toFilePointer(),
-                'public',
+                $visibility,
             );
         }
 
@@ -202,6 +204,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param MediaPreset $presetModel
      * @param Media $media
+     * @param string $visibility
      * @throws Exception
      * @return MediaPreset
      */
@@ -209,11 +212,13 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         Filesystem $storage,
         string $storagePath,
         MediaPreset $presetModel,
-        Media $media
+        Media $media,
+        string $visibility,
     ): MediaPreset {
         $format = $this->format ?: $media->ext;
         $outPath = $this->makeUniquePath($storage, $storagePath, $format);
         $storage->copy($presetModel->path, $outPath);
+        $storage->setVisibility($outPath, $visibility);
 
         // media size row create
         return $media->presets()->create([

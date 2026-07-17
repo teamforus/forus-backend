@@ -31,5 +31,7 @@ class FileServiceProvider extends ServiceProvider
         $this->app->singleton('file', function () {
             return new FileService();
         });
+
+        $this->app->alias('file', FileService::class);
     }
 }

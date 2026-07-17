@@ -72,6 +72,18 @@ return [
             'throw' => true,
         ],
 
+        's3_pdf_to_img' => [
+            'driver' => 's3',
+            'key' => env('PDF_TO_IMG_AWS_ACCESS_KEY_ID'),
+            'secret' => env('PDF_TO_IMG_AWS_SECRET_ACCESS_KEY'),
+            'region' => env('PDF_TO_IMG_AWS_REGION', env('AWS_DEFAULT_REGION', 'eu-west-1')),
+            'bucket' => env('PDF_TO_IMG_AWS_BUCKET'),
+            'url' => env('PDF_TO_IMG_AWS_URL'),
+            'endpoint' => env('PDF_TO_IMG_AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('PDF_TO_IMG_AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => true,
+        ],
+
         's3_email_attachments' => [
             'driver' => 's3',
             'key' => env('AWS_EMAIL_ATTACHMENTS_ACCESS_KEY_ID'),

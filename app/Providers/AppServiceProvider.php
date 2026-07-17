@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Media\CmsMediaConfig;
+use App\Media\FilePdfPreviewPageMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\ImplementationBannerMediaConfig;
 use App\Media\ImplementationBlockMediaConfig;
@@ -183,6 +184,7 @@ class AppServiceProvider extends ServiceProvider
             new ImplementationBannerMediaConfig(),
             new PhysicalCardTypePhotoMediaConfig(),
             new ReimbursementFilePreviewMediaConfig(),
+            new FilePdfPreviewPageMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
             new ImplementationBlockMediaConfig(),
             new PreCheckBannerMediaConfig(),

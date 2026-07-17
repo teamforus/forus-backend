@@ -98,6 +98,12 @@ return [
             'level' => 'debug',
         ],
 
+        'pdf_to_img' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/pdf-to-img-service.log'),
+            'level' => 'debug',
+        ],
+
         'person_bsn_api' => [
             'driver' => 'single',
             'path' => storage_path('logs/person_bsn_api.log'),
