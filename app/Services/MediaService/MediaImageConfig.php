@@ -4,6 +4,8 @@ namespace App\Services\MediaService;
 
 use App\Helpers\Color;
 use App\Services\MediaService\Models\Media;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Exceptions\InvalidArgumentException;
 use Intervention\Image\ImageManager;
 use Throwable;
 
@@ -52,14 +54,16 @@ abstract class MediaImageConfig extends MediaConfig
 
     /**
      * @param string $sourcePath
+     * @throws InvalidArgumentException
      * @return string|null
      */
     public function getDominantColor(string $sourcePath): ?string
     {
-        $image = ImageManager::gd()->read($sourcePath);
+        $manager = ImageManager::usingDriver(Driver::class);
+        $image = $manager->decode($sourcePath);
 
         // Reduce to single color and then sample
-        $color = $image->reduceColors(1)->scaleDown(1, 1)->pickColor(0, 0);
+        $color = $image->reduceColors(1)->scaleDown(1, 1)->colorAt(0, 0);
         unset($image);
 
         return Color::normalizeRgbHex($color->toHex('#'));
