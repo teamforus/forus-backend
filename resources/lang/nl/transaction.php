@@ -56,5 +56,9 @@ return [
             'title' => 'Tegoed-uitbetaling',
             'subtitle' => '',
         ],
+        'voucher_payout_sponsor' => [
+            'title' => 'Tegoed-uitbetaling',
+            'subtitle' => 'Door medewerker',
+        ],
     ],
 ];

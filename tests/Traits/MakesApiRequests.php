@@ -1419,6 +1419,80 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeSponsorPayoutRequest(
+        Fund $fund,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts",
+            ['fund_id' => $fund->id, ...$data],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeSponsorPayoutBatchRequest(
+        Fund $fund,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch",
+            ['fund_id' => $fund->id, 'payouts' => [$data]],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiUpdateSponsorPayoutRequest(
+        Organization $organization,
+        VoucherTransaction $transaction,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address",
+            $data,
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiCancelSponsorPayoutRequest(
+        Organization $organization,
+        VoucherTransaction $transaction,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address/cancel",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
+    }
+
+    /**
      * @param Identity $identity
      * @param Voucher $voucher
      * @return TestResponse
@@ -1426,6 +1500,25 @@ trait MakesApiRequests
     protected function apiGetVoucherRequest(Identity $identity, Voucher $voucher): TestResponse
     {
         return $this->getJson("/api/v1/platform/vouchers/$voucher->number", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetSponsorPayoutsRequest(
+        Organization $organization,
+        array $query = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts$queryString",
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
     }
 
     /**

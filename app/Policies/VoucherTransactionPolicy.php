@@ -216,17 +216,25 @@ class VoucherTransactionPolicy
         VoucherTransaction $transaction,
         Organization $organization,
     ): bool|Response {
-        if ($transaction->voucher?->fund?->organization_id !== $organization->id) {
-            return false;
-        }
+        $canManagePayout = $this->showPayoutSponsor($identity, $transaction, $organization);
 
-        if (!$transaction->targetIsPayout()) {
-            return $this->deny('Not payout transaction.');
-        }
+        return $canManagePayout === true ? $transaction->isEditablePayout() : $canManagePayout;
+    }
 
-        return $transaction->voucher->fund->organization->identityCan($identity, [
-            Permission::MANAGE_PAYOUTS,
-        ]) && $transaction->isEditablePayout();
+    /**
+     * @param Identity $identity
+     * @param VoucherTransaction $transaction
+     * @param Organization $organization
+     * @return bool|Response
+     */
+    public function cancelPayoutsSponsor(
+        Identity $identity,
+        VoucherTransaction $transaction,
+        Organization $organization,
+    ): bool|Response {
+        $canManagePayout = $this->showPayoutSponsor($identity, $transaction, $organization);
+
+        return $canManagePayout === true ? $transaction->isCancelableBySponsor() : $canManagePayout;
     }
 
     /**

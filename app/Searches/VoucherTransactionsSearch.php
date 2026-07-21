@@ -234,6 +234,14 @@ class VoucherTransactionsSearch extends BaseSearch
                             WHEN `target` = "' . VoucherTransaction::TARGET_PROVIDER . '" THEN "direct_provider"
                             WHEN `target` = "' . VoucherTransaction::TARGET_IBAN . '" THEN "direct_iban"
                             WHEN `target` = "' . VoucherTransaction::TARGET_TOP_UP . '" THEN "direct_top_up"
+
+                            WHEN `initiator` = "' . VoucherTransaction::INITIATOR_SPONSOR . '"
+                                AND `target` = "' . VoucherTransaction::TARGET_PAYOUT . '"
+                                AND EXISTS (
+                                    SELECT 1 FROM `vouchers`
+                                    WHERE `vouchers`.`id` = `voucher_transactions`.`voucher_id`
+                                    AND `vouchers`.`voucher_type` = "' . Voucher::VOUCHER_TYPE_VOUCHER . '"
+                                ) THEN "voucher_payout_sponsor"
         
                             WHEN `initiator` = "' . VoucherTransaction::INITIATOR_REQUESTER . '" 
                                 AND `target` = "' . VoucherTransaction::TARGET_PAYOUT . '" 

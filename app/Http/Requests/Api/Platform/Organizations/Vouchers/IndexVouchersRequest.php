@@ -59,6 +59,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'identity_id' => 'nullable|exists:identities,id',
             'amount_available_min' => 'nullable|numeric',
             'amount_available_max' => 'nullable|numeric',
+            'payout_eligible' => 'nullable|boolean',
             'implementation_id' => 'nullable|exists:implementations,id|in:' . $implementations->join(','),
             ...$this->sortableResourceRules(100, ['created_at']),
             ...$this->exportableResourceRules(

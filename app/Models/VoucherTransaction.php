@@ -168,6 +168,14 @@ class VoucherTransaction extends Model
         self::INITIATOR_REQUESTER,
     ];
 
+    public const string PAYOUT_FUNDING_TYPE_STANDALONE = 'standalone';
+    public const string PAYOUT_FUNDING_TYPE_VOUCHER = 'voucher';
+
+    public const array PAYOUT_FUNDING_TYPES = [
+        self::PAYOUT_FUNDING_TYPE_STANDALONE,
+        self::PAYOUT_FUNDING_TYPE_VOUCHER,
+    ];
+
     public const string TARGET_PROVIDER = 'provider';
     public const string TARGET_TOP_UP = 'top_up';
     public const string TARGET_PAYOUT = 'payout';
@@ -527,9 +535,20 @@ class VoucherTransaction extends Model
     {
         return
             $this->targetIsPayout() &&
-            $this->initiator !== self::INITIATOR_REQUESTER &&
+            $this->initiator === self::INITIATOR_SPONSOR &&
+            $this->voucher?->voucher_type === Voucher::VOUCHER_TYPE_PAYOUT &&
             !$this->target_source &&
             !$this->voucher_transaction_bulk_id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isVoucherBackedPayout(): bool
+    {
+        return
+            $this->targetIsPayout() &&
+            $this->voucher?->voucher_type === Voucher::VOUCHER_TYPE_VOUCHER;
     }
 
     /**
@@ -547,7 +566,10 @@ class VoucherTransaction extends Model
      */
     public function isCancelableBySponsor(): bool
     {
-        return $this->isCancelable();
+        return
+            $this->targetIsPayout() &&
+            $this->initiator === self::INITIATOR_SPONSOR &&
+            $this->isCancelable();
     }
 
     /**
@@ -783,10 +805,16 @@ class VoucherTransaction extends Model
      */
     public function cancelPending(?Employee $employee, bool $sponsor): VoucherTransaction
     {
-        $this->update([
+        $attributes = [
             'state' => self::STATE_CANCELED,
             'canceled_at' => now(),
-        ]);
+        ];
+
+        if ($sponsor && $this->isVoucherBackedPayout()) {
+            $attributes['amount_voucher'] = 0;
+        }
+
+        $this->forceFill($attributes)->save();
 
         $this->log(
             event: $sponsor ? self::EVENT_CANCELED_SPONSOR : self::EVENT_CANCELED_PROVIDER,

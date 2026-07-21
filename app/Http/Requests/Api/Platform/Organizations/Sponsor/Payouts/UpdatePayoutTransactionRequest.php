@@ -28,7 +28,6 @@ class UpdatePayoutTransactionRequest extends StorePayoutTransactionRequest
     public function rules(): array
     {
         return [
-            'cancel' => 'nullable|boolean',
             'skip_transfer_delay' => 'nullable|boolean',
             'amount' => [
                 'nullable',
