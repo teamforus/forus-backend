@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Identity;
 use App\Models\Implementation;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -177,6 +178,22 @@ class IdentityEmailAuthStartTest extends TestCase
     /**
      * @return void
      */
+    public function testEmailConfirmationRedirectsToWebsite(): void
+    {
+        $exchangeToken = 'test-confirmation-token';
+
+        Config::set('forus.front_ends.website-default', 'https://forus.test/');
+
+        $this->getEmailConfirmationRedirect(
+            $exchangeToken,
+            null,
+            Implementation::FRONTEND_WEBSITE
+        )->assertRedirect("https://forus.test/confirmation/email/$exchangeToken");
+    }
+
+    /**
+     * @return void
+     */
     public function testEmailRestoreRedirectPreservesZeroTargetWhenProvided(): void
     {
         $emailToken = 'test-email-token';
@@ -236,12 +253,16 @@ class IdentityEmailAuthStartTest extends TestCase
     /**
      * @param string $exchangeToken
      * @param string|null $target
+     * @param string $clientType
      * @return TestResponse
      */
-    protected function getEmailConfirmationRedirect(string $exchangeToken, ?string $target = null): TestResponse
-    {
+    protected function getEmailConfirmationRedirect(
+        string $exchangeToken,
+        ?string $target = null,
+        string $clientType = Implementation::FRONTEND_SPONSOR_DASHBOARD
+    ): TestResponse {
         return $this->get('/api/v1/identity/proxy/confirmation/redirect/' . $exchangeToken . '?' . http_build_query([
-            'client_type' => Implementation::FRONTEND_SPONSOR_DASHBOARD,
+            'client_type' => $clientType,
             'implementation_key' => Implementation::KEY_GENERAL,
             'is_mobile' => 0,
             'target' => $target,
