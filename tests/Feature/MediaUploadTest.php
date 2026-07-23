@@ -34,7 +34,6 @@ class MediaUploadTest extends TestCase
         'is_dark',
         'original_name',
         'dominant_color',
-        'identity_address',
         'sizes' => ['thumbnail'],
     ];
 

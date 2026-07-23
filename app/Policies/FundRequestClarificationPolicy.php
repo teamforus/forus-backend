@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
@@ -58,7 +59,7 @@ class FundRequestClarificationPolicy
         FundRequest $request,
         Organization $organization
     ): Response|bool {
-        return $this->create($identity, $request, $organization);
+        return $this->validateValidatorAccess($identity, $organization, $request);
     }
 
     /**
@@ -93,25 +94,52 @@ class FundRequestClarificationPolicy
      *
      * @param Identity $identity
      * @param FundRequest $request
+     * @param FundRequestRecord $record
      * @param Organization $organization
      * @return Response|bool
-     * @noinspection PhpUnused
      */
     public function create(
         Identity $identity,
         FundRequest $request,
+        FundRequestRecord $record,
         Organization $organization
     ): Response|bool {
-        if (!$this->checkIntegrityValidator($organization, $request)) {
-            return $this->deny('fund_requests.invalid_endpoint');
-        }
+        $access = $this->validateValidatorAccess($identity, $organization, $request);
 
-        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
-            return $this->deny('fund_requests.invalid_validator');
+        if ($access !== true) {
+            return $access;
         }
 
         if (!$request->identity->email) {
-            return $this->deny('fund_requests.request_identity_has_no_email');
+            return $this->deny(__('policies.fund_requests.request_identity_has_no_email'));
+        }
+
+        if (!$record->fund_criterion || !$request->fund->criteria()->where('id', $record->fund_criterion_id)->exists()) {
+            return $this->deny(__('policies.fund_requests.record_not_part_fund_criteria'));
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @param FundRequest $request
+     * @param FundRequestClarification|null $requestClarification
+     * @return Response|bool
+     */
+    private function validateValidatorAccess(
+        Identity $identity,
+        Organization $organization,
+        FundRequest $request,
+        FundRequestClarification $requestClarification = null,
+    ): Response|bool {
+        if (!$this->checkIntegrityValidator($organization, $request, $requestClarification)) {
+            return $this->deny(__('policies.fund_requests.invalid_endpoint'));
+        }
+
+        if (!$organization->identityCan($identity, Permission::VALIDATE_RECORDS)) {
+            return $this->deny(__('policies.fund_requests.invalid_validator'));
         }
 
         return true;

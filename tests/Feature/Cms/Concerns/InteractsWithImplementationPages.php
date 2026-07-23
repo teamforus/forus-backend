@@ -35,7 +35,7 @@ trait InteractsWithImplementationPages
             'id', 'title', 'description', 'description_html',
         ],
         'data.blocks.*.media' => [
-            'identity_address', 'original_name', 'dominant_color', 'is_dark', 'type', 'ext', 'uid',
+            'original_name', 'dominant_color', 'is_dark', 'type', 'ext', 'uid',
         ],
         'data.blocks.*.media.sizes' => [],
     ];
