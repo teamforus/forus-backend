@@ -6,6 +6,7 @@ use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Events\ProductReservations\ProductReservationPending;
 use App\Events\ProductReservations\ProductReservationRejected;
+use App\Events\ProductReservations\ProductReservationSendProviderMessage;
 use App\Events\ReservationExtraPayments\ReservationExtraPaymentCreated;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Models\Traits\HasNotes;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
@@ -55,6 +57,7 @@ use Throwable;
  * @property string|null $note
  * @property string|null $cancellation_note
  * @property string|null $rejection_note
+ * @property string|null $accepted_note
  * @property string|null $invoice_number
  * @property bool $archived
  * @property Carbon|null $accepted_at
@@ -77,6 +80,8 @@ use Throwable;
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product $product
  * @property-read \App\Models\Voucher|null $product_voucher
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProviderMessage[] $provider_messages
+ * @property-read int|null $provider_messages_count
  * @property-read \App\Models\Voucher $voucher
  * @property-read \App\Models\VoucherTransaction|null $voucher_transaction
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation newModelQuery()
@@ -84,6 +89,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAcceptedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAcceptedNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductReservation whereAmountExtra($value)
@@ -139,6 +145,7 @@ class ProductReservation extends Model
     public const string EVENT_CANCELED_PAYMENT_FAILED = 'canceled_payment_failed';
     public const string EVENT_CANCELED_PAYMENT_EXPIRED = 'canceled_payment_expired';
     public const string EVENT_CANCELED_PAYMENT_CANCELED = 'canceled_payment_canceled';
+    public const string EVENT_PROVIDER_MESSAGE_CREATED = 'provider_message_created';
 
     public const string STATE_WAITING = 'waiting';
     public const string STATE_PENDING = 'pending';
@@ -211,7 +218,7 @@ class ProductReservation extends Model
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
         'first_name', 'last_name', 'user_note', 'phone', 'address', 'birth_date', 'archived',
         'street', 'house_nr', 'house_nr_addition', 'postal_code', 'city', 'amount_extra',
-        'cancellation_note', 'rejection_note', 'invoice_number',
+        'cancellation_note', 'rejection_note', 'invoice_number', 'accepted_note',
     ];
 
     /**
@@ -339,6 +346,15 @@ class ProductReservation extends Model
     }
 
     /**
+     * @return MorphMany
+     * @noinspection PhpUnused
+     */
+    public function provider_messages(): MorphMany
+    {
+        return $this->morphMany(ProviderMessage::class, 'mailable');
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -413,13 +429,22 @@ class ProductReservation extends Model
 
     /**
      * @param Employee|null $employee
+     * @param string|null $note
+     * @param bool $addNoteToRequesterNotification
      * @throws Throwable
      * @return $this
      */
-    public function acceptProvider(?Employee $employee = null): self
-    {
-        DB::transaction(function () use ($employee) {
-            return $this->setAccepted($this->makeTransaction($employee));
+    public function acceptProvider(
+        ?Employee $employee = null,
+        ?string $note = null,
+        bool $addNoteToRequesterNotification = false,
+    ): self {
+        DB::transaction(function () use ($employee, $note, $addNoteToRequesterNotification) {
+            return $this->setAccepted(
+                $this->makeTransaction($employee),
+                $note,
+                $addNoteToRequesterNotification
+            );
         });
 
         return $this;
@@ -494,17 +519,23 @@ class ProductReservation extends Model
 
     /**
      * @param VoucherTransaction $transaction
+     * @param string|null $note
+     * @param bool $addNoteToRequesterNotification
      * @return $this
      */
-    public function setAccepted(VoucherTransaction $transaction): self
-    {
+    public function setAccepted(
+        VoucherTransaction $transaction,
+        ?string $note = null,
+        bool $addNoteToRequesterNotification = false,
+    ): self {
         $this->update([
             'state' => self::STATE_ACCEPTED,
             'accepted_at' => now(),
             'voucher_transaction_id' => $transaction->id,
+            'accepted_note' => $note,
         ]);
 
-        Event::dispatch(new ProductReservationAccepted($this));
+        Event::dispatch(new ProductReservationAccepted($this, $addNoteToRequesterNotification));
 
         return $this;
     }
@@ -775,6 +806,41 @@ class ProductReservation extends Model
             !$this->product->trashed() &&
             (!$this->extra_payment || $this->extra_payment->isPaid()) &&
             (!$this->extra_payment || $this->extra_payment->refunds_active->isEmpty());
+    }
+
+    /**
+     * @param string $message
+     * @param Employee|null $employee
+     * @return ProviderMessage
+     */
+    public function addProviderMessage(string $message, ?Employee $employee): ProviderMessage
+    {
+        $providerMessage = $this->provider_messages()->create([
+            'type' => ProviderMessage::TYPE_REGULAR_MESSAGE,
+            'message' => $message,
+            'employee_id' => $employee?->id,
+            'identity_id' => $this->voucher->identity_id,
+        ]);
+
+        Event::dispatch(new ProductReservationSendProviderMessage($this, $providerMessage));
+
+        return $providerMessage;
+    }
+
+    /**
+     * @return bool
+     */
+    public function providerMessageAllowed(): bool
+    {
+        return (bool) $this
+            ->product
+            ->organization
+            ->fund_providers
+            ->first(function (FundProvider $fundProvider) {
+                return
+                    $fundProvider->allow_provider_messages &&
+                    $this->voucher->fund_id === $fundProvider->fund_id;
+            });
     }
 
     /**

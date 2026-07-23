@@ -1,11 +1,16 @@
-# Reservering van :product_name is geannuleerd door :provider_name!
+# Uw reservering voor :product_name is geannuleerd
+
+Bericht van :provider_name
+
 
 Beste deelnemer,
 
-:provider_name heeft uw reservering voor :product_name geannuleerd.
+U ontvangt dit bericht namens :provider_name.  
+Uw reservering voor :product_name is geannuleerd.
 
 :refunded_body
 
 :provider_note
 
-Hebt u vragen over deze annulering? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
+Heeft u vragen? Neem voor meer informatie contact op met :provider_name.  
+Stuur een e-mail naar :provider_email of bel naar :provider_phone.

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Requests\BaseFormRequest;
 use App\Models\Identity;
 use App\Models\Permission;
 use App\Models\ProductReservation;
@@ -38,7 +37,6 @@ class ProductReservationResource extends BaseProductReservationResource
      */
     public function toArray(Request $request): array
     {
-        $baseRequest = BaseFormRequest::createFrom($request);
         $reservation = $this->resource;
         $voucher = $this->resource->voucher;
         $transaction = $this->resource->voucher_transaction;
@@ -53,9 +51,6 @@ class ProductReservationResource extends BaseProductReservationResource
             'expired' => $reservation->isExpired(),
             'canceled' => $reservation->isCanceled(),
             'cancelable' => $reservation->isCancelableByRequester(),
-            'acceptable' => $reservation->isAcceptable(),
-            'rejectable' => $reservation->isCancelableByProvider(),
-            'archivable' => $reservation->isArchivable(),
             'product' => $this->productData($reservation),
             'fund' => [
                 'id' => $voucher->fund->id,
@@ -65,7 +60,6 @@ class ProductReservationResource extends BaseProductReservationResource
             'voucher_transaction' => $transaction?->only('id', 'address'),
             'custom_fields' => ProductReservationFieldValueResource::collection($reservation->custom_fields),
             'records_title' => $voucher->getRecordsTitle(),
-            ...$baseRequest->isProviderDashboard() ? $reservation->only('invoice_number') : [],
             ...$this->getProductPrice($reservation),
             ...$this->identityData($reservation, $voucher),
             ...$this->extraPaymentData($reservation),

@@ -53,6 +53,9 @@ class AcceptProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'note' => 'nullable|string|max:255',
+            'share_note_by_email' => 'nullable|boolean',
+        ];
     }
 }

@@ -450,6 +450,14 @@
             "content": "De reserving van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie."
         }
     },
+    "notifications_identities.product_reservation_message": {
+        "mail": {
+            "title": "Bericht over reservering.",
+            "template": "notifications_identities/product_reservation_message.md"
+        },
+        "push": {},
+        "database": {}
+    },
     "notifications_products.approved": {
         "mail": {},
         "push": {},
