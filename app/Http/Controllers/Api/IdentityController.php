@@ -109,21 +109,24 @@ class IdentityController extends Controller
             abort(404, 'Invalid implementation key.');
         }
 
+        $isWebsite = in_array($clientType, (array) Config::get('forus.clients.websites', []), true);
+
         $isWebFrontend = in_array($clientType, array_merge(
             (array) config('forus.clients.webshop', []),
             (array) config('forus.clients.dashboards', [])
         ), true);
 
-        if ($isWebFrontend) {
-            $webShopUrl = Implementation::byKey($implementationKey);
-            $webShopUrl = $webShopUrl['url_' . $clientType];
+        if ($isWebFrontend || $isWebsite) {
+            $frontendUrl = $isWebsite
+                ? Config::get('forus.front_ends.website-default')
+                : Implementation::byKey($implementationKey)['url_' . $clientType];
 
             $query = http_build_query(array_filter($request->only('target'), static function ($value) {
                 return $value !== null && $value !== '';
             }));
 
             return redirect(sprintf(
-                $webShopUrl . 'confirmation/email/%s%s',
+                $frontendUrl . 'confirmation/email/%s%s',
                 $exchangeToken,
                 $query ? "?$query" : ''
             ));
