@@ -8,8 +8,8 @@ use App\Models\Organization;
 use App\Services\DigIdService\Models\DigIdSession;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
-use Tests\Browser\Traits\HasFundRequestFormActions;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\HasFundRequestFormActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
@@ -98,15 +98,8 @@ class FundRequestDigidWarningTest extends DuskTestCase
     {
         $requester = $this->makeIdentity($this->makeUniqueEmail());
 
-        // set a BSN for the requester to enable fund request option
-        $requester->setBsnRecord('12345678');
-
-        $this->browse(function (Browser $browser) use (
-            $implementation,
-            $fund,
-            $requester
-        ) {
-            $this->openFundRequestFormByDigiD($browser, $implementation, $fund, $requester);
+        $this->browse(function (Browser $browser) use ($implementation, $fund, $requester) {
+            $this->openFundRequestFormByDigiD($browser, $implementation, $fund, $requester, bsn: '12345678');
 
             // verify the warning and expiration messages is not shown ahead of time
             $browser->assertMissing('@bsnWarning');

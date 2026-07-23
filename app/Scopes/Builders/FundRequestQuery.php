@@ -110,6 +110,38 @@ class FundRequestQuery
 
     /**
      * @param Builder|Relation|FundRequest $builder
+     * @param int $organizationId
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereEligibleAsSponsorProfileBankAccountSource(
+        Builder|Relation|FundRequest $builder,
+        int $organizationId,
+    ): Builder|Relation|FundRequest {
+        return $builder
+            ->where('state', FundRequest::STATE_APPROVED)
+            ->whereRelation('fund', 'organization_id', $organizationId)
+            ->whereHas('fund.vouchers', function (Builder $builder) {
+                $builder->whereColumn('vouchers.identity_id', 'fund_requests.identity_id');
+                VoucherQuery::whereNotExpiredAndActive($builder);
+            })
+            ->whereHas('records', function (Builder $builder) {
+                FundRequestRecordQuery::whereIsFirstOfType($builder)
+                    ->where('value', '!=', '')
+                    ->whereHas('fund_request.fund.fund_config', function (Builder $builder) {
+                        $builder->whereColumn('iban_record_key', 'fund_request_records.record_type_key');
+                    });
+            })
+            ->whereHas('records', function (Builder $builder) {
+                FundRequestRecordQuery::whereIsFirstOfType($builder)
+                    ->where('value', '!=', '')
+                    ->whereHas('fund_request.fund.fund_config', function (Builder $builder) {
+                        $builder->whereColumn('iban_name_record_key', 'fund_request_records.record_type_key');
+                    });
+            });
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
      * @param string $q
      * @return Builder|Relation|FundRequest
      */
