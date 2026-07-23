@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Implementations\Implement
 
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\MediaUidRule;
+use App\Services\CmsService\ImplementationBlocks\Validation\ImplementationCmsBlockRuleSet;
 
 class ValidateImplementationPageBlocksRequest extends BaseFormRequest
 {
@@ -50,6 +51,17 @@ class ValidateImplementationPageBlocksRequest extends BaseFormRequest
             'blocks.*.button_link.required_if' => 'Het button link veld is verplicht',
             'blocks.*.button_link_label.required_if' => 'Het button link label veld is verplicht',
         ];
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return array_merge(
+            parent::attributes(),
+            ImplementationCmsBlockRuleSet::attributes($this->input('cms_blocks')),
+        );
     }
 
     /**

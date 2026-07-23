@@ -8,7 +8,9 @@ use App\Models\Announcement;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Permission;
+use App\Services\CmsService\ImplementationBlocks\ImplementationCmsBlockService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use League\CommonMark\Exception\CommonMarkException;
 
 class ImplementationPrivateResource extends BaseJsonResource
@@ -74,7 +76,11 @@ class ImplementationPrivateResource extends BaseJsonResource
 
         $data = array_merge($data, [
             'pages' => ImplementationPageResource::collection($implementation->pages),
-            'page_types' => array_map(fn (array $pageType) => array_merge($pageType, [
+            'page_types' => array_map(fn (array $pageType) => array_merge(Arr::except(
+                $pageType,
+                'generic_cms_blocks',
+            ), [
+                'cms_blocks' => ImplementationCmsBlockService::getBlockConfigsForPageType($pageType['key']) !== [],
                 'webshop_url' => $implementation->urlWebshop(ImplementationPage::webshopUriByPageType($pageType['key'])),
             ]), ImplementationPage::PAGE_TYPES),
         ]);

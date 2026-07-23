@@ -4,12 +4,13 @@ namespace App\Services\TranslationService\Models;
 
 use App\Models\Announcement;
 use App\Models\FundConfig;
+use App\Models\FundCriteriaGroup;
 use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\Language;
-use App\Models\ReservationField;
 use App\Models\PreCheck;
 use App\Models\PreCheckRecord;
+use App\Models\ReservationField;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
@@ -267,7 +268,16 @@ class TranslationValue extends Model
      */
     private static function getAvailableTranslatableTypes(): array
     {
-        return ['fund', 'product', 'organization', 'implementation_page', 'implementation_block'];
+        return [
+            'fund',
+            'product',
+            'organization',
+            'implementation_page',
+            'implementation_block',
+            'implementation_cms_block_value',
+            'implementation_cms_block_item_value',
+            FundCriteriaGroup::class,
+        ];
     }
 
     /**
@@ -297,10 +307,17 @@ class TranslationValue extends Model
     {
         return [
             'fund_application' => [
-                FundConfig::class, FundCriteriaStep::class, FundCriterion::class,
+                FundConfig::class, FundCriteriaGroup::class, FundCriteriaStep::class, FundCriterion::class,
             ],
             'webshop_content' => [
-                'faq', 'fund', 'implementation', 'implementation_block', 'implementation_page', Announcement::class,
+                'faq',
+                'fund',
+                'implementation',
+                'implementation_block',
+                'implementation_page',
+                'implementation_cms_block_value',
+                'implementation_cms_block_item_value',
+                Announcement::class,
             ],
             'providers_content' => [
                 'organization', ReservationField::class, 'product', PreCheck::class, PreCheckRecord::class,

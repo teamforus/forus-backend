@@ -4,8 +4,8 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\ReservationField;
 use App\Models\Product;
+use App\Models\ReservationField;
 use App\Rules\EanCodeRule;
 use App\Rules\MediaUidRule;
 use Illuminate\Database\Query\Builder;
@@ -62,7 +62,7 @@ abstract class BaseProductRequest extends BaseFormRequest
             'alternative_text' => 'nullable|between:2,500',
             'price' => 'required_if:price_type,regular|numeric|min:.2',
             'media_uids' => 'nullable|array|max:5',
-            'media_uids.*' => ['nullable', new MediaUidRule('product_photo', $updatedProduct?->id)],
+            'media_uids.*' => ['nullable', new MediaUidRule('product_photo', $updatedProduct)],
             'price_type' => ['required', Rule::in($updatedProduct ? [$updatedProduct->price_type] : Product::PRICE_TYPES)],
 
             'price_discount' => match ($priceType) {

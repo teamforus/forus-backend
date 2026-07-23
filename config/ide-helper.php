@@ -68,6 +68,7 @@ return [
         'app/Models',
         'app/Services/BankService/Models',
         'app/Services/BunqService/Models',
+        'app/Services/CmsService/ImplementationBlocks/Models',
         'app/Services/FileService/Models',
         'app/Services/MediaService/Models',
         'app/Services/Forus/Record/Models',
