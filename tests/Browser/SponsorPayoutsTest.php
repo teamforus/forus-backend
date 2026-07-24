@@ -201,6 +201,76 @@ class SponsorPayoutsTest extends DuskTestCase
     /**
      * @throws Throwable
      */
+    public function testSponsorCanCreateVoucherBackedPayout(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $implementation->organization;
+        $organizationState = $organization->only(['allow_profiles', 'fund_request_resolve_policy']);
+
+        $organization->forceFill(['allow_profiles' => true])->save();
+        $fund = $this->makePayoutEnabledFund($organization, $implementation, [
+            'allow_custom_amounts' => true,
+            'custom_amount_min' => 1,
+            'custom_amount_max' => 1000,
+        ]);
+
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $result = $this->makePayoutVoucherViaApplication($requester, $fund);
+
+        $this->rollbackModels([
+            [$organization, $organizationState],
+        ], function () use ($implementation, $organization, $fund, $result) {
+            $this->browse(function (Browser $browser) use ($implementation, $organization, $fund, $result) {
+                $browser->visit($implementation->urlSponsorDashboard());
+
+                $this->loginIdentity($browser, $organization->identity);
+                $this->assertIdentityAuthenticatedOnSponsorDashboard($browser, $organization->identity);
+                $this->selectDashboardOrganization($browser, $organization);
+
+                $this->goSponsorPayoutsPage($browser);
+
+                $browser->waitFor('@payoutsPage');
+                $browser->waitFor('@payoutCreateButton');
+                $browser->click('@payoutCreateButton');
+
+                $browser->waitFor('@payoutCreateModal');
+                $browser->within('@payoutCreateModal', function (Browser $browser) use ($fund) {
+                    $this->switchToFund($browser, $fund->id);
+                });
+                $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 1);
+                $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
+                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', index: 1);
+
+                $browser->waitFor('@payoutVoucherSelect');
+                $browser->waitFor('@payoutAmount');
+                $this->typeSearchInput($browser, '@payoutAmount', '100.00');
+                $browser->waitUntilEnabled('@payoutSubmit');
+                $browser->press('@payoutSubmit');
+                $browser->waitUntilMissing('@payoutCreateModal');
+
+                $transaction = $this->findTransactionByIban($organization, $result['iban']);
+
+                $this->assertNotNull($transaction);
+                $this->assertEquals($result['voucher']->id, $transaction->voucher_id);
+                $this->assertEquals('100.00', $transaction->amount_voucher);
+
+                $browser->waitFor("@payoutsTableRow$transaction->id");
+                $browser->assertAttribute(
+                    "@payoutsTableFundingType$transaction->id",
+                    'data-funding-type',
+                    'voucher',
+                );
+
+                $this->logout($browser);
+            });
+        }, function () use ($fund) {
+            $fund && $this->deleteFund($fund);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testSponsorCanCreatePayoutFromProfileBankAccount(): void
     {
         $implementation = Implementation::byKey('nijmegen');
@@ -444,17 +514,25 @@ class SponsorPayoutsTest extends DuskTestCase
                 $browser->waitFor('@payoutCreateModal');
                 $browser->waitFor('@payoutTargetIban');
                 $browser->assertEnabled('@payoutTargetIban');
+                $browser->waitFor('@payoutFundingTypeSelect');
+                $browser->assertAttributeContains('@payoutFundingTypeSelect', 'class', 'disabled');
 
                 $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 1);
                 $browser->pause(100);
 
                 $browser->assertDisabled('@payoutTargetIban');
                 $browser->waitFor('@payoutBankAccountSelect');
+                $browser->assertAttributeDoesntContain('@payoutFundingTypeSelect', 'class', 'disabled');
+
+                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', index: 1);
+                $browser->waitFor('@payoutVoucherSelect');
 
                 $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 0);
                 $browser->pause(300);
 
                 $browser->assertEnabled('@payoutTargetIban');
+                $browser->assertAttributeContains('@payoutFundingTypeSelect', 'class', 'disabled');
+                $browser->assertMissing('@payoutVoucherSelect');
 
                 $browser->press('@payoutCreateModal .modal-close');
                 $browser->waitUntilMissing('@payoutCreateModal');

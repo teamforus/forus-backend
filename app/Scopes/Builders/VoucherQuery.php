@@ -332,6 +332,21 @@ class VoucherQuery
     }
 
     /**
+     * @param Builder|Relation|Voucher $builder
+     * @return Builder|Relation|Voucher
+     */
+    public static function whereEligibleForSponsorPayout(
+        Builder|Relation|Voucher $builder,
+    ): Builder|Relation|Voucher {
+        $builder->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
+        $builder->whereNotNull('identity_id');
+        $builder->whereNull('product_id');
+        $builder->whereNull('product_reservation_id');
+
+        return self::whereHasBalanceIsActiveAndNotExpired($builder);
+    }
+
+    /**
      * @param Builder|Relation|Voucher $query
      * @return Builder|Relation|Voucher
      */

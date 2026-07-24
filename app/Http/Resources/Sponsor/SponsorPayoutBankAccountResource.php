@@ -33,6 +33,7 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
         if ($resource instanceof FundRequest) {
             return $this->transformBankAccount(
                 $resource->id,
+                $resource->identity_id,
                 $resource->getIban(false),
                 $resource->getIbanName(false),
                 'fund_request',
@@ -44,6 +45,7 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
         if ($resource instanceof ProfileBankAccount) {
             return $this->transformBankAccount(
                 $resource->id,
+                $resource->profile?->identity_id,
                 $resource->iban,
                 $resource->name,
                 'profile_bank_account',
@@ -55,6 +57,7 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
         if ($resource instanceof Reimbursement) {
             return $this->transformBankAccount(
                 $resource->id,
+                $resource->voucher?->identity_id,
                 $resource->iban,
                 $resource->iban_name,
                 'reimbursement',
@@ -66,6 +69,7 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
         if ($resource instanceof VoucherTransaction) {
             return $this->transformBankAccount(
                 $resource->id,
+                $resource->voucher?->identity_id,
                 $resource->target_iban,
                 $resource->target_name,
                 'payout',
@@ -80,15 +84,23 @@ class SponsorPayoutBankAccountResource extends BaseJsonResource
      * Transform bank account data into standardized array format.
      *
      * @param int $id
+     * @param int|null $identityId
      * @param string $iban
      * @param string $ibanName
      * @param string $type
      * @param array $timestamps
      * @return array
      */
-    private function transformBankAccount(int $id, string $iban, string $ibanName, string $type, array $timestamps): array
-    {
+    private function transformBankAccount(
+        int $id,
+        ?int $identityId,
+        string $iban,
+        string $ibanName,
+        string $type,
+        array $timestamps,
+    ): array {
         return [
+            'identity_id' => $identityId,
             'iban' => $iban,
             'iban_name' => $ibanName,
             'type' => $type,
