@@ -364,6 +364,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate",
     );
 
+    $router->get(
+        'organizations/{organization}/implementations/{implementation}/pages/cms-block-configs',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@cmsBlockConfigs",
+    );
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pages/validate-cms-blocks',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeCmsBlocksValidate",
+    );
+
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"
