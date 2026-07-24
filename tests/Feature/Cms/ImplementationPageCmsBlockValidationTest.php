@@ -95,14 +95,6 @@ class ImplementationPageCmsBlockValidationTest extends ImplementationCmsTestCase
         );
 
         $response = $this->getJson(
-            $this->getUrlPageCmsBlockConfigs($implementation, ImplementationPage::TYPE_FUNDS),
-            $this->makeApiHeaders($proxy),
-        );
-
-        $response->assertSuccessful();
-        $this->assertSame([BannerCmsBlockConfig::KEY], array_column($response->json('data'), 'key'));
-
-        $response = $this->getJson(
             $this->getUrlPageCmsBlockConfigs($implementation, ImplementationPage::TYPE_PRODUCTS),
             $this->makeApiHeaders($proxy),
         );

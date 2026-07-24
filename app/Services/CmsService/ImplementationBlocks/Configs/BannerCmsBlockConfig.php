@@ -39,7 +39,6 @@ class BannerCmsBlockConfig extends CmsBlockConfig
         return [
             ImplementationPage::TYPE_HOME,
             ImplementationPage::TYPE_EXPLANATION,
-            ImplementationPage::TYPE_FUNDS,
             ImplementationPage::TYPE_PRIVACY,
             ImplementationPage::TYPE_ACCESSIBILITY,
             ImplementationPage::TYPE_TERMS_AND_CONDITIONS,

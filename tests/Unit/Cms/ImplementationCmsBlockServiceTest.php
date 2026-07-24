@@ -15,15 +15,11 @@ use App\Services\CmsService\ImplementationBlocks\Configs\ProviderSignUpCmsBlockC
 use App\Services\CmsService\ImplementationBlocks\Configs\ProvidersMapCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\TextCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\ImplementationCmsBlockService;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Container\CircularDependencyException;
 use Tests\TestCase;
 
 class ImplementationCmsBlockServiceTest extends TestCase
 {
     /**
-     * @throws BindingResolutionException
-     * @throws CircularDependencyException
      * @return void
      */
     public function testServiceResolvesRegisteredConfigsFromContainer(): void
@@ -102,7 +98,6 @@ class ImplementationCmsBlockServiceTest extends TestCase
         $this->assertSame([
             ImplementationPage::TYPE_HOME,
             ImplementationPage::TYPE_EXPLANATION,
-            ImplementationPage::TYPE_FUNDS,
             ImplementationPage::TYPE_PRIVACY,
             ImplementationPage::TYPE_ACCESSIBILITY,
             ImplementationPage::TYPE_TERMS_AND_CONDITIONS,
@@ -135,11 +130,8 @@ class ImplementationCmsBlockServiceTest extends TestCase
             ),
         );
         $this->assertSame(
-            [BannerCmsBlockConfig::KEY],
-            array_map(
-                fn (CmsBlockConfig $config) => $config->key(),
-                ImplementationCmsBlockService::getBlockConfigsForPageType(ImplementationPage::TYPE_FUNDS),
-            ),
+            [],
+            ImplementationCmsBlockService::getBlockConfigsForPageType(ImplementationPage::TYPE_FUNDS),
         );
         $this->assertSame(
             [
