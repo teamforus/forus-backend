@@ -20,8 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $request_id
  * @property string|null $response_id
  * @property string|null $response_code
- * @property array|null $response_body
+ * @property array<array-key, mixed>|null $response_body
  * @property string|null $response_error
+ * @property string|null $correlation_id
  * @property int $attempts
  * @property string|null $last_attempt_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -35,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereAction($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereAttempts($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereBsn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereCorrelationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundBackofficeLog whereId($value)
@@ -56,7 +58,7 @@ class FundBackofficeLog extends Model
     protected $fillable = [
         'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
         'response_code', 'response_body', 'response_error', 'attempts', 'last_attempt_at',
-        'voucher_id', 'voucher_relation_id',
+        'voucher_id', 'voucher_relation_id', 'correlation_id',
     ];
 
     protected $casts = [

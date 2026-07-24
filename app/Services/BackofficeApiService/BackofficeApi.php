@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 class BackofficeApi
@@ -104,7 +105,10 @@ class BackofficeApi
     public function checkStatus(): FundBackofficeLog
     {
         $log = $this->makeLog(self::ACTION_STATUS);
-        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS));
+
+        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS), headers: [
+            'x-correlation-id' => $log->correlation_id,
+        ]);
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [
@@ -134,16 +138,20 @@ class BackofficeApi
      * @param string $method
      * @param string $url
      * @param array $data
+     * @param array $headers
      * @return array
      */
-    public function request(string $method, string $url, array $data = []): array
+    public function request(string $method, string $url, array $data = [], array $headers = []): array
     {
         $certTmpFile = new TmpFile($this->fund->fund_config->backoffice_certificate);
         $clientCertTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert);
         $clientCertKeyTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert_key);
 
         try {
-            $http = Http::withHeaders($this->makeRequestHeaders())
+            $http = Http::withHeaders([
+                ...$this->makeRequestHeaders(),
+                ...$headers,
+            ])
                 ->timeout(10)
                 ->withOptions([
                     'verify' => $certTmpFile->path(),
@@ -280,7 +288,9 @@ class BackofficeApi
             $response = $backofficeApi->request('POST', $endpoint, array_merge($body, [
                 'id' => $requestId,
                 'bsn' => $log->bsn,
-            ]));
+            ]), [
+                'x-correlation-id' => $log->correlation_id,
+            ]);
 
             if ($response['success'] ?? false) {
                 $log->update([
@@ -375,7 +385,9 @@ class BackofficeApi
         $response = $this->request('POST', $endpoint, array_merge($body, [
             'id' => $requestId,
             'bsn' => $bsn,
-        ]));
+        ]), [
+            'x-correlation-id' => $log->correlation_id,
+        ]);
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [
@@ -418,16 +430,20 @@ class BackofficeApi
      * @param string $action
      * @param string|null $bsn
      * @param string|null $requestId
+     * @param string|null $correlationId
      * @return FundBackofficeLog|null
      */
     protected function makeLog(
         string $action,
         ?string $bsn = null,
-        ?string $requestId = null
+        ?string $requestId = null,
+        ?string $correlationId = null,
     ): ?FundBackofficeLog {
         if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
             $requestId = $requestId ?: self::makeRequestId();
         }
+
+        $correlationId = $correlationId ?: Str::uuid()->toString();
 
         /** @var FundBackofficeLog $fundLog */
         $fundLog = $this->fund->backoffice_logs()->create([
@@ -435,6 +451,7 @@ class BackofficeApi
             'bsn' => $bsn,
             'action' => $action,
             'request_id' => $requestId,
+            'correlation_id' => $correlationId,
             'response' => null,
             'state' => self::STATE_PENDING,
             'attempts' => 0,
