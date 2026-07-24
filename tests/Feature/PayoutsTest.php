@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
@@ -33,6 +34,7 @@ class PayoutsTest extends TestCase
     use MakesRequesterVoucherPayouts;
     use MakesTestReimbursements;
     use MakesTestVouchers;
+    use MakesAssertStoreUploadedCsvFile;
 
     /**
      * @return void
@@ -208,7 +210,7 @@ class PayoutsTest extends TestCase
         $this->configureFundPayouts($fund);
         $this->assertPayoutsUpdated($fund);
 
-        $res = $this->storeRequestBatch($fund, [
+        $res = $this->apiMakePayoutRequestBatchRequest($fund, [
             'description' => 'Test description',
             'amount' => '50',
             'target_iban' => $this->faker()->iban(),
@@ -240,40 +242,40 @@ class PayoutsTest extends TestCase
         $presets = $fund->amount_presets->pluck('amount')->toArray();
 
         // assert can't use fund_id from another organization while correct fund id works
-        $this->storeRequestBatch($fund, ['fund_id' => $fund->id])->assertJsonMissingValidationErrors('fund_id');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['fund_id' => $fund->id])->assertJsonMissingValidationErrors('fund_id');
 
         // assert can't use non string for description but null is allowed
-        $this->storeRequestBatch($fund, ['description' => []])->assertJsonValidationErrorFor('payouts.0.description');
-        $this->storeRequestBatch($fund, ['description' => null])->assertJsonMissingValidationErrors('payouts.0.description');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['description' => []])->assertJsonValidationErrorFor('payouts.0.description');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['description' => null])->assertJsonMissingValidationErrors('payouts.0.description');
 
         // assert can't use amount lower or higher than configured
-        $this->storeRequestBatch($fund, ['amount' => 5])->assertJsonValidationErrorFor('payouts.0.amount');
-        $this->storeRequestBatch($fund, ['amount' => 200])->assertJsonValidationErrorFor('payouts.0.amount');
-        $this->storeRequestBatch($fund, ['amount' => 50])->assertJsonMissingValidationErrors('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => 5])->assertJsonValidationErrorFor('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => 200])->assertJsonValidationErrorFor('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => 50])->assertJsonMissingValidationErrors('payouts.0.amount');
 
         // assert amount_preset_id is validated
-        $this->storeRequestBatch($fund, ['amount_preset' => null])->assertJsonValidationErrorFor('payouts.0.amount_preset');
-        $this->storeRequestBatch($fund, ['amount_preset' => 999])->assertJsonValidationErrorFor('payouts.0.amount_preset');
-        $this->storeRequestBatch($fund, ['amount_preset' => $presets[0]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
-        $this->storeRequestBatch($fund, ['amount_preset' => $presets[1]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
-        $this->storeRequestBatch($fund, ['amount_preset' => $presets[2]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => null])->assertJsonValidationErrorFor('payouts.0.amount_preset');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => 999])->assertJsonValidationErrorFor('payouts.0.amount_preset');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => $presets[0]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => $presets[1]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => $presets[2]])->assertJsonMissingValidationErrors('payouts.0.amount_preset');
 
         // assert can't use non numeric
-        $this->storeRequestBatch($fund, ['amount' => []])->assertJsonValidationErrorFor('payouts.0.amount');
-        $this->storeRequestBatch($fund, ['amount' => null])->assertJsonValidationErrorFor('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => []])->assertJsonValidationErrorFor('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => null])->assertJsonValidationErrorFor('payouts.0.amount');
 
         // assert can't use non iban value
-        $this->storeRequestBatch($fund, ['target_iban' => 'invalid'])->assertJsonValidationErrorFor('payouts.0.target_iban');
-        $this->storeRequestBatch($fund, ['target_iban' => null])->assertJsonValidationErrorFor('payouts.0.target_iban');
-        $this->storeRequestBatch($fund, ['target_iban' => []])->assertJsonValidationErrorFor('payouts.0.target_iban');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['target_iban' => 'invalid'])->assertJsonValidationErrorFor('payouts.0.target_iban');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['target_iban' => null])->assertJsonValidationErrorFor('payouts.0.target_iban');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['target_iban' => []])->assertJsonValidationErrorFor('payouts.0.target_iban');
 
         // assert iban_name is required and can't use non string values
-        $this->storeRequestBatch($fund, ['target_name' => null])->assertJsonValidationErrorFor('payouts.0.target_name');
-        $this->storeRequestBatch($fund, ['target_name' => []])->assertJsonValidationErrorFor('payouts.0.target_name');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['target_name' => null])->assertJsonValidationErrorFor('payouts.0.target_name');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['target_name' => []])->assertJsonValidationErrorFor('payouts.0.target_name');
 
         // assert amount is required when amount_preset_id is missing
-        $this->storeRequestBatch($fund, ['amount' => null ])->assertJsonValidationErrorFor('payouts.0.amount');
-        $this->storeRequestBatch($fund, ['amount_preset' => $presets[1]])->assertJsonMissingValidationErrors('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount' => null ])->assertJsonValidationErrorFor('payouts.0.amount');
+        $this->apiMakePayoutRequestBatchRequest($fund, ['amount_preset' => $presets[1]])->assertJsonMissingValidationErrors('payouts.0.amount');
     }
 
     /**
@@ -1279,6 +1281,34 @@ class PayoutsTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testPayoutBatchStoreUploadedCsvFile(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $organization->forceFill(['allow_payouts' => true])->save();
+
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $data = [
+            'description' => 'Test description',
+            'amount' => '50',
+            'target_iban' => $this->faker()->iban(),
+            'target_name' => $this->makeIbanName(),
+        ];
+
+        $this->apiMakePayoutRequestBatchRequest($fund, $data, true)->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PAYOUTS, 1);
+
+        $this->assertLoggedUploadedFileContent($log, [$data]);
+    }
+
+    /**
      * @param Fund $fund
      * @return void
      */
@@ -1390,21 +1420,6 @@ class PayoutsTest extends TestCase
         return $this->postJson($apiUrl, [
             'fund_id' => $fund->id,
             ...$data,
-        ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)));
-    }
-
-    /**
-     * @param Fund $fund
-     * @param array $data
-     * @return \Illuminate\Testing\TestResponse
-     */
-    protected function storeRequestBatch(Fund $fund, array $data): TestResponse
-    {
-        $apiUrl = "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch";
-
-        return $this->postJson($apiUrl, [
-            'fund_id' => $fund->id,
-            'payouts' => [$data],
         ], $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity)));
     }
 
