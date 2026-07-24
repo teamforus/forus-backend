@@ -96,6 +96,7 @@ class FundRequest extends Model
     public const string EVENT_ASSIGNED = 'assigned';
     public const string EVENT_RESIGNED = 'resigned';
     public const string EVENT_DISREGARDED = 'disregarded';
+    public const string EVENT_RECORDS_UPDATED = 'records_updated';
 
     public const string STATE_PENDING = 'pending';
     public const string STATE_APPROVED = 'approved';
@@ -550,6 +551,35 @@ class FundRequest extends Model
                     'type' => $type,
                 ]);
             }
+        }
+    }
+
+    /**
+     * @param array $fundPrefills
+     * @return array|null
+     */
+    public function prepareRecords(array $fundPrefills): ?array
+    {
+        return [
+            ...Fund::preparePrefillRecords($fundPrefills),
+            ...$this->records->pluck('value', 'record_type_key')->toArray(),
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function addRecords(array $data): void
+    {
+        $criteria = $this->fund->criteria->keyBy('record_type_key');
+
+        foreach ($data as $record) {
+            $this->records()->create([
+                ...$record,
+                'source' => FundRequestRecord::SOURCE_BRP,
+                'fund_criterion_id' => $criteria[$record['record_type_key']]->id ?? null,
+            ]);
         }
     }
 

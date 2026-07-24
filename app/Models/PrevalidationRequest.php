@@ -235,7 +235,7 @@ class PrevalidationRequest extends Model
         // prepare prefill records
         $data = $this->prepareRecords($fundPrefills);
 
-        if (!$this->recordsIsValid($this->fund, $data)) {
+        if (!$this->fund->recordsIsValidByCriteria($data)) {
             $this->failWithReason($fundPrefills, $this::FAILED_REASON_INVALID_RECORDS);
 
             return;
@@ -275,65 +275,9 @@ class PrevalidationRequest extends Model
     public function prepareRecords(array $fundPrefills): ?array
     {
         return [
-            ...$this->preparePrefillRecords($fundPrefills),
+            ...Fund::preparePrefillRecords($fundPrefills),
             ...$this->records->pluck('value', 'record_type_key')->toArray(),
         ];
-    }
-
-    /**
-     * @param array $fundPrefills
-     * @return array|null
-     */
-    public function preparePrefillRecords(array $fundPrefills): ?array
-    {
-        return Arr::mapWithKeys([
-            ...Arr::get($fundPrefills, 'person', []),
-            ...Arr::get($fundPrefills, 'partner', []),
-            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
-            ...Arr::get($fundPrefills, 'children_groups_counts', []),
-        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
-    }
-
-    /**
-     * @param Fund $fund
-     * @param array $data
-     * @return bool
-     */
-    public function recordsIsValid(Fund $fund, array $data): bool
-    {
-        $criteriaByKey = $fund->criteria->pluck('id', 'record_type_key')->toArray();
-
-        // get optional criteria to prefill them for validation
-        $optionalCriteria = array_fill_keys(
-            $fund->criteria
-                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
-                ->where('optional', true)
-                ->pluck('record_type_key')
-                ->toArray(),
-            null
-        );
-
-        $data = [
-            ...$optionalCriteria,
-            ...$data,
-        ];
-
-        $records = array_values(array_filter(array_map(function ($value, $record_type_key) use ($criteriaByKey) {
-            return Arr::has($criteriaByKey, $record_type_key) ? [
-                'value' => $value,
-                'fund_criterion_id' => Arr::get($criteriaByKey, $record_type_key),
-            ] : null;
-        }, $data, array_keys($data))));
-
-        $validator = Validator::make(
-            [
-                ...compact('records'),
-                'criteria_groups' => $this->fund->criteria_groups->pluck('id', 'id')->toArray(),
-            ],
-            (new StoreFundRequestRequest())->recordsRule($fund, $records, true)
-        );
-
-        return $validator->passes();
     }
 
     /**
@@ -366,7 +310,7 @@ class PrevalidationRequest extends Model
         $data = $this->records->pluck('value', 'record_type_key')->toArray();
 
         // double check records
-        if (!$this->recordsIsValid($this->fund, $data)) {
+        if (!$this->fund->recordsIsValidByCriteria($data)) {
             $this->failWithReason($fundPrefills, $this::FAILED_REASON_INVALID_RECORDS);
 
             return;
@@ -387,7 +331,7 @@ class PrevalidationRequest extends Model
             ->get()
             ->keyBy('record_type_key');
 
-        foreach ($this->preparePrefillRecords($fundPrefills) as $record_type_key => $value) {
+        foreach (Fund::preparePrefillRecords($fundPrefills) as $record_type_key => $value) {
             /** @var PrevalidationRequestRecord $record */
             $record = $records->get($record_type_key);
 
