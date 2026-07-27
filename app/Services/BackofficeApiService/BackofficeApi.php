@@ -430,35 +430,27 @@ class BackofficeApi
      * @param string $action
      * @param string|null $bsn
      * @param string|null $requestId
-     * @param string|null $correlationId
-     * @return FundBackofficeLog|null
+     * @return FundBackofficeLog
      */
     protected function makeLog(
         string $action,
         ?string $bsn = null,
         ?string $requestId = null,
-        ?string $correlationId = null,
-    ): ?FundBackofficeLog {
+    ): FundBackofficeLog {
         if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
             $requestId = $requestId ?: self::makeRequestId();
         }
 
-        $correlationId = $correlationId ?: Str::uuid()->toString();
-
-        /** @var FundBackofficeLog $fundLog */
-        $fundLog = $this->fund->backoffice_logs()->create([
+        return $this->fund->backoffice_logs()->create([
             'identity_address' => Identity::findByBsn($bsn)?->address,
             'bsn' => $bsn,
             'action' => $action,
             'request_id' => $requestId,
-            'correlation_id' => $correlationId,
-            'response' => null,
+            'correlation_id' => Str::uuid()->toString(),
             'state' => self::STATE_PENDING,
             'attempts' => 0,
             'last_attempt_at' => null,
         ]);
-
-        return $fundLog ?? null;
     }
 
     /**
