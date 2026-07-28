@@ -891,6 +891,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\Sponsor\PayoutsController@bankAccounts"
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/{transaction_address}/cancel',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@cancel"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/payouts',
         'Api\Platform\Organizations\Sponsor\PayoutsController'
