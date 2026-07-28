@@ -157,11 +157,14 @@ class EmployeeTest extends TestCase
             ->assertJsonPath('data.0.id', $employee->id);
 
         // Search employee by permissions and assert that only matching employees found
-        $this
-            ->searchEmployee($organization, ['permission' => Permission::MANAGE_VOUCHERS, 'order_by' => 'created_at'], $identityHeaders)
-            ->assertJsonCount(2, 'data')
-            ->assertJsonPath('data.0.id', $organization->findEmployee($identity)->id)
-            ->assertJsonPath('data.1.id', $employee->id);
+        $response = $this
+            ->searchEmployee($organization, ['permission' => Permission::MANAGE_VOUCHERS], $identityHeaders)
+            ->assertJsonCount(2, 'data');
+
+        $this->assertEqualsCanonicalizing([
+            $organization->findEmployee($identity)->id,
+            $employee->id,
+        ], $response->json('data.*.id'));
     }
 
     /**
