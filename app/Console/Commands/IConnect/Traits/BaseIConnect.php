@@ -155,6 +155,7 @@ trait BaseIConnect
      */
     protected function resetStats(): void
     {
+        $this->acceptAll = false;
         $this->stats = array_map(fn () => 0, $this->stats);
         $this->statsDetails = [];
     }

@@ -245,7 +245,7 @@ class FundRequestSubscriber
      * @throws Exception
      * @noinspection PhpUnused
      */
-    public function onPrevalidationRequestRecordsUpdated(FundRequestRecordsUpdatedEvent $event): void
+    public function onFundRequestRecordsUpdated(FundRequestRecordsUpdatedEvent $event): void
     {
         $request = $event->getFundRequest();
         $addedKeys = array_keys($event->getAdded());
@@ -278,6 +278,7 @@ class FundRequestSubscriber
         $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
 
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
+        $events->listen(FundRequestRecordsUpdatedEvent::class, "$class@onFundRequestRecordsUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
         $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
