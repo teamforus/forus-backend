@@ -239,7 +239,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 });
                 $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 1);
                 $this->changeSelectControl($browser, '@payoutBankAccountSelect', index: 1);
-                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', index: 1);
+                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', text: 'Bestaand tegoed');
 
                 $browser->waitFor('@payoutVoucherSelect');
                 $browser->waitFor('@payoutAmount');
@@ -524,7 +524,7 @@ class SponsorPayoutsTest extends DuskTestCase
                 $browser->waitFor('@payoutBankAccountSelect');
                 $browser->assertAttributeDoesntContain('@payoutFundingTypeSelect', 'class', 'disabled');
 
-                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', index: 1);
+                $this->changeSelectControl($browser, '@payoutFundingTypeSelect', text: 'Bestaand tegoed');
                 $browser->waitFor('@payoutVoucherSelect');
 
                 $this->changeSelectControl($browser, '@payoutBankAccountSourceSelect', index: 0);
