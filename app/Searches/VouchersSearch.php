@@ -99,6 +99,7 @@ class VouchersSearch extends BaseSearch
         $this->filterByCountPerIdentity($builder);
         $this->filterByStateAndExpired($builder);
         $this->filterByIdentity($builder);
+        $this->filterByPayoutEligibility($builder);
 
         return $builder->orderBy(
             $this->getFilter('order_by', 'created_at'),
@@ -347,6 +348,19 @@ class VouchersSearch extends BaseSearch
         }
 
         return $builder;
+    }
+
+    /**
+     * @param Relation|Builder|Voucher $builder
+     * @return Relation|Builder|Voucher
+     */
+    protected function filterByPayoutEligibility(Relation|Builder|Voucher $builder): Relation|Builder|Voucher
+    {
+        if (!$this->getFilter('payout_eligible')) {
+            return $builder;
+        }
+
+        return VoucherQuery::whereEligibleForSponsorPayout($builder);
     }
 
     /**
