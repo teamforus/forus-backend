@@ -4,7 +4,6 @@ namespace Tests\Browser;
 
 use App\Models\Fund;
 use App\Models\FundPayoutFormula;
-use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -166,14 +165,14 @@ class VoucherAmountVisibilityTest extends DuskTestCase
                 $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
 
                 $this->goToVoucher($browser, $voucher);
-                $this->assertAmountVisibilityInReservationModal($browser, $fund, $identity, $product, true);
+                $this->assertAmountVisibilityInReservationModal($browser, $fund, $product, true);
 
                 $voucher->fund->fund_config->forceFill([
                     'hide_voucher_amount' => true,
                 ])->save();
 
                 $this->goToVoucher($browser, $voucher);
-                $this->assertAmountVisibilityInReservationModal($browser, $fund, $identity, $product, false);
+                $this->assertAmountVisibilityInReservationModal($browser, $fund, $product, false);
 
                 // Logout
                 $this->logout($browser);
@@ -339,8 +338,8 @@ class VoucherAmountVisibilityTest extends DuskTestCase
      * @param bool $assertVisible
      * @param string $formSelector
      * @param string $selectSelector
-     * @return void
      * @throws TimeoutException
+     * @return void
      */
     private function assertVisibilityInForm(
         Browser $browser,
@@ -394,7 +393,6 @@ class VoucherAmountVisibilityTest extends DuskTestCase
     /**
      * @param Browser $browser
      * @param Fund $fund
-     * @param Identity $identity
      * @param Product $product
      * @param bool $assertVisible
      * @throws ElementClickInterceptedException
@@ -405,7 +403,6 @@ class VoucherAmountVisibilityTest extends DuskTestCase
     private function assertAmountVisibilityInReservationModal(
         Browser $browser,
         Fund $fund,
-        Identity $identity,
         Product $product,
         bool $assertVisible
     ): void {
@@ -418,15 +415,17 @@ class VoucherAmountVisibilityTest extends DuskTestCase
         $browser->click("@listFundsRow$fund->id @reserveProduct");
         $browser->waitFor('@modalProductReserve');
 
-        $browser->within('@modalProductReserve', function (Browser $browser) use ($identity, $assertVisible) {
+        $browser->within('@modalProductReserve', function (Browser $browser) use ($assertVisible) {
             $browser->waitFor('@btnSelectVoucher');
 
             $assertVisible
                 ? $browser->assertVisible('@voucherAmount')
                 : $browser->assertMissing('@voucherAmount');
 
-            $browser->click('@closeModalButton');
+            $browser->keys('@closeModalButton', '{escape}');
         });
+
+        $browser->waitUntilMissing('@modalProductReserve');
     }
 
     /**
