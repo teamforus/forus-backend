@@ -7,6 +7,7 @@ use App\Http\Resources\FaqResource;
 use App\Http\Resources\ImplementationBlockResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Services\CmsService\ImplementationBlocks\Resources\ImplementationCmsBlockResource;
 use Illuminate\Http\Request;
 
 /**
@@ -19,6 +20,7 @@ class ImplementationPageResource extends BaseJsonResource
     ];
 
     public const array LOAD_NESTED = [
+        'cms_blocks' => ImplementationCmsBlockResource::class,
         'blocks' => ImplementationBlockResource::class,
         'faq' => FaqResource::class,
     ];
@@ -34,12 +36,13 @@ class ImplementationPageResource extends BaseJsonResource
         $page = $this->resource;
 
         return array_merge($page->only([
-            'id', 'page_type', 'state', 'external', 'external_url', 'blocks', 'implementation_id',
+            'id', 'page_type', 'state', 'external', 'external_url', 'implementation_id',
             'description', 'description_alignment', 'description_position', 'description_html',
             'blocks_per_row',
         ]), [
             'title' => $page->title ?: '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
+            'cms_blocks' => ImplementationCmsBlockResource::collection($page->cms_blocks),
             'url_webshop' => $this->webshopUrl($page),
             'implementation' => $this->getImplementationData($page->implementation),
             'faq' => FaqResource::collection($page->faq),

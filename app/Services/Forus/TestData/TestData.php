@@ -547,7 +547,7 @@ class TestData
             'overlay_opacity' => 10,
             'show_privacy_checkbox' => true,
             'pre_check_enabled' => true,
-            'pre_check_title' => ucfirst($faker->text(rand(40, 80))),
+            'pre_check_title' => ucfirst($faker->text(rand(40, 50))),
             'pre_check_description' => $faker->text(rand(400, 600)),
             'pre_check_banner_title' => ucfirst($faker->text(rand(40, 80))),
             'pre_check_banner_label' => trim($faker->text(rand(10, 15)), '.'),
@@ -616,7 +616,7 @@ class TestData
                 for ($i = 3; $i > 0; $i--) {
                     $pageModel->blocks()->create([
                         'title' => ucfirst($faker->text(rand(40, 80))),
-                        'description' => $faker->text(rand(400, 600)),
+                        'description' => $faker->text(rand(400, 500)),
                         'label' => $faker->text(rand(10, 20)),
                         'button_link' => $faker->safeEmailDomain(),
                         'button_text' => $faker->text(rand(10, 20)),
