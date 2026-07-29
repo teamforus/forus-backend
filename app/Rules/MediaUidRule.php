@@ -4,24 +4,25 @@ namespace App\Rules;
 
 use App\Services\MediaService\Models\Media;
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
 class MediaUidRule implements Rule
 {
     protected string $type;
     protected string $errorMessage;
-    protected ?int $mediableId;
+    protected ?Model $expectedMediable;
 
     /**
      * Create a new rule instance.
      *
      * @param string $type
-     * @param int|null $mediableId
+     * @param Model|null $expectedMediable
      */
-    public function __construct(string $type, int $mediableId = null)
+    public function __construct(string $type, ?Model $expectedMediable = null)
     {
         $this->type = $type;
-        $this->mediableId = $mediableId;
+        $this->expectedMediable = $expectedMediable;
     }
 
     /**
@@ -57,7 +58,12 @@ class MediaUidRule implements Rule
             return false;
         }
 
-        if ($media->mediable && $media->mediable->getKey() !== $this->mediableId) {
+        $hasMediable = $media->mediable_id !== null || $media->mediable_type !== null;
+        $hasExpectedMediable = $this->expectedMediable &&
+            $media->mediable_type === $this->expectedMediable->getMorphClass() &&
+            $media->mediable_id === $this->expectedMediable->getKey();
+
+        if ($hasMediable && !$hasExpectedMediable) {
             $this->errorMessage = trans('validation.in');
 
             return false;

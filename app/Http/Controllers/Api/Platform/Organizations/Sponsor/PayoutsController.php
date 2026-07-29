@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\CancelPayoutTransactionRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\IndexPayoutBankAccountsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\IndexPayoutTransactionsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Payouts\StorePayoutTransactionBatchRequest;
@@ -12,7 +13,9 @@ use App\Http\Resources\Sponsor\SponsorPayoutBankAccountResource;
 use App\Http\Resources\Sponsor\VoucherTransactionPayoutResource;
 use App\Models\Data\BankAccount;
 use App\Models\Organization;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Searches\Sponsor\PayoutBankAccounts\FundRequestPayoutBankAccountSearch;
 use App\Searches\Sponsor\PayoutBankAccounts\PayoutTransactionPayoutBankAccountSearch;
@@ -21,11 +24,15 @@ use App\Searches\Sponsor\PayoutBankAccounts\ReimbursementPayoutBankAccountSearch
 use App\Searches\VoucherTransactionsSearch;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Random\RandomException;
+use Throwable;
 
 /**
  * @noinspection PhpUnused
@@ -102,9 +109,9 @@ class PayoutsController extends Controller
      *
      * @param StorePayoutTransactionRequest $request
      * @param Organization $organization
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return VoucherTransactionPayoutResource
      * @noinspection PhpUnused
+     * @throws AuthorizationException|Throwable
+     * @return VoucherTransactionPayoutResource
      */
     public function store(
         StorePayoutTransactionRequest $request,
@@ -116,25 +123,64 @@ class PayoutsController extends Controller
         $fund = $organization->funds()->find($request->input('fund_id'));
         $employee = $request->employee($organization);
 
-        $bankAccountData = $request->bankAccountData();
-        $bankAccount = new BankAccount($bankAccountData['target_iban'] ?? null, $bankAccountData['target_name'] ?? null);
+        $transaction = DB::transaction(function () use ($request, $organization, $fund, $employee) {
+            if ($request->isVoucherBackedPayout()) {
+                $bankData = $request->bankAccountPayload();
 
-        $amount = $request->input('amount_preset_id') ?
-            $fund->amount_presets?->find($request->input('amount_preset_id')) :
-            $request->input('amount');
+                $voucher = VoucherQuery::whereEligibleForSponsorPayout(Voucher::query())
+                    ->whereKey((int) $request->input('voucher_id'))
+                    ->where('fund_id', $fund->id)
+                    ->where('identity_id', $bankData['source_identity_id'] ?? null)
+                    ->lockForUpdate()
+                    ->first();
 
-        $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
-            'description' => $request->input('description'),
-            ...Arr::only($bankAccountData, ['target_source_type', 'target_source_id']),
-        ]);
+                if (!$voucher) {
+                    throw ValidationException::withMessages([
+                        'voucher_id' => [trans('validation.in', ['attribute' => 'voucher_id'])],
+                    ]);
+                }
 
-        if ($request->input('bsn') && $organization->bsn_enabled) {
-            $transaction->addPayoutRelation('bsn', $request->input('bsn'));
-        }
+                $payoutAmount = $request->resolvePayoutAmount($fund);
+                $amount = $payoutAmount->getAmount();
 
-        if ($request->input('email')) {
-            $transaction->addPayoutRelation('email', $request->input('email'));
-        }
+                if ($payoutAmount->exceeds($voucher->amount_available)) {
+                    throw ValidationException::withMessages([
+                        $payoutAmount->getField() => [trans('validation.voucher.not_enough_funds')],
+                    ]);
+                }
+
+                $transaction = $voucher->makeTransactionBySponsor($employee, [
+                    'amount' => $amount,
+                    'amount_voucher' => $amount,
+                    'target' => VoucherTransaction::TARGET_PAYOUT,
+                    'target_iban' => $bankData['target_iban'],
+                    'target_name' => $bankData['target_name'],
+                    'transfer_at' => now()->addDay(),
+                    'description' => $request->input('description'),
+                    ...Arr::only($bankData, ['target_source_type', 'target_source_id']),
+                ]);
+            } else {
+                $bankData = $request->bankAccountData();
+                $bankAccount = new BankAccount($bankData['target_iban'] ?? null, $bankData['target_name'] ?? null);
+                $payoutAmount = $request->resolvePayoutAmount($fund);
+                $amount = $payoutAmount->getPreset() ?? $payoutAmount->getAmount();
+
+                $transaction = $fund->makePayout(null, $amount, $employee, $bankAccount, transactionFields: [
+                    'description' => $request->input('description'),
+                    ...Arr::only($bankData, ['target_source_type', 'target_source_id']),
+                ]);
+            }
+
+            if ($request->input('bsn') && $organization->bsn_enabled) {
+                $transaction->addPayoutRelation('bsn', $request->input('bsn'));
+            }
+
+            if ($request->input('email')) {
+                $transaction->addPayoutRelation('email', $request->input('email'));
+            }
+
+            return $transaction;
+        });
 
         return VoucherTransactionPayoutResource::create($transaction);
     }
@@ -225,6 +271,7 @@ class PayoutsController extends Controller
      * @param UpdatePayoutTransactionRequest $request
      * @param Organization $organization
      * @param VoucherTransaction $transaction
+     * @throws AuthorizationException|Throwable
      * @return VoucherTransactionPayoutResource
      */
     public function update(
@@ -233,21 +280,52 @@ class PayoutsController extends Controller
         VoucherTransaction $transaction,
     ): VoucherTransactionPayoutResource {
         $this->authorize('show', $organization);
-        $this->authorize('updatePayoutsSponsor', [$transaction, $organization]);
 
         $employee = $request->employee($organization);
 
-        $transaction->updatePayout($employee, $request->only([
-            'amount', 'amount_preset_id', 'target_name', 'target_iban', 'description',
-        ]));
+        $transaction = DB::transaction(function () use ($request, $transaction, $organization, $employee) {
+            $this->authorize('updatePayoutsSponsor', [$transaction, $organization]);
 
-        if ($request->input('skip_transfer_delay')) {
-            $transaction->skipTransferDelay($employee);
-        }
+            $transaction->updatePayout($employee, $request->only([
+                'amount', 'amount_preset_id', 'target_name', 'target_iban', 'description',
+            ]));
 
-        if ($request->input('cancel')) {
-            $transaction->cancelPending($employee, true);
-        }
+            if ($request->boolean('skip_transfer_delay')) {
+                $transaction->skipTransferDelay($employee);
+            }
+
+            return $transaction;
+        });
+
+        return VoucherTransactionPayoutResource::create($transaction);
+    }
+
+    /**
+     * Cancel the specified payout.
+     *
+     * @param CancelPayoutTransactionRequest $request
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @throws AuthorizationException|Throwable
+     * @return VoucherTransactionPayoutResource
+     */
+    public function cancel(
+        CancelPayoutTransactionRequest $request,
+        Organization $organization,
+        VoucherTransaction $transaction,
+    ): VoucherTransactionPayoutResource {
+        $this->authorize('show', $organization);
+
+        $employee = $request->employee($organization);
+
+        $transaction = DB::transaction(function () use ($transaction, $organization, $employee) {
+            $transaction->voucher()->lockForUpdate()->firstOrFail();
+            $transaction = VoucherTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+
+            $this->authorize('cancelPayoutsSponsor', [$transaction, $organization]);
+
+            return $transaction->cancelPending($employee, true);
+        });
 
         return VoucherTransactionPayoutResource::create($transaction);
     }
@@ -272,14 +350,21 @@ class PayoutsController extends Controller
             'q', 'identity_id',
         ]);
 
-        $search = match ($request->input('type')) {
-            'fund_request' => new FundRequestPayoutBankAccountSearch($organization, $filters),
-            'profile_bank_account' => new ProfilePayoutBankAccountSearch($organization, $filters),
-            'reimbursement' => new ReimbursementPayoutBankAccountSearch($organization, $filters),
-            'payout' => new PayoutTransactionPayoutBankAccountSearch($organization, $filters),
+        $query = match ($request->input('type')) {
+            'fund_request' => (new FundRequestPayoutBankAccountSearch($organization, $filters))
+                ->query(),
+            'profile_bank_account' => (new ProfilePayoutBankAccountSearch($organization, $filters))
+                ->query()
+                ->with('profile:id,identity_id'),
+            'reimbursement' => (new ReimbursementPayoutBankAccountSearch($organization, $filters))
+                ->query()
+                ->with('voucher:id,identity_id'),
+            'payout' => (new PayoutTransactionPayoutBankAccountSearch($organization, $filters))
+                ->query()
+                ->with('voucher:id,identity_id'),
             default => throw new InvalidArgumentException("Invalid type: {$request->input('type')}"),
         };
 
-        return SponsorPayoutBankAccountResource::queryCollection($search->query()->latest('created_at'), $request);
+        return SponsorPayoutBankAccountResource::queryCollection($query->latest('created_at'), $request);
     }
 }

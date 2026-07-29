@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\IConnect\Traits;
 
 use App\Events\PrevalidationRequests\PrevalidationRequestRecordsUpdatedEvent;
 use App\Models\Prevalidation;
@@ -14,89 +14,9 @@ use Illuminate\Support\Facades\Event;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Throwable;
 
-class IConnectCliCommand extends BaseCommand
+trait PrevalidationIConnectCli
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'iconnect:cli';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Update prevalidation request records from IConnect and sync prevalidations';
-
-    /**
-     * @var bool
-     */
-    protected bool $acceptAll = false;
-
-    /**
-     * @var array
-     */
-    protected array $stats = [
-        'updated' => 0,
-        'skipped_no_diff' => 0,
-        'skipped_manual' => 0,
-        'skipped_invalid_link' => 0,
-        'skipped_records_mismatch' => 0,
-        'failed' => 0,
-    ];
-
-    /**
-     * @var array
-     */
-    protected array $statsDetails = [];
-
-    /**
-     * @throws Throwable
-     * @return void
-     */
-    public function handle(): void
-    {
-        $this->askAction();
-    }
-
-    /**
-     * @return array
-     */
-    protected function askActionList(): array
-    {
-        return [
-            '### Prevalidation:',
-            '[1] Update pending prevalidations.',
-            '[2] Update used prevalidations.',
-            '[3] Exit',
-        ];
-    }
-
-    /**
-     * @throws Throwable
-     * @return void
-     */
-    protected function askAction(): void
-    {
-        $this->resetStats();
-        $this->printHeader('Select next action:');
-        $this->printList($this->askActionList());
-        $action = $this->ask('Please select next step:', 1);
-
-        switch ($action) {
-            case 1: $this->updatePrevalidations(Prevalidation::STATE_PENDING);
-                break;
-            case 2: $this->updatePrevalidations(Prevalidation::STATE_USED);
-                break;
-            case 3: $this->exit();
-                // no break
-            default: $this->printText("Invalid input!\nPlease try again:\n");
-        }
-
-        $this->askAction();
-    }
+    use BaseIConnect;
 
     /**
      * @param string $state
@@ -105,6 +25,7 @@ class IConnectCliCommand extends BaseCommand
      */
     protected function updatePrevalidations(string $state): void
     {
+        $this->type = self::PREVALIDATION_REQUEST_TYPE;
         $hours = $this->ask('Select prevalidation requests older than number of hours:', 5);
 
         $requests = PrevalidationRequest::query()
@@ -150,7 +71,7 @@ class IConnectCliCommand extends BaseCommand
                 $this->newLine();
                 $this->printText("Request #$request->id has $prevalidations_count linked prevalidations, skipping.");
                 $this->stats['skipped_invalid_link']++;
-                $this->addStatistic(prevalidationRequestId: $request->id, failed: 'invalid_link');
+                $this->addStatistic(requestId: $request->id, failed: 'invalid_link');
                 $bar->advance();
 
                 return;
@@ -260,7 +181,7 @@ class IConnectCliCommand extends BaseCommand
             $updatedText = $this->diffArrayToString($updated, true);
 
             $this->addStatistic(
-                prevalidationRequestId: $request->id,
+                requestId: $request->id,
                 prevalidationId: $prevalidation->id,
                 added: $addedText,
                 updated: $updatedText,
@@ -348,7 +269,7 @@ class IConnectCliCommand extends BaseCommand
 
         $newData = $request->prepareRecords($fundPrefills);
 
-        if (!$request->recordsIsValid($request->fund, $newData)) {
+        if (!$request->fund->recordsIsValidByCriteria($newData)) {
             $this->newLine();
             $this->printText("Prevalidation request #$request->id, prevalidation #$prevalidation->id:");
             $this->printText($this->red('Fetch from BRP failed: Invalid records for the fund'));
@@ -531,121 +452,5 @@ class IConnectCliCommand extends BaseCommand
     protected function addPrevalidationRequestRecords(PrevalidationRequest $request, array $records): void
     {
         $request->records()->createMany($this->mapRequestRecords($records));
-    }
-
-    /**
-     * @return void
-     */
-    protected function printStats(): void
-    {
-        $this->printHeader('Stats:');
-
-        $this->printListWithValues([
-            'Updated:' => $this->stats['updated'],
-            'Skipped (no changes):' => $this->stats['skipped_no_diff'],
-            'Skipped (manual):' => $this->stats['skipped_manual'],
-            'Skipped (invalid link):' => $this->stats['skipped_invalid_link'],
-            'Skipped (records mismatch):' => $this->stats['skipped_records_mismatch'],
-            'Failed:' => $this->stats['failed'],
-        ]);
-
-        if (count($this->statsDetails)) {
-            $this->newLine();
-            $this->printHeader('Stats details:');
-            $this->table([
-                'Prevalidation request ID', 'Prevalidation ID', 'Added', 'Updated', 'Deleted', 'Failed',
-            ], $this->statsDetails);
-        }
-
-        $this->printSeparator();
-    }
-
-    /**
-     * @param int $prevalidationRequestId
-     * @param int|null $prevalidationId
-     * @param string $added
-     * @param string $updated
-     * @param string $deleted
-     * @param string $failed
-     * @return void
-     */
-    private function addStatistic(
-        int $prevalidationRequestId,
-        ?int $prevalidationId = null,
-        string $added = '',
-        string $updated = '',
-        string $deleted = '',
-        string $failed = ''
-    ): void {
-        $this->statsDetails[] = [
-            'prevalidation_request_id' => $prevalidationRequestId,
-            'prevalidation_id' => $prevalidationId ?? '',
-            'added' => $added,
-            'updated' => $updated,
-            'deleted' => $deleted,
-            'failed' => $failed,
-        ];
-    }
-
-    /**
-     * @param array $records
-     * @return array
-     */
-    private function mapRequestRecords(array $records): array
-    {
-        return array_map(fn ($value, $key) => [
-            'record_type_key' => $key,
-            'value' => is_null($value) ? '' : $value,
-        ], $records, array_keys($records));
-    }
-
-    /**
-     * @param array $array
-     * @param bool $isUpdateArray
-     * @return string
-     */
-    private function diffArrayToString(array $array, bool $isUpdateArray = false): string
-    {
-        $arr = $isUpdateArray
-            ? array_map(fn ($value, $key) => "$key: {$value['old']} => {$value['new']}", $array, array_keys($array))
-            : array_map(fn ($value, $key) => "$key: $value", $array, array_keys($array));
-
-        return implode("\n", $arr);
-    }
-
-    /**
-     * @param array $array
-     * @param bool $isUpdateArray
-     * @return array
-     */
-    private function diffArrayToTableValues(array $array, bool $isUpdateArray = false): array
-    {
-        return $isUpdateArray
-            ? array_map(fn ($value, $key) => [$key, $value['old'], $value['new']], $array, array_keys($array))
-            : array_map(fn ($value, $key) => [$key, $value], $array, array_keys($array));
-    }
-
-    /**
-     * @param array $array
-     * @return array
-     */
-    private function normalizeData(array $array): array
-    {
-        return collect($array)->map(function ($value) {
-            if (is_numeric($value)) {
-                return (int) $value;
-            }
-
-            return $value;
-        })->toArray();
-    }
-
-    /**
-     * @return void
-     */
-    private function resetStats(): void
-    {
-        $this->stats = array_map(fn () => 0, $this->stats);
-        $this->statsDetails = [];
     }
 }
