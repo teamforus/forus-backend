@@ -7,6 +7,7 @@ use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
+use App\Events\FundRequests\FundRequestRecordsUpdatedEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\Data\BankAccount;
@@ -240,6 +241,27 @@ class FundRequestSubscriber
     }
 
     /**
+     * @param FundRequestRecordsUpdatedEvent $event
+     * @throws Exception
+     * @noinspection PhpUnused
+     */
+    public function onFundRequestRecordsUpdated(FundRequestRecordsUpdatedEvent $event): void
+    {
+        $request = $event->getFundRequest();
+        $addedKeys = array_keys($event->getAdded());
+
+        $request->log(FundRequest::EVENT_RECORDS_UPDATED, [
+            'fund_request' => $request,
+            'organization' => $request->fund->organization,
+        ], [
+            'fund_request_update_source' => 'cli',
+            'fund_request_records_mode' => $event->getMode(),
+            'fund_request_records_added_keys' => $addedKeys,
+            'fund_request_records_added_count' => count($addedKeys),
+        ]);
+    }
+
+    /**
      * The events dispatcher.
      *
      * @param Dispatcher $events
@@ -256,6 +278,7 @@ class FundRequestSubscriber
         $events->listen(FundRequestResigned::class, "$class@onFundRequestResigned");
 
         $events->listen(FundRequestRecordUpdated::class, "$class@onFundRequestRecordUpdated");
+        $events->listen(FundRequestRecordsUpdatedEvent::class, "$class@onFundRequestRecordsUpdated");
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
         $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");

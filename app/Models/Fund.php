@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Data\BankAccount;
 use App\Models\Traits\HasFaq;
@@ -44,6 +45,7 @@ use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -2243,5 +2245,60 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    public function recordsIsValidByCriteria(array $data): bool
+    {
+        $criteriaByKey = $this->criteria->pluck('id', 'record_type_key')->toArray();
+
+        // get optional criteria to prefill them for validation
+        $optionalCriteria = array_fill_keys(
+            $this->criteria
+                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
+                ->where('optional', true)
+                ->pluck('record_type_key')
+                ->toArray(),
+            null
+        );
+
+        $data = [
+            ...$optionalCriteria,
+            ...$data,
+        ];
+
+        $records = array_values(array_filter(array_map(function ($value, $record_type_key) use ($criteriaByKey) {
+            return Arr::has($criteriaByKey, $record_type_key) ? [
+                'value' => $value,
+                'fund_criterion_id' => Arr::get($criteriaByKey, $record_type_key),
+            ] : null;
+        }, $data, array_keys($data))));
+
+        $validator = Validator::make(
+            [
+                ...compact('records'),
+                'criteria_groups' => $this->criteria_groups->pluck('id', 'id')->toArray(),
+            ],
+            (new StoreFundRequestRequest())->recordsRule($this, $records, true)
+        );
+
+        return $validator->passes();
+    }
+
+    /**
+     * @param array $fundPrefills
+     * @return array|null
+     */
+    public static function preparePrefillRecords(array $fundPrefills): ?array
+    {
+        return Arr::mapWithKeys([
+            ...Arr::get($fundPrefills, 'person', []),
+            ...Arr::get($fundPrefills, 'partner', []),
+            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+            ...Arr::get($fundPrefills, 'children_groups_counts', []),
+        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
     }
 }
