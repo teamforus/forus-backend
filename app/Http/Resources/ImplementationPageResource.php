@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\ImplementationPage;
+use App\Services\CmsService\ImplementationBlocks\Resources\ImplementationCmsBlockResource;
 use Illuminate\Http\Request;
 
 /**
@@ -13,6 +14,7 @@ class ImplementationPageResource extends BaseJsonResource
     public const array LOAD = [];
 
     public const array LOAD_NESTED = [
+        'cms_blocks_public' => ImplementationCmsBlockResource::class,
         'blocks' => ImplementationBlockResource::class,
         'faq' => FaqResource::class,
     ];
@@ -43,6 +45,7 @@ class ImplementationPageResource extends BaseJsonResource
             ),
             'external_url' => $page->external ? $page->external_url : '',
             'blocks' => ImplementationBlockResource::collection($page->blocks),
+            'cms_blocks' => ImplementationCmsBlockResource::collection($page->cms_blocks_public),
             'faq' => FaqResource::collection($page->faq),
         ];
     }
