@@ -48,10 +48,10 @@ class ImplementationCmsBlockServiceTest extends TestCase
         $this->assertInstanceOf(ProviderSignUpCmsBlockConfig::class, $providerSignUpConfig);
         $this->assertSame('Info', $infoConfig->name());
         $this->assertSame('Tekst', $textConfig->name());
-        $this->assertSame('Banner', $bannerConfig->name());
-        $this->assertSame('Aandachtsblok', $calloutConfig->name());
+        $this->assertSame('Informatieve banner', $bannerConfig->name());
+        $this->assertSame('Uitgelicht', $calloutConfig->name());
         $this->assertSame('Veelgestelde vragen', $faqConfig->name());
-        $this->assertSame('Linkpanelen', $linkPanelsConfig->name());
+        $this->assertSame('Kolommen', $linkPanelsConfig->name());
         $this->assertSame('Aanbiederskaart', $providersMapConfig->name());
         $this->assertSame('Aanbod categorieën', $productCategoriesConfig->name());
         $this->assertSame('Aanbod', $productShowcaseConfig->name());
