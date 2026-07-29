@@ -142,7 +142,7 @@ return [
             ],
         ],
         'banner' => [
-            'name' => 'Banner',
+            'name' => 'Informatieve banner',
             'fields' => [
                 'section_title' => [
                     'name' => 'Sectietitel',
@@ -278,7 +278,7 @@ return [
             ],
         ],
         'callout' => [
-            'name' => 'Aandachtsblok',
+            'name' => 'Uitgelicht',
             'fields' => [
                 'section_title' => [
                     'name' => 'Sectietitel',
@@ -421,7 +421,7 @@ return [
             ],
         ],
         'link_panels' => [
-            'name' => 'Linkpanelen',
+            'name' => 'Kolommen',
             'fields' => [
                 'section_title' => [
                     'name' => 'Sectietitel',
