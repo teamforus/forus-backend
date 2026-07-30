@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages;
 
+use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\Organization;
 use App\Rules\MediaUidRule;
+use App\Services\CmsService\ImplementationBlocks\Validation\ImplementationCmsBlockRuleSet;
 use App\Traits\ValidatesFaq;
+use Illuminate\Support\Facades\Gate;
 
 class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRequest
 {
@@ -17,7 +21,17 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
      */
     public function authorize(): bool
     {
-        return true;
+        $organization = $this->route('organization');
+        $implementation = $this->route('implementation');
+        $implementationPage = $this->route('implementationPage');
+
+        return
+            $organization instanceof Organization &&
+            $implementation instanceof Implementation &&
+            $implementationPage instanceof ImplementationPage &&
+            Gate::allows('show', $organization) &&
+            Gate::allows('updateCMS', [$implementation, $organization]) &&
+            Gate::allows('update', [$implementationPage, $implementation, $organization]);
     }
 
     /**
@@ -43,6 +57,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
             'media_uid' => 'nullable|array',
             'media_uid.*' => $this->mediaRule(),
             'blocks_per_row' => 'nullable|integer|min:1|max:3',
+            ...$this->cmsBlockRules(),
             ...$faqRules,
         ];
     }
@@ -52,7 +67,7 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
      */
     public function attributes(): array
     {
-        return $this->getFaqAttributes();
+        return array_merge(parent::attributes(), $this->getFaqAttributes());
     }
 
     /**
@@ -66,5 +81,17 @@ class UpdateImplementationPageRequest extends ValidateImplementationPageBlocksRe
             'exists:media,uid',
             new MediaUidRule('cms_media'),
         ];
+    }
+
+    /**
+     * @return array
+     */
+    private function cmsBlockRules(): array
+    {
+        return ImplementationCmsBlockRuleSet::rules(
+            $this->getRouteImplementationPage(),
+            null,
+            $this->input('cms_blocks'),
+        );
     }
 }

@@ -205,6 +205,7 @@ return [
 
         App\Services\FileService\FileServiceProvider::class,
         App\Services\MediaService\MediaServiceProvider::class,
+        App\Services\CmsService\CmsServiceProvider::class,
         App\Services\GeocodeService\GeocodeServiceProvider::class,
         App\Services\QueryCounterService\QueryCounterServiceProvider::class,
 

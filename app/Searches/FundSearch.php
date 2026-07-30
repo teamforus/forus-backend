@@ -3,7 +3,6 @@
 namespace App\Searches;
 
 use App\Models\Fund;
-use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
@@ -50,8 +49,28 @@ class FundSearch extends BaseSearch
             $builder->whereHas('tags_webshop', fn (Builder $q) => $q->where('tags.id', $tagId));
         }
 
-        if ($this->getFilter('organization_id')) {
-            $builder->where('organization_id', $this->getFilter('organization_id'));
+        if ($tagIds = $this->getFilter('tag_ids')) {
+            $builder->whereHas('tags_webshop', fn (Builder $q) => $q->whereIn('tags.id', $tagIds));
+        }
+
+        if ($organizationId = $this->getFilter('organization_id')) {
+            $builder->where('organization_id', $organizationId);
+        }
+
+        if ($organizationScope = $this->getFilter('organization_scope')) {
+            $organizationId = Implementation::active()?->organization_id;
+
+            if (!$organizationId) {
+                $builder->whereIn('organization_id', []);
+            } elseif ($organizationScope === 'own') {
+                $builder->where('organization_id', $organizationId);
+            } elseif ($organizationScope === 'partners') {
+                $builder->where('organization_id', '!=', $organizationId);
+            }
+        }
+
+        if (is_array($organizationIds = $this->getFilter('organization_ids'))) {
+            $builder->whereIn('organization_id', $organizationIds);
         }
 
         if ($this->getFilter('physical_card_type_id')) {

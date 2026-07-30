@@ -29,6 +29,7 @@ class VoucherTransactionPayoutResource extends SponsorVoucherTransactionResource
     public function toArray(Request $request): array
     {
         $transaction = $this->resource;
+        $isVoucherBackedPayout = $transaction->isVoucherBackedPayout();
 
         return [
             ...$transaction->only([
@@ -57,8 +58,14 @@ class VoucherTransactionPayoutResource extends SponsorVoucherTransactionResource
             'payout_relations' => $transaction->payout_relations->map(fn ($relation) => $relation->only([
                 'id', 'type', 'value',
             ])),
-            'amount_preset_id' => $transaction->voucher?->fund_amount_preset_id,
+            'amount_preset_id' => $isVoucherBackedPayout
+                ? null
+                : $transaction->voucher?->fund_amount_preset_id,
             'payment_type_locale' => $this->getPaymentTypeLocale($transaction),
+            'funding_type' => $isVoucherBackedPayout
+                ? VoucherTransaction::PAYOUT_FUNDING_TYPE_VOUCHER
+                : VoucherTransaction::PAYOUT_FUNDING_TYPE_STANDALONE,
+            'voucher' => $isVoucherBackedPayout ? $transaction->voucher->only(['id', 'number']) : null,
         ];
     }
 }

@@ -103,7 +103,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
 
         $this->rollbackModels([], function () use ($fund, $product, $product2, $orderByColumns) {
             $this->browse(function (Browser $browser) use ($fund, $product, $product2, $orderByColumns) {
-                $browser->visit($fund->urlWebshop('aanbod'))->refresh();
+                $browser->visit($fund->urlWebshop('aanbod'));
                 $browser->waitFor($this->getWebshopRowsSelector());
 
                 $browser->waitFor('@productFilterGroupFunds');
@@ -123,6 +123,42 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
             $fund && $this->deleteFund($fund);
             $product->delete();
             $product2->delete();
+        });
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductsPriceTypeActiveFilterLabels(): void
+    {
+        $implementation = Implementation::byKey('nijmegen');
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($organization, implementation: $implementation);
+        $scope = 'product-price-types-' . Str::random(10);
+        $products = $this->setupPriceTypeProducts($fund, $scope);
+
+        $this->rollbackModels([
+            [$implementation, $implementation->only(['voucher_payout_informational_product_id'])],
+        ], function () use ($implementation, $products, $scope) {
+            $implementation->forceFill([
+                'voucher_payout_informational_product_id' => $products['payout']->id,
+            ])->save();
+
+            Implementation::clearMemo();
+
+            $this->browse(function (Browser $browser) use ($implementation, $products, $scope) {
+                $browser->visit($implementation->urlWebshop('aanbod', [
+                    'q' => $scope,
+                ]));
+
+                $this->assertProductsFilterByPriceTypeLabels($browser, $products);
+                $this->assertProductsFilterResetAllActiveLabel($browser, $products);
+            });
+        }, function () use ($fund, $products) {
+            $this->deleteFund($fund);
+            array_walk($products, fn (Product $product) => $product->delete());
+            Implementation::clearMemo();
         });
     }
 
@@ -158,6 +194,41 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
             ->setPaid(null, now());
 
         return $products;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $scope
+     * @return Product[]
+     */
+    protected function setupPriceTypeProducts(Fund $fund, string $scope): array
+    {
+        $products = $this->setupProducts($fund, 6, 10);
+        $productsByFilter = [];
+
+        $filters = [
+            'regular' => [Product::PRICE_TYPE_REGULAR, 10, 0],
+            'discount_fixed' => [Product::PRICE_TYPE_DISCOUNT_FIXED, 10, 5],
+            'discount_percentage' => [Product::PRICE_TYPE_DISCOUNT_PERCENTAGE, 10, 10],
+            'free' => [Product::PRICE_TYPE_FREE, 0, 0],
+            'informational' => [Product::PRICE_TYPE_INFORMATIONAL, 0, 0],
+            'payout' => [Product::PRICE_TYPE_INFORMATIONAL, 0, 0],
+        ];
+
+        foreach ($filters as $filter => [$priceType, $price, $priceDiscount]) {
+            $product = array_shift($products);
+
+            $product->forceFill([
+                'name' => "$scope $filter product",
+                'price' => $price,
+                'price_type' => $priceType,
+                'price_discount' => $priceDiscount,
+            ])->save();
+
+            $productsByFilter[$filter] = $product->fresh();
+        }
+
+        return $productsByFilter;
     }
 
     /**
@@ -347,6 +418,66 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
         $this->assertActiveFilterLabelAndReset($browser, 'extra_payment');
 
         $this->changeSelectControl($browser, '@selectControlOrganizations', index: 0);
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Product[] $products
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertProductsFilterByPriceTypeLabels(Browser $browser, array $products): void
+    {
+        $browser->waitFor('@productFilterGroupPriceType');
+        $this->uncollapseWebshopFilterGroup($browser, '@productFilterGroupPriceType');
+
+        foreach ($this->getProductPriceTypeFilterSelectors() as $filter => $selector) {
+            $browser->waitFor($selector);
+            $browser->click($selector);
+
+            $this->assertListVisibility($browser, $products[$filter]->id, true);
+            $this->assertActiveFilterLabelAndReset($browser, $filter);
+            $this->assertListVisibility($browser, $products[$filter]->id, true, count($products));
+        }
+    }
+
+    /**
+     * @param Browser $browser
+     * @param Product[] $products
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeOutException
+     * @return void
+     */
+    protected function assertProductsFilterResetAllActiveLabel(Browser $browser, array $products): void
+    {
+        $browser->waitFor('@priceTypeOptionRegular');
+        $browser->click('@priceTypeOptionRegular');
+
+        $browser->waitFor('@priceTypeOptionFree');
+        $browser->click('@priceTypeOptionFree');
+
+        $this->assertActiveFilterLabelVisible($browser, 'regular');
+        $this->assertActiveFilterLabelVisible($browser, 'free');
+        $this->assertActiveFilterLabelAndReset($browser, 'all');
+        $this->assertListVisibility($browser, $products['regular']->id, true, count($products));
+    }
+
+    /**
+     * @return array
+     */
+    protected function getProductPriceTypeFilterSelectors(): array
+    {
+        return [
+            'regular' => '@priceTypeOptionRegular',
+            'discount_fixed' => '@priceTypeOptionDiscountFixed',
+            'discount_percentage' => '@priceTypeOptionDiscountPercentage',
+            'free' => '@priceTypeOptionFree',
+            'informational' => '@priceTypeOptionInformational',
+            'payout' => '@priceTypeOptionPayout',
+        ];
     }
 
     /**

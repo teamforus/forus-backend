@@ -15,7 +15,7 @@ use Throwable;
 class NotificationResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'event',
+        'event.event_log_relation',
         'system_notification.templates',
     ];
 
@@ -52,7 +52,7 @@ class NotificationResource extends BaseJsonResource
         try {
             return $this->resource->system_notification->findTemplate(
                 Implementation::findAndMemo($event->data['implementation_key'] ?? Implementation::KEY_GENERAL),
-                $event->data['fund_id'] ?? null,
+                $event->event_log_relation?->fund_id ?? null,
                 'database',
             );
         } catch (Throwable $e) {

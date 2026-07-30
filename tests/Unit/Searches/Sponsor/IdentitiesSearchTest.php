@@ -2,15 +2,23 @@
 
 namespace Tests\Unit\Searches\Sponsor;
 
+use App\Models\Fund;
+use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Organization;
 use App\Models\ProfileRelation;
+use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Searches\Sponsor\IdentitiesSearch;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
+use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestHousehold;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestReimbursements;
 use Tests\Unit\Searches\SearchTestCase;
 use Throwable;
 
@@ -19,7 +27,9 @@ class IdentitiesSearchTest extends SearchTestCase
     use DoesTesting;
     use MakesTestFunds;
     use MakesTestHousehold;
+    use MakesTestFundRequests;
     use MakesTestOrganizations;
+    use MakesTestReimbursements;
 
     /**
      * @return void
@@ -34,6 +44,7 @@ class IdentitiesSearchTest extends SearchTestCase
     }
 
     /**
+     * @throws Throwable
      * @return void
      */
     public function testFiltersByQueryBaseFields(): void
@@ -56,9 +67,32 @@ class IdentitiesSearchTest extends SearchTestCase
         $profileBankAccountIbanPart1 = '33333';
         $profileBankAccountIbanPart2 = '44444';
 
+        $fundRequestBankAccountNamePart1 = 'fund_request_bank_account_name_one';
+        $fundRequestBankAccountNamePart2 = 'fund_request_bank_account_name_two';
+
+        $fundRequestBankAccountIbanPart1 = '12345';
+        $fundRequestBankAccountIbanPart2 = '54321';
+
+        $reimbursementBankAccountNamePart1 = 'reimbursement_bank_account_name_one';
+        $reimbursementBankAccountNamePart2 = 'reimbursement_bank_account_name_two';
+
+        $reimbursementBankAccountIbanPart1 = '12333';
+        $reimbursementBankAccountIbanPart2 = '54333';
+
+        $payoutBankAccountNamePart1 = 'payout_bank_account_name_one';
+        $payoutBankAccountNamePart2 = 'payout_bank_account_name_two';
+
+        $payoutBankAccountIbanPart1 = '12444';
+        $payoutBankAccountIbanPart2 = '54444';
+
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $employee = $organization->employees()->first();
-        $fund = $this->makeTestFund($organization);
+
+        $fund = $this->makeTestFund($organization, fundConfigsData: [
+            'iban_record_key' => 'iban',
+            'iban_name_record_key' => 'iban_name',
+            'allow_reimbursements' => true,
+        ]);
 
         $identity1 = $this->makeIdentity($this->makeUniqueEmail($emailPart1), "{$bsnPart1}555");
         $identity1->addEmail($this->makeUniqueEmail($emailVerifiedPart1), true);
@@ -125,27 +159,238 @@ class IdentitiesSearchTest extends SearchTestCase
             'organization_id' => $organization->id,
         ], [$identity2->id]);
 
-        // assert by bank account name
-        $this->assertSearchIds([
-            'q' => $profileBankAccountNamePart1,
-            'organization_id' => $organization->id,
-        ], [$identity1->id]);
+        $this->assertBankAccountSearch($organization, [[
+            'iban' => $profileBankAccountIbanPart1,
+            'iban_name' => $profileBankAccountNamePart1,
+            'identity' => $identity1,
+        ], [
+            'iban' => $profileBankAccountIbanPart2,
+            'iban_name' => $profileBankAccountNamePart2,
+            'identity' => $identity2,
+        ]]);
 
-        $this->assertSearchIds([
-            'q' => $profileBankAccountNamePart2,
-            'organization_id' => $organization->id,
-        ], [$identity2->id]);
+        // prepare fund requests as bank accounts
+        $this->makeTestFundRequestAsBankAccount(
+            $identity1,
+            $fund,
+            "{$fundRequestBankAccountIbanPart1}99999",
+            "$fundRequestBankAccountNamePart1 Bank Account name"
+        );
 
-        // assert by bank account iban
-        $this->assertSearchIds([
-            'q' => $profileBankAccountIbanPart1,
-            'organization_id' => $organization->id,
-        ], [$identity1->id]);
+        $this->makeTestFundRequestAsBankAccount(
+            $identity2,
+            $fund,
+            "{$fundRequestBankAccountIbanPart2}99999",
+            "$fundRequestBankAccountNamePart2 Bank Account name"
+        );
 
-        $this->assertSearchIds([
-            'q' => $profileBankAccountIbanPart2,
-            'organization_id' => $organization->id,
-        ], [$identity2->id]);
+        $this->assertBankAccountSearch($organization, [[
+            'iban' => $fundRequestBankAccountIbanPart1,
+            'iban_name' => $fundRequestBankAccountNamePart1,
+            'identity' => $identity1,
+        ], [
+            'iban' => $fundRequestBankAccountIbanPart2,
+            'iban_name' => $fundRequestBankAccountNamePart2,
+            'identity' => $identity2,
+        ]]);
+
+        // prepare reimbursements and assert bank account search
+        $voucher1 = $fund->makeVoucher($identity1);
+        $voucher2 = $fund->makeVoucher($identity2);
+
+        $reimbursement1 = $this->makeReimbursement($voucher1, true);
+        $reimbursement2 = $this->makeReimbursement($voucher2, true);
+
+        $reimbursement1->update([
+            'iban' => "{$reimbursementBankAccountIbanPart1}99999",
+            'iban_name' => "$reimbursementBankAccountNamePart1 Bank Account name",
+        ]);
+
+        $reimbursement2->update([
+            'iban' => "{$reimbursementBankAccountIbanPart2}99999",
+            'iban_name' => "$reimbursementBankAccountNamePart2 Bank Account name",
+        ]);
+
+        $reimbursement1->assign($employee)->approve();
+        $reimbursement2->assign($employee)->approve();
+
+        $this->assertBankAccountSearch($organization, [[
+            'iban' => $reimbursementBankAccountIbanPart1,
+            'iban_name' => $reimbursementBankAccountNamePart1,
+            'identity' => $identity1,
+        ], [
+            'iban' => $reimbursementBankAccountIbanPart2,
+            'iban_name' => $reimbursementBankAccountNamePart2,
+            'identity' => $identity2,
+        ]]);
+
+        // prepare payout transaction and assert bank account search
+        $transactionArr = [
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'amount' => 10,
+        ];
+
+        $payoutVoucher1 = $fund->makeVoucher($identity1, ['voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT]);
+        $payoutVoucher2 = $fund->makeVoucher($identity2, ['voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT]);
+
+        $payoutVoucher1->makeTransaction([
+            ...$transactionArr,
+            'target_iban' => "{$payoutBankAccountIbanPart1}99999",
+            'target_name' => "$payoutBankAccountNamePart1 Bank Account name",
+        ]);
+
+        $payoutVoucher2->makeTransaction([
+            ...$transactionArr,
+            'target_iban' => "{$payoutBankAccountIbanPart2}99999",
+            'target_name' => "$payoutBankAccountNamePart2 Bank Account name",
+        ]);
+
+        $this->assertBankAccountSearch($organization, [[
+            'iban' => $payoutBankAccountIbanPart1,
+            'iban_name' => $payoutBankAccountNamePart1,
+            'identity' => $identity1,
+        ], [
+            'iban' => $payoutBankAccountIbanPart2,
+            'iban_name' => $payoutBankAccountNamePart2,
+            'identity' => $identity2,
+        ]]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProfileBankAccountQueryIsScopedToOrganization(): void
+    {
+        $organization1 = $this->makeTestOrganization($this->makeIdentity());
+        $organization2 = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
+
+        $this->makeTestFund($organization1)->makeVoucher($identity);
+        $this->makeTestFund($organization2)->makeVoucher($identity);
+
+        $iban = $this->makeIban();
+        $ibanName = 'profile_bank_account_organization_2';
+
+        $organization2->findOrMakeProfile($identity)->profile_bank_accounts()->create([
+            'iban' => $iban,
+            'name' => $ibanName,
+        ]);
+
+        $this->assertBankAccountSearchIsScopedToOrganization(
+            $organization1,
+            $organization2,
+            $identity,
+            $iban,
+            $ibanName,
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestBankAccountQueryIsScopedToOrganization(): void
+    {
+        $organization1 = $this->makeTestOrganization($this->makeIdentity());
+        $organization2 = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
+
+        $this->makeTestFund($organization1)->makeVoucher($identity);
+
+        $fund = $this->makeTestFund($organization2, fundConfigsData: [
+            'iban_record_key' => 'iban',
+            'iban_name_record_key' => 'iban_name',
+        ]);
+
+        $iban = $this->makeIban();
+        $ibanName = 'fund_request_bank_account_organization_2';
+
+        $fundRequest = $this->makeTestFundRequestAsBankAccount($identity, $fund, $iban, $ibanName);
+
+        $fund->makeVoucher($identity, [
+            'fund_request_id' => $fundRequest->id,
+        ]);
+
+        $this->assertBankAccountSearchIsScopedToOrganization(
+            $organization1,
+            $organization2,
+            $identity,
+            $iban,
+            $ibanName,
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testReimbursementBankAccountQueryIsScopedToOrganization(): void
+    {
+        $organization1 = $this->makeTestOrganization($this->makeIdentity());
+        $organization2 = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
+
+        $this->makeTestFund($organization1)->makeVoucher($identity);
+
+        $fund = $this->makeTestFund($organization2, fundConfigsData: [
+            'allow_reimbursements' => true,
+        ]);
+
+        $reimbursement = $this->makeReimbursement($fund->makeVoucher($identity), true);
+        $iban = $this->makeIban();
+        $ibanName = 'reimbursement_bank_account_organization_2';
+
+        $reimbursement->update([
+            'iban' => $iban,
+            'iban_name' => $ibanName,
+        ]);
+
+        $reimbursement->assign($organization2->employees()->first())->approve();
+
+        $this->assertBankAccountSearchIsScopedToOrganization(
+            $organization1,
+            $organization2,
+            $identity,
+            $iban,
+            $ibanName,
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPayoutBankAccountQueryIsScopedToOrganization(): void
+    {
+        $organization1 = $this->makeTestOrganization($this->makeIdentity());
+        $organization2 = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
+
+        $this->makeTestFund($organization1)->makeVoucher($identity);
+
+        $voucher = $this->makeTestFund($organization2)->makeVoucher($identity, [
+            'voucher_type' => Voucher::VOUCHER_TYPE_PAYOUT,
+        ]);
+        $iban = $this->makeIban();
+        $ibanName = 'payout_bank_account_organization_2';
+
+        $voucher->makeTransaction([
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'target' => VoucherTransaction::TARGET_PAYOUT,
+            'target_iban' => $iban,
+            'target_name' => $ibanName,
+            'amount' => 10,
+        ]);
+
+        $this->assertBankAccountSearchIsScopedToOrganization(
+            $organization1,
+            $organization2,
+            $identity,
+            $iban,
+            $ibanName,
+        );
     }
 
     /**
@@ -855,6 +1100,97 @@ class IdentitiesSearchTest extends SearchTestCase
             'order_by' => 'type',
             'order_dir' => 'desc',
         ], [$identityB->id, $identityA->id]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $assertData
+     * @return void
+     */
+    private function assertBankAccountSearch(Organization $organization, array $assertData): void
+    {
+        foreach ($assertData as $data) {
+            // assert by bank account name
+            $this->assertSearchIds([
+                'q' => $data['iban_name'],
+                'organization_id' => $organization->id,
+            ], [$data['identity']->id]);
+
+            // assert by bank account iban
+            $this->assertSearchIds([
+                'q' => $data['iban'],
+                'organization_id' => $organization->id,
+            ], [$data['identity']->id]);
+        }
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Organization $bankAccountOrganization
+     * @param Identity $identity
+     * @param string $iban
+     * @param string $ibanName
+     * @return void
+     */
+    private function assertBankAccountSearchIsScopedToOrganization(
+        Organization $organization,
+        Organization $bankAccountOrganization,
+        Identity $identity,
+        string $iban,
+        string $ibanName,
+    ): void {
+        $this->assertSearchIds([
+            'organization_id' => $organization->id,
+        ], [$identity->id]);
+
+        $this->assertBankAccountSearch($bankAccountOrganization, [[
+            'iban' => $iban,
+            'iban_name' => $ibanName,
+            'identity' => $identity,
+        ]]);
+
+        $this->assertSearchIds([
+            'q' => $ibanName,
+            'organization_id' => $organization->id,
+        ], []);
+
+        $this->assertSearchIds([
+            'q' => $iban,
+            'organization_id' => $organization->id,
+        ], []);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param string $iban
+     * @param string $ibanName
+     * @return FundRequest
+     */
+    private function makeTestFundRequestAsBankAccount(
+        Identity $identity,
+        Fund $fund,
+        string $iban,
+        string $ibanName
+    ): FundRequest {
+        $employee = $fund->organization->employees()->first();
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $identity);
+
+        $fundRequest->records()->create([
+            'value' => $iban,
+            'record_type_key' => 'iban',
+            'source' => FundRequestRecord::SOURCE_FORM,
+        ]);
+
+        $fundRequest->records()->create([
+            'value' => $ibanName,
+            'record_type_key' => 'iban_name',
+            'source' => FundRequestRecord::SOURCE_FORM,
+        ]);
+
+        $fundRequest->assignEmployee($employee)->approve();
+
+        return $fundRequest;
     }
 
     /**

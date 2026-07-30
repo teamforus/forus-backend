@@ -11,7 +11,7 @@ use App\Models\ProfileBankAccount;
 use App\Models\ProfileRecord;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Scopes\Builders\VoucherQuery;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -107,17 +107,12 @@ class SponsorIdentityResource extends BaseJsonResource
         ?Organization $organization,
         ?Profile $profile,
     ): array {
-        $fundRequests = $organization ? FundRequest::query()
-            ->with('records')
-            ->where('identity_id', $identity->id)
-            ->where('state', FundRequest::STATE_APPROVED)
-            ->whereRelation('fund', 'organization_id', $organization->id)
-            ->whereHas('fund.vouchers', function (Builder $builder) use ($identity) {
-                $builder->where('identity_id', $identity->id);
-                VoucherQuery::whereNotExpiredAndActive($builder);
-            })
-            ->orderByDesc('created_at')
-            ->get() : collect();
+        $fundRequests = $organization ? FundRequestQuery::whereEligibleAsSponsorProfileBankAccountSource(
+            FundRequest::query()
+                ->with(['records' => fn (Builder|Relation $builder) => $builder->orderBy('id')])
+                ->where('identity_id', $identity->id),
+            $organization->id,
+        )->orderByDesc('created_at')->get() : collect();
 
         $reimbursements = $identity->reimbursements->filter(function ($item) use ($organization) {
             return $item?->voucher?->fund?->organization_id === $organization?->id;
@@ -169,9 +164,7 @@ class SponsorIdentityResource extends BaseJsonResource
                     'updated_at' => $transaction->updated_at,
                 ]),
             ]),
-            ...$fundRequests->filter(fn (FundRequest $fundRequest) => (
-                $fundRequest->getIban(false) && $fundRequest->getIbanName(false)
-            ))->map(fn (FundRequest $fundRequest) => [
+            ...$fundRequests->map(fn (FundRequest $fundRequest) => [
                 'id' => null,
                 'iban' => $fundRequest->getIban(false),
                 'name' => $fundRequest->getIbanName(false),

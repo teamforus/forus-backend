@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 /**
  * App\Models\SystemNotification.
@@ -326,7 +328,12 @@ class SystemNotification extends Model
     {
         return EmailLog::query()
             ->where('system_notification_key', $this->key)
-            ->whereHas('event_log', fn (Builder $builder) => $builder->whereIn('data->fund_id', $fundIds))
+            ->whereExists(function (QueryBuilder $builder) use ($fundIds) {
+                $builder->select(DB::raw(1))
+                    ->from('event_log_relations as elr')
+                    ->whereColumn('elr.event_log_id', 'email_logs.event_log_id')
+                    ->whereIn('elr.fund_id', $fundIds);
+            })
             ->latest('created_at')
             ->first()
             ?->created_at;

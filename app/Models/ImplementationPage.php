@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasFaq;
+use App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlock;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
 use App\Traits\HasMarkdownFields;
@@ -32,6 +33,10 @@ use Illuminate\Support\Arr;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read int|null $blocks_count
+ * @property-read Collection|\App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlock[] $cms_blocks
+ * @property-read int|null $cms_blocks_count
+ * @property-read Collection|\App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlock[] $cms_blocks_public
+ * @property-read int|null $cms_blocks_public_count
  * @property-read Collection|\App\Models\Faq[] $faq
  * @property-read int|null $faq_count
  * @property-read string $description_html
@@ -107,84 +112,98 @@ class ImplementationPage extends Model
         'key' => self::TYPE_HOME,
         'type' => 'static',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PRODUCTS,
         'type' => 'static',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PROVIDERS,
         'type' => 'static',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FUNDS,
         'type' => 'static',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_PROVIDER,
         'type' => 'static',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => false,
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_EXPLANATION,
         'type' => 'extra',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => true,
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_PRIVACY,
         'type' => 'extra',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => false,
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_ACCESSIBILITY,
         'type' => 'extra',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => false,
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_TERMS_AND_CONDITIONS,
         'type' => 'extra',
         'blocks' => true,
+        'generic_cms_blocks' => true,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
         'type' => 'element',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FOOTER_OPENING_TIMES,
         'type' => 'element',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_FOOTER_APP_INFO,
         'type' => 'element',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => true,
     ], [
         'key' => self::TYPE_BLOCK_HOME_PRODUCTS,
         'type' => 'block',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ], [
         'key' => self::TYPE_BLOCK_HOME_PRODUCT_CATEGORIES,
         'type' => 'block',
         'blocks' => false,
+        'generic_cms_blocks' => false,
         'faq' => false,
         'description_position_configurable' => false,
     ]];
@@ -218,6 +237,24 @@ class ImplementationPage extends Model
     public function blocks(): HasMany
     {
         return $this->hasMany(ImplementationBlock::class)->orderBy('order');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function cms_blocks(): HasMany
+    {
+        return $this->hasMany(ImplementationCmsBlock::class)->orderBy('order');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function cms_blocks_public(): HasMany
+    {
+        return $this->hasMany(ImplementationCmsBlock::class)
+            ->where('state', ImplementationCmsBlock::STATE_PUBLIC)
+            ->orderBy('order');
     }
 
     /**

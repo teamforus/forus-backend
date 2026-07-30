@@ -138,4 +138,38 @@ class AuthenticationTest extends DuskTestCase
             $this->logout($browser);
         });
     }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testDashboardEmailAuthWithoutTargetRedirectsIdentityWithoutOrganizationsToSignUp(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $implementation = Implementation::where('key', 'nijmegen')->first();
+        $proxy = $identity->makeAuthorizationEmailProxy();
+
+        $this->assertNotNull($implementation);
+
+        $authLink = url(sprintf(
+            '/api/v1/identity/proxy/email/redirect/%s?%s',
+            $proxy->exchange_token,
+            http_build_query([
+                'is_mobile' => 0,
+                'client_type' => Implementation::FRONTEND_SPONSOR_DASHBOARD,
+                'implementation_key' => $implementation->key,
+            ])
+        ));
+
+        $this->browse(function (Browser $browser) use ($authLink, $implementation) {
+            $browser->visit($implementation->urlSponsorDashboard());
+            $browser->script('localStorage.clear();');
+
+            $browser->visit($authLink);
+            $browser->waitUsing(10, 100, function () use ($browser) {
+                return str_contains($browser->driver->getCurrentURL(), '#/aanmelden');
+            });
+            $browser->waitFor('@signUpSponsorPageTitle');
+        });
+    }
 }

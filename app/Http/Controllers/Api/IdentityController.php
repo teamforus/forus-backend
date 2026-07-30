@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
 use App\Http\Requests\Api\Identity\IdentityDestroyRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
-use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Requests\BaseFormRequest;
@@ -25,6 +24,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class IdentityController extends Controller
 {
@@ -43,38 +43,19 @@ class IdentityController extends Controller
     }
 
     /**
-     * Create new identity (registration).
+     * Start email authentication.
      *
      * @param IdentityStoreRequest $request
-     * @return IdentityResource
+     * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function store(IdentityStoreRequest $request): IdentityResource
+    public function store(IdentityStoreRequest $request): JsonResponse
     {
-        // make identity and exchange_token
-        $identity = Identity::build(email: $request->input('email'));
-        $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
-        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
-
-        $queryParams = sprintf('?%s', http_build_query(array_merge($request->only('target'), [
-            'client_type' => $request->client_type(),
-            'implementation_key' => $request->implementation_key(),
-            'is_mobile' => $isMobile ? 1 : 0,
-        ])));
-
-        // send confirmation email
-        $request->notification_repo()->sendEmailConfirmationLink(
-            $identity->email,
-            $request->client_type(),
-            Implementation::emailFrom(),
-            url("/api/v1/identity/proxy/confirmation/redirect/$exchangeToken$queryParams")
-        );
-
-        return IdentityResource::create($identity);
+        return $this->sendEmailAuthStart($request);
     }
 
     /**
-     * Validate email for registration, format and if it's already in the system.
+     * Validate email format without exposing if it's already in the system.
      *
      * @param IdentityStoreValidateEmailRequest $request
      * @return JsonResponse
@@ -83,12 +64,11 @@ class IdentityController extends Controller
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request): JsonResponse
     {
         $email = (string) $request->input('email', '');
-        $used = !Identity::isEmailAvailable($email);
 
         return new JsonResponse([
             'email' => [
-                'used' => $used,
-                'unique' => !$used,
+                'used' => false,
+                'unique' => true,
                 'valid' => Validator::make(compact('email'), [
                     'email' => [
                         'required',
@@ -116,7 +96,6 @@ class IdentityController extends Controller
         $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
 
-        $target = $request->input('target', false);
         $clientType = $request->input('client_type', '');
         $implementationKey = $request->input('implementation_key');
 
@@ -130,19 +109,26 @@ class IdentityController extends Controller
             abort(404, 'Invalid implementation key.');
         }
 
+        $isWebsite = in_array($clientType, (array) Config::get('forus.clients.websites', []), true);
+
         $isWebFrontend = in_array($clientType, array_merge(
             (array) config('forus.clients.webshop', []),
             (array) config('forus.clients.dashboards', [])
         ), true);
 
-        if ($isWebFrontend) {
-            $webShopUrl = Implementation::byKey($implementationKey);
-            $webShopUrl = $webShopUrl['url_' . $clientType];
+        if ($isWebFrontend || $isWebsite) {
+            $frontendUrl = $isWebsite
+                ? Config::get('forus.front_ends.website-default')
+                : Implementation::byKey($implementationKey)['url_' . $clientType];
+
+            $query = http_build_query(array_filter($request->only('target'), static function ($value) {
+                return $value !== null && $value !== '';
+            }));
 
             return redirect(sprintf(
-                $webShopUrl . 'confirmation/email/%s?%s',
+                $frontendUrl . 'confirmation/email/%s%s',
                 $exchangeToken,
-                http_build_query(compact('target'))
+                $query ? "?$query" : ''
             ));
         }
 
@@ -179,40 +165,16 @@ class IdentityController extends Controller
     }
 
     /**
-     * Make new email authorization request.
+     * Compatibility alias for email authentication start.
      *
-     * @param IdentityAuthorizationEmailTokenRequest $request
+     * @param IdentityStoreRequest $request
      * @return JsonResponse
      * @noinspection PhpUnused
      */
     public function proxyAuthorizationEmailToken(
-        IdentityAuthorizationEmailTokenRequest $request
+        IdentityStoreRequest $request
     ): JsonResponse {
-        $email = $request->input('email');
-        $source = sprintf('%s_%s', $request->implementation_key(), $request->client_type());
-        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
-        $proxy = Identity::findByEmail($email)->makeAuthorizationEmailProxy();
-
-        $redirect_link = url(sprintf(
-            '/api/v1/identity/proxy/email/redirect/%s?%s',
-            $proxy->exchange_token,
-            http_build_query(array_merge([
-                'target' => $request->input('target', ''),
-                'is_mobile' => $isMobile ? 1 : 0,
-            ], $isMobile ? [] : [
-                'client_type' => $request->client_type(),
-                'implementation_key' => $request->implementation_key(),
-            ]))
-        ));
-
-        $request->notification_repo()->loginViaEmail(
-            $email,
-            Implementation::emailFrom(),
-            $redirect_link,
-            $source
-        );
-
-        return new JsonResponse(null, 201);
+        return $this->sendEmailAuthStart($request);
     }
 
     /**
@@ -259,7 +221,7 @@ class IdentityController extends Controller
                 'token' => $emailToken,
                 'target' => $request->input('target'),
             ], static function ($var) {
-                return !empty($var);
+                return $var !== null && $var !== '';
             }))
         );
 
@@ -472,5 +434,85 @@ class IdentityController extends Controller
         }
 
         return new JsonResponse();
+    }
+
+    /**
+     * @param IdentityStoreRequest $request
+     * @return JsonResponse
+     */
+    protected function sendEmailAuthStart(IdentityStoreRequest $request): JsonResponse
+    {
+        $email = (string) $request->input('email');
+
+        if ($identity = Identity::findByEmail($email)) {
+            $this->sendEmailRestoreLink($request, $identity, $email);
+        } elseif (Identity::isEmailAvailable($email)) {
+            $this->sendEmailConfirmationLink($request, Identity::build(email: $email));
+        } else {
+            throw ValidationException::withMessages([
+                'email' => [trans('validation.unique', ['attribute' => 'email'])],
+            ]);
+        }
+
+        return new JsonResponse((object) [], 201);
+    }
+
+    /**
+     * @param IdentityStoreRequest $request
+     * @param Identity $identity
+     * @return void
+     */
+    protected function sendEmailConfirmationLink(IdentityStoreRequest $request, Identity $identity): void
+    {
+        $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
+        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
+
+        $queryParams = sprintf('?%s', http_build_query(array_merge($request->only('target'), [
+            'client_type' => $request->client_type(),
+            'implementation_key' => $request->implementation_key(),
+            'is_mobile' => $isMobile ? 1 : 0,
+        ])));
+
+        $request->notification_repo()->sendEmailConfirmationLink(
+            $identity->email,
+            $request->client_type(),
+            Implementation::emailFrom(),
+            url("/api/v1/identity/proxy/confirmation/redirect/$exchangeToken$queryParams")
+        );
+    }
+
+    /**
+     * @param IdentityStoreRequest $request
+     * @param Identity $identity
+     * @param string $email
+     * @return void
+     */
+    protected function sendEmailRestoreLink(IdentityStoreRequest $request, Identity $identity, string $email): void
+    {
+        $source = sprintf('%s_%s', $request->implementation_key(), $request->client_type());
+        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
+        $proxy = $identity->makeAuthorizationEmailProxy();
+
+        $queryParams = http_build_query([
+            ...array_filter($request->only('target'), fn ($value) => $value !== null && $value !== ''),
+            ...$isMobile ? [] : [
+                'client_type' => $request->client_type(),
+                'implementation_key' => $request->implementation_key(),
+            ],
+            'is_mobile' => $isMobile ? 1 : 0,
+        ]);
+
+        $redirect_link = url(sprintf(
+            '/api/v1/identity/proxy/email/redirect/%s?%s',
+            $proxy->exchange_token,
+            $queryParams
+        ));
+
+        $request->notification_repo()->loginViaEmail(
+            $email,
+            Implementation::emailFrom(),
+            $redirect_link,
+            $source
+        );
     }
 }
