@@ -37,6 +37,7 @@ trait MakesAssertStoreUploadedCsvFile
         $this->assertNotNull($file);
         $fileContent = json_decode(resolve('file')->getContent($file->path), true);
 
+        $this->assertSame($this->makeBatchRequestCsvContent($expected), Arr::get($fileContent, 'content'));
         $this->assertSame($expected, Arr::get($fileContent, 'data'));
     }
 }

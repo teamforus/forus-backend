@@ -60,7 +60,18 @@ class Employee extends Model
     public const string EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
     public const string EVENT_UPLOADED_RESERVATIONS = 'uploaded_reservations';
     public const string EVENT_UPLOADED_PREVALIDATIONS = 'uploaded_prevalidations';
-    public const string EVENT_UPLOADED_PREVALIDATION_REQUESTS = 'uploaded_prevalidation_requestss';
+    public const string EVENT_UPLOADED_PREVALIDATION_REQUESTS = 'uploaded_prevalidation_requests';
+
+    public const string CSV_UPLOAD_STORAGE_PREFIX = '/uploaded_csv_details';
+
+    public const array CSV_UPLOAD_FILE_TYPES = [
+        self::EVENT_UPLOADED_PAYOUTS,
+        self::EVENT_UPLOADED_VOUCHERS,
+        self::EVENT_UPLOADED_TRANSACTIONS,
+        self::EVENT_UPLOADED_RESERVATIONS,
+        self::EVENT_UPLOADED_PREVALIDATIONS,
+        self::EVENT_UPLOADED_PREVALIDATION_REQUESTS,
+    ];
 
     public const string EVENT_FUND_REQUEST_ASSIGNED = 'fund_request_assigned';
 
@@ -163,7 +174,7 @@ class Employee extends Model
         $uploadedFile = new UploadedFile($filePath, $fileName, 'application/json');
 
         $fileModel = resolve('file')->uploadSingle($uploadedFile, $type, [
-            'storage_prefix' => '/uploaded_csv_details',
+            'storage_prefix' => self::CSV_UPLOAD_STORAGE_PREFIX,
         ]);
 
         fclose($file);

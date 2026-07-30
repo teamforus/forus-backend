@@ -12,8 +12,10 @@ use App\Models\PrevalidationRequestMissedRecord;
 use App\Models\PrevalidationRequestRecord;
 use App\Models\RecordType;
 use App\Models\Role;
+use App\Services\FileService\Models\File;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
@@ -795,7 +797,10 @@ class PrevalidationRequestCsvUploadTest extends TestCase
 
         $employee = $organization->findEmployee($organization->identity);
         $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PREVALIDATION_REQUESTS, 2);
+        $file = File::findOrFail(Arr::get($log->data, 'uploaded_file_meta.file_id'));
 
+        $this->assertSame('uploaded_prevalidation_requests', $log->event);
+        $this->assertSame('uploaded_prevalidation_requests', $file->type);
         $this->assertLoggedUploadedFileContent($log, $requestData['data']);
     }
 

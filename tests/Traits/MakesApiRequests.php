@@ -1586,13 +1586,13 @@ trait MakesApiRequests
 
     /**
      * @param array $data
-     * @return array[]
+     * @return string
      */
-    private function appendFileDataToBatchRequest(array $data): array
+    protected function makeBatchRequestCsvContent(array $data): string
     {
         $fp = fopen('php://temp', 'r+');
 
-        fputcsv($fp, array_keys($data));
+        fputcsv($fp, array_keys($data[0] ?? []));
 
         foreach ($data as $row) {
             fputcsv($fp, $row);
@@ -1602,10 +1602,19 @@ trait MakesApiRequests
         $csvContent = stream_get_contents($fp);
         fclose($fp);
 
+        return $csvContent;
+    }
+
+    /**
+     * @param array $data
+     * @return array[]
+     */
+    private function appendFileDataToBatchRequest(array $data): array
+    {
         return [
             'file' => [
                 'name' => 'file.csv',
-                'content' => $csvContent,
+                'content' => $this->makeBatchRequestCsvContent($data),
                 'total' => count($data),
                 'chunk' => 1,
                 'chunks' => 1,
