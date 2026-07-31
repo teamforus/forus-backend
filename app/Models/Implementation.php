@@ -16,6 +16,7 @@ use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Repositories\DigIdCgiRepo;
 use App\Services\DigIdService\Repositories\DigIdSamlRepo;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
+use App\Services\FileService\FileUploadConfigService;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
@@ -866,6 +867,7 @@ class Implementation extends Model
         return [
             ...$config,
             'organization_id' => $implementation->organization_id,
+            'files' => self::getPlatformFileConfig(),
             'media' => self::getPlatformMediaConfig(),
             'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
@@ -1145,6 +1147,23 @@ class Implementation extends Model
     /**
      * @return array
      */
+    private static function getPlatformFileConfig(): array
+    {
+        $config = [];
+        $fileUploadConfigService = resolve(FileUploadConfigService::class);
+
+        foreach ($fileUploadConfigService->getAllowedTypes() as $type) {
+            $config[$type] = [
+                'source_extensions' => $fileUploadConfigService->getAllowedExtensions($type),
+            ];
+        }
+
+        return $config;
+    }
+
+    /**
+     * @return array
+     */
     private static function getPlatformMediaConfig(): array
     {
         return array_map(function (MediaImageConfig $config) {
@@ -1160,6 +1179,7 @@ class Implementation extends Model
 
             return [
                 'aspect_ratio' => $config->getPreviewAspectRatio(),
+                'source_extensions' => $config->getSourceExtensions(),
                 'size' => $sizes,
             ];
         }, MediaService::getMediaConfigs());
