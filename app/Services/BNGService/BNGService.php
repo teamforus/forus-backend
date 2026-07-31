@@ -268,7 +268,8 @@ class BNGService
     public function makeAccountConsentRequest(string $redirectToken, array $params = []): AccountConsentValue
     {
         $url = $this->getEndpoint('consent');
-        $res = $this->requestJson('post', $url, array_merge_recursive([
+
+        $res = $this->requestJson('post', $url, array_replace_recursive([
             'access' => [
                 'accounts' => null,
                 'balances' => null,

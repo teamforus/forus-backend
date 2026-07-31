@@ -248,9 +248,10 @@ class BankConnection extends Model
     }
 
     /**
+     * @param string|null $iban
      * @return ?string
      */
-    public function makeOauthUrl(): ?string
+    public function makeOauthUrl(?string $iban = null): ?string
     {
         $auth_url = null;
 
@@ -259,7 +260,7 @@ class BankConnection extends Model
         }
 
         if ($this->bank->isBNG()) {
-            $auth_url = $this->makeOauthUrlBNG();
+            $auth_url = $this->makeOauthUrlBNG($iban);
         }
 
         return $auth_url;
@@ -579,15 +580,27 @@ class BankConnection extends Model
     }
 
     /**
+     * @param string|null $iban
      * @return ?string
      */
-    protected function makeOauthUrlBNG(): ?string
+    protected function makeOauthUrlBNG(?string $iban = null): ?string
     {
         /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
 
+        $params = $iban ? [
+            'access' => [
+                'accounts' => [compact('iban')],
+                'balances' => null,
+                'transactions' => [compact('iban')],
+                'availableAccounts' => null,
+                'availableAccountsWithBalances' => null,
+                'allPsd2' => null,
+            ],
+        ] : [];
+
         try {
-            $response = $bngService->makeAccountConsentRequest($this->redirect_token);
+            $response = $bngService->makeAccountConsentRequest($this->redirect_token, $params);
             $authData = $response->getAuthData();
             $consentId = $response->getConsentId();
 
