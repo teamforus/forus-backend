@@ -19,6 +19,7 @@ trait HasFundRequestFormActions
      * @param Fund $fund
      * @param Identity $requester
      * @param bool $assertForm
+     * @param string|null $bsn
      * @throws NoSuchElementException
      * @throws TimeoutException
      * @throws ElementClickInterceptedException
@@ -30,6 +31,7 @@ trait HasFundRequestFormActions
         Fund $fund,
         Identity $requester,
         bool $assertForm = true,
+        ?string $bsn = null,
     ): void {
         $browser->visit($implementation->urlWebshop());
         $this->loginIdentity($browser, $requester);
@@ -38,6 +40,10 @@ trait HasFundRequestFormActions
         $browser->visit($implementation->urlWebshop("fondsen/$fund->id"));
         $browser->waitFor('@fundTitle');
         $browser->assertSeeIn('@fundTitle', $fund->name);
+
+        if ($bsn !== null) {
+            $requester->setBsnRecord($bsn);
+        }
 
         $browser->waitFor('@requestButton')->click('@requestButton');
         $browser->waitFor('@digidOption')->click('@digidOption');

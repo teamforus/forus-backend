@@ -809,7 +809,7 @@
     "prevalidation_requests.reasons.not_filled_required_criteria": "Not meeting the required criteria",
     "prevalidation_requests.reasons.not_found": "Not found",
     "prevalidation_requests.reasons.taken_by_partner": "Tasks by partner",
-    "prices.discount": "Discount::amount",
+    "prices.discount": "Discount: :amount",
     "prices.discount_fixed": "Discount €",
     "prices.discount_percentage": "Discount %",
     "prices.free": "Free",

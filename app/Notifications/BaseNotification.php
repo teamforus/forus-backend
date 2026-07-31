@@ -388,7 +388,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function getFundId(): ?int
     {
-        return $this->eventLog?->data['fund_id'] ?? null;
+        return $this->eventLog?->event_log_relation?->fund_id;
     }
 
     /**
