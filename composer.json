@@ -33,7 +33,7 @@
         "kalnoy/nestedset": "6.0.6",
         "kreait/laravel-firebase": "^6",
         "laravel-notification-channels/apn": "^5.4",
-        "laravel-notification-channels/fcm": "^5.0",
+        "laravel-notification-channels/fcm": "^6.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^3.0",
         "laravel/ui": "^4.0",
