@@ -50,6 +50,8 @@ trait InteractsWithImplementationCmsBlocks
                 'item_type_key' => InfoCmsBlockConfig::ITEM_TYPE_POST,
                 'values' => [
                     'label' => 'First label',
+                    'label_background_color' => '#315EFD',
+                    'label_text_color' => '#ffffff',
                     'title' => 'First post',
                     'description' => 'First description',
                     'button_enabled' => true,
