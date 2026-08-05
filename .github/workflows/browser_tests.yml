@@ -45,7 +45,7 @@ jobs:
         run: cp -n .env.docker.dusk .env && cat .env
 
       - name: Run docker compose up
-        run: docker compose --profile testing up -d
+        run: docker compose --profile testing up -d --wait --wait-timeout 120
 
       - name: Set ownership of files due to volume on Github agent
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
