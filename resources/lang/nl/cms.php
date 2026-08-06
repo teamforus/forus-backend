@@ -63,6 +63,14 @@ return [
                             'hint' => 'Max. 30 tekens',
                             'placeholder' => 'Label...',
                         ],
+                        'label_background_color' => [
+                            'name' => 'Achtergrondkleur van label',
+                            'placeholder' => '#ffffff',
+                        ],
+                        'label_text_color' => [
+                            'name' => 'Tekstkleur van label',
+                            'placeholder' => '#4E4D40',
+                        ],
                         'title' => [
                             'name' => 'Titel',
                             'hint' => 'Max. 100 tekens',
