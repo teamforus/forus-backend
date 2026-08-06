@@ -33,7 +33,7 @@ jobs:
         run: cp -n .env.docker.dusk .env
 
       - name: Run docker compose up
-        run: docker compose up -d
+        run: docker compose up -d --wait --wait-timeout 120
 
       - name: Set correct ownership of files in docker
         run: docker exec -u 0 forus-backend-app chown -R forus:forus /var/www/
