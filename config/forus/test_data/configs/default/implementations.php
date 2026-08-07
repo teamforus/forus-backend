@@ -19,6 +19,10 @@ return [
             'languages' => [
                 'en', 'de', 'ru', 'uk', 'ro', 'ar',
             ],
+            'openid_enabled' => true,
+        ],
+        'openid_flow_keys' => [
+            'nl_wallet',
         ],
     ],
     'Stadjerspas' => [

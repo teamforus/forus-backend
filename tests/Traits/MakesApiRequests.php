@@ -11,6 +11,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Note;
 use App\Models\Organization;
@@ -24,6 +25,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Services\FileService\Models\File;
+use App\Services\OpenIdService\Models\OpenIdFlow;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -88,6 +90,58 @@ trait MakesApiRequests
             ),
             $data,
             $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateImplementationOpenIdRequest(
+        Implementation $implementation,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            sprintf(
+                '/api/v1/platform/organizations/%s/implementations/%s/openid',
+                $implementation->organization_id,
+                $implementation->id,
+            ),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @param IdentityProxy|Identity|bool $authProxy
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiStartOpenIdAuthRequest(
+        Implementation $implementation,
+        array $data = [],
+        IdentityProxy|Identity|bool $authProxy = false,
+        array $headers = [],
+    ): TestResponse {
+        /** @var OpenIdFlow $flow */
+        $flow = $implementation->availableOpenIdFlows()->first();
+
+        return $this->postJson(
+            '/api/v1/platform/openid/auth',
+            [
+                'flow_id' => $flow?->id,
+                ...$data,
+            ],
+            $this->makeApiHeaders($authProxy, [
+                'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+                'Client-Key' => $implementation->key,
+                ...$headers,
+            ]),
         );
     }
 

@@ -15,6 +15,7 @@ return [
         'organization' => [
             'backoffice_available' => true,
             'translations_enabled' => true,
+            'allow_openid' => true,
             'allow_payouts' => true,
             'allow_profiles' => true,
             'allow_pre_checks' => true,
