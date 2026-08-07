@@ -53,9 +53,7 @@ class NotifyAboutReachedNotificationFundAmount extends Command
     public function getLowBalanceFunds(int $notificationInterval = 7): Collection|Arrayable
     {
         $fundsQuery = Fund::where(function (Builder $query) {
-            FundQuery::whereActiveFilter($query);
-            FundQuery::whereIsInternal($query);
-            FundQuery::whereIsConfiguredByForus($query);
+            FundQuery::whereIsInternalConfiguredAndActive($query);
         })->where(static function (Builder $query) use ($notificationInterval) {
             $query->whereNull('notified_at');
             $query->orWhereDate('notified_at', '<=', now()->subDays($notificationInterval)->startOfDay());

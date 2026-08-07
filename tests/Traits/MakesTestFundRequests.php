@@ -117,14 +117,10 @@ trait MakesTestFundRequests
         FundRequest $fundRequest,
         array $headers = [],
     ): void {
-        // assert email log exists
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), $headers),
-        );
-
-        $response->assertSuccessful();
-        $data = $response->json('data');
+        $data = $this
+            ->apiGetOrganizationEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id], $headers)
+            ->assertSuccessful()
+            ->json('data');
 
         self::assertCount(1, $data);
         self::assertCount(1, Arr::where($data, function ($item) {
@@ -178,18 +174,14 @@ trait MakesTestFundRequests
         FundRequest $fundRequest,
         array $headers = [],
     ): void {
-        // assert email log exists
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($organization->identity), [
-                'Accept' => 'application/json',
-                'client_type' => 'webshop',
-                ...$headers,
-            ]),
-        );
-
-        $response->assertSuccessful();
-        $data = $response->json('data');
+        $data = $this
+            ->apiGetOrganizationEmailLogsRequest(
+                $organization,
+                ['fund_request_id' => $fundRequest->id],
+                ['Accept' => 'application/json', 'client_type' => 'webshop', ...$headers],
+            )
+            ->assertSuccessful()
+            ->json('data');
 
         self::assertCount(2, $data);
         self::assertCount(1, Arr::where($data, function ($item) {

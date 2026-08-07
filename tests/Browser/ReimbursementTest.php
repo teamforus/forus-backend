@@ -65,6 +65,57 @@ class ReimbursementTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
+    public function testReimbursementMultipleImageUploadCanBeCropped(): void
+    {
+        Cache::clear();
+
+        $implementation = Implementation::byKey('nijmegen');
+        $this->assertNotNull($implementation);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+        $this->browse(function (Browser $browser) use ($implementation, $identity) {
+            $browser->visit($implementation->urlWebshop());
+            $this->loginIdentity($browser, $identity);
+            $this->assertIdentityAuthenticatedOnWebshop($browser, $identity);
+
+            $this->makeTestVoucher($implementation->funds[0], $identity);
+            $this->goToReimbursementsPage($browser);
+
+            $browser->waitFor('@reimbursementsEmptyBlock');
+            $browser->press('@btnEmptyBlock');
+            $browser->waitFor('@reimbursementEditContent');
+            $browser->waitFor('@reimbursementForm');
+
+            $browser->within('@reimbursementForm', function (Browser $browser) {
+                $browser->within('@fileUploader', function (Browser $browser) {
+                    $this->selectFilesInFileUploader($browser, [
+                        base_path('tests/assets/test.png'),
+                        base_path('tests/assets/test.png'),
+                    ]);
+                });
+            });
+
+            $browser->waitFor('@modalPhotoCropper');
+            $browser->waitUsing(10, 100, fn () => count($browser->elements('.cropper-pagination-item')) === 2);
+            $browser->waitFor('@modalPhotoCropperSubmit', 10);
+            $browser->waitUntilEnabled('@modalPhotoCropperSubmit');
+            $browser->press('@modalPhotoCropperSubmit');
+            $browser->waitUntilMissing('@modalPhotoCropper');
+
+            $browser->waitFor('@reimbursementForm');
+            $browser->within('@reimbursementForm', function (Browser $browser) {
+                $browser->waitUsing(10, 100, fn () => count($browser->elements('.file-item')) === 2);
+            });
+
+            $this->logout($browser);
+        });
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testApprovedReimbursementCreate(): void
     {
         Cache::clear();

@@ -29,6 +29,8 @@ return [
         ]),
         'invalid_fund_request_manual_policy' => "Payout funds don't support apply_manually fund request policy.",
         'configuration_issue' => 'Configuratieprobleem.',
+        'request_identity_has_no_email' => 'Identity has no email.',
+        'record_not_part_fund_criteria' => 'Record not part of fund criteria.',
     ],
     '2fa' => [
         'same_type_exists' => 'Je hebt al een verbinding van hetzelfde type.',
@@ -69,6 +71,10 @@ return [
                 'Wilt u een tweede code activeren, gebruik hiervoor een nieuw e-mailadres.',
             ]),
         ],
+    ],
+    'prevalidation_requests' => [
+        'not_note_author' => 'Alleen de auteur kan notities verwijderen.',
+        'invalid_endpoint' => 'Ongeldige endpoint.',
     ],
     'reimbursements' => [
         'not_draft' => 'Alleen conceptverzoeken kunnen worden geannuleerd.',

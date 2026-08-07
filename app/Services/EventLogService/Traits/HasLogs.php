@@ -4,9 +4,11 @@ namespace App\Services\EventLogService\Traits;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Services\EventLogService\EventLogService;
+use App\Services\EventLogService\Events\EventLogCreated;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Event;
 
 /**
  * @mixin \Eloquent
@@ -42,7 +44,11 @@ trait HasLogs
             'implementation_key' => $request->implementation_key(),
         ], $meta, $raw_meta);
 
-        return $this->logs()->create(compact('data', 'event', 'identity_address'));
+        $log = $this->logs()->create(compact('data', 'event', 'identity_address'));
+
+        Event::dispatch(new EventLogCreated($log));
+
+        return $log;
     }
 
     /**

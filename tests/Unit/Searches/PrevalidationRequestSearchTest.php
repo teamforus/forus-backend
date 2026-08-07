@@ -96,6 +96,9 @@ class PrevalidationRequestSearchTest extends SearchTestCase
 
         $request2->update(['state' => PrevalidationRequest::STATE_SUCCESS]);
         $this->assertSearchIds(['state' => PrevalidationRequest::STATE_SUCCESS], [$request2->id], $organization);
+
+        $request1->update(['state' => PrevalidationRequest::STATE_MISSING_RECORDS]);
+        $this->assertSearchIds(['state' => PrevalidationRequest::STATE_MISSING_RECORDS], [$request1->id], $organization);
     }
 
     /**

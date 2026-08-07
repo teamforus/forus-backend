@@ -376,6 +376,16 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate",
     );
 
+    $router->get(
+        'organizations/{organization}/implementations/{implementation}/pages/cms-block-configs',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@cmsBlockConfigs",
+    );
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pages/validate-cms-blocks',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeCmsBlocksValidate",
+    );
+
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"
@@ -538,6 +548,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/disregard-undo',
             "Api\Platform\Organizations\FundRequestsController@disregardUndo"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/approve-missed-records',
+            "Api\Platform\Organizations\FundRequestsController@approveMissedRecords"
         );
 
         $router->resource(
@@ -898,6 +913,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         "Api\Platform\Organizations\Sponsor\PayoutsController@bankAccounts"
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/payouts/{transaction_address}/cancel',
+        "Api\Platform\Organizations\Sponsor\PayoutsController@cancel"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/payouts',
         'Api\Platform\Organizations\Sponsor\PayoutsController'
@@ -1115,6 +1135,13 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         ->parameter('prevalidations', 'prevalidation_uid')
         ->only('index', 'store', 'destroy');
 
+    // Prevalidation requests notes
+    $router->group(['prefix' => 'organizations/{organization}/prevalidation-requests/{prevalidation_request}'], function () use ($router) {
+        $router->get('notes', "Api\Platform\Organizations\PrevalidationRequestController@notes");
+        $router->post('notes', "Api\Platform\Organizations\PrevalidationRequestController@storeNote");
+        $router->delete('notes/{note}', "Api\Platform\Organizations\PrevalidationRequestController@destroyNote");
+    });
+
     $router->post('organizations/{organization}/prevalidation-requests/collection', 'Api\Platform\Organizations\PrevalidationRequestController@storeCollection');
     $router->post(
         'organizations/{organization}/prevalidation-requests/collection/validate',
@@ -1132,7 +1159,32 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     );
 
     $router->resource('organizations/{organization}/prevalidation-requests', 'Api\Platform\Organizations\PrevalidationRequestController')
-        ->only('index', 'destroy');
+        ->only('index', 'show', 'destroy');
+
+    $router->patch(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/approve-missed-records',
+        "Api\Platform\Organizations\PrevalidationRequestController@approveMissedRecords"
+    );
+
+    $router->patch(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/finalize',
+        "Api\Platform\Organizations\PrevalidationRequestController@finalize"
+    );
+
+    $router->get(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/person',
+        "Api\Platform\Organizations\PrevalidationRequestController@person"
+    );
+
+    $router->resource(
+        'organizations/{organization}/prevalidation-requests/{prevalidation_request}/records',
+        "Api\Platform\Organizations\PrevalidationRequestRecordsController"
+    )->parameters([
+        'records' => 'record',
+    ])->only('update');
+
+    $router->resource('organizations/{organization}/fund-product-limits', 'Api\Platform\Organizations\FundProductLimitController')
+        ->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->resource('feedback', 'Api\Platform\FeedbackController')
         ->only('store');

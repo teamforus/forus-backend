@@ -7,7 +7,6 @@ use App\Models\VoucherRelation;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
 use App\Scopes\Builders\FundQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
 class StoreVoucherRequest extends BaseStoreVouchersRequest
@@ -83,10 +82,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
      */
     private function fundIdRule(): array
     {
-        $fundIds = $this->organization->funds()->where(function (Builder $builder) {
-            FundQuery::whereIsInternal($builder);
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->pluck('id')->toArray();
+        $fundIds = FundQuery::whereIsInternalAndConfigured($this->organization->funds())->pluck('id')->toArray();
 
         return [
             'required',

@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends BaseFormRequest
 {
@@ -33,7 +32,6 @@ class IdentityStoreRequest extends BaseFormRequest
         return [
             'email' => [
                 'required',
-                Rule::unique('identity_emails', 'email')->whereNull('deleted_at'),
                 ...$this->emailRules(),
             ],
             'target' => 'nullable|alpha_dash',

@@ -130,6 +130,19 @@ class FundRequestTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testFundRequestCannotBeApprovedBeforeAssignment(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $this->makeIdentity($this->makeUniqueEmail()));
+
+        $this->apiFundRequestApproveRequest($fundRequest, $organization->employees[0])->assertForbidden();
+        $this->assertEquals($fundRequest::STATE_PENDING, $fundRequest->refresh()->state);
+    }
+
+    /**
      * @param Identity $requester
      * @param Fund $fund
      * @param array $records

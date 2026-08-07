@@ -119,14 +119,6 @@ trait MakesRequesterVoucherPayouts
     }
 
     /**
-     * @return array{string, string}
-     */
-    private function getPayoutIbanRecordKeys(): array
-    {
-        return ['iban_requester_payout', 'iban_name_requester_payout'];
-    }
-
-    /**
      * @param Organization $organization
      * @param string $recordTypeKey
      * @return RecordType
@@ -200,5 +192,13 @@ trait MakesRequesterVoucherPayouts
             'organization_id' => $fund->organization_id,
             'prevalidation_id' => $prevalidation->id,
         ]);
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function getPayoutIbanRecordKeys(): array
+    {
+        return ['iban_requester_payout', 'iban_name_requester_payout'];
     }
 }

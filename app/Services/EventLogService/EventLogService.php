@@ -17,6 +17,7 @@ use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestRecord;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Reimbursement;
@@ -68,6 +69,7 @@ class EventLogService implements IEventLogService
             'reservation_extra_payment' => fn () => $this->reservationExtraPaymentMeta($model),
             'bi_connection' => fn () => $this->biConnectionMeta($model),
             'prevalidation_request' => fn () => $this->prevalidationRequestMeta($model),
+            'prevalidation_request_record' => fn () => $this->prevalidationRequestRecordMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -507,6 +509,19 @@ class EventLogService implements IEventLogService
             'id' => $prevalidationRequest->id,
             'state' => $prevalidationRequest->state,
         ], 'prevalidation_request_');
+    }
+
+    /**
+     * @param PrevalidationRequestRecord $prevalidationRequestRecord
+     * @return array
+     */
+    protected function prevalidationRequestRecordMeta(PrevalidationRequestRecord $prevalidationRequestRecord): array
+    {
+        return $this->keyPrepend([
+            'id' => $prevalidationRequestRecord->id,
+            'value' => $prevalidationRequestRecord->value,
+            'record_type_key' => $prevalidationRequestRecord->record_type_key,
+        ], 'prevalidation_request_record_');
     }
 
     /**

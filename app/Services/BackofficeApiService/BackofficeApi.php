@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 class BackofficeApi
@@ -104,6 +105,7 @@ class BackofficeApi
     public function checkStatus(): FundBackofficeLog
     {
         $log = $this->makeLog(self::ACTION_STATUS);
+
         $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS));
 
         if ($response['success'] ?? false) {
@@ -134,16 +136,20 @@ class BackofficeApi
      * @param string $method
      * @param string $url
      * @param array $data
+     * @param array $headers
      * @return array
      */
-    public function request(string $method, string $url, array $data = []): array
+    public function request(string $method, string $url, array $data = [], array $headers = []): array
     {
         $certTmpFile = new TmpFile($this->fund->fund_config->backoffice_certificate);
         $clientCertTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert);
         $clientCertKeyTmpFile = new TmpFile($this->fund->fund_config->backoffice_client_cert_key);
 
         try {
-            $http = Http::withHeaders($this->makeRequestHeaders())
+            $http = Http::withHeaders([
+                ...$this->makeRequestHeaders(),
+                ...$headers,
+            ])
                 ->timeout(10)
                 ->withOptions([
                     'verify' => $certTmpFile->path(),
@@ -418,30 +424,27 @@ class BackofficeApi
      * @param string $action
      * @param string|null $bsn
      * @param string|null $requestId
-     * @return FundBackofficeLog|null
+     * @return FundBackofficeLog
      */
     protected function makeLog(
         string $action,
         ?string $bsn = null,
-        ?string $requestId = null
-    ): ?FundBackofficeLog {
+        ?string $requestId = null,
+    ): FundBackofficeLog {
         if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
             $requestId = $requestId ?: self::makeRequestId();
         }
 
-        /** @var FundBackofficeLog $fundLog */
-        $fundLog = $this->fund->backoffice_logs()->create([
+        return $this->fund->backoffice_logs()->create([
             'identity_address' => Identity::findByBsn($bsn)?->address,
             'bsn' => $bsn,
             'action' => $action,
             'request_id' => $requestId,
-            'response' => null,
+            'correlation_id' => Str::uuid()->toString(),
             'state' => self::STATE_PENDING,
             'attempts' => 0,
             'last_attempt_at' => null,
         ]);
-
-        return $fundLog ?? null;
     }
 
     /**

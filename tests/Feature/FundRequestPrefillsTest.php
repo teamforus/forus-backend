@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Fund;
 use App\Models\FundCriterion;
+use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\RecordType;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequestPrefills;
+use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestOrganizations;
@@ -23,6 +25,7 @@ class FundRequestPrefillsTest extends TestCase
     use MakesTestFunds;
     use MakesTestIdentities;
     use MakesTestOrganizations;
+    use MakesTestFundRequests;
 
     protected function setUp(): void
     {
@@ -446,5 +449,85 @@ class FundRequestPrefillsTest extends TestCase
         $this->assertContains('child_1_first_name', $recordKeys);
         $this->assertContains('children_age_group_18_99', $recordKeys);
         $this->assertContains('children_age_group_12_17_gender_female_partner_female', $recordKeys);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestRecordEdit()
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_fund_request_record_edit' => true,
+        ]);
+
+        $employee = $organization->employees()->first();
+        $fund = $this->makeTestFund($organization);
+
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $identity);
+        $fundRequest->assignEmployee($employee);
+
+        $recordKey = token_generator()->generate(16);
+
+        $this->makeRecordTypeForKey(
+            $organization,
+            $recordKey,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $record = $fundRequest->records()->firstOrCreate([
+            'record_type_key' => $recordKey,
+            'value' => 1,
+            'source' => FundRequestRecord::SOURCE_BRP,
+        ]);
+
+        // collect both records - with criteria (created as test data) and new brp record
+        $records = [
+            $record,
+            ...$fundRequest->records()->get(),
+        ];
+
+        /** @var FundRequestRecord $record */
+        foreach ($records as $record) {
+            // prepare invalid and valid values (brp record has type number)
+            $invalid = $record->fund_criterion
+                ? ($record->fund_criterion->record_type->type === RecordType::TYPE_NUMBER ? 'invalid_value' : 2)
+                : 'invalid_value';
+
+            $valid = $record->fund_criterion
+                ? ($record->fund_criterion->record_type->type === RecordType::TYPE_NUMBER ? 2 : 'string')
+                : 3;
+
+            $this->updateFundRequestRecordRequest($fundRequest, $record, $invalid)
+                ->assertJsonValidationErrorFor('value');
+
+            $this->updateFundRequestRecordRequest($fundRequest, $record, $valid)
+                ->assertSuccessful();
+
+            $record->refresh();
+            $this->assertEquals($valid, $record->value);
+        }
+
+        // create another record with source 'form' and assert that edit of this record
+        // gives validation error because record don't have fund criteria and source is 'form'
+        $recordKey = token_generator()->generate(16);
+
+        $this->makeRecordTypeForKey(
+            $organization,
+            $recordKey,
+            RecordType::TYPE_NUMBER,
+            RecordType::CONTROL_TYPE_NUMBER,
+        );
+
+        $recordSourceForm = $fundRequest->records()->firstOrCreate([
+            'record_type_key' => $recordKey,
+            'value' => 1,
+            'source' => FundRequestRecord::SOURCE_FORM,
+        ]);
+
+        $this->updateFundRequestRecordRequest($fundRequest, $recordSourceForm, 3)
+            ->assertJsonValidationErrorFor('value');
     }
 }

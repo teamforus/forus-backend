@@ -619,7 +619,7 @@ class EmailLogTest extends TestCase
      */
     public function testEmailLogsEndpointRequireFilters(): void
     {
-        $this->makeEmailLogsRequest($this->makeTestOrganization($this->makeIdentity()), [])->assertForbidden();
+        $this->apiGetOrganizationEmailLogsRequest($this->makeTestOrganization($this->makeIdentity()), [])->assertForbidden();
     }
 
     /**
@@ -741,7 +741,7 @@ class EmailLogTest extends TestCase
         $logsVisibleIds = $logsVisible->pluck('id')->toArray();
         $logsNotVisibleIds = $logsNotVisible->pluck('id')->toArray();
 
-        $this->makeEmailLogsRequest($organization, ['identity_id' => $identity->id])
+        $this->apiGetOrganizationEmailLogsRequest($organization, ['identity_id' => $identity->id])
             ->assertSuccessful()
             ->assertJsonPath('data', function (array $data) use ($logsVisibleIds, $logsNotVisibleIds) {
                 $ids = Arr::pluck($data, 'id');
@@ -825,7 +825,7 @@ class EmailLogTest extends TestCase
         $logsVisibleIds = $logsVisible->pluck('id')->toArray();
         $logsNotVisibleIds = $logsNotVisible->pluck('id')->toArray();
 
-        $this->makeEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id])
+        $this->apiGetOrganizationEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id])
             ->assertSuccessful()
             ->assertJsonPath('data', function (array $data) use ($logsVisibleIds, $logsNotVisibleIds) {
                 $ids = Arr::pluck($data, 'id');
@@ -854,21 +854,6 @@ class EmailLogTest extends TestCase
         foreach ($logsNotVisible as $log) {
             $this->makeEmailLogsExportRequest($organization, $log)->assertForbidden();
         }
-    }
-
-    /**
-     * Makes a request to fetch email logs for a given organization.
-     *
-     * @param Organization $organization
-     * @param array $params
-     * @return TestResponse
-     */
-    protected function makeEmailLogsRequest(Organization $organization, array $params): TestResponse
-    {
-        return $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query($params),
-            $this->makeApiHeaders($organization->identity),
-        );
     }
 
     /**

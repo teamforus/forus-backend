@@ -4,6 +4,7 @@ namespace App\Services\EventLogService\Models;
 
 use App\Models\BankConnection;
 use App\Models\Employee;
+use App\Models\EventLogRelation;
 use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Implementation;
@@ -13,6 +14,7 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
@@ -30,6 +32,7 @@ use Illuminate\Support\Arr;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read EventLogRelation|null $event_log_relation
  * @property-read string|null $loggable_locale_dashboard
  * @property-read Identity|null $identity
  * @property-read Model|Eloquent $loggable
@@ -78,6 +81,14 @@ class EventLog extends Model
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function event_log_relation(): HasOne
+    {
+        return $this->hasOne(EventLogRelation::class, 'event_log_id');
     }
 
     /**

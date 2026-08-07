@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundUnArchivedEvent;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Models\Data\BankAccount;
 use App\Models\Traits\HasFaq;
@@ -40,9 +41,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
 
@@ -1657,6 +1660,16 @@ class Fund extends Model
                     'source' => FundRequestRecord::SOURCE_BRP,
                 ]);
             }
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_INFO,
+                Arr::get($iConnectPrefills, 'missed_fields.info', []),
+            );
+
+            $fundRequest->storeMissedFields(
+                FundRequestMissedRecord::TYPE_WARNING,
+                Arr::get($iConnectPrefills, 'missed_fields.warning', []),
+            );
         }
 
         return $fundRequest;
@@ -2100,6 +2113,82 @@ class Fund extends Model
     }
 
     /**
+     * @param SupportCollection $records
+     * @return array
+     */
+    public function getRecordGroups(SupportCollection $records): array
+    {
+        $groups = RecordGroup::getCachedList()
+            ->filter(function (RecordGroup $group) {
+                return
+                    // global scope
+                    (!$group->organization_id && !$group->fund_id) ||
+                    // organization scope
+                    ($group->organization_id === $this->organization_id && !$group->fund_id) ||
+                    // organization and fund scope
+                    ($group->organization_id === $this->organization_id && $group->fund_id === $this->id);
+            })
+            ->values();
+
+        $groupsPriority = $groups
+            ->sortBy(fn (RecordGroup $group) => $group->fund_id ? 0 : ($group->organization_id ? 1 : 2))
+            ->values();
+
+        $groupRecordTypes = $groupsPriority
+            ->mapWithKeys(fn (RecordGroup $group) => [
+                $group->id => $group->record_group_record_types->pluck('record_type_key')->values()->toArray(),
+            ])
+            ->toArray();
+
+        $recordIdsByGroup = $groupsPriority
+            ->pluck('id')
+            ->mapWithKeys(fn (int $groupId) => [$groupId => []])
+            ->toArray();
+
+        $ungroupedRecordIds = [];
+
+        foreach ($records as $record) {
+            $assigned = false;
+
+            foreach ($groupsPriority as $group) {
+                if (in_array($record->record_type_key, $groupRecordTypes[$group->id] ?? [], true)) {
+                    $recordIdsByGroup[$group->id][] = $record->id;
+                    $assigned = true;
+                    break;
+                }
+            }
+
+            if (!$assigned) {
+                $ungroupedRecordIds[] = $record->id;
+            }
+        }
+
+        $recordGroups = $groups
+            ->map(fn (RecordGroup $group) => [
+                ...$group->only([
+                    'id', 'title', 'organization_id', 'fund_id', 'order',
+                ]),
+                'record_ids' => $recordIdsByGroup[$group->id] ?? [],
+            ])
+            ->filter(fn (array $group) => count($group['record_ids']) > 0)
+            ->values()
+            ->toArray();
+
+        if (!empty($ungroupedRecordIds)) {
+            $recordGroups[] = [
+                'id' => 0,
+                'title' => 'Overige gegevens',
+                'organization_id' => null,
+                'fund_id' => null,
+                'order' => 999,
+                'record_ids' => $ungroupedRecordIds,
+            ];
+        }
+
+        return $recordGroups;
+    }
+
+    /**
      * Update existing or create new fund criterion.
      * @param array $criterion
      * @param bool $textsOnly
@@ -2156,5 +2245,60 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    public function recordsIsValidByCriteria(array $data): bool
+    {
+        $criteriaByKey = $this->criteria->pluck('id', 'record_type_key')->toArray();
+
+        // get optional criteria to prefill them for validation
+        $optionalCriteria = array_fill_keys(
+            $this->criteria
+                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
+                ->where('optional', true)
+                ->pluck('record_type_key')
+                ->toArray(),
+            null
+        );
+
+        $data = [
+            ...$optionalCriteria,
+            ...$data,
+        ];
+
+        $records = array_values(array_filter(array_map(function ($value, $record_type_key) use ($criteriaByKey) {
+            return Arr::has($criteriaByKey, $record_type_key) ? [
+                'value' => $value,
+                'fund_criterion_id' => Arr::get($criteriaByKey, $record_type_key),
+            ] : null;
+        }, $data, array_keys($data))));
+
+        $validator = Validator::make(
+            [
+                ...compact('records'),
+                'criteria_groups' => $this->criteria_groups->pluck('id', 'id')->toArray(),
+            ],
+            (new StoreFundRequestRequest())->recordsRule($this, $records, true)
+        );
+
+        return $validator->passes();
+    }
+
+    /**
+     * @param array $fundPrefills
+     * @return array|null
+     */
+    public static function preparePrefillRecords(array $fundPrefills): ?array
+    {
+        return Arr::mapWithKeys([
+            ...Arr::get($fundPrefills, 'person', []),
+            ...Arr::get($fundPrefills, 'partner', []),
+            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+            ...Arr::get($fundPrefills, 'children_groups_counts', []),
+        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
     }
 }

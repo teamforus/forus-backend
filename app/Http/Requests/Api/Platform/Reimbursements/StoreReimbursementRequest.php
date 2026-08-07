@@ -75,12 +75,9 @@ class StoreReimbursementRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
-            'amount.min' => trans('validation.min.numeric', [
-                'attribute' => ucfirst($this->attributes()['amount'] ?? 'bedrag'),
-            ]),
-            'description.min' => trans('validation.min.numeric', [
-                'attribute' => ucfirst(trans('validation.attributes.description')),
-            ]),
+            'amount.min' => trans('validation.reimbursement.amount.min'),
+            'amount.max' => trans('validation.reimbursement.amount.max'),
+            'description.min' => trans('validation.reimbursement.description.min'),
             'voucher_id.required' => trans('validation.required_not_filled'),
             'title.required' => trans('validation.required_not_filled'),
             'amount.required' => trans('validation.required_not_filled'),

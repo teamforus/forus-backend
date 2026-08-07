@@ -2,13 +2,16 @@
 
 namespace App\Listeners;
 
+use App\Events\PrevalidationRequestRecords\PrevalidationRequestRecordUpdated;
 use App\Events\PrevalidationRequests\PrevalidationRequestCreatedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestDeletedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestFailedEvent;
+use App\Events\PrevalidationRequests\PrevalidationRequestMissingRecordsEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestRecordsUpdatedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateResubmittedEvent;
 use App\Events\PrevalidationRequests\PrevalidationRequestStateUpdatedEvent;
 use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestRecord;
 use Exception;
 use Illuminate\Events\Dispatcher;
 
@@ -113,6 +116,40 @@ class PrevalidationRequestSubscriber
     }
 
     /**
+     * @param PrevalidationRequestRecordUpdated $event
+     * @noinspection PhpUnused
+     */
+    public function onPrevalidationRequestRecordUpdated(PrevalidationRequestRecordUpdated $event): void
+    {
+        $requestRecord = $event->getPrevalidationRequestRecord();
+
+        $eventModels = $this->getPrevalidationRequestRecordLogModels($requestRecord, [
+            'employee' => $event->getEmployee(),
+        ]);
+
+        $requestRecord->log($requestRecord::EVENT_UPDATED, $eventModels, [
+            'prevalidation_request_record_previous_value' => $event->getPreviousValue(),
+        ]);
+    }
+
+    /**
+     * @param PrevalidationRequestMissingRecordsEvent $event
+     * @throws Exception
+     * @noinspection PhpUnused
+     */
+    public function onPrevalidationRequestMissingRecords(PrevalidationRequestMissingRecordsEvent $event): void
+    {
+        $prevalidationRequest = $event->getPrevalidationRequest();
+
+        $prevalidationRequest->log(PrevalidationRequest::EVENT_MISSING_RECORDS, [
+            'prevalidation_request' => $prevalidationRequest,
+            'organization' => $prevalidationRequest->organization,
+        ], [
+            ...$event->getResponseArray(),
+        ]);
+    }
+
+    /**
      * @param PrevalidationRequestDeletedEvent $event
      * @throws Exception
      * @noinspection PhpUnused
@@ -145,5 +182,35 @@ class PrevalidationRequestSubscriber
         $events->listen(PrevalidationRequestDeletedEvent::class, "$class@onPrevalidationRequestDeleted");
         $events->listen(PrevalidationRequestStateResubmittedEvent::class, "$class@onPrevalidationRequestResubmitted");
         $events->listen(PrevalidationRequestRecordsUpdatedEvent::class, "$class@onPrevalidationRequestRecordsUpdated");
+        $events->listen(PrevalidationRequestRecordUpdated::class, "$class@onPrevalidationRequestRecordUpdated");
+        $events->listen(PrevalidationRequestMissingRecordsEvent::class, "$class@onPrevalidationRequestMissingRecords");
+    }
+
+    /**
+     * @param PrevalidationRequestRecord $requestRecord
+     * @param array $extraModels
+     * @return array
+     */
+    private function getPrevalidationRequestRecordLogModels(
+        PrevalidationRequestRecord $requestRecord,
+        array $extraModels = []
+    ): array {
+        return array_merge($this->getPrevalidationRequestLogModels($requestRecord->prevalidation_request), array_merge([
+            'prevalidation_request_record' => $requestRecord,
+        ], $extraModels));
+    }
+
+    /**
+     * @param PrevalidationRequest $prevalidationRequest
+     * @return array
+     */
+    private function getPrevalidationRequestLogModels(PrevalidationRequest $prevalidationRequest): array
+    {
+        return [
+            'fund' => $prevalidationRequest->fund,
+            'sponsor' => $prevalidationRequest->fund->organization,
+            'prevalidation_request' => $prevalidationRequest,
+            'implementation' => $prevalidationRequest->fund->getImplementation(),
+        ];
     }
 }

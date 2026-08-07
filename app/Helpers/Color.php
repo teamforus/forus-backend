@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use InvalidArgumentException;
+
 class Color
 {
     protected const float LUMA_THRESHOLD = .75;
@@ -35,12 +37,25 @@ class Color
     }
 
     /**
-     * @return string
+     * @return bool
      * @noinspection PhpUnused
      */
-    public function isDark(): string
+    public function isDark(): bool
     {
         return $this->toLuma() < self::LUMA_THRESHOLD;
+    }
+
+    /**
+     * @param string $hex
+     * @return string|null
+     */
+    public static function normalizeRgbHex(string $hex): ?string
+    {
+        if (!preg_match('/^#?(?:([0-9a-f]{3})|([0-9a-f]{6})(?:[0-9a-f]{2})?)$/i', trim($hex), $matches)) {
+            return null;
+        }
+
+        return '#' . strtolower($matches[1] ?: ($matches[2] ?? ''));
     }
 
     /**
@@ -50,7 +65,13 @@ class Color
      */
     public static function createFromHex(string $hex): Color
     {
-        $color = self::hex2rgb($hex);
+        $normalizedHex = self::normalizeRgbHex($hex);
+
+        if (!$normalizedHex) {
+            throw new InvalidArgumentException(sprintf('Invalid hex color "%s".', $hex));
+        }
+
+        $color = self::hex2rgb($normalizedHex);
 
         return new self($color['red'], $color['green'], $color['blue']);
     }
@@ -101,9 +122,9 @@ class Color
      * @param string $hexStr (hexadecimal color value)
      * @param bool $returnAsString (if set true, returns the value separated by the separator character. Otherwise, returns associative array)
      * @param string $separator (to separate RGB values. Applicable only if second parameter is true.)
-     * @return array|string (depending on second parameter. Returns False if invalid hex color value)
+     * @return array|string|null (depending on second parameter. Returns null if invalid hex color value)
      */
-    public static function hex2rgb($hexStr, $returnAsString = false, $separator = ',')
+    public static function hex2rgb(string $hexStr, bool $returnAsString = false, string $separator = ','): array|string|null
     {
         // Gets a proper hex string
         $hexStr = preg_replace('/[^0-9A-Fa-f]/', '', $hexStr);

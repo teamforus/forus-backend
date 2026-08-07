@@ -61,37 +61,19 @@ class FundRequestEmailLogsTest extends TestCase
         DB::rollBack();
 
         DB::beginTransaction();
-        $this->approveFundRequest($organization, $fundRequest);
+        $this->apiFundRequestApproveRequest($fundRequest, $organization->employees[0])->assertSuccessful();
         $this->assertFundRequestApprovedEmailLog($organization, $fundRequest);
         DB::rollBack();
 
         DB::beginTransaction();
-        $this->disregardFundRequest($organization, $fundRequest, true);
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => true], $organization->employees[0])->assertSuccessful();
         $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, true);
         DB::rollBack();
 
         DB::beginTransaction();
-        $this->disregardFundRequest($organization, $fundRequest, false);
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $organization->employees[0])->assertSuccessful();
         $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, false);
         DB::rollBack();
-    }
-
-    /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return void
-     */
-    protected function approveFundRequest(
-        Organization $organization,
-        FundRequest $fundRequest,
-    ): void {
-        $response = $this->patch(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/approve",
-            [],
-            $this->makeApiHeaders($organization->identity),
-        );
-
-        $response->assertSuccessful();
     }
 
     /**
@@ -103,37 +85,11 @@ class FundRequestEmailLogsTest extends TestCase
         Organization $organization,
         FundRequest $fundRequest,
     ): void {
-        // assert email log exists
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
-            $this->makeApiHeaders($organization->identity),
-        );
-
-        $response->assertSuccessful();
-        $data = $response->json('data');
+        $response = $this->apiGetOrganizationEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id]);
+        $data = $response->assertSuccessful()->json('data');
 
         self::assertCount(2, $data);
         self::assertCount(1, Arr::where($data, fn ($item) => $item['type'] == 'fund_request_approved'));
-    }
-
-    /**
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @param bool $notify
-     * @return void
-     */
-    protected function disregardFundRequest(
-        Organization $organization,
-        FundRequest $fundRequest,
-        bool $notify,
-    ): void {
-        $response = $this->patch(
-            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/disregard",
-            [ 'notify' => $notify ],
-            $this->makeApiHeaders($organization->identity),
-        );
-
-        $response->assertSuccessful();
     }
 
     /**
@@ -147,14 +103,10 @@ class FundRequestEmailLogsTest extends TestCase
         FundRequest $fundRequest,
         bool $notify,
     ): void {
-        // assert email log exists
-        $response = $this->getJson(
-            "/api/v1/platform/organizations/$organization->id/email-logs?fund_request_id=$fundRequest->id",
-            $this->makeApiHeaders($organization->identity),
-        );
-
-        $response->assertSuccessful();
-        $data = $response->json('data');
+        $data = $this
+            ->apiGetOrganizationEmailLogsRequest($organization, ['fund_request_id' => $fundRequest->id])
+            ->assertSuccessful()
+            ->json('data');
 
         self::assertCount($notify ? 2 : 1, $data);
         self::assertCount(

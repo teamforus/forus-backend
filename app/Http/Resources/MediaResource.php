@@ -34,7 +34,7 @@ class MediaResource extends BaseJsonResource
         });
 
         return array_merge($media->only([
-            'identity_address', 'original_name', 'type', 'ext', 'uid', 'dominant_color', 'is_dark',
+            'original_name', 'type', 'ext', 'uid', 'dominant_color', 'is_dark',
         ]), compact('sizes'));
     }
 }

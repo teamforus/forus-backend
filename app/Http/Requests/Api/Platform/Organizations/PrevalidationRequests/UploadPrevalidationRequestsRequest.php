@@ -124,15 +124,10 @@ class UploadPrevalidationRequestsRequest extends BaseFormRequest
     }
 
     /**
-     * @return Builder|Relation|Fund[]
+     * @return Builder|Relation|Arrayable
      */
     private function getAvailableFunds(): Builder|Relation|Arrayable
     {
-        return $this->organization->funds()
-            ->where(function (Builder $builder) {
-                FundQuery::whereIsInternal($builder);
-                FundQuery::whereIsConfiguredByForus($builder);
-            })
-            ->where('state', '!=', Fund::STATE_CLOSED);
+        return FundQuery::whereIsInternalConfiguredAndNotClosed($this->organization->funds());
     }
 }

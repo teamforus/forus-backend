@@ -12,6 +12,7 @@ use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
+use JsonException;
 use Laravel\Dusk\Browser;
 use RuntimeException;
 use Tests\Traits\MakesTestIdentities;
@@ -161,6 +162,63 @@ trait HasFrontendActions
             $browser->waitUntilMissing('.file-item-uploading');
         }
 
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'none')");
+    }
+
+    /**
+     * @param Browser $browser
+     * @param array<int, string> $filePaths
+     * @throws JsonException
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function selectFilesInFileUploader(Browser $browser, array $filePaths): void
+    {
+        $files = array_map(function (string $filePath): array {
+            if (!is_file($filePath)) {
+                throw new InvalidArgumentException("File [$filePath] does not exist.");
+            }
+
+            $contents = file_get_contents($filePath);
+
+            if ($contents === false) {
+                throw new InvalidArgumentException("File [$filePath] could not be read.");
+            }
+
+            return [
+                'name' => basename($filePath),
+                'type' => mime_content_type($filePath) ?: 'application/octet-stream',
+                'data' => base64_encode($contents),
+            ];
+        }, $filePaths);
+
+        $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'block')");
+        $browser->waitFor("input[name='file_uploader_input_hidden']");
+        $browser->script('
+            (() => {
+                const input = document.querySelector("input[name=\'file_uploader_input_hidden\']");
+                const files = ' . json_encode($files, JSON_THROW_ON_ERROR) . ';
+                const dataTransfer = new DataTransfer();
+
+                const decode = (base64) => {
+                    const binary = window.atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+
+                    for (let index = 0; index < binary.length; index++) {
+                        bytes[index] = binary.charCodeAt(index);
+                    }
+
+                    return bytes;
+                };
+
+                files.forEach((file) => {
+                    dataTransfer.items.add(new File([decode(file.data)], file.name, { type: file.type }));
+                });
+
+                input.files = dataTransfer.files;
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+            })();
+        ');
         $browser->script("document.querySelectorAll('.droparea-hidden-input').forEach((el) => el.style.display = 'none')");
     }
 

@@ -9,6 +9,8 @@ use App\Models\Permission;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlockItemValue;
+use App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlockValue;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Database\Eloquent\Builder;
@@ -99,9 +101,38 @@ class MediaPolicy
 
             $managesProviderProduct =
                 $product?->sponsor_organization &&
-                Gate::allows('updateSponsorProduct', [$product, $product?->organization, $product?->sponsor_organization]);
+                Gate::allows('updateSponsorProduct', [
+                    $product, $product?->organization, $product?->sponsor_organization,
+                ]);
 
             return $managesProduct || $managesProviderProduct;
+        }
+
+        if (
+            $media->mediable instanceof ImplementationCmsBlockValue &&
+            $media->type === 'implementation_block_media'
+        ) {
+            $organization = $media->mediable
+                ->implementation_cms_block
+                ?->implementation_page
+                ?->implementation
+                ?->organization;
+
+            return $organization?->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS) ?: false;
+        }
+
+        if (
+            $media->mediable instanceof ImplementationCmsBlockItemValue &&
+            $media->type === 'implementation_block_media'
+        ) {
+            $organization = $media->mediable
+                ->implementation_cms_block_item
+                ?->implementation_cms_block
+                ?->implementation_page
+                ?->implementation
+                ?->organization;
+
+            return $organization?->identityCan($identity, Permission::MANAGE_IMPLEMENTATION_CMS) ?: false;
         }
 
         return $identity->address == $media->identity_address;

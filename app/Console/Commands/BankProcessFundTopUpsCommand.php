@@ -57,8 +57,7 @@ class BankProcessFundTopUpsCommand extends Command
         $funds->whereHas('organization', fn (Builder $b) => $b->whereHas('bank_connection_active'));
         $funds->whereHas('top_ups');
 
-        FundQuery::whereIsInternal($funds);
-        FundQuery::whereIsConfiguredByForus($funds);
+        FundQuery::whereIsInternalAndConfigured($funds);
 
         foreach ($funds->get() as $fund) {
             DB::transaction(function () use ($fund) {

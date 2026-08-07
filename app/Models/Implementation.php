@@ -88,6 +88,8 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_office_map
  * @property bool $show_voucher_map
  * @property bool $show_product_map
+ * @property bool $show_fund_image_list
+ * @property bool $show_fund_partners_page
  * @property bool $show_privacy_checkbox
  * @property bool $show_terms_checkbox
  * @property bool $allow_per_fund_notification_templates
@@ -230,6 +232,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation wherePreCheckTitle($value)
  * @method static Builder<static>|Implementation whereProductsDefaultSorting($value)
  * @method static Builder<static>|Implementation whereRootProductCategoryId($value)
+ * @method static Builder<static>|Implementation whereShowFundImageList($value)
+ * @method static Builder<static>|Implementation whereShowFundPartnersPage($value)
  * @method static Builder<static>|Implementation whereShowHomeMap($value)
  * @method static Builder<static>|Implementation whereShowHomeProducts($value)
  * @method static Builder<static>|Implementation whereShowOfficeMap($value)
@@ -335,6 +339,8 @@ class Implementation extends Model
         'digid_saml_context' => 'json',
         'show_voucher_map' => 'boolean',
         'show_product_map' => 'boolean',
+        'show_fund_image_list' => 'boolean',
+        'show_fund_partners_page' => 'boolean',
         'allow_per_fund_notification_templates' => 'boolean',
         'currency_round' => 'boolean',
         'pre_check_enabled' => 'boolean',
@@ -961,6 +967,7 @@ class Implementation extends Model
 
         return [
             ...$config,
+            'organization_id' => $implementation->organization_id,
             'media' => self::getPlatformMediaConfig(),
             'has_internal_funds' => self::hasInternalFunds(),
             'has_reimbursements' => $implementation->hasReimbursements(),
@@ -1031,6 +1038,7 @@ class Implementation extends Model
                 'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
                 'show_office_map', 'show_voucher_map', 'show_product_map', 'page_title_suffix',
                 'show_privacy_checkbox', 'show_terms_checkbox', 'products_default_sorting',
+                'show_fund_image_list', 'show_fund_partners_page',
             ]),
         ];
     }

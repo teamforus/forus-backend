@@ -5,6 +5,7 @@ namespace Tests\Traits;
 use App\Models\BusinessType;
 use App\Models\Employee;
 use App\Models\Fund;
+use App\Models\FundProductLimit;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -14,6 +15,8 @@ use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Models\PrevalidationRequest;
+use App\Models\PrevalidationRequestRecord;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
@@ -182,6 +185,98 @@ trait MakesApiRequests
         $this->travelBack();
 
         return $organization->funds()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetFundProductLimitsRequest(
+        Organization $organization,
+        array $query,
+        Identity $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakeFundProductLimitRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundProductLimit $fundProductLimit
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiDeleteFundProductLimitRequest(
+        Organization $organization,
+        FundProductLimit $fundProductLimit,
+        Identity $identity,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/fund-product-limits/$fundProductLimit->id",
+            [],
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
@@ -1059,14 +1154,17 @@ trait MakesApiRequests
     /**
      * @param Organization $organization
      * @param array $query
+     * @param array $headers
      * @return TestResponse
      */
-    protected function apiGetOrganizationEmailLogsRequest(Organization $organization, array $query): TestResponse
-    {
-        // assert email log exists
+    protected function apiGetOrganizationEmailLogsRequest(
+        Organization $organization,
+        array $query,
+        array $headers = [],
+    ): TestResponse {
         return $this->getJson(
             "/api/v1/platform/organizations/$organization->id/email-logs?" . http_build_query($query),
-            $this->makeApiHeaders($organization->identity),
+            $this->makeApiHeaders($organization->identity, $headers),
         );
     }
 
@@ -1119,6 +1217,240 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakePrevalidationRequestCollectionRequest(
+        Organization $organization,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestsRequest(
+        Organization $organization,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestPersonRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/person",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetPrevalidationRequestNotesRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestResubmitRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/resubmit",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestResubmitFailedRequest(
+        Organization $organization,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/resubmit-failed",
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestDeleteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestApproveMissedRecordsRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        array $data = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/approve-missed-records",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiPrevalidationRequestFinalizeRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/finalize",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiStorePrevalidationRequestNoteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param Note $note
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiDeletePrevalidationRequestNoteRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        Note $note,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/notes/$note->id",
+            [],
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param PrevalidationRequest $prevalidationRequest
+     * @param PrevalidationRequestRecord $record
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiUpdatePrevalidationRequestRecordRequest(
+        Organization $organization,
+        PrevalidationRequest $prevalidationRequest,
+        PrevalidationRequestRecord $record,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/prevalidation-requests/$prevalidationRequest->id/records/$record->id",
+            $data,
+            $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
+        );
+    }
+
+    /**
      * @param array $data
      * @param Identity $identity
      * @return TestResponse
@@ -1141,6 +1473,80 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeSponsorPayoutRequest(
+        Fund $fund,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts",
+            ['fund_id' => $fund->id, ...$data],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiMakeSponsorPayoutBatchRequest(
+        Fund $fund,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch",
+            ['fund_id' => $fund->id, 'payouts' => [$data]],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @param array $data
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiUpdateSponsorPayoutRequest(
+        Organization $organization,
+        VoucherTransaction $transaction,
+        array $data,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address",
+            $data,
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherTransaction $transaction
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiCancelSponsorPayoutRequest(
+        Organization $organization,
+        VoucherTransaction $transaction,
+        ?Identity $identity = null,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts/$transaction->address/cancel",
+            [],
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
+    }
+
+    /**
      * @param Identity $identity
      * @param Voucher $voucher
      * @return TestResponse
@@ -1148,6 +1554,25 @@ trait MakesApiRequests
     protected function apiGetVoucherRequest(Identity $identity, Voucher $voucher): TestResponse
     {
         return $this->getJson("/api/v1/platform/vouchers/$voucher->number", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity|null $identity
+     * @return TestResponse
+     */
+    protected function apiGetSponsorPayoutsRequest(
+        Organization $organization,
+        array $query = [],
+        ?Identity $identity = null,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/payouts$queryString",
+            $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $organization->identity)),
+        );
     }
 
     /**
