@@ -147,10 +147,10 @@ class FundActionsTest extends DuskTestCase
 
             // Create fund with same criteria
             $fund2 = $this->createFund($implementation->organization, $fundConfigs);
-            $browser->refresh();
 
             // Assert activate button is shown due to valid records from previous fund
             $browser->visit($implementation->urlWebshop('fondsen'));
+            $browser->refresh();
 
             $this->searchWebshopList($browser, '@listFunds', $fund2->name, $fund2->id);
             $browser->waitFor("@listFundsRow$fund2->id")->assertMissing("@listFundsRow$fund2->id @pendingButton");
