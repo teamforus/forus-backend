@@ -43,6 +43,7 @@ use Throwable;
  * @property int $implementation_id
  * @property int|null $bank_connection_account_id
  * @property string|null $consent_id
+ * @property array|null $consent_access
  * @property string|null $auth_url
  * @property array|null $auth_params
  * @property string $redirect_token
@@ -143,7 +144,7 @@ class BankConnection extends Model
     protected $fillable = [
         'bank_id', 'organization_id', 'implementation_id', 'redirect_token', 'access_token',
         'code', 'state', 'context', 'expire_at', 'bank_connection_account_id',
-        'auth_url', 'auth_params', 'consent_id',
+        'auth_url', 'auth_params', 'consent_id', 'consent_access',
     ];
 
     /**
@@ -151,7 +152,7 @@ class BankConnection extends Model
      */
     protected $hidden = [
         'redirect_token', 'access_token', 'code', 'context', 'auth_url', 'auth_params',
-        'consent_id',
+        'consent_id', 'consent_access',
     ];
 
     /**
@@ -161,6 +162,7 @@ class BankConnection extends Model
         'context' => 'array',
         'expire_at' => 'datetime',
         'auth_params' => 'array',
+        'consent_access' => 'array',
     ];
 
     /**
@@ -272,6 +274,22 @@ class BankConnection extends Model
     public function isPending(): bool
     {
         return $this->state == static::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasBalanceAccess(): bool
+    {
+        if ($this->bank->isBunq()) {
+            return true;
+        }
+
+        return $this->bank->isBNG() && (
+            is_null($this->consent_access) ||
+            ($this->consent_access['allPsd2'] ?? null) === 'allAccounts' ||
+            !empty($this->consent_access['balances'])
+        );
     }
 
     /**
@@ -587,20 +605,10 @@ class BankConnection extends Model
     {
         /** @var BNGService $bngService */
         $bngService = resolve('bng_service');
-
-        $params = $iban ? [
-            'access' => [
-                'accounts' => [compact('iban')],
-                'balances' => null,
-                'transactions' => [compact('iban')],
-                'availableAccounts' => null,
-                'availableAccountsWithBalances' => null,
-                'allPsd2' => null,
-            ],
-        ] : [];
+        $access = $bngService->makeAccountConsentAccess($iban);
 
         try {
-            $response = $bngService->makeAccountConsentRequest($this->redirect_token, $params);
+            $response = $bngService->makeAccountConsentRequest($this->redirect_token, compact('access'));
             $authData = $response->getAuthData();
             $consentId = $response->getConsentId();
 
@@ -608,6 +616,7 @@ class BankConnection extends Model
                 'auth_url' => $authData->getUrl(),
                 'auth_params' => $authData->getParams(),
                 'consent_id' => $consentId,
+                'consent_access' => $access,
             ]);
         } catch (ApiException $e) {
             $this->logBngError('Oauth url', $e);
