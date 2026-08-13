@@ -486,16 +486,20 @@ trait HasFrontendActions
     /**
      * @param Browser $browser
      * @param int $fundId
-     * @throws TimeOutException
      * @return void
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      */
     protected function switchToFund(Browser $browser, int $fundId): void
     {
         $browser->waitFor('@selectControlFunds');
-        $browser->element('@selectControlFunds')->click();
+        $browser->click('@selectControlFunds');
 
-        $browser->waitFor("@selectControlFundItem$fundId");
-        $browser->element("@selectControlFundItem$fundId")->click();
+        $browser->elsewhere('', function (Browser $browser) use ($fundId) {
+            $browser->waitFor("@selectControlFundItem$fundId");
+            $browser->click("@selectControlFundItem$fundId");
+        });
     }
 
     /**

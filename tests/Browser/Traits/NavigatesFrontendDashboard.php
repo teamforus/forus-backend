@@ -162,10 +162,7 @@ trait NavigatesFrontendDashboard
 
         $browser->waitFor('@prevalidationsSelectFund');
         $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
+            $this->switchToFund($browser, $fund->id);
         });
     }
 
@@ -184,10 +181,7 @@ trait NavigatesFrontendDashboard
 
         $browser->waitFor('@prevalidationsSelectFund');
         $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
+            $this->switchToFund($browser, $fund->id);
         });
     }
 
