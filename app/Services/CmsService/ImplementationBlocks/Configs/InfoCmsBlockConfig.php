@@ -107,6 +107,20 @@ class InfoCmsBlockConfig extends CmsBlockConfig
             'max' => 30,
             'translatable' => true,
         ], [
+            'key' => 'label_background_color',
+            'name' => $this->itemFieldText(self::ITEM_TYPE_POST, 'label_background_color', 'name'),
+            'type' => self::TYPE_COLOR,
+            'placeholder' => $this->itemFieldText(self::ITEM_TYPE_POST, 'label_background_color', 'placeholder'),
+            'required' => false,
+            'translatable' => false,
+        ], [
+            'key' => 'label_text_color',
+            'name' => $this->itemFieldText(self::ITEM_TYPE_POST, 'label_text_color', 'name'),
+            'type' => self::TYPE_COLOR,
+            'placeholder' => $this->itemFieldText(self::ITEM_TYPE_POST, 'label_text_color', 'placeholder'),
+            'required' => false,
+            'translatable' => false,
+        ], [
             'key' => 'title',
             'name' => $this->itemFieldText(self::ITEM_TYPE_POST, 'title', 'name'),
             'type' => self::TYPE_TEXT,
