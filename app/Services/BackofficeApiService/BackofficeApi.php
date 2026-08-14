@@ -106,7 +106,9 @@ class BackofficeApi
     {
         $log = $this->makeLog(self::ACTION_STATUS);
 
-        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS));
+        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS), headers: [
+            'x-correlation-id' => $log->request_id,
+        ]);
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [
@@ -286,7 +288,9 @@ class BackofficeApi
             $response = $backofficeApi->request('POST', $endpoint, array_merge($body, [
                 'id' => $requestId,
                 'bsn' => $log->bsn,
-            ]));
+            ]), [
+                'x-correlation-id' => $requestId,
+            ]);
 
             if ($response['success'] ?? false) {
                 $log->update([
@@ -381,7 +385,9 @@ class BackofficeApi
         $response = $this->request('POST', $endpoint, array_merge($body, [
             'id' => $requestId,
             'bsn' => $bsn,
-        ]));
+        ]), [
+            'x-correlation-id' => $requestId,
+        ]);
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [
@@ -412,10 +418,10 @@ class BackofficeApi
     protected static function makeRequestId(): string
     {
         do {
-            $value = token_generator()->generate(16);
+            $value = Str::uuid()->toString();
         } while (FundBackofficeLog::where('response_id', $value)->exists());
 
-        return 'forus-' . $value;
+        return $value;
     }
 
     /**
@@ -431,7 +437,7 @@ class BackofficeApi
         ?string $bsn = null,
         ?string $requestId = null,
     ): FundBackofficeLog {
-        if (!in_array($action, [self::ACTION_STATUS, self::ACTION_REPORT_FIRST_USE])) {
+        if ($action != self::ACTION_REPORT_FIRST_USE) {
             $requestId = $requestId ?: self::makeRequestId();
         }
 
@@ -440,7 +446,6 @@ class BackofficeApi
             'bsn' => $bsn,
             'action' => $action,
             'request_id' => $requestId,
-            'correlation_id' => Str::uuid()->toString(),
             'state' => self::STATE_PENDING,
             'attempts' => 0,
             'last_attempt_at' => null,

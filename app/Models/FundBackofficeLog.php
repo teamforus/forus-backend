@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $response_code
  * @property array<array-key, mixed>|null $response_body
  * @property string|null $response_error
- * @property string|null $correlation_id
  * @property int $attempts
  * @property string|null $last_attempt_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -58,7 +57,7 @@ class FundBackofficeLog extends Model
     protected $fillable = [
         'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
         'response_code', 'response_body', 'response_error', 'attempts', 'last_attempt_at',
-        'voucher_id', 'voucher_relation_id', 'correlation_id',
+        'voucher_id', 'voucher_relation_id',
     ];
 
     protected $casts = [
