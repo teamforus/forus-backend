@@ -13,6 +13,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 use Tests\TestCases\VoucherBatchTestCases;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\VoucherTestTrait;
 use Throwable;
@@ -22,6 +23,7 @@ class VoucherBatchTest extends TestCase
     use VoucherTestTrait;
     use DatabaseTransactions;
     use MakesTestFunds;
+    use MakesAssertStoreUploadedCsvFile;
 
     /**
      * @var string
@@ -89,6 +91,36 @@ class VoucherBatchTest extends TestCase
     public function testVoucherBatchCaseBudgetVouchersAllowedDirectPaymentsErrors(): void
     {
         $this->processVoucherBatchTestCase(VoucherBatchTestCases::$featureTestCaseBudgetVouchersAllowedDirectPaymentsErrors);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testProductReservationsBatchStoreUploadedCsvFile(): void
+    {
+        $sponsor = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $fund = $this->makeTestFund($sponsor, fundConfigsData: ['allow_physical_cards' => true]);
+
+        $this->addTestCriteriaToFund($fund);
+
+        $vouchers = $this->makeVoucherData($fund, [
+            'type' => 'budget',
+            'assign_by' => 'bsn',
+            'vouchers_count' => 5,
+        ], []);
+
+        $data = [
+            'fund_id' => $fund->id,
+            'vouchers' => array_map(fn (array $voucher) => Arr::dot($voucher), $vouchers),
+        ];
+
+        $this->apiMakeVoucherRequestBatchRequest($sponsor, $data, true)->assertSuccessful();
+
+        $employee = $sponsor->findEmployee($sponsor->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_VOUCHERS, 5);
+
+        $this->assertLoggedUploadedFileContent($log, $data['vouchers']);
     }
 
     /**
