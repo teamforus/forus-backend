@@ -18,7 +18,8 @@ services:
     ports:
       - "8000:80"
     depends_on:
-      - forus-backend-db
+      forus-backend-db:
+        condition: service_healthy
     networks:
       - forus-network
 
@@ -35,6 +36,12 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -u root --silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
     volumes:
       - ./docker/docker-compose/mysql:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql

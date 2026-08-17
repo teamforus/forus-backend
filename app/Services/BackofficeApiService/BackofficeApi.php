@@ -106,9 +106,7 @@ class BackofficeApi
     {
         $log = $this->makeLog(self::ACTION_STATUS);
 
-        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS), headers: [
-            'x-correlation-id' => $log->correlation_id,
-        ]);
+        $response = $this->request('GET', $this->getEndpoint(self::ACTION_STATUS));
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [
@@ -288,9 +286,7 @@ class BackofficeApi
             $response = $backofficeApi->request('POST', $endpoint, array_merge($body, [
                 'id' => $requestId,
                 'bsn' => $log->bsn,
-            ]), [
-                'x-correlation-id' => $log->correlation_id,
-            ]);
+            ]));
 
             if ($response['success'] ?? false) {
                 $log->update([
@@ -385,9 +381,7 @@ class BackofficeApi
         $response = $this->request('POST', $endpoint, array_merge($body, [
             'id' => $requestId,
             'bsn' => $bsn,
-        ]), [
-            'x-correlation-id' => $log->correlation_id,
-        ]);
+        ]));
 
         if ($response['success'] ?? false) {
             return tap($log)->update(array_merge(Arr::only($response, [

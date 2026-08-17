@@ -632,8 +632,10 @@ class ReimbursementTest extends DuskTestCase
 
             $browser->waitFor('@voucherSelector');
             $browser->press('@voucherSelector');
-            $browser->waitFor('@voucherSelectorOptions');
-            $browser->press("@voucherSelectorOption$voucher->id");
+
+            $browser->elsewhereWhenAvailable('@voucherSelectorOptions', function (Browser $browser) use ($voucher) {
+                $browser->press("@voucherSelectorOption$voucher->id");
+            });
         });
 
         return $formData;
