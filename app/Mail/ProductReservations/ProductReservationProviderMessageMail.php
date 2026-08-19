@@ -6,9 +6,9 @@ use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
-class ProductReservationRejectedMail extends ImplementationMail
+class ProductReservationProviderMessageMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = 'notifications_identities.product_reservation_rejected';
+    public ?string $notificationTemplateKey = 'notifications_identities.product_reservation_message';
 
     /**
      * @throws CommonMarkException
@@ -26,7 +26,7 @@ class ProductReservationRejectedMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
-            'provider_note' => nl2br($data['provider_note'] ?? ''),
+            'provider_message' => nl2br($data['provider_message'] ?? ''),
             'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
             'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
         ];

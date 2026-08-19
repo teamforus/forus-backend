@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Gate;
  * @property Organization $organization
  * @property ProductReservation $product_reservation
  */
-class RejectProductReservationRequest extends BaseFormRequest
+class StoreReservationProviderMessageRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,10 +21,7 @@ class RejectProductReservationRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return
-            $this->isAuthenticated() &&
-            Gate::allows('show', $this->organization) &&
-            Gate::allows('rejectProvider', [$this->product_reservation, $this->organization]);
+        return Gate::allows('storeProviderMessage', [$this->product_reservation, $this->organization]);
     }
 
     /**
@@ -35,13 +32,11 @@ class RejectProductReservationRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'note' => 'nullable|string|max:255',
-            'share_note_by_email' => [
-                'nullable',
-                'boolean',
-                ...($this->filled('note') && in_array($this->input('share_note_by_email'), [true, 1, '1'], true) ? [
-                    new ProviderMessageRecipientEmailRule($this->product_reservation),
-                ] : []),
+            'message' => [
+                'required',
+                'string',
+                'max:2000',
+                new ProviderMessageRecipientEmailRule($this->product_reservation),
             ],
         ];
     }

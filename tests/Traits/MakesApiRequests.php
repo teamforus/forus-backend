@@ -19,6 +19,7 @@ use App\Models\PrevalidationRequestRecord;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
+use App\Models\ProviderMessage;
 use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
@@ -544,6 +545,24 @@ trait MakesApiRequests
     /**
      * @param ProductReservation $reservation
      * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiAcceptProductReservationByProviderRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->postJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/accept',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
      * @return ProductReservation
      */
     public function apiCancelProductReservation(
@@ -569,7 +588,7 @@ trait MakesApiRequests
         array $data = [],
     ): TestResponse {
         return $this->postJson(
-            "/api/v1/platform/organizations/{$reservation->product->organization->id}/product-reservations/$reservation->id/reject",
+            $this->apiProductReservationProviderUrl($reservation) . '/reject',
             $data,
             $this->makeApiHeaders($identity),
         );
@@ -634,6 +653,71 @@ trait MakesApiRequests
     }
 
     /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProductReservationByProviderRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            $this->apiProductReservationProviderUrl($reservation),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProductReservationProviderMessagesRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/provider-messages',
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiStoreProductReservationProviderMessageRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data,
+    ): TestResponse {
+        return $this->postJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/provider-messages',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param ProviderMessage $message
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiExportProductReservationProviderMessageRequest(
+        ProductReservation $reservation,
+        ProviderMessage $message,
+        Identity $identity,
+    ): TestResponse {
+        return $this->get(
+            $this->apiProductReservationProviderUrl($reservation) . "/provider-messages/$message->id/export",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
      * @param Organization $organization
      * @param array $query
      * @return TestResponse
@@ -674,6 +758,19 @@ trait MakesApiRequests
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return string
+     */
+    protected function apiProductReservationProviderUrl(ProductReservation $reservation): string
+    {
+        return sprintf(
+            '/api/v1/platform/organizations/%d/product-reservations/%d',
+            $reservation->product->organization_id,
+            $reservation->id,
+        );
     }
 
     /**
