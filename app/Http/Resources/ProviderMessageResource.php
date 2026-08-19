@@ -12,8 +12,8 @@ use Throwable;
 class ProviderMessageResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'employee.identity',
-        'identity',
+        'employee.identity.primary_email',
+        'identity.primary_email',
     ];
 
     /**

@@ -26,6 +26,7 @@ class ProductReservationProviderMessageMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
+            'provider_message' => nl2br($data['provider_message'] ?? ''),
             'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
             'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
         ];

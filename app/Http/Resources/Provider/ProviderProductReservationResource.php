@@ -12,19 +12,7 @@ use Illuminate\Http\Request;
 class ProviderProductReservationResource extends ProductReservationResource
 {
     public const array LOAD = [
-        'voucher.fund.fund_config',
-        'voucher.fund.organization',
-        'voucher.identity.primary_email',
-        'voucher.physical_cards',
-        'voucher.voucher_records',
-        'product.organization',
-        'product.photos.presets',
-        'voucher_transaction',
-        'extra_payment.refunds',
-        'extra_payment.refunds_active',
-        'custom_fields.reservation_field',
-        'custom_fields.files',
-        'fund_provider_product_with_trashed',
+        ...parent::LOAD,
         'product.organization.fund_providers',
     ];
 
@@ -40,11 +28,11 @@ class ProviderProductReservationResource extends ProductReservationResource
 
         return [
             ...parent::toArray($request),
-            ...$reservation->only('invoice_number'),
+            ...$reservation->only('invoice_number', 'accepted_note'),
             'acceptable' => $reservation->isAcceptable(),
             'rejectable' => $reservation->isCancelableByProvider(),
             'archivable' => $reservation->isArchivable(),
-            'allow_provider_messages' => $reservation->providerMessageAllowed(),
+            'allow_provider_messages' => $reservation->regularProviderMessageAllowed(),
         ];
     }
 }

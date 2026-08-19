@@ -8,6 +8,7 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\View;
 use Throwable;
 
 /**
@@ -96,8 +97,11 @@ class ProviderMessage extends Model
     public function getMessageHtml(): string
     {
         $emailBody = new MailBodyBuilder();
-        $emailBody->markdownHtml($this->message, 'text_center');
+        $emailBody->text($this->message, ['text_center']);
 
-        return view('emails.mail-builder-template', ['emailBody' => $emailBody, 'hideFooter' => true])->render();
+        return View::make('emails.mail-builder-template', [
+            'emailBody' => $emailBody,
+            'hideFooter' => true,
+        ])->render();
     }
 }

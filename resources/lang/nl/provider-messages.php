@@ -2,9 +2,9 @@
 
 return [
     'type' => [
-        'regular_message' => 'Custom message to requester',
-        'approve_reservation' => 'Reservation has been accepted',
-        'cancel_reservation' => 'Reservation has been cancelled',
-        'reject_reservation' => 'Reservation has been rejected',
+        'regular_message' => 'Persoonlijk bericht aan deelnemer',
+        'approve_reservation' => 'Reservering is geaccepteerd',
+        'cancel_reservation' => 'Reservering is geannuleerd',
+        'reject_reservation' => 'Reservering is geweigerd',
     ],
 ];

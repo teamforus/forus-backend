@@ -3,7 +3,15 @@
 namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
+use App\Models\ProductReservation;
+use App\Rules\ProviderMessageRecipientEmailRule;
+use Illuminate\Support\Facades\Gate;
 
+/**
+ * @property Organization $organization
+ * @property ProductReservation $product_reservation
+ */
 class StoreReservationProviderMessageRequest extends BaseFormRequest
 {
     /**
@@ -13,7 +21,7 @@ class StoreReservationProviderMessageRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('storeProviderMessage', [$this->product_reservation, $this->organization]);
     }
 
     /**
@@ -24,7 +32,12 @@ class StoreReservationProviderMessageRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'message' => 'required|string|max:2000',
+            'message' => [
+                'required',
+                'string',
+                'max:2000',
+                new ProviderMessageRecipientEmailRule($this->product_reservation),
+            ],
         ];
     }
 }

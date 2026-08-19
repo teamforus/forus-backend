@@ -830,7 +830,7 @@ class ProductReservation extends Model
     /**
      * @return bool
      */
-    public function providerMessageAllowed(): bool
+    public function regularProviderMessageAllowed(): bool
     {
         return (bool) $this
             ->product
@@ -838,6 +838,7 @@ class ProductReservation extends Model
             ->fund_providers
             ->first(function (FundProvider $fundProvider) {
                 return
+                    $fundProvider->isAccepted() &&
                     $fundProvider->allow_provider_messages &&
                     $this->voucher->fund_id === $fundProvider->fund_id;
             });

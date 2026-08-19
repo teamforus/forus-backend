@@ -484,7 +484,7 @@ class ProductReservationPolicy
     ): bool {
         return
             $this->updateProvider($identity, $productReservation, $organization) &&
-            $productReservation->providerMessageAllowed();
+            $productReservation->regularProviderMessageAllowed();
     }
 
     /**
@@ -503,7 +503,6 @@ class ProductReservationPolicy
         return
             $message->mailable_type === $productReservation->getMorphClass() &&
             $message->mailable_id === $productReservation->getKey() &&
-            $productReservation->providerMessageAllowed() &&
             $this->updateProvider($identity, $productReservation, $organization);
     }
 }

@@ -190,18 +190,16 @@ class ProductReservationsController extends Controller
         Organization $organization,
         ProductReservation $productReservation
     ): ProviderProductReservationResource {
-        $this->authorize('show', $organization);
-        $this->authorize('acceptProvider', [$productReservation, $organization]);
-
         $employee = $organization->findEmployee($request->auth_address());
+        $shareNoteByEmail = $request->filled('note') && $request->boolean('share_note_by_email');
 
         $productReservation->acceptProvider(
             $employee,
             $request->post('note'),
-            $request->post('share_note_by_email', false),
+            $shareNoteByEmail,
         );
 
-        if (!empty($request->post('note')) && $request->post('share_note_by_email', false)) {
+        if ($shareNoteByEmail) {
             $productReservation->provider_messages()->create([
                 'type' => ProviderMessage::TYPE_APPROVE_RESERVATION,
                 'message' => $request->get('note'),
@@ -228,20 +226,18 @@ class ProductReservationsController extends Controller
         Organization $organization,
         ProductReservation $productReservation
     ): ProviderProductReservationResource {
-        $this->authorize('show', $organization);
-        $this->authorize('rejectProvider', [$productReservation, $organization]);
-
         $employee = $organization->findEmployee($request->auth_address());
+        $shareNoteByEmail = $request->filled('note') && $request->boolean('share_note_by_email');
 
         $productReservation->rejectOrCancelProvider(
             $employee,
             $request->post('note'),
-            $request->post('share_note_by_email', false),
+            $shareNoteByEmail,
         );
 
-        if (!empty($request->post('note')) && $request->post('share_note_by_email', false)) {
+        if ($shareNoteByEmail) {
             $productReservation->provider_messages()->create([
-                'type' => $productReservation->isAccepted()
+                'type' => $productReservation->isCanceledByProvider()
                     ? ProviderMessage::TYPE_CANCEL_RESERVATION
                     : ProviderMessage::TYPE_REJECT_RESERVATION,
                 'message' => $request->get('note'),
@@ -514,7 +510,10 @@ class ProductReservationsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyProviderMessage', [$productReservation, $organization]);
 
-        return ProviderMessageResource::queryCollection($productReservation->provider_messages(), $request);
+        return ProviderMessageResource::queryCollection(
+            $productReservation->provider_messages()->orderByDesc('created_at')->orderByDesc('id'),
+            $request,
+        );
     }
 
     /**
@@ -528,8 +527,6 @@ class ProductReservationsController extends Controller
         Organization $organization,
         ProductReservation $productReservation,
     ): ProviderMessageResource {
-        $this->authorize('storeProviderMessage', [$productReservation, $organization]);
-
         return ProviderMessageResource::create($productReservation->addProviderMessage(
             $request->input('message'),
             $request->employee($organization),
