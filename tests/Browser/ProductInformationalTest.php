@@ -9,7 +9,6 @@ use App\Scopes\Builders\FundProviderQuery;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
-use Facebook\WebDriver\WebDriverBy;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\NavigatesFrontendDashboard;
@@ -267,28 +266,15 @@ class ProductInformationalTest extends DuskTestCase
 
     /**
      * @param Browser $browser
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
+     * @throws TimeoutException
      * @return void
      */
     protected function fillCategories(Browser $browser): void
     {
-        foreach (range(0, 3) as $index) {
-            $duskSelector = "@selectControlProductCategory$index";
-            $selector = $browser->resolver->format($duskSelector);
-
-            try {
-                $browser->waitUsing(1, 100, function () use ($browser, $selector) {
-                    return count(
-                        $browser->driver->findElements(
-                            WebDriverBy::cssSelector($selector)
-                        )
-                    ) > 0;
-                });
-
-                $this->changeSelectControl($browser, $duskSelector, index: 1);
-            } catch (Throwable) {
-                // The next select never appeared, so we're done.
-                break;
-            }
+        foreach (range(0, 1) as $index) {
+            $this->changeSelectControl($browser, "@selectControlProductCategory$index", index: 1);
         }
     }
 
