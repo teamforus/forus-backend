@@ -59,6 +59,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.product_reservation_accepted' => ['database', 'mail'],
         'notifications_identities.product_reservation_canceled' => ['database', 'mail'],
         'notifications_identities.product_reservation_rejected' => ['database', 'mail'],
+        'notifications_identities.product_reservation_message' => ['mail'],
 
         'notifications_products.approved' => ['database'],
         'notifications_products.expired' => ['database'],
@@ -129,6 +130,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.product_reservation_accepted',
         'notifications_identities.product_reservation_canceled',
         'notifications_identities.product_reservation_rejected',
+        'notifications_identities.product_reservation_message',
 
         'notifications_products.approved',
         'notifications_products.expired',
@@ -224,6 +226,7 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_identities.product_voucher_reserved',
             'notifications_identities.product_reservation_created',
             'notifications_identities.product_reservation_accepted',
+            'notifications_identities.product_reservation_message',
             'notifications_identities.product_voucher_shared',
             'notifications_identities.product_reservation_rejected',
             'notifications_identities.product_reservation_canceled',

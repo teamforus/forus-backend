@@ -4,8 +4,9 @@ namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\ProductReservation;
+use App\Rules\ProviderMessageRecipientEmailRule;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @property Organization $organization
@@ -22,8 +23,8 @@ class RejectProductReservationRequest extends BaseFormRequest
     {
         return
             $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), Permission::SCAN_VOUCHERS) &&
-            $this->organization->id === $this->product_reservation->product->organization_id;
+            Gate::allows('show', $this->organization) &&
+            Gate::allows('rejectProvider', [$this->product_reservation, $this->organization]);
     }
 
     /**
@@ -35,7 +36,13 @@ class RejectProductReservationRequest extends BaseFormRequest
     {
         return [
             'note' => 'nullable|string|max:255',
-            'share_note_by_email' => 'nullable|boolean',
+            'share_note_by_email' => [
+                'nullable',
+                'boolean',
+                ...($this->filled('note') && in_array($this->input('share_note_by_email'), [true, 1, '1'], true) ? [
+                    new ProviderMessageRecipientEmailRule($this->product_reservation),
+                ] : []),
+            ],
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\BankConnections;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\BankConnection;
 use App\Models\Organization;
+use App\Rules\Base\IbanRule;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -29,8 +30,9 @@ class StoreBankConnectionsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return array_merge([
+        return [
+            'iban' => ['nullable', new IbanRule()],
             'bank_id' => 'required|exists:banks,id',
-        ]);
+        ];
     }
 }
