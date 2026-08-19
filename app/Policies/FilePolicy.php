@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Employee;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
@@ -10,7 +11,9 @@ use App\Models\ProductReservationFieldValue;
 use App\Models\Reimbursement;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class FilePolicy
 {
@@ -36,7 +39,15 @@ class FilePolicy
             return false;
         }
 
-        if ($file->type === 'uploaded_csv_details') {
+        $csvUploadPath = Str::finish(
+            Str::start((string) Config::get('file.storage_path'), '/') . Employee::CSV_UPLOAD_STORAGE_PREFIX,
+            '/',
+        );
+
+        if (
+            in_array($file->type, Employee::CSV_UPLOAD_FILE_TYPES, true) ||
+            Str::startsWith($file->path, $csvUploadPath)
+        ) {
             return false;
         }
 
@@ -115,9 +126,11 @@ class FilePolicy
             $field = $fieldValue?->reservation_field;
             $organization = $reservation?->product?->organization;
 
-            return $reservation && $field && $organization
-                ? Gate::forUser($identity)->allows('updateCustomField', [$reservation, $organization, $field])
-                : false;
+            return
+                $field &&
+                $reservation &&
+                $organization &&
+                Gate::forUser($identity)->allows('updateCustomField', [$reservation, $organization, $field]);
         }
 
         if ($file->fileable && in_array($file->type, [
