@@ -28,6 +28,7 @@ use App\Services\FileService\Models\File;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 
 trait MakesApiRequests
@@ -1244,6 +1245,7 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param array $overwrite
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function makeStorePrevalidationBatchRequest(
@@ -1251,11 +1253,13 @@ trait MakesApiRequests
         Fund $fund,
         array $data,
         array $overwrite = [],
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
             'fund_id' => $fund->id,
             'data' => $data,
             'overwrite' => $overwrite,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
 
@@ -1263,18 +1267,76 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param array $data
      * @param Identity|null $identity
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function apiMakePrevalidationRequestCollectionRequest(
         Organization $organization,
         array $data,
         ?Identity $identity = null,
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson(
             "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
-            $data,
+            [
+                ...$data,
+                ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'data')) : [],
+            ],
             $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
         );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeReservationRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/product-reservations/batch", [
+            'reservations' => $data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch", [
+            ...$data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'vouchers')) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherTransactionRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        $apiUrl = "/api/v1/platform/organizations/$organization->id/sponsor/transactions/batch";
+
+        return $this->postJson($apiUrl, [
+            ...$data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'transactions')) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
 
     /**
@@ -1537,16 +1599,22 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param Identity|null $identity
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function apiMakeSponsorPayoutBatchRequest(
         Fund $fund,
         array $data,
         ?Identity $identity = null,
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson(
             "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch",
-            ['fund_id' => $fund->id, 'payouts' => [$data]],
+            [
+                'fund_id' => $fund->id,
+                'payouts' => [$data],
+                ...$appendFileData ? $this->appendFileDataToBatchRequest([$data]) : [],
+            ],
             $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
         );
     }
@@ -1690,5 +1758,44 @@ trait MakesApiRequests
             $params,
             $this->makeApiHeaders($organization->identity),
         );
+    }
+
+    /**
+     * @param array $data
+     * @return string
+     */
+    protected function makeBatchRequestCsvContent(array $data): string
+    {
+        $fp = fopen('php://temp', 'r+');
+
+        fputcsv($fp, array_keys($data[0] ?? []));
+
+        foreach ($data as $row) {
+            fputcsv($fp, $row);
+        }
+
+        rewind($fp);
+        $csvContent = stream_get_contents($fp);
+        fclose($fp);
+
+        return $csvContent;
+    }
+
+    /**
+     * @param array $data
+     * @return array[]
+     */
+    private function appendFileDataToBatchRequest(array $data): array
+    {
+        return [
+            'file' => [
+                'name' => 'file.csv',
+                'content' => $this->makeBatchRequestCsvContent($data),
+                'total' => count($data),
+                'chunk' => 1,
+                'chunks' => 1,
+                'chunkSize' => count($data),
+            ],
+        ];
     }
 }
