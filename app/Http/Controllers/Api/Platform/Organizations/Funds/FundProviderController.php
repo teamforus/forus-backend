@@ -91,7 +91,7 @@ class FundProviderController extends Controller
 
         DB::transaction(function () use ($organization, $fundProvider, $request, $fund) {
             $fundProvider->update($request->only([
-                'allow_products', 'allow_budget', 'excluded',
+                'allow_products', 'allow_budget', 'excluded', 'allow_provider_messages',
                 ...($organization->allow_provider_extra_payments ? [
                     'allow_extra_payments', 'allow_extra_payments_full',
                 ] : []),
