@@ -616,6 +616,74 @@ class ProductReservationTest extends DuskTestCase
      * @throws Throwable
      * @return void
      */
+    public function testProductReservationAddressCombinedWithUserNoteField(): void
+    {
+        $fund = $this->makeTestFund(Implementation::byKey('nijmegen')->organization);
+
+        try {
+            $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+            $product = $this->makeTestProductForReservation($provider);
+            $identity = $this->makeIdentity($this->makeUniqueEmail());
+
+            $this->makeTestVoucher($fund, $identity);
+            $this->makeTestFundProvider($provider, $fund);
+            $this->assertFundHasApprovedProviders($fund);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            $product->forceFill([
+                'reservation_address' => Product::RESERVATION_FIELD_OPTIONAL,
+                'reservation_fields_enabled' => true,
+            ])->save();
+
+            $addressData = [
+                'city' => 'Kraigmouth',
+                'street' => 'Hodkiewicz Parks',
+                'house_nr' => '8',
+                'house_nr_addition' => 'A',
+                'postal_code' => '1234AB',
+            ];
+
+            // Test without a user note
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ], [...$addressData, 'existing' => false, 'optional' => true], noteDisabled: true);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_OPTIONAL,
+            ])->save();
+
+            // Test with a user note and address
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ], [...$addressData, 'existing' => false, 'optional' => true]);
+
+            $provider->forceFill([
+                'reservation_user_note' => Product::RESERVATION_FIELD_REQUIRED,
+            ])->save();
+
+            $product->forceFill([
+                'reservation_address' => Product::RESERVATION_FIELD_NO,
+            ])->save();
+
+            // Test with a user note and without address
+            $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
+                'first_name' => $this->faker->firstName(),
+                'last_name' => $this->faker->lastName(),
+            ]);
+        } finally {
+            $fund->archive($fund->organization->employees[0]);
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testProductReservationRequiredAddressWithoutProfile(): void
     {
         $organization = Implementation::byKey('nijmegen')->organization;
