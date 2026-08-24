@@ -660,7 +660,7 @@ class ProductReservationTest extends DuskTestCase
             $this->assertProductCanBeReservedByIdentity($fund, $product, $identity, [
                 'first_name' => $this->faker->firstName(),
                 'last_name' => $this->faker->lastName(),
-            ], [...$addressData, 'existing' => false, 'optional' => true]);
+            ], [...$addressData, 'existing' => false, 'optional' => true, 'fill_optional' => true]);
 
             $provider->forceFill([
                 'reservation_user_note' => Product::RESERVATION_FIELD_REQUIRED,
@@ -1504,6 +1504,7 @@ class ProductReservationTest extends DuskTestCase
             $skip = $data['skip'] ?? false;
             $optional = $data['optional'] ?? false;
             $existing = $data['existing'] ?? false;
+            $fillOptional = $data['fill_optional'] ?? false;
             $hiddenControls = $data['hidden_controls'] ?? false;
             $clearAfterApply = $data['clear_after_apply'] ?? false;
             $existingUpdate = $data['existing_update'] ?? false;
@@ -1521,7 +1522,7 @@ class ProductReservationTest extends DuskTestCase
                     $browser->assertDisabled('@productReserveAddressFormApply');
                 }
 
-                if ($optional && !$clearAfterApply) {
+                if ($optional && !$fillOptional && !$clearAfterApply) {
                     $browser->assertMissing('@btnSkip');
                     $browser->press('@btnSubmit');
 
@@ -1617,7 +1618,7 @@ class ProductReservationTest extends DuskTestCase
                 $browser->click('@productReserveAddressFormCancel');
             }
 
-            if ($existing && $optional) {
+            if ($optional && ($existing || $fillOptional)) {
                 $browser->assertPresent('@btnSkip');
             } else {
                 $browser->assertMissing('@btnSkip');
@@ -1667,7 +1668,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitForTextIn('@productReserveConfirmDetails', $firstName);
 
         if (!is_null($address)) {
-            if (!Arr::get($address, 'optional', false)) {
+            if (!Arr::get($address, 'optional', false) || Arr::get($address, 'fill_optional', false)) {
                 $browser->waitForTextIn('@overviewValueStreet', Arr::get($address, 'street', 'Leeg'));
                 $browser->waitForTextIn('@overviewValueHouseNr', Arr::get($address, 'house_nr', 'Leeg'));
                 $browser->waitForTextIn('@overviewValueHouseNrAddition', Arr::get($address, 'house_nr_addition', 'Leeg'));
