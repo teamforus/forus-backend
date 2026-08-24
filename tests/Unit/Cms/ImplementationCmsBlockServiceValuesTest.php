@@ -106,6 +106,8 @@ class ImplementationCmsBlockServiceValuesTest extends TestCase
         $this->assertSame([
             'media' => $media->uid,
             'label' => null,
+            'label_background_color' => null,
+            'label_text_color' => null,
             'title' => 'Translated post title',
             'description' => 'Translated post description',
             'button_enabled' => '1',

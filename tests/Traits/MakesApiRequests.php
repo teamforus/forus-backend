@@ -19,6 +19,7 @@ use App\Models\PrevalidationRequestRecord;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductReservation;
+use App\Models\ProviderMessage;
 use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
@@ -27,6 +28,7 @@ use App\Services\FileService\Models\File;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 
 trait MakesApiRequests
@@ -543,6 +545,24 @@ trait MakesApiRequests
     /**
      * @param ProductReservation $reservation
      * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiAcceptProductReservationByProviderRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->postJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/accept',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
      * @return ProductReservation
      */
     public function apiCancelProductReservation(
@@ -568,7 +588,7 @@ trait MakesApiRequests
         array $data = [],
     ): TestResponse {
         return $this->postJson(
-            "/api/v1/platform/organizations/{$reservation->product->organization->id}/product-reservations/$reservation->id/reject",
+            $this->apiProductReservationProviderUrl($reservation) . '/reject',
             $data,
             $this->makeApiHeaders($identity),
         );
@@ -633,6 +653,71 @@ trait MakesApiRequests
     }
 
     /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProductReservationByProviderRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            $this->apiProductReservationProviderUrl($reservation),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProductReservationProviderMessagesRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/provider-messages',
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiStoreProductReservationProviderMessageRequest(
+        ProductReservation $reservation,
+        Identity $identity,
+        array $data,
+    ): TestResponse {
+        return $this->postJson(
+            $this->apiProductReservationProviderUrl($reservation) . '/provider-messages',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @param ProviderMessage $message
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiExportProductReservationProviderMessageRequest(
+        ProductReservation $reservation,
+        ProviderMessage $message,
+        Identity $identity,
+    ): TestResponse {
+        return $this->get(
+            $this->apiProductReservationProviderUrl($reservation) . "/provider-messages/$message->id/export",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
      * @param Organization $organization
      * @param array $query
      * @return TestResponse
@@ -673,6 +758,19 @@ trait MakesApiRequests
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return string
+     */
+    protected function apiProductReservationProviderUrl(ProductReservation $reservation): string
+    {
+        return sprintf(
+            '/api/v1/platform/organizations/%d/product-reservations/%d',
+            $reservation->product->organization_id,
+            $reservation->id,
+        );
     }
 
     /**
@@ -1187,6 +1285,7 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param array $overwrite
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function makeStorePrevalidationBatchRequest(
@@ -1194,11 +1293,13 @@ trait MakesApiRequests
         Fund $fund,
         array $data,
         array $overwrite = [],
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
             'fund_id' => $fund->id,
             'data' => $data,
             'overwrite' => $overwrite,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
 
@@ -1206,18 +1307,76 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param array $data
      * @param Identity|null $identity
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function apiMakePrevalidationRequestCollectionRequest(
         Organization $organization,
         array $data,
         ?Identity $identity = null,
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson(
             "/api/v1/platform/organizations/$organization->id/prevalidation-requests/collection",
-            $data,
+            [
+                ...$data,
+                ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'data')) : [],
+            ],
             $this->makeApiHeaders($identity ?: $this->makeIdentityProxy($organization->identity)),
         );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeReservationRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/product-reservations/batch", [
+            'reservations' => $data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch", [
+            ...$data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'vouchers')) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param bool $appendFileData
+     * @return TestResponse
+     */
+    protected function apiMakeVoucherTransactionRequestBatchRequest(
+        Organization $organization,
+        array $data,
+        bool $appendFileData = false,
+    ): TestResponse {
+        $apiUrl = "/api/v1/platform/organizations/$organization->id/sponsor/transactions/batch";
+
+        return $this->postJson($apiUrl, [
+            ...$data,
+            ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'transactions')) : [],
+        ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
 
     /**
@@ -1480,16 +1639,22 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param Identity|null $identity
+     * @param bool $appendFileData
      * @return TestResponse
      */
     protected function apiMakeSponsorPayoutBatchRequest(
         Fund $fund,
         array $data,
         ?Identity $identity = null,
+        bool $appendFileData = false,
     ): TestResponse {
         return $this->postJson(
             "/api/v1/platform/organizations/$fund->organization_id/sponsor/payouts/batch",
-            ['fund_id' => $fund->id, 'payouts' => [$data]],
+            [
+                'fund_id' => $fund->id,
+                'payouts' => [$data],
+                ...$appendFileData ? $this->appendFileDataToBatchRequest([$data]) : [],
+            ],
             $this->makeApiHeaders($this->makeIdentityProxy($identity ?: $fund->organization->identity)),
         );
     }
@@ -1633,5 +1798,44 @@ trait MakesApiRequests
             $params,
             $this->makeApiHeaders($organization->identity),
         );
+    }
+
+    /**
+     * @param array $data
+     * @return string
+     */
+    protected function makeBatchRequestCsvContent(array $data): string
+    {
+        $fp = fopen('php://temp', 'r+');
+
+        fputcsv($fp, array_keys($data[0] ?? []));
+
+        foreach ($data as $row) {
+            fputcsv($fp, $row);
+        }
+
+        rewind($fp);
+        $csvContent = stream_get_contents($fp);
+        fclose($fp);
+
+        return $csvContent;
+    }
+
+    /**
+     * @param array $data
+     * @return array[]
+     */
+    private function appendFileDataToBatchRequest(array $data): array
+    {
+        return [
+            'file' => [
+                'name' => 'file.csv',
+                'content' => $this->makeBatchRequestCsvContent($data),
+                'total' => count($data),
+                'chunk' => 1,
+                'chunks' => 1,
+                'chunkSize' => count($data),
+            ],
+        ];
     }
 }

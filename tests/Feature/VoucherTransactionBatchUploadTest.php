@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesVoucherTransaction;
 
 class VoucherTransactionBatchUploadTest extends TestCase
@@ -21,6 +22,7 @@ class VoucherTransactionBatchUploadTest extends TestCase
     use MakesVoucherTransaction;
     use WithFaker;
     use DatabaseTransactions;
+    use MakesAssertStoreUploadedCsvFile;
 
     /**
      * @var string
@@ -232,6 +234,48 @@ class VoucherTransactionBatchUploadTest extends TestCase
         ];
 
         $this->checkTransactionBatch($transactions, $errors);
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function testVoucherTransactionBatchStoreUploadedCsvFile(): void
+    {
+        $transactionsPerVoucher = 5;
+        $vouchersCount = 3;
+
+        $organization = $this->getOrganization();
+        $vouchers = $this->getVouchersForBatchTransactionsQuery($organization)->take($vouchersCount)->get();
+        $this->assertNotEmpty($vouchers);
+
+        /** @var array $transactions */
+        $transactions = $vouchers->reduce(function (array $arr, Voucher $voucher) use ($transactionsPerVoucher) {
+            return array_merge($arr, array_map(function () use ($voucher, $transactionsPerVoucher) {
+                $amount = $voucher->amount_available / $transactionsPerVoucher;
+
+                $amount = fmod($amount, 1.0) === 0.0
+                    ? (int) $amount
+                    : $amount;
+
+                return [
+                    'amount' => $amount,
+                    'voucher_number' => $voucher->number,
+                    ...$this->getDefaultTransactionData(),
+                ];
+            }, range(1, $transactionsPerVoucher)));
+        }, []);
+
+        $this->apiMakeVoucherTransactionRequestBatchRequest(
+            $organization,
+            compact('transactions'),
+            true
+        )->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_TRANSACTIONS, 15);
+
+        $this->assertLoggedUploadedFileContent($log, $transactions);
     }
 
     /**

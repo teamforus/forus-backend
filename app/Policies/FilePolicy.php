@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Employee;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
@@ -11,7 +12,9 @@ use App\Models\Reimbursement;
 use App\Services\FileService\FilePdfPreviewService;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class FilePolicy
 {
@@ -41,7 +44,15 @@ class FilePolicy
             return false;
         }
 
-        if ($file->type === 'uploaded_csv_details') {
+        $csvUploadPath = Str::finish(
+            Str::start((string) Config::get('file.storage_path'), '/') . Employee::CSV_UPLOAD_STORAGE_PREFIX,
+            '/',
+        );
+
+        if (
+            in_array($file->type, Employee::CSV_UPLOAD_FILE_TYPES, true) ||
+            Str::startsWith($file->path, $csvUploadPath)
+        ) {
             return false;
         }
 

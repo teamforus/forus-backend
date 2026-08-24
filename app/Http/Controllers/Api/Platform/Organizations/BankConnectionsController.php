@@ -58,7 +58,7 @@ class BankConnectionsController extends Controller
         $bank = Bank::find($request->input('bank_id'));
         $employee = $request->employee($organization);
         $connection = $organization->makeBankConnection($bank, $employee, $request->implementation());
-        $auth_url = $connection->makeOauthUrl();
+        $auth_url = $connection->makeOauthUrl($request->input('iban'));
 
         if (is_string($auth_url)) {
             $connection->update(['auth_url' => $auth_url]);

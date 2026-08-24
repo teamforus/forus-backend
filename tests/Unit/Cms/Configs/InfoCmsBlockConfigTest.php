@@ -50,6 +50,8 @@ class InfoCmsBlockConfigTest extends CmsBlockTestCase
         $this->assertSame([
             'media',
             'label',
+            'label_background_color',
+            'label_text_color',
             'title',
             'description',
             'button_enabled',
@@ -59,6 +61,9 @@ class InfoCmsBlockConfigTest extends CmsBlockTestCase
             'button_target_blank',
         ], array_column($config->itemFields(InfoCmsBlockConfig::ITEM_TYPE_POST), 'key'));
 
+        $labelBackgroundColor = $config->itemField(InfoCmsBlockConfig::ITEM_TYPE_POST, 'label_background_color');
+        $labelTextColor = $config->itemField(InfoCmsBlockConfig::ITEM_TYPE_POST, 'label_text_color');
+
         $media = $config->itemField(InfoCmsBlockConfig::ITEM_TYPE_POST, 'media');
         $title = $config->itemField(InfoCmsBlockConfig::ITEM_TYPE_POST, 'title');
         $buttonText = $config->itemField(InfoCmsBlockConfig::ITEM_TYPE_POST, 'button_text');
@@ -67,6 +72,9 @@ class InfoCmsBlockConfigTest extends CmsBlockTestCase
         $this->assertSame(CmsBlockConfig::TYPE_MEDIA, $media['type']);
         $this->assertSame('implementation_block_media', $media['media_type']);
         $this->assertFalse($media['translatable']);
+
+        $this->assertSame(CmsBlockConfig::TYPE_COLOR, $labelBackgroundColor['type']);
+        $this->assertSame(CmsBlockConfig::TYPE_COLOR, $labelTextColor['type']);
 
         $this->assertSame(CmsBlockConfig::TYPE_TEXT, $title['type']);
         $this->assertTrue($title['required']);

@@ -412,7 +412,8 @@
     "notifications_identities.product_reservation_accepted": {
         "mail": {
             "title": "Reserverving is geaccepteerd.",
-            "template": "notifications_identities/product_reservation_accepted.md"
+            "template": "notifications_identities/product_reservation_accepted.md",
+            "template_informal": "notifications_identities/product_reservation_accepted_informal.md"
         },
         "push": {},
         "database": {
@@ -423,7 +424,8 @@
     "notifications_identities.product_reservation_canceled": {
         "mail": {
             "title": "Reservering is geannuleerd.",
-            "template": "notifications_identities/product_reservation_canceled.md"
+            "template": "notifications_identities/product_reservation_canceled.md",
+            "template_informal": "notifications_identities/product_reservation_canceled_informal.md"
         },
         "push": {},
         "database": {
@@ -442,13 +444,23 @@
     "notifications_identities.product_reservation_rejected": {
         "mail": {
             "title": "Reservering is geweigerd.",
-            "template": "notifications_identities/product_reservation_rejected.md"
+            "template": "notifications_identities/product_reservation_rejected.md",
+            "template_informal": "notifications_identities/product_reservation_rejected_informal.md"
         },
         "push": {},
         "database": {
             "title": "Reservering is geweigerd.",
             "content": "De reserving van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie."
         }
+    },
+    "notifications_identities.product_reservation_message": {
+        "mail": {
+            "title": "Bericht over reservering.",
+            "template": "notifications_identities/product_reservation_message.md",
+            "template_informal": "notifications_identities/product_reservation_message_informal.md"
+        },
+        "push": {},
+        "database": {}
     },
     "notifications_products.approved": {
         "mail": {},

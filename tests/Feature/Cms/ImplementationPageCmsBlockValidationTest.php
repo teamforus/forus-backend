@@ -68,6 +68,8 @@ class ImplementationPageCmsBlockValidationTest extends ImplementationCmsTestCase
         $this->assertSame([
             'media',
             'label',
+            'label_background_color',
+            'label_text_color',
             'title',
             'description',
             'button_enabled',

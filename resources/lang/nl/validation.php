@@ -358,4 +358,8 @@ return [
             'min' => 'De :attribute is te kort. Schrijf minimaal :min tekens. Voorbeeld: Sportschoenen.',
         ],
     ],
+    'provider_message' => [
+        'recipient_email_missing' =>
+            'Deze deelnemer heeft geen e-mailadres. Het bericht kan niet per e-mail worden verstuurd.',
+    ],
 ];
