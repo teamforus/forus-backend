@@ -16,12 +16,14 @@ trait MakesTestProducts
      * @param Organization $organization
      * @param float $price
      * @param int|null $product_category_id
+     * @param array $attributes
      * @return Product
      */
     public function makeTestProduct(
         Organization $organization,
         float $price = 10,
         ?int $product_category_id = null,
+        array $attributes = [],
     ): Product {
         return $organization->products()->forceCreate([
             'name' => $this->faker->text(60),
@@ -36,6 +38,7 @@ trait MakesTestProducts
             'price_type' => Product::PRICE_TYPE_REGULAR,
             'price_discount' => 0,
             'reservation_enabled' => 1,
+            ...$attributes,
         ])->fresh();
     }
 

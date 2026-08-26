@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Services\FileService\FileUploadConfigService;
 use Illuminate\Contracts\Validation\Rule;
 
 class FileTypeRule implements Rule
@@ -15,7 +16,7 @@ class FileTypeRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return in_array($value, config('file.allowed_types', []));
+        return is_string($value) && resolve(FileUploadConfigService::class)->isTypeAllowed($value);
     }
 
     /**

@@ -2,16 +2,16 @@
 
 namespace Tests\Feature;
 
-use App\Models\Fund;
-use App\Models\Organization;
-use App\Models\Product;
-use App\Models\ProductReservation;
 use App\Models\ReservationField;
-use App\Models\Voucher;
+use App\Services\FileService\Models\File;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use Tests\Traits\MakesProductReservationPdfFiles;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Throwable;
@@ -20,6 +20,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
 {
     use MakesTestFunds;
     use MakesProductReservations;
+    use MakesProductReservationPdfFiles;
     use DatabaseTransactions;
 
     /**
@@ -30,14 +31,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
     {
         ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'provider optional file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'provider optional file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField($provider, 'provider optional file field');
 
         $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
             'value' => [],
@@ -58,14 +52,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
     {
         ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'provider file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'provider file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField($provider, 'provider file field');
 
         $uploadedFile = $this->apiUploadProductReservationCustomFieldFile($provider->identity, [
             'file' => UploadedFile::fake()->image('existing-file.png'),
@@ -94,14 +81,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
     {
         ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'provider multi file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'provider multi file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField($provider, 'provider multi file field');
 
         $uploadedFile = $this->apiUploadProductReservationCustomFieldFile($provider->identity, [
             'file' => UploadedFile::fake()->image('uploaded-file.png'),
@@ -142,14 +122,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
     {
         ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'provider resubmitted file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'provider resubmitted file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField($provider, 'provider resubmitted file field');
 
         $uploadedFile = $this->apiUploadProductReservationCustomFieldFile($provider->identity, [
             'file' => UploadedFile::fake()->image('resubmitted-file.png'),
@@ -248,14 +221,7 @@ class ProductReservationCustomFieldValuesTest extends TestCase
         $secondVoucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity());
         $secondReservation = $this->makeReservation($secondVoucher, $product);
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'provider searchable file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'provider searchable file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_PROVIDER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField($provider, 'provider searchable file field');
 
         $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
             'value' => [
@@ -282,18 +248,200 @@ class ProductReservationCustomFieldValuesTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testProviderReservationResponseIncludesPdfPreviewState(): void
+    {
+        Storage::fake('public');
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf file field');
+        $file = $this->makeProductReservationCustomFieldFile($provider->identity, 'reservation.pdf');
+
+        $firstPage = $this->makePdfPreviewPage('page-1.jpg');
+        $secondPage = $this->makePdfPreviewPage('page-2.jpg');
+
+        $file->syncMedia([$firstPage->uid, $secondPage->uid], 'file_pdf_preview_page');
+
+        $fieldValue = $reservation->custom_fields()->create([
+            'reservation_field_id' => $field->id,
+            'value' => null,
+        ]);
+
+        $fieldValue->appendFilesByUid($file->uid);
+
+        $this
+            ->apiGetProductReservationsByProviderRequest($provider)
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.custom_fields.0.files.0.uid', $file->uid)
+            ->assertJsonMissingPath('data.0.custom_fields.0.files.0.url')
+            ->assertJsonPath('data.0.custom_fields.0.files.0.preview', null)
+            ->assertJsonPath('data.0.custom_fields.0.files.0.uses_pdf_preview', true)
+            ->assertJsonPath('data.0.custom_fields.0.files.0.has_pdf_preview_pages', true)
+            ->assertJsonMissingPath('data.0.custom_fields.0.files.0.pdf_preview_pages');
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testReplacingPdfFileRemovesOldPreviewPages(): void
+    {
+        Storage::fake('public');
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf replacement field');
+        $oldFile = $this->makeProductReservationPdfFile($provider->identity, 'old-reservation.pdf', 2);
+        $newFile = $this->makeProductReservationPdfFile($provider->identity, 'new-reservation.pdf', 2);
+        $oldPageIds = $oldFile->pdf_preview_pages()->pluck('id')->toArray();
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => [$oldFile->uid],
+        ]);
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => [$newFile->uid],
+        ]);
+
+        $fieldValue = $reservation->custom_fields()->firstWhere('reservation_field_id', $field->id);
+
+        $this->assertTrue(File::withTrashed()->findOrFail($oldFile->id)->trashed());
+        Storage::disk(Config::get('file.filesystem_driver', 'local'))->assertMissing(ltrim($oldFile->path, '/'));
+        $this->assertSame(0, Media::query()->whereIn('id', $oldPageIds)->count());
+        $this->assertSame([$newFile->uid], $fieldValue->files()->pluck('uid')->toArray());
+        $this->assertSame(2, $newFile->pdf_preview_pages()->count());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testClearingPdfFileRemovesPreviewPages(): void
+    {
+        Storage::fake('public');
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf clear field');
+        $file = $this->makeProductReservationPdfFile($provider->identity, 'clear-reservation.pdf', 2);
+        $pageIds = $file->pdf_preview_pages()->pluck('id')->toArray();
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => [$file->uid],
+        ]);
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => [],
+        ]);
+
+        $fieldValue = $reservation->custom_fields()->firstWhere('reservation_field_id', $field->id);
+
+        $this->assertTrue(File::withTrashed()->findOrFail($file->id)->trashed());
+        Storage::disk(Config::get('file.filesystem_driver', 'local'))->assertMissing(ltrim($file->path, '/'));
+        $this->assertSame(0, Media::query()->whereIn('id', $pageIds)->count());
+        $this->assertSame([], $fieldValue->files()->pluck('uid')->toArray());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFailedPdfAttachmentKeepsPreviewPages(): void
+    {
+        Storage::fake('public');
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf failed attachment field');
+        $file = $this->makeProductReservationPdfFile($this->makeIdentity(), 'other-identity-reservation.pdf', 2);
+        $pageIds = $file->pdf_preview_pages()->pluck('id')->toArray();
+
+        $this
+            ->apiUpdateProductReservationFieldByProviderRequest($provider, $reservation, $field, [
+                'value' => [$file->uid],
+            ])
+            ->assertJsonValidationErrors(['value.0']);
+
+        $this->assertFalse(File::findOrFail($file->id)->trashed());
+        $this->assertSame(2, Media::query()->whereIn('id', $pageIds)->count());
+        $this->assertNull($reservation->custom_fields()->firstWhere('reservation_field_id', $field->id));
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testAttachingPdfFileDoesNotRunConverterAgain(): void
+    {
+        $this->fakeProductReservationPdfStorage();
+        $converter = $this->bindFakePdfToImgConverter($this->makePdfToImgResponse(2));
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf attachment field');
+
+        $file = $this->apiUploadProductReservationCustomFieldFile($provider->identity, [
+            'file' => $this->makePdfFixtureUpload(),
+        ]);
+
+        $this->assertCount(1, $converter->getRequests());
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => [$file->uid],
+        ]);
+
+        $this->assertCount(1, $converter->getRequests());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPdfFilesWithPreviewPagesRespectFileLimit(): void
+    {
+        Storage::fake('public');
+
+        ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
+
+        $fileUids = array_map(
+            fn (int $i) => $this->makeProductReservationPdfFile($provider->identity, "reservation-$i.pdf", 3)->uid,
+            range(1, 6),
+        );
+
+        $field = $this->makeReservationFileField($provider, 'provider pdf limit field');
+        $firstFiveFileUids = array_slice($fileUids, 0, 5);
+
+        $this->apiUpdateProductReservationFieldByProvider($provider, $reservation, $field, [
+            'value' => $firstFiveFileUids,
+        ]);
+
+        $fieldValue = $reservation->custom_fields()->firstWhere('reservation_field_id', $field->id);
+
+        $this->assertSame($firstFiveFileUids, $fieldValue->files()->pluck('uid')->toArray());
+        $this->assertSame(15, $fieldValue->files()->with('pdf_preview_pages')->get()->sum(
+            fn (File $file) => $file->pdf_preview_pages->count(),
+        ));
+
+        $this
+            ->apiUpdateProductReservationFieldByProviderRequest($provider, $reservation, $field, [
+                'value' => $fileUids,
+            ])
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testProviderCannotDestroyRequesterCustomFieldFile(): void
     {
         ['provider' => $provider, 'reservation' => $reservation] = $this->makeReservationContext();
 
-        $field = $provider->reservation_fields()->create([
-            'label' => 'requester protected file field',
-            'type' => ReservationField::TYPE_FILE,
-            'description' => 'requester protected file field description',
-            'required' => false,
-            'fillable_by' => ReservationField::FILLABLE_BY_REQUESTER,
-            'order' => 1,
-        ]);
+        $field = $this->makeReservationFileField(
+            $provider,
+            'requester protected file field',
+            ReservationField::FILLABLE_BY_REQUESTER,
+        );
 
         $uploadedFile = $this->apiUploadProductReservationCustomFieldFile($provider->identity, [
             'file' => UploadedFile::fake()->image('requester-protected-file.png'),
@@ -331,37 +479,5 @@ class ProductReservationCustomFieldValuesTest extends TestCase
         $this->apiUpdateProductReservationFieldByProviderRequest($provider, $reservation, $field, [
             'value' => null,
         ])->assertJsonValidationErrors(['value']);
-    }
-
-    /**
-     * @param bool $withReservation
-     * @return array{
-     *     fund: Fund,
-     *     product: Product,
-     *     provider: Organization,
-     *     reservation: ProductReservation|null,
-     *     voucher: Voucher,
-     * }
-     */
-    protected function makeReservationContext(bool $withReservation = true): array
-    {
-        $sponsor = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
-        $fund = $this->makeTestFund($sponsor);
-        $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
-        $product = $this->createProductForReservation($provider, [$fund]);
-        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity($this->makeUniqueEmail()));
-
-        $product->update([
-            'reservation_fields_enabled' => true,
-            'reservation_fields_config' => Product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
-        ]);
-
-        return [
-            'fund' => $fund,
-            'provider' => $provider,
-            'product' => $product,
-            'voucher' => $voucher,
-            'reservation' => $withReservation ? $this->makeReservation($voucher, $product) : null,
-        ];
     }
 }

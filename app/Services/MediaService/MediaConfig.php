@@ -9,6 +9,8 @@ abstract class MediaConfig
 {
     public const string TYPE_SINGLE = 'single';
     public const string TYPE_MULTIPLE = 'multiple';
+    public const string VISIBILITY_PUBLIC = 'public';
+    public const string VISIBILITY_PRIVATE = 'private';
 
     public const array TYPES = [
         self::TYPE_SINGLE,
@@ -75,6 +77,8 @@ abstract class MediaConfig
      */
     protected bool $save_dominant_color = true;
 
+    protected string $visibility = self::VISIBILITY_PUBLIC;
+
     /**
      * @return string|null
      */
@@ -130,6 +134,14 @@ abstract class MediaConfig
     public function getMaxSourceFileSize(int $default): int
     {
         return $this->max_source_file_size ?: $default;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVisibility(): string
+    {
+        return $this->visibility;
     }
 
     /**

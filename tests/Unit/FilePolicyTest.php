@@ -19,7 +19,7 @@ class FilePolicyTest extends TestCase
         $identity = new Identity();
         $identity->forceFill(['address' => 'owner']);
         $identity->exists = true;
-        $policy = new FilePolicy();
+        $policy = resolve(FilePolicy::class);
 
         foreach (Employee::CSV_UPLOAD_FILE_TYPES as $fileType) {
             $file = new File();
@@ -45,7 +45,7 @@ class FilePolicyTest extends TestCase
         $identity = new Identity();
         $identity->forceFill(['address' => 'owner']);
         $identity->exists = true;
-        $policy = new FilePolicy();
+        $policy = resolve(FilePolicy::class);
 
         $file = new File();
 
@@ -69,7 +69,7 @@ class FilePolicyTest extends TestCase
         $identity = new Identity();
         $identity->forceFill(['address' => 'owner']);
         $identity->exists = true;
-        $policy = new FilePolicy();
+        $policy = resolve(FilePolicy::class);
 
         $file = new File();
 
