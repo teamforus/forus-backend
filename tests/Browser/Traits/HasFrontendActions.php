@@ -444,6 +444,20 @@ trait HasFrontendActions
 
     /**
      * @param Browser $browser
+     * @throws TimeoutException
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @return void
+     */
+    protected function assertAndCloseDangerNotification(Browser $browser): void
+    {
+        $browser->waitFor('@dangerNotification');
+        $browser->click('@dangerNotification @notificationCloseBtn');
+        $browser->waitUntilMissing('@dangerNotification');
+    }
+
+    /**
+     * @param Browser $browser
      * @throws TimeOutException
      * @return void
      */
