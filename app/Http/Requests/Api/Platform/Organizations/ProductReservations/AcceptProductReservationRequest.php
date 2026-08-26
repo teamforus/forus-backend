@@ -6,9 +6,10 @@ use App\Exceptions\AuthorizationJsonException;
 use App\Helpers\Locker;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\ProductReservation;
+use App\Rules\ProviderMessageRecipientEmailRule;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
@@ -41,9 +42,10 @@ class AcceptProductReservationRequest extends BaseFormRequest
             abort(429, 'To many requests, please try again later.');
         }
 
-        return $this->isAuthenticated() &&
-            $this->organization->identityCan($this->identity(), Permission::SCAN_VOUCHERS) &&
-            $this->organization->id === $this->product_reservation->product->organization_id;
+        return
+            $this->isAuthenticated() &&
+            Gate::allows('show', $this->organization) &&
+            Gate::allows('acceptProvider', [$this->product_reservation, $this->organization]);
     }
 
     /**
@@ -53,6 +55,15 @@ class AcceptProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'note' => 'nullable|string|max:255',
+            'share_note_by_email' => [
+                'nullable',
+                'boolean',
+                ...($this->filled('note') && in_array($this->input('share_note_by_email'), [true, 1, '1'], true) ? [
+                    new ProviderMessageRecipientEmailRule($this->product_reservation),
+                ] : []),
+            ],
+        ];
     }
 }

@@ -56,13 +56,15 @@ abstract class MediaPreset
      * @param Filesystem $storage
      * @param string $storagePath
      * @param Media $media
+     * @param string $visibility
      * @return mixed
      */
     abstract public function makePresetModel(
         string $sourcePath,
         Filesystem $storage,
         string $storagePath,
-        Media $media
+        Media $media,
+        string $visibility,
     ): mixed;
 
     /**
@@ -70,6 +72,7 @@ abstract class MediaPreset
      * @param string $storagePath
      * @param PresetModel $presetModel
      * @param Media $media
+     * @param string $visibility
      * @return mixed
      */
     abstract public function copyPresetModel(
@@ -77,6 +80,7 @@ abstract class MediaPreset
         string $storagePath,
         PresetModel $presetModel,
         Media $media,
+        string $visibility,
     ): mixed;
 
     /**

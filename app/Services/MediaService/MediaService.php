@@ -285,7 +285,8 @@ class MediaService
                 $tmpFile->path(),
                 $this->storage(),
                 $this->storagePath,
-                $media
+                $media,
+                $mediaConfig->getVisibility(),
             );
         }
 
@@ -569,7 +570,8 @@ class MediaService
                     $this->storage(),
                     $this->storagePath,
                     $presetModel,
-                    $newMedia
+                    $newMedia,
+                    $mediaConfig->getVisibility(),
                 );
             }
         }

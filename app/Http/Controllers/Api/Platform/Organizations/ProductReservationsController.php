@@ -12,17 +12,20 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProdu
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationNoteRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreReservationProviderMessageRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationFieldRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\UpdateProductReservationRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Requests\BaseIndexFormRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\NoteResource;
-use App\Http\Resources\ProductReservationResource;
+use App\Http\Resources\Provider\ProviderProductReservationResource;
+use App\Http\Resources\ProviderMessageResource;
 use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ProviderMessage;
 use App\Models\ReservationField;
 use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
@@ -32,6 +35,7 @@ use App\Services\MollieService\Exceptions\MollieException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -71,7 +75,7 @@ class ProductReservationsController extends Controller
             'q_type' => 'provider',
         ], ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
-        return ProductReservationResource::queryCollection($search->query());
+        return ProviderProductReservationResource::queryCollection($search->query());
     }
 
     /**
@@ -81,12 +85,12 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws Throwable
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function store(
         StoreProductReservationRequest $request,
         Organization $organization
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('createProvider', [ProductReservation::class, $organization]);
 
         $product = Product::find($request->input('product_id'));
@@ -99,7 +103,7 @@ class ProductReservationsController extends Controller
 
         $reservation->acceptProvider();
 
-        return ProductReservationResource::create($reservation);
+        return ProviderProductReservationResource::create($reservation);
     }
 
     /**
@@ -147,7 +151,7 @@ class ProductReservationsController extends Controller
         }
 
         $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
-        $reserved = ProductReservationResource::createCollection($reservations);
+        $reserved = ProviderProductReservationResource::createCollection($reservations);
 
         $event?->forceFill([
             'data->uploaded_file_meta->state' => 'success',
@@ -168,16 +172,16 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function show(
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('viewProvider', [$productReservation, $organization]);
 
-        return ProductReservationResource::create($productReservation);
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -187,19 +191,32 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param \App\Models\ProductReservation $productReservation
      * @throws \Illuminate\Auth\Access\AuthorizationException|Throwable
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function accept(
         AcceptProductReservationRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
-        $this->authorize('show', $organization);
-        $this->authorize('acceptProvider', [$productReservation, $organization]);
+    ): ProviderProductReservationResource {
+        $employee = $organization->findEmployee($request->auth_address());
+        $shareNoteByEmail = $request->filled('note') && $request->boolean('share_note_by_email');
 
-        $productReservation->acceptProvider($organization->findEmployee($request->auth_address()));
+        $productReservation->acceptProvider(
+            $employee,
+            $request->post('note'),
+            $shareNoteByEmail,
+        );
 
-        return ProductReservationResource::create($productReservation);
+        if ($shareNoteByEmail) {
+            $productReservation->provider_messages()->create([
+                'type' => ProviderMessage::TYPE_APPROVE_RESERVATION,
+                'message' => $request->get('note'),
+                'employee_id' => $employee?->id,
+                'identity_id' => $productReservation->voucher->identity_id,
+            ]);
+        }
+
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -210,23 +227,34 @@ class ProductReservationsController extends Controller
      * @param \App\Models\ProductReservation $productReservation
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws Throwable
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function reject(
         RejectProductReservationRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
-        $this->authorize('show', $organization);
-        $this->authorize('rejectProvider', [$productReservation, $organization]);
+    ): ProviderProductReservationResource {
+        $employee = $organization->findEmployee($request->auth_address());
+        $shareNoteByEmail = $request->filled('note') && $request->boolean('share_note_by_email');
 
         $productReservation->rejectOrCancelProvider(
-            $organization->findEmployee($request->auth_address()),
+            $employee,
             $request->post('note'),
-            $request->post('share_note_by_email', false),
+            $shareNoteByEmail,
         );
 
-        return ProductReservationResource::create($productReservation);
+        if ($shareNoteByEmail) {
+            $productReservation->provider_messages()->create([
+                'type' => $productReservation->isCanceledByProvider()
+                    ? ProviderMessage::TYPE_CANCEL_RESERVATION
+                    : ProviderMessage::TYPE_REJECT_RESERVATION,
+                'message' => $request->get('note'),
+                'employee_id' => $employee?->id,
+                'identity_id' => $productReservation->voucher->identity_id,
+            ]);
+        }
+
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -276,19 +304,19 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function archive(
         BaseFormRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('archive', [$productReservation, $organization]);
 
         $productReservation->archive($organization->findEmployee($request->auth_address()));
 
-        return ProductReservationResource::create($productReservation);
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -296,20 +324,20 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      * @noinspection PhpUnused
      */
     public function unArchive(
         BaseFormRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('unarchive', [$productReservation, $organization]);
 
         $productReservation->unArchive($organization->findEmployee($request->auth_address()));
 
-        return ProductReservationResource::create($productReservation);
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -317,13 +345,13 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @throws Throwable
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function fetchExtraPayment(
         FetchExtraPaymentProductReservationsRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('fetchExtraPayment', [$productReservation, $organization]);
 
@@ -333,7 +361,7 @@ class ProductReservationsController extends Controller
             abort(503, $e->getMessage());
         }
 
-        return ProductReservationResource::create($productReservation->refresh());
+        return ProviderProductReservationResource::create($productReservation->refresh());
     }
 
     /**
@@ -341,13 +369,13 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @throws Throwable
-     * @return ProductReservationResource|JsonResponse
+     * @return ProviderProductReservationResource|JsonResponse
      */
     public function refundExtraPayment(
         RefundExtraPaymentProductReservationRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource|JsonResponse {
+    ): ProviderProductReservationResource|JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('refundExtraPayment', [$productReservation, $organization]);
 
@@ -366,26 +394,26 @@ class ProductReservationsController extends Controller
             abort(503, $e->getMessage());
         }
 
-        return ProductReservationResource::create($productReservation->refresh());
+        return ProviderProductReservationResource::create($productReservation->refresh());
     }
 
     /**
      * @param UpdateProductReservationRequest $request
      * @param Organization $organization
      * @param ProductReservation $productReservation
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function update(
         UpdateProductReservationRequest $request,
         Organization $organization,
         ProductReservation $productReservation
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$productReservation, $organization]);
 
         $productReservation->update($request->only('invoice_number'));
 
-        return ProductReservationResource::create($productReservation);
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -393,14 +421,14 @@ class ProductReservationsController extends Controller
      * @param Organization $organization
      * @param ProductReservation $productReservation
      * @param ReservationField $field
-     * @return ProductReservationResource
+     * @return ProviderProductReservationResource
      */
     public function updateCustomField(
         UpdateProductReservationFieldRequest $request,
         Organization $organization,
         ProductReservation $productReservation,
         ReservationField $field
-    ): ProductReservationResource {
+    ): ProviderProductReservationResource {
         $this->authorize('show', $organization);
         $this->authorize('updateCustomField', [$productReservation, $organization, $field]);
 
@@ -416,7 +444,7 @@ class ProductReservationsController extends Controller
             $fieldValue->syncFieldFilesByUid(is_array($value) ? $value : []);
         }
 
-        return ProductReservationResource::create($productReservation);
+        return ProviderProductReservationResource::create($productReservation);
     }
 
     /**
@@ -473,5 +501,60 @@ class ProductReservationsController extends Controller
         $note->delete();
 
         return new JsonResponse();
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param BaseIndexFormRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return AnonymousResourceCollection
+     */
+    public function providerMessages(
+        BaseIndexFormRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation,
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyProviderMessage', [$productReservation, $organization]);
+
+        return ProviderMessageResource::queryCollection(
+            $productReservation->provider_messages()->orderByDesc('created_at')->orderByDesc('id'),
+            $request,
+        );
+    }
+
+    /**
+     * @param StoreReservationProviderMessageRequest $request
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @return ProviderMessageResource
+     */
+    public function storeProviderMessage(
+        StoreReservationProviderMessageRequest $request,
+        Organization $organization,
+        ProductReservation $productReservation,
+    ): ProviderMessageResource {
+        return ProviderMessageResource::create($productReservation->addProviderMessage(
+            $request->input('message'),
+            $request->employee($organization),
+        ));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param ProductReservation $productReservation
+     * @param ProviderMessage $message
+     * @throws Throwable
+     * @return Response
+     */
+    public function exportProviderMessage(
+        Organization $organization,
+        ProductReservation $productReservation,
+        ProviderMessage $message
+    ): Response {
+        $this->authorize('exportProviderMessage', [$productReservation, $message, $organization]);
+
+        return $message->toPdf()->download('email.pdf');
     }
 }
