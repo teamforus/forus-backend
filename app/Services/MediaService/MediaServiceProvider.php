@@ -36,5 +36,7 @@ class MediaServiceProvider extends ServiceProvider
         $this->app->singleton('media', function () {
             return new MediaService();
         });
+
+        $this->app->alias('media', MediaService::class);
     }
 }

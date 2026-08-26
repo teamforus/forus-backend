@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     locales \
     libzip-dev \
     libfreetype6-dev \
+    poppler-utils \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp \

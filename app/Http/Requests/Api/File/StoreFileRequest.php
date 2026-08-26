@@ -4,8 +4,11 @@ namespace App\Http\Requests\Api\File;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\FileTypeRule;
-use Illuminate\Support\Facades\Config;
+use App\Services\FileService\FilePdfPreviewService;
+use App\Services\FileService\FileUploadConfigService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreFileRequest extends BaseFormRequest
 {
@@ -34,20 +37,53 @@ class StoreFileRequest extends BaseFormRequest
     }
 
     /**
+     * @param Validator $validator
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $uploadedFile = $this->file('file');
+            $uploadedFile = $uploadedFile instanceof UploadedFile ? $uploadedFile : null;
+            $type = $this->input('type');
+            $type = is_string($type) ? $type : null;
+            $filePdfPreviewService = resolve(FilePdfPreviewService::class);
+
+            if (!$filePdfPreviewService->isPdfPreviewUpload($type, $uploadedFile)) {
+                return;
+            }
+
+            if (!$filePdfPreviewService->hasPdfClientExtension($uploadedFile)) {
+                $validator->errors()->add('file', trans('validation.file_pdf_preview.extension'));
+
+                return;
+            }
+
+            if (!resolve(FileUploadConfigService::class)->isExtensionAllowed($type, 'pdf')) {
+                $validator->errors()->add('file', trans('validation.file_pdf_preview.disabled'));
+            }
+
+            if ($this->hasFile('file_preview')) {
+                $validator->errors()->add('file_preview', trans('validation.file_pdf_preview.file_preview'));
+            }
+        });
+    }
+
+    /**
      * @return array
      */
     public function fileRule(): array
     {
         $type = $this->get('type');
-        $typeConfigSizeKey = 'file.allowed_size_per_type.' . $type;
-        $typeConfigMimeKey = 'file.allowed_extensions_per_type.' . $type;
 
         if (!(new FileTypeRule())->passes('type', $type)) {
             return ['required', 'file', Rule::in([])];
         }
 
-        $mimes = Config::get($typeConfigMimeKey, Config::get('file.allowed_extensions', []));
-        $maxSize = Config::get($typeConfigSizeKey, Config::get('file.max_file_size', 2000));
+        $fileUploadConfigService = resolve(FileUploadConfigService::class);
+        $mimes = $fileUploadConfigService->getAllowedExtensions($type);
+        $maxSize = $fileUploadConfigService->getMaxSize($type);
 
         return [
             'required',
