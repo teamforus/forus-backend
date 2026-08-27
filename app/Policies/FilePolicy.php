@@ -9,6 +9,7 @@ use App\Models\Identity;
 use App\Models\Permission;
 use App\Models\ProductReservationFieldValue;
 use App\Models\Reimbursement;
+use App\Services\FileService\FilePdfPreviewService;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Facades\Config;
@@ -18,6 +19,10 @@ use Illuminate\Support\Str;
 class FilePolicy
 {
     use HandlesAuthorization;
+
+    public function __construct(protected FilePdfPreviewService $filePdfPreviewService)
+    {
+    }
 
     /**
      * @param Identity $identity
@@ -87,6 +92,12 @@ class FilePolicy
                 ?->identityCan($identity, Permission::VALIDATE_RECORDS);
         }
 
+        if ($file->fileable && $file->type === 'product_reservation_custom_field') {
+            return
+                $this->canViewOwnProductReservationFile($identity, $file) ||
+                $this->canViewProductReservationFile($identity, $file);
+        }
+
         return false;
     }
 
@@ -97,7 +108,58 @@ class FilePolicy
      */
     public function download(Identity $identity, File $file): bool
     {
+        if ($this->filePdfPreviewService->usesPdfPreviewPages($file)) {
+            return false;
+        }
+
         return $this->show($identity, $file);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return bool
+     */
+    public function downloadArchive(Identity $identity, File $file): bool
+    {
+        if (
+            !$identity->exists ||
+            !$identity->address ||
+            !$this->filePdfPreviewService->usesPdfPreviewPages($file)
+        ) {
+            return false;
+        }
+
+        if ($file->fileable_id || $file->fileable_type) {
+            return $file->fileable && $this->canViewProductReservationFile($identity, $file);
+        }
+
+        return $file->identity_address === $identity->address;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return bool
+     */
+    public function downloadPreviewArchive(Identity $identity, File $file): bool
+    {
+        if (
+            !$identity->exists ||
+            !$identity->address ||
+            !$this->filePdfPreviewService->usesPdfPreviewPages($file)
+        ) {
+            return false;
+        }
+
+        if ($file->fileable_id || $file->fileable_type) {
+            return $file->fileable && (
+                $this->canViewOwnProductReservationFile($identity, $file) ||
+                $this->canViewProductReservationFile($identity, $file)
+            );
+        }
+
+        return $file->identity_address === $identity->address;
     }
 
     /**
@@ -121,16 +183,7 @@ class FilePolicy
         }
 
         if ($file->fileable && $file->type === 'product_reservation_custom_field') {
-            $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
-            $reservation = $fieldValue?->product_reservation;
-            $field = $fieldValue?->reservation_field;
-            $organization = $reservation?->product?->organization;
-
-            return
-                $field &&
-                $reservation &&
-                $organization &&
-                Gate::forUser($identity)->allows('updateCustomField', [$reservation, $organization, $field]);
+            return $this->canUpdateProductReservationFile($identity, $file);
         }
 
         if ($file->fileable && in_array($file->type, [
@@ -141,5 +194,54 @@ class FilePolicy
         }
 
         return $identity->address === $file->identity_address;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return bool
+     */
+    protected function canUpdateProductReservationFile(Identity $identity, File $file): bool
+    {
+        $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
+        $reservation = $fieldValue?->product_reservation;
+        $field = $fieldValue?->reservation_field;
+        $organization = $reservation?->product?->organization;
+
+        return
+            $field &&
+            $reservation &&
+            $organization &&
+            Gate::forUser($identity)->allows('updateCustomField', [$reservation, $organization, $field]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return bool
+     */
+    protected function canViewProductReservationFile(Identity $identity, File $file): bool
+    {
+        $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
+        $reservation = $fieldValue?->product_reservation;
+        $organization = $reservation?->product?->organization;
+
+        return
+            $reservation &&
+            $organization &&
+            Gate::forUser($identity)->allows('viewProvider', [$reservation, $organization]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param File $file
+     * @return bool
+     */
+    protected function canViewOwnProductReservationFile(Identity $identity, File $file): bool
+    {
+        $fieldValue = $file->fileable instanceof ProductReservationFieldValue ? $file->fileable : null;
+        $reservation = $fieldValue?->product_reservation;
+
+        return $reservation && $reservation->voucher?->identity_id === $identity->id;
     }
 }

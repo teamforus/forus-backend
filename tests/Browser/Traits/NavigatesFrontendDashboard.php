@@ -204,6 +204,20 @@ trait NavigatesFrontendDashboard
      * @throws TimeoutException
      * @return void
      */
+    protected function goToProviderProductsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupSales');
+        $browser->element('@asideMenuGroupSales')->click();
+        $browser->waitFor('@productsPage');
+        $browser->element('@productsPage')->click();
+        $browser->waitFor('@productsTitle');
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
     protected function goToReimbursementsPage(Browser $browser): void
     {
         $browser->waitFor('@asideMenuGroupVouchers');
