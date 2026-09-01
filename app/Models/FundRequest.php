@@ -582,7 +582,9 @@ class FundRequest extends Model
                 'fund_criterion_id' => $criteria[$item['record_type_key']]->id ?? null,
             ]);
 
-            $isApproved && $record->makeValidation();
+            if ($isApproved) {
+                $record->makeValidation();
+            }
         }
     }
 

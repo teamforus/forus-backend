@@ -47,6 +47,20 @@ trait FundRequestIConnectCli
             return;
         }
 
+        $approvedWithoutEmployee = $requests->filter(
+            fn (FundRequest $fundRequest) => $fundRequest->isApproved() && !$fundRequest->employee
+        );
+
+        if ($approvedWithoutEmployee->isNotEmpty()) {
+            $this->warn('There are approved fund requests without employee!');
+            $this->warn('Please check next ids:');
+            $this->table(['Fund request ID'], $approvedWithoutEmployee->map(fn (FundRequest $request) => ['id' => $request->id])->all());
+            $this->printSeparator();
+            $this->askAction();
+
+            return;
+        }
+
         $proceed = $this->ask("{$requests->count()} fund requests found, proceed?", 'yes');
 
         if ($proceed === 'yes') {
