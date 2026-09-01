@@ -40,7 +40,11 @@ class StoreOrganizationRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'email_public' => 'boolean',
-            'phone' => 'required|digits_between:4,20',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^\+?[0-9\s().-]+$/',
+            ],
             'phone_public' => 'boolean',
             'kvk' => [
                 'required',
