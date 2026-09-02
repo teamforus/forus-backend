@@ -232,6 +232,14 @@ return [
         'not_enough_voucher_funds' => 'Onvoldoende budget op de voucher',
         'reservations_has_unpaid_extra' => 'Er bestaat al een reservering voor dit aanbod waar de bijbetaling nog niet is afgerond.',
     ],
+    'file_pdf_preview' => [
+        'disabled' => 'PDF-bestanden kunnen op dit moment niet worden verwerkt.',
+        'extension' => 'De bestandsnaam van een PDF-bestand moet eindigen op .pdf.',
+        'file_preview' => 'Stuur geen voorbeeldafbeelding mee voor een PDF-bestand.',
+        'conversion_failed' => 'Het PDF-bestand kon niet worden verwerkt. Probeer een ander bestand.',
+        'partial_generation' => 'Niet alle pagina\'s van het PDF-bestand konden worden verwerkt.',
+        'too_many_pages' => 'Het PDF-bestand mag maximaal :max pagina\'s bevatten.',
+    ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
     ],

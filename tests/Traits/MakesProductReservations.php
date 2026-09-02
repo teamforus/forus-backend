@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\ReservationExtraPayment;
+use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
@@ -126,6 +127,61 @@ trait MakesProductReservations
         $this->assertNotNull($reservation);
 
         return $reservation;
+    }
+
+    /**
+     * @param bool $withReservation
+     * @return array{
+     *     fund: Fund,
+     *     product: Product,
+     *     provider: Organization,
+     *     reservation: ProductReservation|null,
+     *     voucher: Voucher,
+     * }
+     */
+    protected function makeReservationContext(bool $withReservation = true): array
+    {
+        $sponsor = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($sponsor);
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity($this->makeUniqueEmail('provider_')));
+        $product = $this->createProductForReservation($provider, [$fund]);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity($this->makeUniqueEmail()));
+
+        $product->update([
+            'reservation_fields_enabled' => true,
+            'reservation_fields_config' => Product::CUSTOM_RESERVATION_FIELDS_GLOBAL,
+        ]);
+
+        return [
+            'fund' => $fund,
+            'provider' => $provider,
+            'product' => $product,
+            'voucher' => $voucher,
+            'reservation' => $withReservation ? $this->makeReservation($voucher, $product) : null,
+        ];
+    }
+
+    /**
+     * @param Organization $provider
+     * @param string $label
+     * @param string $fillableBy
+     * @param bool $required
+     * @return ReservationField
+     */
+    protected function makeReservationFileField(
+        Organization $provider,
+        string $label,
+        string $fillableBy = ReservationField::FILLABLE_BY_PROVIDER,
+        bool $required = false,
+    ): ReservationField {
+        return $provider->reservation_fields()->create([
+            'label' => $label,
+            'type' => ReservationField::TYPE_FILE,
+            'description' => "$label description",
+            'required' => $required,
+            'fillable_by' => $fillableBy,
+            'order' => 1,
+        ]);
     }
 
     /**
