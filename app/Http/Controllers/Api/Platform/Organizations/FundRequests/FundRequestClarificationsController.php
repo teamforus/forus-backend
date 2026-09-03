@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
+use App\Events\FundRequestClarifications\FundRequestClarificationUpdated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\CloseFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\IndexFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\StoreFundRequestClarificationsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\UpdateFundRequestClarificationsRequest;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -86,6 +89,66 @@ class FundRequestClarificationsController extends Controller
         $this->authorize('viewValidator', [
             $fundRequestClarification, $fundRequest, $organization,
         ]);
+
+        return FundRequestClarificationResource::create($fundRequestClarification);
+    }
+
+    /**
+     * @param UpdateFundRequestClarificationsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param FundRequestClarification $fundRequestClarification
+     * @return FundRequestClarificationResource
+     */
+    public function update(
+        UpdateFundRequestClarificationsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+        FundRequestClarification $fundRequestClarification
+    ): FundRequestClarificationResource {
+        $this->authorize('updateValidator', [
+            $fundRequestClarification, $fundRequest, $organization,
+        ]);
+
+        $previousQuestion = $fundRequestClarification->question;
+
+        $fundRequestClarification->update($request->only([
+            'question', 'text_requirement', 'files_requirement',
+        ]));
+
+        if ($fundRequestClarification->wasChanged()) {
+            Event::dispatch(new FundRequestClarificationUpdated(
+                $fundRequestClarification,
+                $previousQuestion,
+                $request->input('notify_requester', false),
+            ));
+        }
+
+        return FundRequestClarificationResource::create($fundRequestClarification);
+    }
+
+    /**
+     * @param CloseFundRequestClarificationsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param FundRequestClarification $fundRequestClarification
+     * @return FundRequestClarificationResource
+     */
+    public function close(
+        CloseFundRequestClarificationsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+        FundRequestClarification $fundRequestClarification
+    ): FundRequestClarificationResource {
+        $this->authorize('closeValidator', [
+            $fundRequestClarification, $fundRequest, $organization,
+        ]);
+
+        $fundRequestClarification->close(
+            $request->input('note'),
+            $request->input('notify_requester', false),
+            $request->employee($organization)
+        );
 
         return FundRequestClarificationResource::create($fundRequestClarification);
     }
