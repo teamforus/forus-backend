@@ -12,6 +12,7 @@ class FundRequestClarificationResource extends BaseJsonResource
 {
     public const array LOAD = [
         'fund_request_record.record_type.translation',
+        'fund_request_record.logs',
     ];
 
     public const array LOAD_NESTED = [
@@ -36,9 +37,12 @@ class FundRequestClarificationResource extends BaseJsonResource
             'files_requirement' => $this->resource->files_requirement,
             'fund_request_record_id' => $this->resource->fund_request_record_id,
             'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
-            ...$this->makeTimestamps($this->resource->only([
-                'answered_at', 'created_at', 'updated_at',
-            ])),
+            ...$this->makeTimestamps([
+                ...$this->resource->only([
+                    'resolved_at', 'created_at', 'updated_at',
+                ]),
+                'changed_at' => $this->resource->getLastChangedAt(),
+            ]),
         ];
     }
 }

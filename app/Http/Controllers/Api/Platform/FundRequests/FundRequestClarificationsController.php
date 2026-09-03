@@ -29,7 +29,7 @@ class FundRequestClarificationsController extends Controller
 
         $requestClarification->update([
             'answer' => $requestClarification->text_requirement !== 'no' ? $request->post('answer') : null,
-            'answered_at' => now(),
+            'resolved_at' => now(),
             'state' => FundRequestClarification::STATE_ANSWERED,
         ]);
 

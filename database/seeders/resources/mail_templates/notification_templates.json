@@ -261,9 +261,29 @@
         "push": {},
         "database": {
             "title": "Aanvraag :fund_name aanvullen.",
-            "content": "Uw aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question",
-            "content_informal": "Je aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om je aanvraag af te handelen. Het bericht is: :fund_request_clarification_question"
+            "content": "Uw aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen.",
+            "content_informal": "Je aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om je aanvraag af te handelen."
         }
+    },
+    "notifications_identities.fund_request_clarification_updated": {
+        "mail": {
+            "title": "Aanvullende vraag voor aanvraag :fund_name is gewijzigd.",
+            "title_informal": "Aanvullende vraag voor aanvraag :fund_name is gewijzigd.",
+            "template": "notifications_identities/fund_request_clarification_updated.md",
+            "template_informal": "notifications_identities/fund_request_clarification_updated_informal.md"
+        },
+        "push": {},
+        "database": {}
+    },
+    "notifications_identities.fund_request_clarification_closed": {
+        "mail": {
+            "title": "Aanvullende vraag voor aanvraag :fund_name is aangepast",
+            "title_informal": "Aanvullende vraag voor aanvraag :fund_name is aangepast",
+            "template": "notifications_identities/fund_request_clarification_closed.md",
+            "template_informal": "notifications_identities/fund_request_clarification_closed_informal.md"
+        },
+        "push": {},
+        "database": {}
     },
     "notifications_identities.reimbursement_submitted": {
         "mail": {

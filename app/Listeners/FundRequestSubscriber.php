@@ -2,8 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Events\FundRequestClarifications\FundRequestClarificationClosed;
 use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
+use App\Events\FundRequestClarifications\FundRequestClarificationUpdated;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
@@ -17,6 +19,8 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestClarificationClosedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestClarificationUpdatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
@@ -262,6 +266,48 @@ class FundRequestSubscriber
     }
 
     /**
+     * @param FundRequestClarificationUpdated $event
+     */
+    public function onFundRequestClarificationUpdated(
+        FundRequestClarificationUpdated $event
+    ): void {
+        $clarification = $event->getFundRequestClarification();
+        $fundRequestRecord = $clarification->fund_request_record;
+
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_UPDATED, $eventModels, [
+            'fund_request_clarification_previous_question' => $event->getPreviousQuestion(),
+        ]);
+
+        if ($event->getNotifyRequester()) {
+            IdentityFundRequestClarificationUpdatedNotification::send($log);
+        }
+    }
+
+    /**
+     * @param FundRequestClarificationClosed $event
+     */
+    public function onFundRequestClarificationClosed(
+        FundRequestClarificationClosed $event
+    ): void {
+        $clarification = $event->getFundRequestClarification();
+        $fundRequestRecord = $clarification->fund_request_record;
+
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_CLOSED, $eventModels);
+
+        if ($event->getNotifyRequester()) {
+            IdentityFundRequestClarificationClosedNotification::send($log);
+        }
+    }
+
+    /**
      * The events dispatcher.
      *
      * @param Dispatcher $events
@@ -282,6 +328,8 @@ class FundRequestSubscriber
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
         $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
+        $events->listen(FundRequestClarificationUpdated::class, "$class@onFundRequestClarificationUpdated");
+        $events->listen(FundRequestClarificationClosed::class, "$class@onFundRequestClarificationClosed");
     }
 
     /**
