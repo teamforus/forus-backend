@@ -572,14 +572,19 @@ class FundRequest extends Model
      */
     public function addRecords(array $data): void
     {
+        $isApproved = $this->isApproved();
         $criteria = $this->fund->criteria->keyBy('record_type_key');
 
-        foreach ($data as $record) {
-            $this->records()->create([
-                ...$record,
+        foreach ($data as $item) {
+            $record = $this->records()->create([
+                ...$item,
                 'source' => FundRequestRecord::SOURCE_BRP,
-                'fund_criterion_id' => $criteria[$record['record_type_key']]->id ?? null,
+                'fund_criterion_id' => $criteria[$item['record_type_key']]->id ?? null,
             ]);
+
+            if ($isApproved) {
+                $record->makeValidation();
+            }
         }
     }
 
