@@ -18,7 +18,6 @@ use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -37,12 +36,20 @@ class ProviderSignUpTest extends DuskTestCase
     use MakesTestOrganizations;
 
     /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::closeAll();
+    }
+
+    /**
      * @throws Throwable
      * @return void
      */
     public function testProviderSignupEmailFlow(): void
     {
-        Cache::clear();
         $startTime = Carbon::now();
         $implementation = Implementation::where('key', 'nijmegen')->first();
 
@@ -51,41 +58,22 @@ class ProviderSignUpTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($startTime, $implementation, $organization) {
             $browser->visit($implementation->urlProviderDashboard('aanmelden'));
-            $this->cleanBrowser($browser);
             $email = $this->makeUniqueEmail('provider');
 
-            /*
-             * GENERAL, CREATE PROFILE
-             */
             $this->signUpWithEmail($browser, $email, $startTime);
 
-            /*
-             * ORGANIZATION CREATE
-             */
             $this->addOrganization($browser);
             $this->next($browser);
 
-            /*
-             * OFFICES
-             */
             $this->addOffice($browser);
             $this->next($browser);
 
-            /*
-             * EMPLOYEES
-             */
             $this->addEmployee($browser);
             $this->next($browser);
 
-            /*
-             * FUND APPLICATIONS
-             */
             $this->applyToFunds($browser, $organization);
             $this->next($browser);
 
-            /*
-             * PROCESS NOTICE
-             */
             $browser
                 ->waitFor('@stepProcessNotice')
                 ->assertVisible('@stepProcessNotice')
@@ -113,13 +101,11 @@ class ProviderSignUpTest extends DuskTestCase
      */
     public function testProviderSignupPhoneFlow(): void
     {
-        Cache::clear();
         $startTime = Carbon::now();
         $implementation = Implementation::where('key', 'nijmegen')->first();
 
         $this->browse(function (Browser $browser) use ($startTime, $implementation) {
             $browser->visit($implementation->urlProviderDashboard('aanmelden'));
-            $this->cleanBrowser($browser);
 
             /*
              * GENERAL
@@ -258,13 +244,11 @@ class ProviderSignUpTest extends DuskTestCase
      */
     public function testSeveralOrganizationsAdd(): void
     {
-        Cache::clear();
         $startTime = Carbon::now();
         $implementation = Implementation::where('key', 'nijmegen')->first();
 
         $this->browse(function (Browser $browser) use ($startTime, $implementation) {
             $browser->visit($implementation->urlProviderDashboard('aanmelden'));
-            $this->cleanBrowser($browser);
             $email = $this->makeUniqueEmail('provider');
 
             $this->signUpWithEmail($browser, $email, $startTime);
@@ -288,6 +272,8 @@ class ProviderSignUpTest extends DuskTestCase
             // assert created organization exists and selectable
             $browser
                 ->waitFor('@organizationItem0')
+                ->assertVisible('@organizationItem0')
+                ->assertMissing('@organizationItem1')
                 ->click('@organizationItem0');
 
             // assert after selecting organization next step is OFFICES
@@ -341,19 +327,15 @@ class ProviderSignUpTest extends DuskTestCase
      */
     public function testOrganizationValidation(): void
     {
-        Cache::clear();
         $startTime = Carbon::now();
         $implementation = Implementation::where('key', 'nijmegen')->first();
 
         $this->browse(function (Browser $browser) use ($startTime, $implementation) {
             $browser->visit($implementation->urlProviderDashboard('aanmelden'));
-            $this->cleanBrowser($browser);
             $email = $this->makeUniqueEmail('provider');
 
             $this->signUpWithEmail($browser, $email, $startTime);
-
             $this->addOrganizationWithValidation($browser);
-            $browser->script('localStorage.clear();');
         });
     }
 
@@ -368,36 +350,24 @@ class ProviderSignUpTest extends DuskTestCase
      */
     protected function signUpWithEmail(Browser $browser, string $email, Carbon $startTime): void
     {
-        /*
-         * GENERAL
-         */
         $browser
             ->waitFor('@stepGeneral')
             ->assertVisible('@stepGeneral');
 
         $this->next($browser);
 
-        /*
-         * INFO ME APP
-         */
         $browser
             ->waitFor('@stepInfoMeApp')
             ->assertVisible('@stepInfoMeApp');
 
         $this->next($browser);
 
-        /*
-         * CREATE PROFILE
-         */
         $browser
             ->waitFor('@stepCreateProfile')
             ->assertVisible('@stepCreateProfile')
             ->waitFor('@signupByEmail')
             ->click('@signupByEmail');
 
-        /*
-         * EMAIL FORM
-         */
         $browser
             ->waitFor('@emailForm')
             ->assertVisible('@emailForm');
@@ -469,7 +439,7 @@ class ProviderSignUpTest extends DuskTestCase
         $this->fillInput($browser, '@nameInput', '', true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 1);
+        $browser->waitFor('@nameError1')->assertVisible('@nameError1');
 
         $invalidIban = 'invalid_iban';
 
@@ -478,27 +448,28 @@ class ProviderSignUpTest extends DuskTestCase
             ->fillInput($browser, '@ibanConfirmationInput', $invalidIban, true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 2);
+        $browser->waitFor('@ibanError1')->assertVisible('@ibanError1');
 
         $this->fillInput($browser, '@emailInput', 'invalid@email', true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 3);
+        $browser->waitFor('@emailError1')->assertVisible('@emailError1');
 
         $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 4);
+        $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
 
         $this->fillInput($browser, '@websiteInput', 'invalid_website', true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 5);
+        $browser->waitFor('@websiteError1')->assertVisible('@websiteError1');
 
         $this->fillInput($browser, '@kvkInput', 'invalid_kvk', true);
 
         $this->next($browser);
-        $this->assertValidationErrors($browser, 7); // kvk can throw 2 errors
+        $browser->waitFor('@kvkError1')->assertVisible('@kvkError1');
+        $browser->waitFor('@kvkError2')->assertVisible('@kvkError2');
     }
 
     /**
@@ -516,7 +487,7 @@ class ProviderSignUpTest extends DuskTestCase
 
         $data = [
             'address' => 'Dam 1, Amsterdam',
-            'phone' => '+31612345678',
+            'phone' => '+31 6 12345678',
         ];
 
         $this->fillOfficeForm($browser, $data);
@@ -535,6 +506,10 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@phoneInput')
             ->assertInputValue('@phoneInput', Arr::get($data, 'phone'));
 
+        $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
+        $browser->click('@saveAddressBtn');
+        $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
+
         $browser
             ->waitFor('@cancelAddressBtn')
             ->click('@cancelAddressBtn')
@@ -548,14 +523,16 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@addOfficeBtn')
             ->click('@addOfficeBtn');
 
-        $this->fillOfficeForm($browser, [
+        $data = [
             'address' => 'Sam 5, Amsterdam',
             'phone' => '+31612345678',
-        ]);
+        ];
+
+        $this->fillOfficeForm($browser, $data);
 
         $browser->waitFor('@office1');
 
-        $browser->within('@office1', function (Browser $browser) {
+        $browser->within('@office0', function (Browser $browser) {
             $browser->waitFor('@deleteOffice')->click('@deleteOffice');
         });
 
@@ -565,6 +542,10 @@ class ProviderSignUpTest extends DuskTestCase
         $browser->waitUntilMissing('@modalDangerZone');
 
         $browser->waitUntilMissing('@office1');
+
+        $browser->within('@office0', function (Browser $browser) use ($data) {
+            $browser->assertSee(Arr::get($data, 'address'))->assertMissing('@deleteOffice');
+        });
 
         // assert with db
         $office = Office::with('schedules')->latest()->first();
@@ -658,16 +639,14 @@ class ProviderSignUpTest extends DuskTestCase
             $browser->select('@organizationFilterSelect', $organization->id);
             $browser->select('@tagFilterSelect', $tag->key);
 
-            $browser->waitForTextIn('@totalCount', '1');
-
             $browser->waitUsing(
                 null,
                 100,
-                function () use ($browser) {
-                    return count($browser->elements('[data-dusk^="fundRow"]')) === 1;
-                },
-                'No fund checkbox found'
+                fn () => trim($browser->text('@totalCount')) === '1',
+                'Expected one filtered fund.'
             );
+
+            $browser->waitFor("@fundRow{$fund->id}");
 
             $browser
                 ->waitFor('@selectAllFundsBtn')
@@ -681,20 +660,6 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@nextBtn')
                 ->assertVisible('@nextBtn');
         }
-    }
-
-    /**
-     * @param Browser $browser
-     * @return void
-     */
-    protected function cleanBrowser(Browser $browser): void
-    {
-        $browser->driver->manage()->deleteAllCookies();
-
-        $browser->script('
-            localStorage.clear();
-            sessionStorage.clear();
-        ');
     }
 
     /**
@@ -715,11 +680,16 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@saveAddressBtn')
             ->click('@saveAddressBtn');
 
-        $this->assertValidationErrors($browser, 1);
+        $browser->waitFor('@addressError1')->assertVisible('@addressError1');
+
+        $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
+        $browser->click('@saveAddressBtn');
+        $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
+        $browser->assertVisible('@addressError1');
 
         $this
             ->fillInput($browser, '@addressInput', Arr::get($data, 'address'))
-            ->fillInput($browser, '@phoneInput', Arr::get($data, 'phone'));
+            ->fillInput($browser, '@phoneInput', Arr::get($data, 'phone'), true);
 
         $browser
             ->waitFor('@officeSameHours')
@@ -761,22 +731,6 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@saveAddressBtn')
             ->click('@saveAddressBtn')
             ->waitFor('@office0');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param int $count
-     * @throws TimeoutException
-     * @return void
-     */
-    private function assertValidationErrors(Browser $browser, int $count): void
-    {
-        $browser->waitUsing(
-            null,
-            100,
-            fn () => count($browser->elements('.form-error')) === $count,
-            "Timeout waiting for $count validation errors."
-        );
     }
 
     /**
