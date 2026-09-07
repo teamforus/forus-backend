@@ -549,6 +549,7 @@ trait HasFrontendActions
      * @param string $value
      * @param string|null $id
      * @param int $expected
+     * @param string|null $completedQuerySelector
      * @throws TimeoutException
      * @return void
      */
@@ -558,13 +559,19 @@ trait HasFrontendActions
         string $value,
         ?string $id,
         int $expected = 1,
+        ?string $completedQuerySelector = null,
     ): void {
         $browser->waitFor($selector . 'Search');
         $this->typeSearchInput($browser, $selector . 'Search', $value);
 
+        if ($completedQuerySelector !== null) {
+            $browser->waitUsing(null, 100, function () use ($browser, $completedQuerySelector, $value) {
+                return $browser->attribute($completedQuerySelector, 'data-search-query') === $value;
+            }, 'Waited %s seconds for search results matching the submitted query.');
+        }
+
         if ($id !== null) {
             $browser->waitFor($selector . "Row$id");
-            $browser->assertVisible($selector . "Row$id");
         }
 
         $this->assertWebshopRowsCount($browser, $expected, $selector . 'Content');
