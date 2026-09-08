@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationClosed;
-use App\Helpers\Arr;
-use App\Services\EventLogService\Models\EventLog;
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +19,8 @@ use Illuminate\Support\Facades\Event;
  * @property string $files_requirement
  * @property string $answer
  * @property string $state
- * @property string|null $resolved_at
+ * @property Carbon|null $resolved_at
+ * @property Carbon|null $changed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
@@ -31,6 +30,7 @@ use Illuminate\Support\Facades\Event;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereAnswer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereChangedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereFilesRequirement($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundRequestClarification whereFundRequestRecordId($value)
@@ -56,12 +56,13 @@ class FundRequestClarification extends Model
     ];
 
     protected $fillable = [
-        'fund_request_record_id', 'state', 'question', 'answer', 'resolved_at',
+        'fund_request_record_id', 'state', 'question', 'answer', 'resolved_at', 'changed_at',
         'text_requirement', 'files_requirement',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'changed_at' => 'datetime',
     ];
 
     /**
@@ -71,23 +72,6 @@ class FundRequestClarification extends Model
     public function fund_request_record(): BelongsTo
     {
         return $this->belongsTo(FundRequestRecord::class);
-    }
-
-    /**
-     * @return Carbon|null
-     */
-    public function getLastChangedAt(): ?Carbon
-    {
-        return $this->fund_request_record
-            ->logs
-            ->filter(function (EventLog $eventLog) {
-                return
-                    $eventLog->event === FundRequestRecord::EVENT_CLARIFICATION_UPDATED &&
-                    Arr::get($eventLog->data, 'fund_request_clarification_id') === $this->id;
-            })
-            ->sortByDesc('created_at')
-            ->first()
-            ?->created_at;
     }
 
     /**

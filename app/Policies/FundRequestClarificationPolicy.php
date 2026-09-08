@@ -105,7 +105,13 @@ class FundRequestClarificationPolicy
         FundRequest $request,
         Organization $organization
     ): Response|bool {
-        $access = $this->validateValidatorAccess($identity, $organization, $request, $requestClarification);
+        $access = $this->validateValidatorAccess(
+            $identity,
+            $organization,
+            $request,
+            $requestClarification,
+            requireAssignment: true
+        );
 
         if ($access !== true) {
             return $access;
@@ -148,7 +154,7 @@ class FundRequestClarificationPolicy
         FundRequestRecord $record,
         Organization $organization
     ): Response|bool {
-        $access = $this->validateValidatorAccess($identity, $organization, $request);
+        $access = $this->validateValidatorAccess($identity, $organization, $request, requireAssignment: true);
 
         if ($access !== true) {
             return $access;
@@ -179,6 +185,7 @@ class FundRequestClarificationPolicy
      * @param Organization $organization
      * @param FundRequest $request
      * @param FundRequestClarification|null $requestClarification
+     * @param bool $requireAssignment
      * @return Response|bool
      */
     private function validateValidatorAccess(
@@ -186,6 +193,7 @@ class FundRequestClarificationPolicy
         Organization $organization,
         FundRequest $request,
         FundRequestClarification $requestClarification = null,
+        bool $requireAssignment = false,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestClarification)) {
             return $this->deny(__('policies.fund_requests.invalid_endpoint'));
@@ -195,7 +203,7 @@ class FundRequestClarificationPolicy
             return $this->deny(__('policies.fund_requests.invalid_validator'));
         }
 
-        return true;
+        return !$requireAssignment || $request->employee?->identity_address === $identity->address;
     }
 
     /**

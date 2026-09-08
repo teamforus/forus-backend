@@ -30,6 +30,7 @@ use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceiv
 use App\Scopes\Builders\FundQuery;
 use Exception;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class FundRequestSubscriber
@@ -218,10 +219,9 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        IdentityFundRequestRecordFeedbackRequestedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_REQUESTED,
-            $eventModels
-        ));
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_REQUESTED, $eventModels);
+
+        DB::afterCommit(fn () => IdentityFundRequestRecordFeedbackRequestedNotification::send($log));
     }
 
     /**
@@ -238,10 +238,9 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        FundRequestRecordFeedbackReceivedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_RECEIVED,
-            $eventModels
-        ));
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_RECEIVED, $eventModels);
+
+        DB::afterCommit(fn () => FundRequestRecordFeedbackReceivedNotification::send($log));
     }
 
     /**
@@ -283,7 +282,7 @@ class FundRequestSubscriber
         ]);
 
         if ($event->getNotifyRequester()) {
-            IdentityFundRequestClarificationUpdatedNotification::send($log);
+            DB::afterCommit(fn () => IdentityFundRequestClarificationUpdatedNotification::send($log));
         }
     }
 
@@ -303,7 +302,7 @@ class FundRequestSubscriber
         $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_CLOSED, $eventModels);
 
         if ($event->getNotifyRequester()) {
-            IdentityFundRequestClarificationClosedNotification::send($log);
+            DB::afterCommit(fn () => IdentityFundRequestClarificationClosedNotification::send($log));
         }
     }
 
