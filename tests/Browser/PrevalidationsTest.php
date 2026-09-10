@@ -538,10 +538,7 @@ class PrevalidationsTest extends DuskTestCase
     {
         $browser->waitFor('@modalCreatePrevalidation');
         $browser->within('@modalCreatePrevalidation', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
+            $this->switchToFund($browser, $fund->id);
         });
 
         $this->fillInputs($browser, $data, $stopOnFirstError);

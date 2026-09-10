@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Validator;
 
@@ -180,10 +181,12 @@ class PrevalidationRequest extends Model
      * @param Fund $fund
      * @param Employee $employee
      * @param array $data
-     * @return void
+     * @return Collection
      */
-    public static function makeFromArray(Fund $fund, Employee $employee, array $data): void
+    public static function makeFromArray(Fund $fund, Employee $employee, array $data): Collection
     {
+        $prevalidationRequests = collect();
+
         foreach ($data as $datum) {
             $item = PrevalidationRequest::create([
                 'bsn' => $datum['bsn'],
@@ -201,7 +204,11 @@ class PrevalidationRequest extends Model
             }
 
             Event::dispatch(new PrevalidationRequestCreatedEvent($item, null));
+
+            $prevalidationRequests->push($item);
         }
+
+        return $prevalidationRequests;
     }
 
     /**

@@ -353,17 +353,24 @@ class VoucherAmountVisibilityTest extends DuskTestCase
         $browser->within($formSelector, function (Browser $browser) use ($voucher, $assertVisible, $selectSelector) {
             $browser->waitFor($selectSelector);
             $browser->press($selectSelector);
-            $browser->waitFor('@voucherSelectorOptions');
 
-            $browser->waitFor("@voucherSelectorOption$voucher->id");
+            $browser->elsewhereWhenAvailable(
+                '@voucherSelectorOptions',
+                function (Browser $browser) use ($voucher, $assertVisible) {
+                    $browser->waitFor("@voucherSelectorOption$voucher->id");
 
-            $browser->within("@voucherSelectorOption$voucher->id", function (Browser $browser) use ($voucher, $assertVisible) {
-                $assertVisible
-                    ? $browser->assertVisible('@voucherAmount')
-                    : $browser->assertMissing('@voucherAmount');
-            });
+                    $browser->within(
+                        "@voucherSelectorOption$voucher->id",
+                        function (Browser $browser) use ($assertVisible) {
+                            $assertVisible
+                                ? $browser->assertVisible('@voucherAmount')
+                                : $browser->assertMissing('@voucherAmount');
+                        },
+                    );
 
-            $browser->press("@voucherSelectorOption$voucher->id");
+                    $browser->press("@voucherSelectorOption$voucher->id");
+                },
+            );
 
             $browser->within($selectSelector, function (Browser $browser) use ($voucher, $assertVisible) {
                 $assertVisible

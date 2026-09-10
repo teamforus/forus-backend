@@ -442,8 +442,8 @@ class SystemNotificationsTest extends TestCase
         $notification = SystemNotification::firstWhere('key', 'notifications_identities.voucher_expire_soon_budget');
         $funds = $implementation->funds->take(2)->values();
 
-        $date1 = now()->subDays(2)->startOfDay();
-        $date2 = now()->subDay()->startOfDay();
+        $date1 = Carbon::now()->subDays(2)->startOfDay();
+        $date2 = Carbon::now()->subDay()->startOfDay();
 
         $this->seedLastSentData($notification, $funds[0], $date1);
         $this->seedLastSentData($notification, $funds[1], $date2);
@@ -818,7 +818,7 @@ class SystemNotificationsTest extends TestCase
      */
     private function assertMailNotification(Fund $fund, string $subject = ''): void
     {
-        $now = now();
+        $now = Carbon::now();
         $voucher = $this->makeVoucher($fund);
 
         $this->assertTrue(
@@ -834,7 +834,7 @@ class SystemNotificationsTest extends TestCase
      */
     private function assertDatabaseNotification(Fund $fund, string $subject = ''): void
     {
-        $now = now();
+        $now = Carbon::now();
         $voucher = $this->makeVoucher($fund);
         $notificationIds = Notification::where('created_at', '>=', $now)->pluck('id');
 

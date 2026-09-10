@@ -155,6 +155,8 @@ Route::group(['middleware' => ['api.auth']], static function () {
         ->parameter('files', 'file_uid');
 
     Route::get('files/{file_uid}/download', 'Api\FileController@download');
+    Route::get('files/{file_uid}/download-archive', 'Api\FileController@downloadArchive');
+    Route::get('files/{file_uid}/download-preview-archive', 'Api\FileController@downloadPreviewArchive');
     Route::post('files/validate', 'Api\FileController@storeValidate');
 });
 

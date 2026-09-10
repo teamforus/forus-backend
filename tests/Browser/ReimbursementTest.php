@@ -83,6 +83,7 @@ class ReimbursementTest extends DuskTestCase
             $this->goToReimbursementsPage($browser);
 
             $browser->waitFor('@reimbursementsEmptyBlock');
+            $browser->waitFor('@btnEmptyBlock');
             $browser->press('@btnEmptyBlock');
             $browser->waitFor('@reimbursementEditContent');
             $browser->waitFor('@reimbursementForm');
@@ -632,8 +633,10 @@ class ReimbursementTest extends DuskTestCase
 
             $browser->waitFor('@voucherSelector');
             $browser->press('@voucherSelector');
-            $browser->waitFor('@voucherSelectorOptions');
-            $browser->press("@voucherSelectorOption$voucher->id");
+
+            $browser->elsewhereWhenAvailable('@voucherSelectorOptions', function (Browser $browser) use ($voucher) {
+                $browser->press("@voucherSelectorOption$voucher->id");
+            });
         });
 
         return $formData;

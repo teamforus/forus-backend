@@ -9,6 +9,7 @@ use Eloquent;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,6 +37,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * @property-read string $url_public
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $pdf_preview_pages
  * @property-read Media|null $preview
  * @method static Builder<static>|File newModelQuery()
  * @method static Builder<static>|File newQuery()
@@ -89,8 +91,27 @@ class File extends Model
     public function preview(): MorphOne
     {
         return $this
-            ->MorphOne(Media::class, 'mediable')
+            ->morphOne(Media::class, 'mediable')
             ->where('type', 'reimbursement_file_preview');
+    }
+
+    /**
+     * @return MorphMany
+     */
+    public function pdf_preview_pages(): MorphMany
+    {
+        return $this
+            ->morphMany(Media::class, 'mediable')
+            ->where('type', 'file_pdf_preview_page')
+            ->orderBy('order');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPdf(): bool
+    {
+        return strtolower($this->ext) === 'pdf';
     }
 
     /**
@@ -134,6 +155,17 @@ class File extends Model
     public function unlink(): ?bool
     {
         return resolve('file')->unlink($this);
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function unlinkPdfPreviewPages(): void
+    {
+        $mediaService = resolve('media');
+
+        $this->pdf_preview_pages()->with('presets')->get()->each(fn (Media $media) => $mediaService->unlink($media));
     }
 
     /**

@@ -49,11 +49,14 @@ class FileService
      * Delete file from db and storage.
      *
      * @param File $file
+     * @throws Exception
      * @return bool|null
      */
     public function unlink(File $file): ?bool
     {
-        self::deleteFile($this->urlPublic($file->path));
+        $file->unlinkPdfPreviewPages();
+
+        self::deleteFile(ltrim($file->path, '/'));
 
         return $file->delete();
     }

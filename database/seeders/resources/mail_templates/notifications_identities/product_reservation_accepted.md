@@ -1,13 +1,18 @@
-# Uw reservering voor :product_name is bevestigd
+# Uw reservering voor :product_name is goedgekeurd
+
+**Bericht van :provider_name**
 
 Beste deelnemer,
 
-:provider_name heeft uw reservering voor het aanbod :product_name geaccepteerd. U kunt gebruik maken van dit aanbod.
-&nbsp;
+U ontvangt dit bericht namens :provider_name.  
+Goed nieuws: uw reservering voor :product_name is goedgekeurd.  
+U kunt nu gebruikmaken van dit aanbod. 
+
+:provider_note
 
 :note
 
-Heeft u vragen over het aanbod? Stuur dan een e-mail naar :provider_email of bel naar :provider_phone.
-&nbsp;
+Heeft u vragen? Neem voor meer informatie contact op met :provider_name.  
+Stuur een e-mail naar :provider_email of bel naar :provider_phone.
 
 Veel plezier met uw aankoop!

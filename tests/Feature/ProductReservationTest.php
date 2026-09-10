@@ -7,12 +7,13 @@ use App\Mail\ProductReservations\ProductReservationCanceledMail;
 use App\Mail\ProductReservations\ProductReservationRejectedMail;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ProviderMessage;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -115,7 +116,7 @@ class ProductReservationTest extends TestCase
 
         $originalAmount = (float) $voucher->amount_available;
         $reservation = $this->makeReservation($voucher, $product);
-        $this->expireVoucherAndFund($voucher, now()->subDay());
+        $this->expireVoucherAndFund($voucher, Carbon::now()->subDay());
 
         $voucher->fund->fund_config->update([
             'reservation_approve_offset' => 0,
@@ -173,7 +174,7 @@ class ProductReservationTest extends TestCase
      */
     public function testReservationNote(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
         $fund = $this->makeTestFund($organization);
         $this->makeProviderAndProducts($fund, 1);
@@ -394,7 +395,7 @@ class ProductReservationTest extends TestCase
         ProductReservation $reservation,
         bool $assertSuccess,
     ): void {
-        $startTime = now();
+        $startTime = Carbon::now();
         $provider = $reservation->product->organization;
 
         // accept reservation
@@ -429,45 +430,59 @@ class ProductReservationTest extends TestCase
     /**
      * @param ProductReservation $reservation
      * @param string $note
-     * @param bool $exists
+     * @param bool $noteShared
      * @return void
      */
     protected function assertRejectedReservationProviderNote(
         ProductReservation $reservation,
         string $note,
-        bool $exists,
+        bool $noteShared,
     ): void {
         $email = $reservation->voucher->identity->email;
-        $from = now();
+        $from = Carbon::now();
 
         $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
             'note' => $note,
-            'share_note_by_email' => $exists,
+            'share_note_by_email' => $noteShared,
         ]);
 
-        $this->assertReservationCancelNoteInMail($email, ProductReservationRejectedMail::class, $from, $note, $exists);
+        if ($noteShared) {
+            $this->assertSame(
+                ProviderMessage::TYPE_REJECT_RESERVATION,
+                $reservation->provider_messages()->where('message', $note)->value('type'),
+            );
+        }
+
+        $this->assertReservationCancelNoteInMail($email, ProductReservationRejectedMail::class, $from, $note, $noteShared);
     }
 
     /**
      * @param ProductReservation $reservation
      * @param string $note
-     * @param bool $exists
+     * @param bool $noteShared
      * @return void
      */
     protected function assertCanceledReservationProviderNote(
         ProductReservation $reservation,
         string $note,
-        bool $exists,
+        bool $noteShared,
     ): void {
         $email = $reservation->voucher->identity->email;
-        $from = now();
+        $from = Carbon::now();
 
         $this->apiCancelReservationByProvider($reservation, $reservation->product->organization->identity, [
             'note' => $note,
-            'share_note_by_email' => $exists,
+            'share_note_by_email' => $noteShared,
         ]);
 
-        $this->assertReservationCancelNoteInMail($email, ProductReservationCanceledMail::class, $from, $note, $exists);
+        if ($noteShared) {
+            $this->assertSame(
+                ProviderMessage::TYPE_CANCEL_RESERVATION,
+                $reservation->provider_messages()->where('message', $note)->value('type'),
+            );
+        }
+
+        $this->assertReservationCancelNoteInMail($email, ProductReservationCanceledMail::class, $from, $note, $noteShared);
     }
 
     /**

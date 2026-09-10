@@ -211,7 +211,16 @@ class BankConnectionsInspectCommand extends BaseCommand
      */
     protected function showBalance(Organization $organization): void
     {
-        $balance = $organization->bank_connection_active->fetchBalance();
+        $bankConnection = $organization->bank_connection_active;
+
+        if (!$bankConnection->hasBalanceAccess()) {
+            $this->printText("The sponsor did not grant balance access for \"$organization->name\".\n");
+            $this->askTargetOrganizationActions($organization);
+
+            return;
+        }
+
+        $balance = $bankConnection->fetchBalance();
 
         if (is_null($balance)) {
             $this->printBankApiError("Could not fetch balance for \"$organization->name\".");

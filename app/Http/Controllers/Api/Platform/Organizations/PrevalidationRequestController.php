@@ -94,11 +94,19 @@ class PrevalidationRequestController extends Controller
     ): NoContentResponse {
         $this->authorize('create', [PrevalidationRequest::class, $organization]);
 
+        $file = $request->post('file');
         $data = $request->input('data', []);
         $employee = $request->employee($organization);
         $fund = $organization->funds()->find($request->input('fund_id'));
 
-        PrevalidationRequest::makeFromArray($fund, $employee, $data);
+        $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATION_REQUESTS, $file, $data);
+
+        $prevalidationRequests = PrevalidationRequest::makeFromArray($fund, $employee, $data);
+
+        $event?->forceFill([
+            'data->uploaded_file_meta->state' => 'success',
+            'data->uploaded_file_meta->created_ids' => $prevalidationRequests->pluck('id')->toArray(),
+        ])?->update();
 
         return new NoContentResponse();
     }

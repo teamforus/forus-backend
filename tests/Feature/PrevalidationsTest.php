@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Throwable;
@@ -18,6 +19,7 @@ class PrevalidationsTest extends TestCase
     use MakesTestFunds;
     use DatabaseTransactions;
     use MakesTestOrganizations;
+    use MakesAssertStoreUploadedCsvFile;
 
     /**
      * Test creating a prevalidation for test criteria.
@@ -204,6 +206,43 @@ class PrevalidationsTest extends TestCase
 
         // assert second prevalidation didn't change
         $this->assertRecordsEquals($secondPrevalidation->refresh(), $secondPrevalidationData);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testPrevalidationBatchStoreUploadedCsvFile(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, fundConfigsData: ['csv_primary_key' => 'uid']);
+        $this->addTestCriteriaToFund($fund);
+
+        // prepare new prevalidation with unique primary_key
+        $prevalidationData = [
+            'uid' => token_generator()->generate(32),
+            'test_bool' => 'Ja',
+            'test_iban' => fake()->iban(),
+            'test_date' => '01-01-2010',
+            'test_email' => fake()->email(),
+            'test_string' => 'lorem_ipsum',
+            'test_string_any' => 'lorem_ipsum',
+            'test_number' => 7,
+            'test_select' => 'foo',
+            'test_select_number' => 2,
+        ];
+
+        $this->makeStorePrevalidationBatchRequest(
+            $organization,
+            $fund,
+            [$prevalidationData],
+            appendFileData: true
+        )->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PREVALIDATIONS, 1);
+
+        $this->assertLoggedUploadedFileContent($log, [$prevalidationData]);
     }
 
     /**

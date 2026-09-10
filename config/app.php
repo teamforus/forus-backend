@@ -228,6 +228,7 @@ return [
 
         App\Services\IConnectApiService\IConnectServiceProvider::class,
 
+        App\Services\PdfToImgService\PdfToImgServiceProvider::class,
         App\Services\TranslationService\TranslationServiceProvider::class,
     ],
 

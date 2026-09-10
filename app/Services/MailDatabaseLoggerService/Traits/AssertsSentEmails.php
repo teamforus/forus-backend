@@ -158,13 +158,13 @@ trait AssertsSentEmails
      * @param string $email
      * @param string $urlSubstr
      * @param Carbon|null $after
-     * @return Collection|EmailLog[]
+     * @return Collection|EmailLog[]|EmailLog
      */
     protected function emailsWithLink(
         string $email,
         string $urlSubstr,
         ?Carbon $after = null
-    ): Collection|Arrayable {
+    ): Collection|Arrayable|EmailLog {
         $emails = $this->getEmailQuery($email, $after)->get();
 
         return $emails->filter(function (EmailLog $emailLog) use ($urlSubstr) {

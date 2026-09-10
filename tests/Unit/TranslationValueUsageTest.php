@@ -49,7 +49,7 @@ class TranslationValueUsageTest extends TestCase
         int $symbols,
         Carbon $date,
     ): void {
-        TranslationValue::query()->create([
+        $value = TranslationValue::query()->create([
             'translatable_type' => $translatableType,
             'translatable_id' => 1,
             'key' => 'value',
@@ -59,8 +59,13 @@ class TranslationValueUsageTest extends TestCase
             'to_length' => $symbols,
             'locale' => 'en-US',
             'organization_id' => $organizationId,
+        ]);
+
+        $value->forceFill([
             'created_at' => $date,
             'updated_at' => $date,
+        ])->save([
+            'timestamps' => false,
         ]);
     }
 }

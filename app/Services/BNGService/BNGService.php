@@ -260,6 +260,29 @@ class BNGService
     }
 
     /**
+     * @param string|null $iban
+     * @return array
+     */
+    public function makeAccountConsentAccess(?string $iban = null): array
+    {
+        return $iban ? [
+            'accounts' => [compact('iban')],
+            'balances' => null,
+            'transactions' => [compact('iban')],
+            'availableAccounts' => null,
+            'availableAccountsWithBalances' => null,
+            'allPsd2' => null,
+        ] : [
+            'accounts' => null,
+            'balances' => null,
+            'transactions' => null,
+            'availableAccounts' => null,
+            'availableAccountsWithBalances' => null,
+            'allPsd2' => 'allAccounts',
+        ];
+    }
+
+    /**
      * @param string $redirectToken
      * @param array $params
      * @throws ApiException
@@ -268,15 +291,9 @@ class BNGService
     public function makeAccountConsentRequest(string $redirectToken, array $params = []): AccountConsentValue
     {
         $url = $this->getEndpoint('consent');
-        $res = $this->requestJson('post', $url, array_merge_recursive([
-            'access' => [
-                'accounts' => null,
-                'balances' => null,
-                'transactions' => null,
-                'availableAccounts' => null,
-                'availableAccountsWithBalances' => null,
-                'allPsd2' => 'allAccounts',
-            ],
+
+        $res = $this->requestJson('post', $url, array_replace_recursive([
+            'access' => $this->makeAccountConsentAccess(),
             'combinedServiceIndicator' => false,
             'recurringIndicator' => true,
             'validUntil' => date('Y-m-d', strtotime('+2 years')),

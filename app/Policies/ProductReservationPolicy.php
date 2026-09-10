@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\ProviderMessage;
 use App\Models\ReservationField;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -454,5 +455,54 @@ class ProductReservationPolicy
         return $this->updateProvider($identity, $productReservation, $organization) &&
             $field->organization_id === $organization->id &&
             $field->isFillableByProvider();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewAnyProviderMessage(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return $this->updateProvider($identity, $productReservation, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function storeProviderMessage(
+        Identity $identity,
+        ProductReservation $productReservation,
+        Organization $organization
+    ): bool {
+        return
+            $this->updateProvider($identity, $productReservation, $organization) &&
+            $productReservation->regularProviderMessageAllowed();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param ProductReservation $productReservation
+     * @param ProviderMessage $message
+     * @param Organization $organization
+     * @return bool
+     */
+    public function exportProviderMessage(
+        Identity $identity,
+        ProductReservation $productReservation,
+        ProviderMessage $message,
+        Organization $organization
+    ): bool {
+        return
+            $message->mailable_type === $productReservation->getMorphClass() &&
+            $message->mailable_id === $productReservation->getKey() &&
+            $this->updateProvider($identity, $productReservation, $organization);
     }
 }

@@ -9,7 +9,7 @@ return [
     // max file size in kB
     'max_file_size' => Env::get('FILES_MAX_SIZE', 10000),
 
-    'allowed_extensions' => ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', ],
+    'allowed_extensions' => ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
 
     'allowed_types' => [
         'fund_request_record_proof',
@@ -20,7 +20,7 @@ return [
 
     'allowed_extensions_per_type' => [
         'reimbursement_proof' => ['jpg', 'jpeg', 'png', 'pdf'],
-        'product_reservation_custom_field' => ['jpg', 'jpeg', 'png'],
+        'product_reservation_custom_field' => ['jpg', 'jpeg', 'png', 'pdf'],
     ],
 
     'allowed_size_per_type' => [

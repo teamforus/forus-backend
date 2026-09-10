@@ -26,6 +26,7 @@ class ProductReservationCanceledMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         return [
+            'provider_note' => nl2br($data['provider_note'] ?? ''),
             'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
             'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
         ];

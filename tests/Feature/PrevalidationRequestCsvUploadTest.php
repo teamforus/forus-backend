@@ -12,11 +12,14 @@ use App\Models\PrevalidationRequestMissedRecord;
 use App\Models\PrevalidationRequestRecord;
 use App\Models\RecordType;
 use App\Models\Role;
+use App\Services\FileService\Models\File;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesTestFundRequestPrefills;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -34,6 +37,7 @@ class PrevalidationRequestCsvUploadTest extends TestCase
     use MakesTestOrganizations;
     use MakesTestFundRequestPrefills;
     use MakesTestPrevalidationRequests;
+    use MakesAssertStoreUploadedCsvFile;
 
     protected function setUp(): void
     {
@@ -756,6 +760,48 @@ class PrevalidationRequestCsvUploadTest extends TestCase
 
         $this->assertEquals(PrevalidationRequest::STATE_FAIL, $ownerRequest->refresh()->state);
         $this->assertEquals(PrevalidationRequest::STATE_PENDING, $otherValidatorRequest->refresh()->state);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testPrevalidationRequestStoreUploadedCsvFile(): void
+    {
+        [
+            'organization' => $organization,
+            'fund' => $fund,
+            'manualKey' => $manualKey,
+        ] = $this->makePrevalidationRequestCsvFixture([
+            '159835562' => [
+                'status' => 404,
+                'body' => [],
+            ],
+        ]);
+
+        $requestDataPrefillSuccess = $this->makePrevalidationRequestRow($manualKey);
+        $requestDataPrefillFailNotFound = $this->makePrevalidationRequestRow($manualKey, ['bsn' => '159835562']);
+
+        $requestData = [
+            'fund_id' => $fund->id,
+            'data' => [
+                $requestDataPrefillSuccess,
+                $requestDataPrefillFailNotFound,
+            ],
+        ];
+
+        $this->apiMakePrevalidationRequestCollectionRequest(
+            $organization,
+            $requestData,
+            appendFileData: true
+        )->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PREVALIDATION_REQUESTS, 2);
+        $file = File::findOrFail(Arr::get($log->data, 'uploaded_file_meta.file_id'));
+
+        $this->assertSame('uploaded_prevalidation_requests', $log->event);
+        $this->assertSame('uploaded_prevalidation_requests', $file->type);
+        $this->assertLoggedUploadedFileContent($log, $requestData['data']);
     }
 
     /**

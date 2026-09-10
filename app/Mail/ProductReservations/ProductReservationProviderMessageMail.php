@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Mail\ProductReservations;
+
+use App\Mail\ImplementationMail;
+use Illuminate\Mail\Mailable;
+use League\CommonMark\Exception\CommonMarkException;
+
+class ProductReservationProviderMessageMail extends ImplementationMail
+{
+    public ?string $notificationTemplateKey = 'notifications_identities.product_reservation_message';
+
+    /**
+     * @throws CommonMarkException
+     * @return Mailable
+     */
+    public function build(): Mailable
+    {
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'provider_message' => nl2br($data['provider_message'] ?? ''),
+            'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
+            'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
+        ];
+    }
+}

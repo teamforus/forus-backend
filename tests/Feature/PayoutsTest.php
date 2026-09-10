@@ -20,6 +20,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
@@ -37,6 +38,7 @@ class PayoutsTest extends TestCase
     use MakesRequesterVoucherPayouts;
     use MakesTestReimbursements;
     use MakesTestVouchers;
+    use MakesAssertStoreUploadedCsvFile;
 
     /**
      * @return void
@@ -1531,6 +1533,34 @@ class PayoutsTest extends TestCase
             ->assertJsonPath('data.voucher_payout_has_valid_records', true);
 
         $this->apiMakePayout($data, $requester);
+    }
+
+    /**
+     * @return void
+     */
+    public function testPayoutBatchStoreUploadedCsvFile(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $organization->forceFill(['allow_payouts' => true])->save();
+
+        $this->configureFundPayouts($fund);
+        $this->assertPayoutsUpdated($fund);
+
+        $data = [
+            'description' => 'Test description',
+            'amount' => '50',
+            'target_iban' => $this->faker()->iban(),
+            'target_name' => $this->makeIbanName(),
+        ];
+
+        $this->apiMakeSponsorPayoutBatchRequest($fund, $data, appendFileData: true)->assertSuccessful();
+
+        $employee = $organization->findEmployee($organization->identity);
+        $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_PAYOUTS, 1);
+
+        $this->assertLoggedUploadedFileContent($log, [$data]);
     }
 
     /**

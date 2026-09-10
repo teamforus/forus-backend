@@ -11,6 +11,7 @@ use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use Throwable;
 
@@ -58,7 +59,8 @@ trait MakesTestReimbursements
                 'uid',
                 'order',
                 'size',
-                'url',
+                'uses_pdf_preview',
+                'has_pdf_preview_pages',
                 'preview' => [
                     'original_name',
                     'type',
@@ -90,7 +92,7 @@ trait MakesTestReimbursements
     protected function makeReimbursement(Voucher $voucher, bool $submit): Reimbursement
     {
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
-        $submitTime = now();
+        $submitTime = Carbon::now();
         $requesterEmail = $voucher->identity->email;
 
         $body = array_merge($this->makeReimbursementRequestBody($voucher, $headers), [

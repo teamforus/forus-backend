@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Event;
  * @property bool $allow_some_products
  * @property bool $allow_extra_payments
  * @property bool $allow_extra_payments_full
+ * @property bool $allow_provider_messages
  * @property bool $excluded
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -58,6 +59,7 @@ use Illuminate\Support\Facades\Event;
  * @method static Builder<static>|FundProvider whereAllowExtraPayments($value)
  * @method static Builder<static>|FundProvider whereAllowExtraPaymentsFull($value)
  * @method static Builder<static>|FundProvider whereAllowProducts($value)
+ * @method static Builder<static>|FundProvider whereAllowProviderMessages($value)
  * @method static Builder<static>|FundProvider whereAllowSomeProducts($value)
  * @method static Builder<static>|FundProvider whereCreatedAt($value)
  * @method static Builder<static>|FundProvider whereExcluded($value)
@@ -106,6 +108,7 @@ class FundProvider extends Model
         'organization_id', 'fund_id', 'state',
         'allow_extra_payments', 'allow_extra_payments_full',
         'allow_products', 'allow_budget', 'allow_some_products', 'excluded',
+        'allow_provider_messages',
     ];
 
     /**
@@ -117,6 +120,7 @@ class FundProvider extends Model
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
         'allow_extra_payments' => 'boolean',
+        'allow_provider_messages' => 'boolean',
         'allow_extra_payments_full' => 'boolean',
     ];
 

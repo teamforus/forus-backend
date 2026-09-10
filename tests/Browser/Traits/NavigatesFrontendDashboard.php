@@ -162,10 +162,7 @@ trait NavigatesFrontendDashboard
 
         $browser->waitFor('@prevalidationsSelectFund');
         $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
+            $this->switchToFund($browser, $fund->id);
         });
     }
 
@@ -184,10 +181,7 @@ trait NavigatesFrontendDashboard
 
         $browser->waitFor('@prevalidationsSelectFund');
         $browser->within('@prevalidationsSelectFund', function (Browser $browser) use ($fund) {
-            $browser->element('@selectControlFunds')->click();
-
-            $browser->waitFor("@selectControlFundItem$fund->id");
-            $browser->element("@selectControlFundItem$fund->id")->click();
+            $this->switchToFund($browser, $fund->id);
         });
     }
 
@@ -203,6 +197,20 @@ trait NavigatesFrontendDashboard
         $browser->waitFor('@reservationsPage');
         $browser->element('@reservationsPage')->click();
         $browser->waitFor('@reservationsTitle');
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws TimeoutException
+     * @return void
+     */
+    protected function goToProviderProductsPage(Browser $browser): void
+    {
+        $browser->waitFor('@asideMenuGroupSales');
+        $browser->element('@asideMenuGroupSales')->click();
+        $browser->waitFor('@productsPage');
+        $browser->element('@productsPage')->click();
+        $browser->waitFor('@productsTitle');
     }
 
     /**
