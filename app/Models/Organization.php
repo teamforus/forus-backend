@@ -887,7 +887,9 @@ class Organization extends Model
     public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
         if (!$fresh) {
-            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
+            return $this->employees
+                ->where('identity_address', $identity->address)
+                ->isNotEmpty();
         }
 
         return $this->employees()->where('identity_address', $identity->address)->exists();

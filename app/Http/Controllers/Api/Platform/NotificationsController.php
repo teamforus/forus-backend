@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
 use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
+use App\Scopes\Builders\NotificationQuery;
 use App\Searches\NotificationSearch;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -22,16 +23,15 @@ class NotificationsController extends Controller
         $mark_read = $request->input('mark_read', false);
 
         $identity = $request->identity();
+        $notificationsQuery = $identity->notifications()->where('scope', $request->client_type());
 
         $search = new NotificationSearch(
             $request->only('organization_id', 'seen'),
-            $identity->notifications()->where('scope', $request->client_type()),
+            NotificationQuery::whereVisibleToIdentity($notificationsQuery, $identity),
         );
 
-        $notificationsQuery = $search->query();
-
         if ($mark_read) {
-            $listUnreadFetched = $notificationsQuery->clone()
+            $listUnreadFetched = $search->query()->clone()
                 ->skip(($page - 1) * $per_page)
                 ->take($per_page)
                 ->get()
@@ -45,7 +45,7 @@ class NotificationsController extends Controller
 
         $total_unseen = Notification::totalUnseenFromRequest($request, $identity);
 
-        return NotificationResource::queryCollection($notificationsQuery, $per_page)->additional([
+        return NotificationResource::queryCollection($search->query(), $per_page)->additional([
             'meta' => compact('total_unseen'),
         ]);
     }

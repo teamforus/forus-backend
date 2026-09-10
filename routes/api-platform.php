@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Routing\Router;
+use Illuminate\Support\Env;
 
 /*
 |--------------------------------------------------------------------------
@@ -307,7 +308,7 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     )->only('index');
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
-    if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
+    if (!Env::get('DISABLE_FALLBACK_TRANSACTIONS', false)) {
         $router->resource(
             'vouchers.transactions',
             "Api\Platform\Vouchers\TransactionsController"
