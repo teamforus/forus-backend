@@ -1617,6 +1617,7 @@ class Fund extends Model
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
             'identity_id' => $identity->id,
+            'expired_at' => $this->end_date,
         ], $this->fund_config->contact_info_enabled ? [
             'contact_information' => $contactInformation,
         ] : []));

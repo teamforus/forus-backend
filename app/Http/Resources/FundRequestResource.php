@@ -35,7 +35,7 @@ class FundRequestResource extends BaseJsonResource
 
         return [
             ...$this->resource->only([
-                'id', 'state', 'employee_id', 'fund_id', 'contact_information',
+                'id', 'state', 'employee_id', 'fund_id', 'contact_information', 'expired',
             ]),
             'fund' => new FundResource($this->resource->fund),
             'records' => FundRequestRecordResource::collection($this->resource->records),

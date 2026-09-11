@@ -237,6 +237,7 @@ class FundRequestValidatorTest extends DuskTestCase
                 $this->assertExistInList($browser, $fundRequest, 'pending', true);
                 $this->assertExistInList($browser, $fundRequest, 'assigned', false);
                 $this->assertExistInList($browser, $fundRequest, 'resolved', false);
+                $this->assertExistInList($browser, $fundRequest, 'expired', false);
 
                 // assigned
                 $this->goToFundRequestPage($browser, $fundRequest);
@@ -247,6 +248,7 @@ class FundRequestValidatorTest extends DuskTestCase
                 $this->assertExistInList($browser, $fundRequest, 'pending', false);
                 $this->assertExistInList($browser, $fundRequest, 'assigned', true);
                 $this->assertExistInList($browser, $fundRequest, 'resolved', false);
+                $this->assertExistInList($browser, $fundRequest, 'expired', false);
 
                 // resolved
                 $this->goToFundRequestPage($browser, $fundRequest);
@@ -257,6 +259,17 @@ class FundRequestValidatorTest extends DuskTestCase
                 $this->assertExistInList($browser, $fundRequest, 'pending', false);
                 $this->assertExistInList($browser, $fundRequest, 'assigned', false);
                 $this->assertExistInList($browser, $fundRequest, 'resolved', true);
+                $this->assertExistInList($browser, $fundRequest, 'expired', false);
+
+                // expired
+                $fundRequest->update(['expire_at' => now()->subDay()]);
+                $browser->refresh();
+                $browser->waitFor('@tableFundRequestSearch');
+
+                $this->assertExistInList($browser, $fundRequest, 'pending', false);
+                $this->assertExistInList($browser, $fundRequest, 'assigned', false);
+                $this->assertExistInList($browser, $fundRequest, 'resolved', false);
+                $this->assertExistInList($browser, $fundRequest, 'expired', true);
 
                 $this->logout($browser);
             });
