@@ -51,9 +51,15 @@ class FundRequestSearch extends BaseSearch
         }
 
         if ($this->hasFilter('archived')) {
-            $this->getFilter('archived')
-                ? $builder->whereIn('state', FundRequest::STATES_ARCHIVED)
-                : $builder->whereNotIn('state', FundRequest::STATES_ARCHIVED);
+            if ($this->getFilter('archived')) {
+                $builder->where(function (Builder $builder) {
+                    $builder->whereIn('state', FundRequest::STATES_ARCHIVED);
+                    $builder->orWhere(fn (Builder $builder) => FundRequestQuery::whereExpired($builder));
+                });
+            } else {
+                $builder->whereNotIn('state', FundRequest::STATES_ARCHIVED);
+                FundRequestQuery::whereNotExpired($builder);
+            }
         }
 
         if ($this->hasFilter('from') && $from = $this->getFilter('from')) {

@@ -39,6 +39,7 @@ use Throwable;
  * @property numeric|null $amount
  * @property int|null $fund_amount_preset_id
  * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property \Illuminate\Support\Carbon|null $expire_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
@@ -46,6 +47,7 @@ use Throwable;
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\FundAmountPreset|null $fund_amount_preset
+ * @property-read bool $expired
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
  * @property-read string $state_locale
@@ -71,6 +73,7 @@ use Throwable;
  * @method static Builder<static>|FundRequest whereDisregardNote($value)
  * @method static Builder<static>|FundRequest whereDisregardNotify($value)
  * @method static Builder<static>|FundRequest whereEmployeeId($value)
+ * @method static Builder<static>|FundRequest whereExpireAt($value)
  * @method static Builder<static>|FundRequest whereFundAmountPresetId($value)
  * @method static Builder<static>|FundRequest whereFundId($value)
  * @method static Builder<static>|FundRequest whereId($value)
@@ -132,10 +135,11 @@ class FundRequest extends Model
     protected $fillable = [
         'fund_id', 'employee_id', 'note', 'state', 'resolved_at',
         'disregard_note', 'disregard_notify', 'identity_id', 'contact_information',
-        'missing_records_approved',
+        'missing_records_approved', 'expire_at',
     ];
 
     protected $casts = [
+        'expire_at' => 'datetime',
         'resolved_at' => 'datetime',
         'disregard_notify' => 'boolean',
         'missing_records_approved' => 'boolean',
@@ -255,6 +259,15 @@ class FundRequest extends Model
     public function missed_records(): HasMany
     {
         return $this->hasMany(FundRequestMissedRecord::class);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getExpiredAttribute(): bool
+    {
+        return $this->fund->end_date->endOfDay()->isPast() || $this->expire_at?->endOfDay()->isPast();
     }
 
     /**

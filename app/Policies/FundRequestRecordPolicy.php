@@ -137,6 +137,10 @@ class FundRequestRecordPolicy
         FundRequest $request,
         Organization $organization,
     ): Response|bool {
+        if ($request->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$this->checkIntegrityValidator($organization, $request, $requestRecord)) {
             return $this->deny(__('policies.fund_requests.invalid_endpoint'));
         }

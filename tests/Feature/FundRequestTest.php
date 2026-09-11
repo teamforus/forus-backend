@@ -143,6 +143,44 @@ class FundRequestTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testFundRequestActionsForbiddenIfExpired(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $employee = $organization->findEmployee($organization->identity);
+
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $this->makeIdentity($this->makeUniqueEmail()));
+        $this->apiFundRequestAssignRequest($fundRequest, $employee)->assertSuccessful();
+
+        $questionData = [
+            'question' => $this->faker()->text(),
+            'text_requirement' => 'required',
+            'files_requirement' => 'no',
+            'fund_request_record_id' => $fundRequest->records[0]->id,
+        ];
+
+        $answerData = ['answer' => $this->faker()->text()];
+        // create clarification for future asserts
+        $this->apiMakeFundRequestClarificationRequest($fundRequest, $employee, $questionData)->assertSuccessful();
+
+        $fundRequest->update(['expire_at' => now()->subDay()]);
+
+        $this->apiFundRequestApproveRequest($fundRequest, $employee)->assertForbidden();
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $employee)->assertForbidden();
+        $this->apiFundRequestDeclineRequest($fundRequest, ['notify' => false], $employee)->assertForbidden();
+
+        $this->apiFundRequestResignRequest($fundRequest, $employee)->assertForbidden();
+
+        $clarification = $fundRequest->clarifications[0];
+        $this->apiMakeFundRequestClarificationRequest($fundRequest, $employee, $questionData)->assertForbidden();
+        $this->apiRespondFundRequestClarificationRequest($clarification, $fundRequest->identity, $answerData)->assertForbidden();
+        $this->apiFundRequestClarificationCloseRequest($clarification, $employee, [])->assertForbidden();
+        $this->apiFundRequestClarificationUpdateRequest($clarification, $employee, $questionData)->assertForbidden();
+    }
+
+    /**
      * @param Identity $requester
      * @param Fund $fund
      * @param array $records

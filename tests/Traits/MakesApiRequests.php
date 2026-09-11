@@ -1112,6 +1112,48 @@ trait MakesApiRequests
     }
 
     /**
+     * @param FundRequestClarification $clarification
+     * @param Employee $employee
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiFundRequestClarificationCloseRequest(
+        FundRequestClarification $clarification,
+        Employee $employee,
+        array $data,
+    ): TestResponse {
+        $fundRequest = $clarification->fund_request_record->fund_request;
+        $organization = $fundRequest->fund->organization;
+
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/clarifications/$clarification->id/close",
+            $data,
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
+     * @param FundRequestClarification $clarification
+     * @param Employee $employee
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiFundRequestClarificationUpdateRequest(
+        FundRequestClarification $clarification,
+        Employee $employee,
+        array $data,
+    ): TestResponse {
+        $fundRequest = $clarification->fund_request_record->fund_request;
+        $organization = $fundRequest->fund->organization;
+
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/clarifications/$clarification->id",
+            $data,
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
      * @param FundRequest $fundRequest
      * @param array $data
      * @param Employee $employee
