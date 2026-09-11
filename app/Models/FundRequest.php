@@ -335,7 +335,7 @@ class FundRequest extends Model
     public function assignEmployee(Employee $employee, ?Employee $supervisorEmployee = null): self
     {
         if ($this->employee) {
-            $this->resignEmployee($employee, $supervisorEmployee);
+            $this->resignEmployee($this->employee, $supervisorEmployee);
         }
 
         $this->update([

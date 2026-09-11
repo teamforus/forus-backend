@@ -8,6 +8,7 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\ProfileBankAccount;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\IdentityQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -135,13 +136,7 @@ class OrganizationPolicy
      */
     public function showFeatures(Identity $identity, Organization $organization): bool
     {
-        $hasFunds = Employee::query()
-            ->where('identity_address', $identity->address)
-            ->whereHas('roles.permissions')
-            ->whereRelation('organization.funds.fund_config', 'is_configured', true)
-            ->exists();
-
-        return $organization->isEmployee($identity) && $hasFunds;
+        return EmployeeQuery::whereCanViewOrganizationFeatures(Employee::query(), $organization->id, $identity->address)->exists();
     }
 
     /**

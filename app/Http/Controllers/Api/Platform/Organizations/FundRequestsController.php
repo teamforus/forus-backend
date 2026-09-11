@@ -49,7 +49,7 @@ class FundRequestsController extends Controller
             'identity_id', 'fund_id',
         ]), FundRequest::query()))->setEmployee($request->employee($organization));
 
-        $stateGroup = $request->get('state_group');
+        $stateGroup = $request->input('state_group');
         $builder = $search->query();
         $query = $stateGroup ? FundRequestQuery::whereGroupState(clone $builder, $stateGroup) : $builder;
 
@@ -105,7 +105,7 @@ class FundRequestsController extends Controller
      * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws Throwable
      * @return ValidatorFundRequestResource
      */
     public function assign(
@@ -277,7 +277,7 @@ class FundRequestsController extends Controller
      * @param AssignEmployeeFundRequestRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws Throwable
      * @return ValidatorFundRequestResource
      * @noinspection PhpUnused
      */
@@ -289,7 +289,7 @@ class FundRequestsController extends Controller
         $this->authorize('assignEmployeeAsSupervisor', [$fundRequest, $organization]);
 
         /** @var Employee $employee */
-        $employee = $organization->employees()->find($request->input('employee_id'));
+        $employee = $organization->employees()->findOrFail($request->input('employee_id'));
 
         return ValidatorFundRequestResource::create($fundRequest->assignEmployee(
             $employee,

@@ -311,20 +311,24 @@ class NotificationService
      */
     private function sendMail($email, Mailable $mailable): bool
     {
-        if (!Config::get('mail.disable', false)) {
-            try {
-                if (!$this->isUnsubscribed($email, $mailable)) {
-                    $mailable = $this->addGlobalVarsToMailable($mailable, $email);
-                    $this->mailer->to($email)->queue($mailable);
-                }
-            } catch (Throwable $e) {
-                $this->logFailure($e);
-            }
-
+        if (Config::get('mail.disable', false)) {
             return false;
         }
 
-        return true;
+        try {
+            if ($this->isUnsubscribed($email, $mailable)) {
+                return false;
+            }
+
+            $mailable = $this->addGlobalVarsToMailable($mailable, $email);
+            $this->mailer->to($email)->queue($mailable);
+
+            return true;
+        } catch (Throwable $e) {
+            $this->logFailure($e->getMessage());
+
+            return false;
+        }
     }
 
     /**

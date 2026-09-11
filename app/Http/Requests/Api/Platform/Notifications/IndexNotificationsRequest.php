@@ -33,9 +33,9 @@ class IndexNotificationsRequest extends BaseFormRequest
             'organization_id' => [
                 'nullable',
                 Rule::exists('organizations', 'id')->where(function (Builder $builder) {
-                    $builder->whereIn('id', Employee::where([
-                        'identity_address' => $this->auth_address(),
-                    ])->pluck('organization_id'));
+                    $builder->whereIn('id', Employee::query()
+                        ->where('identity_address', $this->auth_address())
+                        ->pluck('organization_id'));
                 }),
             ],
         ];
