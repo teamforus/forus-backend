@@ -41,6 +41,8 @@ use App\Scopes\Builders\ProductQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownBlockGenerator;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownPageGenerator;
+use App\Services\OpenIdService\Models\OpenIdFlow;
+use App\Services\OpenIdService\OpenIdService;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 use Exception;
@@ -185,6 +187,33 @@ class TestData
             PersonBsnApiRecordType::firstOrCreate(Arr::only($type, [
                 'person_bsn_api_field', 'record_type_key',
             ]), $type);
+        }
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function makeOpenIdFlows(): void
+    {
+        foreach ($this->config('openid_flows', []) as $flowKey => $flowData) {
+            if (!is_array($flowData)) {
+                throw new Exception("OpenID flow \"$flowKey\" config must be an array.");
+            }
+
+            $key = Arr::get($flowData, 'key', is_string($flowKey) ? $flowKey : null);
+
+            if (!$key) {
+                throw new Exception('OpenID flow key is required.');
+            }
+
+            OpenIdFlow::query()->updateOrCreate([
+                'provider' => Arr::get($flowData, 'provider', OpenIdService::PROVIDER_VERID),
+                'key' => $key,
+            ], [
+                'name' => Arr::get($flowData, 'name', $key),
+                'context' => Arr::get($flowData, 'context'),
+            ]);
         }
     }
 
@@ -516,6 +545,7 @@ class TestData
     /**
      * @param string $name
      * @param Organization|null $organization
+     * @throws Throwable
      * @return Implementation|Model
      */
     public function makeImplementation(
@@ -528,6 +558,8 @@ class TestData
         $blockGenerator = new MarkdownBlockGenerator($faker);
 
         $urlData = $this->makeImplementationUrlData($key);
+        $authPageData = $this->makeImplementationAuthPageData();
+        $openidData = $this->makeOpenidData();
         $samlData = $this->makeImplementationSamlData();
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
@@ -555,6 +587,8 @@ class TestData
             'pre_check_banner_description' => $faker->text(rand(400, 600)),
             ...$this->config('default.implementations', []),
             ...$urlData,
+            ...$authPageData,
+            ...$openidData,
             ...$samlData,
             ...$cgiCertData,
             ...$configData,
@@ -629,6 +663,7 @@ class TestData
         }
 
         $implementation->languages()->sync($languages);
+        $this->syncImplementationOpenIdFlows($implementation, $name);
 
         return $implementation;
     }
@@ -1108,6 +1143,7 @@ class TestData
             'record_types' => Config::get("forus.test_data.configs.$key.record_types"),
             'organizations' => Config::get("forus.test_data.configs.$key.organizations"),
             'implementations' => Config::get("forus.test_data.configs.$key.implementations"),
+            'openid_flows' => Config::get("forus.test_data.configs.$key.openid_flows"),
         ]), fn ($item) => !is_null($item));
     }
 
@@ -1330,6 +1366,51 @@ class TestData
     }
 
     /**
+     * @param Implementation $implementation
+     * @param string $name
+     * @throws Exception
+     * @return void
+     */
+    protected function syncImplementationOpenIdFlows(Implementation $implementation, string $name): void
+    {
+        $flowKeys = $this->config("implementations.$name.openid_flow_keys");
+
+        if (is_null($flowKeys)) {
+            return;
+        }
+
+        if (!is_array($flowKeys)) {
+            throw new Exception("OpenID flow keys for implementation \"$name\" must be an array.");
+        }
+
+        $flowKeys = array_values(array_unique($flowKeys));
+
+        if (empty($flowKeys)) {
+            $implementation->openid_flows()->sync([]);
+
+            return;
+        }
+
+        $flows = OpenIdFlow::query()
+            ->where('provider', OpenIdService::PROVIDER_VERID)
+            ->whereIn('key', $flowKeys)
+            ->get()
+            ->keyBy('key');
+
+        $missingFlowKeys = array_values(array_diff($flowKeys, $flows->keys()->all()));
+
+        if ($missingFlowKeys) {
+            throw new Exception(sprintf(
+                'Missing OpenID flows for implementation "%s": %s.',
+                $name,
+                implode(', ', $missingFlowKeys),
+            ));
+        }
+
+        $implementation->openid_flows()->sync($flows->pluck('id')->all());
+    }
+
+    /**
      * @param string $key
      * @return array
      */
@@ -1341,6 +1422,35 @@ class TestData
             'url_provider' => str_var_replace($this->config('url_provider'), compact('key')),
             'url_validator' => str_var_replace($this->config('url_validator'), compact('key')),
             'url_app' => str_var_replace($this->config('url_app'), compact('key')),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeImplementationAuthPageData(): array
+    {
+        return [
+            'auth_page_title' => 'Inloggen',
+            'auth_page_login_title' => 'Kies hoe u wilt inloggen of registreren',
+            'auth_page_login_email' => true,
+            'auth_page_login_digid' => true,
+            'auth_page_login_openid' => true,
+            'auth_page_login_qr' => true,
+            'auth_page_info_enabled' => false,
+            'auth_page_info_title' => null,
+            'auth_page_info_description' => null,
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeOpenidData(): array
+    {
+        return [
+            'openid_enabled' => $this->config('openid_enabled', false),
+            'openid_verid_brand_uuid' => $this->config('openid_verid_brand_uuid'),
         ];
     }
 

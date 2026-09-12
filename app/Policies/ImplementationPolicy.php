@@ -152,6 +152,27 @@ class ImplementationPolicy
     }
 
     /**
+     * Determine whether the user can update the implementation.
+     *
+     * @param Identity $identity
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updateOpenId(
+        Identity $identity,
+        Implementation $implementation,
+        Organization $organization
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->allow_openid && $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION);
+    }
+
+    /**
      * Determine whether the user can update the implementation auth page.
      *
      * @param Identity $identity

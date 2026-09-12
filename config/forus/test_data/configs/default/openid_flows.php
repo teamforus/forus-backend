@@ -1,0 +1,55 @@
+<?php
+
+return [
+    'nl_wallet' => [
+        'provider' => 'verid',
+        'name' => 'NL Wallet',
+        'context' => [
+            'issuer' => 'https://XXXX.example',
+            'client_id' => 'XXXX',
+            'client_secret' => 'XXXX',
+            'redirect_url' => '/api/v1/platform/openid/verid/callback',
+            'scopes' => ['openid', 'nin'],
+            'bsn_claim' => 'nin.identifier',
+            'bsn_claim_source' => 'claims',
+            'auth_params' => ['prompt' => 'login'],
+            'code_challenge_method' => 'S256',
+            'id_token_signed_response_alg' => 'ES384',
+            'token_endpoint_auth_method' => 'client_secret_basic',
+        ],
+    ],
+    'datakeeper' => [
+        'provider' => 'verid',
+        'name' => 'Datakeeper',
+        'context' => [
+            'issuer' => 'https://XXXX.example',
+            'client_id' => 'XXXX',
+            'client_secret' => 'XXXX',
+            'redirect_url' => '/api/v1/platform/openid/verid/callback',
+            'scopes' => ['openid', 'nin'],
+            'bsn_claim' => 'nin.identifier',
+            'bsn_claim_source' => 'claims',
+            'auth_params' => ['prompt' => 'login'],
+            'code_challenge_method' => 'S256',
+            'id_token_signed_response_alg' => 'ES384',
+            'token_endpoint_auth_method' => 'client_secret_basic',
+        ],
+    ],
+    'yivi' => [
+        'provider' => 'verid',
+        'name' => 'Yivi',
+        'context' => [
+            'issuer' => 'https://XXXX.example',
+            'client_id' => 'XXXX',
+            'client_secret' => 'XXXX',
+            'redirect_url' => '/api/v1/platform/openid/verid/callback',
+            'scopes' => ['openid', 'nin'],
+            'bsn_claim' => 'nin.identifier',
+            'bsn_claim_source' => 'claims',
+            'auth_params' => ['prompt' => 'login'],
+            'code_challenge_method' => 'S256',
+            'id_token_signed_response_alg' => 'ES384',
+            'token_endpoint_auth_method' => 'client_secret_basic',
+        ],
+    ],
+];

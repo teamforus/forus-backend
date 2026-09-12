@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Implementation;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 
 class DomainDigIdMiddleware
@@ -17,11 +18,11 @@ class DomainDigIdMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @param  Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
         if (!$this->isHostAllowed($request)) {
             return response()->json([
@@ -38,7 +39,7 @@ class DomainDigIdMiddleware
      */
     protected function isHostAllowed(Request $request): bool
     {
-        $appUrl = env('APP_URL', '');
+        $appUrl = Config::get('app.url');
         $allowedDomains = Implementation::pluck('digid_forus_api_url')->push($appUrl)->filter();
 
         // use domain names in the future

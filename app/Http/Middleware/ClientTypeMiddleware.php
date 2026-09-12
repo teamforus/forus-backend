@@ -16,6 +16,8 @@ class ClientTypeMiddleware
         'status',
         'digidResolve',
         'digidRedirect',
+        'openidCallback',
+        'openidRedirect',
         'emailSignUpRedirect',
         'emailSignInRedirect',
         'bankOauthRedirect',

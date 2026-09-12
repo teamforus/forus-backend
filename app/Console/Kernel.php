@@ -315,6 +315,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('digid:session-clean')
             ->everyMinute()->withoutOverlapping()->onOneServer();
 
+        /**
+         * OpenIdSessionsCleanupCommand.
+         */
+        $schedule->command('openid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
+
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
         $this->scheduleBackoffice($schedule);
