@@ -117,14 +117,17 @@ class FundRequestClarificationTest extends DuskTestCase
             $browser->waitFor('@fundRequestFund');
             $browser->assertSeeIn('@fundRequestFund', $fundRequest->fund->name);
 
-            $browser->waitFor("@toggleClarifications$record->id")->click("@toggleClarifications$record->id");
+            $text = $this->faker->sentence();
             $browser->waitFor("@clarificationCard$clarification->id");
 
             $browser->within("@clarificationCard$clarification->id", function (Browser $browser) use ($clarification) {
                 $browser->assertSeeIn('@clarificationQuestion', $clarification->question);
-
-                $browser->waitFor('@openReplyForm')->click('@openReplyForm');
                 $browser->waitFor('@submitBtn')->click('@submitBtn');
+            });
+
+            $this->assertAndConfirmNotificationModal($browser);
+
+            $browser->within("@clarificationCard$clarification->id", function (Browser $browser) use ($clarification, $text) {
                 $browser->waitFor('@errorAnswer1');
                 $browser->waitFor('@errorFiles1');
 
@@ -132,14 +135,23 @@ class FundRequestClarificationTest extends DuskTestCase
                 $browser->within('@fileUploader', fn () => $this->attachFilesToFileUploader($browser));
 
                 // fill text
-                $text = $this->faker->sentence();
                 $this->typeSearchInput($browser, '@answerInput', $text);
 
                 $browser->click('@submitBtn');
+            });
 
-                $browser->waitUntilMissing('@errorAnswer1');
-                $browser->waitUntilMissing('@errorFiles1');
+            $this->assertAndConfirmNotificationModal($browser);
 
+            $browser
+                ->waitUntilMissing("@clarificationCard$clarification->id @errorAnswer1")
+                ->waitUntilMissing("@clarificationCard$clarification->id @errorFiles1");
+
+            $browser
+                ->waitFor("@toggleClarifications$record->id")
+                ->click("@toggleClarifications$record->id")
+                ->waitFor("@clarificationCard$clarification->id");
+
+            $browser->within("@clarificationCard$clarification->id", function (Browser $browser) use ($clarification, $text) {
                 $browser->waitFor('@clarificationAnswer');
                 $browser->assertSeeIn('@clarificationAnswer', $text);
                 $browser->assertSeeIn('@clarificationAnswer', 'test.png');
@@ -150,5 +162,21 @@ class FundRequestClarificationTest extends DuskTestCase
             // Logout identity
             $this->logout($browser);
         });
+    }
+
+    /**
+     * @param Browser $browser
+     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
+     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
+     * @throws \Facebook\WebDriver\Exception\TimeoutException
+     * @return void
+     */
+    protected function assertAndConfirmNotificationModal(Browser $browser): void
+    {
+        $browser
+            ->waitFor('@modalNotification')
+            ->waitFor('@btnNotificationConfirm')
+            ->click('@btnNotificationConfirm')
+            ->waitUntilMissing('@modalNotification');
     }
 }

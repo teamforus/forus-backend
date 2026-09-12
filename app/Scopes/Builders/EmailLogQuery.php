@@ -2,7 +2,9 @@
 
 namespace App\Scopes\Builders;
 
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationClosedMail;
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationUpdatedMail;
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
@@ -59,6 +61,8 @@ class EmailLogQuery
             FundRequestApprovedMail::class,
             FundRequestDisregardedMail::class,
             FundRequestClarificationRequestedMail::class,
+            FundRequestClarificationUpdatedMail::class,
+            FundRequestClarificationClosedMail::class,
         ])->whereHas('event_log', fn (Builder $builder) => static::eventsOfTypeFundRequestQuery(
             $builder,
             $fundRequestsQuery,

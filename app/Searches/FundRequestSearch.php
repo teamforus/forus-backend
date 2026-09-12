@@ -5,6 +5,7 @@ namespace App\Searches;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
@@ -116,9 +117,7 @@ class FundRequestSearch extends BaseSearch
                 ->limit(1),
             'no_answer_clarification' => FundRequestRecord::query()
                 ->whereColumn('fund_request_id', 'fund_requests.id')
-                ->whereRelation('fund_request_clarifications', function (Builder $builder) {
-                    $builder->whereNull('answered_at');
-                })
+                ->whereRelation('fund_request_clarifications', 'state', FundRequestClarification::STATE_PENDING)
                 ->selectRaw('count(*)'),
             default => null,
         };
