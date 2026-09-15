@@ -10,6 +10,9 @@ use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use App\Services\Forus\Notification\Models\NotificationToken;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use App\Services\IdentityProviderService\Queries\IdentityProviderMembershipQuery;
+use App\Services\IdentityProviderService\Services\IdentityProviderSessionService;
 use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
@@ -66,6 +70,10 @@ use Throwable;
  * @property-read int|null $identity_2fa_count
  * @property-read Collection|\App\Models\Identity2FA[] $identity_2fa_active
  * @property-read int|null $identity_2fa_active_count
+ * @property-read Collection|IdentityProviderMembership[] $identity_provider_memberships
+ * @property-read int|null $identity_provider_memberships_count
+ * @property-read Collection|IdentityProviderMembership[] $identity_provider_memberships_claimed
+ * @property-read int|null $identity_provider_memberships_claimed_count
  * @property-read \App\Models\IdentityEmail|null $initial_email
  * @property-read Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
@@ -370,6 +378,22 @@ class Identity extends Model implements Authenticatable
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_memberships(): HasMany
+    {
+        return $this->hasMany(IdentityProviderMembership::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_memberships_claimed(): HasMany
+    {
+        return $this->identity_provider_memberships()->where(fn (Builder $q) => IdentityProviderMembershipQuery::whereClaimed($q));
     }
 
     /**
@@ -707,14 +731,17 @@ class Identity extends Model implements Authenticatable
      * @param string $code
      * @param string|null $ip
      * @param IdentityProxy|null $inherit2FA
+     * @param IdentityProxy|null $sourceProxy
+     * @throws Throwable
      * @return bool
      */
     public function activateAuthorizationCodeProxy(
         string $code,
         ?string $ip = null,
         ?IdentityProxy $inherit2FA = null,
+        ?IdentityProxy $sourceProxy = null,
     ): bool {
-        return (bool) static::exchangeToken('pin_code', $code, $this, $ip, $inherit2FA);
+        return (bool) static::exchangeToken('pin_code', $code, $this, $ip, $inherit2FA, $sourceProxy);
     }
 
     /**
@@ -722,25 +749,33 @@ class Identity extends Model implements Authenticatable
      * @param string $token
      * @param string|null $ip
      * @param IdentityProxy|null $inherit2FA
+     * @param IdentityProxy|null $sourceProxy
+     * @throws Throwable
      * @return bool
      */
     public function activateAuthorizationTokenProxy(
         string $token,
         ?string $ip = null,
         ?IdentityProxy $inherit2FA = null,
+        ?IdentityProxy $sourceProxy = null,
     ): bool {
-        return (bool) static::exchangeToken('qr_code', $token, $this, $ip, $inherit2FA);
+        return (bool) static::exchangeToken('qr_code', $token, $this, $ip, $inherit2FA, $sourceProxy);
     }
 
     /**
      * Authorize proxy identity by token.
      * @param string $token
      * @param string|null $ip
+     * @param IdentityProxy|null $sourceProxy
+     * @throws Throwable
      * @return bool
      */
-    public function activateAuthorizationShortTokenProxy(string $token, ?string $ip = null): bool
-    {
-        return (bool) static::exchangeToken('short_token', $token, $this, $ip);
+    public function activateAuthorizationShortTokenProxy(
+        string $token,
+        ?string $ip = null,
+        ?IdentityProxy $sourceProxy = null,
+    ): bool {
+        return (bool) static::exchangeToken('short_token', $token, $this, $ip, sourceProxy: $sourceProxy);
     }
 
     /**
@@ -767,6 +802,7 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
+     * @throws Throwable
      * @return string
      */
     public static function activateAuthorizationEmailProxy(string $token, ?string $ip = null): string
@@ -778,6 +814,7 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
+     * @throws Throwable
      * @return string
      */
     public static function exchangeEmailConfirmationToken(string $token, ?string $ip = null): string
@@ -1139,6 +1176,8 @@ class Identity extends Model implements Authenticatable
      * @param Identity|null $identity
      * @param string|null $ip
      * @param IdentityProxy|null $inherit2FA
+     * @param IdentityProxy|null $sourceProxy
+     * @throws Throwable
      * @return IdentityProxy
      */
     private static function exchangeToken(
@@ -1147,43 +1186,51 @@ class Identity extends Model implements Authenticatable
         Identity $identity = null,
         ?string $ip = null,
         ?IdentityProxy $inherit2FA = null,
+        ?IdentityProxy $sourceProxy = null,
     ): IdentityProxy {
-        $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
+        return DB::transaction(function () use ($type, $exchangeToken, $identity, $ip, $inherit2FA, $sourceProxy) {
+            $proxy = IdentityProxy::findByExchangeToken($exchangeToken, $type);
+            $proxy = $proxy ? IdentityProxy::lockForUpdate()->find($proxy->id) : null;
 
-        if (empty($proxy)) {
-            abort(404, trans('identity-proxy.code.not-found'));
-        }
+            if (empty($proxy)) {
+                abort(404, trans('identity-proxy.code.not-found'));
+            }
 
-        if (!$proxy->isPending()) {
-            abort(403, trans('identity-proxy.code.not-pending'));
-        }
+            if (!$proxy->isPending()) {
+                abort(403, trans('identity-proxy.code.not-pending'));
+            }
 
-        if ($proxy->exchange_time_expired) {
-            abort(403, trans('identity-proxy.code.expired'));
-        }
+            if ($proxy->exchange_time_expired) {
+                abort(403, trans('identity-proxy.code.expired'));
+            }
 
-        // Update identity_address only if provided
-        $proxy->update(array_merge([
-            'state' => IdentityProxy::STATE_ACTIVE,
-            'activated_at' => now(),
-        ], $identity ? [
-            'identity_address' => $identity->address,
-        ] : []));
+            // Update identity_address only if provided
+            $proxy->update(array_merge([
+                'state' => IdentityProxy::STATE_ACTIVE,
+                'activated_at' => now(),
+            ], $identity ? [
+                'identity_address' => $identity->address,
+            ] : []));
 
-        $initialEmail = $proxy->identity->initial_email;
-        $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
+            if ($sourceProxy) {
+                resolve(IdentityProviderSessionService::class)->inheritBinding($sourceProxy, $proxy);
+            }
 
-        if ($inherit2FA) {
-            $proxy->inherit2FAStateFrom($inherit2FA);
-        } elseif ($ip) {
-            $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
-        }
+            $initialEmail = $proxy->identity->initial_email;
+            $isEmailToken = in_array($type, ['email_code', 'confirmation_code']);
 
-        if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
-            $initialEmail->setVerified();
-        }
+            if ($inherit2FA) {
+                $proxy->inherit2FAStateFrom($inherit2FA);
+            } elseif ($ip) {
+                $proxy->inherit2FAState($ip, Config::get('forus.auth_2fa.remember_hours'));
+            }
 
-        return $proxy;
+            if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
+                $initialEmail->setVerified();
+            }
+
+            return $proxy;
+        }, 3);
     }
 
     /**

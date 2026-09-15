@@ -78,6 +78,7 @@ return [
         'app/Services/Forus/Auth2FAService/Models',
         'app/Services/TranslationService/Models',
         'app/Services/DigIdService/Models',
+        'app/Services/IdentityProviderService/Models',
         'app/Services/EventLogService/Models',
         'app/Services/MailDatabaseLoggerService/Models',
     ],

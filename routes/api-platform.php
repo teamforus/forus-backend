@@ -159,6 +159,26 @@ $router->group([], static function () use ($router) {
         ],
     );
 
+    $router->group(['prefix' => 'identity-providers/entra'], static function (Router $router) {
+        $router
+            ->get('oidc/callback', 'Api\Platform\IdentityProviderCallbackController@oidcCallback')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges')
+            ->name('identityProviderEntraOidcCallback');
+
+        $router
+            ->get('admin-consent/callback', 'Api\Platform\IdentityProviderCallbackController@adminConsentCallback')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges')
+            ->name('identityProviderEntraAdminConsentCallback');
+
+        $router
+            ->post('login', 'Api\Platform\IdentityProviderLoginController@login')
+            ->middleware('throttle:identity-providers-entra-authorization');
+
+        $router
+            ->post('exchange', 'Api\Platform\IdentityProviderLoginController@exchange')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges');
+    });
+
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
         $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
@@ -179,6 +199,24 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
  * Authorization required.
  */
 $router->group(['middleware' => 'api.auth'], static function () use ($router) {
+    $router->get('/identity-providers/entra/links', 'Api\Platform\IdentityProviderLinksController@index');
+
+    $router
+        ->post(
+            '/identity-providers/entra/links/{identity_provider_oidc_session}/complete',
+            'Api\Platform\IdentityProviderLinksController@complete',
+        )
+        ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges');
+
+    $router
+        ->post(
+            '/identity-providers/entra/connections/{identity_provider_connection}/links',
+            'Api\Platform\IdentityProviderLinksController@store',
+        )
+        ->middleware('throttle:identity-providers-entra-authorization');
+
+    $router->delete('/identity-providers/entra/links/{identity_provider_link}', 'Api\Platform\IdentityProviderLinksController@destroy');
+
     $router->get('/profile', "Api\Platform\ProfileController@profile");
     $router->patch('/profile', "Api\Platform\ProfileController@updateProfile");
 
@@ -189,6 +227,48 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
+
+        $router->get(
+            'identity-providers/entra',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@current',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections/{identity_provider_connection}',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@show',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@history',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections/{identity_provider_connection}/events',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@events',
+        );
+
+        $router
+            ->post(
+                'identity-providers/entra/consent',
+                'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@startConsent',
+            )
+            ->middleware('throttle:identity-providers-entra-authorization');
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/pause',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@pause',
+        );
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/resume',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@resume',
+        );
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/disconnect',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@disconnect',
+        );
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")

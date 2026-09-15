@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Session\Models\SessionRequest;
+use App\Services\IdentityProviderService\Models\IdentityProviderProxyBinding;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +36,7 @@ use Throwable;
  * @property-read \App\Models\Identity|null $identity
  * @property-read \App\Models\Identity2FA|null $identity_2fa
  * @property-read IdentityProxy|null $identity_2fa_parent_proxy
+ * @property-read IdentityProviderProxyBinding|null $identity_provider_binding
  * @property-read \Illuminate\Database\Eloquent\Collection|Session[] $sessions
  * @property-read int|null $sessions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Session[] $sessions_with_trashed
@@ -116,6 +119,14 @@ class IdentityProxy extends Model
     public function identity_2fa(): BelongsTo
     {
         return $this->belongsTo(Identity2FA::class);
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function identity_provider_binding(): HasOne
+    {
+        return $this->hasOne(IdentityProviderProxyBinding::class, 'identity_proxy_id');
     }
 
     /**
