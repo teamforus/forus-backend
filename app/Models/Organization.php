@@ -13,6 +13,7 @@ use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
@@ -86,6 +87,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_product_updates
  * @property bool $allow_prevalidation_requests
  * @property bool $allow_fund_product_limits
+ * @property string $allow_identity_providers
  * @property bool $reservation_allow_extra_payments
  * @property int $pre_approve_external_funds
  * @property int $provider_throttling_value
@@ -266,6 +268,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereIconnectTargetBinding($value)
  * @method static EloquentBuilder<static>|Organization whereId($value)
  * @method static EloquentBuilder<static>|Organization whereIdentityAddress($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviders($value)
  * @method static EloquentBuilder<static>|Organization whereIsProvider($value)
  * @method static EloquentBuilder<static>|Organization whereIsSponsor($value)
  * @method static EloquentBuilder<static>|Organization whereIsValidator($value)
@@ -293,6 +296,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder<static>|Organization whereWebsite($value)
  * @method static EloquentBuilder<static>|Organization whereWebsitePublic($value)
+ * @property-read IdentityProviderConnection|null $identity_provider_connection
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections_disconnected
+ * @method static EloquentBuilder<static>|Organization whereAllowOpenid($value)
  * @mixin \Eloquent
  */
 class Organization extends Model
@@ -319,6 +326,9 @@ class Organization extends Model
     public const string AUTH_2FA_FUNDS_POLICY_OPTIONAL = 'optional';
     public const string AUTH_2FA_FUNDS_POLICY_REQUIRED = 'required';
     public const string AUTH_2FA_FUNDS_POLICY_RESTRICT = 'restrict_features';
+
+    public const string ALLOW_IDENTITY_PROVIDERS_NO = 'no';
+    public const string ALLOW_IDENTITY_PROVIDERS_SSO = 'sso';
 
     public const array AUTH_2FA_POLICIES = [
         self::AUTH_2FA_POLICY_OPTIONAL,
@@ -693,6 +703,39 @@ class Organization extends Model
     }
 
     /**
+     * @return HasOne
+     */
+    public function identity_provider_connection(): HasOne
+    {
+        return $this->hasOne(IdentityProviderConnection::class)
+            ->where('status', '!=', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections(): HasMany
+    {
+        return $this->hasMany(IdentityProviderConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections_disconnected(): HasMany
+    {
+        return $this->identity_provider_connections()->where('status', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
+     * @return bool
+     */
+    public function allowsIdentityProviderSso(): bool
+    {
+        return $this->allow_identity_providers === self::ALLOW_IDENTITY_PROVIDERS_SSO;
+    }
+
+    /**
      * @return HasOneThrough
      * @noinspection PhpUnused
      */
@@ -887,9 +930,7 @@ class Organization extends Model
     public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
         if (!$fresh) {
-            return $this->employees
-                ->where('identity_address', $identity->address)
-                ->isNotEmpty();
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
         }
 
         return $this->employees()->where('identity_address', $identity->address)->exists();

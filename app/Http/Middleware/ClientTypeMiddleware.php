@@ -20,6 +20,8 @@ class ClientTypeMiddleware
         'emailSignInRedirect',
         'bankOauthRedirect',
         'biConnection',
+        'identityProviderEntraOidcCallback',
+        'identityProviderEntraAdminConsentCallback',
     ];
 
     /**

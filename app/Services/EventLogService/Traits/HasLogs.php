@@ -20,17 +20,19 @@ trait HasLogs
      * @param array $models
      * @param array $raw_meta
      * @param string|null $identity_address
+     * @param bool $useRequestIdentity
      * @return EventLog|Model
      */
     public function log(
         string $event,
         array $models = [],
         array $raw_meta = [],
-        ?string $identity_address = null
+        ?string $identity_address = null,
+        bool $useRequestIdentity = true,
     ): EventLog|Model {
         $request = BaseFormRequest::createFrom(request());
         $logService = resolve(EventLogService::class);
-        $identity_address = $identity_address ?: $request->auth_address();
+        $identity_address = $identity_address ?: ($useRequestIdentity ? $request->auth_address() : null);
 
         $meta = array_reduce(
             array_keys(array_filter($models, fn ($model) => $model !== null)),
