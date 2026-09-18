@@ -20,6 +20,8 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
             'section_title',
             'section_description',
             'section_background_color',
+            'section_text_color',
+            'section_separator_color',
             'section_spacing',
             'columns',
         ], array_column($config->fields(), 'key'));
@@ -32,6 +34,8 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
             'button_text',
             'button_link',
             'button_target_blank',
+            'title_color',
+            'button_text_color',
         ], array_column($config->itemFields(LinkPanelsCmsBlockConfig::ITEM_TYPE_PANEL), 'key'));
 
         $columns = $config->field('columns');
