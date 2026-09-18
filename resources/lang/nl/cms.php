@@ -210,6 +210,9 @@ return [
                         ],
                     ],
                 ],
+                'section_border_hidden' => [
+                    'name' => 'Verberg scheidingslijn',
+                ],
                 'text_background_color' => [
                     'name' => 'Achtergrondkleur tekstvlak / afbeeldingsoverlay',
                     'hint' => 'Bij een indeling met tekst over de afbeelding wordt deze kleur als overlay gebruikt. ' .
@@ -443,6 +446,14 @@ return [
                     'name' => 'Achtergrondkleur van sectie',
                     'placeholder' => '#ffffff',
                 ],
+                'section_text_color' => [
+                    'name' => 'Tekstkleur',
+                    'placeholder' => '#4E4D40',
+                ],
+                'section_separator_color' => [
+                    'name' => 'Schijdingslijn kleur',
+                    'placeholder' => '#ffffff',
+                ],
                 'section_spacing' => [
                     'name' => 'Ruimte boven/onder',
                     'options' => [
@@ -509,6 +520,14 @@ return [
                                     'name' => 'Nieuw tabblad',
                                 ],
                             ],
+                        ],
+                        'title_color' => [
+                            'name' => 'Tekstkleur van knop',
+                            'placeholder' => '#4E4D40',
+                        ],
+                        'button_text_color' => [
+                            'name' => 'Tekstkleur van knop',
+                            'placeholder' => '#4E4D40',
                         ],
                     ],
                 ],
@@ -677,6 +696,20 @@ return [
                     'name' => 'Achtergrondkleur van sectie',
                     'placeholder' => '#ffffff',
                 ],
+                'content_alignment' => [
+                    'name' => 'Uitlijning',
+                    'options' => [
+                        'left' => [
+                            'name' => 'Links',
+                        ],
+                        'center' => [
+                            'name' => 'Midden',
+                        ],
+                        'right' => [
+                            'name' => 'Rechts',
+                        ],
+                    ],
+                ],
                 'section_spacing' => [
                     'name' => 'Ruimte boven/onder',
                     'options' => [
@@ -767,6 +800,10 @@ return [
             'login_link_text' => 'loginlink tekst',
             'media' => 'afbeelding',
             'type' => 'type',
+            'section_border_hidden' => 'verberg scheidingslijn',
+            'section_text_color' => 'tekstkleur',
+            'section_separator_color' => 'schijdingslijn kleur',
+            'title_color' => 'title color',
         ],
     ],
 ];

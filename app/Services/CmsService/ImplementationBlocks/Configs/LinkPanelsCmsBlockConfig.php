@@ -43,6 +43,8 @@ class LinkPanelsCmsBlockConfig extends CmsBlockConfig
             $this->sectionTitleField(),
             $this->sectionDescriptionField(),
             $this->sectionBackgroundColorField(),
+            $this->sectionTextColorField(),
+            $this->sectionSeparatorColorField(),
             $this->sectionSpacingField(),
             [
                 'key' => 'columns',
@@ -144,6 +146,21 @@ class LinkPanelsCmsBlockConfig extends CmsBlockConfig
             'visible_if_filled' => 'button_text',
             'required_with' => 'button_text',
             'default' => false,
+            'translatable' => false,
+        ], [
+            'key' => 'title_color',
+            'name' => $this->itemFieldText(self::ITEM_TYPE_PANEL, 'title_color', 'name'),
+            'type' => self::TYPE_COLOR,
+            'placeholder' => $this->itemFieldText(self::ITEM_TYPE_PANEL, 'title_color', 'placeholder'),
+            'required' => false,
+            'translatable' => false,
+        ], [
+            'key' => 'button_text_color',
+            'name' => $this->itemFieldText(self::ITEM_TYPE_PANEL, 'button_text_color', 'name'),
+            'type' => self::TYPE_COLOR,
+            'placeholder' => $this->itemFieldText(self::ITEM_TYPE_PANEL, 'button_text_color', 'placeholder'),
+            'visible_if_filled' => 'button_text',
+            'required' => false,
             'translatable' => false,
         ]];
     }
