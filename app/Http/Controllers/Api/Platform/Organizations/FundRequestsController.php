@@ -49,7 +49,7 @@ class FundRequestsController extends Controller
             'identity_id', 'fund_id',
         ]), FundRequest::query()))->setEmployee($request->employee($organization));
 
-        $stateGroup = $request->get('state_group');
+        $stateGroup = $request->input('state_group');
         $builder = $search->query();
         $query = $stateGroup ? FundRequestQuery::whereGroupState(clone $builder, $stateGroup) : $builder;
 
@@ -60,6 +60,7 @@ class FundRequestsController extends Controller
                     'pending' => FundRequestQuery::whereGroupStatePending(clone $builder)->count(),
                     'assigned' => FundRequestQuery::whereGroupStateAssigned(clone $builder)->count(),
                     'resolved' => FundRequestQuery::whereGroupStateResolved(clone $builder)->count(),
+                    'expired' => FundRequestQuery::whereGroupStateExpired(clone $builder)->count(),
                 ],
             ],
         ]);

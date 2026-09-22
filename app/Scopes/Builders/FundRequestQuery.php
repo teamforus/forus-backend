@@ -242,7 +242,7 @@ class FundRequestQuery
     public static function whereGroupStatePending(
         Builder|Relation|FundRequest $builder,
     ): Builder|Relation|FundRequest {
-        return $builder->where('state', FundRequest::STATE_PENDING)->whereNull('employee_id');
+        return self::whereNotExpired($builder->where('state', FundRequest::STATE_PENDING)->whereNull('employee_id'));
     }
 
     /**
@@ -252,7 +252,7 @@ class FundRequestQuery
     public static function whereGroupStateAssigned(
         Builder|Relation|FundRequest $builder,
     ): Builder|Relation|FundRequest {
-        return $builder->where('state', FundRequest::STATE_PENDING)->whereNotNull('employee_id');
+        return self::whereNotExpired($builder->where('state', FundRequest::STATE_PENDING)->whereNotNull('employee_id'));
     }
 
     /**
@@ -262,7 +262,52 @@ class FundRequestQuery
     public static function whereGroupStateResolved(
         Builder|Relation|FundRequest $builder,
     ): Builder|Relation|FundRequest {
-        return $builder->whereIn('fund_requests.state', FundRequest::STATES_RESOLVED);
+        return self::whereNotExpired($builder->whereIn('fund_requests.state', FundRequest::STATES_RESOLVED));
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereGroupStateExpired(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return self::whereExpired($builder);
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $builder
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereExpired(
+        Builder|Relation|FundRequest $builder,
+    ): Builder|Relation|FundRequest {
+        return $builder->where(function (Builder $builder) {
+            $builder->where('fund_requests.expire_at', '<', today());
+
+            $builder->orWhereHas('fund', function (Builder $builder) {
+                $builder->where('end_date', '<', today());
+            });
+        });
+    }
+
+    /**
+     * @param Builder|Relation|FundRequest $query
+     * @return Builder|Relation|FundRequest
+     */
+    public static function whereNotExpired(
+        Builder|Relation|FundRequest $query,
+    ): Builder|Relation|FundRequest {
+        return $query->where(function (Builder $builder) {
+            $builder->where(function (Builder $builder) {
+                $builder->whereNull('fund_requests.expire_at');
+                $builder->orWhere('fund_requests.expire_at', '>=', today());
+            });
+
+            $builder->whereHas('fund', function (Builder $builder) {
+                $builder->whereDate('end_date', '>=', today());
+            });
+        });
     }
 
     /**
@@ -278,6 +323,7 @@ class FundRequestQuery
             'pending' => self::whereGroupStatePending($builder),
             'assigned' => self::whereGroupStateAssigned($builder),
             'resolved' => self::whereGroupStateResolved($builder),
+            'expired' => self::whereGroupStateExpired($builder),
             default => $builder,
         };
     }

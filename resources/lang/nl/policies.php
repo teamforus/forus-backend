@@ -31,6 +31,7 @@ return [
         'configuration_issue' => 'Configuratieprobleem.',
         'request_identity_has_no_email' => 'Identity has no email.',
         'record_not_part_fund_criteria' => 'Record not part of fund criteria.',
+        'expired' => 'Fund request is expired',
     ],
     '2fa' => [
         'same_type_exists' => 'Je hebt al een verbinding van hetzelfde type.',
