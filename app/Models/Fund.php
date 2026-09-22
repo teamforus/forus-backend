@@ -1615,12 +1615,13 @@ class Fund extends Model
         ?array $iConnectPrefills = null,
     ): FundRequest {
         /** @var FundRequest $fundRequest */
-        $fundRequest = $this->fund_requests()->create(array_merge([
+        $fundRequest = $this->fund_requests()->create([
             'identity_id' => $identity->id,
-            'expired_at' => $this->end_date,
-        ], $this->fund_config->contact_info_enabled ? [
-            'contact_information' => $contactInformation,
-        ] : []));
+            'expire_at' => $this->end_date,
+            ...($this->fund_config->contact_info_enabled ? [
+                'contact_information' => $contactInformation,
+            ] : []),
+        ]);
 
         foreach ($records as $record) {
             /** @var FundCriterion $criteria */
@@ -1632,12 +1633,13 @@ class Fund extends Model
             }
 
             /** @var FundRequestRecord $requestRecord */
-            $requestRecord = $fundRequest->records()->create(array_merge($record, [
+            $requestRecord = $fundRequest->records()->create([
+                ...$record,
                 'record_type_key' => $criteria->record_type_key,
                 'source' => $criteria->fill_type === $criteria::FILL_TYPE_PREFILL
                     ? FundRequestRecord::SOURCE_BRP
                     : FundRequestRecord::SOURCE_FORM,
-            ]));
+            ]);
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
         }

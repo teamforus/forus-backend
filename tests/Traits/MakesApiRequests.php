@@ -866,6 +866,24 @@ trait MakesApiRequests
     }
 
     /**
+     * @param FundRequest $fundRequest
+     * @param Employee $employee
+     * @return TestResponse
+     */
+    protected function apiFundRequestDisregardUndoRequest(
+        FundRequest $fundRequest,
+        Employee $employee,
+    ): TestResponse {
+        $organization = $fundRequest->fund->organization;
+
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/disregard-undo",
+            [],
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
      * @param Organization $organization
      * @param Employee $employee
      * @param array $query

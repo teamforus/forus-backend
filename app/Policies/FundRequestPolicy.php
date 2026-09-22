@@ -298,6 +298,10 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ): Response|bool {
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$response = $this->resolveAsValidator($identity, $fundRequest, $organization)) {
             return $response;
         }
