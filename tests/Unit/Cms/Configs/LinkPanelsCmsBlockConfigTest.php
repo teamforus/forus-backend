@@ -19,9 +19,13 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
         $this->assertSame([
             'section_title',
             'section_description',
+            'section_title_color',
+            'section_description_color',
             'section_background_color',
             'section_spacing',
             'columns',
+            'separator_enabled',
+            'separator_color',
         ], array_column($config->fields(), 'key'));
         $this->assertSame([LinkPanelsCmsBlockConfig::ITEM_TYPE_PANEL], array_column($config->itemTypes(), 'key'));
         $this->assertSame([], $config->itemFields('unknown'));
@@ -32,6 +36,8 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
             'button_text',
             'button_link',
             'button_target_blank',
+            'title_color',
+            'button_text_color',
         ], array_column($config->itemFields(LinkPanelsCmsBlockConfig::ITEM_TYPE_PANEL), 'key'));
 
         $columns = $config->field('columns');
@@ -53,6 +59,15 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
             LinkPanelsCmsBlockConfig::COLUMNS_THREE,
         ], array_column($columns['options'], 'value'));
         $this->assertFalse($columns['translatable']);
+
+        $separatorEnabled = $config->field('separator_enabled');
+        $separatorColor = $config->field('separator_color');
+
+        $this->assertSame(CmsBlockConfig::TYPE_BOOLEAN, $separatorEnabled['type']);
+        $this->assertFalse($separatorEnabled['default']);
+        $this->assertSame(CmsBlockConfig::TYPE_COLOR, $separatorColor['type']);
+        $this->assertSame(['separator_enabled', true], $separatorColor['visible_if']);
+        $this->assertFalse($separatorColor['required']);
 
         $this->assertSame('Paneel', $itemType['name']);
 
@@ -99,7 +114,56 @@ class LinkPanelsCmsBlockConfigTest extends CmsBlockTestCase
     {
         $page = $this->makeCmsPageAsOwner();
         $blocks = $this->makeValidCmsLinkPanelsBlocksPayload();
+        $blocks[0]['values']['section_title_color'] = '#123456';
+        $blocks[0]['values']['section_description_color'] = '#654321';
+        $blocks[0]['values']['separator_enabled'] = true;
+        $blocks[0]['values']['separator_color'] = '#abcdef';
 
         $this->assertBlocksValid($page, null, $blocks);
+    }
+
+    /**
+     * @return void
+     */
+    public function testValidatesSeparatorColorOnlyWhenSeparatorsAreEnabled(): void
+    {
+        $page = $this->makeCmsPageAsOwner();
+        $blocks = $this->makeValidCmsLinkPanelsBlocksPayload();
+        $blocks[0]['values']['separator_enabled'] = false;
+        $blocks[0]['values']['separator_color'] = 'invalid';
+
+        $this->assertBlocksValid($page, null, $blocks);
+
+        $blocks[0]['values']['separator_enabled'] = true;
+
+        $this->assertValidationErrors(function () use ($page, $blocks) {
+            $this->validateBlocks($page, null, $blocks);
+        }, [
+            'cms_blocks.0.values.separator_color',
+        ]);
+
+        $blocks[0]['values']['separator_color'] = null;
+
+        $this->assertBlocksValid($page, null, $blocks);
+    }
+
+    /**
+     * @return void
+     */
+    public function testRejectsInvalidSectionColorsAndSeparatorToggle(): void
+    {
+        $page = $this->makeCmsPageAsOwner();
+        $blocks = $this->makeValidCmsLinkPanelsBlocksPayload();
+        $blocks[0]['values']['section_title_color'] = 'invalid';
+        $blocks[0]['values']['section_description_color'] = 'invalid';
+        $blocks[0]['values']['separator_enabled'] = 'invalid';
+
+        $this->assertValidationErrors(function () use ($page, $blocks) {
+            $this->validateBlocks($page, null, $blocks);
+        }, [
+            'cms_blocks.0.values.section_title_color',
+            'cms_blocks.0.values.section_description_color',
+            'cms_blocks.0.values.separator_enabled',
+        ]);
     }
 }

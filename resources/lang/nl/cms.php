@@ -210,6 +210,9 @@ return [
                         ],
                     ],
                 ],
+                'section_border_hidden' => [
+                    'name' => 'Verberg scheidingslijn',
+                ],
                 'text_background_color' => [
                     'name' => 'Achtergrondkleur tekstvlak / afbeeldingsoverlay',
                     'hint' => 'Bij een indeling met tekst over de afbeelding wordt deze kleur als overlay gebruikt. ' .
@@ -443,6 +446,21 @@ return [
                     'name' => 'Achtergrondkleur van sectie',
                     'placeholder' => '#ffffff',
                 ],
+                'section_title_color' => [
+                    'name' => 'Tekstkleur van sectietitel',
+                    'placeholder' => '#4E4D40',
+                ],
+                'section_description_color' => [
+                    'name' => 'Tekstkleur van sectieomschrijving',
+                    'placeholder' => '#4E4D40',
+                ],
+                'separator_enabled' => [
+                    'name' => 'Scheidingslijnen tonen',
+                ],
+                'separator_color' => [
+                    'name' => 'Kleur van scheidingslijnen',
+                    'placeholder' => '#ffffff',
+                ],
                 'section_spacing' => [
                     'name' => 'Ruimte boven/onder',
                     'options' => [
@@ -509,6 +527,14 @@ return [
                                     'name' => 'Nieuw tabblad',
                                 ],
                             ],
+                        ],
+                        'title_color' => [
+                            'name' => 'Tekstkleur van titel',
+                            'placeholder' => '#4E4D40',
+                        ],
+                        'button_text_color' => [
+                            'name' => 'Tekstkleur van knop',
+                            'placeholder' => '#4E4D40',
                         ],
                     ],
                 ],
@@ -677,6 +703,20 @@ return [
                     'name' => 'Achtergrondkleur van sectie',
                     'placeholder' => '#ffffff',
                 ],
+                'content_alignment' => [
+                    'name' => 'Uitlijning',
+                    'options' => [
+                        'left' => [
+                            'name' => 'Links',
+                        ],
+                        'center' => [
+                            'name' => 'Midden',
+                        ],
+                        'right' => [
+                            'name' => 'Rechts',
+                        ],
+                    ],
+                ],
                 'section_spacing' => [
                     'name' => 'Ruimte boven/onder',
                     'options' => [
@@ -767,6 +807,12 @@ return [
             'login_link_text' => 'loginlink tekst',
             'media' => 'afbeelding',
             'type' => 'type',
+            'section_border_hidden' => 'verberg scheidingslijn',
+            'section_title_color' => 'tekstkleur van sectietitel',
+            'section_description_color' => 'tekstkleur van sectieomschrijving',
+            'separator_enabled' => 'scheidingslijnen tonen',
+            'separator_color' => 'kleur van scheidingslijnen',
+            'title_color' => 'title color',
         ],
     ],
 ];
