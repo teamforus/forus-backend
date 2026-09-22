@@ -446,12 +446,19 @@ return [
                     'name' => 'Achtergrondkleur van sectie',
                     'placeholder' => '#ffffff',
                 ],
-                'section_text_color' => [
-                    'name' => 'Tekstkleur',
+                'section_title_color' => [
+                    'name' => 'Tekstkleur van sectietitel',
                     'placeholder' => '#4E4D40',
                 ],
-                'section_separator_color' => [
-                    'name' => 'Schijdingslijn kleur',
+                'section_description_color' => [
+                    'name' => 'Tekstkleur van sectieomschrijving',
+                    'placeholder' => '#4E4D40',
+                ],
+                'separator_enabled' => [
+                    'name' => 'Scheidingslijnen tonen',
+                ],
+                'separator_color' => [
+                    'name' => 'Kleur van scheidingslijnen',
                     'placeholder' => '#ffffff',
                 ],
                 'section_spacing' => [
@@ -522,7 +529,7 @@ return [
                             ],
                         ],
                         'title_color' => [
-                            'name' => 'Tekstkleur van knop',
+                            'name' => 'Tekstkleur van titel',
                             'placeholder' => '#4E4D40',
                         ],
                         'button_text_color' => [
@@ -801,8 +808,10 @@ return [
             'media' => 'afbeelding',
             'type' => 'type',
             'section_border_hidden' => 'verberg scheidingslijn',
-            'section_text_color' => 'tekstkleur',
-            'section_separator_color' => 'schijdingslijn kleur',
+            'section_title_color' => 'tekstkleur van sectietitel',
+            'section_description_color' => 'tekstkleur van sectieomschrijving',
+            'separator_enabled' => 'scheidingslijnen tonen',
+            'separator_color' => 'kleur van scheidingslijnen',
             'title_color' => 'title color',
         ],
     ],

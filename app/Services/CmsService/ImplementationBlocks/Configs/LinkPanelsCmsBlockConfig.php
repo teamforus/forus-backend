@@ -42,9 +42,23 @@ class LinkPanelsCmsBlockConfig extends CmsBlockConfig
         return [
             $this->sectionTitleField(),
             $this->sectionDescriptionField(),
+            [
+                'key' => 'section_title_color',
+                'name' => $this->fieldText('section_title_color', 'name'),
+                'type' => self::TYPE_COLOR,
+                'placeholder' => $this->fieldText('section_title_color', 'placeholder'),
+                'required' => false,
+                'translatable' => false,
+            ],
+            [
+                'key' => 'section_description_color',
+                'name' => $this->fieldText('section_description_color', 'name'),
+                'type' => self::TYPE_COLOR,
+                'placeholder' => $this->fieldText('section_description_color', 'placeholder'),
+                'required' => false,
+                'translatable' => false,
+            ],
             $this->sectionBackgroundColorField(),
-            $this->sectionTextColorField(),
-            $this->sectionSeparatorColorField(),
             $this->sectionSpacingField(),
             [
                 'key' => 'columns',
@@ -63,6 +77,21 @@ class LinkPanelsCmsBlockConfig extends CmsBlockConfig
                 ]],
                 'required' => true,
                 'default' => self::COLUMNS_TWO,
+                'translatable' => false,
+            ], [
+                'key' => 'separator_enabled',
+                'name' => $this->fieldText('separator_enabled', 'name'),
+                'type' => self::TYPE_BOOLEAN,
+                'required' => false,
+                'default' => false,
+                'translatable' => false,
+            ], [
+                'key' => 'separator_color',
+                'name' => $this->fieldText('separator_color', 'name'),
+                'type' => self::TYPE_COLOR,
+                'placeholder' => $this->fieldText('separator_color', 'placeholder'),
+                'visible_if' => ['separator_enabled', true],
+                'required' => false,
                 'translatable' => false,
             ]];
     }

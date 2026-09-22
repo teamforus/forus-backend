@@ -170,38 +170,6 @@ abstract class CmsBlockConfig
     }
 
     /**
-     * @param array $overrides
-     * @return array
-     */
-    protected function sectionTextColorField(array $overrides = []): array
-    {
-        return array_replace([
-            'key' => 'section_text_color',
-            'name' => $this->fieldText('section_text_color', 'name'),
-            'type' => self::TYPE_COLOR,
-            'placeholder' => $this->fieldText('section_text_color', 'placeholder'),
-            'required' => false,
-            'translatable' => false,
-        ], $overrides);
-    }
-
-    /**
-     * @param array $overrides
-     * @return array
-     */
-    protected function sectionSeparatorColorField(array $overrides = []): array
-    {
-        return array_replace([
-            'key' => 'section_separator_color',
-            'name' => $this->fieldText('section_separator_color', 'name'),
-            'type' => self::TYPE_COLOR,
-            'placeholder' => $this->fieldText('section_separator_color', 'placeholder'),
-            'required' => false,
-            'translatable' => false,
-        ], $overrides);
-    }
-
-    /**
      * @return array
      */
     protected function sectionSpacingField(): array
