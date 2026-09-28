@@ -164,6 +164,8 @@ class FinancialStatisticQueries
         $dateTo = Arr::get($options, 'date_to');
 
         $query = $query ?: VoucherTransaction::query();
+        $query->whereNotIn('state', [VoucherTransaction::STATE_CANCELED]);
+
         $query = $query->whereHas('voucher.fund', function (Builder $builder) use ($sponsor) {
             FundQuery::whereActiveOrClosedFilter($builder->where([
                 'organization_id' => $sponsor->id,
