@@ -66,7 +66,7 @@ class SponsorFinancialStatisticsTest extends TestCase
     /**
      * @return void
      */
-    public function testFundStatisticDependsOnTransactionState()
+    public function testFundStatisticDependsOnTransactionState(): void
     {
         $funds = [[
             'name' => 'Test fund 1',
