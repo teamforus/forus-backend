@@ -29,6 +29,7 @@ use App\Services\FileService\Models\File;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Models\IdentityProviderOidcSession;
+use App\Services\WalletService\Models\WalletFlow;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -42,6 +43,68 @@ trait MakesApiRequests
     use DoesTesting;
     use MakesTestProducts;
     use TestsReservations;
+
+    /**
+     * @param string $sessionUid
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiCompleteWalletAuthRequest(string $sessionUid, array $data): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/wallets/' . $sessionUid . '/complete', $data);
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateImplementationWalletsRequest(
+        Implementation $implementation,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            sprintf(
+                '/api/v1/platform/organizations/%s/implementations/%s/wallets',
+                $implementation->organization_id,
+                $implementation->id,
+            ),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @param IdentityProxy|Identity|bool $authProxy
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiStartWalletAuthRequest(
+        Implementation $implementation,
+        array $data = [],
+        IdentityProxy|Identity|bool $authProxy = false,
+        array $headers = [],
+    ): TestResponse {
+        /** @var WalletFlow $flow */
+        $flow = $implementation->availableWalletFlows()->first();
+
+        return $this->postJson(
+            '/api/v1/platform/wallets/auth',
+            [
+                'flow_id' => $flow?->id,
+                ...$data,
+            ],
+            $this->makeApiHeaders($authProxy, [
+                'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+                'Client-Key' => $implementation->key,
+                ...$headers,
+            ]),
+        );
+    }
 
     /**
      * @param array $data

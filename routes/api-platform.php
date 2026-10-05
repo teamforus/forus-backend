@@ -179,6 +179,14 @@ $router->group([], static function () use ($router) {
             ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges');
     });
 
+    $router->post('/wallets/{wallet_session_uid}/complete', 'Api\Platform\WalletController@complete');
+    $router->post('/wallets/auth', 'Api\Platform\WalletController@auth')->name('walletAuth');
+    $router->post('/wallets/disclosure', 'Api\Platform\WalletController@disclosure');
+    $router
+        ->get('/wallets/{wallet_session_uid}/redirect', 'Api\Platform\WalletController@redirect')
+        ->name('walletRedirect');
+    $router->get('/wallets/{provider}/callback', 'Api\Platform\WalletController@callback')->name('walletCallback');
+
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
         $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
@@ -199,6 +207,16 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
  * Authorization required.
  */
 $router->group(['middleware' => 'api.auth'], static function () use ($router) {
+    $router->post('funds/{fund}/wallet-disclosures', 'Api\Platform\WalletController@fundDisclosure');
+    $router->get(
+        'funds/{fund}/wallet-disclosures/{wallet_disclosure}',
+        'Api\Platform\WalletController@showDisclosure',
+    );
+    $router->post(
+        'funds/{fund}/wallet-disclosures/{wallet_disclosure}/email',
+        'Api\Platform\WalletController@confirmDisclosureEmail',
+    );
+
     $router->get('/identity-providers/entra/links', 'Api\Platform\IdentityProviderLinksController@index');
 
     $router
@@ -428,6 +446,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD",
+    );
+
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/wallets',
+        "Api\Platform\Organizations\ImplementationsController@updateWallets",
     );
 
     $router->patch(

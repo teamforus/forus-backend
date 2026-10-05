@@ -55,6 +55,7 @@ class FundRequestRecord extends Model
     public const string EVENT_UPDATED = 'updated';
 
     public const string SOURCE_BRP = 'brp';
+    public const string SOURCE_WALLET = 'wallet';
     public const string SOURCE_FORM = 'form';
 
     protected $fillable = [

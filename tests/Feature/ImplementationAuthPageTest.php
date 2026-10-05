@@ -14,12 +14,14 @@ use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesWalletTestData;
 use Throwable;
 
 class ImplementationAuthPageTest extends TestCase
 {
     use WithFaker;
     use MakesTestFunds;
+    use MakesWalletTestData;
     use MakesTestIdentityProviders;
     use MakesTestOrganizations;
     use DatabaseTransactions;
@@ -81,6 +83,61 @@ class ImplementationAuthPageTest extends TestCase
                 ? ['email', 'digid', 'qr', 'entra']
                 : ['email', 'digid', 'qr']);
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function testWalletAndEntraOptionsCanBeConfiguredTogetherAndAreGatedIndependently(): void
+    {
+        Config::set('openid.enabled', true);
+        $implementation = $this->makeWalletImplementation([], [
+            'allow_identity_providers' => Organization::ALLOW_IDENTITY_PROVIDERS_SSO,
+        ]);
+        $this->makeEntraConnection($implementation->organization);
+
+        $manager = $this->makeIdentity();
+        $implementation->organization->addEmployee($manager, [
+            Role::where('key', 'implementation_communication_manager')->firstOrFail()->id,
+        ]);
+
+        $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_wallet' => true,
+            'entra_login_enabled' => true,
+        ]), $manager)->assertOk()->assertJsonPath('data.auth_page_login_wallet', true);
+
+        $this->assertWebshopLoginOptions($implementation->refresh(), ['email', 'wallet', 'qr', 'entra']);
+
+        Config::set('openid.enabled', false);
+        $this->assertWebshopLoginOptions($implementation, ['email', 'qr', 'entra']);
+
+        Config::set('openid.enabled', true);
+        Config::set('identity_providers.enabled', false);
+        $this->assertWebshopLoginOptions($implementation, ['email', 'wallet', 'qr']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testWalletCanBeTheOnlyAvailableLoginOptionAndDoesNotExposeFlowSecrets(): void
+    {
+        Config::set('openid.enabled', true);
+        $implementation = $this->makeWalletImplementation();
+
+        $this->apiUpdateImplementationAuthPageRequest($implementation, $this->makeAuthPageData([
+            'auth_page_login_email' => false,
+            'auth_page_login_wallet' => true,
+            'auth_page_login_qr' => false,
+        ]), $implementation->organization->identity)->assertOk();
+
+        $this->assertWebshopLoginOptions($implementation->refresh(), ['wallet']);
+
+        $response = $this->getJson('/api/v1/platform/config/webshop', [
+            'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+            'Client-Key' => $implementation->key,
+        ])->assertOk();
+
+        $this->assertStringNotContainsString('verid-secret', $response->getContent());
     }
 
     /**
@@ -350,6 +407,7 @@ class ImplementationAuthPageTest extends TestCase
             'auth_page_login_title' => $this->faker->text(50),
             'auth_page_login_email' => true,
             'auth_page_login_digid' => false,
+            'auth_page_login_wallet' => false,
             'auth_page_login_qr' => true,
             'entra_login_enabled' => false,
             'auth_page_info_enabled' => false,

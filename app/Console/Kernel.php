@@ -318,6 +318,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('identity-provider:sessions-clean')
             ->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 
+        $schedule->command('wallets:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
+
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
         $this->scheduleBackoffice($schedule);

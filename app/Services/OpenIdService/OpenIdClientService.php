@@ -2,6 +2,7 @@
 
 namespace App\Services\OpenIdService;
 
+use Closure;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
@@ -10,6 +11,7 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Session\AuthSession;
 use Facile\OpenIDClient\Token\IdTokenVerifierBuilder;
+use Facile\OpenIDClient\Token\TokenSetInterface;
 use GuzzleHttp\Psr7\ServerRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -26,15 +28,31 @@ class OpenIdClientService
      */
     public function buildAuthorization(array $config, array $authParams = []): array
     {
+        return $this->buildAuthorizationWithContext($config, fn () => $authParams);
+    }
+
+    /**
+     * @param array $config
+     * @param Closure(ClientInterface, string): array $resolveAuthParams
+     * @throws OpenIdException
+     * @return array
+     */
+    public function buildAuthorizationWithContext(array $config, Closure $resolveAuthParams): array
+    {
         try {
             $context = $this->makeAuthorizationContext($config);
+            $client = $this->makeClient($config);
+            $authParams = $resolveAuthParams($client, $context['code_challenge']);
 
             return [
-                'redirect_url' => $this->buildAuthorizationUrl($config, $context, $authParams),
+                'redirect_url' => $this->buildAuthorizationUrl($config, $context, $authParams, $client),
                 'state' => $context['state'],
                 'nonce' => $context['nonce'],
                 'code_verifier' => $context['code_verifier'],
+                'auth_params' => $authParams,
             ];
+        } catch (OpenIdException $exception) {
+            throw $exception;
         } catch (Throwable $exception) {
             throw new OpenIdException('Unable to build OpenID authorization URL.', 0, $exception);
         }
@@ -55,29 +73,7 @@ class OpenIdClientService
         ?ClientInterface $client = null,
     ): array {
         try {
-            $config = $this->normalizeConfig($config);
-            $state = $request->query('state');
-
-            if (!is_string($state) || !hash_equals((string) $session['state'], $state)) {
-                throw new OpenIdException('OpenID callback state mismatch.');
-            }
-
-            $authSession = AuthSession::fromArray([
-                'state' => $state,
-                'nonce' => $session['nonce'],
-                'code_verifier' => $session['code_verifier'],
-            ]);
-
-            $authorizationService = $this->authorizationService($config);
-            $client ??= $this->makeClient($config);
-
-            $tokenSet = $authorizationService->callback(
-                $client,
-                $authorizationService->getCallbackParams($this->makeServerRequest($request), $client),
-                $this->resolveRedirectUrl($config['redirect_url']),
-                $authSession,
-            );
-
+            $tokenSet = $this->exchangeCallback($config, $session, $request, $client);
             $claims = $tokenSet->claims();
 
             if (($claims['nonce'] ?? null) !== $session['nonce']) {
@@ -98,10 +94,54 @@ class OpenIdClientService
 
     /**
      * @param array $config
+     * @param array $session
+     * @param Request $request
+     * @param ClientInterface|null $client
+     * @param bool $requireCode
+     * @throws OpenIdException
+     * @return TokenSetInterface
+     */
+    public function exchangeCallback(
+        array $config,
+        array $session,
+        Request $request,
+        ?ClientInterface $client = null,
+        bool $requireCode = false,
+    ): TokenSetInterface {
+        $config = $this->normalizeConfig($config);
+        $state = $request->query('state');
+
+        if (!is_string($state) || !hash_equals((string) $session['state'], $state)) {
+            throw new OpenIdException('OpenID callback state mismatch.');
+        }
+
+        $authSession = AuthSession::fromArray([
+            'state' => $state,
+            'nonce' => $session['nonce'],
+            'code_verifier' => $session['code_verifier'],
+        ]);
+        $authorizationService = $this->authorizationService($config);
+        $client ??= $this->makeClient($config);
+        $params = $authorizationService->getCallbackParams($this->makeServerRequest($request), $client);
+
+        if ($requireCode && (!is_string($params['code'] ?? null) || $params['code'] === '')) {
+            throw new OpenIdException('OpenID callback authorization code is missing.');
+        }
+
+        return $authorizationService->callback(
+            $client,
+            $params,
+            $this->resolveRedirectUrl($config['redirect_url']),
+            $authSession,
+        );
+    }
+
+    /**
+     * @param array $config
      * @throws OpenIdException
      * @return ClientInterface
      */
-    protected function makeClient(array $config): ClientInterface
+    public function makeClient(array $config): ClientInterface
     {
         $config = $this->normalizeConfig($config);
         $issuer = (new IssuerBuilder())->build($config['issuer']);

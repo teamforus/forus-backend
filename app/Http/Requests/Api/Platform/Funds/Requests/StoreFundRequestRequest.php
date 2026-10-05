@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordCriterionIdRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordFilesRule;
@@ -11,9 +12,13 @@ use App\Rules\FundRequests\FundRequestRecords\FundRequestRecordValueRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredGroupRule;
 use App\Rules\FundRequests\FundRequestRecords\FundRequestRequiredRecordsRule;
 use App\Services\IConnectApiService\IConnectPrefill;
+use App\Services\WalletService\Models\WalletDisclosure;
+use App\Services\WalletService\WalletDisclosureMapper;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @property Fund $fund
@@ -59,6 +64,10 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        if ($disclosure = $this->getWalletDisclosure()) {
+            $this->merge(['records' => $this->recordsWithWalletPrefills($disclosure)]);
+        }
+
         $records = $this->input('records');
 
         return [
@@ -143,6 +152,10 @@ class StoreFundRequestRequest extends BaseFormRequest
      */
     public function getIConnectPrefills(Fund $fund): ?array
     {
+        if ($fund->fund_config->wallet_disclosure_flow_id) {
+            return null;
+        }
+
         if ($this->iConnectPrefill) {
             return $this->iConnectPrefill;
         }
@@ -152,6 +165,77 @@ class StoreFundRequestRequest extends BaseFormRequest
         }
 
         return $this->iConnectPrefill;
+    }
+
+    /**
+     * @param bool $lockForUpdate
+     * @throws ValidationException
+     * @return WalletDisclosure|null
+     */
+    public function getWalletDisclosure(bool $lockForUpdate = false): ?WalletDisclosure
+    {
+        if (!$this->fund->fund_config->wallet_disclosure_flow_id) {
+            return null;
+        }
+
+        Validator::make($this->only('wallet_disclosure_id'), [
+            'wallet_disclosure_id' => ['required', 'integer', 'min:1'],
+        ])->validate();
+
+        $query = WalletDisclosure::whereKey($this->input('wallet_disclosure_id'));
+        $disclosure = ($lockForUpdate ? $query->lockForUpdate() : $query)->first();
+
+        if (!$disclosure || Gate::denies('show', [
+            $disclosure, $this->fund, $this->implementation(), $this->client_type(),
+        ])) {
+            throw ValidationException::withMessages([
+                'wallet_disclosure_id' => trans('wallets.disclosure.unavailable'),
+            ]);
+        }
+
+        return $disclosure;
+    }
+
+    /**
+     * @param WalletDisclosure $disclosure
+     * @throws ValidationException
+     * @return array
+     */
+    public function recordsWithWalletPrefills(WalletDisclosure $disclosure): array
+    {
+        Validator::make($this->only('records'), [
+            'records' => ['sometimes', 'array'],
+            'records.*' => ['required', 'array'],
+            'records.*.fund_criterion_id' => ['required', 'integer'],
+        ])->validate();
+
+        try {
+            $values = resolve(WalletDisclosureMapper::class)->validateRecords($this->fund, $disclosure->records);
+        } catch (ValidationException) {
+            throw ValidationException::withMessages([
+                'wallet_disclosure_id' => trans('wallets.disclosure.invalid'),
+            ]);
+        }
+
+        $criteria = $this->fund->criteria->where('fill_type', FundCriterion::FILL_TYPE_PREFILL);
+        $prefillIds = $criteria->modelKeys();
+        $prefills = $criteria
+            ->filter(fn (FundCriterion $criterion) => array_key_exists($criterion->record_type_key, $values))
+            ->mapWithKeys(fn (FundCriterion $criterion) => [$criterion->id => [
+                'fund_criterion_id' => $criterion->id,
+                'value' => $values[$criterion->record_type_key],
+                'files' => [],
+            ]]);
+        $records = collect($this->input('records', []))
+            ->reject(fn ($record) => in_array(Arr::get($record, 'fund_criterion_id'), $prefillIds) &&
+                !$prefills->has(Arr::get($record, 'fund_criterion_id')))
+            ->map(fn ($record) => $prefills->get(Arr::get($record, 'fund_criterion_id'), $record))
+            ->unique('fund_criterion_id');
+
+        return [
+            ...$records->values()->all(),
+            ...$prefills->except($records->pluck('fund_criterion_id')->all())->values()->all(),
+        ];
     }
 
     /**

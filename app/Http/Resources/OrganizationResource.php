@@ -132,6 +132,7 @@ class OrganizationResource extends BaseJsonResource
                 'allow_prevalidation_requests', 'allow_fund_product_limits',
                 'allow_identity_providers',
             ]),
+            'allow_wallets' => $organization->allow_openid,
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
                 'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),

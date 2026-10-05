@@ -9,12 +9,15 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplement
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailBrandingRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationWalletsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdatePreCheckBannerRequest;
 use App\Http\Resources\ImplementationPrivateResource;
 use App\Http\Resources\ImplementationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
+use App\Services\WalletService\Models\WalletFlow;
+use App\Services\WalletService\WalletService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use League\CommonMark\Exception\CommonMarkException;
@@ -160,7 +163,9 @@ class ImplementationsController extends Controller
             'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
             'auth_page_login_qr', 'entra_login_enabled', 'auth_page_info_enabled',
             'auth_page_info_title', 'auth_page_info_description',
-        ]));
+        ]) + [
+            'auth_page_login_openid' => $request->boolean('auth_page_login_wallet'),
+        ]);
 
         $implementation->syncMarkdownMedia('cms_media', 'auth_page_info_description');
 
@@ -235,5 +240,30 @@ class ImplementationsController extends Controller
             'pre_check_banner_state', 'pre_check_banner_title',
             'pre_check_banner_description', 'pre_check_banner_label',
         ]))->attachMediaByUid($request->input('pre_check_media_uid')));
+    }
+
+    /**
+     * @param UpdateImplementationWalletsRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationPrivateResource
+     */
+    public function updateWallets(
+        UpdateImplementationWalletsRequest $request,
+        Organization $organization,
+        Implementation $implementation,
+    ): ImplementationPrivateResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateWallets', [$implementation, $organization]);
+
+        $implementation->update(['openid_enabled' => $request->boolean('wallet_enabled')]);
+
+        $implementation->wallet_flows()->sync(WalletFlow::configuredForProvider(WalletService::PROVIDER_VERID)
+            ->whereIn('key', $request->input('wallet_flow_keys', []))
+            ->pluck('id')
+            ->merge($implementation->wallet_flows()->where('type', WalletFlow::TYPE_DISCLOSURE)->pluck('wallet_flows.id'))
+            ->all());
+
+        return ImplementationPrivateResource::create($implementation);
     }
 }

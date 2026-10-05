@@ -216,14 +216,14 @@ class FundResource extends BaseJsonResource
                     'help_description_html', 'criteria_label_requirement_show',
                     'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
                     'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
-                    'hide_voucher_amount',
+                    'hide_voucher_amount', 'wallet_disclosure_flow_id', 'fund_request_intro_html',
                 ]),
                 ...$fund->fund_config->translateColumns($fund->fund_config->only([
-                    'help_title', 'help_block_text', 'help_button_text', 'help_description_html',
+                    'help_title', 'help_block_text', 'help_button_text', 'help_description_html', 'fund_request_intro_html',
                 ])),
             ] : [],
             ...$isDashboard && $fund->fund_config ? $fund->fund_config->only([
-                'allow_custom_amounts', 'allow_preset_amounts',
+                'fund_request_intro', 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
                 'custom_amount_min', 'custom_amount_max', 'allow_physical_cards',
             ]) : [],

@@ -9,6 +9,9 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Permission;
 use App\Services\CmsService\ImplementationBlocks\ImplementationCmsBlockService;
+use App\Services\WalletService\Models\WalletFlow;
+use App\Services\WalletService\Resources\WalletFlowResource;
+use App\Services\WalletService\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use League\CommonMark\Exception\CommonMarkException;
@@ -16,6 +19,7 @@ use League\CommonMark\Exception\CommonMarkException;
 class ImplementationPrivateResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'wallet_flows',
         'organization',
     ];
 
@@ -63,11 +67,14 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title', 'auth_page_info_description',
                 'entra_login_enabled',
             ]),
+            'auth_page_login_wallet' => $implementation->auth_page_login_openid,
             'auth_page_info_description_html' => $implementation->auth_page_info_description_html,
             'banner_media_uid' => $implementation->banner?->uid,
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'digid_available' => $implementation->digidEnabled(),
+            'wallet_configured' => WalletFlow::configuredForProvider(WalletService::PROVIDER_VERID)->isNotEmpty(),
+            'wallet_available' => $implementation->walletAvailable(),
             'entra_login_configured' => $implementation->entraLoginConfigured(),
             'entra_login_available' => $implementation->entraLoginAvailable(),
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
@@ -107,10 +114,19 @@ class ImplementationPrivateResource extends BaseJsonResource
         if ($implementation->organization->identityCan($request->identity(), [
             Permission::MANAGE_IMPLEMENTATION,
         ])) {
-            return $implementation->only([
-                'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
-                'email_from_address', 'email_from_name',
-            ]);
+            return [
+                ...$implementation->only([
+                    'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+                    'email_from_address', 'email_from_name',
+                ]),
+                'wallet_enabled' => $implementation->openid_enabled,
+                'wallet_flows' => WalletFlowResource::collection(
+                    $implementation->availableWalletFlowsForProvider(WalletService::PROVIDER_VERID),
+                ),
+                'wallet_flow_options' => WalletFlowResource::collection(
+                    WalletFlow::configuredForProvider(WalletService::PROVIDER_VERID),
+                ),
+            ];
         }
 
         return [];

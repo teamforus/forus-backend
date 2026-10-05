@@ -587,6 +587,7 @@ class Fund extends Model
 
     /**
      * @param array $attributes
+     * @throws CommonMarkException
      * @return void
      */
     public function makeFundConfig(array $attributes = []): void
@@ -609,6 +610,7 @@ class Fund extends Model
 
     /**
      * @param array $attributes
+     * @throws CommonMarkException
      * @return void
      */
     public function updateFundsConfig(array $attributes): void
@@ -627,7 +629,7 @@ class Fund extends Model
             'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
             'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
             'custom_amount_min', 'custom_amount_max', 'criteria_label_requirement_show',
-            'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up',
+            'pre_check_excluded', 'pre_check_note', 'allow_provider_sign_up', 'fund_request_intro',
             'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',
         ]);
 
@@ -636,6 +638,10 @@ class Fund extends Model
         ], false) : [];
 
         $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
+
+        if ($this->fund_config->wasChanged('fund_request_intro')) {
+            $this->fund_config->syncMarkdownTexts();
+        }
     }
 
     /**
@@ -1605,6 +1611,7 @@ class Fund extends Model
      * @param array $records
      * @param string|null $contactInformation
      * @param array|null $iConnectPrefills
+     * @param string $prefillSource
      * @throws PersonBsnApiException
      * @return FundRequest
      */
@@ -1613,6 +1620,7 @@ class Fund extends Model
         array $records,
         ?string $contactInformation = null,
         ?array $iConnectPrefills = null,
+        string $prefillSource = FundRequestRecord::SOURCE_BRP,
     ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(array_merge([
@@ -1634,7 +1642,7 @@ class Fund extends Model
             $requestRecord = $fundRequest->records()->create(array_merge($record, [
                 'record_type_key' => $criteria->record_type_key,
                 'source' => $criteria->fill_type === $criteria::FILL_TYPE_PREFILL
-                    ? FundRequestRecord::SOURCE_BRP
+                    ? $prefillSource
                     : FundRequestRecord::SOURCE_FORM,
             ]));
 
@@ -2077,6 +2085,7 @@ class Fund extends Model
     /**
      * @param bool $excluded
      * @param string $note
+     * @throws CommonMarkException
      * @return void
      */
     public function updatePreCheckExclusion(bool $excluded, string $note): void
@@ -2088,6 +2097,7 @@ class Fund extends Model
     }
 
     /**
+     * @throws CommonMarkException
      * @return void
      */
     public function removePreCheckExclusion(): void

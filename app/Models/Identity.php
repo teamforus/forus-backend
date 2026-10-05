@@ -824,11 +824,14 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string $email
+     * @param bool $lockForUpdate
      * @return bool
      */
-    public static function isEmailAvailable(string $email): bool
+    public static function isEmailAvailable(string $email, bool $lockForUpdate = false): bool
     {
-        return IdentityEmail::whereEmail($email)->doesntExist();
+        $query = IdentityEmail::whereEmail($email);
+
+        return $lockForUpdate ? !$query->lockForUpdate()->first(['id']) : $query->doesntExist();
     }
 
     /**

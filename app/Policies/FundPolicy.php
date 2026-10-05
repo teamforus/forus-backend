@@ -4,9 +4,11 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundCriterion;
+use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Services\WalletService\Models\WalletDisclosure;
 use Exception;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -256,10 +258,15 @@ class FundPolicy
      * @param Identity $identity
      * @param Fund $fund
      * @param string|null $logScope from where the policy is called
+     * @param FundRequest|null $fundRequest
      * @return Response|bool
      */
-    public function apply(Identity $identity, Fund $fund, ?string $logScope): Response|bool
-    {
+    public function apply(
+        Identity $identity,
+        Fund $fund,
+        ?string $logScope,
+        ?FundRequest $fundRequest = null,
+    ): Response|bool {
         if (!$fund->isActive()) {
             return $this->deny(__('fund.state_' . $fund->state));
         }
@@ -270,6 +277,16 @@ class FundPolicy
 
         if (!$fund->isConfigured()) {
             return $this->deny(__('fund.not_configured'));
+        }
+
+        if ($fund->fund_config->wallet_disclosure_flow_id && (!$fundRequest ||
+            $fundRequest->fund_id !== $fund->id || $fundRequest->identity_id !== $identity->id ||
+            !$fundRequest->isApproved() || !WalletDisclosure::where([
+                'fund_request_id' => $fundRequest->id,
+                'fund_id' => $fund->id,
+                'identity_id' => $identity->id,
+            ])->whereNotNull('consumed_at')->exists())) {
+            return $this->deny(trans('wallets.disclosure.required'));
         }
 
         if ($fund->isBackofficeApiAvailable() && $fund->fund_config->backoffice_check_partner && $identity->bsn) {
