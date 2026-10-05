@@ -11,9 +11,9 @@ class IdentityEmailUniqueRule implements Rule
     /**
      * Create a new rule instance.
      *
-     * @return void
+     * @param bool $lockForUpdate
      */
-    public function __construct()
+    public function __construct(protected bool $lockForUpdate = false)
     {
     }
 
@@ -27,7 +27,7 @@ class IdentityEmailUniqueRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return Identity::isEmailAvailable($value);
+        return Identity::isEmailAvailable($value, $this->lockForUpdate);
     }
 
     /**

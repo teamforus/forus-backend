@@ -28,7 +28,9 @@ class UpdateImplementationAuthPageRequest extends BaseFormRequest
             'auth_page_login_title' => 'required|string|max:100',
             'auth_page_login_email' => 'required|boolean',
             'auth_page_login_digid' => 'required|boolean',
+            'auth_page_login_wallet' => 'required|boolean',
             'auth_page_login_qr' => 'required|boolean',
+            'entra_login_enabled' => 'required|boolean',
             'auth_page_info_enabled' => 'required|boolean',
             'auth_page_info_title' => 'nullable|string|max:100',
             'auth_page_info_description' => ['nullable', ...$this->markdownRules(0, 1000)],
@@ -44,20 +46,6 @@ class UpdateImplementationAuthPageRequest extends BaseFormRequest
     }
 
     /**
-     * @return void
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'auth_page_login_options' => [
-                'email' => $this->boolean('auth_page_login_email'),
-                'digid' => $this->boolean('auth_page_login_digid'),
-                'qr' => $this->boolean('auth_page_login_qr'),
-            ],
-        ]);
-    }
-
-    /**
      * @return array
      */
     public function attributes(): array
@@ -66,8 +54,25 @@ class UpdateImplementationAuthPageRequest extends BaseFormRequest
             'auth_page_title' => 'titel',
             'auth_page_login_title' => 'inlogsectie titel',
             'auth_page_login_options' => 'inlogopties',
+            'entra_login_enabled' => __('validation.attributes.entra_login_enabled'),
             'auth_page_info_title' => 'uitlegsectie titel',
             'auth_page_info_description' => 'extra omschrijving',
         ];
+    }
+
+    /**
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'auth_page_login_options' => [
+                'email' => $this->boolean('auth_page_login_email'),
+                'digid' => $this->boolean('auth_page_login_digid'),
+                'wallet' => $this->boolean('auth_page_login_wallet'),
+                'qr' => $this->boolean('auth_page_login_qr'),
+                'entra' => $this->boolean('entra_login_enabled'),
+            ],
+        ]);
     }
 }

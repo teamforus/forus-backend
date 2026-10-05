@@ -7,6 +7,15 @@ return [
         'digid_not_enabled' => 'DigId is niet ingeschakeld voor deze implementatie.',
         'sign_in_first' => 'Log eerst in.',
     ],
+    'wallets' => [
+        'invalid_client_type' => 'Ongeldig clienttype.',
+        'invalid_provider' => 'Ongeldige provider.',
+        'invalid_implementation' => 'Ongeldige implementatie.',
+        'not_enabled' => 'ID-Wallet is niet ingeschakeld voor deze implementatie.',
+        'unavailable' => 'Het ID-Wallet-verzoek kan op dit moment niet worden verwerkt.',
+        'already_authenticated' => 'U bent al ingelogd.',
+        'sign_in_first' => 'Log eerst in.',
+    ],
     'bng_bulk' => [
         'invalid_request' => 'Ongeldig verzoek.',
         'not_pending' => 'Bulk is niet in behandeling.',

@@ -41,6 +41,8 @@ use App\Scopes\Builders\ProductQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownBlockGenerator;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownPageGenerator;
+use App\Services\WalletService\Models\WalletFlow;
+use App\Services\WalletService\WalletService;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 use Exception;
@@ -54,6 +56,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
+use League\CommonMark\Exception\CommonMarkException;
 use Throwable;
 
 class TestData
@@ -73,6 +76,40 @@ class TestData
         $this->configKey = Config::get('forus.test_data.test_data.config_key');
         $this->tokenGenerator = resolve('token_generator');
         $this->productCategories = ProductCategory::all();
+    }
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function makeWalletFlows(): void
+    {
+        foreach ($this->config('openid_flows', []) as $type => $flows) {
+            if (!in_array($type, [WalletFlow::TYPE_AUTHENTICATION, WalletFlow::TYPE_DISCLOSURE], true) || !is_array($flows)) {
+                throw new Exception("Invalid Wallet flow group: $type.");
+            }
+
+            foreach ($flows as $flowKey => $flowData) {
+                if (!is_array($flowData)) {
+                    throw new Exception("Wallet flow \"$flowKey\" config must be an array.");
+                }
+
+                $key = Arr::get($flowData, 'key', is_string($flowKey) ? $flowKey : null);
+
+                if (!$key) {
+                    throw new Exception('Wallet flow key is required.');
+                }
+
+                WalletFlow::query()->updateOrCreate([
+                    'provider' => Arr::get($flowData, 'provider', WalletService::PROVIDER_VERID),
+                    'type' => $type,
+                    'key' => $key,
+                ], [
+                    'name' => Arr::get($flowData, 'name', $key),
+                    'context' => Arr::get($flowData, 'context'),
+                ]);
+            }
+        }
     }
 
     /**
@@ -528,6 +565,7 @@ class TestData
         $blockGenerator = new MarkdownBlockGenerator($faker);
 
         $urlData = $this->makeImplementationUrlData($key);
+        $walletData = $this->makeWalletData();
         $samlData = $this->makeImplementationSamlData();
         $cgiCertData = $this->makeImplementationCgiCertData();
         $configData = $this->config("implementations.$name.implementation", []);
@@ -555,6 +593,7 @@ class TestData
             'pre_check_banner_description' => $faker->text(rand(400, 600)),
             ...$this->config('default.implementations', []),
             ...$urlData,
+            ...$walletData,
             ...$samlData,
             ...$cgiCertData,
             ...$configData,
@@ -629,12 +668,14 @@ class TestData
         }
 
         $implementation->languages()->sync($languages);
+        $this->syncImplementationWalletsFlows($implementation, $name);
 
         return $implementation;
     }
 
     /**
      * @param Fund $fund
+     * @throws CommonMarkException
      * @return FundConfig
      */
     public function makeFundConfig(Fund $fund): FundConfig
@@ -645,6 +686,14 @@ class TestData
 
         $config = $this->config("funds.$fund->name.fund_config", []);
         $emailRequired = Arr::get($config, 'email_required', true);
+
+        if ($flowKey = $this->config("funds.$fund->name.wallet_disclosure_flow_key")) {
+            $config['wallet_disclosure_flow_id'] = $implementation->wallet_flows()
+                ->where('provider', WalletService::PROVIDER_VERID)
+                ->where('type', WalletFlow::TYPE_DISCLOSURE)
+                ->where('key', $flowKey)
+                ->firstOrFail()->getKey();
+        }
 
         $backofficeConfig = $fund->organization->backoffice_available ? $this->getBackofficeConfigs() : [];
 
@@ -670,6 +719,7 @@ class TestData
         /** @var FundConfig $fundConfig */
         $data = array_merge($defaultData, $backofficeConfig, $config);
         $fundConfig = $fund->fund_config()->forceCreate($data);
+        $fundConfig->syncMarkdownTexts();
 
         $this->makeFundCriteriaAndFormula($fund);
         $this->makeFundForm($fund);
@@ -1108,6 +1158,7 @@ class TestData
             'record_types' => Config::get("forus.test_data.configs.$key.record_types"),
             'organizations' => Config::get("forus.test_data.configs.$key.organizations"),
             'implementations' => Config::get("forus.test_data.configs.$key.implementations"),
+            'openid_flows' => Config::get("forus.test_data.configs.$key.openid_flows"),
         ]), fn ($item) => !is_null($item));
     }
 
@@ -1327,6 +1378,66 @@ class TestData
     public function getConfigKey(): string
     {
         return $this->configKey;
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param string $name
+     * @throws Exception
+     * @return void
+     */
+    protected function syncImplementationWalletsFlows(Implementation $implementation, string $name): void
+    {
+        $flowKeys = $this->config("implementations.$name.openid_flow_keys");
+
+        if (is_null($flowKeys)) {
+            return;
+        }
+
+        if (!is_array($flowKeys)) {
+            throw new Exception("Wallet flow keys for implementation \"$name\" must be an array.");
+        }
+
+        $flowIds = [];
+
+        foreach ($flowKeys as $type => $keys) {
+            if (!in_array($type, [WalletFlow::TYPE_AUTHENTICATION, WalletFlow::TYPE_DISCLOSURE], true) || !is_array($keys)) {
+                throw new Exception("Invalid Wallet flow group for implementation \"$name\": $type.");
+            }
+
+            $flows = WalletFlow::query()
+                ->where('provider', WalletService::PROVIDER_VERID)
+                ->where('type', $type)
+                ->whereIn('key', $keys)
+                ->get()
+                ->keyBy('key');
+
+            $missingFlowKeys = array_values(array_diff($keys, $flows->keys()->all()));
+
+            if ($missingFlowKeys) {
+                throw new Exception(sprintf(
+                    'Missing Wallet %s flows for implementation "%s": %s.',
+                    $type,
+                    $name,
+                    implode(', ', $missingFlowKeys),
+                ));
+            }
+
+            $flowIds = [...$flowIds, ...$flows->modelKeys()];
+        }
+
+        $implementation->wallet_flows()->sync($flowIds);
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeWalletData(): array
+    {
+        return [
+            'openid_enabled' => $this->config('openid_enabled', false),
+            'openid_verid_brand_uuid' => $this->config('openid_verid_brand_uuid'),
+        ];
     }
 
     /**

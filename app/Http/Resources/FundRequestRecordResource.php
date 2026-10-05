@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\FundRequestRecord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * @property FundRequestRecord $resource
@@ -25,9 +26,12 @@ class FundRequestRecordResource extends BaseJsonResource
     {
         return [
             ...$this->resource->only([
-                'id', 'record_type_key', 'fund_request_id', 'value',
+                'id', 'record_type_key', 'fund_request_id',
                 'fund_criterion_id',
             ]),
+            'value' => $this->resource->record_type_key === 'wallet_bsn'
+                ? Str::mask($this->resource->value, '*', 0, -4)
+                : $this->resource->value,
             'record_type' => [
                 ...$this->resource->record_type->only([
                     'key', 'name', 'type',

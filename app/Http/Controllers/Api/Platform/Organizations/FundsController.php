@@ -225,7 +225,7 @@ class FundsController extends Controller
                     'help_enabled', 'help_title', 'help_block_text', 'help_button_text',
                     'help_email', 'help_phone', 'help_website', 'help_chat', 'help_description',
                     'help_show_email', 'help_show_phone', 'help_show_website', 'help_show_chat',
-                    'criteria_label_requirement_show', 'allow_provider_sign_up',
+                    'criteria_label_requirement_show', 'allow_provider_sign_up', 'fund_request_intro',
                 ]),
                 ...($organization->allow_physical_cards ? $request->only([
                     'allow_physical_cards', 'fund_request_physical_card_enable', 'fund_request_physical_card_type_id',

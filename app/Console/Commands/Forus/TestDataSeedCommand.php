@@ -52,6 +52,11 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Sponsors record types created!');
         $testData->separator();
 
+        $testData->info('⇾ Making Wallet flows!');
+        $testData->makeWalletFlows();
+        $testData->success('✓ Wallet flows created!');
+        $testData->separator();
+
         $testData->info('⇾ Making funds!');
         $testData->makeSponsorsFunds($sponsors);
         $testData->success('✓ Funds created!');

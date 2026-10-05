@@ -887,6 +887,235 @@ return [
             ]],
         ]],
     ],
+    'Nijmegen VIII' => [
+        'implementation_name' => 'Nijmegen',
+        'organization_name' => 'Nijmegen',
+        'wallet_disclosure_flow_key' => 'yivi_disclosure',
+        'fund' => [
+            'auto_requests_validation' => true,
+        ],
+        'fund_config' => [
+            'key' => 'nijmegen-viii',
+            'fund_request_intro' => <<<'MARKDOWN'
+                Met de Meedoenregeling krijgt u maximaal € 150,- voor een cursus of activiteit naar keuze.
+                Het invullen duurt ongeveer 5 minuten.
+
+                #### **Voorwaarden:**
+
+                - **Sommige gegevens zult u zelf invullen**
+                - **Opgeslagen gegevens in uw account**
+                - **Via koppeling met de BRP**
+                - **Via ID-wallet Datakeeper**
+
+                #### **Welke gegevens hebben we nodig:**
+
+                **Persoonsgegevens**
+
+                Via BRP.
+
+                - Voornaam
+                - Achternaam
+                - Geboortedatum
+                - Geslacht
+                - Burgerservicenummer
+
+                **Adresgegevens**
+
+                Via Datakeeper.
+
+                **Woonadres**
+
+                - Straatnaam
+                - Huisnummer
+                - Huisnummertoevoeging
+                - Postcode
+                - Woonplaats
+
+                **Huishoudgegevens**
+
+                Via BRP.
+
+                **Partner (indien van toepassing)**
+
+                - Voornaam partner
+                - Achternaam partner
+                - Geboortedatum partner
+                - Type relatie met partner
+                - Partner op zelfde woonadres
+
+                **Kinderen thuis (indien van toepassing)**
+
+                - Thuiswonende kinderen
+
+                **Contactgegevens**
+
+                Vult u zelf in.
+
+                **Inkomensgegevens**
+
+                Vult u zelf in.
+                MARKDOWN,
+            'allow_fund_request_prefill' => false,
+            'email_required' => false,
+            'contact_info_enabled' => false,
+            'contact_info_required' => false,
+        ],
+        'fund_criteria' => [[
+            'title' => 'Voornaam',
+            'record_type_key' => 'given_name',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 0,
+        ], [
+            'title' => 'Achternaam',
+            'record_type_key' => 'family_name',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 1,
+        ], [
+            'title' => 'Voorletters',
+            'record_type_key' => 'initials',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 2,
+        ], [
+            'title' => 'Geboortedatum',
+            'record_type_key' => 'birth_date',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 3,
+        ], [
+            'title' => 'Geslacht',
+            'record_type_key' => 'gender',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 4,
+        ], [
+            'title' => 'Tussenvoegsel',
+            'record_type_key' => 'last_name_prefix',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => true,
+            'order' => 5,
+        ], [
+            'title' => 'BSN',
+            'record_type_key' => 'wallet_bsn',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Mijn gegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 6,
+        ], [
+            'title' => 'Straatnaam',
+            'record_type_key' => 'street',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 7,
+        ], [
+            'title' => 'Huisnummer',
+            'record_type_key' => 'house_number',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 8,
+        ], [
+            'title' => 'Huisnummer toevoeging',
+            'record_type_key' => 'house_number_addition',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => true,
+            'order' => 9,
+        ], [
+            'title' => 'Postcode',
+            'record_type_key' => 'postal_code',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 10,
+        ], [
+            'title' => 'Woonplaats',
+            'record_type_key' => 'city',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 11,
+        ], [
+            'title' => 'Gemeente',
+            'record_type_key' => 'municipality_name',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Adresgegevens',
+            'fill_type' => 'prefill',
+            'optional' => false,
+            'order' => 12,
+        ], [
+            'title' => 'Op welk telefoonnummer kunnen wij u bereiken?',
+            'record_type_key' => 'telephone',
+            'operator' => '*',
+            'value' => '',
+            'show_attachment' => false,
+            'step' => 'Persoonlijke gegevens',
+            'group' => 'Contactgegevens',
+            'fill_type' => 'manual',
+            'optional' => true,
+            'order' => 13,
+        ]],
+    ],
     'Stadjerspas: Jeugd' => [
         'test_reservations' => false,
         'implementation_name' => 'Stadjerspas',

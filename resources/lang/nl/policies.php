@@ -1,6 +1,17 @@
 <?php
 
 return [
+    'identity_providers' => [
+        'session_identity_mismatch' => 'De sessie hoort niet bij deze identiteit.',
+        'owner_required' => 'Alleen de organisatie-eigenaar kan de koppeling met de identiteitsprovider beheren.',
+        'local_sign_in_required' => 'U moet lokaal ingelogd zijn.',
+        'link_management_disabled' => 'Het beheren van gekoppelde accounts is momenteel uitgeschakeld.',
+        'link_local_sign_in_required' =>
+            'Log in met e-mail of de Me-app om een Microsoft-account te koppelen of te verwijderen.',
+        'connection_unavailable' => 'Deze koppeling is niet beschikbaar voor het koppelen van accounts.',
+        'sign_in_disabled' => 'Inloggen met Microsoft is uitgeschakeld.',
+        'client_not_supported' => 'Inloggen met Microsoft wordt niet ondersteund voor deze applicatie.',
+    ],
     'misc' => [
         'unauthorized_action' => 'Deze actie is niet toegestaan.',
     ],

@@ -54,6 +54,7 @@ class StartDigIdRequest extends BaseFormRequest
 
         return [
             'request' => 'required|in:' . implode(',', $redirectTypes),
+            'target' => 'nullable|alpha_dash|max:200',
             'fund_id' => [
                 'required_if:redirect_type,fund_request',
                 Rule::exists('funds', 'id')->whereIn(
