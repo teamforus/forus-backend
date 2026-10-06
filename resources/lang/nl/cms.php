@@ -719,6 +719,44 @@ return [
                 ],
             ],
         ],
+        'decision_tree' => [
+            'name' => 'Decision trees',
+            'fields' => [
+                'section_title' => [
+                    'name' => 'Sectietitel',
+                    'placeholder' => 'Wat lijkt jou leuk om te doen?',
+                ],
+                'section_description' => [
+                    'name' => 'Sectieomschrijving',
+                    'placeholder' => 'Klik op een thema en je ziet meteen uit welk aanbod je kan kiezen.',
+                ],
+                'section_spacing' => [
+                    'name' => 'Ruimte boven/onder',
+                    'options' => [
+                        'default' => [
+                            'name' => 'Standaard',
+                        ],
+                        'none' => [
+                            'name' => 'Geen ruimte boven/onder',
+                        ],
+                        'no_top' => [
+                            'name' => 'Geen ruimte boven',
+                        ],
+                        'no_bottom' => [
+                            'name' => 'Geen ruimte onder',
+                        ],
+                    ],
+                ],
+                'section_background_color' => [
+                    'name' => 'Achtergrondkleur van sectie',
+                    'placeholder' => '#ffffff',
+                ],
+                'section_title_color' => [
+                    'name' => 'Title color',
+                    'placeholder' => '#000000',
+                ],
+            ],
+        ],
     ],
     'validation' => [
         'attributes' => [
@@ -767,6 +805,7 @@ return [
             'login_link_text' => 'loginlink tekst',
             'media' => 'afbeelding',
             'type' => 'type',
+            'section_title_color' => 'section title color'
         ],
     ],
 ];
