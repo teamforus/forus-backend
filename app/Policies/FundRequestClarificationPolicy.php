@@ -29,6 +29,10 @@ class FundRequestClarificationPolicy
         FundRequestClarification $requestClarification,
         FundRequest $fundRequest
     ): Response|bool {
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$this->checkIntegrityRequester($fundRequest, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
@@ -105,6 +109,10 @@ class FundRequestClarificationPolicy
         FundRequest $request,
         Organization $organization
     ): Response|bool {
+        if ($request->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         $access = $this->validateValidatorAccess(
             $identity,
             $organization,
@@ -154,6 +162,10 @@ class FundRequestClarificationPolicy
         FundRequestRecord $record,
         Organization $organization
     ): Response|bool {
+        if ($request->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         $access = $this->validateValidatorAccess($identity, $organization, $request, requireAssignment: true);
 
         if ($access !== true) {
