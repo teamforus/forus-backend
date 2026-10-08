@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $profile_id
  * @property int|null $employee_id
+ * @property string|null $source
  * @property int $record_type_id
  * @property string $value
  * @property string|null $deleted_at
@@ -35,8 +36,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ProfileRecord extends Model
 {
+    public const string SOURCE_ENTRA = 'entra';
+
     protected $fillable = [
-        'value', 'record_type_id', 'profile_id', 'employee_id',
+        'value', 'record_type_id', 'profile_id', 'employee_id', 'source',
     ];
 
     /**

@@ -48,7 +48,7 @@ class PrevalidationPolicy extends BasePolicy
      */
     public function redeem(Identity $identity, Prevalidation $prevalidation): bool
     {
-        if (!$identity->exists) {
+        if (!$identity->exists || !$identity->canReceiveVouchers()) {
             return false;
         }
 

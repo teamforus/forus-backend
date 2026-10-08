@@ -6,6 +6,7 @@ use App\Mail\Vouchers\ProductBoughtProviderBySponsorMail;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -15,6 +16,7 @@ use Tests\TestCase;
 use Tests\TestCases\VoucherBatchTestCases;
 use Tests\Traits\MakesAssertStoreUploadedCsvFile;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\VoucherTestTrait;
 use Throwable;
 
@@ -23,6 +25,7 @@ class VoucherBatchTest extends TestCase
     use VoucherTestTrait;
     use DatabaseTransactions;
     use MakesTestFunds;
+    use MakesTestIdentityProviders;
     use MakesAssertStoreUploadedCsvFile;
 
     /**
@@ -121,6 +124,50 @@ class VoucherBatchTest extends TestCase
         $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_VOUCHERS, 5);
 
         $this->assertLoggedUploadedFileContent($log, $data['vouchers']);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testMixedVoucherBatchRejectsInactiveRequestersBeforeCreatingVouchers(): void
+    {
+        $connection = $this->makeEntraConnection($this->makeTestOrganization($this->makeIdentity()));
+        $membership = $this->makeIdentityProviderRequester($connection);
+        $ordinary = $this->makeIdentity($this->makeUniqueEmail());
+        $sponsor = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsor);
+
+        $vouchers = $this->makeVoucherData($fund, [
+            'assign_by' => 'email', 'vouchers_count' => 2,
+            'replacement' => ['amount' => 25],
+        ], []);
+
+        $vouchers[0]['email'] = $ordinary->email;
+        $vouchers[1]['email'] = $membership->identity->email;
+        $data = ['fund_id' => $fund->id, 'vouchers' => $vouchers];
+
+        foreach ([
+            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ] as $status) {
+            $membership->update(['provisioning_status' => $status]);
+
+            $this->postJson($this->getApiUrl($fund, '/validate'), $data, $this->makeApiHeaders($sponsor->identity))
+                ->assertJsonValidationErrors(['vouchers.1.email' => __('validation.voucher.managed_requester_inactive')]);
+
+            $this->apiMakeVoucherRequestBatchRequest($sponsor, $data)
+                ->assertJsonValidationErrors(['vouchers.1.email' => __('validation.voucher.managed_requester_inactive')]);
+
+            $this->assertFalse($fund->vouchers()->exists());
+        }
+
+        $membership->update(['provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE]);
+
+        $this->postJson($this->getApiUrl($fund, '/validate'), $data, $this->makeApiHeaders($sponsor->identity))->assertSuccessful();
+        $this->apiMakeVoucherRequestBatchRequest($sponsor, $data)->assertSuccessful();
+
+        $this->assertEqualsCanonicalizing([$ordinary->id, $membership->identity_id], $fund->vouchers()->pluck('identity_id')->all());
     }
 
     /**

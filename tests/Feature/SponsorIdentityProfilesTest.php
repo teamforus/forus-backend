@@ -3,15 +3,22 @@
 namespace Tests\Feature;
 
 use App\Models\Identity;
+use App\Models\Implementation;
+use App\Models\Permission;
+use App\Models\ProfileRecord;
 use App\Models\RecordTypeOption;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use App\Services\IdentityProviderService\Support\IdentityProviderScimUserPayload;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
 
 class SponsorIdentityProfilesTest extends TestCase
@@ -20,6 +27,7 @@ class SponsorIdentityProfilesTest extends TestCase
     use MakesApiRequests;
     use MakesTestOrganizations;
     use MakesTestIdentities;
+    use MakesTestIdentityProviders;
     use MakesTestFunds;
     use MakesRequesterVoucherPayouts;
 
@@ -339,18 +347,103 @@ class SponsorIdentityProfilesTest extends TestCase
     }
 
     /**
-     * Sends a GET request to list all identities under an organization.
-     *
-     * @param int $organizationId
-     * @param Identity $authIdentity
-     * @return TestResponse
+     * @return void
      */
-    protected function apiListIdentitiesRequest(int $organizationId, Identity $authIdentity): TestResponse
+    public function testProfileStaffCanViewOwnRequestersBeforeVouchersWithoutExposingOtherSponsorsManagement(): void
     {
-        return $this->getJson(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities",
-            $this->makeApiHeaders($authIdentity),
+        $sponsor = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_providers' => true,
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $connection = $this->makeEntraConnection($sponsor);
+        $viewer = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::VIEW_IDENTITIES]);
+        $active = $this->makeIdentityProviderRequester($connection);
+
+        $disabled = $this->makeIdentityProviderRequester($connection, [
+            'provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+        ]);
+
+        $deleted = $this->makeIdentityProviderRequester($connection, [
+            'provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ]);
+
+        $otherSponsor = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $otherViewer = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::VIEW_IDENTITIES]);
+        $this->makeIdentityProviderRequester($this->makeEntraConnection($otherSponsor));
+
+        $response = $this->apiListIdentitiesRequest($sponsor->id, $viewer->identity)->assertOk();
+
+        $this->assertEqualsCanonicalizing(
+            [$active->identity_id, $disabled->identity_id, $deleted->identity_id],
+            $response->json('data.*.id'),
         );
+
+        foreach ([[$active, 'active'], [$disabled, 'disabled'], [$deleted, 'disabled']] as [$membership, $status]) {
+            $this->apiViewIdentityRequest($sponsor->id, $membership->identity_id, $viewer->identity)
+                ->assertOk()->assertJsonPath('data.identity_provider_management', ['provider' => 'entra', 'status' => $status]);
+        }
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $active->identity_id, $otherViewer->identity)->assertForbidden();
+        $this->makeTestFund($otherSponsor)->makeVoucher($active->identity);
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $active->identity_id, $otherViewer->identity)
+            ->assertOk()->assertJsonPath('data.id', $active->identity_id)->assertJsonPath('data.identity_provider_management', null);
+    }
+
+    /**
+     * @return void
+     */
+    public function testScimNameUpdatesPreserveProfileHistoryAndOtherSponsorsEdits(): void
+    {
+        Config::set('identity_providers.enabled', true);
+        [$connection, $token] = $this->makeIdentityProviderScimContext();
+        $sponsor = $connection->organization;
+        $sponsor->forceFill(['allow_profiles' => true])->save();
+        $manager = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::MANAGE_IDENTITIES]);
+        $membership = $this->provisionIdentityProviderRequester($connection, $token, $this->makeIdentityProviderScimUserPayload());
+        $identity = $membership->identity;
+        $otherSponsor = $this->makeTestOrganization($this->makeIdentity());
+        $otherManager = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::MANAGE_IDENTITIES]);
+        $this->makeTestFund($otherSponsor)->makeVoucher($identity);
+
+        $this->apiUpdateIdentityRequest($otherSponsor->id, $identity->id, [
+            'given_name' => 'Other sponsor edit',
+        ], $otherManager->identity)->assertOk();
+
+        $this->apiViewIdentityRequest($sponsor->id, $identity->id, $manager->identity)
+            ->assertOk()->assertJsonPath('data.records.given_name.0.value', 'Jane');
+
+        $this->apiUpdateIdentityRequest($sponsor->id, $identity->id, [
+            'given_name' => 'Local edit',
+        ], $manager->identity)->assertOk();
+
+        $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
+            'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+            'Operations' => [['op' => 'replace', 'path' => 'name.givenName', 'value' => 'Entra update']],
+        ], $membership->uid)->assertOk();
+
+        $this->apiViewIdentityRequest($sponsor->id, $identity->id, $manager->identity)
+            ->assertOk()
+            ->assertJsonPath('data.records.given_name.*.value', ['Entra update', 'Local edit', 'Jane'])
+            ->assertJsonPath('data.records.given_name.*.source', [ProfileRecord::SOURCE_ENTRA, null, ProfileRecord::SOURCE_ENTRA])
+            ->assertJsonPath('data.records.given_name.*.employee.id', [null, $manager->id, null]);
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $identity->id, $otherManager->identity)
+            ->assertOk()->assertJsonPath('data.records.given_name.*.value', ['Other sponsor edit']);
+
+        $implementation = $this->makeTestImplementation($sponsor);
+        $proxy = $this->makeIdentityProviderProxy($membership);
+
+        $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders($proxy, [
+            'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+            'Client-Key' => $implementation->key,
+        ]))->assertOk()
+            ->assertJsonPath('records.given_name.0.value', 'Entra update')
+            ->assertJsonPath('records.given_name.0.source', ProfileRecord::SOURCE_ENTRA);
     }
 
     /**
@@ -366,22 +459,6 @@ class SponsorIdentityProfilesTest extends TestCase
         return $this->postJson(
             "/api/v1/platform/organizations/$organizationId/sponsor/identities",
             $payload,
-            $this->makeApiHeaders($authIdentity),
-        );
-    }
-
-    /**
-     * Sends a GET request to view a specific identity under an organization.
-     *
-     * @param int $organizationId
-     * @param int $identityId
-     * @param Identity $authIdentity
-     * @return TestResponse
-     */
-    protected function apiViewIdentityRequest(int $organizationId, int $identityId, Identity $authIdentity): TestResponse
-    {
-        return $this->getJson(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId",
             $this->makeApiHeaders($authIdentity),
         );
     }
@@ -472,21 +549,6 @@ class SponsorIdentityProfilesTest extends TestCase
         return $this->deleteJson(
             "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId/bank-accounts/$bankAccountId",
             [],
-            $this->makeApiHeaders($authIdentity),
-        );
-    }
-
-    /**
-     * Sends a GET request to export identities for a specific organization in CSV format.
-     *
-     * @param int $organizationId
-     * @param Identity $authIdentity
-     * @return TestResponse
-     */
-    protected function apiExportIdentitiesRequest(int $organizationId, Identity $authIdentity): TestResponse
-    {
-        return $this->get(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export?data_format=csv",
             $this->makeApiHeaders($authIdentity),
         );
     }

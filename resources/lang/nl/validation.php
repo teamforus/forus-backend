@@ -192,6 +192,8 @@ return [
         'count_reached' => 'Het maximale aantal uitbetalingen voor dit tegoed (:count) is bereikt.',
     ],
     'voucher' => [
+        'managed_requester_inactive' =>
+            'Deze beheerde aanvrager is uitgeschakeld. Activeer de aanvrager via provisioning voordat u een tegoed toekent.',
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
         'deactivated' => 'De QR-code is sinds :deactivation_date niet meer geldig.',
@@ -252,6 +254,11 @@ return [
         'record_edit_forbidden' => 'U kunt dit gegeven niet aanpassen.',
     ],
     'attributes' => [
+        'exchange_token' => 'uitwisselingstoken',
+        'browser_token' => 'browsertoken',
+        'target' => 'bestemming na het inloggen',
+        'entra_login_enabled' => 'inloggen met Microsoft',
+        'identity_provider_status' => 'provisioningstatus',
         'pin_code' => 'pincode',
         'records' => 'Eigenschappen',
         'email' => 'e-mail',

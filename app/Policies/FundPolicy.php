@@ -260,6 +260,10 @@ class FundPolicy
      */
     public function apply(Identity $identity, Fund $fund, ?string $logScope): Response|bool
     {
+        if (!$identity->canReceiveVouchers()) {
+            return false;
+        }
+
         if (!$fund->isActive()) {
             return $this->deny(__('fund.state_' . $fund->state));
         }

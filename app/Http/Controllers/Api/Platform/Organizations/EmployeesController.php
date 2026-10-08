@@ -68,7 +68,7 @@ class EmployeesController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
 
         $this->authorize('show', [$organization]);
-        $this->authorize('store', [Employee::class, $organization]);
+        $this->authorize('store', [Employee::class, $organization, $request->post('email')]);
 
         $email = $request->post('email');
         $roles = $request->post('roles');

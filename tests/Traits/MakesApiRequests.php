@@ -11,6 +11,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Note;
 use App\Models\Organization;
@@ -25,6 +26,10 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Services\FileService\Models\File;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use App\Services\IdentityProviderService\Models\IdentityProviderOidcSession;
+use App\Services\IdentityProviderService\Models\IdentityProviderScimCredential;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -41,10 +46,10 @@ trait MakesApiRequests
 
     /**
      * @param array $data
-     * @param Identity $identity
+     * @param Identity|IdentityProxy $identity
      * @return TestResponse
      */
-    public function apiMakeOrganizationRequest(array $data, Identity $identity): TestResponse
+    public function apiMakeOrganizationRequest(array $data, Identity|IdentityProxy $identity): TestResponse
     {
         return $this->postJson('/api/v1/platform/organizations', $data, $this->makeApiHeaders($identity));
     }
@@ -88,6 +93,318 @@ trait MakesApiRequests
                 $implementation->organization_id,
                 $implementation->id,
             ),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|IdentityProxy $identity
+     * @param IdentityProviderConnection|null $connection
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionRequest(
+        Organization $organization,
+        Identity|IdentityProxy $identity,
+        ?IdentityProviderConnection $connection = null,
+    ): TestResponse {
+        $url = "/api/v1/platform/organizations/$organization->id/identity-providers/entra";
+
+        return $this->getJson(
+            $connection ? "$url/connections/$connection->uid" : $url,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiIssueIdentityProviderScimCredentialRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/scim-credentials",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param IdentityProviderScimCredential $credential
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiRevokeIdentityProviderScimCredentialRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        IdentityProviderScimCredential $credential,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $url = "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid";
+
+        return $this->deleteJson(
+            "$url/scim-credentials/$credential->uid",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderConnection $connection
+     * @param string $token
+     * @param string|null $uid
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderScimUsersRequest(
+        IdentityProviderConnection $connection,
+        string $token,
+        ?string $uid = null,
+        array $query = [],
+    ): TestResponse {
+        return $this->apiIdentityProviderScimUsersRequest('GET', $connection, $token, $query, $uid);
+    }
+
+    /**
+     * @param string $method
+     * @param IdentityProviderConnection $connection
+     * @param string $token
+     * @param array $data
+     * @param string|null $uid
+     * @return TestResponse
+     */
+    public function apiIdentityProviderScimUsersRequest(
+        string $method,
+        IdentityProviderConnection $connection,
+        string $token,
+        array $data = [],
+        ?string $uid = null,
+    ): TestResponse {
+        $url = "/api/v1/scim/$connection->uid/v2/Users" . ($uid ? "/$uid" : '');
+
+        if ($method === 'GET' && $data) {
+            $url .= '?' . http_build_query($data);
+            $data = [];
+        }
+
+        $headers = $this->defaultHeaders;
+        $this->flushHeaders();
+
+        try {
+            return $this->json($method, $url, $data, [
+                'Accept' => 'application/scim+json',
+                'Authorization' => "Bearer $token",
+            ]);
+        } finally {
+            $this->defaultHeaders = $headers;
+        }
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionHistoryRequest(
+        Organization $organization,
+        array $query,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param array $query
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionEventsRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        array $query,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/events$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param string $action
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiChangeIdentityProviderConnectionStateRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        string $action,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/$action",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderConsentRequest(
+        Organization $organization,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/consent",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiIdentityProviderOidcCallbackRequest(array $query): TestResponse
+    {
+        return $this->get('/api/v1/platform/identity-providers/entra/oidc/callback?' . http_build_query($query));
+    }
+
+    /**
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiIdentityProviderAdminConsentCallbackRequest(array $query): TestResponse
+    {
+        return $this->get('/api/v1/platform/identity-providers/entra/admin-consent/callback?' . http_build_query($query));
+    }
+
+    /**
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderLoginRequest(array $data = []): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/identity-providers/entra/login', $data);
+    }
+
+    /**
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiExchangeIdentityProviderLoginRequest(array $data): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/identity-providers/entra/exchange', $data);
+    }
+
+    /**
+     * @param string $type
+     * @param IdentityProxy|false $sourceProxy
+     * @return TestResponse
+     */
+    public function apiCreateIdentityProxyRequest(string $type, IdentityProxy|false $sourceProxy = false): TestResponse
+    {
+        return $this->postJson("/api/v1/identity/proxy/$type", [], $this->makeApiHeaders($sourceProxy));
+    }
+
+    /**
+     * @param string $type
+     * @param array $data
+     * @param IdentityProxy $sourceProxy
+     * @return TestResponse
+     */
+    public function apiAuthorizeIdentityProxyRequest(string $type, array $data, IdentityProxy $sourceProxy): TestResponse
+    {
+        return $this->postJson("/api/v1/identity/proxy/authorize/$type", $data, $this->makeApiHeaders($sourceProxy));
+    }
+
+    /**
+     * @param string $type
+     * @param string $token
+     * @return TestResponse
+     */
+    public function apiExchangeIdentityProxyRequest(string $type, string $token): TestResponse
+    {
+        return $this->getJson("/api/v1/identity/proxy/$type/exchange/$token");
+    }
+
+    /**
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderLinksRequest(Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson('/api/v1/platform/identity-providers/entra/links', $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityProviderConnection $connection
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderLinkRequest(
+        IdentityProviderConnection $connection,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/identity-providers/entra/connections/$connection->uid/links",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderMembership $membership
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiDeleteIdentityProviderLinkRequest(
+        IdentityProviderMembership $membership,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/identity-providers/entra/links/$membership->uid",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderOidcSession $session
+     * @param array $data
+     * @param Identity|IdentityProxy|false $identity
+     * @return TestResponse
+     */
+    public function apiCompleteIdentityProviderLinkRequest(
+        IdentityProviderOidcSession $session,
+        array $data,
+        Identity|IdentityProxy|false $identity = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/identity-providers/entra/links/$session->uid/complete",
             $data,
             $this->makeApiHeaders($identity),
         );
@@ -758,6 +1075,52 @@ trait MakesApiRequests
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
+    }
+
+    /**
+     * @param int $organizationId
+     * @param int $identityId
+     * @param Identity $authIdentity
+     * @return TestResponse
+     */
+    protected function apiViewIdentityRequest(int $organizationId, int $identityId, Identity $authIdentity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiListIdentitiesRequest(int $organizationId, Identity $authIdentity, array $query = []): TestResponse
+    {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities$queryString",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiExportIdentitiesRequest(int $organizationId, Identity $authIdentity, array $query = []): TestResponse
+    {
+        $queryString = http_build_query(['data_format' => 'csv', ...$query]);
+
+        return $this->get(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export?$queryString",
+            $this->makeApiHeaders($authIdentity),
+        );
     }
 
     /**

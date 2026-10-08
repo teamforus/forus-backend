@@ -7,6 +7,7 @@ use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
+use App\Rules\Vouchers\VoucherRecipientRule;
 use App\Rules\VouchersArraySumAmountsRule;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -26,7 +27,17 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
         return [
             'fund_id' => $this->fundIdRule(),
             'vouchers' => 'required|array|max:1000',
-            'vouchers.*' => 'required|array',
+            'vouchers.*' => [
+                'required',
+                'array',
+                Rule::forEach(function (mixed $voucher) use ($bsn_enabled): array {
+                    if (!$bsn_enabled || !is_array($voucher) || !empty($voucher['email'])) {
+                        return [];
+                    }
+
+                    return ['bsn' => [new VoucherRecipientRule(byBsn: true)]];
+                }),
+            ],
             'vouchers.*.amount' => $this->amountRule($fund),
             'vouchers.*.product_id' => $this->productIdRule($fund),
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
@@ -34,8 +45,12 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.email' => [
                 'nullable',
                 ...$this->emailRules(),
+                new VoucherRecipientRule(),
             ],
-            'vouchers.*.bsn' => $bsn_enabled ? ['nullable', new BsnRule()] : 'nullable|in:',
+            'vouchers.*.bsn' => $bsn_enabled ? [
+                'nullable',
+                new BsnRule(),
+            ] : 'nullable|in:',
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',

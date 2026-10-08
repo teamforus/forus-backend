@@ -300,7 +300,7 @@ trait MakesTestPrevalidationRequests
         $records = $request->records;
 
         foreach ($data as $field => $value) {
-            $record = $records->first(fn (PrevalidationRequestRecord $record) => $record->record_type_key === $field);
+            $record = $records->first(fn (PrevalidationRequestRecord $record) => $record->record_type_key === (string) $field);
             $this->assertNotNull($record);
             $this->assertEquals($value, $record->value);
         }

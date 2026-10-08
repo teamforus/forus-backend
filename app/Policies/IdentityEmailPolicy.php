@@ -63,7 +63,7 @@ class IdentityEmailPolicy
         Identity $identity,
         bool $auth2FAConfirmed = false,
     ): Response|bool {
-        if (!$identity->exists()) {
+        if (!$identity->exists() || $identity->isManagedRequester()) {
             return false;
         }
 
@@ -92,7 +92,7 @@ class IdentityEmailPolicy
             return $this->deny(__('policies.email.not_verified'));
         }
 
-        if ($identityEmail->identity_address !== $identity->address) {
+        if ($identityEmail->identity_address !== $identity->address || $identity->isManagedRequester()) {
             return false;
         }
 
@@ -134,7 +134,7 @@ class IdentityEmailPolicy
             return $this->deny(__('policies.email.invalid_identity'));
         }
 
-        return $identity->exists();
+        return $identity->exists() && !$identity->isManagedRequester();
     }
 
     /**
@@ -155,7 +155,7 @@ class IdentityEmailPolicy
             return $this->deny(__('policies.email.already_verified'));
         }
 
-        if ($identityEmail->identity_address !== $identity->address) {
+        if ($identityEmail->identity_address !== $identity->address || $identity->isManagedRequester()) {
             return false;
         }
 
@@ -180,7 +180,7 @@ class IdentityEmailPolicy
             return $this->deny(__('policies.email.cant_delete_primary_email'));
         }
 
-        if ($identityEmail->identity_address !== $identity->address) {
+        if ($identityEmail->identity_address !== $identity->address || $identity->isManagedRequester()) {
             return false;
         }
 

@@ -253,11 +253,11 @@ class OrganizationsController extends Controller
         Organization $organization
     ): JsonResponse {
         $this->authorize('show', [$organization]);
-        $this->authorize('transferOwnership', [$organization]);
+        $this->authorize('transferOwnership', [$organization, $request->input('employee_id')]);
 
         /** @var Employee $employee */
         $employee_id = $request->input('employee_id');
-        $employee = $organization->employeesOfRoleQuery('admin')->find($employee_id);
+        $employee = $organization->employeesOfRoleQuery('admin')->findOrFail($employee_id);
 
         $organization->update([
             'identity_address' => $employee->identity_address,
