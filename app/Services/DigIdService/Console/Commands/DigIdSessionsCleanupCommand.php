@@ -20,7 +20,7 @@ class DigIdSessionsCleanupCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Change state state and remove expired sessions.';
+    protected $description = 'Expire and remove DigiD and TVS sessions.';
 
     /**
      * Execute the console command.

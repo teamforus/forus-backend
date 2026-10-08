@@ -2,65 +2,29 @@
 
 namespace App\Http\Requests\DigID;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Implementation;
-use Illuminate\Validation\Rule;
+use App\Models\Fund;
+use App\Models\Organization;
+use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\DigIdService\Objects\DigIdSessionData;
+use App\Services\DigIdService\Requests\BaseStartDigIdRequest;
 
-class StartDigIdRequest extends BaseFormRequest
+class StartDigIdRequest extends BaseStartDigIdRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return bool
+     * @return DigIdSessionData
      */
-    public function authorize(): bool
+    public function sessionData(): DigIdSessionData
     {
-        $implementation = $this->implementation();
-        $clientType = $this->client_type();
-
-        $isAuthenticated = $this->isAuthenticated();
-        $isAuthRequest = $this->input('request') === 'auth';
-
-        if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS, true)) {
-            $this->deny(trans('requests.digid.invalid_client_type'));
-        }
-
-        if (!$implementation) {
-            $this->deny(trans('requests.digid.invalid_client_type'));
-        }
-
-        if (!$implementation->digidEnabled()) {
-            $this->deny(trans('requests.digid.digid_not_enabled'));
-        }
-
-        if (!$isAuthRequest && !$isAuthenticated) {
-            $this->deny(trans('requests.digid.sign_in_first'));
-        }
-
-        return true;
+        return $this->makeSessionData($this->sessionOrganization(), $this->implementation()->digid_connection_type);
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * @return Organization
      */
-    public function rules(): array
+    public function sessionOrganization(): Organization
     {
-        $redirectTypes = [
-            'fund_request', 'auth',
-        ];
-
-        return [
-            'request' => 'required|in:' . implode(',', $redirectTypes),
-            'fund_id' => [
-                'required_if:redirect_type,fund_request',
-                Rule::exists('funds', 'id')->whereIn(
-                    'id',
-                    Implementation::activeFundsQuery()->pluck('id')->toArray()
-                ),
-            ],
-        ];
+        return $this->input('request') === DigIdSession::SESSION_REQUEST_FUND_REQUEST
+            ? Fund::findOrFail($this->input('fund_id'))->organization()->firstOrFail()
+            : $this->implementation()->organization()->firstOrFail();
     }
 }

@@ -11,11 +11,8 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\AnnouncementSearch;
-use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\DigIdService\Repositories\DigIdCgiRepo;
-use App\Services\DigIdService\Repositories\DigIdSamlRepo;
-use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
+use App\Services\DigIdService\TvsService;
 use App\Services\FileService\FileUploadConfigService;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -90,20 +87,12 @@ use Illuminate\Support\Facades\Gate;
  * @property bool $show_fund_partners_page
  * @property bool $show_privacy_checkbox
  * @property bool $show_terms_checkbox
- * @property string $auth_page_title
- * @property string $auth_page_login_title
- * @property bool $auth_page_login_email
- * @property bool $auth_page_login_digid
- * @property bool $auth_page_login_qr
- * @property bool $auth_page_info_enabled
- * @property string|null $auth_page_info_title
- * @property string|null $auth_page_info_description
  * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
- * @property array|null $digid_saml_context
+ * @property array<array-key, mixed>|null $digid_saml_context
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -112,6 +101,10 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $digid_trusted_cert
  * @property string|null $digid_cgi_tls_key
  * @property string|null $digid_cgi_tls_cert
+ * @property string|null $digid_tvs_idp_cert
+ * @property string|null $digid_tvs_idp_cert_data
+ * @property string|null $digid_tvs_sp_cert
+ * @property string|null $digid_tvs_sp_private_key
  * @property bool $pre_check_enabled
  * @property string $pre_check_title
  * @property string $pre_check_banner_title
@@ -120,6 +113,14 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $pre_check_banner_label
  * @property string $pre_check_banner_state
  * @property string $products_default_sorting
+ * @property string $auth_page_title
+ * @property string $auth_page_login_title
+ * @property bool $auth_page_login_email
+ * @property bool $auth_page_login_digid
+ * @property bool $auth_page_login_qr
+ * @property bool $auth_page_info_enabled
+ * @property string|null $auth_page_info_title
+ * @property string|null $auth_page_info_description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
@@ -130,8 +131,8 @@ use Illuminate\Support\Facades\Gate;
  * @property-read int|null $fund_configs_count
  * @property-read EloquentCollection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @property-read string $description_html
  * @property-read string $auth_page_info_description_html
+ * @property-read string $description_html
  * @property-read EloquentCollection|\App\Models\ImplementationLanguage[] $implementation_languages
  * @property-read int|null $implementation_languages_count
  * @property-read EloquentCollection|\App\Models\Language[] $languages
@@ -163,6 +164,14 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation newQuery()
  * @method static Builder<static>|Implementation query()
  * @method static Builder<static>|Implementation whereAllowPerFundNotificationTemplates($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoDescription($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoEnabled($value)
+ * @method static Builder<static>|Implementation whereAuthPageInfoTitle($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginDigid($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginEmail($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginQr($value)
+ * @method static Builder<static>|Implementation whereAuthPageLoginTitle($value)
+ * @method static Builder<static>|Implementation whereAuthPageTitle($value)
  * @method static Builder<static>|Implementation whereBannerBackground($value)
  * @method static Builder<static>|Implementation whereBannerBackgroundMobile($value)
  * @method static Builder<static>|Implementation whereBannerButton($value)
@@ -190,6 +199,10 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereDigidSharedSecret($value)
  * @method static Builder<static>|Implementation whereDigidSignUpAllowed($value)
  * @method static Builder<static>|Implementation whereDigidTrustedCert($value)
+ * @method static Builder<static>|Implementation whereDigidTvsIdpCert($value)
+ * @method static Builder<static>|Implementation whereDigidTvsIdpCertData($value)
+ * @method static Builder<static>|Implementation whereDigidTvsSpCert($value)
+ * @method static Builder<static>|Implementation whereDigidTvsSpPrivateKey($value)
  * @method static Builder<static>|Implementation whereEmailColor($value)
  * @method static Builder<static>|Implementation whereEmailFromAddress($value)
  * @method static Builder<static>|Implementation whereEmailFromName($value)
@@ -295,7 +308,8 @@ class Implementation extends Model
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server',
+        'digid_a_select_server', 'digid_tvs_idp_cert', 'digid_tvs_idp_cert_data',
+        'digid_tvs_sp_cert', 'digid_tvs_sp_private_key',
     ];
 
     /**
@@ -684,28 +698,15 @@ class Implementation extends Model
             return $this->digid_enabled && !empty($this->getDigidSamlContext());
         }
 
+        if ($this->digid_connection_type == DigIdSession::CONNECTION_TYPE_TVS) {
+            return $this->digid_enabled;
+        }
+
         return
             $this->digid_enabled &&
             !empty($this->digid_app_id) &&
             !empty($this->digid_shared_secret) &&
             !empty($this->digid_a_select_server);
-    }
-
-    /**
-     * @throws DigIdException
-     * @return DigIdRepo|null
-     */
-    public function getDigid(): ?DigIdRepo
-    {
-        return match ($this->digid_connection_type) {
-            DigIdSession::CONNECTION_TYPE_SAML => (new DigIdSamlRepo($this->getDigidSamlContext())),
-            DigIdSession::CONNECTION_TYPE_CGI => (new DigIdCgiRepo($this->digid_env))
-                ->setAppId($this->digid_app_id)
-                ->setSharedSecret($this->digid_shared_secret)
-                ->setASelectServer($this->digid_a_select_server)
-                ->setTrustedCertificate($this->digid_trusted_cert),
-            default => null,
-        };
     }
 
     /**
@@ -864,6 +865,13 @@ class Implementation extends Model
         $request = BaseFormRequest::createFromBase(request());
         $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
+        $digidUseTvs = $implementation->digid_connection_type === DigIdSession::CONNECTION_TYPE_TVS;
+        $digidTvsOrganizations = $configKey === self::FRONTEND_WEBSHOP ? $implementation->digidTvsOrganizations() : [];
+
+        $digidAvailable = $configKey === self::FRONTEND_WEBSHOP && $digidUseTvs
+            ? !empty($digidTvsOrganizations)
+            : $implementation->digidEnabled();
+
         return [
             ...$config,
             'organization_id' => $implementation->organization_id,
@@ -883,7 +891,9 @@ class Implementation extends Model
             ...($configKey === self::FRONTEND_WEBSHOP ? [
                 'auth_page' => $implementation->authPageConfig(),
             ] : []),
-            'digid' => $implementation->digidEnabled(),
+            'digid' => $digidAvailable,
+            'digid_tvs' => $digidAvailable && $digidUseTvs,
+            'digid_tvs_organizations' => $digidTvsOrganizations,
             'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
             'digid_mandatory' => $implementation->digid_required ?? true,
             'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
@@ -1129,7 +1139,7 @@ class Implementation extends Model
     /**
      * @return array|null
      */
-    protected function getDigidSamlContext(): ?array
+    public function getDigidSamlContext(): ?array
     {
         return $this->digid_saml_context ?: Implementation::general()->digid_saml_context;
     }
@@ -1142,6 +1152,26 @@ class Implementation extends Model
     protected function buildFrontendUrl(string $url, array $getParams = []): string
     {
         return implode('?', array_filter([$url, http_build_query($getParams)]));
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, logo_url: string|null}>
+     */
+    private function digidTvsOrganizations(): array
+    {
+        if ($this->digid_connection_type !== DigIdSession::CONNECTION_TYPE_TVS || !$this->digidEnabled()) {
+            return [];
+        }
+
+        return resolve(TvsService::class)->eligibleOrganizationsQuery(self::activeFundsQuery())
+            ->with('logo.presets')
+            ->orderBy('created_at')
+            ->get(['id', 'name'])
+            ->map(fn (Organization $organization) => [
+                'id' => $organization->id,
+                'name' => $organization->name,
+                'logo_url' => $organization->logo?->findPreset('thumbnail')?->urlPublic(),
+            ])->all();
     }
 
     /**

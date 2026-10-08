@@ -10,6 +10,7 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DigIdService\TvsService;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
@@ -32,11 +33,13 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Validation\ValidationException;
 
 /**
  * App\Models\Organization.
  *
  * @property int $id
+ * @property array<array-key, mixed>|null $tvs_digid_config
  * @property string|null $identity_address
  * @property string $name
  * @property string|null $description
@@ -417,6 +420,7 @@ class Organization extends Model
         'bank_reservation_invoice_number' => 'boolean',
         'allow_prevalidation_requests' => 'boolean',
         'allow_fund_product_limits' => 'boolean',
+        'tvs_digid_config' => 'array',
     ];
 
     /**
@@ -425,7 +429,7 @@ class Organization extends Model
     protected $hidden = [
         'iconnect_api_oin', 'iconnect_target_binding', 'iconnect_base_url', 'iconnect_env',
         'iconnect_key', 'iconnect_key_pass', 'iconnect_cert', 'iconnect_cert_pass',
-        'iconnect_cert_trust',
+        'iconnect_cert_trust', 'tvs_digid_config',
     ];
 
     /**
@@ -1122,6 +1126,27 @@ class Organization extends Model
             'base_url' => $this->iconnect_base_url,
             'target_binding' => $this->iconnect_target_binding,
         ];
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTvsDigidConfig(): bool
+    {
+        return $this->tvs_digid_config !== null;
+    }
+
+    /**
+     * @throws ValidationException
+     * @return array|null
+     */
+    public function getTvsDigidConfig(): ?array
+    {
+        if (!$this->hasTvsDigidConfig()) {
+            return null;
+        }
+
+        return resolve(TvsService::class)->validateConfiguration($this->tvs_digid_config);
     }
 
     /**
