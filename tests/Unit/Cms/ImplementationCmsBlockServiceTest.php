@@ -6,6 +6,7 @@ use App\Models\ImplementationPage;
 use App\Services\CmsService\ImplementationBlocks\Configs\BannerCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CalloutCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CmsBlockConfig;
+use App\Services\CmsService\ImplementationBlocks\Configs\DecisionTreeCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\FaqCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\InfoCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\LinkPanelsCmsBlockConfig;
@@ -123,6 +124,7 @@ class ImplementationCmsBlockServiceTest extends TestCase
                 ProvidersMapCmsBlockConfig::KEY,
                 ProductCategoriesCmsBlockConfig::KEY,
                 ProductShowcaseCmsBlockConfig::KEY,
+                DecisionTreeCmsBlockConfig::KEY,
             ],
             array_map(
                 fn (CmsBlockConfig $config) => $config->key(),
@@ -142,6 +144,7 @@ class ImplementationCmsBlockServiceTest extends TestCase
                 FaqCmsBlockConfig::KEY,
                 LinkPanelsCmsBlockConfig::KEY,
                 ProviderSignUpCmsBlockConfig::KEY,
+                DecisionTreeCmsBlockConfig::KEY,
             ],
             array_map(
                 fn (CmsBlockConfig $config) => $config->key(),
