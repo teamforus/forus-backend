@@ -74,8 +74,13 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             'fund_name', 'sponsor_email', 'sponsor_name', 'sponsor_phone',
         ],
         'notifications_identities.fund_request_feedback_requested' => [
-            'fund_name', 'fund_request_clarification_question', 'sponsor_name',
-            'webshop_clarification_link', 'webshop_clarification_button',
+            'fund_name', 'sponsor_name', 'webshop_clarification_link', 'webshop_clarification_button',
+        ],
+        'notifications_identities.fund_request_clarification_updated' => [
+            'fund_name', 'sponsor_name', 'webshop_clarification_link', 'webshop_clarification_button',
+        ],
+        'notifications_identities.fund_request_clarification_closed' => [
+            'fund_name', 'sponsor_name', 'webshop_clarification_link', 'webshop_clarification_button',
         ],
         'notifications_identities.reimbursement_submitted' => [
             'app_link', 'fund_name', 'sponsor_name', 'webshop_button', 'webshop_link',

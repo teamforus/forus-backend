@@ -9,6 +9,7 @@ use App\Models\OrganizationContact;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
+use App\Rules\Base\PhoneRule;
 use App\Services\TranslationService\Models\TranslationValue;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
@@ -52,7 +53,7 @@ class UpdateOrganizationRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'email_public' => 'nullable|boolean',
-            'phone' => 'nullable|digits_between:4,20',
+            'phone' => ['nullable', new PhoneRule()],
             'phone_public' => 'nullable|boolean',
             'kvk' => [
                 'nullable',

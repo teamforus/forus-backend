@@ -78,7 +78,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
             ...$fundRequest->only([
                 'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
                 'contact_information', 'state_locale', 'employee_id', 'identity_id',
-                'missing_records_approved',
+                'missing_records_approved', 'expired',
             ]),
             'bsn' => $bsn_enabled ? $fundRequest->identity->bsn : null,
             'fund' => $this->fundDetails($fundRequest->fund),
@@ -97,7 +97,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 'email' => $employee->identity?->email,
             ])->toArray(),
             ...$this->makeTimestamps($fundRequest->only([
-                'created_at', 'updated_at', 'resolved_at',
+                'created_at', 'updated_at', 'resolved_at', 'expire_at',
             ])),
         ];
     }

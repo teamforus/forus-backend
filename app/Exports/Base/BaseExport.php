@@ -38,9 +38,9 @@ abstract class BaseExport implements FromCollection, WithHeadings, WithColumnFor
     }
 
     /**
-     * @return \Illuminate\Support\Collection|Model[]
+     * @return Collection
      */
-    public function collection(): Collection|array
+    public function collection(): Collection
     {
         return $this->data;
     }

@@ -36,6 +36,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.fund_request_approved' => ['database', 'mail'],
         'notifications_identities.fund_request_disregarded' => ['database', 'mail'],
         'notifications_identities.fund_request_feedback_requested' => ['database', 'mail'],
+        'notifications_identities.fund_request_clarification_updated' => ['mail'],
+        'notifications_identities.fund_request_clarification_closed' => ['mail'],
 
         'notifications_identities.reimbursement_submitted' => ['database', 'mail'],
         'notifications_identities.reimbursement_approved' => ['database', 'mail'],
@@ -121,6 +123,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.fund_request_approved',
         'notifications_identities.fund_request_disregarded',
         'notifications_identities.fund_request_feedback_requested',
+        'notifications_identities.fund_request_clarification_updated',
+        'notifications_identities.fund_request_clarification_closed',
 
         'notifications_identities.reimbursement_submitted',
         'notifications_identities.reimbursement_approved',
@@ -170,6 +174,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_approved',
         'notifications_identities.fund_request_feedback_requested',
+        'notifications_identities.fund_request_clarification_updated',
+        'notifications_identities.fund_request_clarification_closed',
 
         'notifications_identities.reimbursement_submitted',
         'notifications_identities.reimbursement_approved',
@@ -198,6 +204,8 @@ class SystemNotificationsTableSeeder extends Seeder
             'notifications_identities.fund_request_denied',
             'notifications_identities.fund_request_disregarded',
             'notifications_identities.fund_request_feedback_requested',
+            'notifications_identities.fund_request_clarification_updated',
+            'notifications_identities.fund_request_clarification_closed',
         ],
         'requester_reimbursements' => [
             'notifications_identities.reimbursement_submitted',

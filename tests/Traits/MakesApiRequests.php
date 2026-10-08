@@ -866,6 +866,24 @@ trait MakesApiRequests
     }
 
     /**
+     * @param FundRequest $fundRequest
+     * @param Employee $employee
+     * @return TestResponse
+     */
+    protected function apiFundRequestDisregardUndoRequest(
+        FundRequest $fundRequest,
+        Employee $employee,
+    ): TestResponse {
+        $organization = $fundRequest->fund->organization;
+
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/disregard-undo",
+            [],
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
      * @param Organization $organization
      * @param Employee $employee
      * @param array $query
@@ -1108,6 +1126,48 @@ trait MakesApiRequests
             "/api/v1/platform/fund-requests/$fundRequestRecord->fund_request_id/clarifications/$clarification->id",
             $data,
             $this->makeApiHeaders($identity)
+        );
+    }
+
+    /**
+     * @param FundRequestClarification $clarification
+     * @param Employee $employee
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiFundRequestClarificationCloseRequest(
+        FundRequestClarification $clarification,
+        Employee $employee,
+        array $data,
+    ): TestResponse {
+        $fundRequest = $clarification->fund_request_record->fund_request;
+        $organization = $fundRequest->fund->organization;
+
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/clarifications/$clarification->id/close",
+            $data,
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
+     * @param FundRequestClarification $clarification
+     * @param Employee $employee
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiFundRequestClarificationUpdateRequest(
+        FundRequestClarification $clarification,
+        Employee $employee,
+        array $data,
+    ): TestResponse {
+        $fundRequest = $clarification->fund_request_record->fund_request;
+        $organization = $fundRequest->fund->organization;
+
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/clarifications/$clarification->id",
+            $data,
+            $this->makeApiHeaders($employee->identity),
         );
     }
 
