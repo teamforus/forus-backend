@@ -12,6 +12,10 @@ class ProductShowcaseCmsBlockConfig extends CmsBlockConfig
     public const int PRODUCT_COUNT_NINE = 9;
     public const int PRODUCT_COUNT_TWELVE = 12;
 
+    public const string CONTENT_ALIGNMENT_LEFT = 'left';
+    public const string CONTENT_ALIGNMENT_CENTER = 'center';
+    public const string CONTENT_ALIGNMENT_RIGHT = 'right';
+
     /**
      * @return string
      */
@@ -46,6 +50,25 @@ class ProductShowcaseCmsBlockConfig extends CmsBlockConfig
                 'default' => $this->fieldText('section_title', 'default'),
             ]),
             $this->sectionDescriptionField(),
+            [
+                'key' => 'content_alignment',
+                'name' => $this->fieldText('content_alignment', 'name'),
+                'type' => self::TYPE_TEXT,
+                'control' => self::CONTROL_SELECT,
+                'options' => [[
+                    'value' => self::CONTENT_ALIGNMENT_LEFT,
+                    'name' => $this->fieldOptionText('content_alignment', self::CONTENT_ALIGNMENT_LEFT),
+                ], [
+                    'value' => self::CONTENT_ALIGNMENT_CENTER,
+                    'name' => $this->fieldOptionText('content_alignment', self::CONTENT_ALIGNMENT_CENTER),
+                ], [
+                    'value' => self::CONTENT_ALIGNMENT_RIGHT,
+                    'name' => $this->fieldOptionText('content_alignment', self::CONTENT_ALIGNMENT_RIGHT),
+                ]],
+                'required' => false,
+                'default' => self::CONTENT_ALIGNMENT_LEFT,
+                'translatable' => false,
+            ],
             $this->sectionBackgroundColorField(),
             $this->sectionSpacingField(),
             [

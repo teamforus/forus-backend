@@ -60,6 +60,7 @@ class FundRequestsController extends Controller
                     'pending' => FundRequestQuery::whereGroupStatePending(clone $builder)->count(),
                     'assigned' => FundRequestQuery::whereGroupStateAssigned(clone $builder)->count(),
                     'resolved' => FundRequestQuery::whereGroupStateResolved(clone $builder)->count(),
+                    'expired' => FundRequestQuery::whereGroupStateExpired(clone $builder)->count(),
                 ],
             ],
         ]);

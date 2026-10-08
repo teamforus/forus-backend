@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Platform\FundRequests\FundRequestClarifications\Update
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class FundRequestClarificationsController extends Controller
 {
@@ -17,7 +19,7 @@ class FundRequestClarificationsController extends Controller
      * @param UpdateFundRequestClarificationRequest $request
      * @param FundRequest $fundRequest
      * @param FundRequestClarification $requestClarification
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws Throwable
      * @return FundRequestClarificationResource
      */
     public function update(
@@ -25,20 +27,26 @@ class FundRequestClarificationsController extends Controller
         FundRequest $fundRequest,
         FundRequestClarification $requestClarification
     ): FundRequestClarificationResource {
-        $this->authorize('update', [$requestClarification, $fundRequest]);
+        return DB::transaction(function () use ($request, $fundRequest, $requestClarification) {
+            $requestClarification = FundRequestClarification::query()
+                ->lockForUpdate()
+                ->findOrFail($requestClarification->id);
 
-        $requestClarification->update([
-            'answer' => $requestClarification->text_requirement !== 'no' ? $request->post('answer') : null,
-            'answered_at' => now(),
-            'state' => FundRequestClarification::STATE_ANSWERED,
-        ]);
+            $this->authorize('update', [$requestClarification, $fundRequest]);
 
-        if ($requestClarification->files_requirement !== 'no') {
-            $requestClarification->appendFilesByUid($request->input('files', []));
-        }
+            $requestClarification->update([
+                'answer' => $requestClarification->text_requirement !== 'no' ? $request->post('answer') : null,
+                'resolved_at' => now(),
+                'state' => FundRequestClarification::STATE_ANSWERED,
+            ]);
 
-        FundRequestClarificationReceived::dispatch($requestClarification);
+            if ($requestClarification->files_requirement !== 'no') {
+                $requestClarification->appendFilesByUid($request->input('files', []));
+            }
 
-        return FundRequestClarificationResource::create($requestClarification);
+            FundRequestClarificationReceived::dispatch($requestClarification);
+
+            return FundRequestClarificationResource::create($requestClarification);
+        });
     }
 }

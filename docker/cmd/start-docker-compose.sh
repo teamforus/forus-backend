@@ -6,6 +6,10 @@ rm -rf vendor
 
 docker compose --profile phpmyadmin up -d
 
+# This directory is created as root by Docker, but needs to be owned
+# by the forus user in the container for composer install to work.
+docker compose exec -u root app chown -R forus:forus /var/www/vendor
+
 echo "Composer install"
 docker compose exec app composer install
 

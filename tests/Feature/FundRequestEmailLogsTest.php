@@ -8,7 +8,6 @@ use App\Services\MediaService\Traits\UsesMediaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -28,14 +27,89 @@ class FundRequestEmailLogsTest extends TestCase
 
     /**
      * @throws Throwable
+     * @return void
      */
-    public function testRequestFundEmailLogCreated()
+    public function testRequestFundEmailLogCreated(): void
     {
-        // create sponsor and requester identities
+        [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ] = $this->makeFundRequestEmailLogFixture();
+
+        $this->assertFundRequestCreateEmailLog($organization, $fundRequest);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestApprovedEmailLogCreated(): void
+    {
+        [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ] = $this->makeFundRequestEmailLogFixture();
+
+        $this->apiFundRequestApproveRequest($fundRequest, $organization->employees[0])->assertSuccessful();
+        $this->assertFundRequestApprovedEmailLog($organization, $fundRequest);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestDisregardedEmailLogCreated(): void
+    {
+        [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ] = $this->makeFundRequestEmailLogFixture();
+
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => true], $organization->employees[0])
+            ->assertSuccessful();
+        $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, true);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestDisregardedEmailLogNotCreatedWithoutNotification(): void
+    {
+        [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ] = $this->makeFundRequestEmailLogFixture();
+
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $organization->employees[0])
+            ->assertSuccessful();
+        $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, false);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundRequestClarificationEmailLogCreated(): void
+    {
+        [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ] = $this->makeFundRequestEmailLogFixture();
+
+        $this->requestFundRequestClarification($organization, $fundRequest);
+        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest);
+    }
+
+    /**
+     * @throws Throwable
+     * @return array{organization: Organization, fundRequest: FundRequest}
+     */
+    protected function makeFundRequestEmailLogFixture(): array
+    {
         $sponsorIdentity = $this->makeIdentity(email: $this->makeUniqueEmail());
         $requesterIdentity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
 
-        // create the organization and fund
         $organization = $this->makeTestOrganization($sponsorIdentity);
         $fund = $this->makeTestFund($organization);
 
@@ -45,35 +119,16 @@ class FundRequestEmailLogsTest extends TestCase
             'files' => [],
         ]];
 
-        // create fund request and assert email log created
         $response = $this->makeFundRequest($requesterIdentity, $fund, $records, false);
         $response->assertSuccessful();
-        /** @var FundRequest $fundRequest */
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $this->assertNotNull($fundRequest);
-        $this->assertFundRequestCreateEmailLog($organization, $fundRequest);
 
+        $fundRequest = FundRequest::findOrFail($response->json('data.id'));
         $fundRequest->assignEmployee($organization->findEmployee($sponsorIdentity));
 
-        DB::beginTransaction();
-        $this->requestFundRequestClarification($organization, $fundRequest);
-        $this->assertFundRequestClarificationEmailLog($organization, $fundRequest);
-        DB::rollBack();
-
-        DB::beginTransaction();
-        $this->apiFundRequestApproveRequest($fundRequest, $organization->employees[0])->assertSuccessful();
-        $this->assertFundRequestApprovedEmailLog($organization, $fundRequest);
-        DB::rollBack();
-
-        DB::beginTransaction();
-        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => true], $organization->employees[0])->assertSuccessful();
-        $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, true);
-        DB::rollBack();
-
-        DB::beginTransaction();
-        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $organization->employees[0])->assertSuccessful();
-        $this->assertFundRequestDisregardedEmailLog($organization, $fundRequest, false);
-        DB::rollBack();
+        return [
+            'organization' => $organization,
+            'fundRequest' => $fundRequest,
+        ];
     }
 
     /**

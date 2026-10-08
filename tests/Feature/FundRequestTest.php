@@ -132,6 +132,38 @@ class FundRequestTest extends TestCase
     /**
      * @return void
      */
+    public function testFundRequestKeepsOriginalExpirationWhenFundIsExtended(): void
+    {
+        $this->travelTo('2026-10-01 12:00:00');
+
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization, ['end_date' => '2026-10-10']);
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $this->makeIdentity($this->makeUniqueEmail()));
+
+        $fund->refresh();
+        $fundRequest->refresh();
+
+        $this->assertSame('2026-10-10 00:00:00', $fundRequest->expire_at?->toDateTimeString());
+        $this->assertFalse($fundRequest->expired);
+
+        $this->travelTo('2026-10-11 12:00:00');
+        $fund->refresh();
+        $fundRequest->refresh();
+
+        $this->assertTrue($fundRequest->expired);
+
+        $fund->update(['end_date' => '2026-10-31']);
+        $fund->refresh();
+        $fundRequest->refresh();
+
+        $this->assertSame('2026-10-31', $fund->end_date->toDateString());
+        $this->assertSame('2026-10-10 00:00:00', $fundRequest->expire_at?->toDateTimeString());
+        $this->assertTrue($fundRequest->expired);
+    }
+
+    /**
+     * @return void
+     */
     public function testFundRequestCannotBeApprovedBeforeAssignment(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());
@@ -140,6 +172,79 @@ class FundRequestTest extends TestCase
 
         $this->apiFundRequestApproveRequest($fundRequest, $organization->employees[0])->assertForbidden();
         $this->assertEquals($fundRequest::STATE_PENDING, $fundRequest->refresh()->state);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundRequestActionsForbiddenIfExpired(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $employee = $organization->findEmployee($organization->identity);
+
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $this->makeIdentity($this->makeUniqueEmail()));
+        $this->apiFundRequestAssignRequest($fundRequest, $employee)->assertSuccessful();
+
+        $questionData = [
+            'question' => $this->faker()->text(),
+            'text_requirement' => 'required',
+            'files_requirement' => 'no',
+            'fund_request_record_id' => $fundRequest->records[0]->id,
+        ];
+
+        $answerData = ['answer' => $this->faker()->text()];
+        // create clarification for future asserts
+        $this->apiMakeFundRequestClarificationRequest($fundRequest, $employee, $questionData)->assertSuccessful();
+
+        $fundRequest->update(['expire_at' => now()->subDay()]);
+
+        $this->apiFundRequestApproveRequest($fundRequest, $employee)->assertForbidden();
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $employee)->assertForbidden();
+        $this->apiFundRequestDeclineRequest($fundRequest, ['notify' => false], $employee)->assertForbidden();
+
+        $this->apiFundRequestResignRequest($fundRequest, $employee)->assertForbidden();
+
+        $clarification = $fundRequest->clarifications[0];
+        $this->apiMakeFundRequestClarificationRequest($fundRequest, $employee, $questionData)->assertForbidden();
+        $this->apiRespondFundRequestClarificationRequest($clarification, $fundRequest->identity, $answerData)->assertForbidden();
+        $this->apiFundRequestClarificationCloseRequest($clarification, $employee, [])->assertForbidden();
+        $this->apiFundRequestClarificationUpdateRequest($clarification, $employee, $questionData)->assertForbidden();
+    }
+
+    /**
+     * @return void
+     */
+    public function testFundRequestDisregardUndoRespectsExpiration(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+        $employee = $organization->findEmployee($organization->identity);
+        $fundRequest = $this->makeFundRequestForIdentity($fund, $this->makeIdentity($this->makeUniqueEmail()));
+
+        $this->apiFundRequestAssignRequest($fundRequest, $employee)->assertSuccessful();
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $employee)->assertSuccessful();
+
+        $fundRequest->update(['expire_at' => today()]);
+
+        $this->apiFundRequestDisregardUndoRequest($fundRequest, $employee)->assertSuccessful();
+        $this->assertSame(FundRequest::STATE_PENDING, $fundRequest->refresh()->state);
+
+        $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => false], $employee)->assertSuccessful();
+        $fundRequest->update(['expire_at' => now()->subDay()]);
+
+        $this->apiFundRequestDisregardUndoRequest($fundRequest, $employee)
+            ->assertForbidden()
+            ->assertJsonPath('message', __('policies.fund_requests.expired'));
+        $this->assertSame(FundRequest::STATE_DISREGARDED, $fundRequest->refresh()->state);
+
+        $fundRequest->update(['expire_at' => now()->addDay()]);
+        $fund->update(['end_date' => now()->subDay()]);
+
+        $this->apiFundRequestDisregardUndoRequest($fundRequest, $employee)
+            ->assertForbidden()
+            ->assertJsonPath('message', __('policies.fund_requests.expired'));
+        $this->assertSame(FundRequest::STATE_DISREGARDED, $fundRequest->refresh()->state);
     }
 
     /**

@@ -29,6 +29,10 @@ class FundRequestClarificationPolicy
         FundRequestClarification $requestClarification,
         FundRequest $fundRequest
     ): Response|bool {
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$this->checkIntegrityRequester($fundRequest, $requestClarification)) {
             return $this->deny('fund_requests.invalid_endpoint');
         }
@@ -90,6 +94,60 @@ class FundRequestClarificationPolicy
     }
 
     /**
+     * Determine whether the user can update the fundRequestClarification.
+     *
+     * @param Identity $identity
+     * @param FundRequestClarification $requestClarification
+     * @param FundRequest $request
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function updateValidator(
+        Identity $identity,
+        FundRequestClarification $requestClarification,
+        FundRequest $request,
+        Organization $organization
+    ): Response|bool {
+        if ($request->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
+        $access = $this->validateValidatorAccess(
+            $identity,
+            $organization,
+            $request,
+            $requestClarification,
+            requireAssignment: true
+        );
+
+        if ($access !== true) {
+            return $access;
+        }
+
+        return $requestClarification->state === $requestClarification::STATE_PENDING;
+    }
+
+    /**
+     * Determine whether the user can update the fundRequestClarification.
+     *
+     * @param Identity $identity
+     * @param FundRequestClarification $requestClarification
+     * @param FundRequest $request
+     * @param Organization $organization
+     * @return Response|bool
+     * @noinspection PhpUnused
+     */
+    public function closeValidator(
+        Identity $identity,
+        FundRequestClarification $requestClarification,
+        FundRequest $request,
+        Organization $organization
+    ): Response|bool {
+        return $this->updateValidator($identity, $requestClarification, $request, $organization);
+    }
+
+    /**
      * Determine whether the user can create fundRequestClarifications.
      *
      * @param Identity $identity
@@ -104,10 +162,23 @@ class FundRequestClarificationPolicy
         FundRequestRecord $record,
         Organization $organization
     ): Response|bool {
-        $access = $this->validateValidatorAccess($identity, $organization, $request);
+        if ($request->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
+        $access = $this->validateValidatorAccess($identity, $organization, $request, requireAssignment: true);
 
         if ($access !== true) {
             return $access;
+        }
+
+        $hasPendingClarification = $record
+            ->fund_request_clarifications()
+            ->where('state', FundRequestClarification::STATE_PENDING)
+            ->exists();
+
+        if ($hasPendingClarification) {
+            return false;
         }
 
         if (!$request->identity->email) {
@@ -126,6 +197,7 @@ class FundRequestClarificationPolicy
      * @param Organization $organization
      * @param FundRequest $request
      * @param FundRequestClarification|null $requestClarification
+     * @param bool $requireAssignment
      * @return Response|bool
      */
     private function validateValidatorAccess(
@@ -133,6 +205,7 @@ class FundRequestClarificationPolicy
         Organization $organization,
         FundRequest $request,
         FundRequestClarification $requestClarification = null,
+        bool $requireAssignment = false,
     ): Response|bool {
         if (!$this->checkIntegrityValidator($organization, $request, $requestClarification)) {
             return $this->deny(__('policies.fund_requests.invalid_endpoint'));
@@ -142,7 +215,7 @@ class FundRequestClarificationPolicy
             return $this->deny(__('policies.fund_requests.invalid_validator'));
         }
 
-        return true;
+        return !$requireAssignment || $request->employee?->identity_address === $identity->address;
     }
 
     /**
