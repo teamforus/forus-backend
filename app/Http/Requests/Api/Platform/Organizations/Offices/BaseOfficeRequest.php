@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Rules\Base\PhoneRule;
 
 abstract class BaseOfficeRequest extends BaseFormRequest
 {
@@ -60,7 +61,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
     {
         return [
             'name' => '',
-            'phone' => '',
+            'phone' => ['nullable', new PhoneRule()],
             'email' => [
                 'nullable',
                 ...$this->emailRules(),

@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
+use App\Rules\Base\PhoneRule;
 
 class StoreOrganizationRequest extends BaseFormRequest
 {
@@ -40,7 +41,7 @@ class StoreOrganizationRequest extends BaseFormRequest
                 ...$this->emailRules(),
             ],
             'email_public' => 'boolean',
-            'phone' => 'required|digits_between:4,20',
+            'phone' => ['required', new PhoneRule()],
             'phone_public' => 'boolean',
             'kvk' => [
                 'required',

@@ -1615,11 +1615,13 @@ class Fund extends Model
         ?array $iConnectPrefills = null,
     ): FundRequest {
         /** @var FundRequest $fundRequest */
-        $fundRequest = $this->fund_requests()->create(array_merge([
+        $fundRequest = $this->fund_requests()->create([
             'identity_id' => $identity->id,
-        ], $this->fund_config->contact_info_enabled ? [
-            'contact_information' => $contactInformation,
-        ] : []));
+            'expire_at' => $this->end_date,
+            ...($this->fund_config->contact_info_enabled ? [
+                'contact_information' => $contactInformation,
+            ] : []),
+        ]);
 
         foreach ($records as $record) {
             /** @var FundCriterion $criteria */
@@ -1631,12 +1633,13 @@ class Fund extends Model
             }
 
             /** @var FundRequestRecord $requestRecord */
-            $requestRecord = $fundRequest->records()->create(array_merge($record, [
+            $requestRecord = $fundRequest->records()->create([
+                ...$record,
                 'record_type_key' => $criteria->record_type_key,
                 'source' => $criteria->fill_type === $criteria::FILL_TYPE_PREFILL
                     ? FundRequestRecord::SOURCE_BRP
                     : FundRequestRecord::SOURCE_FORM,
-            ]));
+            ]);
 
             $requestRecord->appendFilesByUid($record['files'] ?? []);
         }
@@ -1863,7 +1866,7 @@ class Fund extends Model
      */
     public function isAutoValidatingRequests(): bool
     {
-        return $this->default_validator_employee_id && $this->auto_requests_validation;
+        return $this->auto_requests_validation && $this->default_validator_employee !== null;
     }
 
     /**
@@ -2189,6 +2192,61 @@ class Fund extends Model
     }
 
     /**
+     * @param array $data
+     * @return bool
+     */
+    public function recordsIsValidByCriteria(array $data): bool
+    {
+        $criteriaByKey = $this->criteria->pluck('id', 'record_type_key')->toArray();
+
+        // get optional criteria to prefill them for validation
+        $optionalCriteria = array_fill_keys(
+            $this->criteria
+                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
+                ->where('optional', true)
+                ->pluck('record_type_key')
+                ->toArray(),
+            null
+        );
+
+        $data = [
+            ...$optionalCriteria,
+            ...$data,
+        ];
+
+        $records = array_values(array_filter(array_map(function ($value, $record_type_key) use ($criteriaByKey) {
+            return Arr::has($criteriaByKey, $record_type_key) ? [
+                'value' => $value,
+                'fund_criterion_id' => Arr::get($criteriaByKey, $record_type_key),
+            ] : null;
+        }, $data, array_keys($data))));
+
+        $validator = Validator::make(
+            [
+                ...compact('records'),
+                'criteria_groups' => $this->criteria_groups->pluck('id', 'id')->toArray(),
+            ],
+            (new StoreFundRequestRequest())->recordsRule($this, $records, true)
+        );
+
+        return $validator->passes();
+    }
+
+    /**
+     * @param array $fundPrefills
+     * @return array|null
+     */
+    public static function preparePrefillRecords(array $fundPrefills): ?array
+    {
+        return Arr::mapWithKeys([
+            ...Arr::get($fundPrefills, 'person', []),
+            ...Arr::get($fundPrefills, 'partner', []),
+            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
+            ...Arr::get($fundPrefills, 'children_groups_counts', []),
+        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
+    }
+
+    /**
      * Update existing or create new fund criterion.
      * @param array $criterion
      * @param bool $textsOnly
@@ -2245,60 +2303,5 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false,
         ]);
-    }
-
-    /**
-     * @param array $data
-     * @return bool
-     */
-    public function recordsIsValidByCriteria(array $data): bool
-    {
-        $criteriaByKey = $this->criteria->pluck('id', 'record_type_key')->toArray();
-
-        // get optional criteria to prefill them for validation
-        $optionalCriteria = array_fill_keys(
-            $this->criteria
-                ->filter(fn (FundCriterion $criterion) => !$criterion->isExcludedByRules($data))
-                ->where('optional', true)
-                ->pluck('record_type_key')
-                ->toArray(),
-            null
-        );
-
-        $data = [
-            ...$optionalCriteria,
-            ...$data,
-        ];
-
-        $records = array_values(array_filter(array_map(function ($value, $record_type_key) use ($criteriaByKey) {
-            return Arr::has($criteriaByKey, $record_type_key) ? [
-                'value' => $value,
-                'fund_criterion_id' => Arr::get($criteriaByKey, $record_type_key),
-            ] : null;
-        }, $data, array_keys($data))));
-
-        $validator = Validator::make(
-            [
-                ...compact('records'),
-                'criteria_groups' => $this->criteria_groups->pluck('id', 'id')->toArray(),
-            ],
-            (new StoreFundRequestRequest())->recordsRule($this, $records, true)
-        );
-
-        return $validator->passes();
-    }
-
-    /**
-     * @param array $fundPrefills
-     * @return array|null
-     */
-    public static function preparePrefillRecords(array $fundPrefills): ?array
-    {
-        return Arr::mapWithKeys([
-            ...Arr::get($fundPrefills, 'person', []),
-            ...Arr::get($fundPrefills, 'partner', []),
-            ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
-            ...Arr::get($fundPrefills, 'children_groups_counts', []),
-        ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
     }
 }

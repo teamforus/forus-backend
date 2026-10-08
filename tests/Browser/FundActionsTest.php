@@ -122,7 +122,7 @@ class FundActionsTest extends DuskTestCase
             $this->loginIdentity($browser, $requester);
 
             $browser->visit($implementation->urlWebshop('fondsen'));
-            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id);
+            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id, completedQuerySelector: '#funds_list');
             $browser->waitFor("@listFundsRow$fund->id")->assertMissing("@listFundsRow$fund->id @pendingButton");
             $browser->waitFor("@listFundsRow$fund->id")->assertMissing("@listFundsRow$fund->id @activateButton");
             $this->clearField($browser, '@listFundsSearch');
@@ -131,7 +131,7 @@ class FundActionsTest extends DuskTestCase
             $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund, $fundConfigs['requester_records']);
 
             $browser->refresh();
-            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id);
+            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id, completedQuerySelector: '#funds_list');
             $browser->waitFor("@listFundsRow$fund->id")->assertPresent("@listFundsRow$fund->id @pendingButton");
             $browser->waitFor("@listFundsRow$fund->id")->assertMissing("@listFundsRow$fund->id @activateButton");
             $this->clearField($browser, '@listFundsSearch');
@@ -140,7 +140,7 @@ class FundActionsTest extends DuskTestCase
             $this->approveFundRequest($fundRequest);
 
             $browser->refresh();
-            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id);
+            $this->searchWebshopList($browser, '@listFunds', $fund->name, $fund->id, completedQuerySelector: '#funds_list');
             $browser->waitFor("@listFundsRow$fund->id")->assertMissing("@listFundsRow$fund->id @pendingButton");
             $browser->waitFor("@listFundsRow$fund->id")->assertMissing("@listFundsRow$fund->id @activateButton");
             $this->clearField($browser, '@listFundsSearch');
@@ -152,7 +152,7 @@ class FundActionsTest extends DuskTestCase
             // Assert activate button is shown due to valid records from previous fund
             $browser->visit($implementation->urlWebshop('fondsen'));
 
-            $this->searchWebshopList($browser, '@listFunds', $fund2->name, $fund2->id);
+            $this->searchWebshopList($browser, '@listFunds', $fund2->name, $fund2->id, completedQuerySelector: '#funds_list');
             $browser->waitFor("@listFundsRow$fund2->id")->assertMissing("@listFundsRow$fund2->id @pendingButton");
             $browser->waitFor("@listFundsRow$fund2->id")->assertPresent("@listFundsRow$fund2->id @activateButton");
             $this->clearField($browser, '@listFundsSearch');

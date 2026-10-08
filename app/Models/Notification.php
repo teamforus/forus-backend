@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
+use App\Scopes\Builders\NotificationQuery;
 use App\Searches\NotificationSearch;
 use App\Services\EventLogService\Models\EventLog;
 use Eloquent;
@@ -76,10 +77,12 @@ class Notification extends DatabaseNotification
      */
     public static function totalUnseenFromRequest(IndexNotificationsRequest $request, Identity $identity): int
     {
+        $notificationsQuery = $identity->notifications()->where('scope', $request->client_type());
+
         $search = new NotificationSearch([
             ...$request->only('organization_id'),
             'seen' => false,
-        ], $identity->notifications()->where('scope', $request->client_type()));
+        ], NotificationQuery::whereVisibleToIdentity($notificationsQuery, $identity));
 
         return $search->query()->count();
     }

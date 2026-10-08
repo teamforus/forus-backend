@@ -379,8 +379,7 @@ class Identity extends Model implements Authenticatable
      */
     public function notifications(): MorphMany
     {
-        return $this->morphMany(Notification::class, 'notifiable')
-            ->orderBy('created_at', 'desc');
+        return $this->morphMany(Notification::class, 'notifiable')->latest();
     }
 
     /**

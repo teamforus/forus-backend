@@ -10,6 +10,24 @@ class EmployeeQuery
 {
     /**
      * @param Builder|Relation|Employee $builder
+     * @param int $organizationId
+     * @param string $identityAddress
+     * @return Builder|Relation|Employee
+     */
+    public static function whereCanViewOrganizationFeatures(
+        Builder|Relation|Employee $builder,
+        int $organizationId,
+        string $identityAddress,
+    ): Builder|Relation|Employee {
+        return $builder
+            ->where('organization_id', $organizationId)
+            ->where('identity_address', $identityAddress)
+            ->whereHas('roles.permissions')
+            ->whereRelation('organization.funds.fund_config', 'is_configured', true);
+    }
+
+    /**
+     * @param Builder|Relation|Employee $builder
      * @param string|array $permissions
      * @return Builder|Relation|Employee
      */

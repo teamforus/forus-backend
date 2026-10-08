@@ -53,6 +53,8 @@ class VoucherTransactionBulkTest extends TestCase
      */
     public function testVoucherTransactionBulkCreateByCommand(): void
     {
+        $this->travelTo(now()->startOfMinute()->addSeconds(30));
+
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization = $this->makeTestOrganization($identity);
         $organization->forceFill([

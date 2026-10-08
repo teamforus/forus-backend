@@ -83,6 +83,7 @@ class ReimbursementTest extends DuskTestCase
             $this->goToReimbursementsPage($browser);
 
             $browser->waitFor('@reimbursementsEmptyBlock');
+            $browser->waitFor('@btnEmptyBlock');
             $browser->press('@btnEmptyBlock');
             $browser->waitFor('@reimbursementEditContent');
             $browser->waitFor('@reimbursementForm');
