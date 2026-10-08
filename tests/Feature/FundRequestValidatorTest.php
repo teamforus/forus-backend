@@ -330,6 +330,7 @@ class FundRequestValidatorTest extends TestCase
         $fund = $this->setupNewFundAndCriteria();
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $employee = $fund->organization->findEmployee($fund->organization->identity);
+        $fundRequest->assignEmployee($employee);
 
         $questionData = [
             'question' => $this->faker()->text(),
@@ -377,6 +378,7 @@ class FundRequestValidatorTest extends TestCase
         $fund = $this->setupNewFundAndCriteria();
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $employee = $fund->organization->findEmployee($fund->organization->identity);
+        $fundRequest->assignEmployee($employee);
 
         $questionData = [
             'question' => $this->faker()->text(),
@@ -981,6 +983,7 @@ class FundRequestValidatorTest extends TestCase
         $fund = $this->setupNewFundAndCriteria();
         $fundRequest = $this->makeIdentityAndFundRequest($fund);
         $employee = $fund->organization->findEmployee($fund->organization->identity);
+        $fundRequest->assignEmployee($employee);
 
         $questionData = [
             'question' => $this->faker()->text(),

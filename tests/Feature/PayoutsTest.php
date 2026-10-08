@@ -398,6 +398,50 @@ class PayoutsTest extends TestCase
     /**
      * @return void
      */
+    public function testSponsorTransactionAndPayoutListsIncludeCanceledPayouts(): void
+    {
+        $setup = $this->makeVoucherBackedPayoutSetup();
+        $organization = $setup['organization'];
+        $transactions = [];
+
+        foreach ([25, 30] as $amount) {
+            $response = $this->storeVoucherBackedPayout(
+                $setup['fund'],
+                $setup['voucher'],
+                $setup['bank_account'],
+                compact('amount'),
+            );
+
+            $response->assertSuccessful();
+            $transactions[] = VoucherTransaction::findOrFail($response->json('data.id'));
+        }
+
+        $this->apiCancelSponsorPayoutRequest($organization, $transactions[0])
+            ->assertSuccessful()
+            ->assertJsonPath('data.state', VoucherTransaction::STATE_CANCELED);
+
+        foreach (['transactions', 'payouts'] as $endpoint) {
+            foreach ([
+                '' => [$transactions[0]->id, $transactions[1]->id],
+                VoucherTransaction::STATE_CANCELED => [$transactions[0]->id],
+                VoucherTransaction::STATE_PENDING => [$transactions[1]->id],
+            ] as $state => $expectedIds) {
+                $query = http_build_query($state ? compact('state') : []);
+
+                $response = $this->getJson(
+                    "/api/v1/platform/organizations/$organization->id/sponsor/$endpoint?$query",
+                    $this->makeApiHeaders($organization->identity),
+                );
+
+                $response->assertSuccessful();
+                $this->assertEqualsCanonicalizing($expectedIds, $response->json('data.*.id'));
+            }
+        }
+    }
+
+    /**
+     * @return void
+     */
     public function testSponsorVoucherBackedPayoutCannotBeUpdated(): void
     {
         $setup = $this->makeVoucherBackedPayoutSetup();
