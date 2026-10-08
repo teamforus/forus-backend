@@ -24,6 +24,7 @@ class BannerCmsBlockConfigTest extends CmsBlockTestCase
             'section_spacing',
             'image',
             'layout',
+            'section_border_hidden',
             'text_background_color',
             'text_color',
             'url',
