@@ -28,11 +28,18 @@ class EmployeePolicy
     /**
      * @param Identity $identity
      * @param Organization $organization
-     * @return bool
+     * @param string $email
+     * @return Response|bool
      */
-    public function store(Identity $identity, Organization $organization): bool
+    public function store(Identity $identity, Organization $organization, string $email): Response|bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
+        if (!$organization->identityCan($identity, Permission::MANAGE_EMPLOYEES)) {
+            return false;
+        }
+
+        return Identity::findByEmail($email)?->isManagedRequester()
+            ? $this->deny(__('policies.employees.managed_requester'))
+            : true;
     }
 
     /**

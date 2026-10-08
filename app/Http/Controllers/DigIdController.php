@@ -108,6 +108,10 @@ class DigIdController extends Controller
     {
         $identity = $session->digidBsnIdentity();
 
+        if ($identity?->isManagedRequester()) {
+            return $session->makeRedirectErrorResponse('managed_requester');
+        }
+
         if (!$identity) {
             if (!$session->implementation->digid_sign_up_allowed) {
                 return $session->makeRedirectErrorResponse('uid_not_found');

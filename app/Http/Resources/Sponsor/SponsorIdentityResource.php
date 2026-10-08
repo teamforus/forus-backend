@@ -13,6 +13,7 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class SponsorIdentityResource extends BaseJsonResource
         'vouchers.transactions',
         'record_bsn',
         'primary_email',
+        'identity_provider_requester_membership.connection',
         'reimbursements.voucher.fund',
         'creator_employee.identity.primary_email',
         'profiles.profile_bank_accounts',
@@ -64,6 +66,7 @@ class SponsorIdentityResource extends BaseJsonResource
         $identity = $this->resource;
         $sessions = $identity->sessions;
         $profile = $identity->profiles?->firstWhere('organization_id', $this->organization?->id);
+        $membership = $identity->identity_provider_requester_membership;
 
         return [
             ...$identity->only([
@@ -76,6 +79,13 @@ class SponsorIdentityResource extends BaseJsonResource
             'profile' => $profile?->only([
                 'id', 'identity_id', 'organization_id',
             ]),
+            'identity_provider_management' => $membership &&
+                $membership->connection->organization_id === $this->organization?->id ? [
+                    'provider' => $membership->connection->provider,
+                    'status' => $membership->isProvisioningActive()
+                        ? IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE
+                        : IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+                ] : null,
             ...((!$identity->creator_organization_id || ($identity->creator_organization_id === $this->organization?->id)) ? [
                 'type' => $identity->type,
                 'type_locale' => $identity->type_locale,
@@ -190,7 +200,7 @@ class SponsorIdentityResource extends BaseJsonResource
         /** @var Collection $groups */
         $groups = $profile?->profile_records?->map(fn (ProfileRecord $record) => [
             ...$record->only([
-                'id', 'value', 'value_locale',
+                'id', 'value', 'value_locale', 'source',
             ]),
             ...self::makeTimestampsStatic([
                 'created_at' => $record->created_at,

@@ -35,6 +35,11 @@ class IdentitiesController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @param IndexIdentitiesRequest $request
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexIdentitiesRequest $request,
@@ -49,7 +54,7 @@ class IdentitiesController extends Controller
                 'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
-                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
+                'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',
             ]),
             'organization_id' => $organization->id,
         ], $query);
@@ -221,7 +226,7 @@ class IdentitiesController extends Controller
                 'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
-                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
+                'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',
             ]),
             'organization_id' => $organization->id,
         ], IdentityQuery::relatedToOrganization(Identity::query(), $organization->id));

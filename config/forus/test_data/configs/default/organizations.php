@@ -33,6 +33,8 @@ return [
             'allow_fund_request_record_edit' => true,
             'allow_custom_fund_notifications' => true,
             'fund_request_resolve_policy' => 'apply_auto_requested',
+            'allow_identity_providers' => true,
+            'allow_identity_provider_requester_provisioning' => true,
         ],
     ],
     'Gemeente Groningen' => [
