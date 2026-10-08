@@ -50,11 +50,11 @@ class OrganizationPolicy
 
     /**
      * @param Identity $identity
-     * @return mixed
+     * @return bool
      */
     public function store(Identity $identity): bool
     {
-        return $identity->exists;
+        return $identity->exists && !$identity->isManagedRequester();
     }
 
     /**
@@ -121,12 +121,20 @@ class OrganizationPolicy
     /**
      * @param Identity $identity
      * @param Organization $organization
+     * @param int $employeeId
      * @return bool
      * @noinspection PhpUnused
      */
-    public function transferOwnership(Identity $identity, Organization $organization): bool
+    public function transferOwnership(Identity $identity, Organization $organization, int $employeeId): bool
     {
-        return $organization->isOwner($identity);
+        if (!$organization->isOwner($identity)) {
+            return false;
+        }
+
+        /** @var Employee|null $employee */
+        $employee = $organization->employeesOfRoleQuery('admin')->find($employeeId);
+
+        return $employee && !$employee->identity->isManagedRequester();
     }
 
     /**

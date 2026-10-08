@@ -4,6 +4,7 @@ namespace App\Services\AuthService;
 
 use App\Models\Identity;
 use App\Models\IdentityProxy;
+use App\Services\IdentityProviderService\Services\IdentityProviderSessionService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Support\Arr;
@@ -26,7 +27,10 @@ class ServiceIdentityProvider implements UserProvider
             return null;
         }
 
-        return $identityProxy->isActive() ? $identityProxy->identity : null;
+        return $identityProxy->isActive() &&
+            resolve(IdentityProviderSessionService::class)->isRequesterSessionAllowed($identityProxy)
+                ? $identityProxy->identity
+                : null;
     }
 
     /**

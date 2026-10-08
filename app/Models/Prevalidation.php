@@ -136,7 +136,7 @@ class Prevalidation extends Model
      */
     public static function assignAvailableToIdentityByBsn(Identity $identity): ?int
     {
-        if (!$identity->bsn) {
+        if (!$identity->bsn || !$identity->canReceiveVouchers()) {
             return null;
         }
 

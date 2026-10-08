@@ -36,6 +36,11 @@ class IndexIdentitiesRequest extends BaseFormRequest
             ],
             'city' => 'nullable|string',
             'has_bsn' => 'nullable|boolean',
+            'identity_provider_status' => [
+                'nullable',
+                Rule::in(IdentitiesSearch::IDENTITY_PROVIDER_STATUSES),
+                Rule::prohibitedIf(!$this->organization->allow_identity_provider_requester_provisioning),
+            ],
             'postal_code' => 'nullable|string',
             'municipality_name' => 'nullable|string',
             'birth_date_to' => 'nullable|date_format:Y-m-d',
