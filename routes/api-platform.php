@@ -161,8 +161,15 @@ $router->group([], static function () use ($router) {
 
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
-        $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
+        $router->post('/digid/complete', 'DigIdController@complete')->name('digidComplete');
         $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
+    });
+
+    $router->group([], function (Router $router) {
+        $router->post('/tvs', 'TvsController@start')->name('tvs.start');
+        $router->post('/tvs/complete', 'TvsController@complete')->name('tvs.complete');
+        $router->get('/tvs/resolve', 'TvsController@resolve')->name('tvs.resolve');
+        $router->get('/tvs/metadata', 'TvsController@metadata')->name('tvs.metadata');
     });
 
     $router->resource('provider-invitations', "Api\Platform\FundProviderInvitationsController")

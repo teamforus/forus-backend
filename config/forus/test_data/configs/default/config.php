@@ -49,6 +49,13 @@ return [
     'digid_a_select_server' => null,
     'digid_trusted_cert' => 'disable',
 
+    'general_implementation' => [
+        // 'digid_tvs_sp_cert' => '',
+        // 'digid_tvs_sp_private_key' => '',
+        // 'digid_tvs_idp_cert' => '',
+        // 'digid_tvs_idp_cert_data' => '',
+    ],
+
     // default implementation frontend urls
     'url_webshop' => 'http://localhost:5500/#!/',
     'url_sponsor' => 'http://localhost:3500/#!/',

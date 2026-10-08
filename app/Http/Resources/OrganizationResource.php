@@ -58,6 +58,7 @@ class OrganizationResource extends BaseJsonResource
             ? $this->getIdentityPermissions($organization, $baseRequest->identity())
             : null;
         $iConnect = $this->getPersonBsnApiConfigured($organization);
+        $tvsData = $this->getTvsConfigured($organization);
         $permissions = is_array($permissionsData) ? ['permissions' => $permissionsData] : [];
 
         return array_filter([
@@ -76,6 +77,7 @@ class OrganizationResource extends BaseJsonResource
             ...$funds2FAOnlyData,
             ...$extraPaymentsData,
             ...$iConnect,
+            ...$tvsData,
             'tags' => TagResource::collection($organization->tags),
             'logo' => new MediaResource($organization->logo),
             'business_type' => new BusinessTypeResource($organization->business_type),
@@ -210,6 +212,17 @@ class OrganizationResource extends BaseJsonResource
     {
         return [
             'has_person_bsn_api' => $organization->bsn_enabled && $organization->hasIConnectApiOin(),
+        ];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool[]
+     */
+    protected function getTvsConfigured(Organization $organization): array
+    {
+        return [
+            'tvs_configured' => $organization->bsn_enabled && $organization->hasTvsDigidConfig(),
         ];
     }
 

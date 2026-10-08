@@ -37,6 +37,7 @@ class TestDataSeedCommand extends BaseCommand
 
         $testData = new TestData();
         $testData->disableEmails();
+        $testData->updateGeneralImplementation();
 
         $testData->info('⇾ Making base identity!');
         $baseIdentity = $testData->makePrimaryIdentity();
