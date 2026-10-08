@@ -19,6 +19,13 @@ return [
             'languages' => [
                 'en', 'de', 'ru', 'uk', 'ro', 'ar',
             ],
+            // 'custom_mailer_config' => [
+            //     'transport' => 'microsoft-graph',
+            //     'tenant_id' => 'your-tenant-id',
+            //     'client_id' => 'your-client-id',
+            //     'client_secret' => 'your-client-secret',
+            //     'from_email' => 'sender@example.com',
+            // ],
         ],
     ],
     'Stadjerspas' => [

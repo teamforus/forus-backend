@@ -39,6 +39,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * App\Models\Implementation.
@@ -120,6 +122,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $pre_check_banner_label
  * @property string $pre_check_banner_state
  * @property string $products_default_sorting
+ * @property array<array-key, mixed>|null $custom_mailer_config
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
@@ -199,6 +202,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereKey($value)
  * @method static Builder<static>|Implementation whereLat($value)
  * @method static Builder<static>|Implementation whereLon($value)
+ * @method static Builder<static>|Implementation whereCustomMailerConfig($value)
  * @method static Builder<static>|Implementation whereName($value)
  * @method static Builder<static>|Implementation whereOrganizationId($value)
  * @method static Builder<static>|Implementation whereOverlayEnabled($value)
@@ -335,6 +339,7 @@ class Implementation extends Model
         'banner_background_mobile' => 'boolean',
         'root_product_category_id' => 'integer',
         'voucher_payout_informational_product_id' => 'integer',
+        'custom_mailer_config' => 'array',
     ];
 
     /**
@@ -1124,6 +1129,33 @@ class Implementation extends Model
                 'default' => false,
             ]);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCustomMailer(): bool
+    {
+        return $this->custom_mailer_config !== null;
+    }
+
+    /**
+     * @throws ValidationException
+     * @return array|null
+     */
+    public function getCustomMailerConfig(): ?array
+    {
+        if (!$this->hasCustomMailer()) {
+            return null;
+        }
+
+        return Validator::make($this->custom_mailer_config, [
+            'transport' => 'required|string|in:microsoft-graph',
+            'tenant_id' => 'required|string',
+            'client_id' => 'required|string',
+            'client_secret' => 'required|string',
+            'from_email' => 'required|email',
+        ])->validate();
     }
 
     /**

@@ -229,6 +229,8 @@ return [
 
         App\Services\PdfToImgService\PdfToImgServiceProvider::class,
         App\Services\TranslationService\TranslationServiceProvider::class,
+
+        App\Services\MicrosoftMailService\MicrosoftMailServiceProvider::class,
     ],
 
     /*
