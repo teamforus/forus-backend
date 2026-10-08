@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\Voucher;
 
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Identity;
-use App\Models\Implementation;
+use App\Models\Voucher;
 
 /**
  * Send voucher to owner's email.
@@ -16,10 +16,14 @@ class IdentityVoucherSharedByEmailNotification extends BaseIdentityVoucherNotifi
 
     /**
      * @param Identity $identity
+     * @return void
      */
     public function toMail(Identity $identity): void
     {
-        $mailable = new SendVoucherMail($this->eventLog->data, Implementation::emailFrom());
+        /** @var Voucher $voucher */
+        $voucher = $this->eventLog->loggable;
+
+        $mailable = new SendVoucherMail($this->eventLog->data, $voucher->fund->getEmailFrom());
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
     }
 }

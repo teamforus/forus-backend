@@ -64,6 +64,76 @@ class SponsorFinancialStatisticsTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testFundStatisticDependsOnTransactionState(): void
+    {
+        $funds = [[
+            'name' => 'Test fund 1',
+            'date' => '2021-06-23',
+            'vouchers' => [[
+                'type' => 'budget',
+                'transaction_amount' => 24,
+            ], [
+                'type' => 'product',
+                'product_price' => 14,
+                'category' => 'test_category_el2',
+                'provider' => 'test_provider_month',
+                'business_type' => 'test_business_type',
+                'provider_office_postcode_number' => '123456789',
+            ], [
+                'type' => 'budget',
+                'transaction_amount' => 24,
+            ]],
+        ], [
+            'name' => 'Test fund 1',
+            'date' => '2021-06-13',
+            'vouchers' => [[
+                'type' => 'budget',
+                'transaction_amount' => 29,
+            ], [
+                'type' => 'product',
+                'product_price' => 29,
+                'category' => 'test_category_el',
+                'provider' => 'test_provider_month2',
+                'business_type' => 'test_business_type',
+                'provider_office_postcode_number' => '123456789',
+            ]],
+        ]];
+
+        $date = '2021-06-01';
+        $initialCount = 5;
+        $initialAmount = 120;
+
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $employee = $organization->employees()->first();
+        $this->createFundsAndVouchers($organization, compact('date', 'funds'));
+
+        $response = $this->makeApiCall($organization, [
+            'type' => 'month',
+            'type_value' => $date,
+        ]);
+
+        $response->assertJsonPath('totals.count', $initialCount);
+        $response->assertJsonPath('totals.amount', $initialAmount);
+
+        // make all these transactions canceled and assert these transactions not included in response
+        $organization->funds->each(function (Fund $fund) use ($employee) {
+            $fund->voucher_transactions->each(function (VoucherTransaction $transaction) use ($employee) {
+                $transaction->cancelPending($employee, true);
+            });
+        });
+
+        $response = $this->makeApiCall($organization, [
+            'type' => 'month',
+            'type_value' => $date,
+        ]);
+
+        $response->assertJsonPath('totals.count', 0);
+        $response->assertJsonPath('totals.amount', 0);
+    }
+
+    /**
      * @param array $testCase
      * @return void
      */
@@ -109,13 +179,12 @@ class SponsorFinancialStatisticsTest extends TestCase
 
                 $voucher
                     ->makeTransactionBySponsor($employee, ['amount' => $item['transaction_amount']])
-                    ->setPaid(null, now());
+                    ->setPaid(null, Carbon::now());
             } elseif ($item['type'] === 'product') {
                 /** @var ProductCategory $category */
                 $category = ProductCategory::where(['key' => $item['category']])->first();
 
                 if (!$category) {
-                    /** @var ProductCategory $baseCategory */
                     $baseCategory = ProductCategory::firstOrCreate([
                         'key' => "base_{$item['category']}",
                     ]);
@@ -132,7 +201,6 @@ class SponsorFinancialStatisticsTest extends TestCase
                     ...$this->mapCategories,
                 ];
 
-                /** @var BusinessType $businessType */
                 $businessType = BusinessType::firstOrCreate(['key' => $item['business_type']]);
 
                 $this->mapBusinessTypes = [
@@ -181,7 +249,7 @@ class SponsorFinancialStatisticsTest extends TestCase
                     'organization_id' => $voucher->product->organization_id,
                 ];
 
-                $voucher->makeTransaction($params)->setPaid(null, now());
+                $voucher->makeTransaction($params)->setPaid(null, Carbon::now());
             }
         }
     }
@@ -256,11 +324,7 @@ class SponsorFinancialStatisticsTest extends TestCase
             'type_value' => $assert['date'],
         ];
 
-        $url = "/api/v1/platform/organizations/$organization->id/sponsor/finances";
-        $url .= '?' . http_build_query($query);
-
-        $response = $this->getJson($url, $this->makeApiHeaders($organization->identity));
-        $response->assertSuccessful();
+        $response = $this->makeApiCall($organization, $query);
 
         $this->assertByType($type, $response->json('dates'), $assert);
         $this->assertTotals($response, $assert);
@@ -565,5 +629,21 @@ class SponsorFinancialStatisticsTest extends TestCase
         );
 
         return $data;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $params
+     * @return TestResponse
+     */
+    private function makeApiCall(Organization $organization, array $params = []): TestResponse
+    {
+        $url = "/api/v1/platform/organizations/$organization->id/sponsor/finances";
+        $url .= '?' . http_build_query($params);
+
+        $response = $this->getJson($url, $this->makeApiHeaders($organization->identity));
+        $response->assertSuccessful();
+
+        return $response;
     }
 }
