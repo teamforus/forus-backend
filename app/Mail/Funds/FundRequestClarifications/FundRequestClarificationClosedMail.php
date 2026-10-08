@@ -7,11 +7,11 @@ use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 
 /**
- * Notify requester about fund request clarification being requested by the sponsor/validator.
+ * Notify requester about fund request clarification being closed by the sponsor/validator.
  */
-class FundRequestClarificationRequestedMail extends ImplementationMail
+class FundRequestClarificationClosedMail extends ImplementationMail
 {
-    public ?string $notificationTemplateKey = 'notifications_identities.fund_request_feedback_requested';
+    public ?string $notificationTemplateKey = 'notifications_identities.fund_request_clarification_closed';
 
     /**
      * @throws CommonMarkException
