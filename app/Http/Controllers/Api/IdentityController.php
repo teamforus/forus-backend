@@ -15,6 +15,7 @@ use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
+use App\Services\IdentityProviderService\Services\IdentityProviderSessionService;
 use App\Traits\ThrottleWithMeta;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -23,8 +24,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class IdentityController extends Controller
 {
@@ -152,8 +155,9 @@ class IdentityController extends Controller
      *
      * @param BaseFormRequest $request
      * @param string $exchangeToken
-     * @return JsonResponse
      * @noinspection PhpUnused
+     * @throws Throwable
+     * @return JsonResponse
      */
     public function emailConfirmationExchange(
         BaseFormRequest $request,
@@ -239,8 +243,9 @@ class IdentityController extends Controller
      *
      * @param BaseFormRequest $request
      * @param string $emailToken
-     * @return JsonResponse
      * @noinspection PhpUnused
+     * @throws Throwable
+     * @return JsonResponse
      */
     public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
     {
@@ -251,15 +256,27 @@ class IdentityController extends Controller
 
     /**
      * @param BaseFormRequest $request
+     * @throws Throwable
      * @return JsonResponse
      */
     public function store2FASharedToken(BaseFormRequest $request): JsonResponse
     {
-        $proxy = $request->identity()->makeAuthorizationEmailProxy();
-        $proxy->inherit2FAStateFrom($request->identityProxy());
+        $sourceProxy = $request->identityProxy();
+
+        if (!$sourceProxy) {
+            abort(403, __('exceptions.forbidden'));
+        }
+
+        $proxy = DB::transaction(function () use ($sourceProxy) {
+            $proxy = $sourceProxy->identity->makeAuthorizationEmailProxy();
+            resolve(IdentityProviderSessionService::class)->inheritBinding($sourceProxy, $proxy);
+            $proxy->inherit2FAStateFrom($sourceProxy);
+            $sourceProxy->deactivateByLogout();
+
+            return $proxy;
+        }, 3);
 
         $uri = config('forus.front_ends.app-me_app') . 'identity-restore?%s';
-        $request->identityProxy()->deactivateByLogout();
 
         return new JsonResponse([
             'redirect_url' => sprintf($uri, http_build_query([
@@ -288,16 +305,24 @@ class IdentityController extends Controller
      * Authorize pin code authorization request.
      *
      * @param IdentityAuthorizeCodeRequest $request
+     * @throws Throwable
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request): JsonResponse
     {
+        $sourceProxy = $request->identityProxy();
+
+        if (!$sourceProxy) {
+            abort(403, __('exceptions.forbidden'));
+        }
+
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationCodeProxy(
+            'success' => $sourceProxy->identity->activateAuthorizationCodeProxy(
                 $request->post('auth_code') ?: '',
                 $request->ip(),
-                $request->identityProxy()->is2FAConfirmed() ? $request->identityProxy() : null,
+                $sourceProxy->is2FAConfirmed() ? $sourceProxy : null,
+                sourceProxy: $sourceProxy,
             ),
         ]);
     }
@@ -322,18 +347,25 @@ class IdentityController extends Controller
      * Authorize auth code (qr-code) authorization request.
      *
      * @param IdentityAuthorizeTokenRequest $request
+     * @throws Throwable
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
     public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request): JsonResponse
     {
         $authCode = $request->post('auth_token') ?: '';
+        $sourceProxy = $request->identityProxy();
+
+        if (!$sourceProxy) {
+            abort(403, __('exceptions.forbidden'));
+        }
 
         return new JsonResponse([
-            'success' => $request->identity()->activateAuthorizationTokenProxy(
+            'success' => $sourceProxy->identity->activateAuthorizationTokenProxy(
                 $authCode,
                 $request->ip(),
-                $request->identityProxy()->is2FAConfirmed() ? $request->identityProxy() : null,
+                $sourceProxy->is2FAConfirmed() ? $sourceProxy : null,
+                sourceProxy: $sourceProxy,
             ),
         ]);
     }
@@ -342,16 +374,29 @@ class IdentityController extends Controller
      * Create and activate a short living token for current user.
      *
      * @param BaseFormRequest $request
-     * @throws Exception
+     * @throws Throwable
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
     public function proxyAuthorizationShortToken(BaseFormRequest $request): JsonResponse
     {
-        $request->identity() or abort(403);
+        $sourceProxy = $request->identityProxy();
 
-        $proxy = Identity::makeAuthorizationShortTokenProxy();
-        $request->identity()->activateAuthorizationShortTokenProxy($proxy->exchange_token, $request->ip());
+        if (!$sourceProxy) {
+            abort(403, __('exceptions.forbidden'));
+        }
+
+        $proxy = DB::transaction(function () use ($request, $sourceProxy) {
+            $proxy = Identity::makeAuthorizationShortTokenProxy();
+
+            $sourceProxy->identity->activateAuthorizationShortTokenProxy(
+                $proxy->exchange_token,
+                $request->ip(),
+                $sourceProxy,
+            );
+
+            return $proxy;
+        }, 3);
 
         return new JsonResponse([
             'exchange_token' => $proxy->exchange_token,
@@ -428,7 +473,7 @@ class IdentityController extends Controller
                 new IdentityDestroyRequestMail([
                     'email' => $request->identity()?->email ?: 'Identity has no email!',
                     'address' => $request->identity()?->address,
-                    'comment' => $request->get('comment'),
+                    'comment' => $request->input('comment'),
                 ])
             );
         }

@@ -47,7 +47,7 @@ abstract class BaseFundRequestRule extends BaseRule
      */
     public static function recordTypeRuleFor(FundCriterion $criterion, string $label = null): ?BaseRecordTypeRule
     {
-        $recordType = RecordType::where('key', Arr::get($criterion, 'record_type_key'))->first();
+        $recordType = $criterion->record_type;
 
         return match ($recordType->type) {
             $recordType::TYPE_STRING => new RecordTypeStringRule($criterion, $label),

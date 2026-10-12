@@ -18,6 +18,7 @@ use App\Services\DigIdService\Repositories\DigIdSamlRepo;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\FileService\FileUploadConfigService;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IdentityProviderService\Services\IdentityProviderAccessService;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
@@ -25,7 +26,11 @@ use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use App\Services\WalletService\Models\WalletFlow;
+use App\Services\WalletService\Resources\WalletFlowResource;
+use App\Services\WalletService\WalletService;
 use App\Traits\HasMarkdownFields;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -100,6 +105,10 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $auth_page_info_description
  * @property bool $allow_per_fund_notification_templates
  * @property bool $digid_enabled
+ * @property bool $openid_enabled
+ * @property bool $auth_page_login_openid
+ * @property string|null $openid_verid_brand_uuid
+ * @property-read EloquentCollection|WalletFlow[] $wallet_flows
  * @property bool $digid_required
  * @property bool $digid_sign_up_allowed
  * @property string $digid_connection_type
@@ -233,6 +242,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereUrlValidator($value)
  * @method static Builder<static>|Implementation whereUrlWebshop($value)
  * @method static Builder<static>|Implementation whereVoucherPayoutInformationalProductId($value)
+ * @property bool $entra_login_enabled
+ * @method static Builder<static>|Implementation whereEntraLoginEnabled($value)
  * @mixin \Eloquent
  */
 class Implementation extends Model
@@ -276,6 +287,8 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+        'openid_enabled', 'openid_verid_brand_uuid', 'auth_page_login_openid',
+        'entra_login_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
@@ -294,6 +307,7 @@ class Implementation extends Model
      * @var string[]
      */
     protected $hidden = [
+        'openid_enabled', 'openid_verid_brand_uuid',
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
         'digid_a_select_server',
     ];
@@ -305,6 +319,9 @@ class Implementation extends Model
         'lon' => 'float',
         'lat' => 'float',
         'digid_enabled' => 'boolean',
+        'openid_enabled' => 'boolean',
+        'auth_page_login_openid' => 'boolean',
+        'entra_login_enabled' => 'boolean',
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
@@ -795,6 +812,78 @@ class Implementation extends Model
     }
 
     /**
+     * @return BelongsToMany
+     */
+    public function wallet_flows(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            WalletFlow::class,
+            'implementation_wallet_flows',
+            'implementation_id',
+            'wallet_flow_id',
+        )->withTimestamps();
+    }
+
+    /**
+     * @return string|null
+     */
+    public function veridBrandUuid(): ?string
+    {
+        $uuid = trim((string) $this->openid_verid_brand_uuid);
+
+        return $uuid === '' ? null : $uuid;
+    }
+
+    /**
+     * @param string $type
+     * @return EloquentCollection|WalletFlow[]
+     */
+    public function availableWalletFlows(string $type = WalletFlow::TYPE_AUTHENTICATION): EloquentCollection|Arrayable
+    {
+        return $this->wallet_flows
+            ->where('type', $type)
+            ->filter(fn (WalletFlow $flow) => $flow->configured())
+            ->values();
+    }
+
+    /**
+     * @param string $provider
+     * @param string $type
+     * @return EloquentCollection
+     */
+    public function availableWalletFlowsForProvider(
+        string $provider,
+        string $type = WalletFlow::TYPE_AUTHENTICATION,
+    ): EloquentCollection {
+        return $this->availableWalletFlows($type)
+            ->where('provider', $provider)
+            ->values();
+    }
+
+    /**
+     * @return bool
+     */
+    public function veridWalletAvailable(): bool
+    {
+        return !$this->isGeneral() &&
+            ($this->organization?->allow_openid ?? false) &&
+            $this->organization->bsn_enabled &&
+            $this->openid_enabled &&
+            $this->availableWalletFlowsForProvider(WalletService::PROVIDER_VERID)->isNotEmpty();
+    }
+
+    /**
+     * @param array|null $walletProviders
+     * @return bool
+     */
+    public function walletAvailable(?array $walletProviders = null): bool
+    {
+        return WalletService::enabled() &&
+            $this->veridWalletAvailable() &&
+            in_array(WalletService::PROVIDER_VERID, $walletProviders ?? WalletService::enabledProviderKeys($this), true);
+    }
+
+    /**
      * @return array
      */
     public function authPageLoginOptions(): array
@@ -802,7 +891,9 @@ class Implementation extends Model
         return $this->authPageUsableLoginOptions([
             'email' => $this->auth_page_login_email,
             'digid' => $this->auth_page_login_digid,
+            'wallet' => $this->auth_page_login_openid,
             'qr' => $this->auth_page_login_qr,
+            'entra' => $this->entra_login_enabled,
         ]);
     }
 
@@ -815,8 +906,36 @@ class Implementation extends Model
         return array_keys(array_filter([
             'email' => $loginFlags['email'] ?? false,
             'digid' => ($loginFlags['digid'] ?? false) && $this->digidEnabled(),
+            'wallet' => ($loginFlags['wallet'] ?? false) && $this->walletAvailable(),
             'qr' => $loginFlags['qr'] ?? false,
+            'entra' => ($loginFlags['entra'] ?? false) && $this->entraLoginAvailable(),
         ]));
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginConfigured(): bool
+    {
+        return Config::get('identity_providers.enabled') &&
+            $this->organization?->allowsIdentityProviderSso() &&
+            $this->organization->identity_provider_connection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginAvailable(): bool
+    {
+        return $this->entraLoginConfigured() && $this->organization->identity_provider_connection->isEnabled();
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginEnabled(): bool
+    {
+        return $this->entra_login_enabled && $this->entraLoginAvailable();
     }
 
     /**
@@ -864,6 +983,8 @@ class Implementation extends Model
         $request = BaseFormRequest::createFromBase(request());
         $pages = ImplementationPageResource::queryCollection($implementation->pages_public())->toArray($request);
 
+        $walletEnabled = $configKey === self::FRONTEND_WEBSHOP && $implementation->walletAvailable();
+
         return [
             ...$config,
             'organization_id' => $implementation->organization_id,
@@ -880,7 +1001,23 @@ class Implementation extends Model
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
             ], Announcement::query()))->query()->get())->toArray($request),
+            'entra_dashboard_login_available' => $configKey === 'dashboard' &&
+                resolve(IdentityProviderAccessService::class)->isLoginConfigured(),
+            'wallet' => $walletEnabled,
+            'wallet_config' => [
+                'default_provider' => $walletEnabled ? WalletService::PROVIDER_VERID : null,
+                'providers' => $walletEnabled ? [WalletService::PROVIDER_VERID] : [],
+                'flows' => $walletEnabled ? WalletFlowResource::createCollection(
+                    $implementation->availableWalletFlowsForProvider(WalletService::PROVIDER_VERID),
+                )->toArray($request) : [],
+            ],
             ...($configKey === self::FRONTEND_WEBSHOP ? [
+                'wallet_disclosure_flows' => WalletService::disclosureAvailable($implementation)
+                    ? WalletFlowResource::createCollection($implementation->availableWalletFlowsForProvider(
+                        WalletService::PROVIDER_VERID,
+                        WalletFlow::TYPE_DISCLOSURE,
+                    ))->toArray($request)
+                    : [],
                 'auth_page' => $implementation->authPageConfig(),
             ] : []),
             'digid' => $implementation->digidEnabled(),

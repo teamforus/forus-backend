@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use League\CommonMark\Exception\CommonMarkException;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -57,6 +58,7 @@ class FundRequestValidatorTest extends TestCase
     /**
      * Test the approval of a fund request with a predefined amount preset.
      *
+     * @throws CommonMarkException
      * @return void
      */
     public function testFundRequestApproveWithAmountPresets()
@@ -100,6 +102,7 @@ class FundRequestValidatorTest extends TestCase
     /**
      * Test the approval of a fund request with a custom amount.
      *
+     * @throws CommonMarkException
      * @return void
      */
     public function testFundRequestApproveWithCustomAmount()

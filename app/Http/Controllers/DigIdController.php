@@ -8,6 +8,7 @@ use App\Models\Identity;
 use App\Services\DigIdService\Models\DigIdSession;
 use Exception;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr;
 use Throwable;
 
 class DigIdController extends Controller
@@ -129,6 +130,7 @@ class DigIdController extends Controller
 
         return $session->makeRedirectResponse([
             'token' => $proxy->exchange_token,
+            ...Arr::only($session->meta ?? [], ['target']),
         ], sprintf('%s/auth-link', rtrim($session->session_final_url, '/')));
     }
 

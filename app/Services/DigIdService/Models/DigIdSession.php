@@ -435,6 +435,6 @@ class DigIdSession extends Model
             return $request->only('fund_id');
         }
 
-        return [];
+        return $request->only('target');
     }
 }

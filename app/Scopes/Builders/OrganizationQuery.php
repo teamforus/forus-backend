@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeRole;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Role;
@@ -13,11 +14,27 @@ use App\Models\RolePermission;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Arr;
 
 class OrganizationQuery
 {
+    /**
+     * @param Builder|Relation|Organization $query
+     * @param Identity $identity
+     * @return Builder|Relation|Organization
+     */
+    public static function whereEligibleForIdentityProviderLink(
+        Builder|Relation|Organization $query,
+        Identity $identity,
+    ): Builder|Relation|Organization {
+        return $query
+            ->where('allow_identity_providers', Organization::ALLOW_IDENTITY_PROVIDERS_SSO)
+            ->where('identity_address', '!=', $identity->address)
+            ->whereHas('employees', fn (Builder $query) => $query
+                ->where('identity_address', $identity->address));
+    }
+
     /**
      * @param Builder|Relation|Organization $builder
      * @param string|array $identityAddress

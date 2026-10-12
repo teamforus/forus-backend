@@ -130,7 +130,9 @@ class OrganizationResource extends BaseJsonResource
                 'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
                 'allow_prevalidation_requests', 'allow_fund_product_limits',
+                'allow_identity_providers',
             ]),
+            'allow_wallets' => $organization->allow_openid,
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
                 'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),
@@ -183,7 +185,7 @@ class OrganizationResource extends BaseJsonResource
 
         return $canUpdate ? array_merge($organization->only([
             'kvk', 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-            'phone_public', 'website_public',
+            'phone_public', 'website_public', 'allow_identity_providers',
         ]), [
             'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => ReservationFieldResource::collection($organization->reservation_fields),

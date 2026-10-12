@@ -252,6 +252,10 @@ return [
         'record_edit_forbidden' => 'U kunt dit gegeven niet aanpassen.',
     ],
     'attributes' => [
+        'exchange_token' => 'uitwisselingstoken',
+        'browser_token' => 'browsertoken',
+        'target' => 'bestemming na het inloggen',
+        'entra_login_enabled' => 'inloggen met Microsoft',
         'pin_code' => 'pincode',
         'records' => 'Eigenschappen',
         'email' => 'e-mail',

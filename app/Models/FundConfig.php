@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Helpers\Markdown;
 use App\Services\TranslationService\Traits\HasOnDemandTranslations;
+use App\Services\WalletService\Models\WalletFlow;
+use App\Traits\HasMarkdownFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Exception\CommonMarkException;
@@ -41,6 +43,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_fund_request_prefill
+ * @property int|null $wallet_disclosure_flow_id
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
@@ -101,6 +104,8 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property string|null $help_website
  * @property string|null $help_chat
  * @property string|null $help_description
+ * @property string|null $fund_request_intro
+ * @property string|null $fund_request_intro_text
  * @property bool $help_show_email
  * @property bool $help_show_phone
  * @property bool $help_show_website
@@ -111,7 +116,9 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string $help_description_html
+ * @property-read string $fund_request_intro_html
  * @property-read \App\Models\Implementation|null $implementation
+ * @property-read WalletFlow|null $wallet_disclosure_flow
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundConfig newModelQuery()
@@ -218,6 +225,7 @@ use League\CommonMark\Exception\CommonMarkException;
  */
 class FundConfig extends Model
 {
+    use HasMarkdownFields;
     use HasOnDemandTranslations;
 
     public const string BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
@@ -262,6 +270,7 @@ class FundConfig extends Model
     ];
 
     protected $fillable = [
+        'fund_request_intro', 'fund_request_intro_text', 'wallet_disclosure_flow_id',
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
@@ -382,6 +391,14 @@ class FundConfig extends Model
     }
 
     /**
+     * @return BelongsTo
+     */
+    public function wallet_disclosure_flow(): BelongsTo
+    {
+        return $this->belongsTo(WalletFlow::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
@@ -459,6 +476,23 @@ class FundConfig extends Model
     public function getHelpDescriptionHtmlAttribute(): string
     {
         return Markdown::convert($this->help_description ?: '');
+    }
+
+    /**
+     * @return array
+     */
+    public static function getMarkdownKeys(): array
+    {
+        return ['fund_request_intro'];
+    }
+
+    /**
+     * @throws CommonMarkException
+     * @return string
+     */
+    public function getFundRequestIntroHtmlAttribute(): string
+    {
+        return $this->markdownToHtml('fund_request_intro');
     }
 
     /**

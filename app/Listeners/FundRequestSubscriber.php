@@ -110,7 +110,7 @@ class FundRequestSubscriber
             }
 
             foreach ($funds as $fund) {
-                if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
+                if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope, $fundRequest])) {
                     $amount = $fund->id === $fundRequest->fund_id ? $fundRequest->getPaymentAmount() : null;
 
                     if ($fund->fund_config->isPayoutOutcome()) {

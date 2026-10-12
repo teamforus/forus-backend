@@ -19,6 +19,12 @@ return [
             'languages' => [
                 'en', 'de', 'ru', 'uk', 'ro', 'ar',
             ],
+            'openid_enabled' => true,
+            'auth_page_login_openid' => true,
+        ],
+        'openid_flow_keys' => [
+            'authentication' => ['yivi', 'nl_wallet'],
+            'disclosure' => ['yivi_disclosure'],
         ],
     ],
     'Stadjerspas' => [

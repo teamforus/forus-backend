@@ -8,6 +8,8 @@ use App\Http\Resources\ImplementationPreChecksResource;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
+use Illuminate\Auth\Access\AuthorizationException;
+use League\CommonMark\Exception\CommonMarkException;
 
 class PreCheckController extends Controller
 {
@@ -16,7 +18,7 @@ class PreCheckController extends Controller
      *
      * @param Organization $organization
      * @param Implementation $implementation
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      * @return ImplementationPreChecksResource
      */
     public function index(
@@ -35,9 +37,9 @@ class PreCheckController extends Controller
      * @param SyncPreCheckRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @return ImplementationPreChecksResource
      * @noinspection PhpUnused
+     * @throws AuthorizationException|CommonMarkException
+     * @return ImplementationPreChecksResource
      */
     public function syncPreChecks(
         SyncPreCheckRequest $request,

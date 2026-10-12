@@ -10,6 +10,8 @@ use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestValidationRequ
 use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
+use App\Models\Identity;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -58,11 +60,18 @@ class FundRequestsController extends Controller
         DB::beginTransaction();
 
         try {
+            if ($fund->fund_config->wallet_disclosure_flow_id) {
+                Identity::whereKey($request->auth_id())->lockForUpdate()->firstOrFail();
+            }
+
+            $disclosure = $request->getWalletDisclosure(lockForUpdate: true);
+
             $fundRequest = $fund->makeFundRequest(
                 $request->identity(),
-                $request->input('records'),
+                $disclosure ? $request->recordsWithWalletPrefills($disclosure) : $request->input('records'),
                 $request->input('contact_information'),
-                $request->getIConnectPrefills($fund)
+                $request->getIConnectPrefills($fund),
+                prefillSource: $disclosure ? FundRequestRecord::SOURCE_WALLET : FundRequestRecord::SOURCE_BRP,
             );
 
             if ($type = $fund->fund_config->getApplicationPhysicalCardRequestType()) {
@@ -75,12 +84,21 @@ class FundRequestsController extends Controller
                     'physical_card_type_id' => $type->id,
                 ]);
             }
+
+            $disclosure?->update([
+                'fund_request_id' => $fundRequest->id,
+                'consumed_at' => now(),
+            ]);
         } catch (PersonBsnApiException $e) {
             DB::rollBack();
 
             return new JsonResponse([
                 'message' => $e->getMessage(),
             ], 400);
+        } catch (Throwable $exception) {
+            DB::rollBack();
+
+            throw $exception;
         }
 
         DB::commit();
