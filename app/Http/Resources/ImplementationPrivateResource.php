@@ -9,6 +9,8 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Permission;
 use App\Services\CmsService\ImplementationBlocks\ImplementationCmsBlockService;
+use App\Services\OpenIdService\Models\OpenIdFlow;
+use App\Services\OpenIdService\OpenIdService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use League\CommonMark\Exception\CommonMarkException;
@@ -16,6 +18,7 @@ use League\CommonMark\Exception\CommonMarkException;
 class ImplementationPrivateResource extends BaseJsonResource
 {
     public const array LOAD = [
+        'openid_flows',
         'organization',
     ];
 
@@ -60,13 +63,16 @@ class ImplementationPrivateResource extends BaseJsonResource
                 'banner_position', 'banner_collapse', 'banner_wide', 'banner_color',
                 'banner_background', 'banner_background_mobile', 'products_default_sorting',
                 'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
-                'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title', 'auth_page_info_description',
+                'auth_page_login_openid', 'auth_page_login_qr', 'auth_page_info_enabled', 'auth_page_info_title',
+                'auth_page_info_description',
             ]),
             'auth_page_info_description_html' => $implementation->auth_page_info_description_html,
             'banner_media_uid' => $implementation->banner?->uid,
             'pre_check_url' => $implementation->urlWebshop('/fund-pre-check'),
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'digid_available' => $implementation->digidEnabled(),
+            'openid_configured' => OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID)->isNotEmpty(),
+            'openid_available' => $implementation->openidAvailable(),
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
             'pre_check_banner' => new MediaResource($implementation->pre_check_banner),
@@ -104,10 +110,17 @@ class ImplementationPrivateResource extends BaseJsonResource
         if ($implementation->organization->identityCan($request->identity(), [
             Permission::MANAGE_IMPLEMENTATION,
         ])) {
-            return $implementation->only([
-                'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
-                'email_from_address', 'email_from_name',
-            ]);
+            $flowsEnabled = $implementation->availableOpenIdFlowsForProvider(OpenIdService::PROVIDER_VERID);
+            $flowsOptions = OpenIdFlow::configuredForProvider(OpenIdService::PROVIDER_VERID);
+
+            return [
+                ...$implementation->only([
+                    'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+                    'openid_enabled', 'email_from_address', 'email_from_name',
+                ]),
+                'openid_flows' => OpenIdFlowResource::collection($flowsEnabled),
+                'openid_flow_options' => OpenIdFlowResource::collection($flowsOptions),
+            ];
         }
 
         return [];
