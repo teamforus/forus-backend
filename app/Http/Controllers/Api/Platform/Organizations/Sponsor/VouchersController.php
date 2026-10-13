@@ -100,6 +100,7 @@ class VouchersController extends Controller
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $voucherFields = compact('note', 'employee_id');
         $productVouchers = [];
+        $multipleVouchers = [];
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
         $identity = $email ? Identity::findOrBuild(
@@ -132,11 +133,17 @@ class VouchersController extends Controller
                 limitMultiplier: $multiplier,
             );
 
+            $multipleVouchers = $fund->makeFundFormulaMultipleVouchers(
+                identity: $identity,
+                voucherFields: $voucherFields,
+                expireAt: $expire_at,
+            );
+
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
         }
 
         /** @var Voucher[] $vouchers */
-        $vouchers = array_merge([$mainVoucher], $productVouchers);
+        $vouchers = array_merge([$mainVoucher], $productVouchers, $multipleVouchers);
         $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
         foreach ($vouchers as $voucher) {
@@ -227,6 +234,9 @@ class VouchersController extends Controller
             $payment_iban = $voucher['direct_payment_iban'] ?? null;
             $payment_name = $voucher['direct_payment_name'] ?? null;
 
+            $productVouchers = [];
+            $multipleVouchers = [];
+
             $identity = $email ? Identity::findOrBuild(
                 email: $email,
                 type: Identity::TYPE_VOUCHER,
@@ -257,11 +267,17 @@ class VouchersController extends Controller
                     limitMultiplier: $multiplier,
                 );
 
+                $multipleVouchers = $fund->makeFundFormulaMultipleVouchers(
+                    identity: $identity,
+                    voucherFields: $voucherFields,
+                    expireAt: $expire_at,
+                );
+
                 $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
             }
 
             /** @var Voucher[] $vouchers */
-            $vouchers = array_merge([$mainVoucher], $productVouchers ?? []);
+            $vouchers = array_merge([$mainVoucher], $productVouchers, $multipleVouchers);
             $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
             foreach ($vouchers as $voucherModel) {

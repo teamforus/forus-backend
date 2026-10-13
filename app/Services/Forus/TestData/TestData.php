@@ -285,6 +285,7 @@ class TestData
             $prevalidation->assignToIdentity($identity);
 
             $voucher = $prevalidation->fund->makeVoucher(identity: $identity);
+            $prevalidation->fund->makeFundFormulaMultipleVouchers($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
 
             /** @var Product $product */
@@ -1271,6 +1272,7 @@ class TestData
                 $note = 'Test data seeder!';
 
                 $fund->makeVoucher(identity: $identity, voucherFields: compact('note'));
+                $fund->makeFundFormulaMultipleVouchers($identity, voucherFields: compact('note'));
                 $fund->makeFundFormulaProductVouchers($identity, compact('note'));
             }
         }
