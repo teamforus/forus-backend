@@ -1907,6 +1907,10 @@ class Fund extends Model
     public function checkBackofficeIfAvailable(
         Identity $identity,
     ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
+        if (!$identity->canReceiveVouchers()) {
+            return null;
+        }
+
         $bsn = $identity->bsn;
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
 

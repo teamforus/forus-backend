@@ -136,6 +136,12 @@ return [
 
     'identity_profiles' => [
         'id' => 'ID',
+        'type' => 'Type',
+        'identity_provider_status' => 'Entra-beheer',
+        'identity_provider_statuses' => [
+            'active' => 'Actief',
+            'disabled' => 'Uitgeschakeld',
+        ],
         'given_name' => 'Voornaam',
         'family_name' => 'Achternaam',
         'email' => 'E-mail adres',
