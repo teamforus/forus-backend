@@ -17,6 +17,7 @@ return [
         'scim_requests_per_minute' => env('IDENTITY_PROVIDER_THROTTLE_SCIM_REQUESTS_PER_MINUTE', 300),
     ],
     'scim' => [
+        'base_url' => env('IDENTITY_PROVIDER_SCIM_BASE_URL'),
         'max_results' => 100,
     ],
     'entra' => [

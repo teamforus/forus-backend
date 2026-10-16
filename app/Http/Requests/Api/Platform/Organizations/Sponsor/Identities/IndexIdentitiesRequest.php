@@ -30,6 +30,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'type' => ['nullable', Rule::in(Identity::TYPES)],
             'fund_id' => [
                 'nullable',
                 Rule::in($this->organization->funds->pluck('id')->toArray()),
@@ -39,7 +40,7 @@ class IndexIdentitiesRequest extends BaseFormRequest
             'identity_provider_status' => [
                 'nullable',
                 Rule::in(IdentitiesSearch::IDENTITY_PROVIDER_STATUSES),
-                Rule::prohibitedIf(!$this->organization->allow_identity_provider_requester_provisioning),
+                Rule::prohibitedIf(!$this->organization->showsIdentityProviderProfileStatus()),
             ],
             'postal_code' => 'nullable|string',
             'municipality_name' => 'nullable|string',

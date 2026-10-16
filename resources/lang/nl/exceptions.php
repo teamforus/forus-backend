@@ -15,6 +15,9 @@ return [
         'connection_disconnect_failed' => 'De Entra-koppeling kon niet worden verbroken.',
         'connection_has_requesters' =>
             'Deze koppeling beheert aanvragers en kan niet worden verbroken, ook niet als hun accounts zijn uitgeschakeld of via provisioning verwijderd.',
+        'connection_has_managed_employees' =>
+            'Deze koppeling beheert medewerkers en kan niet worden verbroken, '
+            . 'ook niet als hun accounts zijn uitgeschakeld of via provisioning verwijderd.',
         'scim_connection_disconnected' => 'Provisioning-tokens kunnen niet worden beheerd voor een verbroken koppeling.',
         'scim_credential_issue_failed' => 'Het provisioning-token kon niet worden aangemaakt.',
         'scim_credential_revoke_failed' => 'Het provisioning-token kon niet worden ingetrokken.',

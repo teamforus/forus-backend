@@ -54,7 +54,7 @@ class OrganizationPolicy
      */
     public function store(Identity $identity): bool
     {
-        return $identity->exists && !$identity->isManagedRequester();
+        return $identity->exists && !$identity->isManagedByIdentityProvider();
     }
 
     /**
@@ -134,7 +134,7 @@ class OrganizationPolicy
         /** @var Employee|null $employee */
         $employee = $organization->employeesOfRoleQuery('admin')->find($employeeId);
 
-        return $employee && !$employee->identity->isManagedRequester();
+        return $employee && !$employee->identity->isManagedByIdentityProvider();
     }
 
     /**

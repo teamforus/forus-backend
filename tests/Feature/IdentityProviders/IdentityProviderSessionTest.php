@@ -153,69 +153,89 @@ class IdentityProviderSessionTest extends TestCase
     /**
      * @return void
      */
-    public function testRequesterPinAndQrSessionsAreRevokedByScimDisable(): void
+    public function testManagedAccountPinAndQrSessionsAreRevokedByScimDisable(): void
     {
-        $this->withHeaders(['Client-Type' => Implementation::FRONTEND_WEBSHOP]);
-        [$membership, $sourceProxy] = $this->useRequester();
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            $this->withHeaders([
+                'Client-Type' => $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? Implementation::FRONTEND_SPONSOR_DASHBOARD
+                    : Implementation::FRONTEND_WEBSHOP,
+            ]);
 
-        $this->entraConnection->organization->forceFill(['allow_identity_provider_requester_provisioning' => true])->save();
+            [$membership, $sourceProxy] = $this->useManagedAccount($accountType);
 
-        $token = Str::random(64);
-        $this->makeIdentityProviderScimCredential($this->entraConnection, $token);
+            $this->entraConnection->organization->forceFill([
+                'allow_identity_provider_employee_provisioning' => true,
+                'allow_identity_provider_requester_provisioning' => true,
+            ])->save();
 
-        [$pinProxy, $qrProxy] = $this->createPinAndQrProxies($sourceProxy, $membership);
+            $token = Str::random(64);
+            $this->makeIdentityProviderScimCredential($this->entraConnection, $token, $accountType);
 
-        $this->getJson('/api/v1/identity/proxy/check-token', ['Access-Token' => $qrProxy->access_token])
-            ->assertOk()->assertJsonPath('message', 'active');
+            [$pinProxy, $qrProxy] = $this->createPinAndQrProxies($sourceProxy, $membership);
 
-        $this->apiIdentityProviderScimUsersRequest('PATCH', $this->entraConnection, $token, [
-            'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
-            'Operations' => [['op' => 'replace', 'path' => 'active', 'value' => false]],
-        ], $membership->uid)->assertOk();
+            $this->apiCheckIdentityProxyTokenRequest($qrProxy->access_token)
+                ->assertOk()->assertJsonPath('message', 'active');
 
-        $proxies = [$sourceProxy, $pinProxy, $qrProxy];
-        $this->assertRevokedProxies($proxies);
+            $this->apiIdentityProviderScimUsersRequest('PATCH', $this->entraConnection, $token, [
+                'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+                'Operations' => [['op' => 'replace', 'path' => 'active', 'value' => false]],
+            ], $membership->uid)->assertOk();
 
-        foreach ($proxies as $proxy) {
-            $this->assertFalse($proxy->refresh()->isActive());
+            $proxies = [$sourceProxy, $pinProxy, $qrProxy];
+            $this->assertRevokedProxies($proxies);
 
-            $this->getJson('/api/v1/identity/proxy/check-token', ['Access-Token' => $proxy->access_token])
-                ->assertOk()->assertJsonPath('message', 'invalid');
+            foreach ($proxies as $proxy) {
+                $this->assertFalse($proxy->refresh()->isActive());
+
+                $this->apiCheckIdentityProxyTokenRequest($proxy->access_token)
+                    ->assertOk()->assertJsonPath('message', 'invalid');
+            }
         }
     }
 
     /**
      * @return void
      */
-    public function testRequesterCanExchangeShared2faHandoffButNotStandaloneEmailTokens(): void
+    public function testManagedAccountCanExchangeShared2faHandoffButNotStandaloneEmailTokens(): void
     {
-        $this->withHeaders(['Client-Type' => Implementation::FRONTEND_WEBSHOP]);
-        [$membership, $sourceProxy] = $this->useRequester();
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            $this->withHeaders([
+                'Client-Type' => $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? Implementation::FRONTEND_SPONSOR_DASHBOARD
+                    : Implementation::FRONTEND_WEBSHOP,
+            ]);
 
-        $provider = $this->setup2FAProvider($sourceProxy, 'authenticator');
-        $this->activate2FAProvider($sourceProxy, $provider);
-        $handoff = $this->createShared2faHandoff($sourceProxy);
+            [$membership, $sourceProxy] = $this->useManagedAccount($accountType);
 
-        $response = $this->apiExchangeIdentityProxyRequest('email', $handoff->exchange_token)->assertOk();
-        $proxy = IdentityProxy::where('access_token', $response->json('access_token'))->firstOrFail();
+            $provider = $this->setup2FAProvider($sourceProxy, 'authenticator');
+            $this->activate2FAProvider($sourceProxy, $provider);
+            $handoff = $this->createShared2faHandoff($sourceProxy);
 
-        $this->assertTrue($proxy->is2FAConfirmed());
-        $this->assertIdentityProviderProxy($proxy, $membership);
+            $response = $this->apiExchangeIdentityProxyRequest('email', $handoff->exchange_token)->assertOk();
+            $proxy = IdentityProxy::where('access_token', $response->json('access_token'))->firstOrFail();
 
-        foreach (['email' => 'email_code', 'confirmation' => 'confirmation_code'] as $route => $type) {
-            $standalone = Identity::makeProxy($type, $membership->identity);
+            $this->assertTrue($proxy->is2FAConfirmed());
+            $this->assertIdentityProviderProxy($proxy, $membership);
 
-            $this->apiExchangeIdentityProxyRequest($route, $standalone->exchange_token)->assertForbidden();
-            $this->assertTrue($standalone->refresh()->isPending());
+            foreach (['email' => 'email_code', 'confirmation' => 'confirmation_code'] as $route => $type) {
+                $standalone = Identity::makeProxy($type, $membership->identity);
+
+                $this->apiExchangeIdentityProxyRequest($route, $standalone->exchange_token)->assertForbidden();
+                $this->assertTrue($standalone->refresh()->isPending());
+            }
         }
     }
 
     /**
+     * @param string $accountType
      * @return array{IdentityProviderMembership, IdentityProxy}
      */
-    protected function useRequester(): array
+    protected function useManagedAccount(string $accountType): array
     {
-        $membership = $this->makeIdentityProviderRequester($this->entraConnection);
+        $membership = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+            ? $this->makeIdentityProviderEmployee($this->entraConnection)
+            : $this->makeIdentityProviderRequester($this->entraConnection);
 
         return [$membership, $this->makeIdentityProviderProxy($membership)];
     }

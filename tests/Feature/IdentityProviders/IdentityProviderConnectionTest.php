@@ -5,6 +5,7 @@ namespace Tests\Feature\IdentityProviders;
 use App\Models\Implementation;
 use App\Models\Role;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Models\IdentityProviderOidcSession;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
@@ -283,6 +284,33 @@ class IdentityProviderConnectionTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testManagedEmployeesPreventDisconnect(): void
+    {
+        foreach ([
+            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ] as $status) {
+            $organization = $this->makeTestOrganization($this->makeIdentity(), [
+                'allow_identity_providers' => true,
+                'allow_identity_provider_employee_provisioning' => true,
+            ]);
+
+            $connection = $this->makeEntraConnection($organization);
+            $this->makeIdentityProviderEmployee($connection, ['provisioning_status' => $status]);
+
+            $this->apiChangeIdentityProviderConnectionStateRequest(
+                $organization,
+                $connection,
+                'disconnect',
+                $organization->identity,
+            )->assertConflict();
+        }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testEventsAreScopedToConnectionAndOrdered(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity(), [
@@ -306,9 +334,19 @@ class IdentityProviderConnectionTest extends TestCase
             outcome: IdentityProviderConnection::EVENT_OUTCOME_FAILURE,
         );
 
+        $employeeCreated = $connection->recordEvent(IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREATED);
+
+        $employeeFailed = $connection->recordEvent(
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREATE_FAILED,
+            outcome: IdentityProviderConnection::EVENT_OUTCOME_FAILURE,
+        );
+
         $this->apiGetIdentityProviderConnectionEventsRequest($organization, $connection, [], $proxy)
             ->assertOk()
-            ->assertJsonPath('data.*.id', [$failed->id, $provisioned->id, $resumed->id, $paused->id, $connected->id]);
+            ->assertJsonPath('data.*.id', [
+                $employeeFailed->id, $employeeCreated->id, $failed->id, $provisioned->id,
+                $resumed->id, $paused->id, $connected->id,
+            ]);
 
         $this->apiGetIdentityProviderConnectionEventsRequest($organization, $connection, ['category' => 'sso'], $proxy)
             ->assertOk()->assertJsonPath('data.*.id', [$resumed->id, $paused->id, $connected->id]);
@@ -320,6 +358,14 @@ class IdentityProviderConnectionTest extends TestCase
         $this->apiGetIdentityProviderConnectionEventsRequest($organization, $connection, [
             'category' => 'requester_provisioning', 'outcome' => 'failure',
         ], $proxy)->assertOk()->assertJsonPath('data.*.id', [$failed->id]);
+
+        $this->apiGetIdentityProviderConnectionEventsRequest($organization, $connection, [
+            'category' => 'employee_provisioning', 'outcome' => 'success',
+        ], $proxy)->assertOk()->assertJsonPath('data.*.id', [$employeeCreated->id]);
+
+        $this->apiGetIdentityProviderConnectionEventsRequest($organization, $connection, [
+            'category' => 'employee_provisioning', 'outcome' => 'failure',
+        ], $proxy)->assertOk()->assertJsonPath('data.*.id', [$employeeFailed->id]);
     }
 
     /**

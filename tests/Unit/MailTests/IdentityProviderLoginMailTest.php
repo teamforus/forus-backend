@@ -4,6 +4,7 @@ namespace Tests\Unit\MailTests;
 
 use App\Mail\Auth\IdentityProviderLoginMail;
 use App\Models\Implementation;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use ReflectionException;
 use Tests\TestCase;
@@ -80,6 +81,36 @@ class IdentityProviderLoginMailTest extends TestCase
      * @throws ReflectionException
      * @return void
      */
+    public function testEmployeeGuidanceUsesDashboardForLoginAndAppAuthorization(): void
+    {
+        $implementation = $this->makeTestImplementation($this->makeTestOrganization($this->makeIdentity()), [
+            'url_sponsor' => 'https://unused-dashboard.example.test',
+        ]);
+
+        $dashboard = $this->renderGuidance(
+            $implementation,
+            Implementation::FRONTEND_SPONSOR_DASHBOARD,
+            accountType: IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE,
+        );
+
+        $this->assertSame([Implementation::general()->urlSponsorDashboard()], $this->getEmailLinks($dashboard));
+        $this->assertStringContainsString('Log in via Microsoft op het dashboard', $dashboard);
+        $this->assertStringContainsString('medewerkersrol toekennen', $dashboard);
+
+        $mobile = $this->renderGuidance(
+            $implementation,
+            Implementation::ME_APP_ANDROID,
+            accountType: IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE,
+        );
+
+        $this->assertStringContainsString('Autoriseer apparaat', html_entity_decode(strip_tags($mobile)));
+        $this->assertSame([], $this->getEmailLinks($mobile));
+    }
+
+    /**
+     * @throws ReflectionException
+     * @return void
+     */
     public function testInactiveGuidanceReplacesClientLoginInstructions(): void
     {
         $implementation = $this->makeTestImplementation($this->makeTestOrganization($this->makeIdentity()));
@@ -104,13 +135,22 @@ class IdentityProviderLoginMailTest extends TestCase
      * @param Implementation $implementation
      * @param string $clientType
      * @param bool $active
+     * @param string $accountType
      * @throws ReflectionException
      * @return string
      */
-    protected function renderGuidance(Implementation $implementation, string $clientType, bool $active = true): string
-    {
-        $content = (new IdentityProviderLoginMail($implementation, $clientType, $active))
-            ->locale('nl')->with('hideFooter', true)->render();
+    protected function renderGuidance(
+        Implementation $implementation,
+        string $clientType,
+        bool $active = true,
+        string $accountType = IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
+    ): string {
+        $content = (new IdentityProviderLoginMail(
+            $implementation,
+            $clientType,
+            $active,
+            $accountType,
+        ))->locale('nl')->with('hideFooter', true)->render();
 
         $this->assertDoesNotMatchRegularExpression('/:(guidance|navigation_link|frontend_url|email_logo)\b/', $content);
 

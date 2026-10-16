@@ -23,30 +23,45 @@ class IdentityProviderEventResource extends BaseJsonResource
         $log = $this->resource;
         $errorCode = $log->data['error_code'] ?? null;
         $context = $log->data['context'] ?? [];
+        $sso = in_array($log->event, IdentityProviderConnection::EVENTS_SSO, true);
+        $employeeProvisioning = in_array($log->event, IdentityProviderConnection::EVENTS_EMPLOYEE_PROVISIONING, true);
         $requesterProvisioning = in_array($log->event, IdentityProviderConnection::EVENTS_REQUESTER_PROVISIONING, true);
+
         $category = match (true) {
-            $requesterProvisioning => 'requester_provisioning',
-            in_array($log->event, IdentityProviderConnection::EVENTS_SSO, true) => 'sso',
+            $sso => IdentityProviderConnection::EVENT_CATEGORY_SSO,
+            $employeeProvisioning => IdentityProviderConnection::EVENT_CATEGORY_EMPLOYEE_PROVISIONING,
+            $requesterProvisioning => IdentityProviderConnection::EVENT_CATEGORY_REQUESTER_PROVISIONING,
             default => null,
         };
 
-        $provisioningContext = $requesterProvisioning ? $context : [];
+        $provisioningContext = $employeeProvisioning || $requesterProvisioning ? $context : [];
         $reason = $provisioningContext['reason'] ?? null;
+
         $result = $provisioningContext['result'] ?? match ($log->event) {
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATED => 'created',
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_REPROVISIONED => 'reprovisioned',
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_REACTIVATED => 'reactivated',
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DISABLED => 'disabled',
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DELETED => 'deleted',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREATED => 'created',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_REPROVISIONED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_REPROVISIONED => 'reprovisioned',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_REACTIVATED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_REACTIVATED => 'reactivated',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DISABLED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_DISABLED => 'disabled',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DELETED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_DELETED => 'deleted',
             IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATED,
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED => 'updated',
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_UPDATED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_EMAIL_CHANGED => 'updated',
             default => null,
         };
 
         $fields = $provisioningContext['requested_fields'] ?? $provisioningContext['changed_fields'] ?? match ($log->event) {
             IdentityProviderConnection::EVENT_SCIM_REQUESTER_REACTIVATED,
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DISABLED => ['active'],
-            IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED => ['emails'],
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_DISABLED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_REACTIVATED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_DISABLED => ['active'],
+            IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED,
+            IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_EMAIL_CHANGED => ['emails'],
             default => [],
         };
 

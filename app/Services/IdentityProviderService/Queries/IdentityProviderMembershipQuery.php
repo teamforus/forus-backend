@@ -11,13 +11,17 @@ class IdentityProviderMembershipQuery
 {
     /**
      * @param IdentityProviderConnection $connection
+     * @param string $accountType
      * @param bool $withDeleted
      * @return Builder<IdentityProviderMembership>
      */
-    public static function forScimConnection(IdentityProviderConnection $connection, bool $withDeleted = false): Builder
-    {
+    public static function forScimConnection(
+        IdentityProviderConnection $connection,
+        string $accountType,
+        bool $withDeleted = false,
+    ): Builder {
         return IdentityProviderMembership::where('connection_id', $connection->id)
-            ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER)
+            ->where('account_type', $accountType)
             ->where('claim_state', IdentityProviderMembership::CLAIM_CLAIMED)
             ->whereIn('provisioning_status', [
                 IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE,

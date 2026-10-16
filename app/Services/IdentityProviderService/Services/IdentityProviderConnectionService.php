@@ -10,6 +10,7 @@ use App\Services\IdentityProviderService\Exceptions\IdentityProviderException;
 use App\Services\IdentityProviderService\Implementations\EntraAdapter;
 use App\Services\IdentityProviderService\Models\IdentityProviderAdminSession;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Models\IdentityProviderScimCredential;
 use App\Services\IdentityProviderService\Models\IdentityProviderTenantReservation;
 use App\Services\IdentityProviderService\Queries\IdentityProviderAdminSessionQuery;
@@ -446,6 +447,12 @@ class IdentityProviderConnectionService
                 throw new IdentityProviderConflictException(IdentityProviderErrorCode::CONNECTION_HAS_REQUESTERS);
             }
 
+            if ($connection->memberships_managed_employees()->exists()) {
+                throw new IdentityProviderConflictException(
+                    IdentityProviderErrorCode::CONNECTION_HAS_MANAGED_EMPLOYEES,
+                );
+            }
+
             $memberships = $connection->memberships_current()->lockForUpdate()->get();
 
             foreach ($memberships as $membership) {
@@ -486,37 +493,49 @@ class IdentityProviderConnectionService
     /**
      * @param IdentityProviderConnection $connection
      * @param Identity $identity
+     * @param string $accountType
      * @throws Throwable
      * @return array{credential: IdentityProviderScimCredential, token: string}
      */
-    public function issueScimCredential(IdentityProviderConnection $connection, Identity $identity): array
-    {
-        return DB::transaction(function () use ($connection, $identity): array {
+    public function issueScimCredential(
+        IdentityProviderConnection $connection,
+        Identity $identity,
+        string $accountType,
+    ): array {
+        return DB::transaction(function () use ($connection, $identity, $accountType): array {
             $connection = IdentityProviderConnection::lockForUpdate()->findOrFail($connection->id);
 
             if ($connection->isDisconnected()) {
                 throw new IdentityProviderConflictException(IdentityProviderErrorCode::SCIM_CONNECTION_DISCONNECTED);
             }
 
-            $rotated = $connection->scim_credentials()->whereNull('revoked_at')->update([
-                'revoked_at' => now(),
-                'revoked_by_identity_id' => $identity->id,
-            ]);
+            $rotated = $connection->scim_credentials()
+                ->where('account_type', $accountType)
+                ->whereNull('revoked_at')
+                ->update([
+                    'revoked_at' => now(),
+                    'revoked_by_identity_id' => $identity->id,
+                ]);
 
             $token = $this->randomToken();
 
             /** @var IdentityProviderScimCredential $credential */
             $credential = $connection->scim_credentials()->create([
+                'account_type' => $accountType,
                 'token_hash' => $this->hashToken($token),
                 'created_by_identity_id' => $identity->id,
             ]);
 
             $connection->recordEvent(
-                $rotated
+                $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? ($rotated
+                    ? IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREDENTIAL_ROTATED
+                    : IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREDENTIAL_CREATED)
+                    : ($rotated
                     ? IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREDENTIAL_ROTATED
-                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREDENTIAL_CREATED,
+                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREDENTIAL_CREATED),
                 identity: $identity,
-                context: ['credential_uid' => $credential->uid],
+                context: ['credential_uid' => $credential->uid, 'account_type' => $credential->account_type],
             );
 
             return ['credential' => $credential, 'token' => $token];
@@ -555,9 +574,11 @@ class IdentityProviderConnectionService
             ]);
 
             $connection->recordEvent(
-                IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREDENTIAL_REVOKED,
+                $credential->account_type === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREDENTIAL_REVOKED
+                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREDENTIAL_REVOKED,
                 identity: $identity,
-                context: ['credential_uid' => $credential->uid],
+                context: ['credential_uid' => $credential->uid, 'account_type' => $credential->account_type],
             );
         });
     }

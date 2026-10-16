@@ -4,7 +4,9 @@ namespace Tests\Feature\IdentityProviders;
 
 use App\Models\Implementation;
 use App\Models\ProfileRecord;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Support\IdentityProviderScimDiscovery;
 use App\Services\IdentityProviderService\Support\IdentityProviderScimUserPayload;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -60,49 +62,110 @@ class IdentityProviderScimProfileTest extends TestCase
      */
     public function testCreateExposesProfileValuesInScimAndExistingProfileViews(): void
     {
-        [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $connection->organization->forceFill(['allow_profiles' => true])->save();
-        $payload = $this->makeIdentityProviderScimUserPayload([
-            'schemas' => [
-                IdentityProviderScimDiscovery::SCHEMA_FORUS_USER, IdentityProviderScimDiscovery::SCHEMA_USER,
-                IdentityProviderScimDiscovery::SCHEMA_ENTERPRISE_USER,
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            [$connection, $token] = $this->makeIdentityProviderScimContext($accountType, [
+                'allow_identity_provider_employee_provisioning_profiles' => true,
+            ]);
+
+            $connection->organization->forceFill(['allow_profiles' => true])->save();
+
+            $payload = $this->makeIdentityProviderScimUserPayload([
+                'schemas' => [
+                    IdentityProviderScimDiscovery::SCHEMA_FORUS_USER, IdentityProviderScimDiscovery::SCHEMA_USER,
+                    IdentityProviderScimDiscovery::SCHEMA_ENTERPRISE_USER,
+                ],
+                IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => ['birthDate' => '1992-02-29', 'gender' => 'female'],
+            ]);
+
+            $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
+
+            $response = $this->apiGetIdentityProviderScimUsersRequest($connection, $token, $membership->uid)->assertOk();
+
+            $this->assertSame(
+                ['birthDate' => '1992-02-29', 'gender' => 'female'],
+                $response->json()[IdentityProviderScimDiscovery::SCHEMA_FORUS_USER],
+            );
+
+            $this->assertContains(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER, $response->json('schemas'));
+
+            $this->apiViewIdentityRequest(
+                $connection->organization_id,
+                $membership->identity_id,
+                $connection->organization->identity,
+            )->assertOk()
+                ->assertJsonPath('data.records.birth_date.0.value', '1992-02-29')
+                ->assertJsonPath('data.records.gender.0.value', 'vrouwelijk')
+                ->assertJsonPath('data.records.birth_date.0.source', ProfileRecord::SOURCE_ENTRA)
+                ->assertJsonPath('data.records.gender.0.source', ProfileRecord::SOURCE_ENTRA);
+
+            $implementation = $this->makeTestImplementation($connection->organization);
+            $proxy = $this->makeIdentityProviderProxy($membership);
+
+            $this->apiGetProfileRequest($proxy, [
+                'Client-Type' => Implementation::FRONTEND_WEBSHOP, 'Client-Key' => $implementation->key,
+            ])->assertOk()
+                ->assertJsonPath('records.birth_date.0.value', '1992-02-29')
+                ->assertJsonPath('records.gender.0.value', 'vrouwelijk');
+
+            /** @var EventLog $event */
+            $event = $connection->logs()
+                ->where('event', $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREATED
+                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATED)
+                ->firstOrFail();
+
+            $this->assertContains('birthDate', $event->data['context']['requested_fields']);
+            $this->assertContains('gender', $event->data['context']['requested_fields']);
+            $this->assertStringNotContainsString('1992-02-29', json_encode($event->data));
+            $this->assertStringNotContainsString('female', json_encode($event->data));
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testEmployeeProfileSyncCanBeDisabledWithoutStoppingAccountUpdates(): void
+    {
+        [$connection, $token] = $this->makeIdentityProviderScimContext(IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE);
+        $payload = $this->makeIdentityProviderScimUserPayload();
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
+        $this->assertFalse($membership->identity->profiles()->exists());
+
+        $connection->organization->forceFill(['allow_identity_provider_employee_provisioning_profiles' => true])->save();
+
+        $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $payload, $membership->uid)
+            ->assertOk()->assertJsonPath('name', $payload['name']);
+
+        $profile = $membership->identity->profiles()->where('organization_id', $connection->organization_id)->firstOrFail();
+        $records = $profile->profile_records()->get()->toArray();
+        $connection->organization->forceFill(['allow_identity_provider_employee_provisioning_profiles' => false])->save();
+        $email = $this->makeUniqueEmail();
+
+        $patch = [
+            'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+            'Operations' => [
+                ['op' => 'replace', 'path' => 'name.givenName', 'value' => 'Ignored'],
+                ['op' => 'replace', 'path' => IdentityProviderScimDiscovery::SCHEMA_FORUS_USER . ':birthDate', 'value' => '1990-01-01'],
+                ['op' => 'replace', 'value' => [
+                    'name' => ['familyName' => 'Ignored'],
+                    'emails' => [['value' => $email, 'type' => 'work']],
+                ]],
             ],
-            IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => ['birthDate' => '1992-02-29', 'gender' => 'female'],
-        ]);
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+        ];
 
-        $response = $this->apiGetIdentityProviderScimUsersRequest($connection, $token, $membership->uid)->assertOk();
-        $this->assertSame(
-            ['birthDate' => '1992-02-29', 'gender' => 'female'],
-            $response->json()[IdentityProviderScimDiscovery::SCHEMA_FORUS_USER],
-        );
-        $this->assertContains(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER, $response->json('schemas'));
+        $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, $patch, $membership->uid)
+            ->assertOk()->assertJsonPath('emails.0.value', $email)->assertJsonMissingPath('name');
 
-        $this->apiViewIdentityRequest(
-            $connection->organization_id,
-            $membership->identity_id,
-            $connection->organization->identity,
-        )->assertOk()
-            ->assertJsonPath('data.records.birth_date.0.value', '1992-02-29')
-            ->assertJsonPath('data.records.gender.0.value', 'vrouwelijk')
-            ->assertJsonPath('data.records.birth_date.0.source', ProfileRecord::SOURCE_ENTRA)
-            ->assertJsonPath('data.records.gender.0.source', ProfileRecord::SOURCE_ENTRA);
+        $payload['emails'][0]['value'] = $email;
+        $payload['name'] = ['givenName' => 'Also ignored'];
 
-        $implementation = $this->makeTestImplementation($connection->organization);
-        $proxy = $this->makeIdentityProviderProxy($membership);
+        $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $payload, $membership->uid)
+            ->assertOk()->assertJsonMissingPath('name');
 
-        $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders($proxy, [
-            'Client-Type' => Implementation::FRONTEND_WEBSHOP, 'Client-Key' => $implementation->key,
-        ]))->assertOk()
-            ->assertJsonPath('records.birth_date.0.value', '1992-02-29')
-            ->assertJsonPath('records.gender.0.value', 'vrouwelijk');
+        $this->assertSame($records, $profile->profile_records()->get()->toArray());
 
-        $event = $connection->logs()
-            ->where('event', IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATED)->firstOrFail();
-        $this->assertContains('birthDate', $event->data['context']['requested_fields']);
-        $this->assertContains('gender', $event->data['context']['requested_fields']);
-        $this->assertStringNotContainsString('1992-02-29', json_encode($event->data));
-        $this->assertStringNotContainsString('female', json_encode($event->data));
+        $this->apiViewIdentityRequest($connection->organization_id, $membership->identity_id, $connection->organization->identity)
+            ->assertOk()->assertJsonPath('data.records.given_name.0.value', 'Jane');
     }
 
     /**
@@ -111,11 +174,13 @@ class IdentityProviderScimProfileTest extends TestCase
     public function testPatchUpdatesPreservesAndClearsProfileValuesWithSponsorScopedHistory(): void
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $membership = $this->provisionIdentityProviderRequester(
+
+        $membership = $this->provisionIdentityProviderUser(
             $connection,
             $token,
             $this->makeIdentityProviderScimUserPayload(),
         );
+
         $profile = $membership->identity->profiles()
             ->where('organization_id', $connection->organization_id)->firstOrFail();
         $otherProfile = $membership->identity->profiles()->create([
@@ -189,7 +254,8 @@ class IdentityProviderScimProfileTest extends TestCase
         $payload = $this->makeIdentityProviderScimUserPayload([
             IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => ['birthDate' => '1990-05-10', 'gender' => 'male'],
         ]);
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
         $payload[IdentityProviderScimDiscovery::SCHEMA_FORUS_USER] = ['gender' => 'unknown'];
 
         $response = $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $payload, $membership->uid)
@@ -214,14 +280,10 @@ class IdentityProviderScimProfileTest extends TestCase
     public function testInvalidProfileUpdateRejectsTheWholePatchAndAuditsFieldNamesOnly(): void
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $membership = $this->provisionIdentityProviderRequester(
-            $connection,
-            $token,
-            $this->makeIdentityProviderScimUserPayload(),
-        );
+
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $this->makeIdentityProviderScimUserPayload());
         $proxy = $this->makeIdentityProviderProxy($membership);
-        $profile = $membership->identity->profiles()
-            ->where('organization_id', $connection->organization_id)->firstOrFail();
+        $profile = $membership->identity->profiles()->where('organization_id', $connection->organization_id)->firstOrFail();
         $records = $profile->profile_records()->get()->toArray();
 
         $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
@@ -238,12 +300,16 @@ class IdentityProviderScimProfileTest extends TestCase
         $this->assertTrue($membership->refresh()->isProvisioningActive());
         $this->assertIdentityProviderProxy($proxy->refresh(), $membership);
 
+        /** @var EventLog $event */
         $event = $connection->logs()
-            ->where('event', IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED)->firstOrFail();
+            ->where('event', IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED)
+            ->firstOrFail();
+
         $this->assertSame(
             ['active', 'name.givenName', 'birthDate', 'gender'],
             $event->data['context']['requested_fields'],
         );
+
         $this->assertStringNotContainsString('1991-02-29', json_encode($event->data));
         $this->assertStringNotContainsString('female', json_encode($event->data));
 
@@ -253,10 +319,12 @@ class IdentityProviderScimProfileTest extends TestCase
             ['category' => 'requester_provisioning', 'outcome' => 'failure'],
             $connection->organization->identity,
         )->assertOk();
+
         $this->assertContains(
             ['key' => 'birthDate', 'name' => 'Geboortedatum'],
             $response->json('data.0.requested_fields'),
         );
+
         $this->assertContains(['key' => 'gender', 'name' => 'Geslacht'], $response->json('data.0.requested_fields'));
     }
 }

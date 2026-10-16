@@ -27,7 +27,7 @@ class IdentityEmailAuthStartTest extends TestCase
     /**
      * @return void
      */
-    public function testManagedRequesterReceivesGuidanceInsteadOfEmailLoginTokens(): void
+    public function testManagedAccountsReceiveGuidanceInsteadOfEmailLoginTokens(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity(), [
             'allow_identity_providers' => true,
@@ -36,15 +36,19 @@ class IdentityEmailAuthStartTest extends TestCase
 
         $connection = $this->makeEntraConnection($organization);
 
-        foreach ([
-            IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE,
-            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
-            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
-        ] as $status) {
-            foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
-                $membership = $this->makeIdentityProviderRequester($connection, ['provisioning_status' => $status]);
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            foreach ([
+                IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE,
+                IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+                IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+            ] as $status) {
+                foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
+                    $membership = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                        ? $this->makeIdentityProviderEmployee($connection, ['provisioning_status' => $status])
+                        : $this->makeIdentityProviderRequester($connection, ['provisioning_status' => $status]);
 
-                $this->assertRequesterEmailGuidance($uri, $membership->identity);
+                    $this->assertManagedEmailGuidance($uri, $membership->identity);
+                }
             }
         }
     }
@@ -52,19 +56,28 @@ class IdentityEmailAuthStartTest extends TestCase
     /**
      * @return void
      */
-    public function testDisablingProvisioningDoesNotRestoreRequesterEmailLogin(): void
+    public function testDisablingProvisioningDoesNotRestoreManagedAccountEmailLogin(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity(), [
             'allow_identity_providers' => true,
             'allow_identity_provider_requester_provisioning' => true,
         ]);
 
-        $membership = $this->makeIdentityProviderRequester($this->makeEntraConnection($organization));
+        $connection = $this->makeEntraConnection($organization);
 
-        $organization->forceFill(['allow_identity_provider_requester_provisioning' => false])->save();
+        $organization->forceFill([
+            'allow_identity_provider_employee_provisioning' => false,
+            'allow_identity_provider_requester_provisioning' => false,
+        ])->save();
 
-        foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
-            $this->assertRequesterEmailGuidance($uri, $membership->identity);
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            $membership = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                ? $this->makeIdentityProviderEmployee($connection)
+                : $this->makeIdentityProviderRequester($connection);
+
+            foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
+                $this->assertManagedEmailGuidance($uri, $membership->identity);
+            }
         }
     }
 
@@ -276,7 +289,7 @@ class IdentityEmailAuthStartTest extends TestCase
      * @param Identity $identity
      * @return void
      */
-    protected function assertRequesterEmailGuidance(string $uri, Identity $identity): void
+    protected function assertManagedEmailGuidance(string $uri, Identity $identity): void
     {
         $emails = $this->getEmailOfTypeQuery($identity->email, IdentityProviderLoginMail::class);
         $count = $emails->count();

@@ -193,7 +193,7 @@ return [
     ],
     'voucher' => [
         'managed_requester_inactive' =>
-            'Deze beheerde aanvrager is uitgeschakeld. Activeer de aanvrager via provisioning voordat u een tegoed toekent.',
+            'Dit beheerde account is uitgeschakeld. Activeer het account via provisioning voordat u een tegoed toekent.',
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
         'deactivated' => 'De QR-code is sinds :deactivation_date niet meer geldig.',

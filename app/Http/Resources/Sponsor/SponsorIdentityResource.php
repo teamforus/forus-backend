@@ -30,7 +30,7 @@ class SponsorIdentityResource extends BaseJsonResource
         'vouchers.transactions',
         'record_bsn',
         'primary_email',
-        'identity_provider_requester_membership.connection',
+        'identity_provider_managed_membership.connection',
         'reimbursements.voucher.fund',
         'creator_employee.identity.primary_email',
         'profiles.profile_bank_accounts',
@@ -66,7 +66,7 @@ class SponsorIdentityResource extends BaseJsonResource
         $identity = $this->resource;
         $sessions = $identity->sessions;
         $profile = $identity->profiles?->firstWhere('organization_id', $this->organization?->id);
-        $membership = $identity->identity_provider_requester_membership;
+        $membership = $identity->identity_provider_managed_membership;
 
         return [
             ...$identity->only([

@@ -156,6 +156,7 @@ class IdentityProviderAccessService
     ): void {
         if (
             !$employee ||
+            ($membership->isProvisioned() && !$membership->isProvisioningActive()) ||
             $employee->trashed() ||
             $employee->organization_id !== $connection->organization_id ||
             $employee->identity_address !== $membership->identity->address

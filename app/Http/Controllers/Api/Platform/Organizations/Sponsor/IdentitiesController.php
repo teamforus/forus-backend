@@ -51,7 +51,7 @@ class IdentitiesController extends Controller
 
         $search = new IdentitiesSearch([
             ...$request->only([
-                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
+                'q', 'type', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
                 'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',
@@ -223,7 +223,7 @@ class IdentitiesController extends Controller
 
         $search = new IdentitiesSearch([
             ...$request->only([
-                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
+                'q', 'type', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
                 'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',

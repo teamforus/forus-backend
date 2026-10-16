@@ -108,7 +108,7 @@ class DigIdController extends Controller
     {
         $identity = $session->digidBsnIdentity();
 
-        if ($identity?->isManagedRequester()) {
+        if ($identity?->isManagedByIdentityProvider()) {
             return $session->makeRedirectErrorResponse('managed_requester');
         }
 

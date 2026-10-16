@@ -86,6 +86,7 @@ class IdentityProviderScimUserPayload
 
     /**
      * @param array $payload
+     * @param bool $withProfiles
      * @param string|null $expectedExternalId
      * @throws IdentityProviderScimException
      * @return array{
@@ -93,13 +94,16 @@ class IdentityProviderScimUserPayload
      *     given_name: string, family_name: string, birth_date: string, gender: string, active: bool
      * }
      */
-    public static function normalize(array $payload, ?string $expectedExternalId = null): array
-    {
+    public static function normalize(
+        array $payload,
+        bool $withProfiles,
+        ?string $expectedExternalId = null,
+    ): array {
         $payload = self::attributes($payload, self::USER_ATTRIBUTES);
 
-        $name = $payload['name'] ?? [];
+        $name = $withProfiles ? $payload['name'] ?? [] : [];
         $emails = $payload['emails'] ?? null;
-        $profile = $payload[strtolower(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER)] ?? [];
+        $profile = $withProfiles ? $payload[strtolower(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER)] ?? [] : [];
 
         foreach ([
             'name' => is_array($name),
@@ -162,7 +166,8 @@ class IdentityProviderScimUserPayload
         ], [
             'schemas' => 'required|array|min:1|max:3',
             'schemas.*' => ['required', 'string', 'distinct', Rule::in([
-                IdentityProviderScimDiscovery::SCHEMA_USER, IdentityProviderScimDiscovery::SCHEMA_FORUS_USER,
+                IdentityProviderScimDiscovery::SCHEMA_USER,
+                IdentityProviderScimDiscovery::SCHEMA_FORUS_USER,
                 IdentityProviderScimDiscovery::SCHEMA_ENTERPRISE_USER,
             ])],
             'external_id' => 'required|uuid',
@@ -217,10 +222,11 @@ class IdentityProviderScimUserPayload
     /**
      * @param array $payload
      * @param array $current
+     * @param bool $withProfiles
      * @throws IdentityProviderScimException
      * @return array
      */
-    public static function normalizePatch(array $payload, array $current): array
+    public static function normalizePatch(array $payload, array $current, bool $withProfiles): array
     {
         $payload = self::attributes($payload, ['schemas', 'operations']);
         $operations = $payload['operations'] ?? null;
@@ -234,10 +240,10 @@ class IdentityProviderScimUserPayload
         $expectedExternalId = $current['externalid'];
 
         foreach ($operations as $operation) {
-            $current = self::applyPatchOperation($current, self::normalizePatchOperation($operation));
+            $current = self::applyPatchOperation($current, self::normalizePatchOperation($operation), $withProfiles);
         }
 
-        return self::normalize($current, $expectedExternalId);
+        return self::normalize($current, $withProfiles, $expectedExternalId);
     }
 
     /**
@@ -322,17 +328,24 @@ class IdentityProviderScimUserPayload
     /**
      * @param array $current
      * @param array{op: string, path?: string, value?: mixed} $operation
+     * @param bool $withProfiles
      * @throws IdentityProviderScimException
      * @return array
      */
-    protected static function applyPatchOperation(array $current, array $operation): array
+    protected static function applyPatchOperation(array $current, array $operation, bool $withProfiles): array
     {
         if (array_key_exists('path', $operation)) {
-            return self::applyPatchValue($current, $operation['op'], $operation['path'], $operation['value'] ?? null);
+            return self::applyPatchValue(
+                $current,
+                $operation['op'],
+                $operation['path'],
+                $operation['value'] ?? null,
+                $withProfiles,
+            );
         }
 
         foreach ($operation['value'] as $path => $value) {
-            $current = self::applyPatchValue($current, $operation['op'], $path, $value);
+            $current = self::applyPatchValue($current, $operation['op'], $path, $value, $withProfiles);
         }
 
         return $current;
@@ -343,13 +356,27 @@ class IdentityProviderScimUserPayload
      * @param string $op
      * @param string $path
      * @param mixed $value
+     * @param bool $withProfiles
      * @throws IdentityProviderScimException
      * @return array
      */
-    protected static function applyPatchValue(array $current, string $op, string $path, mixed $value): array
-    {
+    protected static function applyPatchValue(
+        array $current,
+        string $op,
+        string $path,
+        mixed $value,
+        bool $withProfiles,
+    ): array {
         $path = self::normalizePatchPath($path);
+        $profileSchema = strtolower(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER);
         $remove = $op === 'remove';
+
+        if (!$withProfiles && in_array($path, [
+            'name', 'name.givenname', 'name.familyname', $profileSchema,
+            $profileSchema . ':birthdate', $profileSchema . ':gender',
+        ], true)) {
+            return $current;
+        }
 
         if (in_array($path, ['id', 'meta', 'schemas'], true) ||
             ($remove && in_array($path, ['externalid', 'username', 'active', 'emails'], true))) {
@@ -369,8 +396,6 @@ class IdentityProviderScimUserPayload
 
             return $current;
         }
-
-        $profileSchema = strtolower(IdentityProviderScimDiscovery::SCHEMA_FORUS_USER);
 
         if ($path === $profileSchema) {
             if (!$remove && $value !== null && !is_array($value)) {

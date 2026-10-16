@@ -49,7 +49,10 @@ class IdentityProviderScimUserPayloadTest extends TestCase
             [['externalId' => 'private-id'], ['external_id' => ['Uuid']]],
         ] as [$changes, $expected]) {
             try {
-                IdentityProviderScimUserPayload::normalize([...self::CURRENT_USER, ...$changes]);
+                IdentityProviderScimUserPayload::normalize(
+                    [...self::CURRENT_USER, ...$changes],
+                    withProfiles: true,
+                );
 
                 $this->fail('Invalid user attributes must be rejected.');
             } catch (IdentityProviderScimException $exception) {
@@ -76,7 +79,7 @@ class IdentityProviderScimUserPayloadTest extends TestCase
                 ['op' => 'replace', 'path' => 'emails[type eq "work"].value', 'value' => 'changed@example.org'],
                 ['op' => 'remove', 'path' => 'name.familyName'],
             ],
-        ], $current);
+        ], $current, withProfiles: true);
 
         $this->assertSame([
             'external_id' => $current['externalId'],
@@ -105,7 +108,7 @@ class IdentityProviderScimUserPayloadTest extends TestCase
                 IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => [
                     'BIRTHDATE' => $case['birthDate'], 'GENDER' => $case['gender'],
                 ],
-            ]);
+            ], withProfiles: true);
 
             $this->assertSame($case['expected'], [$attributes['birth_date'], $attributes['gender']]);
         }
@@ -132,7 +135,7 @@ class IdentityProviderScimUserPayloadTest extends TestCase
             try {
                 IdentityProviderScimUserPayload::normalize([
                     ...self::CURRENT_USER, IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => $profile,
-                ]);
+                ], withProfiles: true);
 
                 $this->fail('Invalid profile attributes must be rejected.');
             } catch (IdentityProviderScimException $exception) {
@@ -152,7 +155,7 @@ class IdentityProviderScimUserPayloadTest extends TestCase
                 IdentityProviderScimUserPayload::normalizePatch([
                     'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
                     'Operations' => [['op' => 'replace', 'path' => 'active', 'value' => $value]],
-                ], self::CURRENT_USER);
+                ], self::CURRENT_USER, withProfiles: true);
 
                 $this->fail('Invalid active values must be rejected.');
             } catch (IdentityProviderScimException $exception) {
@@ -176,7 +179,7 @@ class IdentityProviderScimUserPayloadTest extends TestCase
                     ['op' => 'replace', 'path' => 'name.givenName', 'value' => 'Janet'],
                     ['op' => 'replace', 'path' => 'externalId', 'value' => '11111111-1111-4111-8111-111111111111'],
                 ],
-            ], $current);
+            ], $current, withProfiles: true);
 
             $this->fail('Changing the external object must fail the complete PATCH.');
         } catch (IdentityProviderScimException $exception) {

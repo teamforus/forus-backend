@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
@@ -47,9 +48,12 @@ use Illuminate\Support\Str;
  * @property-read int|null $memberships_current_claimed_count
  * @property-read Collection|IdentityProviderMembership[] $memberships_requesters
  * @property-read int|null $memberships_requesters_count
+ * @property-read Collection|IdentityProviderMembership[] $memberships_managed_employees
+ * @property-read int|null $memberships_managed_employees_count
  * @property-read Collection|IdentityProviderScimCredential[] $scim_credentials
  * @property-read int|null $scim_credentials_count
- * @property-read IdentityProviderScimCredential|null $latest_scim_credential
+ * @property-read IdentityProviderScimCredential|null $latest_requester_scim_credential
+ * @property-read IdentityProviderScimCredential|null $latest_employee_scim_credential
  * @property-read Organization $organization
  * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityProviderConnection newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|IdentityProviderConnection newQuery()
@@ -101,14 +105,42 @@ class IdentityProviderConnection extends Model
     public const string EVENT_SCIM_REQUESTER_CREATE_FAILED = 'scim_requester_create_failed';
     public const string EVENT_SCIM_REQUESTER_UPDATE_FAILED = 'scim_requester_update_failed';
     public const string EVENT_SCIM_REQUESTER_DELETE_FAILED = 'scim_requester_delete_failed';
+    public const string EVENT_SCIM_EMPLOYEE_CREATED = 'scim_employee_created';
+    public const string EVENT_SCIM_EMPLOYEE_REPROVISIONED = 'scim_employee_reprovisioned';
+    public const string EVENT_SCIM_EMPLOYEE_REACTIVATED = 'scim_employee_reactivated';
+    public const string EVENT_SCIM_EMPLOYEE_DISABLED = 'scim_employee_disabled';
+    public const string EVENT_SCIM_EMPLOYEE_DELETED = 'scim_employee_deleted';
+    public const string EVENT_SCIM_EMPLOYEE_UPDATED = 'scim_employee_updated';
+    public const string EVENT_SCIM_EMPLOYEE_EMAIL_CHANGED = 'scim_employee_email_changed';
+    public const string EVENT_SCIM_EMPLOYEE_CREATE_FAILED = 'scim_employee_create_failed';
+    public const string EVENT_SCIM_EMPLOYEE_UPDATE_FAILED = 'scim_employee_update_failed';
+    public const string EVENT_SCIM_EMPLOYEE_DELETE_FAILED = 'scim_employee_delete_failed';
+    public const string EVENT_SCIM_EMPLOYEE_CREDENTIAL_CREATED = 'scim_employee_credential_created';
+    public const string EVENT_SCIM_EMPLOYEE_CREDENTIAL_ROTATED = 'scim_employee_credential_rotated';
+    public const string EVENT_SCIM_EMPLOYEE_CREDENTIAL_REVOKED = 'scim_employee_credential_revoked';
     public const string EVENT_ENTRA_LINK_SELF_LINKED = 'entra_link_self_linked';
     public const string EVENT_ENTRA_LINK_SELF_UNLINKED = 'entra_link_self_unlinked';
     public const string EVENT_MEMBERSHIP_RETIRED_BY_DISCONNECTION = 'membership_retired_by_disconnection';
     public const string EVENT_ENTRA_LOGIN_SUCCEEDED = 'entra_login_succeeded';
     public const string EVENT_ENTRA_LOGIN_FAILED = 'entra_login_failed';
 
+    public const string EVENT_CATEGORY_SSO = 'sso';
+    public const string EVENT_CATEGORY_EMPLOYEE_PROVISIONING = 'employee_provisioning';
+    public const string EVENT_CATEGORY_REQUESTER_PROVISIONING = 'requester_provisioning';
+
+    public const array EVENT_CATEGORIES = [
+        self::EVENT_CATEGORY_SSO,
+        self::EVENT_CATEGORY_EMPLOYEE_PROVISIONING,
+        self::EVENT_CATEGORY_REQUESTER_PROVISIONING,
+    ];
+
     public const string EVENT_OUTCOME_SUCCESS = 'success';
     public const string EVENT_OUTCOME_FAILURE = 'failure';
+
+    public const array EVENT_OUTCOMES = [
+        self::EVENT_OUTCOME_SUCCESS,
+        self::EVENT_OUTCOME_FAILURE,
+    ];
 
     public const array EVENTS_SSO = [
         self::EVENT_CONNECTION_CONNECTED,
@@ -120,6 +152,22 @@ class IdentityProviderConnection extends Model
         self::EVENT_MEMBERSHIP_RETIRED_BY_DISCONNECTION,
         self::EVENT_ENTRA_LOGIN_SUCCEEDED,
         self::EVENT_ENTRA_LOGIN_FAILED,
+    ];
+
+    public const array EVENTS_EMPLOYEE_PROVISIONING = [
+        self::EVENT_SCIM_EMPLOYEE_CREDENTIAL_CREATED,
+        self::EVENT_SCIM_EMPLOYEE_CREDENTIAL_ROTATED,
+        self::EVENT_SCIM_EMPLOYEE_CREDENTIAL_REVOKED,
+        self::EVENT_SCIM_EMPLOYEE_CREATED,
+        self::EVENT_SCIM_EMPLOYEE_REPROVISIONED,
+        self::EVENT_SCIM_EMPLOYEE_REACTIVATED,
+        self::EVENT_SCIM_EMPLOYEE_DISABLED,
+        self::EVENT_SCIM_EMPLOYEE_DELETED,
+        self::EVENT_SCIM_EMPLOYEE_UPDATED,
+        self::EVENT_SCIM_EMPLOYEE_EMAIL_CHANGED,
+        self::EVENT_SCIM_EMPLOYEE_CREATE_FAILED,
+        self::EVENT_SCIM_EMPLOYEE_UPDATE_FAILED,
+        self::EVENT_SCIM_EMPLOYEE_DELETE_FAILED,
     ];
 
     public const array EVENTS_REQUESTER_PROVISIONING = [
@@ -198,6 +246,16 @@ class IdentityProviderConnection extends Model
     /**
      * @return HasMany
      */
+    public function memberships_managed_employees(): HasMany
+    {
+        return $this->memberships()
+            ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE)
+            ->whereNotNull('provisioning_status');
+    }
+
+    /**
+     * @return HasMany
+     */
     public function scim_credentials(): HasMany
     {
         return $this->hasMany(IdentityProviderScimCredential::class, 'connection_id');
@@ -206,9 +264,21 @@ class IdentityProviderConnection extends Model
     /**
      * @return HasOne
      */
-    public function latest_scim_credential(): HasOne
+    public function latest_requester_scim_credential(): HasOne
     {
-        return $this->hasOne(IdentityProviderScimCredential::class, 'connection_id')->latestOfMany();
+        return $this->hasOne(IdentityProviderScimCredential::class, 'connection_id')
+            ->ofMany(['id' => 'max'], fn (Builder $query) => $query
+                ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER));
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function latest_employee_scim_credential(): HasOne
+    {
+        return $this->hasOne(IdentityProviderScimCredential::class, 'connection_id')
+            ->ofMany(['id' => 'max'], fn (Builder $query) => $query
+                ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE));
     }
 
     /**
@@ -217,7 +287,10 @@ class IdentityProviderConnection extends Model
      */
     public function scimUrl(string $path = ''): string
     {
-        return URL::to(sprintf('/api/v1/scim/%s/v2%s', $this->uid, $path));
+        $baseUrl = Config::get('identity_providers.scim.base_url');
+        $path = sprintf('/api/v1/scim/%s/v2%s', $this->uid, $path);
+
+        return $baseUrl ? rtrim($baseUrl, '/') . $path : URL::to($path);
     }
 
     /**
@@ -253,6 +326,16 @@ class IdentityProviderConnection extends Model
     }
 
     /**
+     * @param string $accountType
+     * @return bool
+     */
+    public function usesScimProfiles(string $accountType): bool
+    {
+        return $accountType === IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER ||
+            $this->organization->allow_identity_provider_employee_provisioning_profiles;
+    }
+
+    /**
      * @param string $eventType
      * @param string $outcome
      * @param ?IdentityProviderMembership $membership
@@ -269,7 +352,9 @@ class IdentityProviderConnection extends Model
         ?Identity $identity = null,
         array $context = [],
     ): EventLog {
-        if ($membership?->isRequester() && in_array($eventType, self::EVENTS_REQUESTER_PROVISIONING, true)) {
+        if ($membership?->isProvisioned() &&
+            (in_array($eventType, self::EVENTS_EMPLOYEE_PROVISIONING, true) ||
+                in_array($eventType, self::EVENTS_REQUESTER_PROVISIONING, true))) {
             $context = [...$this->scimAccountContext($membership), ...$context];
         }
 
@@ -296,7 +381,12 @@ class IdentityProviderConnection extends Model
             'account_email' => $membership->identity->email,
             'external_id' => $membership->external_identity->object_id,
             'identity_id' => $membership->identity_id,
-            'profile_id' => $membership->identity->profiles()->where('organization_id', $this->organization_id)->value('id'),
+            ...$membership->isRequester() ? [
+                'profile_id' => $membership->identity
+                    ->profiles()
+                    ->where('organization_id', $this->organization_id)
+                    ->value('id'),
+            ] : ['employee_id' => $membership->employee_id],
         ];
     }
 

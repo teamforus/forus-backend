@@ -17,9 +17,9 @@ class IdentityProviderSessionService
      * @param IdentityProxy $proxy
      * @return bool
      */
-    public function isRequesterSessionAllowed(IdentityProxy $proxy): bool
+    public function isManagedSessionAllowed(IdentityProxy $proxy): bool
     {
-        $membership = $proxy->identity?->identity_provider_requester_membership;
+        $membership = $proxy->identity?->identity_provider_managed_membership;
 
         if (!$membership) {
             return true;
@@ -50,7 +50,7 @@ class IdentityProviderSessionService
             if (
                 !$connection->isEnabled() ||
                 !$membership->isClaimed() ||
-                ($membership->isRequester() && !$membership->isProvisioningActive()) ||
+                ($membership->isProvisioned() && !$membership->isProvisioningActive()) ||
                 $membership->connection_id !== $connection->id ||
                 $membership->identity?->address !== $proxy->identity_address
             ) {
@@ -63,7 +63,7 @@ class IdentityProviderSessionService
         if (
             !$sourceProxy?->isActive() ||
             $sourceProxy->identity_address !== $proxy->identity_address ||
-            !$this->isRequesterSessionAllowed($sourceProxy)
+            !$this->isManagedSessionAllowed($sourceProxy)
         ) {
             abort(403, __('exceptions.forbidden'));
         }

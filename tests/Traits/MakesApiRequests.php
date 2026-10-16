@@ -11,6 +11,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\IdentityEmail;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Note;
@@ -45,6 +46,65 @@ trait MakesApiRequests
     use TestsReservations;
 
     /**
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityRequest(Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson('/api/v1/identity', $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityEmailRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson("/api/v1/identity/emails/$email->id", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStoreIdentityEmailRequest(array $data, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/identity/emails', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiSetIdentityEmailPrimaryRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->patchJson("/api/v1/identity/emails/$email->id/primary", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiDeleteIdentityEmailRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->deleteJson("/api/v1/identity/emails/$email->id", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity|IdentityProxy $identity
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiGetProfileRequest(Identity|IdentityProxy $identity, array $headers = []): TestResponse
+    {
+        return $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders($identity, $headers));
+    }
+
+    /**
      * @param array $data
      * @param Identity|IdentityProxy $identity
      * @return TestResponse
@@ -52,6 +112,24 @@ trait MakesApiRequests
     public function apiMakeOrganizationRequest(array $data, Identity|IdentityProxy $identity): TestResponse
     {
         return $this->postJson('/api/v1/platform/organizations', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Employee $employee
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiTransferOrganizationOwnershipRequest(
+        Organization $organization,
+        Employee $employee,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/transfer-ownership",
+            ['employee_id' => $employee->id],
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
@@ -121,16 +199,18 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param IdentityProviderConnection $connection
      * @param Identity|IdentityProxy $identity
+     * @param string $accountType
      * @return TestResponse
      */
     public function apiIssueIdentityProviderScimCredentialRequest(
         Organization $organization,
         IdentityProviderConnection $connection,
         Identity|IdentityProxy $identity,
+        string $accountType = IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
     ): TestResponse {
         return $this->postJson(
             "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/scim-credentials",
-            [],
+            ['account_type' => $accountType],
             $this->makeApiHeaders($identity),
         );
     }
@@ -349,6 +429,15 @@ trait MakesApiRequests
     public function apiExchangeIdentityProxyRequest(string $type, string $token): TestResponse
     {
         return $this->getJson("/api/v1/identity/proxy/$type/exchange/$token");
+    }
+
+    /**
+     * @param string $accessToken
+     * @return TestResponse
+     */
+    public function apiCheckIdentityProxyTokenRequest(string $accessToken): TestResponse
+    {
+        return $this->getJson('/api/v1/identity/proxy/check-token', ['Access-Token' => $accessToken]);
     }
 
     /**
@@ -1119,6 +1208,19 @@ trait MakesApiRequests
 
         return $this->get(
             "/api/v1/platform/organizations/$organizationId/sponsor/identities/export?$queryString",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @return TestResponse
+     */
+    protected function apiGetIdentitiesExportFieldsRequest(int $organizationId, Identity $authIdentity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export-fields",
             $this->makeApiHeaders($authIdentity),
         );
     }

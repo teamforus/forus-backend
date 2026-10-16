@@ -62,6 +62,20 @@ class IdentitiesSearch extends BaseSearch
 
         $builder = IdentityQuery::relatedToOrganization($builder, $organizationId, $fundId);
 
+        if ($type = $this->getFilter('type')) {
+            $builder->where(fn (Builder $query) => $query
+                ->whereNull('creator_organization_id')
+                ->orWhere('creator_organization_id', $organizationId));
+
+            $builder->where(function (Builder $query) use ($type): void {
+                $query->where('type', $type);
+
+                if ($type === Identity::TYPE_VOUCHER) {
+                    $query->orWhereNull('type');
+                }
+            });
+        }
+
         if ($status = $this->getFilter('identity_provider_status')) {
             $membershipQuery = function (Builder $query) use ($organizationId, $status): void {
                 $query->whereRelation('connection', 'organization_id', $organizationId);
@@ -77,9 +91,9 @@ class IdentitiesSearch extends BaseSearch
             };
 
             if ($status === 'unmanaged') {
-                $builder->whereDoesntHave('identity_provider_requester_membership', $membershipQuery);
+                $builder->whereDoesntHave('identity_provider_managed_membership', $membershipQuery);
             } else {
-                $builder->whereHas('identity_provider_requester_membership', $membershipQuery);
+                $builder->whereHas('identity_provider_managed_membership', $membershipQuery);
             }
         }
 

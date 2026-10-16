@@ -20,6 +20,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
+use Throwable;
 
 class SponsorIdentityProfilesTest extends TestCase
 {
@@ -141,7 +142,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that sponsor identity details include fund request bank accounts.
      *
-     * @throws \Throwable
+     * @throws Throwable
      * @return void
      */
     public function testSponsorIdentityShowsFundRequestBankAccount(): void
@@ -404,7 +405,7 @@ class SponsorIdentityProfilesTest extends TestCase
         $sponsor = $connection->organization;
         $sponsor->forceFill(['allow_profiles' => true])->save();
         $manager = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::MANAGE_IDENTITIES]);
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $this->makeIdentityProviderScimUserPayload());
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $this->makeIdentityProviderScimUserPayload());
         $identity = $membership->identity;
         $otherSponsor = $this->makeTestOrganization($this->makeIdentity());
         $otherManager = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::MANAGE_IDENTITIES]);

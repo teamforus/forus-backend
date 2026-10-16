@@ -15,11 +15,12 @@ class IdentityProviderConnectionResource extends BaseJsonResource
     public const array LOAD = [
         'memberships_current_claimed',
         'organization.implementations',
-        'latest_scim_credential',
+        'latest_requester_scim_credential',
+        'latest_employee_scim_credential',
     ];
 
     public const array LOAD_COUNT = [
-        'memberships_requesters',
+        'memberships_requesters', 'memberships_managed_employees',
     ];
 
     /**
@@ -43,13 +44,21 @@ class IdentityProviderConnectionResource extends BaseJsonResource
             'managed_employees_count' => $connection->memberships_current_claimed
                 ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE)->count(),
             'can_disconnect' => !$connection->isDisconnected() &&
-                $connection->memberships_requesters_count === 0,
-            'disconnect_disabled_reason' => $connection->memberships_requesters_count > 0
-                ? __('exceptions.identity_providers.connection_has_requesters')
-                : null,
+                $connection->memberships_requesters_count === 0 &&
+                $connection->memberships_managed_employees_count === 0,
+            'disconnect_disabled_reason' => match (true) {
+                $connection->memberships_requesters_count > 0 =>
+                    __('exceptions.identity_providers.connection_has_requesters'),
+                $connection->memberships_managed_employees_count > 0 =>
+                    __('exceptions.identity_providers.connection_has_managed_employees'),
+                default => null,
+            },
             'scim_url' => $connection->scimUrl(),
-            'scim_credential' => $connection->latest_scim_credential
-                ? IdentityProviderScimCredentialResource::make($connection->latest_scim_credential)
+            'scim_credential_requester' => $connection->latest_requester_scim_credential
+                ? IdentityProviderScimCredentialResource::make($connection->latest_requester_scim_credential)
+                : null,
+            'scim_credential_employee' => $connection->latest_employee_scim_credential
+                ? IdentityProviderScimCredentialResource::make($connection->latest_employee_scim_credential)
                 : null,
             'webshops' => $connection->organization->implementations
                 ->whereNotNull('url_webshop')

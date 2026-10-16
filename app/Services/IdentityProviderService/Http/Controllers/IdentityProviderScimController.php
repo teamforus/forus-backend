@@ -39,9 +39,10 @@ class IdentityProviderScimController extends Controller
         $startIndex = max(1, (int) $request->input('startIndex', 1));
         $maxResults = max(1, (int) Config::get('identity_providers.scim.max_results', 100));
         $count = min($maxResults, max(0, (int) $request->input('count', $maxResults)));
+        $accountType = $request->attributes->get('scim_account_type');
 
-        $membership = IdentityProviderMembershipQuery::forScimConnection($connection)
-            ->with(IdentityProviderScimUserResource::loadForConnection($connection));
+        $membership = IdentityProviderMembershipQuery::forScimConnection($connection, $accountType)
+            ->with(IdentityProviderScimUserResource::loadForConnection($connection, $accountType));
 
         $query = IdentityProviderMembershipQuery::whereScimFilter($membership, $request->scimFilter());
         $total = $query->count();
@@ -66,8 +67,10 @@ class IdentityProviderScimController extends Controller
      */
     public function show(Request $request, IdentityProviderConnection $connection, string $uid): JsonResponse
     {
-        $membership = IdentityProviderMembershipQuery::forScimConnection($connection)
-            ->with(IdentityProviderScimUserResource::loadForConnection($connection))
+        $accountType = $request->attributes->get('scim_account_type');
+
+        $membership = IdentityProviderMembershipQuery::forScimConnection($connection, $accountType)
+            ->with(IdentityProviderScimUserResource::loadForConnection($connection, $accountType))
             ->where('uid', $uid)->firstOrFail();
 
         return IdentityProviderScimResponse::json(
@@ -83,8 +86,10 @@ class IdentityProviderScimController extends Controller
      */
     public function store(Request $request, IdentityProviderConnection $connection): JsonResponse
     {
-        $membership = $this->provisioningService->create($connection, $request->all());
-        $membership->load(IdentityProviderScimUserResource::loadForConnection($connection));
+        $accountType = $request->attributes->get('scim_account_type');
+        $membership = $this->provisioningService->create($connection, $request->all(), $accountType);
+
+        $membership->load(IdentityProviderScimUserResource::loadForConnection($connection, $membership->account_type));
 
         return IdentityProviderScimResponse::json(
             IdentityProviderScimUserResource::make($membership)->resolve($request),
@@ -102,21 +107,29 @@ class IdentityProviderScimController extends Controller
      */
     public function update(Request $request, IdentityProviderConnection $connection, string $uid): JsonResponse
     {
-        $membership = $this->provisioningService->update($connection, $uid, $request->all(), $request->isMethod('PATCH'));
-        $membership->load(IdentityProviderScimUserResource::loadForConnection($connection));
+        $membership = $this->provisioningService->update(
+            $connection,
+            $uid,
+            $request->all(),
+            $request->attributes->get('scim_account_type'),
+            $request->isMethod('PATCH'),
+        );
+
+        $membership->load(IdentityProviderScimUserResource::loadForConnection($connection, $membership->account_type));
 
         return IdentityProviderScimResponse::json(IdentityProviderScimUserResource::make($membership)->resolve($request));
     }
 
     /**
+     * @param Request $request
      * @param IdentityProviderConnection $connection
      * @param string $uid
      * @throws Throwable
      * @return NoContentResponse
      */
-    public function destroy(IdentityProviderConnection $connection, string $uid): NoContentResponse
+    public function destroy(Request $request, IdentityProviderConnection $connection, string $uid): NoContentResponse
     {
-        $this->provisioningService->delete($connection, $uid);
+        $this->provisioningService->delete($connection, $uid, $request->attributes->get('scim_account_type'));
 
         return (new NoContentResponse())->header('Cache-Control', 'no-store');
     }
@@ -130,18 +143,28 @@ class IdentityProviderScimController extends Controller
     }
 
     /**
+     * @param Request $request
      * @param IdentityProviderConnection $connection
      * @param string|null $schema
      * @throws IdentityProviderScimException
      * @return JsonResponse
      */
-    public function schemas(IdentityProviderConnection $connection, ?string $schema = null): JsonResponse
-    {
+    public function schemas(
+        Request $request,
+        IdentityProviderConnection $connection,
+        ?string $schema = null,
+    ): JsonResponse {
+        $accountType = $request->attributes->get('scim_account_type');
+
         $resources = [
-            IdentityProviderScimDiscovery::SCHEMA_USER => IdentityProviderScimDiscovery::schemaUser($connection),
-            IdentityProviderScimDiscovery::SCHEMA_FORUS_USER =>
-                IdentityProviderScimDiscovery::schemaForusUser($connection),
+            IdentityProviderScimDiscovery::SCHEMA_USER =>
+                IdentityProviderScimDiscovery::schemaUser($connection, $accountType),
         ];
+
+        if ($connection->usesScimProfiles($accountType)) {
+            $resources[IdentityProviderScimDiscovery::SCHEMA_FORUS_USER] =
+                IdentityProviderScimDiscovery::schemaForusUser($connection);
+        }
 
         if ($schema !== null && !isset($resources[$schema])) {
             throw new IdentityProviderScimException(__('identity_provider.scim.not_found'), 404);
@@ -153,18 +176,25 @@ class IdentityProviderScimController extends Controller
     }
 
     /**
+     * @param Request $request
      * @param IdentityProviderConnection $connection
      * @param string|null $type
      * @throws IdentityProviderScimException
      * @return JsonResponse
      */
-    public function resourceTypes(IdentityProviderConnection $connection, ?string $type = null): JsonResponse
-    {
+    public function resourceTypes(
+        Request $request,
+        IdentityProviderConnection $connection,
+        ?string $type = null,
+    ): JsonResponse {
         if ($type !== null && $type !== 'User') {
             throw new IdentityProviderScimException(__('identity_provider.scim.not_found'), 404);
         }
 
-        $resource = IdentityProviderScimDiscovery::resourceTypeUser($connection);
+        $resource = IdentityProviderScimDiscovery::resourceTypeUser(
+            $connection,
+            $request->attributes->get('scim_account_type'),
+        );
 
         return $type === null
             ? IdentityProviderScimResponse::listing([$resource], 1)

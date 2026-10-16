@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\IdentityProviders;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\IdentityProviders\Connections\ScimCredentials\StoreIdentityProviderScimCredentialRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Responses\NoContentResponse;
 use App\Models\Organization;
@@ -27,28 +28,33 @@ class IdentityProviderScimCredentialsController extends Controller
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param StoreIdentityProviderScimCredentialRequest $request
      * @param Organization $organization
      * @param IdentityProviderConnection $connection
      * @throws AuthorizationException
      * @return JsonResponse
      */
     public function store(
-        BaseFormRequest $request,
+        StoreIdentityProviderScimCredentialRequest $request,
         Organization $organization,
         IdentityProviderConnection $connection,
     ): JsonResponse {
-        $this->authorize('manageProvisioning', [
-            IdentityProviderConnection::class, $organization, $request->identityProxy(), $connection,
+        $accountType = $request->validated('account_type');
+
+        $this->authorize('issueScimCredential', [
+            IdentityProviderConnection::class, $organization, $request->identityProxy(), $connection, $accountType,
         ]);
 
         try {
-            $result = $this->connectionService->issueScimCredential($connection, $request->identity());
+            $result = $this->connectionService->issueScimCredential($connection, $request->identity(), $accountType);
         } catch (Throwable $exception) {
             throw IdentityProviderHttpFailure::toException(
                 $exception,
                 operation: IdentityProviderLogService::OPERATION_SCIM_CREDENTIAL_ISSUE,
-                context: IdentityProviderLogService::ownerContext($organization, $connection),
+                context: [
+                    ...IdentityProviderLogService::ownerContext($organization, $connection),
+                    'account_type' => $accountType,
+                ],
                 fallbackCode: IdentityProviderErrorCode::SCIM_CREDENTIAL_ISSUE_FAILED,
                 fallbackMessage: __('exceptions.identity_providers.scim_credential_issue_failed'),
             );
@@ -76,7 +82,7 @@ class IdentityProviderScimCredentialsController extends Controller
         IdentityProviderConnection $connection,
         IdentityProviderScimCredential $credential,
     ): NoContentResponse {
-        $this->authorize('manageProvisioning', [
+        $this->authorize('revokeScimCredential', [
             IdentityProviderConnection::class, $organization, $request->identityProxy(), $connection, $credential,
         ]);
 
@@ -86,7 +92,10 @@ class IdentityProviderScimCredentialsController extends Controller
             throw IdentityProviderHttpFailure::toException(
                 $exception,
                 operation: IdentityProviderLogService::OPERATION_SCIM_CREDENTIAL_REVOKE,
-                context: IdentityProviderLogService::ownerContext($organization, $connection),
+                context: [
+                    ...IdentityProviderLogService::ownerContext($organization, $connection),
+                    'account_type' => $credential->account_type,
+                ],
                 fallbackCode: IdentityProviderErrorCode::SCIM_CREDENTIAL_REVOKE_FAILED,
                 fallbackMessage: __('exceptions.identity_providers.scim_credential_revoke_failed'),
             );

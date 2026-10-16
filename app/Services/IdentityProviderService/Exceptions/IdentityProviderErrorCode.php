@@ -57,6 +57,7 @@ final class IdentityProviderErrorCode
     public const string CONNECTION_RESUME_FAILED = 'connection_resume_failed';
     public const string CONNECTION_DISCONNECT_FAILED = 'connection_disconnect_failed';
     public const string CONNECTION_HAS_REQUESTERS = 'connection_has_requesters';
+    public const string CONNECTION_HAS_MANAGED_EMPLOYEES = 'connection_has_managed_employees';
     public const string SCIM_CONNECTION_DISCONNECTED = 'scim_connection_disconnected';
     public const string SCIM_CREDENTIAL_ISSUE_FAILED = 'scim_credential_issue_failed';
     public const string SCIM_CREDENTIAL_REVOKE_FAILED = 'scim_credential_revoke_failed';

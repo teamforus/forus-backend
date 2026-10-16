@@ -40,7 +40,7 @@ class IdentityProviderRequesterLifecycleTest extends TestCase
     public function testDisableAndReactivateAffectsAllVouchersButDoesNotRestoreRevokedSessions(): void
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $this->makeIdentityProviderScimUserPayload());
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $this->makeIdentityProviderScimUserPayload());
         $identity = $membership->identity;
         $proxy = $this->makeIdentityProviderProxy($membership);
         $fund = $this->makeTestFund($connection->organization);
@@ -121,7 +121,7 @@ class IdentityProviderRequesterLifecycleTest extends TestCase
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
         $payload = $this->makeIdentityProviderScimUserPayload();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
         $identity = $membership->identity;
         $profile = $identity->profiles()->where('organization_id', $connection->organization_id)->firstOrFail();
         $records = $profile->profile_records()->get()->toArray();
@@ -153,7 +153,7 @@ class IdentityProviderRequesterLifecycleTest extends TestCase
         )->assertConflict();
 
         $this->assertSame(IdentityProviderConnection::STATUS_ENABLED, $connection->refresh()->status);
-        $reprovisioned = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+        $reprovisioned = $this->provisionIdentityProviderUser($connection, $token, $payload);
 
         $this->assertSame($membership->id, $reprovisioned->id);
         $this->assertSame($identity->id, $reprovisioned->identity_id);

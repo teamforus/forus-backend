@@ -152,7 +152,8 @@ class IdentityProviderScimUserTest extends TestCase
                 IdentityProviderScimDiscovery::SCHEMA_USER, IdentityProviderScimDiscovery::SCHEMA_ENTERPRISE_USER,
             ],
         ]);
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
         $identity = $membership->identity;
 
         $this->assertTrue($membership->isRequester());
@@ -173,6 +174,30 @@ class IdentityProviderScimUserTest extends TestCase
 
         $this->apiGetIdentityProviderScimUsersRequest($connection, $token, $membership->uid)
             ->assertOk()->assertJsonPath('externalId', $payload['externalId'])->assertJsonPath('name', $payload['name']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testScimBaseUrlOverrideIsUsedConsistently(): void
+    {
+        Config::set('identity_providers.scim.base_url', 'https://scim.example.test/');
+
+        [$connection, $token] = $this->makeIdentityProviderScimContext();
+
+        $response = $this->apiIdentityProviderScimUsersRequest(
+            'POST',
+            $connection,
+            $token,
+            $this->makeIdentityProviderScimUserPayload(),
+        )->assertCreated();
+
+        $scimUrl = "https://scim.example.test/api/v1/scim/$connection->uid/v2";
+        $userUrl = $scimUrl . '/Users/' . $response->json('id');
+
+        $response->assertHeader('Location', $userUrl)->assertJsonPath('meta.location', $userUrl);
+        $this->apiGetIdentityProviderConnectionRequest($connection->organization, $connection->organization->identity)
+            ->assertOk()->assertJsonPath('data.scim_url', $scimUrl);
     }
 
     /**
@@ -209,6 +234,7 @@ class IdentityProviderScimUserTest extends TestCase
                 'error_code' => 'scim_request_failed',
                 'connection_id' => $connection->id,
                 'organization_id' => $connection->organization_id,
+                'account_type' => IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
                 'http_status' => 400,
                 'validation_errors' => ['external_id' => ['Uuid'], 'email' => ['Email']],
             ], $context);
@@ -222,28 +248,30 @@ class IdentityProviderScimUserTest extends TestCase
      */
     public function testProvisioningRejectsExistingPrimaryOrUnverifiedSecondaryEmail(): void
     {
-        [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $existing = $this->makeIdentity($this->makeUniqueEmail());
-        $existing->primary_email->update(['verified' => true]);
-        $secondary = $existing->addEmail($this->makeUniqueEmail());
-        $identities = Identity::count();
-        $profiles = Profile::count();
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            [$connection, $token] = $this->makeIdentityProviderScimContext($accountType);
+            $existing = $this->makeIdentity($this->makeUniqueEmail());
+            $existing->primary_email->update(['verified' => true]);
+            $secondary = $existing->addEmail($this->makeUniqueEmail());
+            $identities = Identity::count();
+            $profiles = Profile::count();
 
-        foreach ([$existing->email, $secondary->email] as $email) {
-            $payload = $this->makeIdentityProviderScimUserPayload([
-                'emails' => [['value' => $email, 'type' => 'work']],
-            ]);
+            foreach ([$existing->email, $secondary->email] as $email) {
+                $payload = $this->makeIdentityProviderScimUserPayload([
+                    'emails' => [['value' => $email, 'type' => 'work']],
+                ]);
 
-            $this->apiIdentityProviderScimUsersRequest('POST', $connection, $token, $payload)
-                ->assertConflict()->assertJsonPath('scimType', 'uniqueness');
+                $this->apiIdentityProviderScimUsersRequest('POST', $connection, $token, $payload)
+                    ->assertConflict()->assertJsonPath('scimType', 'uniqueness');
 
-            $this->assertSame($identities, Identity::count());
-            $this->assertSame($profiles, Profile::count());
-            $this->assertFalse($connection->memberships()->exists());
-            $this->assertFalse($existing->identity_provider_memberships()->exists());
+                $this->assertSame($identities, Identity::count());
+                $this->assertSame($profiles, Profile::count());
+                $this->assertFalse($connection->memberships()->exists());
+                $this->assertFalse($existing->identity_provider_memberships()->exists());
+            }
+
+            $this->assertFalse($secondary->refresh()->verified);
         }
-
-        $this->assertFalse($secondary->refresh()->verified);
     }
 
     /**
@@ -251,34 +279,76 @@ class IdentityProviderScimUserTest extends TestCase
      */
     public function testDuplicateObjectsAndUsernamesDoNotOverwriteRequesterOrEmployeeLinks(): void
     {
-        [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $payload = $this->makeIdentityProviderScimUserPayload();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
-        $employee = $this->makeIdentityProviderMembership(
-            $connection,
-            $connection->organization->addEmployee($this->makeIdentity()),
-        );
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            [$connection, $token] = $this->makeIdentityProviderScimContext($accountType);
+            $payload = $this->makeIdentityProviderScimUserPayload();
+            $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
 
-        $identities = Identity::count();
-
-        foreach ([
-            ['externalId' => $payload['externalId']],
-            ['userName' => strtoupper($payload['userName'])],
-            ['externalId' => $employee->external_identity->object_id],
-        ] as $conflict) {
-            $this->apiIdentityProviderScimUsersRequest(
-                'POST',
+            $employee = $this->makeIdentityProviderMembership(
                 $connection,
-                $token,
-                $this->makeIdentityProviderScimUserPayload($conflict),
-            )->assertConflict()->assertJsonPath('scimType', 'uniqueness');
-        }
+                $connection->organization->addEmployee($this->makeIdentity()),
+            );
 
-        $this->assertSame($identities, Identity::count());
-        $this->assertSame(2, $connection->memberships()->count());
-        $this->assertSame($payload['emails'][0]['value'], $membership->refresh()->identity->email);
-        $this->assertFalse($employee->refresh()->isRequester());
-        $this->assertNotNull($employee->employee_id);
+            $identities = Identity::count();
+
+            foreach ([
+                ['externalId' => $payload['externalId']],
+                ['userName' => strtoupper($payload['userName'])],
+                ['externalId' => $employee->external_identity->object_id],
+            ] as $conflict) {
+                $this->apiIdentityProviderScimUsersRequest(
+                    'POST',
+                    $connection,
+                    $token,
+                    $this->makeIdentityProviderScimUserPayload($conflict),
+                )->assertConflict()->assertJsonPath('scimType', 'uniqueness');
+            }
+
+            $this->assertSame($identities, Identity::count());
+            $this->assertSame(2, $connection->memberships()->count());
+            $this->assertSame($payload['emails'][0]['value'], $membership->refresh()->identity->email);
+            $this->assertFalse($employee->refresh()->isRequester());
+            $this->assertNotNull($employee->employee_id);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testCredentialsCannotReadOrChangeTheOtherAccountType(): void
+    {
+        [$connection, $requesterToken] = $this->makeIdentityProviderScimContext(organizationAttributes: [
+            'allow_identity_provider_employee_provisioning' => true,
+        ]);
+
+        $employeeToken = Str::random(64);
+        $this->makeIdentityProviderScimCredential($connection, $employeeToken, IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE);
+
+        $requesterPayload = $this->makeIdentityProviderScimUserPayload();
+        $employeePayload = $this->makeIdentityProviderScimUserPayload(['userName' => $requesterPayload['userName']]);
+        $requester = $this->provisionIdentityProviderUser($connection, $requesterToken, $requesterPayload);
+        $employee = $this->provisionIdentityProviderUser($connection, $employeeToken, $employeePayload);
+
+        foreach ([[$requesterToken, $requester, $employee], [$employeeToken, $employee, $requester]] as [$token, $own, $other]) {
+            $this->apiGetIdentityProviderScimUsersRequest($connection, $token)->assertOk()
+                ->assertJsonPath('Resources.*.id', [$own->uid]);
+
+            $this->apiGetIdentityProviderScimUsersRequest($connection, $token, query: [
+                'filter' => 'userName eq "' . $own->scim_user_name . '"',
+            ])->assertOk()->assertJsonPath('Resources.*.id', [$own->uid]);
+
+            $this->apiGetIdentityProviderScimUsersRequest($connection, $token, $other->uid)->assertNotFound();
+
+            $patch = [
+                'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+                'Operations' => [['op' => 'replace', 'path' => 'active', 'value' => false]],
+            ];
+
+            $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, $patch, $other->uid)->assertNotFound();
+            $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $employeePayload, $other->uid)->assertNotFound();
+            $this->apiIdentityProviderScimUsersRequest('DELETE', $connection, $token, uid: $other->uid)->assertNotFound();
+            $this->assertTrue($other->refresh()->isProvisioningActive());
+        }
     }
 
     /**
@@ -286,43 +356,52 @@ class IdentityProviderScimUserTest extends TestCase
      */
     public function testEmailReplacementPreservesIdentityAndEmailRowWithPrivateChangeHistory(): void
     {
-        [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $payload = $this->makeIdentityProviderScimUserPayload();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
-        $identity = $membership->identity;
-        $emailId = $identity->primary_email->id;
-        $identity->addRecords(['primary_email' => $identity->email]);
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            [$connection, $token] = $this->makeIdentityProviderScimContext($accountType);
+            $payload = $this->makeIdentityProviderScimUserPayload();
+            $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
+            $identity = $membership->identity;
+            $emailId = $identity->primary_email->id;
+            $identity->addRecords(['primary_email' => $identity->email]);
 
-        $newEmail = $this->makeUniqueEmail();
-        $updated = [...$payload, 'userName' => $this->makeUniqueEmail('renamed-')];
-        $updated['emails'][0]['value'] = $newEmail;
+            $newEmail = $this->makeUniqueEmail();
+            $updated = [...$payload, 'userName' => $this->makeUniqueEmail('renamed-')];
+            $updated['emails'][0]['value'] = $newEmail;
 
-        $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $updated, $membership->uid)
-            ->assertOk()->assertJsonPath('userName', $updated['userName'])->assertJsonPath('emails.0.value', $newEmail);
+            $this->apiIdentityProviderScimUsersRequest('PUT', $connection, $token, $updated, $membership->uid)
+                ->assertOk()->assertJsonPath('userName', $updated['userName'])->assertJsonPath('emails.0.value', $newEmail);
 
-        $this->assertSame($identity->id, $membership->refresh()->identity_id);
-        $this->assertSame($emailId, $identity->refresh()->primary_email->id);
-        $this->assertTrue($identity->primary_email->verified);
-        $this->assertSame($newEmail, $identity->records()->whereRelation('record_type', 'key', 'primary_email')->value('value'));
+            $this->assertSame($identity->id, $membership->refresh()->identity_id);
+            $this->assertSame($emailId, $identity->refresh()->primary_email->id);
+            $this->assertTrue($identity->primary_email->verified);
+            $this->assertSame($newEmail, $identity->records()->whereRelation('record_type', 'key', 'primary_email')->value('value'));
 
-        /** @var EventLog $event */
-        $event = $connection->logs()
-            ->where('event', IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED)->firstOrFail();
+            /** @var EventLog $event */
+            $event = $connection->logs()
+                ->where('event', $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_EMAIL_CHANGED
+                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_EMAIL_CHANGED)
+                ->firstOrFail();
 
-        $this->assertEquals(['old' => $payload['emails'][0]['value'], 'new' => $newEmail], $event->data['context']['email_change']);
+            $this->assertEquals(['old' => $payload['emails'][0]['value'], 'new' => $newEmail], $event->data['context']['email_change']);
 
-        $response = $this->apiGetIdentityProviderConnectionEventsRequest(
-            $connection->organization,
-            $connection,
-            ['category' => 'requester_provisioning'],
-            $connection->organization->identity,
-        )->assertOk();
+            $response = $this->apiGetIdentityProviderConnectionEventsRequest(
+                $connection->organization,
+                $connection,
+                [
+                    'category' => $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                        ? 'employee_provisioning'
+                        : 'requester_provisioning',
+                ],
+                $connection->organization->identity,
+            )->assertOk();
 
-        /** @var array<string, mixed> $publicEvent */
-        $publicEvent = collect($response->json('data'))->sole('id', $event->id);
+            /** @var array<string, mixed> $publicEvent */
+            $publicEvent = collect($response->json('data'))->sole('id', $event->id);
 
-        $this->assertArrayNotHasKey('context', $publicEvent);
-        $this->assertStringNotContainsString($payload['emails'][0]['value'], json_encode($publicEvent));
+            $this->assertArrayNotHasKey('context', $publicEvent);
+            $this->assertStringNotContainsString($payload['emails'][0]['value'], json_encode($publicEvent));
+        }
     }
 
     /**
@@ -332,7 +411,7 @@ class IdentityProviderScimUserTest extends TestCase
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
         $payload = $this->makeIdentityProviderScimUserPayload();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
 
         $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
             'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
@@ -358,7 +437,8 @@ class IdentityProviderScimUserTest extends TestCase
     public function testPatchUpdatesBothNamesFromPathlessEntraAttributes(): void
     {
         [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $membership = $this->provisionIdentityProviderRequester(
+
+        $membership = $this->provisionIdentityProviderUser(
             $connection,
             $token,
             $this->makeIdentityProviderScimUserPayload(),
@@ -380,43 +460,52 @@ class IdentityProviderScimUserTest extends TestCase
     /**
      * @return void
      */
-    public function testConflictingUpdateDoesNotPartiallyChangeOrDisableRequesterAndRetainsFailureAudit(): void
+    public function testConflictingUpdateDoesNotPartiallyChangeOrDisableAccountAndRetainsFailureAudit(): void
     {
-        [$connection, $token] = $this->makeIdentityProviderScimContext();
-        $payload = $this->makeIdentityProviderScimUserPayload();
-        $membership = $this->provisionIdentityProviderRequester($connection, $token, $payload);
-        $proxy = $this->makeIdentityProviderProxy($membership);
-        $voucher = $this->makeTestVoucher($this->makeTestFund($connection->organization), $membership->identity, amount: 100);
-        $existing = $this->makeIdentity($this->makeUniqueEmail());
-        $profile = $membership->identity->profiles()->where('organization_id', $connection->organization_id)->firstOrFail();
-        $records = $profile->profile_records()->get()->toArray();
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            [$connection, $token] = $this->makeIdentityProviderScimContext($accountType, [
+                'allow_identity_provider_employee_provisioning_profiles' => true,
+            ]);
 
-        $response = $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
-            'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
-            'Operations' => [['op' => 'replace', 'value' => [
-                'active' => false,
-                'name' => ['givenName' => 'Private rejected name'],
-                'emails' => [['value' => $existing->email, 'type' => 'work']],
-            ]]],
-        ], $membership->uid)->assertConflict()->assertJsonPath('scimType', 'uniqueness');
+            $payload = $this->makeIdentityProviderScimUserPayload();
+            $membership = $this->provisionIdentityProviderUser($connection, $token, $payload);
+            $proxy = $this->makeIdentityProviderProxy($membership);
+            $voucher = $this->makeTestVoucher($this->makeTestFund($connection->organization), $membership->identity, amount: 100);
+            $existing = $this->makeIdentity($this->makeUniqueEmail());
+            $profile = $membership->identity->profiles()->where('organization_id', $connection->organization_id)->firstOrFail();
+            $records = $profile->profile_records()->get()->toArray();
 
-        $this->assertTrue($membership->refresh()->isProvisioningActive());
-        $this->assertSame($payload['emails'][0]['value'], $membership->identity->email);
-        $this->assertSame($records, $profile->profile_records()->get()->toArray());
-        $this->assertSame(Voucher::STATE_ACTIVE, $voucher->refresh()->state);
-        $this->assertIdentityProviderProxy($proxy->refresh(), $membership);
+            $response = $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
+                'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+                'Operations' => [['op' => 'replace', 'value' => [
+                    'active' => false,
+                    'name' => ['givenName' => 'Private rejected name'],
+                    'emails' => [['value' => $existing->email, 'type' => 'work']],
+                ]]],
+            ], $membership->uid)->assertConflict()->assertJsonPath('scimType', 'uniqueness');
 
-        /** @var EventLog $event */
-        $event = $connection->logs()
-            ->where('event', IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED)->firstOrFail();
-        $context = $event->data['context'];
+            $this->assertTrue($membership->refresh()->isProvisioningActive());
+            $this->assertSame($payload['emails'][0]['value'], $membership->identity->email);
+            $this->assertSame($records, $profile->profile_records()->get()->toArray());
+            $this->assertSame(Voucher::STATE_ACTIVE, $voucher->refresh()->state);
+            $this->assertIdentityProviderProxy($proxy->refresh(), $membership);
 
-        $this->assertNotEmpty($response->headers->get('X-Diagnostic-Id'));
-        $this->assertSame($response->headers->get('X-Diagnostic-Id'), $context['diagnostic_id']);
-        $this->assertSame('email_conflict', $context['reason']);
-        $this->assertSame('unchanged', $context['result']);
-        $this->assertSame(['active', 'name', 'emails'], $context['requested_fields']);
-        $this->assertArrayNotHasKey('payload', $context);
-        $this->assertStringNotContainsString('Private rejected name', json_encode($event->data));
+            /** @var EventLog $event */
+            $event = $connection->logs()
+                ->where('event', $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                    ? IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_UPDATE_FAILED
+                    : IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED)
+                ->firstOrFail();
+
+            $context = $event->data['context'];
+
+            $this->assertNotEmpty($response->headers->get('X-Diagnostic-Id'));
+            $this->assertSame($response->headers->get('X-Diagnostic-Id'), $context['diagnostic_id']);
+            $this->assertSame('email_conflict', $context['reason']);
+            $this->assertSame('unchanged', $context['result']);
+            $this->assertSame(['active', 'name', 'emails'], $context['requested_fields']);
+            $this->assertArrayNotHasKey('payload', $context);
+            $this->assertStringNotContainsString('Private rejected name', json_encode($event->data));
+        }
     }
 }

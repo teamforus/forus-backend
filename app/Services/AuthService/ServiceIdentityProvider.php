@@ -28,7 +28,7 @@ class ServiceIdentityProvider implements UserProvider
         }
 
         return $identityProxy->isActive() &&
-            resolve(IdentityProviderSessionService::class)->isRequesterSessionAllowed($identityProxy)
+            resolve(IdentityProviderSessionService::class)->isManagedSessionAllowed($identityProxy)
                 ? $identityProxy->identity
                 : null;
     }

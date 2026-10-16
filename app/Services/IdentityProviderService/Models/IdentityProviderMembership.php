@@ -48,12 +48,16 @@ use Illuminate\Support\Str;
  */
 class IdentityProviderMembership extends Model
 {
-    public const string CLAIM_PENDING = 'pending_link';
     public const string CLAIM_CLAIMED = 'claimed';
     public const string CLAIM_RETIRED = 'retired';
 
     public const string ACCOUNT_TYPE_EMPLOYEE = 'employee';
     public const string ACCOUNT_TYPE_REQUESTER = 'requester';
+
+    public const array ACCOUNT_TYPES = [
+        self::ACCOUNT_TYPE_EMPLOYEE,
+        self::ACCOUNT_TYPE_REQUESTER,
+    ];
 
     public const string PROVISIONING_STATUS_ACTIVE = 'active';
     public const string PROVISIONING_STATUS_DISABLED = 'disabled';
@@ -140,6 +144,14 @@ class IdentityProviderMembership extends Model
     public function isEmployee(): bool
     {
         return $this->account_type === self::ACCOUNT_TYPE_EMPLOYEE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProvisioned(): bool
+    {
+        return $this->provisioning_status !== null;
     }
 
     /**

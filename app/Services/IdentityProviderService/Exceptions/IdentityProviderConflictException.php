@@ -16,6 +16,8 @@ final class IdentityProviderConflictException extends IdentityProviderException
         IdentityProviderErrorCode::CONNECTION_NOT_PAUSED => 'exceptions.identity_providers.connection_not_paused',
         IdentityProviderErrorCode::CONNECTION_NOT_CURRENT => 'exceptions.identity_providers.connection_not_current',
         IdentityProviderErrorCode::CONNECTION_HAS_REQUESTERS => 'exceptions.identity_providers.connection_has_requesters',
+        IdentityProviderErrorCode::CONNECTION_HAS_MANAGED_EMPLOYEES =>
+            'exceptions.identity_providers.connection_has_managed_employees',
         IdentityProviderErrorCode::SCIM_CONNECTION_DISCONNECTED =>
             'exceptions.identity_providers.scim_connection_disconnected',
     ];

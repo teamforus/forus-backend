@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Notifications;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Employee;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
@@ -33,9 +32,7 @@ class IndexNotificationsRequest extends BaseFormRequest
             'organization_id' => [
                 'nullable',
                 Rule::exists('organizations', 'id')->where(function (Builder $builder) {
-                    $builder->whereIn('id', Employee::query()
-                        ->where('identity_address', $this->auth_address())
-                        ->pluck('organization_id'));
+                    $builder->whereIn('id', $this->identity()->employees()->pluck('organization_id'));
                 }),
             ],
         ];

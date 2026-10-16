@@ -27,7 +27,7 @@ class IdentityProviderMembershipPolicy
             return $this->deny(__('policies.identity_providers.session_identity_mismatch'));
         }
 
-        if ($identity->isManagedRequester()) {
+        if ($identity->isManagedByIdentityProvider()) {
             return $this->deny(__('policies.identity_providers.link_managed_requester'));
         }
 

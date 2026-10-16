@@ -3,6 +3,7 @@
 namespace App\Services\IdentityProviderService\Support;
 
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Support\Facades\Config;
 
 class IdentityProviderScimDiscovery
@@ -56,9 +57,10 @@ class IdentityProviderScimDiscovery
 
     /**
      * @param IdentityProviderConnection $connection
+     * @param string $accountType
      * @return array
      */
-    public static function resourceTypeUser(IdentityProviderConnection $connection): array
+    public static function resourceTypeUser(IdentityProviderConnection $connection, string $accountType): array
     {
         return [
             'schemas' => [self::SCHEMA_RESOURCE_TYPE],
@@ -66,35 +68,42 @@ class IdentityProviderScimDiscovery
             'name' => 'User',
             'endpoint' => '/Users',
             'schema' => self::SCHEMA_USER,
-            'schemaExtensions' => [['schema' => self::SCHEMA_FORUS_USER, 'required' => false]],
+            'schemaExtensions' => $connection->usesScimProfiles($accountType)
+                ? [['schema' => self::SCHEMA_FORUS_USER, 'required' => false]]
+                : [],
             'meta' => ['resourceType' => 'ResourceType', 'location' => $connection->scimUrl('/ResourceTypes/User')],
         ];
     }
 
     /**
      * @param IdentityProviderConnection $connection
+     * @param string $accountType
      * @return array
      */
-    public static function schemaUser(IdentityProviderConnection $connection): array
+    public static function schemaUser(IdentityProviderConnection $connection, string $accountType): array
     {
+        $isRequester = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER;
+
         return [
             'schemas' => [
                 self::SCHEMA_SCHEMA,
             ],
             'id' => self::SCHEMA_USER,
             'name' => 'User',
-            'description' => __('identity_provider.scim.user_description'),
+            'description' => $isRequester
+                ? __('identity_provider.scim.user_description_requester')
+                : __('identity_provider.scim.user_description_employee'),
             'attributes' => [
                 self::attribute('id', 'string', true, 'readOnly', 'server', true),
                 self::attribute('externalId', 'string', true, 'immutable'),
                 self::attribute('userName', 'string', true, uniqueness: 'server'),
                 self::attribute('active', 'boolean', true),
-                [
+                ...$connection->usesScimProfiles($accountType) ? [[
                     ...self::attribute('name', 'complex'),
                     'subAttributes' => [
                         self::attribute('givenName', 'string'), self::attribute('familyName', 'string'),
                     ],
-                ],
+                ]] : [],
                 [
                     ...self::attribute('emails', 'complex', true),
                     'multiValued' => true,
@@ -119,7 +128,7 @@ class IdentityProviderScimDiscovery
             'schemas' => [self::SCHEMA_SCHEMA],
             'id' => self::SCHEMA_FORUS_USER,
             'name' => 'ForusUser',
-            'description' => __('identity_provider.scim.user_description'),
+            'description' => __('identity_provider.scim.profile_description'),
             'attributes' => [
                 self::attribute('birthDate', 'string'),
                 [

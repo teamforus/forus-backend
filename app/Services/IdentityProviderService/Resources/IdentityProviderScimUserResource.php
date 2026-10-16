@@ -19,15 +19,20 @@ use Illuminate\Http\Request;
 class IdentityProviderScimUserResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'connection', 'external_identity', 'identity.primary_email',
+        'connection.organization', 'external_identity', 'identity.primary_email',
     ];
 
     /**
      * @param IdentityProviderConnection $connection
+     * @param string $accountType
      * @return array
      */
-    public static function loadForConnection(IdentityProviderConnection $connection): array
+    public static function loadForConnection(IdentityProviderConnection $connection, string $accountType): array
     {
+        if (!$connection->usesScimProfiles($accountType)) {
+            return static::load();
+        }
+
         return [
             ...static::load(),
             'identity.profiles' => fn (HasMany|Profile $query) =>
@@ -44,6 +49,40 @@ class IdentityProviderScimUserResource extends BaseJsonResource
      * @return array
      */
     public function toArray(Request $request): array
+    {
+        $membership = $this->resource;
+        $profileAttributes = $membership->connection->usesScimProfiles($membership->account_type)
+            ? $this->profileAttributes() : [];
+
+        return [
+            'schemas' => [
+                IdentityProviderScimDiscovery::SCHEMA_USER,
+                ...isset($profileAttributes[IdentityProviderScimDiscovery::SCHEMA_FORUS_USER])
+                    ? [IdentityProviderScimDiscovery::SCHEMA_FORUS_USER] : [],
+            ],
+            'id' => $membership->uid,
+            'externalId' => $membership->external_identity->object_id,
+            'userName' => $membership->scim_user_name,
+            'active' => $membership->isProvisioningActive(),
+            ...$profileAttributes,
+            'emails' => [[
+                'value' => $membership->identity->primary_email->email,
+                'type' => 'work',
+                'primary' => true,
+            ]],
+            'meta' => [
+                'resourceType' => 'User',
+                'created' => $membership->created_at?->toAtomString(),
+                'lastModified' => $membership->updated_at?->toAtomString(),
+                'location' => $membership->connection->scimUrl('/Users/' . $membership->uid),
+            ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function profileAttributes(): array
     {
         $membership = $this->resource;
 
@@ -70,30 +109,11 @@ class IdentityProviderScimUserResource extends BaseJsonResource
         ]);
 
         return [
-            'schemas' => [
-                IdentityProviderScimDiscovery::SCHEMA_USER,
-                ...$profileAttributes ? [IdentityProviderScimDiscovery::SCHEMA_FORUS_USER] : [],
-            ],
-            'id' => $membership->uid,
-            'externalId' => $membership->external_identity->object_id,
-            'userName' => $membership->scim_user_name,
-            'active' => $membership->isProvisioningActive(),
             'name' => [
                 'givenName' => $recordGivenName?->value ?? '',
                 'familyName' => $recordFamilyName?->value ?? '',
             ],
             ...$profileAttributes ? [IdentityProviderScimDiscovery::SCHEMA_FORUS_USER => $profileAttributes] : [],
-            'emails' => [[
-                'value' => $membership->identity->primary_email->email,
-                'type' => 'work',
-                'primary' => true,
-            ]],
-            'meta' => [
-                'resourceType' => 'User',
-                'created' => $membership->created_at?->toAtomString(),
-                'lastModified' => $membership->updated_at?->toAtomString(),
-                'location' => $membership->connection->scimUrl('/Users/' . $membership->uid),
-            ],
         ];
     }
 }

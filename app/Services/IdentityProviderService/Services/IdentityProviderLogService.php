@@ -41,7 +41,7 @@ class IdentityProviderLogService
     protected const array CONTEXT_KEYS = [
         'session_uid', 'organization_id', 'connection_id', 'membership_id', 'tenant_id', 'expected_tenant_id', 'mode',
         'provider_error_code', 'state_present', 'admin_consent', 'tenant_present',
-        'role_claim_present', 'received_role_ids', 'http_status', 'validation_errors',
+        'role_claim_present', 'received_role_ids', 'http_status', 'validation_errors', 'account_type',
     ];
 
     /**
@@ -93,6 +93,7 @@ class IdentityProviderLogService
 
     /**
      * @param IdentityProviderConnection $connection
+     * @param string $accountType
      * @param string $method
      * @param array $payload
      * @param string|null $uid
@@ -101,6 +102,7 @@ class IdentityProviderLogService
      */
     public function scimMutationFailure(
         IdentityProviderConnection $connection,
+        string $accountType,
         string $method,
         array $payload,
         ?string $uid,
@@ -134,6 +136,7 @@ class IdentityProviderLogService
         $context = [
             'connection_id' => $connection->id,
             'organization_id' => $connection->organization_id,
+            'account_type' => $accountType,
             'http_status' => $status,
             'validation_errors' => $exception instanceof IdentityProviderScimException
                 ? $exception->validationErrors ?: null
@@ -155,15 +158,21 @@ class IdentityProviderLogService
 
         try {
             $membership = $uid ? IdentityProviderMembership::where('connection_id', $connection->id)
-                ->where('account_type', IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER)
+                ->where('account_type', $accountType)
                 ->where('uid', $uid)->first() : null;
 
             $connection->recordEvent(
-                match ($method) {
-                    'POST' => IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATE_FAILED,
-                    'DELETE' => IdentityProviderConnection::EVENT_SCIM_REQUESTER_DELETE_FAILED,
-                    default => IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED,
-                },
+                $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE ?
+                    match ($method) {
+                        'POST' => IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_CREATE_FAILED,
+                        'DELETE' => IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_DELETE_FAILED,
+                        default => IdentityProviderConnection::EVENT_SCIM_EMPLOYEE_UPDATE_FAILED,
+                    } :
+                    match ($method) {
+                        'POST' => IdentityProviderConnection::EVENT_SCIM_REQUESTER_CREATE_FAILED,
+                        'DELETE' => IdentityProviderConnection::EVENT_SCIM_REQUESTER_DELETE_FAILED,
+                        default => IdentityProviderConnection::EVENT_SCIM_REQUESTER_UPDATE_FAILED,
+                    },
                 outcome: IdentityProviderConnection::EVENT_OUTCOME_FAILURE,
                 membership: $membership,
                 errorCode: IdentityProviderErrorCode::SCIM_REQUEST_FAILED,

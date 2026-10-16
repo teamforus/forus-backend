@@ -13,6 +13,10 @@ return [
         'attempts' => env('FUND_CHECK_ATTEMPTS', 20),
         'decay' => env('FUND_CHECK_DECAY', 60),
     ],
+    'fund_custom_notification' => [
+        'attempts' => env('FUND_CUSTOM_NOTIFICATION_ATTEMPTS', 10),
+        'decay' => env('FUND_CUSTOM_NOTIFICATION_DECAY', 60 * 24),
+    ],
     'contact_form' => [
         'attempts' => env('CONTACT_FORM_THROTTLE_ATTEMPTS', 10),
         'decay' => env('CONTACT_FORM_THROTTLE_DECAY', 10),
@@ -29,12 +33,18 @@ return [
         'attempts' => env('FEEDBACK_FORM_API_ATTEMPTS', 15),
         'decay' => env('FEEDBACK_FORM_API_DECAY', 15),
     ],
-
+    'employee_invite' => [
+        'attempts' => env('EMPLOYEE_INVITE_THROTTLE_ATTEMPTS', 10),
+        'decay' => env('EMPLOYEE_INVITE_THROTTLE_DECAY', 10),
+    ],
     'accept_reservation' => [
         'attempts' => env('ACCEPT_RESERVATION_THROTTLE_ATTEMPTS', 1),
         'decay' => env('ACCEPT_RESERVATION_THROTTLE_DECAY', 60),
     ],
-
+    'reset_bulks' => [
+        'attempts' => env('RESET_BULKS_ATTEMPTS', 10),
+        'decay' => env('RESET_BULKS_DECAY', 10),
+    ],
     'mollie' => [
         'fetch_connections' => [
             'attempts' => env('MOLLIE_FETCH_CONNECTION_ATTEMPTS', 10),

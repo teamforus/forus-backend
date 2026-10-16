@@ -4,6 +4,7 @@ namespace Tests\Feature\IdentityProviders;
 
 use App\Models\Implementation;
 use App\Models\Role;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Models\IdentityProviderScimCredential;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
@@ -53,9 +54,9 @@ class IdentityProviderScimCredentialTest extends TestCase
 
         $this->apiGetIdentityProviderConnectionRequest($organization, $proxy)
             ->assertOk()
-            ->assertJsonPath('data.scim_credential.uid', $credential->uid)
-            ->assertJsonMissingPath('data.scim_credential.token')
-            ->assertJsonMissingPath('data.scim_credential.token_hash');
+            ->assertJsonPath('data.scim_credential_requester.uid', $credential->uid)
+            ->assertJsonMissingPath('data.scim_credential_requester.token')
+            ->assertJsonMissingPath('data.scim_credential_requester.token_hash');
 
         $this->apiGetIdentityProviderScimUsersRequest($connection, $token)->assertOk();
 
@@ -109,5 +110,57 @@ class IdentityProviderScimCredentialTest extends TestCase
         $this->assertFalse($credential->refresh()->isRevoked());
         $this->assertFalse($otherCredential->refresh()->isRevoked());
         $this->assertSame(1, $connection->scim_credentials()->count());
+    }
+
+    /**
+     * @return void
+     */
+    public function testCredentialRotationRevocationAndFlagsAreScopedToAccountType(): void
+    {
+        [$connection, $requesterToken] = $this->makeIdentityProviderScimContext();
+        $requesterCredentialUid = $connection->scim_credentials()->sole()->uid;
+        $organization = $connection->organization;
+        $proxy = $this->makeIdentityProxy($organization->identity);
+        $accountType = IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE;
+
+        $this->apiIssueIdentityProviderScimCredentialRequest($organization, $connection, $proxy, $accountType)
+            ->assertForbidden();
+
+        $organization->forceFill(['allow_identity_provider_employee_provisioning' => true])->save();
+
+        $issued = $this->apiIssueIdentityProviderScimCredentialRequest($organization, $connection, $proxy, $accountType)
+            ->assertCreated();
+
+        $employeeToken = $issued->json('data.token');
+
+        $rotated = $this->apiIssueIdentityProviderScimCredentialRequest($organization, $connection, $proxy, $accountType)
+            ->assertCreated();
+
+        $credential = IdentityProviderScimCredential::where('uid', $rotated->json('data.uid'))->firstOrFail();
+
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $employeeToken)->assertUnauthorized();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $rotated->json('data.token'))->assertOk();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $requesterToken)->assertOk();
+
+        $this->apiGetIdentityProviderConnectionRequest($organization, $proxy)->assertOk()
+            ->assertJsonPath('data.scim_credential_employee.uid', $credential->uid)
+            ->assertJsonPath('data.scim_credential_requester.uid', $requesterCredentialUid);
+
+        $organization->forceFill(['allow_identity_provider_employee_provisioning' => false])->save();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $rotated->json('data.token'))->assertUnauthorized();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $requesterToken)->assertOk();
+
+        $organization->forceFill([
+            'allow_identity_provider_employee_provisioning' => true,
+            'allow_identity_provider_requester_provisioning' => false,
+        ])->save();
+
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $requesterToken)->assertUnauthorized();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $rotated->json('data.token'))->assertOk();
+        $this->apiRevokeIdentityProviderScimCredentialRequest($organization, $connection, $credential, $proxy)->assertNoContent();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $rotated->json('data.token'))->assertUnauthorized();
+
+        $organization->forceFill(['allow_identity_provider_requester_provisioning' => true])->save();
+        $this->apiGetIdentityProviderScimUsersRequest($connection, $requesterToken)->assertOk();
     }
 }

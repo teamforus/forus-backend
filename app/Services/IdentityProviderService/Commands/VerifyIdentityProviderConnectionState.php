@@ -2,6 +2,7 @@
 
 namespace App\Services\IdentityProviderService\Commands;
 
+use App\Models\Employee;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Console\Command;
@@ -22,17 +23,16 @@ class VerifyIdentityProviderConnectionState extends Command
         $issues = [];
 
         $connection->memberships()
-            ->with(['external_identity', 'identity'])
+            ->with(['external_identity', 'identity.identity_provider_managed_membership'])
             ->orderBy('id')
             ->each(function (IdentityProviderMembership $membership) use ($connection, &$issues): void {
                 $externalIdentity = $membership->external_identity;
-                $employee = $membership->isEmployee() ? $membership->employee()->withTrashed()->first() : null;
-
-                if ($membership->isRetired() && ($membership->identity_id !== null || $membership->employee_id !== null)) {
-                    $issues[] = [$membership->uid, 'Retired membership still has an identity or employee'];
-                }
 
                 if ($membership->isRetired()) {
+                    if ($membership->identity_id !== null || $membership->employee_id !== null) {
+                        $issues[] = [$membership->uid, 'Retired membership still has an identity or employee'];
+                    }
+
                     if ($externalIdentity?->identity_id && !$externalIdentity->memberships()
                         ->where('claim_state', IdentityProviderMembership::CLAIM_CLAIMED)
                         ->where('identity_id', $externalIdentity->identity_id)
@@ -49,22 +49,67 @@ class VerifyIdentityProviderConnectionState extends Command
                     $issues[] = [$membership->uid, 'External account is missing or belongs to another provider or tenant'];
                 }
 
-                if ($membership->isEmployee() && $membership->isClaimed() &&
-                    ($membership->identity_id === null || !$employee ||
-                        $employee->organization_id !== $connection->organization_id ||
-                        $employee->identity_address !== $membership->identity?->address)) {
-                    $issues[] = [$membership->uid, 'Linked identity or employee is missing or inconsistent'];
-                }
-
-                if ($membership->isRequester() &&
-                    (!$membership->isClaimed() || !$membership->identity || $membership->employee_id !== null ||
-                        $membership->provisioning_status === null ||
-                        $membership->scim_user_name === null || $membership->scim_user_name === '')) {
-                    $issues[] = [$membership->uid, 'Requester membership identity or provisioning fields are inconsistent'];
-                }
-
                 if ($externalIdentity?->identity_id !== $membership->identity_id) {
                     $issues[] = [$membership->uid, 'External account and membership identity bindings do not match'];
+                }
+
+                if ($membership->isProvisioned() &&
+                    $membership->identity?->identity_provider_managed_membership?->id !== $membership->id) {
+                    $issues[] = [$membership->uid, 'Managed identity membership is missing or inconsistent'];
+                }
+
+                if ($membership->isRequester()) {
+                    if (
+                        !$membership->isClaimed() ||
+                        !$membership->identity ||
+                        $membership->employee_id !== null ||
+                        !$membership->isProvisioned() ||
+                        $membership->scim_user_name === null ||
+                        $membership->scim_user_name === ''
+                    ) {
+                        $issues[] = [
+                            $membership->uid,
+                            'Requester membership identity or provisioning fields are inconsistent',
+                        ];
+                    }
+                } elseif ($membership->isEmployee()) {
+                    $employee = $membership->employee()->withTrashed()
+                        ->with('identity_provider_managed_membership')->first();
+
+                    if ($membership->isClaimed() && (
+                        $membership->identity_id === null ||
+                        !$employee ||
+                        $employee->organization_id !== $connection->organization_id ||
+                        $employee->identity_address !== $membership->identity?->address
+                    )) {
+                        $issues[] = [$membership->uid, 'Linked identity or employee is missing or inconsistent'];
+                    }
+
+                    if ($membership->isProvisioned()) {
+                        $shouldBeDeleted = !$membership->isProvisioningActive();
+                        $expectedDeletionReason = $shouldBeDeleted
+                            ? Employee::DELETION_REASON_PROVISIONING
+                            : null;
+
+                        $employeeStateMismatch = $employee && (
+                            $employee->trashed() !== $shouldBeDeleted ||
+                            $employee->deletion_reason !== $expectedDeletionReason
+                        );
+
+                        if (
+                            !$membership->isClaimed() ||
+                            !$employee ||
+                            $employeeStateMismatch ||
+                            $employee->identity_provider_managed_membership?->id !== $membership->id ||
+                            $membership->scim_user_name === null ||
+                            $membership->scim_user_name === ''
+                        ) {
+                            $issues[] = [
+                                $membership->uid,
+                                'Provisioned employee or provisioning fields are inconsistent',
+                            ];
+                        }
+                    }
                 }
             });
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\IdentityProviderService\Http\Middleware;
 
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Models\IdentityProviderScimCredential;
 use App\Services\IdentityProviderService\Responses\IdentityProviderScimResponse;
 use Closure;
@@ -34,11 +35,19 @@ class AuthenticateIdentityProviderScim
 
         $connection = $credential?->connection;
 
+        $provisioningAllowed = match ($credential?->account_type) {
+            IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE =>
+                $connection?->organization->allow_identity_provider_employee_provisioning,
+            IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER =>
+                $connection?->organization->allow_identity_provider_requester_provisioning,
+            default => false,
+        };
+
         if (!$connection ||
             !$connection->isEntra() ||
             $connection->isDisconnected() ||
             !$connection->organization->allow_identity_providers ||
-            !$connection->organization->allow_identity_provider_requester_provisioning) {
+            !$provisioningAllowed) {
             return IdentityProviderScimResponse::error(401, __('identity_provider.scim.invalid_credential'), headers: [
                 'WWW-Authenticate' => 'Bearer error="invalid_token"',
             ]);
@@ -46,6 +55,7 @@ class AuthenticateIdentityProviderScim
 
         $credential->update(['last_used_at' => now()]);
         $request->route()->setParameter('connection', $connection);
+        $request->attributes->set('scim_account_type', $credential->account_type);
 
         return $next($request);
     }

@@ -35,6 +35,13 @@ class IdentityController extends Controller
     use ThrottleWithMeta;
 
     /**
+     * @param IdentityProviderSessionService $sessionService
+     */
+    public function __construct(protected IdentityProviderSessionService $sessionService)
+    {
+    }
+
+    /**
      * Get identity details.
      *
      * @param BaseFormRequest $request
@@ -270,7 +277,7 @@ class IdentityController extends Controller
 
         $proxy = DB::transaction(function () use ($sourceProxy) {
             $proxy = $sourceProxy->identity->makeAuthorizationEmailProxy();
-            resolve(IdentityProviderSessionService::class)->inheritBinding($sourceProxy, $proxy);
+            $this->sessionService->inheritBinding($sourceProxy, $proxy);
             $proxy->inherit2FAStateFrom($sourceProxy);
             $sourceProxy->deactivateByLogout();
 
@@ -439,7 +446,7 @@ class IdentityController extends Controller
         if (
             $identityProxy?->isActive() &&
             $identityProxy->identity &&
-            resolve(IdentityProviderSessionService::class)->isRequesterSessionAllowed($identityProxy)
+            $this->sessionService->isManagedSessionAllowed($identityProxy)
         ) {
             return new JsonResponse(['message' => 'active']);
         }
@@ -495,11 +502,12 @@ class IdentityController extends Controller
         $email = (string) $request->input('email');
 
         if ($identity = Identity::findByEmail($email)) {
-            if ($membership = $identity->identity_provider_requester_membership) {
+            if ($membership = $identity->identity_provider_managed_membership) {
                 $request->notification_repo()->sendSystemMail($email, new IdentityProviderLoginMail(
                     $request->implementation(),
                     $request->client_type(),
                     $membership->isProvisioningActive(),
+                    $membership->account_type,
                 ));
             } else {
                 $this->sendEmailRestoreLink($request, $identity, $email);

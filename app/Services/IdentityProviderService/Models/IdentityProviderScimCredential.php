@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $uid
  * @property int $connection_id
+ * @property string $account_type
  * @property string $token_hash
  * @property int $created_by_identity_id
  * @property int|null $revoked_by_identity_id
@@ -30,7 +31,7 @@ class IdentityProviderScimCredential extends Model
     protected $table = 'identity_provider_scim_credentials';
 
     protected $fillable = [
-        'uid', 'connection_id', 'token_hash', 'created_by_identity_id', 'revoked_by_identity_id',
+        'uid', 'connection_id', 'account_type', 'token_hash', 'created_by_identity_id', 'revoked_by_identity_id',
         'revoked_at', 'last_used_at',
     ];
 

@@ -19,6 +19,7 @@ use App\Traits\ThrottleWithMeta;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Config;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EmployeesController extends Controller
@@ -27,8 +28,8 @@ class EmployeesController extends Controller
 
     public function __construct()
     {
-        $this->maxAttempts = env('EMPLOYEE_INVITE_THROTTLE_ATTEMPTS', 10);
-        $this->decayMinutes = env('EMPLOYEE_INVITE_THROTTLE_DECAY', 10);
+        $this->maxAttempts = Config::get('forus.throttles.employee_invite.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.employee_invite.decay');
     }
 
     /**
@@ -145,7 +146,7 @@ class EmployeesController extends Controller
         $this->authorize('destroy', [$employee, $organization]);
 
         EmployeeDeleted::broadcast($employee);
-        $employee->delete();
+        $employee->deleteWithReason(Employee::DELETION_REASON_MANUAL);
 
         return new JsonResponse([]);
     }

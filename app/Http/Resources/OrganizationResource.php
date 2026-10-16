@@ -129,9 +129,10 @@ class OrganizationResource extends BaseJsonResource
                 'auth_2fa_policy', 'auth_2fa_remember_ip', 'allow_2fa_restrictions', 'allow_product_updates',
                 'allow_physical_cards', 'allow_provider_extra_payments', 'allow_pre_checks', 'allow_payouts',
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
-                'allow_prevalidation_requests', 'allow_fund_product_limits',
-                'allow_identity_providers', 'allow_identity_provider_requester_provisioning',
+                'allow_prevalidation_requests', 'allow_fund_product_limits', 'allow_identity_providers',
+                'allow_identity_provider_employee_provisioning', 'allow_identity_provider_requester_provisioning',
             ]),
+            'show_identity_provider_profile_status' => $organization->showsIdentityProviderProfileStatus(),
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
                 'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),
@@ -184,8 +185,10 @@ class OrganizationResource extends BaseJsonResource
 
         return $canUpdate ? array_merge($organization->only([
             'kvk', 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-            'phone_public', 'website_public', 'allow_identity_providers', 'allow_identity_provider_requester_provisioning',
+            'phone_public', 'website_public', 'allow_identity_providers',
+            'allow_identity_provider_employee_provisioning', 'allow_identity_provider_requester_provisioning',
         ]), [
+            'show_identity_provider_profile_status' => $organization->showsIdentityProviderProfileStatus(),
             'contacts' => OrganizationContactResource::collection($organization->contacts),
             'reservation_fields' => ReservationFieldResource::collection($organization->reservation_fields),
             ...$baseRequest->isSponsorDashboard() ? $this->getAvailableLanguages($organization) : [],

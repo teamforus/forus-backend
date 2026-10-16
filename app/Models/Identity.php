@@ -75,6 +75,7 @@ use Throwable;
  * @property-read Collection|IdentityProviderMembership[] $identity_provider_memberships_claimed
  * @property-read int|null $identity_provider_memberships_claimed_count
  * @property-read IdentityProviderMembership|null $identity_provider_requester_membership
+ * @property-read IdentityProviderMembership|null $identity_provider_managed_membership
  * @property-read \App\Models\IdentityEmail|null $initial_email
  * @property-read Collection|\App\Models\Note[] $notes
  * @property-read int|null $notes_count
@@ -407,11 +408,19 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @return HasOne
+     */
+    public function identity_provider_managed_membership(): HasOne
+    {
+        return $this->hasOne(IdentityProviderMembership::class)->whereNotNull('provisioning_status');
+    }
+
+    /**
      * @return bool
      */
-    public function isManagedRequester(): bool
+    public function isManagedByIdentityProvider(): bool
     {
-        return $this->identity_provider_requester_membership !== null;
+        return $this->identity_provider_managed_membership !== null;
     }
 
     /**
@@ -419,7 +428,7 @@ class Identity extends Model implements Authenticatable
      */
     public function canReceiveVouchers(): bool
     {
-        $membership = $this->identity_provider_requester_membership;
+        $membership = $this->identity_provider_managed_membership;
 
         return !$membership || $membership->isProvisioningActive();
     }
@@ -823,7 +832,7 @@ class Identity extends Model implements Authenticatable
             abort(403, trans('identity-proxy.code.expired'));
         }
 
-        if (!resolve(IdentityProviderSessionService::class)->isRequesterSessionAllowed($proxy)) {
+        if (!resolve(IdentityProviderSessionService::class)->isManagedSessionAllowed($proxy)) {
             abort(403, __('exceptions.forbidden'));
         }
 
@@ -1248,7 +1257,7 @@ class Identity extends Model implements Authenticatable
                 resolve(IdentityProviderSessionService::class)->inheritBinding($sourceProxy, $proxy);
             }
 
-            if (!resolve(IdentityProviderSessionService::class)->isRequesterSessionAllowed($proxy)) {
+            if (!resolve(IdentityProviderSessionService::class)->isManagedSessionAllowed($proxy)) {
                 abort(403, __('exceptions.forbidden'));
             }
 

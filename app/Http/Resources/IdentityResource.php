@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 class IdentityResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'record_bsn', 'identity_provider_memberships_claimed', 'identity_provider_requester_membership',
+        'record_bsn', 'identity_provider_memberships_claimed', 'identity_provider_managed_membership',
     ];
 
     public static $wrap = null;
@@ -53,7 +53,7 @@ class IdentityResource extends BaseJsonResource
                 'bsn' => !empty($bsnRecord),
                 'bsn_time' => $bsnRecord ? now()->diffInSeconds($bsnRecord->created_at, true) : null,
                 'email' => $email,
-                'can_manage_emails' => !$identity->isManagedRequester(),
+                'can_manage_emails' => !$identity->isManagedByIdentityProvider(),
                 ...($request->isDashboard() ? [
                     'has_identity_provider_links' => $identity->identity_provider_memberships_claimed->isNotEmpty(),
                     'can_link_identity_provider' => Gate::forUser($identity)->allows('manageLinks', [

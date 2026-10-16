@@ -29,6 +29,27 @@ return [
                 . 'Neem bij vragen contact op met je organisatie.',
             'link' => 'Naar het dashboard',
         ],
+        'employee_dashboard' => [
+            'formal' => 'Log in via Microsoft op het dashboard van uw organisatie. '
+                . 'Voor toegang moet uw organisatie u een medewerkersrol toekennen.',
+            'informal' => 'Log in via Microsoft op het dashboard van je organisatie. '
+                . 'Voor toegang moet je organisatie je een medewerkersrol toekennen.',
+            'link' => 'Naar het dashboard',
+        ],
+        'employee_me_app' => [
+            'formal' => "U kunt de Me-app koppelen via het dashboard:\n\n"
+                . "1. Log in via Microsoft op het dashboard van uw organisatie.\n"
+                . "2. Open in de Me-app het scherm voor inloggen vanaf een ander apparaat, zodat u een code ziet.\n"
+                . "3. Open 'Persoonlijke instellingen' in het dashboard en kies 'Autoriseer apparaat'.\n"
+                . "4. Vul daar de code uit de Me-app in en bevestig het koppelen.\n\n"
+                . 'Neem contact op met uw organisatie als u geen toegang heeft tot het dashboard.',
+            'informal' => "Je kunt de Me-app koppelen via het dashboard:\n\n"
+                . "1. Log in via Microsoft op het dashboard van je organisatie.\n"
+                . "2. Open in de Me-app het scherm voor inloggen vanaf een ander apparaat, zodat je een code ziet.\n"
+                . "3. Open 'Persoonlijke instellingen' in het dashboard en kies 'Autoriseer apparaat'.\n"
+                . "4. Vul daar de code uit de Me-app in en bevestig het koppelen.\n\n"
+                . 'Neem contact op met je organisatie als je geen toegang hebt tot het dashboard.',
+        ],
         'inactive' => [
             'formal' => 'Uw account is niet actief. U kunt momenteel niet inloggen. '
                 . 'Neem contact op met uw organisatie als u weer toegang nodig heeft.',

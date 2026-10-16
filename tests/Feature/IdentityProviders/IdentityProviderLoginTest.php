@@ -130,19 +130,24 @@ class IdentityProviderLoginTest extends TestCase
     {
         $this->employee->roles()->detach();
         $implementation = $this->useWebshop();
-        [$session, $browserToken, $state] = $this->startLogin(['target' => 'vouchers']);
 
-        $this->assertSame($implementation->id, $session->implementation_id);
-        $this->assertSame($this->entraConnection->id, $session->connection_id);
-        $this->assertSame('https://webshop.example.test/auth-link', $session->final_url);
+        foreach ([null, IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE] as $status) {
+            $this->membership->update(['provisioning_status' => $status]);
+            [$session, $browserToken, $state] = $this->startLogin(['target' => 'vouchers']);
 
-        $query = $this->resolveLogin($session, $state);
+            $this->assertSame($implementation->id, $session->implementation_id);
+            $this->assertSame($this->entraConnection->id, $session->connection_id);
+            $this->assertSame('https://webshop.example.test/auth-link', $session->final_url);
 
-        $this->assertSame('vouchers', $query['target']);
+            $query = $this->resolveLogin($session, $state);
 
-        $this->assertAuthenticatedProxy($this->apiExchangeIdentityProviderLoginRequest([
-            'exchange_token' => $query['entra_exchange'], 'browser_token' => $browserToken,
-        ])->assertOk(), $session, $this->membership);
+            $this->assertSame('vouchers', $query['target']);
+
+            $this->assertAuthenticatedProxy($this->apiExchangeIdentityProviderLoginRequest([
+                'exchange_token' => $query['entra_exchange'],
+                'browser_token' => $browserToken,
+            ])->assertOk(), $session, $this->membership);
+        }
     }
 
     /**
@@ -193,6 +198,46 @@ class IdentityProviderLoginTest extends TestCase
 
         $this->assertExchangeRejected($session, $query['entra_exchange'], $browserToken, $membership);
         $this->assertFalse($membership->identity->proxies()->exists());
+    }
+
+    /**
+     * @return void
+     */
+    public function testManagedEmployeeDashboardLoginRequiresRolesButNotProvisioningEnablement(): void
+    {
+        $membership = $this->makeIdentityProviderEmployee($this->entraConnection);
+        $this->openIdClient->setClaims([...$this->claims, 'oid' => $membership->external_identity->object_id]);
+        $this->assertLoginRejected(IdentityProviderErrorCode::DASHBOARD_ROLE_MISSING);
+
+        $membership->employee->roles()->sync([Role::where('key', 'admin')->firstOrFail()->id]);
+
+        foreach ([true, false] as $enabled) {
+            $this->entraConnection->organization->forceFill(['allow_identity_provider_employee_provisioning' => $enabled])->save();
+            [$session, $browserToken, $state] = $this->startLogin();
+            $query = $this->resolveLogin($session, $state);
+
+            $response = $this->apiExchangeIdentityProviderLoginRequest([
+                'exchange_token' => $query['entra_exchange'], 'browser_token' => $browserToken,
+            ])->assertOk();
+
+            $this->assertAuthenticatedProxy($response, $session, $membership);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testManagedEmployeeDisabledBeforeExchangeCannotLogIn(): void
+    {
+        $membership = $this->makeIdentityProviderEmployee($this->entraConnection);
+        $membership->employee->roles()->sync([Role::where('key', 'admin')->firstOrFail()->id]);
+        $this->openIdClient->setClaims([...$this->claims, 'oid' => $membership->external_identity->object_id]);
+        [$session, $browserToken, $state] = $this->startLogin();
+        $query = $this->resolveLogin($session, $state);
+
+        $membership->update(['provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_DISABLED]);
+
+        $this->assertExchangeRejected($session, $query['entra_exchange'], $browserToken, $membership);
     }
 
     /**

@@ -111,14 +111,48 @@ trait MakesTestIdentityProviders
 
     /**
      * @param IdentityProviderConnection $connection
+     * @param array $attributes
+     * @return IdentityProviderMembership
+     */
+    protected function makeIdentityProviderEmployee(
+        IdentityProviderConnection $connection,
+        array $attributes = [],
+    ): IdentityProviderMembership {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $identity->primary_email->update(['verified' => true]);
+
+        $employee = $connection->organization->employees()->create(['identity_address' => $identity->address]);
+        $membership = $this->makeIdentityProviderMembership($connection, $employee);
+
+        $membership->update([
+            'account_type' => IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE,
+            'provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE,
+            'scim_user_name' => $this->makeUniqueEmail('username-'),
+            'consent_version' => null,
+            'consented_at' => null,
+            ...$attributes,
+        ]);
+
+        if (!$membership->isProvisioningActive()) {
+            $employee->deleteWithReason(Employee::DELETION_REASON_PROVISIONING);
+        }
+
+        return $membership;
+    }
+
+    /**
+     * @param IdentityProviderConnection $connection
      * @param string $token
+     * @param string $accountType
      * @return IdentityProviderScimCredential
      */
     protected function makeIdentityProviderScimCredential(
         IdentityProviderConnection $connection,
         string $token,
+        string $accountType = IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
     ): IdentityProviderScimCredential {
         return $connection->scim_credentials()->create([
+            'account_type' => $accountType,
             'token_hash' => hash('sha256', $token),
             'created_by_identity_id' => $connection->organization->identity->id,
         ]);
@@ -141,18 +175,24 @@ trait MakesTestIdentityProviders
     }
 
     /**
+     * @param string $accountType
+     * @param array $organizationAttributes
      * @return array{IdentityProviderConnection, string}
      */
-    protected function makeIdentityProviderScimContext(): array
-    {
+    protected function makeIdentityProviderScimContext(
+        string $accountType = IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
+        array $organizationAttributes = [],
+    ): array {
         $organization = $this->makeTestOrganization($this->makeIdentity(), [
             'allow_identity_providers' => true,
-            'allow_identity_provider_requester_provisioning' => true,
+            'allow_identity_provider_employee_provisioning' => $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE,
+            'allow_identity_provider_requester_provisioning' => $accountType === IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
+            ...$organizationAttributes,
         ]);
 
         $connection = $this->makeEntraConnection($organization);
         $token = Str::random(64);
-        $this->makeIdentityProviderScimCredential($connection, $token);
+        $this->makeIdentityProviderScimCredential($connection, $token, $accountType);
 
         return [$connection, $token];
     }
@@ -180,7 +220,7 @@ trait MakesTestIdentityProviders
      * @param array $payload
      * @return IdentityProviderMembership
      */
-    protected function provisionIdentityProviderRequester(
+    protected function provisionIdentityProviderUser(
         IdentityProviderConnection $connection,
         string $token,
         array $payload,
@@ -216,6 +256,6 @@ trait MakesTestIdentityProviders
         $this->assertSame($membership->identity->address, $proxy->identity_address);
         $this->assertSame($membership->connection_id, $proxy->identity_provider_binding->connection_id);
         $this->assertSame($membership->id, $proxy->identity_provider_binding->membership_id);
-        $this->getJson('/api/v1/identity', $this->makeApiHeaders($proxy))->assertOk();
+        $this->apiGetIdentityRequest($proxy)->assertOk();
     }
 }

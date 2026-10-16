@@ -13,6 +13,7 @@ return [
         'connection_unavailable' => 'Deze koppeling is niet beschikbaar voor het koppelen van accounts.',
         'sign_in_disabled' => 'Inloggen met Microsoft is uitgeschakeld.',
         'client_not_supported' => 'Inloggen met Microsoft wordt niet ondersteund voor deze applicatie.',
+        'employee_provisioning_disabled' => 'Provisioning van medewerkers is niet ingeschakeld voor deze organisatie.',
         'requester_provisioning_disabled' => 'Provisioning van aanvragers is niet ingeschakeld voor deze organisatie.',
     ],
     'misc' => [
@@ -113,7 +114,7 @@ return [
         'invalid_permissions' => 'Deze actie is niet toegestaan.',
     ],
     'employees' => [
-        'managed_requester' => 'Een beheerde aanvrager kan niet als medewerker worden toegevoegd.',
+        'managed_identity' => 'Een beheerd account kan niet handmatig als medewerker worden toegevoegd.',
         'cant_delete_if_default_validator_exists' => 'De Standaard beoordelaar kan niet worden verwijderd. Neem contact op met support',
     ],
     'fund_providers' => [

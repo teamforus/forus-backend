@@ -102,8 +102,12 @@ class IdentityProviderConnectionsController extends Controller
 
         if ($request->input('category')) {
             $query->whereIn('event', match ($request->input('category')) {
-                'sso' => IdentityProviderConnection::EVENTS_SSO,
-                'requester_provisioning' => IdentityProviderConnection::EVENTS_REQUESTER_PROVISIONING,
+                IdentityProviderConnection::EVENT_CATEGORY_SSO =>
+                    IdentityProviderConnection::EVENTS_SSO,
+                IdentityProviderConnection::EVENT_CATEGORY_EMPLOYEE_PROVISIONING =>
+                    IdentityProviderConnection::EVENTS_EMPLOYEE_PROVISIONING,
+                IdentityProviderConnection::EVENT_CATEGORY_REQUESTER_PROVISIONING =>
+                    IdentityProviderConnection::EVENTS_REQUESTER_PROVISIONING,
             });
         }
 
