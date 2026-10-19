@@ -1201,18 +1201,60 @@ class Fund extends Model
             switch ($formula->type) {
                 case FundFormula::TYPE_FIXED: return $formula->amount;
                 case FundFormula::TYPE_MULTIPLY: {
-                    if ($records) {
-                        $value = $records[$formula->record_type_key] ?? null;
-                    } else {
-                        $record = $this->getTrustedRecordOfType($identity, $formula->record_type_key);
-                        $value = $record?->value;
-                    }
+                    $value = $this->getFormulaRecordValue($formula, $identity, $records);
 
                     return is_numeric($value) ? $formula->amount * $value : 0;
                 }
                 default: return 0;
             }
         })->sum() + $this->fund_formula_products->pluck('price')->sum();
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return float
+     */
+    public function amountFundFormulaMultipleVouchers(?Identity $identity): float
+    {
+        return $this->fund_formulas
+            ->filter(fn (FundFormula $fundFormula) => $fundFormula->type === $fundFormula::TYPE_MULTIPLY_VOUCHERS)
+            ->sum(fn (FundFormula $formula) => $formula->amount * $this->getFormulaMultipleVouchersCount(
+                $formula,
+                $identity,
+            ));
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @param array $voucherFields
+     * @param Carbon|null $expireAt
+     * @return array
+     */
+    public function makeFundFormulaMultipleVouchers(
+        ?Identity $identity,
+        array $voucherFields = [],
+        Carbon $expireAt = null,
+    ): array {
+        return $this->fund_formulas
+            ->filter(fn (FundFormula $fundFormula) => $fundFormula->type === $fundFormula::TYPE_MULTIPLY_VOUCHERS)
+            ->map(function (FundFormula $formula) use ($identity, $voucherFields, $expireAt) {
+                $voucherCount = $this->getFormulaMultipleVouchersCount($formula, $identity);
+                $vouchers = [];
+
+                for ($i = 0; $i < $voucherCount; $i++) {
+                    $vouchers[] = $this->makeVoucher(
+                        identity: $identity,
+                        voucherFields: $voucherFields,
+                        amount: $formula->amount,
+                        expireAt: $expireAt,
+                        limitMultiplier: 1,
+                    );
+                }
+
+                return array_filter($vouchers);
+            })
+            ->collapse()
+            ->all();
     }
 
     /**
@@ -1282,7 +1324,7 @@ class Fund extends Model
                 ?->toArray() ?? [];
 
         $formulaKeys = $this->fund_formulas
-            ?->where('type', FundFormula::TYPE_MULTIPLY)
+            ?->whereIn('type', [FundFormula::TYPE_MULTIPLY, FundFormula::TYPE_MULTIPLY_VOUCHERS])
             ?->pluck('record_type_key')
             ?->toArray() ?? [];
 
@@ -1938,6 +1980,7 @@ class Fund extends Model
                 $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
                 $voucher = $this->makeVoucher(identity: $identity, voucherFields: $extraFields);
 
+                $this->makeFundFormulaMultipleVouchers(identity: $identity, voucherFields: $extraFields);
                 $this->makeFundFormulaProductVouchers($identity, $extraFields);
 
                 $response->getLog()->update([
@@ -2244,6 +2287,39 @@ class Fund extends Model
             ...Arr::collapse(Arr::get($fundPrefills, 'children', [])),
             ...Arr::get($fundPrefills, 'children_groups_counts', []),
         ], fn (array $item) => [$item['record_type_key'] => $item['value']]);
+    }
+
+    /**
+     * @param FundFormula $formula
+     * @param Identity|null $identity
+     * @param array|null $records
+     * @return int
+     */
+    public function getFormulaMultipleVouchersCount(
+        FundFormula $formula,
+        ?Identity $identity,
+        ?array $records = null,
+    ): int {
+        $value = $this->getFormulaRecordValue($formula, $identity, $records);
+
+        return is_numeric($value) ? min(max(intval($value), 0), FundFormula::MULTIPLY_VOUCHERS_MAX) : 0;
+    }
+
+    /**
+     * @param FundFormula $formula
+     * @param Identity|null $identity
+     * @param array|null $records
+     * @return mixed
+     */
+    protected function getFormulaRecordValue(FundFormula $formula, ?Identity $identity, ?array $records): mixed
+    {
+        if ($records) {
+            return $records[$formula->record_type_key] ?? null;
+        }
+
+        return $identity?->exists
+            ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)?->value
+            : null;
     }
 
     /**

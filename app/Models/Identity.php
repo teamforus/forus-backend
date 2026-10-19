@@ -482,6 +482,16 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @param array<string> $emails
+     * @return Collection<int, Identity>
+     */
+    public static function listByEmails(array $emails): Collection
+    {
+        return static::whereRelation('primary_email', fn (Builder $query) => $query->whereIn('email', $emails))
+            ->get();
+    }
+
+    /**
      * @param string|null $bsn
      * @return Identity|Model|null
      */

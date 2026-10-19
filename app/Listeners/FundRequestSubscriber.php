@@ -112,6 +112,7 @@ class FundRequestSubscriber
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
                     $amount = $fund->id === $fundRequest->fund_id ? $fundRequest->getPaymentAmount() : null;
+                    $voucherFields = ['fund_request_id' => $fundRequest->id];
 
                     if ($fund->fund_config->isPayoutOutcome()) {
                         $fund->makePayout(
@@ -122,26 +123,22 @@ class FundRequestSubscriber
                                 $fundRequest->getIban(),
                                 $fundRequest->getIbanName(),
                             ),
-                            voucherFields: [
-                                'fund_request_id' => $fundRequest->id,
-                            ],
+                            voucherFields: $voucherFields,
                         );
                     } else {
                         $fund->makeVoucher(
                             identity: $fundRequest->identity,
-                            voucherFields: [
-                                'fund_request_id' => $fundRequest->id,
-                            ],
+                            voucherFields: $voucherFields,
                             amount: $amount,
+                        );
+
+                        $fund->makeFundFormulaMultipleVouchers(
+                            identity: $fundRequest->identity,
+                            voucherFields: $voucherFields,
                         );
                     }
 
-                    $fund->makeFundFormulaProductVouchers(
-                        $fundRequest->identity,
-                        voucherFields: [
-                            'fund_request_id' => $fundRequest->id,
-                        ]
-                    );
+                    $fund->makeFundFormulaProductVouchers($fundRequest->identity, voucherFields: $voucherFields);
                 }
             }
 

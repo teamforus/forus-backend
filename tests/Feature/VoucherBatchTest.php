@@ -142,6 +142,14 @@ class VoucherBatchTest extends TestCase
 
         // create vouchers
         foreach ($testCase['asserts'] as $assert) {
+            if (isset($assert['fund_config'])) {
+                $fund->fund_config->forceFill($assert['fund_config'])->save();
+            }
+
+            if (isset($assert['fund_budget'])) {
+                $this->setTestFundBudget($fund, $assert['fund_budget']);
+            }
+
             $this->storeVouchers($fund, $assert, $products[$assert['product'] ?? 'approved']);
         }
     }
@@ -163,7 +171,10 @@ class VoucherBatchTest extends TestCase
             'vouchers' => $this->makeVoucherData($fund, $assert, $products),
         ];
 
+        $vouchersCount = $fund->vouchers()->count();
         $validateResponse = $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers);
+        $this->assertSame($vouchersCount, $fund->vouchers()->count());
+
         $uploadResponse = $this->postJson($this->getApiUrl($fund), $data, $headers);
 
         if ($assert['assert_created']) {
@@ -175,8 +186,15 @@ class VoucherBatchTest extends TestCase
             $this->assertEmailSentToProvider($vouchersBuilder, $assert, $startDate);
             $vouchersBuilder->each(fn (Voucher $voucher) => $this->deleteVoucher($voucher));
         } else {
-            $validateResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
-            $uploadResponse->assertJsonValidationErrors($assert['assert_errors'] ?? []);
+            $errors = Arr::map(
+                $assert['assert_errors'] ?? [],
+                fn (string $value, int|string $key) => is_string($key) ? __($value) : $value,
+            );
+
+            $validateResponse->assertStatus(422)->assertJsonValidationErrors($errors);
+            $uploadResponse->assertStatus(422)->assertJsonValidationErrors($errors);
+
+            $this->assertSame($vouchersCount, $fund->vouchers()->count());
         }
     }
 
