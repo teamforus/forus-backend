@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\VoucherRelation;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
+use App\Rules\VouchersArraySumAmountsRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Validation\Rule;
 
@@ -101,6 +102,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'required_without:product_id',
             'numeric',
             'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
+            new VouchersArraySumAmountsRule($fund, [$this->only(['amount', 'email', 'product_id'])]),
         ];
     }
 

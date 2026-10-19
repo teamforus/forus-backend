@@ -158,6 +158,38 @@ class VoucherBatchTestCases
                 'vouchers.0.bsn',
                 'vouchers.1.bsn',
             ],
+        ], [
+            'type' => 'budget',
+            'assign_by' => 'email',
+            'vouchers_count' => 2,
+            'fund_budget' => 300,
+            'fund_config' => [
+                'generator_ignore_fund_budget' => false,
+                'limit_generator_amount' => 1000,
+                'limit_voucher_total_amount' => 1000,
+            ],
+            'replacement' => [
+                'amount' => 200,
+            ],
+            'assert_created' => false,
+            'assert_errors' => [
+                'vouchers.0.amount' => 'validation.voucher_generator.budget_exceeded',
+                'vouchers.1.amount' => 'validation.voucher_generator.budget_exceeded',
+            ],
+        ], [
+            'type' => 'budget',
+            'assign_by' => 'email',
+            'vouchers_count' => 2,
+            'fund_budget' => 400,
+            'fund_config' => [
+                'generator_ignore_fund_budget' => false,
+                'limit_generator_amount' => 1000,
+                'limit_voucher_total_amount' => 1000,
+            ],
+            'replacement' => [
+                'amount' => 200,
+            ],
+            'assert_created' => true,
         ]],
     ];
 

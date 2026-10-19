@@ -136,6 +136,45 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiApplyForFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/apply",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiCheckFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/check",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiRedeemFundRequest(Fund $fund, array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/funds/redeem', $data, $this->makeWebshopHeaders($identity, $fund));
+    }
+
+    /**
      * @param Organization $organization
      * @param array $query
      * @param Identity $identity
@@ -328,12 +367,18 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param Identity $identity
+     * @param bool $validate
      * @return TestResponse
      */
-    public function apiMakeVoucherAsSponsorRequest(Organization $organization, Fund $fund, array $data, Identity $identity): TestResponse
-    {
+    public function apiMakeVoucherAsSponsorRequest(
+        Organization $organization,
+        Fund $fund,
+        array $data,
+        Identity $identity,
+        bool $validate = false,
+    ): TestResponse {
         return $this->postJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers",
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers" . ($validate ? '/validate' : ''),
             ['fund_id' => $fund->id, 'amount' => '1000', ...$data],
             $this->makeApiHeaders($identity),
         );
@@ -757,6 +802,19 @@ trait MakesApiRequests
             $this->makeRequestCriterionValue($fund, 'test_select_number', 2),
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
+        ]);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return array
+     */
+    protected function makeWebshopHeaders(Identity $identity, Fund $fund): array
+    {
+        return $this->makeApiHeaders($identity, [
+            'Client-Type' => 'webshop',
+            'Client-Key' => $fund->getImplementation()->key,
         ]);
     }
 
@@ -1407,14 +1465,18 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param array $data
      * @param bool $appendFileData
+     * @param bool $validate
      * @return TestResponse
      */
     protected function apiMakeVoucherRequestBatchRequest(
         Organization $organization,
         array $data,
         bool $appendFileData = false,
+        bool $validate = false,
     ): TestResponse {
-        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch", [
+        $apiUrl = "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch";
+
+        return $this->postJson($apiUrl . ($validate ? '/validate' : ''), [
             ...$data,
             ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'vouchers')) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));

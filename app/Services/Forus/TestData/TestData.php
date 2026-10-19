@@ -1268,12 +1268,12 @@ class TestData
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
+                $identity = $this->makeIdentity();
 
                 $fund->makeVoucher(identity: $identity, voucherFields: compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, voucherFields: compact('note'));
                 $fund->makeFundFormulaMultipleVouchers($identity, voucherFields: compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
             }
         }
     }

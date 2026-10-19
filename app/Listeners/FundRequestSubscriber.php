@@ -138,10 +138,7 @@ class FundRequestSubscriber
                         );
                     }
 
-                    $fund->makeFundFormulaProductVouchers(
-                        $fundRequest->identity,
-                        voucherFields: $voucherFields
-                    );
+                    $fund->makeFundFormulaProductVouchers($fundRequest->identity, voucherFields: $voucherFields);
                 }
             }
 

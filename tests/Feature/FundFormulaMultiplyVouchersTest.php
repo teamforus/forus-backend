@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
@@ -28,10 +29,6 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     use DatabaseTransactions;
     use MakesTestFundRequests;
     use MakesTestOrganizations;
-
-    protected string $apiUrlFundsApply = '/api/v1/platform/funds/%s/apply';
-    protected string $apiUrlFundsCheck = '/api/v1/platform/funds/%s/check';
-    protected string $apiUrlFundsRedeem = '/api/v1/platform/funds/redeem';
 
     /**
      * Amount of each voucher created by the multiply_vouchers formula.
@@ -57,12 +54,11 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: TestData::randomFakeBsn());
         $fund = $this->makeMultiplyVouchersFund();
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $this->makePrevalidationForTestCriteria($fund->organization, $fund)->assignToIdentity($identity);
 
-        $this->postJson(sprintf($this->apiUrlFundsApply, $fund->id), [], $this->makeWebshopHeaders($identity, $fund))
-            ->assertSuccessful();
+        $this->apiApplyForFundRequest($fund, $identity)->assertSuccessful();
 
         $this->assertMultiplyVouchersCreated($fund, $identity, $startDate);
     }
@@ -75,13 +71,13 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: TestData::randomFakeBsn());
         $fund = $this->makeMultiplyVouchersFund();
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $prevalidation = $this->makePrevalidationForTestCriteria($fund->organization, $fund);
 
-        $response = $this->postJson($this->apiUrlFundsRedeem, [
+        $response = $this->apiRedeemFundRequest($fund, [
             'code' => $prevalidation->uid,
-        ], $this->makeWebshopHeaders($identity, $fund));
+        ], $identity);
 
         $response->assertSuccessful();
         $response->assertJsonCount(1 + $this->recordValue, 'vouchers');
@@ -99,12 +95,11 @@ class FundFormulaMultiplyVouchersTest extends TestCase
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: $bsn);
         $fund = $this->makeMultiplyVouchersFund($organization, ['csv_primary_key' => 'bsn']);
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $this->makePrevalidationForTestCriteria($organization, $fund, $bsn);
 
-        $this->postJson(sprintf($this->apiUrlFundsCheck, $fund->id), [], $this->makeWebshopHeaders($identity, $fund))
-            ->assertSuccessful();
+        $this->apiCheckFundRequest($fund, $identity)->assertSuccessful();
 
         $this->assertMultiplyVouchersCreated($fund, $identity, $startDate);
     }
@@ -117,7 +112,7 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeMultiplyVouchersFund();
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $response = $this->makeFundRequest($identity, $fund, [
             $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
@@ -149,7 +144,7 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: TestData::randomFakeBsn());
         $fund = $this->makeMultiplyVouchersFund(fundConfigsData: $this->sponsorVoucherFundConfigs());
-        $startDate = now();
+        $startDate = Carbon::now();
         $note = $this->faker->sentence();
 
         $this->makePrevalidationForTestCriteria($fund->organization, $fund)->assignToIdentity($identity);
@@ -166,6 +161,54 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     }
 
     /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorVoucherAggregateBudgetLimit(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->makeMultiplyVouchersFund(fundConfigsData: [
+            ...$this->sponsorVoucherFundConfigs(),
+            'generator_ignore_fund_budget' => false,
+        ]);
+
+        $organization = $fund->organization;
+        $startDate = Carbon::now();
+        $totalAmount = $this->mainVoucherAmount + $this->formulaAmount * $this->recordValue;
+
+        $this->makePrevalidationForTestCriteria($organization, $fund)->assignToIdentity($identity);
+        $this->setTestFundBudget($fund, $totalAmount - 1);
+
+        $data = [
+            'assign_by_type' => 'email',
+            'email' => $identity->email,
+            'amount' => $this->mainVoucherAmount,
+            'activate' => true,
+        ];
+
+        $this->assertLessThanOrEqual($fund->getMaxAmountPerVoucher(), $this->mainVoucherAmount);
+
+        foreach ([true, false] as $validate) {
+            $this->apiMakeVoucherAsSponsorRequest($organization, $fund, $data, $organization->identity, $validate)
+                ->assertStatus(422)
+                ->assertOnlyJsonValidationErrors([
+                    'amount' => __('validation.voucher_generator.budget_exceeded'),
+                ]);
+
+            $this->assertSame(0, $fund->vouchers()->count());
+        }
+
+        $this->setTestFundBudget($fund, $totalAmount);
+
+        foreach ([true, false] as $validate) {
+            $this->apiMakeVoucherAsSponsorRequest($organization, $fund, $data, $organization->identity, $validate)
+                ->assertSuccessful();
+        }
+
+        $this->assertMultiplyVouchersCreated($fund, $identity, $startDate);
+    }
+
+    /**
      * Sponsor vouchers without email have no identity to read records from, no extra vouchers must be created.
      *
      * @throws Throwable
@@ -174,7 +217,7 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     public function testNoVouchersCreatedBySponsorWithoutIdentity(): void
     {
         $fund = $this->makeMultiplyVouchersFund(fundConfigsData: $this->sponsorVoucherFundConfigs());
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $response = $this->apiMakeVoucherAsSponsorRequest($fund->organization, $fund, [
             'assign_by_type' => 'activation_code',
@@ -198,7 +241,7 @@ class FundFormulaMultiplyVouchersTest extends TestCase
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: TestData::randomFakeBsn());
         $otherIdentity = $this->makeIdentity($this->makeUniqueEmail());
         $fund = $this->makeMultiplyVouchersFund(fundConfigsData: $this->sponsorVoucherFundConfigs());
-        $startDate = now();
+        $startDate = Carbon::now();
 
         // only the first identity has the trusted record
         $this->makePrevalidationForTestCriteria($fund->organization, $fund)->assignToIdentity($identity);
@@ -224,11 +267,67 @@ class FundFormulaMultiplyVouchersTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testSponsorBatchAggregateBudgetLimitWithMixedCaseRepeatedEmail(): void
+    {
+        $email = $this->makeUniqueEmail('Mixed.');
+        $identity = $this->makeIdentity($email);
+        $fund = $this->makeMultiplyVouchersFund(fundConfigsData: [
+            ...$this->sponsorVoucherFundConfigs(),
+            'generator_ignore_fund_budget' => false,
+        ]);
+
+        $organization = $fund->organization;
+        $emails = [$email, Str::upper($email), Str::lower($email)];
+        $totalAmount = count($emails) * ($this->mainVoucherAmount + $this->formulaAmount * $this->recordValue);
+
+        $this->makePrevalidationForTestCriteria($organization, $fund)->assignToIdentity($identity);
+        $this->setTestFundBudget($fund, $totalAmount - 1);
+
+        $data = [
+            'fund_id' => $fund->id,
+            'vouchers' => array_map(fn (string $email) => [
+                'email' => $email,
+                'amount' => $this->mainVoucherAmount,
+                'activate' => true,
+            ], $emails),
+        ];
+
+        foreach ([true, false] as $validate) {
+            $this->apiMakeVoucherRequestBatchRequest($organization, $data, validate: $validate)
+                ->assertStatus(422)
+                ->assertOnlyJsonValidationErrors([
+                    'vouchers.0.amount' => __('validation.voucher_generator.budget_exceeded'),
+                    'vouchers.1.amount' => __('validation.voucher_generator.budget_exceeded'),
+                    'vouchers.2.amount' => __('validation.voucher_generator.budget_exceeded'),
+                ]);
+
+            $this->assertSame(0, $fund->vouchers()->count());
+        }
+
+        $this->setTestFundBudget($fund, $totalAmount);
+
+        $this->apiMakeVoucherRequestBatchRequest($organization, $data, validate: true)->assertSuccessful();
+        $this->assertSame(0, $fund->vouchers()->count());
+        $this->apiMakeVoucherRequestBatchRequest($organization, $data)->assertSuccessful();
+
+        $vouchers = $fund->vouchers()->get();
+
+        $this->assertCount(count($emails) * (1 + $this->recordValue), $vouchers);
+        $this->assertCount(count($emails), $vouchers->where('amount', $this->mainVoucherAmount));
+        $this->assertCount(count($emails) * $this->recordValue, $vouchers->where('amount', $this->formulaAmount));
+        $this->assertEquals($totalAmount, $vouchers->sum('amount'));
+        $this->assertSame([$identity->id], $vouchers->pluck('identity_id')->unique()->values()->all());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testNoVouchersCreatedWithoutRecordValue(): void
     {
         $identity = $this->makeIdentity($this->makeUniqueEmail(), bsn: TestData::randomFakeBsn());
         $fund = $this->makeMultiplyVouchersFund();
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $this->makePrevalidationForTestCriteria($fund->organization, $fund)->assignToIdentity($identity);
 
@@ -239,8 +338,7 @@ class FundFormulaMultiplyVouchersTest extends TestCase
 
         $fund->refresh();
 
-        $this->postJson(sprintf($this->apiUrlFundsApply, $fund->id), [], $this->makeWebshopHeaders($identity, $fund))
-            ->assertSuccessful();
+        $this->apiApplyForFundRequest($fund, $identity)->assertSuccessful();
 
         $vouchers = $this->budgetVouchersQuery($fund, $identity, $startDate)->get();
 
@@ -281,19 +379,6 @@ class FundFormulaMultiplyVouchersTest extends TestCase
             'limit_voucher_total_amount' => 1000,
             'generator_ignore_fund_budget' => true,
         ];
-    }
-
-    /**
-     * @param Identity $identity
-     * @param Fund $fund
-     * @return array
-     */
-    protected function makeWebshopHeaders(Identity $identity, Fund $fund): array
-    {
-        return $this->makeApiHeaders($identity, [
-            'Client-Type' => 'webshop',
-            'Client-Key' => $fund->getImplementation()->key,
-        ]);
     }
 
     /**

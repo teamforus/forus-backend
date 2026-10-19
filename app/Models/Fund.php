@@ -1980,11 +1980,7 @@ class Fund extends Model
                 $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
                 $voucher = $this->makeVoucher(identity: $identity, voucherFields: $extraFields);
 
-                $this->makeFundFormulaMultipleVouchers(
-                    identity: $identity,
-                    voucherFields: $extraFields,
-                );
-
+                $this->makeFundFormulaMultipleVouchers(identity: $identity, voucherFields: $extraFields);
                 $this->makeFundFormulaProductVouchers($identity, $extraFields);
 
                 $response->getLog()->update([
@@ -2296,11 +2292,15 @@ class Fund extends Model
     /**
      * @param FundFormula $formula
      * @param Identity|null $identity
+     * @param array|null $records
      * @return int
      */
-    protected function getFormulaMultipleVouchersCount(FundFormula $formula, ?Identity $identity): int
-    {
-        $value = $this->getFormulaRecordValue($formula, $identity, null);
+    public function getFormulaMultipleVouchersCount(
+        FundFormula $formula,
+        ?Identity $identity,
+        ?array $records = null,
+    ): int {
+        $value = $this->getFormulaRecordValue($formula, $identity, $records);
 
         return is_numeric($value) ? min(max(intval($value), 0), FundFormula::MULTIPLY_VOUCHERS_MAX) : 0;
     }
@@ -2311,11 +2311,8 @@ class Fund extends Model
      * @param array|null $records
      * @return mixed
      */
-    protected function getFormulaRecordValue(
-        FundFormula $formula,
-        ?Identity $identity,
-        ?array $records
-    ): mixed {
+    protected function getFormulaRecordValue(FundFormula $formula, ?Identity $identity, ?array $records): mixed
+    {
         if ($records) {
             return $records[$formula->record_type_key] ?? null;
         }
