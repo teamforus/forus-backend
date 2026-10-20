@@ -22,7 +22,6 @@ use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Redirector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
@@ -88,13 +87,13 @@ class IdentityController extends Controller
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
      * @throws Exception
-     * @return View|RedirectResponse|Redirector
+     * @return View|RedirectResponse
      * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken
-    ): View|Redirector|RedirectResponse {
+    ): View|RedirectResponse {
         $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
 
@@ -189,13 +188,13 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
-     * @return View|RedirectResponse|\Illuminate\Routing\Redirector
+     * @return View|RedirectResponse
      * @noinspection PhpUnused
      */
     public function emailTokenRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
-    ): View|Redirector|RedirectResponse {
+    ): View|RedirectResponse {
         $exchangeToken = $emailToken;
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');
