@@ -255,6 +255,10 @@ class Implementation extends Model
     public const string ME_APP_IOS = 'me_app-ios';
     public const string ME_APP_ANDROID = 'me_app-android';
     public const string ME_APP_DEPRECATED = 'app-me_app';
+    public const string ME_APP_REQUESTER_ANDROID = 'me_app.requester.android';
+    public const string ME_APP_REQUESTER_IOS = 'me_app.requester.ios';
+    public const string ME_APP_PROVIDER_ANDROID = 'me_app.provider.android';
+    public const string ME_APP_PROVIDER_IOS = 'me_app.provider.ios';
 
     public const array FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
