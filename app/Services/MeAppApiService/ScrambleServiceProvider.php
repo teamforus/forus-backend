@@ -46,8 +46,8 @@ class ScrambleServiceProvider extends ServiceProvider
         Scramble::registerExtension(ViewResponse::class);
 
         foreach ([
-            'requester' => 'Forus Wallet API',
-            'provider' => 'Forus Provider API',
+            'requester' => 'Forus Wallet Mobile App API',
+            'provider' => 'Forus Provider Mobile App API',
         ] as $appKey => $title) {
             $namespace = Config::get("me-app-api.$appKey.namespace");
 
