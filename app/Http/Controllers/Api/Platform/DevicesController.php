@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\DeleteDevicePushRequest;
 use App\Http\Requests\Api\Platform\RegisterDevicePushRequest;
+use App\Models\Implementation;
 use App\Services\Forus\Notification\NotificationService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +31,11 @@ class DevicesController extends Controller
      */
     public function registerPush(RegisterDevicePushRequest $request): JsonResponse
     {
-        $ios = str_contains($request->server('HTTP_USER_AGENT'), 'iOS');
+        $ios = match ($request->client_type()) {
+            Implementation::ME_APP_REQUESTER_IOS, Implementation::ME_APP_PROVIDER_IOS => true,
+            Implementation::ME_APP_REQUESTER_ANDROID, Implementation::ME_APP_PROVIDER_ANDROID => false,
+            default => str_contains($request->server('HTTP_USER_AGENT'), 'iOS'),
+        };
         $type = $ios ? NotificationService::TYPE_PUSH_IOS : NotificationService::TYPE_PUSH_ANDROID;
         $token = $request->input('id');
 

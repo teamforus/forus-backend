@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
 use App\Http\Requests\Api\Identity\IdentityDestroyRequest;
+use App\Http\Requests\Api\Identity\IdentityStoreShared2FATokenRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
@@ -15,12 +16,12 @@ use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
+use App\Services\MeAppApiService\MeAppApiService;
 use App\Traits\ThrottleWithMeta;
 use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Redirector;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
@@ -86,13 +87,13 @@ class IdentityController extends Controller
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
      * @throws Exception
-     * @return View|RedirectResponse|Redirector
+     * @return View|RedirectResponse
      * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken
-    ): View|Redirector|RedirectResponse {
+    ): View|RedirectResponse {
         $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
 
@@ -133,15 +134,19 @@ class IdentityController extends Controller
         }
 
         if ($isMobile) {
-            $sourceUrl = config('forus.front_ends.app-me_app');
+            $service = resolve(MeAppApiService::class);
+            $sourceUrl = $service->deepLinkBaseUrl($clientType);
             $redirectUrl = sprintf(
                 $sourceUrl . 'identity-confirmation?%s',
                 http_build_query(compact('token'))
             );
 
-            return view()->make('pages.auth.deep_link', array_merge([
+            return view()->make('pages.auth.deep_link', [
                 'type' => 'email_confirmation',
-            ], compact('redirectUrl', 'exchangeToken')));
+                'redirectUrl' => $redirectUrl,
+                'exchangeToken' => $exchangeToken,
+                ...$service->authPageContext($clientType, $implementationKey),
+            ]);
         }
 
         abort(404);
@@ -183,13 +188,13 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
-     * @return View|RedirectResponse|\Illuminate\Routing\Redirector
+     * @return View|RedirectResponse
      * @noinspection PhpUnused
      */
     public function emailTokenRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
-    ): View|Redirector|RedirectResponse {
+    ): View|RedirectResponse {
         $exchangeToken = $emailToken;
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');
@@ -206,7 +211,8 @@ class IdentityController extends Controller
         }
 
         if ($isMobile) {
-            $sourceUrl = config('forus.front_ends.app-me_app');
+            $service = resolve(MeAppApiService::class);
+            $sourceUrl = $service->deepLinkBaseUrl($clientType);
         } else {
             $sourceUrl = Implementation::byKey($implementationKey)->urlFrontend($clientType);
 
@@ -226,9 +232,12 @@ class IdentityController extends Controller
         );
 
         if ($isMobile) {
-            return view('pages.auth.deep_link', array_merge([
+            return view('pages.auth.deep_link', [
                 'type' => 'email_sign_in',
-            ], compact('redirectUrl', 'exchangeToken')));
+                'redirectUrl' => $redirectUrl,
+                'exchangeToken' => $exchangeToken,
+                ...$service->authPageContext($clientType, $implementationKey),
+            ]);
         }
 
         return redirect($redirectUrl);
@@ -250,15 +259,17 @@ class IdentityController extends Controller
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param IdentityStoreShared2FATokenRequest $request
      * @return JsonResponse
      */
-    public function store2FASharedToken(BaseFormRequest $request): JsonResponse
+    public function store2FASharedToken(IdentityStoreShared2FATokenRequest $request): JsonResponse
     {
+        $service = resolve(MeAppApiService::class);
+        $clientType = $request->validated('client_type') ?? $request->client_type();
+        $uri = $service->deepLinkBaseUrl($clientType) . 'identity-restore?%s';
         $proxy = $request->identity()->makeAuthorizationEmailProxy();
         $proxy->inherit2FAStateFrom($request->identityProxy());
 
-        $uri = config('forus.front_ends.app-me_app') . 'identity-restore?%s';
         $request->identityProxy()->deactivateByLogout();
 
         return new JsonResponse([
@@ -428,7 +439,7 @@ class IdentityController extends Controller
                 new IdentityDestroyRequestMail([
                     'email' => $request->identity()?->email ?: 'Identity has no email!',
                     'address' => $request->identity()?->address,
-                    'comment' => $request->get('comment'),
+                    'comment' => $request->input('comment'),
                 ])
             );
         }
@@ -442,6 +453,7 @@ class IdentityController extends Controller
      */
     protected function sendEmailAuthStart(IdentityStoreRequest $request): JsonResponse
     {
+        resolve(MeAppApiService::class)->deepLinkBaseUrl($request->client_type());
         $email = (string) $request->input('email');
 
         if ($identity = Identity::findByEmail($email)) {
@@ -464,20 +476,28 @@ class IdentityController extends Controller
      */
     protected function sendEmailConfirmationLink(IdentityStoreRequest $request, Identity $identity): void
     {
+        $service = resolve(MeAppApiService::class);
         $exchangeToken = $identity->makeIdentityPoxy()->exchange_token;
         $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 
-        $queryParams = sprintf('?%s', http_build_query(array_merge($request->only('target'), [
+        $queryParams = array_merge($request->only('target'), [
             'client_type' => $request->client_type(),
             'implementation_key' => $request->implementation_key(),
             'is_mobile' => $isMobile ? 1 : 0,
-        ])));
+        ]);
 
         $request->notification_repo()->sendEmailConfirmationLink(
             $identity->email,
             $request->client_type(),
             Implementation::emailFrom(),
-            url("/api/v1/identity/proxy/confirmation/redirect/$exchangeToken$queryParams")
+            $service->emailRedirectUrl($request->client_type(), true, [
+                'exchangeToken' => $exchangeToken,
+                ...$queryParams,
+            ]) ?? url(sprintf(
+                '/api/v1/identity/proxy/confirmation/redirect/%s?%s',
+                $exchangeToken,
+                http_build_query($queryParams)
+            ))
         );
     }
 
@@ -489,23 +509,27 @@ class IdentityController extends Controller
      */
     protected function sendEmailRestoreLink(IdentityStoreRequest $request, Identity $identity, string $email): void
     {
+        $service = resolve(MeAppApiService::class);
         $source = sprintf('%s_%s', $request->implementation_key(), $request->client_type());
         $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
         $proxy = $identity->makeAuthorizationEmailProxy();
 
-        $queryParams = http_build_query([
+        $queryParams = [
             ...array_filter($request->only('target'), fn ($value) => $value !== null && $value !== ''),
-            ...$isMobile ? [] : [
+            ...$isMobile && !$service->appKeyForClientType($request->client_type()) ? [] : [
                 'client_type' => $request->client_type(),
                 'implementation_key' => $request->implementation_key(),
             ],
             'is_mobile' => $isMobile ? 1 : 0,
-        ]);
+        ];
 
-        $redirect_link = url(sprintf(
+        $redirect_link = $service->emailRedirectUrl($request->client_type(), false, [
+            'emailToken' => $proxy->exchange_token,
+            ...$queryParams,
+        ]) ?? url(sprintf(
             '/api/v1/identity/proxy/email/redirect/%s?%s',
             $proxy->exchange_token,
-            $queryParams
+            http_build_query($queryParams)
         ));
 
         $request->notification_repo()->loginViaEmail(

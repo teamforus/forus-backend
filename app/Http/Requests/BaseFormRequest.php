@@ -158,6 +158,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function emailRules(): array
     {
         return [
+            'string',
             'max:191',
             'email:strict,filter_unicode',
         ];
