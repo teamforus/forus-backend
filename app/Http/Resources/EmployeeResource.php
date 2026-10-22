@@ -18,6 +18,7 @@ class EmployeeResource extends BaseJsonResource
         'identity.primary_email',
         'identity.identity_2fa_active',
         'identity.session_last_activity',
+        'identity_provider_managed_membership.connection',
     ];
 
     public const array LOAD_NESTED = [
@@ -33,6 +34,7 @@ class EmployeeResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         $employee = $this->resource;
+        $membership = $employee->identity_provider_managed_membership;
 
         return array_merge($employee->only([
             'id', 'identity_address', 'organization_id', 'office_id',
@@ -42,6 +44,10 @@ class EmployeeResource extends BaseJsonResource
                 return array_merge($list, $role->permissions->pluck('key')->toArray());
             }, [])),
             'email' => $employee->identity?->email,
+            'identity_provider_management' => $membership ? [
+                'provider' => $membership->connection->provider,
+                'status' => $membership->provisioning_status,
+            ] : null,
             'organization' => $employee->organization->only('id', 'name'),
             'is_2fa_configured' => $employee->identity->is2FAConfigured(),
             'branch' => [
