@@ -46,17 +46,19 @@ class ScrambleServiceProvider extends ServiceProvider
         Scramble::registerExtension(ViewResponse::class);
 
         foreach ([
-            'requester' => Config::get('me-app-api.requester.namespace'),
-            'provider' => Config::get('me-app-api.provider.namespace'),
-        ] as $appKey => $namespace) {
+            'requester' => 'Forus Wallet API',
+            'provider' => 'Forus Provider API',
+        ] as $appKey => $title) {
+            $namespace = Config::get("me-app-api.$appKey.namespace");
+
             Scramble::registerApi($appKey, [
                 'api_path' => trim($namespace, '/') . '/v1',
                 'export_path' => storage_path("app/openapi-$appKey.json"),
-                'ui' => ['title' => 'Me-app ' . $appKey . ' API'],
+                'ui' => ['title' => $title],
                 'security_strategy' => [MiddlewareAuthSecurityStrategy::class, ['middleware' => ['api.auth']]],
                 'info' => [
                     'version' => '1.0.0',
-                    'description' => 'Me-app ' . $appKey . ' API.',
+                    'description' => $title . '.',
                 ],
             ])->routes(static fn (Route $route): bool => $route->named("mobile.$appKey.v1.*"))
                 ->withParametersExtractors(static function (ParametersExtractors $extractors): void {
