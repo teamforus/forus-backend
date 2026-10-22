@@ -96,9 +96,10 @@ class Profile extends Model
     /**
      * @param array $records
      * @param Employee|null $employee
+     * @param string|null $source
      * @return void
      */
-    public function updateRecords(array $records, ?Employee $employee = null): void
+    public function updateRecords(array $records, ?Employee $employee = null, ?string $source = null): void
     {
         foreach ($records as $recordKey => $recordValue) {
             $recordType = RecordType::findByKey($recordKey);
@@ -115,6 +116,7 @@ class Profile extends Model
                 $this->profile_records()->create([
                     'value' => trim($recordValue),
                     'employee_id' => $employee?->id,
+                    'source' => $source,
                     'record_type_id' => $recordType?->id,
                 ]);
             }

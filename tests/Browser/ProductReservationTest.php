@@ -1675,7 +1675,7 @@ class ProductReservationTest extends DuskTestCase
         $browser->waitFor('@modalFilePdfPreview');
 
         $browser->within('@modalFilePdfPreview', function (Browser $browser) {
-            $browser->assertPresent('@pdfPreviewPage');
+            $browser->waitFor('@pdfPreviewPage');
         });
 
         $browser

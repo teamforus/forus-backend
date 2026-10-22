@@ -66,7 +66,7 @@ class VoucherRelation extends Model
     {
         $identity = Identity::findByBsn($this->bsn);
 
-        if (!$identity || $this->voucher->identity_id) {
+        if (!$identity || $this->voucher->identity_id || !$identity->canReceiveVouchers()) {
             return false;
         }
 

@@ -3,6 +3,7 @@
 namespace Tests\Traits;
 
 use App\Models\BusinessType;
+use App\Models\Employee;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Role;
@@ -51,5 +52,18 @@ trait MakesTestOrganizations
         $organization->addEmployee($identity, Role::pluck('id')->toArray());
 
         return $organization;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $permissions
+     * @return Employee
+     */
+    protected function makeTestEmployeeWithPermissions(Organization $organization, array $permissions): Employee
+    {
+        $role = Role::create(['key' => token_generator()->generate(32)]);
+        $role->attachPermissions($permissions);
+
+        return $organization->addEmployee($this->makeIdentity($this->makeUniqueEmail()), [$role->id]);
     }
 }
