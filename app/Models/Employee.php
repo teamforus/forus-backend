@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Helpers\Arr;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\UploadedFile;
 
@@ -19,12 +21,14 @@ use Illuminate\Http\UploadedFile;
  * @property string $identity_address
  * @property int $organization_id
  * @property int|null $office_id
+ * @property string|null $deletion_reason
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read \App\Models\Identity|null $identity
+ * @property-read IdentityProviderMembership|null $identity_provider_managed_membership
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Office|null $office
@@ -55,6 +59,9 @@ class Employee extends Model
     public const string EVENT_UPDATED = 'updated';
     public const string EVENT_DELETED = 'deleted';
 
+    public const string DELETION_REASON_MANUAL = 'manual';
+    public const string DELETION_REASON_PROVISIONING = 'provisioning';
+
     public const string EVENT_UPLOADED_PAYOUTS = 'uploaded_payouts';
     public const string EVENT_UPLOADED_VOUCHERS = 'uploaded_vouchers';
     public const string EVENT_UPLOADED_TRANSACTIONS = 'uploaded_transactions';
@@ -80,11 +87,30 @@ class Employee extends Model
     ];
 
     /**
+     * @param string $reason
+     * @return bool|null
+     */
+    public function deleteWithReason(string $reason): ?bool
+    {
+        $this->forceFill(['deletion_reason' => $reason])->save();
+
+        return $this->delete();
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function identity_provider_managed_membership(): HasOne
+    {
+        return $this->hasOne(IdentityProviderMembership::class)->whereNotNull('provisioning_status');
     }
 
     /**
