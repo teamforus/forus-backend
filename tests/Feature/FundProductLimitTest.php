@@ -572,6 +572,81 @@ class FundProductLimitTest extends TestCase
     }
 
     /**
+     * Make 2 vouchers for the same identity in one fund and 2 products (A,B)
+     * Create fund product limit scope ONLY_SELECTED and products (A,B) with limit 1
+     * Reserve product A with voucher #1
+     * Assert product B is not available to reserve with voucher #1
+     * Assert product B is available to reserve with voucher #2 (limits are applied per voucher)
+     * Assert product A is not available to reserve with voucher #2.
+     * @return void
+     */
+    public function testFundProductLimitCaseTwoVouchers(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $voucher1 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000);
+        $voucher2 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $productA = $this->createProductForReservation($provider, [$fund]);
+        $productB = $this->createProductForReservation($provider, [$fund]);
+
+        $this->makeFundProductLimit($fund, FundProductLimit::SCOPE_ONLY_SELECTED, 1, [$productA->id, $productB->id]);
+
+        $this->createReservation($voucher1, $productA);
+        $this->createReservation($voucher1, $productB, false);
+        $this->createReservation($voucher2, $productB);
+        $this->createReservation($voucher2, $productA, false);
+    }
+
+    /**
+     * Make voucher #1 for identity and 3 products (A,B,C)
+     * Create fund product limit scope ONLY_SELECTED and products (A,B,C) with limit 1
+     * Reserve product A with voucher #1
+     * Assert product C has no limit available for the fund on the product details page
+     * Make voucher #2 for the same identity in the same fund
+     * Assert product C has limit available for the fund (voucher #2 can still be used)
+     * Reserve product B with voucher #2
+     * Assert product C has no limit available for the fund (both vouchers reached the limit).
+     * @return void
+     */
+    public function testFundProductLimitCaseTwoVouchersProductFunds(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $voucher1 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $productA = $this->createProductForReservation($provider, [$fund]);
+        $productB = $this->createProductForReservation($provider, [$fund]);
+        $productC = $this->createProductForReservation($provider, [$fund]);
+
+        $this->makeFundProductLimit($fund, FundProductLimit::SCOPE_ONLY_SELECTED, 1, [
+            $productA->id, $productB->id, $productC->id,
+        ]);
+
+        $this->createReservation($voucher1, $productA);
+        $this->assertEquals(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+
+        $voucher2 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000);
+
+        $this->assertGreaterThan(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+
+        $this->createReservation($voucher2, $productB);
+        $this->assertEquals(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @param bool $assertCreated
@@ -603,5 +678,22 @@ class FundProductLimitTest extends TestCase
         $response->assertJsonValidationErrorFor('product_id');
 
         return null;
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return int|null
+     */
+    protected function getProductFundLimitAvailable(Voucher $voucher, Product $product): ?int
+    {
+        $response = $this->getJson(
+            "/api/v1/platform/products/$product->id",
+            $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity)),
+        );
+
+        $response->assertSuccessful();
+
+        return collect($response->json('data.funds'))->firstWhere('id', $voucher->fund_id)['limit_available'] ?? null;
     }
 }
