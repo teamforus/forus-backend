@@ -25,6 +25,7 @@ class FinancialStatistic
         $options = array_merge($options, [
             'date_from' => Arr::first($dates)['from'] ?? null,
             'date_to' => Arr::last($dates)['to'] ?? null,
+            'exclude_canceled' => true,
         ]);
 
         return [
@@ -90,6 +91,13 @@ class FinancialStatistic
         return collect($dates);
     }
 
+    /**
+     * @param array $options
+     * @param Organization $sponsor
+     * @param Carbon $dateFrom
+     * @param Carbon $dateTo
+     * @return Builder
+     */
     public function getTransactionsQuery(
         array $options,
         Organization $sponsor,
@@ -102,6 +110,7 @@ class FinancialStatistic
         return $queries->getFilterTransactionsQuery($sponsor, array_merge($options, [
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
+            'exclude_canceled' => true,
         ]));
     }
 

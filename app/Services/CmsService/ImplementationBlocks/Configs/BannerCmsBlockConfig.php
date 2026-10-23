@@ -96,6 +96,13 @@ class BannerCmsBlockConfig extends CmsBlockConfig
                 'default' => self::LAYOUT_IMAGE_LEFT,
                 'translatable' => false,
             ], [
+                'key' => 'section_border_hidden',
+                'name' => $this->fieldText('section_border_hidden', 'name'),
+                'type' => self::TYPE_BOOLEAN,
+                'required' => false,
+                'default' => false,
+                'translatable' => false,
+            ], [
                 'key' => 'text_background_color',
                 'name' => $this->fieldText('text_background_color', 'name'),
                 'hint' => $this->fieldText('text_background_color', 'hint'),

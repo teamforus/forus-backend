@@ -44,7 +44,7 @@ class FundRequestResource extends BaseJsonResource
     {
         return [
             ...$this->resource->only([
-                'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale',
+                'id', 'fund_id', 'contact_information', 'note', 'state', 'state_locale', 'expired',
             ]),
             'fund' => [
                 ...(new FundTinyResource($this->resource->fund))->toArray($request),

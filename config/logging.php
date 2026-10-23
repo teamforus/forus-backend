@@ -92,6 +92,12 @@ return [
             'level' => 'debug',
         ],
 
+        'openid' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/openid-service.log'),
+            'level' => 'debug',
+        ],
+
         'mollie' => [
             'driver' => 'single',
             'path' => storage_path('logs/mollie-service.log'),

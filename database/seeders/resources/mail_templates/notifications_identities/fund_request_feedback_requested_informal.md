@@ -6,7 +6,7 @@ Beste aanvrager,
 We hebben je aanvraag gecontroleerd. De aanvraag is nog niet compleet.  Er is extra informatie nodig om de aanvraag goed te kunnen beoordelen.
 
 &nbsp;  
-Klik op de knop ‘Bekijk de aanvraag’ om de extra vraag te zien en informatie toe te voegen.
+Klik op ‘Bekijk de aanvraag’ om de extra vraag te zien en informatie toe te voegen.
 
 &nbsp;
 
