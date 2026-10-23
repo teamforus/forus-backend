@@ -51,6 +51,7 @@ class ProductSubQuery
         ])->getQuery();
 
         $query = Product::query()->fromSub($baseQuery, 'products');
+        $limitByFundAvailable = self::limitByFundAvailableSubQuery($options);
 
         $query->selectRaw('*,
             CAST(IF(
@@ -73,10 +74,19 @@ class ProductSubQuery
                             GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
                             GREATEST(`limit_total` - `limit_total_used`, 0)
                         ),
-                        GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)
+                        GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
+                        IF(
+                            `limit_by_fund_vouchers_available` < `limit_by_fund_vouchers`
+                            AND `limit_per_identity` > `limit_per_identity_used`
+                            AND (ISNULL(`limit_total`) OR `limit_total` > `limit_total_used`),
+                            COALESCE((
+                                ' . $limitByFundAvailable->toSql() . '
+                            ), GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)),
+                            GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)
+                        )
                     ), 0
                 ) AS SIGNED)
-            ) as `limit_available`');
+            ) as `limit_available`', $limitByFundAvailable->getBindings());
 
         return Product::query()->fromSub($query, 'products');
     }
@@ -292,6 +302,33 @@ class ProductSubQuery
                 });
             }
         });
+    }
+
+    /**
+     * @param array $options
+     * @return QBuilder
+     */
+    private static function limitByFundAvailableSubQuery(array $options): QBuilder
+    {
+        $vouchers = self::limitByFundVouchersQuery($options)
+            ->whereNotExists(self::limitReachedScopeOnlySelectedQuery())
+            ->whereNotExists(self::limitReachedScopeAllExceptSelectedQuery())
+            ->select(['vouchers.id', 'vouchers.limit_multiplier']);
+
+        $voucherOptions = [
+            'voucher_id' => [DB::raw('fund_limit_vouchers.id')],
+        ];
+
+        $limits = DB::query()->fromSub($vouchers, 'fund_limit_vouchers')->select([
+            'limit_per_voucher' => self::limitPerIdentitySubQuery($voucherOptions),
+            'limit_per_voucher_used' => self::limitTotalUsedSubQuery($voucherOptions),
+        ]);
+
+        return DB::query()->fromSub($limits, 'fund_limit_voucher_limits')->selectRaw('CAST(IF(
+            COUNT(*) = COUNT(`limit_per_voucher`),
+            COALESCE(SUM(GREATEST(`limit_per_voucher` - `limit_per_voucher_used`, 0)), 0),
+            NULL
+        ) AS SIGNED)');
     }
 
     /**

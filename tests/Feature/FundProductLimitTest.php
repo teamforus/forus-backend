@@ -588,6 +588,7 @@ class FundProductLimitTest extends TestCase
         $voucher1 = $fund->makeVoucher($organization->identity, [
             'state' => Voucher::STATE_ACTIVE,
         ], amount: 10000);
+
         $voucher2 = $fund->makeVoucher($organization->identity, [
             'state' => Voucher::STATE_ACTIVE,
         ], amount: 10000);
@@ -647,6 +648,49 @@ class FundProductLimitTest extends TestCase
     }
 
     /**
+     * Make 2 vouchers for the same identity in one fund and 2 products (1,2)
+     * Set both voucher multipliers to 1 and product #1 allowance to 1 per voucher
+     * Create fund product limit scope ONLY_SELECTED and products (1,2) with limit 1
+     * Reserve product #1 with voucher #1
+     * Reserve product #2 with voucher #2
+     * Assert product #1 is not available with voucher #1 (product allowance reached)
+     * Assert product #1 is not available with voucher #2 (fund product limit reached)
+     * Assert product #1 has no limit available for the fund on the product details page.
+     * @return void
+     */
+    public function testFundProductLimitAvailabilityRequiresVoucherWithRemainingProductAllowance(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $voucher1 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000, limitMultiplier: 1);
+
+        $voucher2 = $fund->makeVoucher($organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000, limitMultiplier: 1);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product1 = $this->createProductForReservation($provider, [$fund]);
+        $product2 = $this->createProductForReservation($provider, [$fund]);
+
+        $product1->getFundProviderProduct($fund)->update([
+            'limit_per_identity' => 1,
+            'limit_per_identity_unlimited' => false,
+        ]);
+
+        $this->makeFundProductLimit($fund, FundProductLimit::SCOPE_ONLY_SELECTED, 1, [$product1->id, $product2->id]);
+
+        $this->createReservation($voucher1, $product1);
+        $this->createReservation($voucher2, $product2);
+        $this->createReservation($voucher1, $product1, false);
+        $this->createReservation($voucher2, $product1, false);
+
+        $this->assertSame(0, $this->getProductFundLimitAvailable($voucher1, $product1));
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @param bool $assertCreated
@@ -687,12 +731,7 @@ class FundProductLimitTest extends TestCase
      */
     protected function getProductFundLimitAvailable(Voucher $voucher, Product $product): ?int
     {
-        $response = $this->getJson(
-            "/api/v1/platform/products/$product->id",
-            $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity)),
-        );
-
-        $response->assertSuccessful();
+        $response = $this->apiGetProductRequest($product, $voucher->identity)->assertSuccessful();
 
         return collect($response->json('data.funds'))->firstWhere('id', $voucher->fund_id)['limit_available'] ?? null;
     }
