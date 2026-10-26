@@ -253,11 +253,16 @@ abstract class BaseDigIdController extends Controller
     /**
      * @param DigIdSession $session
      * @param CompleteDigIdRequest $request
+     * @throws Throwable
      * @return RedirectResponse
      */
     protected function _resolveAuth(DigIdSession $session, CompleteDigIdRequest $request): RedirectResponse
     {
         $identity = $session->digidBsnIdentity();
+
+        if ($identity?->isManagedByIdentityProvider()) {
+            return $this->makeRedirectErrorResponse($session, 'managed_requester');
+        }
 
         if (!$identity) {
             if (!$session->implementation->digid_sign_up_allowed) {
