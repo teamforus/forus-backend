@@ -26,6 +26,7 @@ use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\FileService\Models\File;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
@@ -1223,6 +1224,35 @@ trait MakesApiRequests
             "/api/v1/platform/organizations/$organizationId/sponsor/identities/export-fields",
             $this->makeApiHeaders($authIdentity),
         );
+    }
+
+    /**
+     * @param string $transport
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiCompleteDigIdRequest(string $transport, array $data, array $headers = []): TestResponse
+    {
+        return $this->postJson("/api/v1/platform/$transport/complete", $data, $headers);
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiResolveDigIdRequest(
+        DigIdSession $session,
+        array $data = [],
+        array $headers = [],
+    ): TestResponse {
+        $url = $session->isConnectionTypeTvs()
+            ? '/api/v1/platform/tvs/resolve'
+            : "/api/v1/platform/digid/$session->session_uid/resolve";
+
+        return $this->getJson($url . ($data ? '?' . http_build_query($data) : ''), $headers);
     }
 
     /**

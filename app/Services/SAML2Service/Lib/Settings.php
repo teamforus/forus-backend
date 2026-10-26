@@ -94,6 +94,15 @@ class Settings extends OneLoginSettings
     }
 
     /**
+     * @throws Saml2Exception
+     * @return XMLSecurityKey
+     */
+    public function getSPEncryptionXmlSecurityKey(): XMLSecurityKey
+    {
+        return $this->getXmlSecurityKey($this->getSPkey(), algorithm: XMLSecurityKey::RSA_OAEP_MGF1P);
+    }
+
+    /**
      * @return array
      */
     public function getSettings(): array
@@ -114,13 +123,17 @@ class Settings extends OneLoginSettings
     /**
      * @param string|null $certOrKey
      * @param string $type
+     * @param string $algorithm
      * @throws Saml2Exception
      * @return XMLSecurityKey
      */
-    protected function getXmlSecurityKey(?string $certOrKey, string $type = 'private'): XMLSecurityKey
-    {
+    protected function getXmlSecurityKey(
+        ?string $certOrKey,
+        string $type = 'private',
+        string $algorithm = XMLSecurityKey::RSA_SHA256,
+    ): XMLSecurityKey {
         try {
-            $key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, compact('type'));
+            $key = new XMLSecurityKey($algorithm, compact('type'));
             $key->loadKey($certOrKey);
 
             return $key;

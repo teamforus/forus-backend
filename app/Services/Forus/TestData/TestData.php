@@ -38,6 +38,7 @@ use App\Models\VoucherTransaction;
 use App\Rules\BsnRule;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\DigIdService\TvsService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownBlockGenerator;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownPageGenerator;
@@ -52,6 +53,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
 use Throwable;
@@ -362,6 +364,16 @@ class TestData
         array $fields = [],
         int $offices_count = 0
     ): Organization {
+        $tvsConfiguration = $this->config("organizations.$name.tvs_digid_config", []);
+
+        if ($tvsConfiguration !== []) {
+            $tvsConfiguration = Validator::make(['tvs_digid_config' => $tvsConfiguration], [
+                'tvs_digid_config' => 'required|array',
+            ])->validate()['tvs_digid_config'];
+
+            $tvsConfiguration = resolve(TvsService::class)->validateConfiguration($tvsConfiguration);
+        }
+
         $data = [
             'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->faker->iban('NL'),
@@ -379,6 +391,10 @@ class TestData
             ...$this->config("organizations.$name.organization", []),
             ...$fields,
         ];
+
+        if ($tvsConfiguration !== []) {
+            $data['tvs_digid_config'] = $tvsConfiguration;
+        }
 
         $organization = Organization::forceCreate(array_merge($data, [
             'name' => $name,
@@ -511,6 +527,25 @@ class TestData
         }
 
         return $fund;
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function updateGeneralImplementation(): void
+    {
+        $attributes = $this->config('general_implementation', []);
+
+        if (!is_array($attributes) || $attributes === []) {
+            return;
+        }
+
+        if (Arr::hasAny($attributes, ['id', 'key'])) {
+            throw new Exception('General implementation configuration cannot override id or key.');
+        }
+
+        Implementation::where('key', Implementation::KEY_GENERAL)->firstOrFail()->forceFill($attributes)->save();
     }
 
     /**

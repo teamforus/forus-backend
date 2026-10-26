@@ -3,24 +3,42 @@
 namespace App\Services\DigIdService;
 
 use Exception;
+use Throwable;
 
 class DigIdException extends Exception
 {
-    protected mixed $digIdErrorCode = null;
+    protected ?string $digIdErrorCode = null;
 
     /**
-     * @return mixed
+     * @param string $message
+     * @param string|null $errorCode
+     * @param Throwable|null $previous
+     * @return self
      */
-    public function getDigIdCode(): mixed
+    public static function make(string $message, ?string $errorCode = null, ?Throwable $previous = null): self
+    {
+        $exception = new self($message, 0, $previous);
+
+        if ($errorCode) {
+            return $exception->setDigIdCode($errorCode);
+        }
+
+        return $exception;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDigIdCode(): ?string
     {
         return $this->digIdErrorCode;
     }
 
     /**
-     * @param $errorCode
+     * @param string|null $errorCode
      * @return $this
      */
-    public function setDigIdCode($errorCode): DigIdException
+    public function setDigIdCode(?string $errorCode): DigIdException
     {
         $this->digIdErrorCode = $errorCode;
 

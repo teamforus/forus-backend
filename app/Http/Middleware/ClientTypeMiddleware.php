@@ -15,13 +15,14 @@ class ClientTypeMiddleware
     public const array EXCEPT = [
         'status',
         'digidResolve',
-        'digidRedirect',
         'emailSignUpRedirect',
         'emailSignInRedirect',
         'bankOauthRedirect',
         'biConnection',
         'identityProviderEntraOidcCallback',
         'identityProviderEntraAdminConsentCallback',
+        'tvs.metadata',
+        'tvs.resolve',
     ];
 
     /**

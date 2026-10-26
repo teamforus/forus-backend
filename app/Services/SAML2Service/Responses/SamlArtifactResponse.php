@@ -3,8 +3,10 @@
 namespace App\Services\SAML2Service\Responses;
 
 use App\Services\SAML2Service\Exceptions\Saml2Exception;
+use App\Services\SAML2Service\Lib\ArtifactResolutionResult;
 use App\Services\SAML2Service\Lib\Saml2User;
 use App\Services\SAML2Service\Lib\Settings;
+use DOMElement;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\Assertion;
 use SAML2\Constants;
@@ -16,28 +18,45 @@ use Throwable;
 class SamlArtifactResponse
 {
     protected Response $response;
+    protected DOMElement $rawResponse;
     protected Settings $settings;
 
-    public function __construct(Response $response, Settings $settings)
+    /**
+     * @param ArtifactResolutionResult $result
+     * @param Settings $settings
+     */
+    public function __construct(ArtifactResolutionResult $result, Settings $settings)
     {
-        $this->response = $response;
+        $this->response = $result->response;
+        $this->rawResponse = $result->rawResponse;
         $this->settings = $settings;
     }
 
     /**
      * @throws Throwable
+     * @return Saml2User
      */
     public function getUser(): Saml2User
     {
-        return new Saml2User(last($this->getAssertions()));
+        return new Saml2User(last($this->getAssertions()), $this->rawResponse, $this->settings);
     }
 
     /**
      * @throws Throwable
+     * @return Assertion[]
      */
     public function getAssertions(): array
     {
         return $this->processArtifactResponseBody();
+    }
+
+    /**
+     * @param Settings $settings
+     * @return void
+     */
+    public function setSettings(Settings $settings): void
+    {
+        $this->settings = $settings;
     }
 
     /**
@@ -50,10 +69,10 @@ class SamlArtifactResponse
     }
 
     /**
-     * @return string
+     * @return string|null
      * @noinspection PhpUnused
      */
-    public function getInResponseTo(): string
+    public function getInResponseTo(): ?string
     {
         return $this->response->getInResponseTo();
     }
@@ -111,7 +130,7 @@ class SamlArtifactResponse
     /**
      * @throws Saml2Exception
      * @throws Throwable
-     * @return Assertion|null
+     * @return Assertion[]|null
      */
     protected function processArtifactResponseBody(): ?array
     {
@@ -134,9 +153,7 @@ class SamlArtifactResponse
             throw new Saml2Exception('No assertions found in response from IdP.');
         }
 
-        if (!self::checkSign($this->settings->getSPXmlSecurityKey(), $this->response)) {
-            throw new Saml2Exception('The response was signed.');
-        }
+        $this->checkSign($this->settings->getSPXmlSecurityKey(), $this->response);
 
         $this->checkAssertion($assertions);
 
@@ -149,16 +166,16 @@ class SamlArtifactResponse
      * @param XMLSecurityKey $key
      * @param SignedElement $element
      * @throws Saml2Exception
-     * @return bool
+     * @return void
      */
-    protected function checkSign(XMLSecurityKey $key, SignedElement $element): bool
+    protected function checkSign(XMLSecurityKey $key, SignedElement $element): void
     {
         try {
             if ($element->validate($key)) {
-                return true;
+                return;
             }
         } catch (Throwable $e) {
-            throw new Saml2Exception(get_class($element) . ' ' . $e->getMessage());
+            throw new Saml2Exception($e);
         }
 
         throw new Saml2Exception(get_class($element) . ' response sign check failed');
@@ -169,13 +186,30 @@ class SamlArtifactResponse
      *
      * @param Assertion[] $assertions The assertion.
      * @throws Saml2Exception
+     * @return void
      */
     protected function checkAssertion(array $assertions): void
     {
         foreach ($assertions as $assertion) {
+            $this->checkIssuers($assertion);
             $this->checkAssertionTime($assertion);
             $this->checkAssertionAudience($assertion);
             $this->checkAssertionSubjectConfirmation($assertion);
+        }
+    }
+
+    /**
+     * @param Assertion $assertion
+     * @throws Saml2Exception
+     * @return void
+     */
+    protected function checkIssuers(Assertion $assertion): void
+    {
+        $idpId = $this->settings->getOptional('idp.entityId');
+        $issuer = $assertion->getIssuer()->getValue();
+
+        if ($issuer !== $idpId) {
+            throw new Saml2Exception("Unexpected Issuer: $issuer");
         }
     }
 

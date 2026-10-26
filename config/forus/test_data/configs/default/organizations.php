@@ -9,6 +9,13 @@ return [
             'allow_2fa_restrictions' => true,
             'allow_custom_fund_notifications' => true,
         ],
+        'tvs_digid_config' => [
+            // 'entity_id' => '',
+            // 'service_uuid' => '',
+            // 'authn_context' => '',
+            // 'certificate' => '',
+            // 'private_key' => '',
+        ],
     ],
     'Nijmegen' => [
         'offices_count' => 0,

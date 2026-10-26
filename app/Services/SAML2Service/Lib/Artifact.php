@@ -28,32 +28,34 @@ class Artifact
     }
 
     /**
-     * @throws
-     * @return Response
+     * @throws Throwable
+     * @return ArtifactResolutionResult
      */
-    public function resolve(): Response
+    public function resolve(): ArtifactResolutionResult
     {
         $client = new SOAPClient();
         $artifactResolve = $this->makeArtifactResolve();
         $artifactResponse = $client->send($artifactResolve, $this->settings);
 
-        $artifactXML = $artifactResponse->getAny();
-        $samlResponse = $artifactXML ? Response::fromXML($artifactXML) : null;
-        $samlResponse->addValidator([get_class($this), 'validateSignature'], $artifactResponse);
-
         if (!$artifactResponse->isSuccess()) {
             throw new ArtifactRequestFailedException();
         }
+
+        $artifactXML = $artifactResponse->getAny();
 
         if (empty($artifactXML)) {
             throw new ArtifactResponseEmptyException();
         }
 
+        $samlResponse = Response::fromXML($artifactXML);
+
         if (!$samlResponse instanceof Response) {
             throw new Saml2Exception('Invalid response type.');
         }
 
-        return $samlResponse;
+        $samlResponse->addValidator([get_class($this), 'validateSignature'], $artifactResponse);
+
+        return new ArtifactResolutionResult($samlResponse, $artifactXML);
     }
 
     /**

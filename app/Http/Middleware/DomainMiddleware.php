@@ -16,7 +16,6 @@ class DomainMiddleware
         'status',
         'digidStart',
         'digidResolve',
-        'digidRedirect',
     ];
 
     /**
