@@ -634,6 +634,16 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Product $product
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
+    }
+
+    /**
      * @param Organization $organization
      * @param array $data
      * @param Identity $identity
