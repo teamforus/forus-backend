@@ -1,6 +1,8 @@
 <?php
 
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationClosedMail;
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationUpdatedMail;
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
@@ -34,6 +36,8 @@ return [
         FundRequestDeniedMail::class,
         FundRequestDisregardedMail::class,
         FundRequestClarificationRequestedMail::class,
+        FundRequestClarificationUpdatedMail::class,
+        FundRequestClarificationClosedMail::class,
         FundSponsorCustomNotificationMail::class,
         ReimbursementSubmittedMail::class,
         ReimbursementApprovedMail::class,

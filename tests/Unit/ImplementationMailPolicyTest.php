@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Mail\Auth\IdentityProviderLoginMail;
 use App\Mail\Auth\UserLoginMail;
 use App\Mail\BankConnections\BankConnectionExpiringMail;
 use App\Mail\ContactForm\ContactFormMail;
@@ -11,8 +12,10 @@ use App\Mail\Forus\FundStatisticsMail;
 use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Mail\Forus\TransactionVerifyMail;
 use App\Mail\Funds\FundBalanceWarningMail;
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationClosedMail;
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationReceivedMail;
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationUpdatedMail;
 use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
 use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
 use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
@@ -60,6 +63,7 @@ use Tests\TestCase;
 class ImplementationMailPolicyTest extends TestCase
 {
     private const array CUSTOM_MAILER_POLICY = [
+        IdentityProviderLoginMail::class => false,
         UserLoginMail::class => false,
         BankConnectionExpiringMail::class => false,
         ContactFormMail::class => false,
@@ -71,6 +75,8 @@ class ImplementationMailPolicyTest extends TestCase
         FundBalanceWarningMail::class => false,
         FundRequestClarificationReceivedMail::class => false,
         FundRequestClarificationRequestedMail::class => true,
+        FundRequestClarificationUpdatedMail::class => true,
+        FundRequestClarificationClosedMail::class => true,
         FundRequestApprovedMail::class => true,
         FundRequestCreatedMail::class => true,
         FundRequestDeniedMail::class => true,
