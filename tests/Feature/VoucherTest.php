@@ -16,6 +16,8 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +31,7 @@ use Tests\TestCases\VoucherTestCases;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
 use Tests\Traits\MakesVoucherTransaction;
 use Tests\Traits\TestsReservations;
@@ -38,6 +41,7 @@ use Throwable;
 class VoucherTest extends TestCase
 {
     use MakesTestFunds;
+    use MakesTestIdentityProviders;
     use VoucherTestTrait;
     use TestsReservations;
     use DatabaseTransactions;
@@ -275,6 +279,90 @@ class VoucherTest extends TestCase
             'id' => $payout->id,
             'target' => VoucherTransaction::TARGET_PAYOUT,
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testSponsorCanIssueAndAssignVouchersOnlyToActiveManagedRequesters(): void
+    {
+        $connection = $this->makeEntraConnection($this->makeTestOrganization($this->makeIdentity()));
+        $membership = $this->makeIdentityProviderRequester($connection);
+        $sponsor = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsor);
+        $headers = $this->makeApiHeaders($sponsor->identity);
+
+        $data = [
+            'fund_id' => $fund->id,
+            'assign_by_type' => 'email',
+            ...$this->makeVoucherData($fund, [
+                'assign_by' => 'email', 'vouchers_count' => 1,
+                'replacement' => ['email' => $membership->identity->email, 'amount' => 25],
+            ], [])[0],
+        ];
+
+        $issued = $this->apiMakeVoucherAsSponsor($sponsor, $fund, $data, $sponsor->identity);
+        $this->assertSame($membership->identity_id, $issued->identity_id);
+
+        $unassigned = $this->makeTestVoucher($fund, amount: 25);
+
+        foreach ([
+            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ] as $status) {
+            $membership->update(['provisioning_status' => $status]);
+
+            $this->postJson($this->getApiUrl($fund, '/validate'), $data, $headers)
+                ->assertJsonValidationErrors(['email' => __('validation.voucher.managed_requester_inactive')]);
+
+            $this->apiMakeVoucherAsSponsorRequest($sponsor, $fund, $data, $sponsor->identity)
+                ->assertJsonValidationErrors(['email' => __('validation.voucher.managed_requester_inactive')]);
+
+            $this->patchJson($this->getSponsorApiUrl($unassigned, '/assign'), ['email' => $data['email']], $headers)
+                ->assertJsonValidationErrors(['email' => __('validation.voucher.managed_requester_inactive')]);
+
+            $this->assertNull($unassigned->refresh()->identity_id);
+            $this->assertSame(2, $fund->vouchers()->count());
+        }
+
+        $membership->update(['provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE]);
+
+        $this->patchJson($this->getSponsorApiUrl($unassigned, '/assign'), ['email' => $data['email']], $headers)->assertSuccessful();
+        $this->assertSame($membership->identity_id, $unassigned->refresh()->identity_id);
+    }
+
+    /**
+     * @return void
+     */
+    public function testVoucherActivationRequiresActiveRequesterButAllowsPausedSso(): void
+    {
+        $connection = $this->makeEntraConnection($this->makeTestOrganization($this->makeIdentity()));
+        $membership = $this->makeIdentityProviderRequester($connection);
+        $sponsor = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsor);
+
+        $voucher = $this->makeTestVoucher($fund, $membership->identity, [
+            'state' => Voucher::STATE_DEACTIVATED,
+        ], amount: 25);
+
+        foreach ([
+            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ] as $status) {
+            $membership->update(['provisioning_status' => $status]);
+
+            $this->patchJson($this->getSponsorApiUrl($voucher, '/activate'), [
+                'note' => 'Activate voucher',
+            ], $this->makeApiHeaders($sponsor->identity))->assertForbidden();
+
+            $this->assertTrue($voucher->refresh()->isDeactivated());
+        }
+
+        $membership->update(['provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE]);
+        $connection->update(['status' => IdentityProviderConnection::STATUS_PAUSED]);
+
+        $this->assertAbilityActivateVoucher($voucher);
     }
 
     /**

@@ -162,6 +162,9 @@ class AuthServiceProvider extends ServiceProvider
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function register(): void
     {
         $this->app->singleton(GateContract::class, function ($app) {

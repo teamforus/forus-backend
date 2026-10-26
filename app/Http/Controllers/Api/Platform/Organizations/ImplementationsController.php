@@ -17,6 +17,7 @@ use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use League\CommonMark\Exception\CommonMarkException;
 use Throwable;
 
 class ImplementationsController extends Controller
@@ -143,10 +144,9 @@ class ImplementationsController extends Controller
      * @param UpdateImplementationAuthPageRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws Throwable
+     * @throws CommonMarkException
      * @return ImplementationPrivateResource
-     * @noinspection PhpUnused
      */
     public function updateAuthPage(
         UpdateImplementationAuthPageRequest $request,
@@ -157,14 +157,9 @@ class ImplementationsController extends Controller
         $this->authorize('updateAuthPage', [$implementation, $organization]);
 
         $implementation->update($request->only([
-            'auth_page_title',
-            'auth_page_login_title',
-            'auth_page_login_email',
-            'auth_page_login_digid',
-            'auth_page_login_qr',
-            'auth_page_info_enabled',
-            'auth_page_info_title',
-            'auth_page_info_description',
+            'auth_page_title', 'auth_page_login_title', 'auth_page_login_email', 'auth_page_login_digid',
+            'auth_page_login_qr', 'entra_login_enabled', 'auth_page_info_enabled',
+            'auth_page_info_title', 'auth_page_info_description',
         ]));
 
         $implementation->syncMarkdownMedia('cms_media', 'auth_page_info_description');

@@ -19,6 +19,8 @@ class ClientTypeMiddleware
         'emailSignInRedirect',
         'bankOauthRedirect',
         'biConnection',
+        'identityProviderEntraOidcCallback',
+        'identityProviderEntraAdminConsentCallback',
         'tvs.metadata',
         'tvs.resolve',
     ];

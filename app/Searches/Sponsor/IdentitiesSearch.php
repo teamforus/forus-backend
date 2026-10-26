@@ -12,6 +12,7 @@ use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\IdentityQuery;
 use App\Searches\BaseSearch;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Carbon;
@@ -19,6 +20,8 @@ use InvalidArgumentException;
 
 class IdentitiesSearch extends BaseSearch
 {
+    public const array IDENTITY_PROVIDER_STATUSES = ['managed', 'active', 'disabled', 'unmanaged'];
+
     /**
      * @var array
      */
@@ -58,6 +61,41 @@ class IdentitiesSearch extends BaseSearch
         }
 
         $builder = IdentityQuery::relatedToOrganization($builder, $organizationId, $fundId);
+
+        if ($type = $this->getFilter('type')) {
+            $builder->where(fn (Builder $query) => $query
+                ->whereNull('creator_organization_id')
+                ->orWhere('creator_organization_id', $organizationId));
+
+            $builder->where(function (Builder $query) use ($type): void {
+                $query->where('type', $type);
+
+                if ($type === Identity::TYPE_VOUCHER) {
+                    $query->orWhereNull('type');
+                }
+            });
+        }
+
+        if ($status = $this->getFilter('identity_provider_status')) {
+            $membershipQuery = function (Builder $query) use ($organizationId, $status): void {
+                $query->whereRelation('connection', 'organization_id', $organizationId);
+
+                if ($status === 'active') {
+                    $query->where('provisioning_status', IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE);
+                } elseif ($status === 'disabled') {
+                    $query->whereIn('provisioning_status', [
+                        IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+                        IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+                    ]);
+                }
+            };
+
+            if ($status === 'unmanaged') {
+                $builder->whereDoesntHave('identity_provider_managed_membership', $membershipQuery);
+            } else {
+                $builder->whereHas('identity_provider_managed_membership', $membershipQuery);
+            }
+        }
 
         if ($this->getFilter('q')) {
             $builder = $this->querySearchIdentity($builder, $this->getFilter('q'), $organizationId);
