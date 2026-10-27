@@ -24,14 +24,8 @@ Route::prefix('identity')->name('identity.')->group(static function (): void {
     Route::post('/', [IdentityController::class, 'store'])->name('store');
 
     Route::prefix('proxy')->name('proxy.')->group(static function (): void {
-        // create a pending QR login
-        Route::post('token', [IdentityController::class, 'proxyAuthorizationToken'])->name('token');
-
         // create a pending PIN code login
         Route::post('code', [IdentityController::class, 'proxyAuthorizationCode'])->name('code');
-
-        // create a temporary token for webshop login
-        Route::post('short-token', [IdentityController::class, 'proxyAuthorizationShortToken'])->name('short-token');
 
         // check whether a pending login was authorized
         Route::get('check-token', [IdentityController::class, 'checkToken'])->name('check-token');
@@ -60,10 +54,6 @@ Route::middleware('api.auth')->group(static function (): void {
     Route::prefix('identity')->name('identity.')->group(static function (): void {
         // read identity details
         Route::get('/', [MobileIdentityController::class, 'show'])->name('show');
-
-        // approve a scanned login QR
-        Route::post('proxy/authorize/token', [IdentityController::class, 'proxyAuthorizeToken'])
-            ->name('proxy.authorize.token');
     });
 
     // register device token for push notifications

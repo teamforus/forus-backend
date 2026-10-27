@@ -54,7 +54,6 @@ class MobileOperationTransformer implements OperationTransformer
             'identity.proxy.token' => 'Create a QR login request.',
             'identity.proxy.code' => 'Create a PIN login request.',
             'identity.proxy.authorize.token' => 'Approve a QR login request.',
-            'identity.proxy.short-token' => 'Create a temporary login token.',
             'identity.proxy.check-token' => 'Check login status.',
             'firestore-tokens.store' => 'Create a Firebase authentication token.',
         ];
@@ -162,11 +161,6 @@ class MobileOperationTransformer implements OperationTransformer
                 ]))->setRequired(['message']),
                 (new ObjectType())->addProperty('error', (new StringType())->const('2fa'))->setRequired(['error']),
             ]))));
-        }
-
-        if ($route->named('mobile.*.v1.identity.proxy.short-token')) {
-            $operation->security = null;
-            $forbidden[] = 'missing authenticated identity';
         }
 
         if ($forbidden) {
