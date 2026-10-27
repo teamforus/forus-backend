@@ -18,6 +18,7 @@ use App\Services\DigIdService\Repositories\DigIdSamlRepo;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\FileService\FileUploadConfigService;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IdentityProviderService\Services\IdentityProviderAccessService;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
@@ -39,6 +40,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * App\Models\Implementation.
@@ -120,6 +123,7 @@ use Illuminate\Support\Facades\Gate;
  * @property string|null $pre_check_banner_label
  * @property string $pre_check_banner_state
  * @property string $products_default_sorting
+ * @property array<array-key, mixed>|null $custom_mailer_config
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
@@ -199,6 +203,7 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereKey($value)
  * @method static Builder<static>|Implementation whereLat($value)
  * @method static Builder<static>|Implementation whereLon($value)
+ * @method static Builder<static>|Implementation whereCustomMailerConfig($value)
  * @method static Builder<static>|Implementation whereName($value)
  * @method static Builder<static>|Implementation whereOrganizationId($value)
  * @method static Builder<static>|Implementation whereOverlayEnabled($value)
@@ -233,6 +238,8 @@ use Illuminate\Support\Facades\Gate;
  * @method static Builder<static>|Implementation whereUrlValidator($value)
  * @method static Builder<static>|Implementation whereUrlWebshop($value)
  * @method static Builder<static>|Implementation whereVoucherPayoutInformationalProductId($value)
+ * @property bool $entra_login_enabled
+ * @method static Builder<static>|Implementation whereEntraLoginEnabled($value)
  * @mixin \Eloquent
  */
 class Implementation extends Model
@@ -276,6 +283,7 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+        'entra_login_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity',
         'show_home_map', 'show_home_products', 'show_providers_map', 'show_provider_map',
         'show_office_map', 'show_voucher_map', 'show_product_map', 'email_color', 'email_signature',
@@ -305,6 +313,7 @@ class Implementation extends Model
         'lon' => 'float',
         'lat' => 'float',
         'digid_enabled' => 'boolean',
+        'entra_login_enabled' => 'boolean',
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
@@ -335,6 +344,7 @@ class Implementation extends Model
         'banner_background_mobile' => 'boolean',
         'root_product_category_id' => 'integer',
         'voucher_payout_informational_product_id' => 'integer',
+        'custom_mailer_config' => 'array',
     ];
 
     /**
@@ -803,6 +813,7 @@ class Implementation extends Model
             'email' => $this->auth_page_login_email,
             'digid' => $this->auth_page_login_digid,
             'qr' => $this->auth_page_login_qr,
+            'entra' => $this->entra_login_enabled,
         ]);
     }
 
@@ -816,7 +827,34 @@ class Implementation extends Model
             'email' => $loginFlags['email'] ?? false,
             'digid' => ($loginFlags['digid'] ?? false) && $this->digidEnabled(),
             'qr' => $loginFlags['qr'] ?? false,
+            'entra' => ($loginFlags['entra'] ?? false) && $this->entraLoginAvailable(),
         ]));
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginConfigured(): bool
+    {
+        return Config::get('identity_providers.enabled') &&
+            $this->organization?->allow_identity_providers &&
+            $this->organization->identity_provider_connection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginAvailable(): bool
+    {
+        return $this->entraLoginConfigured() && $this->organization->identity_provider_connection->isEnabled();
+    }
+
+    /**
+     * @return bool
+     */
+    public function entraLoginEnabled(): bool
+    {
+        return $this->entra_login_enabled && $this->entraLoginAvailable();
     }
 
     /**
@@ -880,6 +918,8 @@ class Implementation extends Model
                 'client_type' => $request->client_type(),
                 'implementation_id' => $implementation->id,
             ], Announcement::query()))->query()->get())->toArray($request),
+            'entra_dashboard_login_available' => $configKey === 'dashboard' &&
+                resolve(IdentityProviderAccessService::class)->isLoginConfigured(),
             ...($configKey === self::FRONTEND_WEBSHOP ? [
                 'auth_page' => $implementation->authPageConfig(),
             ] : []),
@@ -1124,6 +1164,33 @@ class Implementation extends Model
                 'default' => false,
             ]);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCustomMailer(): bool
+    {
+        return $this->custom_mailer_config !== null;
+    }
+
+    /**
+     * @throws ValidationException
+     * @return array|null
+     */
+    public function getCustomMailerConfig(): ?array
+    {
+        if (!$this->hasCustomMailer()) {
+            return null;
+        }
+
+        return Validator::make($this->custom_mailer_config, [
+            'transport' => 'required|string|in:microsoft-graph',
+            'tenant_id' => 'required|string',
+            'client_id' => 'required|string',
+            'client_secret' => 'required|string',
+            'from_email' => 'required|email',
+        ])->validate();
     }
 
     /**

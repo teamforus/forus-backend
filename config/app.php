@@ -224,11 +224,14 @@ return [
         App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,
         App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
         App\Services\MollieService\MollieServiceProvider::class,
+        App\Services\IdentityProviderService\IdentityProviderServiceProvider::class,
 
         App\Services\IConnectApiService\IConnectServiceProvider::class,
 
         App\Services\PdfToImgService\PdfToImgServiceProvider::class,
         App\Services\TranslationService\TranslationServiceProvider::class,
+
+        App\Services\MicrosoftMailService\MicrosoftMailServiceProvider::class,
     ],
 
     /*

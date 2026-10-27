@@ -13,6 +13,7 @@ use App\Services\BIConnectionService\Models\BIConnection;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
@@ -74,6 +75,10 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_identity_providers
+ * @property bool $allow_identity_provider_employee_provisioning
+ * @property bool $allow_identity_provider_requester_provisioning
+ * @property bool $allow_identity_provider_employee_provisioning_profiles
  * @property bool $allow_physical_cards
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
@@ -156,6 +161,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $funds_active_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
+ * @property-read IdentityProviderConnection|null $identity_provider_connection
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections
+ * @property-read int|null $identity_provider_connections_count
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections_disconnected
+ * @property-read int|null $identity_provider_connections_disconnected_count
  * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
  * @property-read Session|null $last_employee_session
@@ -210,6 +220,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundProductLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviderEmployeeProvisioning($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviderRequesterProvisioning($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviders($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPhysicalCards($value)
@@ -383,6 +396,10 @@ class Organization extends Model
         'allow_2fa_restrictions' => 'boolean',
         'allow_fund_request_record_edit' => 'boolean',
         'allow_bi_connection' => 'boolean',
+        'allow_identity_providers' => 'boolean',
+        'allow_identity_provider_employee_provisioning' => 'boolean',
+        'allow_identity_provider_requester_provisioning' => 'boolean',
+        'allow_identity_provider_employee_provisioning_profiles' => 'boolean',
         'allow_physical_cards' => 'boolean',
         'allow_product_updates' => 'boolean',
         'allow_profiles_create' => 'boolean',
@@ -693,6 +710,31 @@ class Organization extends Model
     }
 
     /**
+     * @return HasOne
+     */
+    public function identity_provider_connection(): HasOne
+    {
+        return $this->hasOne(IdentityProviderConnection::class)
+            ->where('status', '!=', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections(): HasMany
+    {
+        return $this->hasMany(IdentityProviderConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections_disconnected(): HasMany
+    {
+        return $this->identity_provider_connections()->where('status', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
      * @return HasOneThrough
      * @noinspection PhpUnused
      */
@@ -815,6 +857,17 @@ class Organization extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function showsIdentityProviderProfileStatus(): bool
+    {
+        return
+            $this->allow_identity_provider_requester_provisioning ||
+            ($this->allow_identity_provider_employee_provisioning &&
+                $this->allow_identity_provider_employee_provisioning_profiles);
+    }
+
+    /**
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
@@ -887,9 +940,7 @@ class Organization extends Model
     public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
         if (!$fresh) {
-            return $this->employees
-                ->where('identity_address', $identity->address)
-                ->isNotEmpty();
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
         }
 
         return $this->employees()->where('identity_address', $identity->address)->exists();
