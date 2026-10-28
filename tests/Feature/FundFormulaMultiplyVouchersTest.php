@@ -114,26 +114,53 @@ class FundFormulaMultiplyVouchersTest extends TestCase
         $fund = $this->makeMultiplyVouchersFund();
         $startDate = Carbon::now();
 
-        $response = $this->makeFundRequest($identity, $fund, [
-            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
-            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
-            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
-            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
-            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
-            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
-            $this->makeRequestCriterionValue($fund, 'test_number', 7),
-            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
-            $this->makeRequestCriterionValue($fund, 'test_select_number', $this->recordValue),
-        ], false);
+        $fundRequest = $this->makeAndApproveFundRequest($identity, $fund);
 
-        $response->assertSuccessful();
-
-        $fundRequest = FundRequest::find($response->json('data.id'));
-        $fundRequest->assignEmployee($fund->organization->employees->first());
-        $fundRequest->approve();
-
-        $this->assertTrue($fundRequest->refresh()->isApproved());
         $this->assertMultiplyVouchersCreated($fund, $identity, $startDate, ['fund_request_id' => $fundRequest->id]);
+    }
+
+    /**
+     * Fund has only multiply_vouchers formula, main voucher amount is zero - only additional vouchers are created.
+     *
+     * @throws Throwable
+     * @return void
+     */
+    public function testOnlyMultiplyVouchersCreatedOnFundRequestApproveWithoutMainAmount(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $fund = $this->makeMultiplyVouchersFund(withFixedFormula: false);
+        $startDate = Carbon::now();
+
+        $fundRequest = $this->makeAndApproveFundRequest($identity, $fund);
+
+        $this->assertOnlyMultiplyVouchersCreated($fund, $identity, $startDate, $fundRequest);
+    }
+
+    /**
+     * Sponsor resolve policy "apply_auto_available": vouchers for related funds are created on approve,
+     * related fund main voucher amount is zero - only additional vouchers are created for it.
+     *
+     * @throws Throwable
+     * @return void
+     */
+    public function testOnlyMultiplyVouchersCreatedForRelatedFundOnFundRequestApprove(): void
+    {
+        $identity = $this->makeIdentity($this->makeUniqueEmail());
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+
+        $fund = $this->makeMultiplyVouchersFund($organization);
+        $relatedFund = $this->makeMultiplyVouchersFund($organization, withFixedFormula: false, withCriteria: false);
+
+        $organization->forceFill([
+            'fund_request_resolve_policy' => Organization::FUND_REQUEST_POLICY_AUTO_AVAILABLE,
+        ])->save();
+
+        $startDate = Carbon::now();
+
+        $fundRequest = $this->makeAndApproveFundRequest($identity, $fund);
+
+        $this->assertMultiplyVouchersCreated($fund, $identity, $startDate, ['fund_request_id' => $fundRequest->id]);
+        $this->assertOnlyMultiplyVouchersCreated($relatedFund, $identity, $startDate, $fundRequest);
     }
 
     /**
@@ -349,16 +376,28 @@ class FundFormulaMultiplyVouchersTest extends TestCase
     /**
      * @param Organization|null $organization
      * @param array $fundConfigsData
+     * @param bool $withFixedFormula
+     * @param bool $withCriteria
      * @return Fund
      */
     protected function makeMultiplyVouchersFund(
         ?Organization $organization = null,
         array $fundConfigsData = [],
+        bool $withFixedFormula = true,
+        bool $withCriteria = true,
     ): Fund {
         $organization ??= $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, [], $fundConfigsData);
 
-        $this->addTestCriteriaToFund($fund);
+        if ($withCriteria) {
+            $this->addTestCriteriaToFund($fund);
+        } else {
+            $fund->criteria()->delete();
+        }
+
+        if (!$withFixedFormula) {
+            $fund->fund_formulas()->where('type', FundFormula::TYPE_FIXED)->delete();
+        }
 
         $fund->fund_formulas()->create([
             'type' => FundFormula::TYPE_MULTIPLY_VOUCHERS,
@@ -367,6 +406,36 @@ class FundFormulaMultiplyVouchersTest extends TestCase
         ]);
 
         return $fund->refresh();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return FundRequest
+     */
+    protected function makeAndApproveFundRequest(Identity $identity, Fund $fund): FundRequest
+    {
+        $response = $this->makeFundRequest($identity, $fund, [
+            $this->makeRequestCriterionValue($fund, 'test_bool', 'Ja'),
+            $this->makeRequestCriterionValue($fund, 'test_iban', fake()->iban()),
+            $this->makeRequestCriterionValue($fund, 'test_date', '01-01-2010'),
+            $this->makeRequestCriterionValue($fund, 'test_email', fake()->email()),
+            $this->makeRequestCriterionValue($fund, 'test_string', 'lorem_ipsum'),
+            $this->makeRequestCriterionValue($fund, 'test_string_any', 'ipsum_lorem'),
+            $this->makeRequestCriterionValue($fund, 'test_number', 7),
+            $this->makeRequestCriterionValue($fund, 'test_select', 'foo'),
+            $this->makeRequestCriterionValue($fund, 'test_select_number', $this->recordValue),
+        ], false);
+
+        $response->assertSuccessful();
+
+        $fundRequest = FundRequest::find($response->json('data.id'));
+        $fundRequest->assignEmployee($fund->organization->employees->first());
+        $fundRequest->approve();
+
+        $this->assertTrue($fundRequest->refresh()->isApproved());
+
+        return $fundRequest;
     }
 
     /**
@@ -423,5 +492,27 @@ class FundFormulaMultiplyVouchersTest extends TestCase
                 $this->assertEquals($value, $voucher->$key, "Voucher field [$key] mismatch.");
             }
         }
+    }
+
+    /**
+     * Assert identity got only record value count of vouchers with formula amount, without main voucher.
+     *
+     * @param Fund $fund
+     * @param Identity $identity
+     * @param Carbon $startDate
+     * @param FundRequest $fundRequest
+     * @return void
+     */
+    protected function assertOnlyMultiplyVouchersCreated(
+        Fund $fund,
+        Identity $identity,
+        Carbon $startDate,
+        FundRequest $fundRequest,
+    ): void {
+        $vouchers = $this->budgetVouchersQuery($fund, $identity, $startDate)->get();
+
+        $this->assertCount($this->recordValue, $vouchers, 'Only multiply vouchers expected.');
+        $this->assertCount($this->recordValue, $vouchers->where('amount', $this->formulaAmount));
+        $this->assertCount($this->recordValue, $vouchers->where('fund_request_id', $fundRequest->id));
     }
 }

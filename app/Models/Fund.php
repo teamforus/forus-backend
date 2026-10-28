@@ -1452,6 +1452,15 @@ class Fund extends Model
         $amount = $presetModel ? $presetModel->amount : $amount;
         $amount = $amount === null ? $this->amountForIdentity($identity) : $amount;
 
+        // if amount is zero and identity gets additional vouchers by "multiply_vouchers" formulas - only they are created
+        if (
+            (float) $amount === 0.0 &&
+            $this->fund_formulas->contains('type', FundFormula::TYPE_MULTIPLY_VOUCHERS) &&
+            $this->amountFundFormulaMultipleVouchers($identity) > 0
+        ) {
+            return null;
+        }
+
         $voucher = Voucher::create([
             'number' => Voucher::makeUniqueNumber(),
             'identity_id' => $identity?->id,

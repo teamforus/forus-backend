@@ -143,7 +143,10 @@ class VouchersController extends Controller
         }
 
         /** @var Voucher[] $vouchers */
-        $vouchers = array_merge([$mainVoucher], $productVouchers, $multipleVouchers);
+        $vouchers = array_filter(array_merge([$mainVoucher], $productVouchers, $multipleVouchers));
+
+        // main voucher is not created when amount is zero and multiply vouchers are created instead
+        $mainVoucher = $mainVoucher ?: Arr::first($multipleVouchers);
         $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
         foreach ($vouchers as $voucher) {
@@ -277,7 +280,11 @@ class VouchersController extends Controller
             }
 
             /** @var Voucher[] $vouchers */
-            $vouchers = array_merge([$mainVoucher], $productVouchers, $multipleVouchers);
+            $vouchers = array_filter(array_merge([$mainVoucher], $productVouchers, $multipleVouchers));
+
+            // main voucher is not created when amount is zero and multiply vouchers are created instead
+            $isMainVoucherCreated = (bool) $mainVoucher;
+            $mainVoucher = $mainVoucher ?: Arr::first($multipleVouchers);
             $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
             foreach ($vouchers as $voucherModel) {
@@ -304,7 +311,12 @@ class VouchersController extends Controller
                 }
             }
 
-            if ($payment_iban && $mainVoucher->isBudgetType() && $fund->generatorDirectPaymentsAllowed()) {
+            if (
+                $isMainVoucherCreated &&
+                $payment_iban &&
+                $mainVoucher->isBudgetType() &&
+                $fund->generatorDirectPaymentsAllowed()
+            ) {
                 $mainVoucher->makeDirectPayment($payment_iban, $payment_name, $employee);
             }
 
