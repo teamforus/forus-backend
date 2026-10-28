@@ -115,6 +115,18 @@ class IdentityQuery
                 $builder->where('type', Identity::TYPE_PROFILE);
                 $builder->where('creator_organization_id', (array) $organizationId);
             });
+
+            if (!$fundId) {
+                $builder->orWhereHas(
+                    'identity_provider_requester_membership.connection',
+                    fn (Builder $builder) => $builder->whereIn('organization_id', (array) $organizationId),
+                );
+
+                $builder->orWhereHas('profiles', fn (Builder $query) => $query
+                    ->whereIn('organization_id', (array) $organizationId)
+                    ->whereHas('identity.identity_provider_managed_membership.connection', fn (Builder $query) => $query
+                        ->whereColumn('identity_provider_connections.organization_id', 'profiles.organization_id')));
+            }
         });
     }
 

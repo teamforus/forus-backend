@@ -9,11 +9,15 @@ use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Mail\Factory;
+use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\SentMessage;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
 use Mews\Purifier\Facades\Purifier;
@@ -191,6 +195,31 @@ class ImplementationMail extends Mailable implements ShouldQueue
         if ($logger = logger()) {
             $logger->error('Error sending digest: `' . $e->getMessage() . '`');
         }
+    }
+
+    /**
+     * @return Implementation|null
+     */
+    public function getImplementation(): ?Implementation
+    {
+        return Implementation::byKey($this->implementationKey());
+    }
+
+    /**
+     * @param Factory|Mailer $mailer
+     * @return SentMessage|null
+     */
+    public function send($mailer): ?SentMessage
+    {
+        if (in_array(static::class, Config::get('forus.mail.custom_mailer_allowlist', []), true)) {
+            $transport = $this->getImplementation()?->getCustomMailerConfig();
+
+            if ($transport !== null) {
+                $mailer = Mail::build($transport);
+            }
+        }
+
+        return parent::send($mailer);
     }
 
     /**
