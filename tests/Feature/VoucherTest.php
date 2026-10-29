@@ -869,11 +869,7 @@ class VoucherTest extends TestCase
         );
 
         $response = $this->post($url, [
-            'city' => Str::limit($this->faker()->city(), 0, 15),
-            'house' => $this->faker()->numberBetween(1, 200),
-            'address' => $this->faker()->address(),
-            'postcode' => $this->faker()->postcode(),
-            'house_addition' => $this->faker()->word(),
+            ...$this->addressFields(),
             'fund_physical_card_type_id' => $this->makeFundPhysicalCardType($voucher->fund)->id,
         ], $headers);
 
@@ -1014,11 +1010,7 @@ class VoucherTest extends TestCase
         $url = $this->getIdentityApiUrl($voucher, '/physical-card-requests');
 
         $response = $this->post($url, [
-            'address' => $this->faker()->address(),
-            'house' => $this->faker()->numberBetween(1, 100),
-            'house_addition' => $this->faker()->word(),
-            'postcode' => $this->faker()->postcode(),
-            'city' => Str::limit($this->faker()->city(), 0, 15),
+            ...$this->addressFields(),
             'fund_physical_card_type_id' => $this->makeFundPhysicalCardType($voucher->fund)->id,
         ], $headers);
 
@@ -1129,5 +1121,19 @@ class VoucherTest extends TestCase
     protected function getIdentityApiUrl(Voucher $voucher, string $append = ''): string
     {
         return "$this->apiBaseUrl/vouchers/$voucher->number" . $append;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function addressFields(): array
+    {
+        return [
+            'address' => 'Test address',
+            'house' => '123',
+            'house_addition' => 'B',
+            'postcode' => '1234 AB',
+            'city' => 'Test city',
+        ];
     }
 }
