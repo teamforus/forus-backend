@@ -1093,7 +1093,11 @@ class Implementation extends Model
                 $vouchers[] = $voucher;
             }
 
-            return array_merge($vouchers, $fund->makeFundFormulaProductVouchers($identity));
+            return [
+                ...$vouchers,
+                ...$fund->makeFundFormulaProductVouchers($identity),
+                ...$fund->makeFundFormulaMultipleVouchers($identity),
+            ];
         }, []);
     }
 
