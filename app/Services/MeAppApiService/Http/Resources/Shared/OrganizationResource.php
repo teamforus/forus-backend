@@ -19,11 +19,7 @@ class OrganizationResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array{
-     *   id: int, name: string,
-     *   email: string|null, phone: string|null,
-     *   logo: MediaResource|null
-     * }
+     * @return array
      */
     public function toArray(Request $request): array
     {
@@ -33,10 +29,8 @@ class OrganizationResource extends BaseJsonResource
             ...$organization->only([
                 'id', 'name',
             ]),
-            /** @var string|null */
-            'email' => $organization->email ?? null,
-            /** @var string|null */
-            'phone' => $organization->phone ?? null,
+            'email' => $organization->email ?: null,
+            'phone' => $organization->phone ?: null,
             'logo' => $organization->logo ? new MediaResource($organization->logo) : null,
         ];
     }

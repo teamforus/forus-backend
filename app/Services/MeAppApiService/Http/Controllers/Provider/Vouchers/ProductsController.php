@@ -11,7 +11,6 @@ use App\Models\VoucherToken;
 use App\Services\MeAppApiService\Http\Resources\Provider\ProviderProductResource;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductsController extends Controller
 {
@@ -22,9 +21,6 @@ class ProductsController extends Controller
      * @param VoucherToken $voucherToken
      * @throws AuthorizationException
      * @return AnonymousResourceCollection
-     * @scramble-return AnonymousResourceCollection<
-     *     LengthAwarePaginator<int, Product>, array{}, ProviderProductResource
-     * >
      */
     public function index(IndexProductsRequest $request, VoucherToken $voucherToken): AnonymousResourceCollection
     {

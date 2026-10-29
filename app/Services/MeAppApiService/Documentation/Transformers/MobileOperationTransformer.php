@@ -72,9 +72,9 @@ class MobileOperationTransformer implements OperationTransformer
             ]);
         }
 
-        if ($route->named('mobile.requester.v1.vouchers.index')) {
+        if ($route->named('mobile.requester.v1.vouchers.index', 'mobile.requester.v1.vouchers.show')) {
             $descriptions = [
-                'product_id' => 'Must reference an existing product when non-null.',
+                'product_id' => 'Existing product ID for query_product context. Does not filter vouchers.',
                 'implementation_id' => 'Must reference an existing implementation when non-null.',
                 'implementation_key' => 'Must reference an existing implementation key when non-null.',
             ];
@@ -82,6 +82,87 @@ class MobileOperationTransformer implements OperationTransformer
             foreach ($operation->parameters as $parameter) {
                 if ($parameter->in === 'query' && isset($descriptions[$parameter->name])) {
                     $parameter->description($descriptions[$parameter->name]);
+                }
+            }
+        }
+
+        if ($route->named('mobile.*.v1.product-categories.index')) {
+            foreach ($operation->parameters as $parameter) {
+                if ($parameter->in !== 'query') {
+                    continue;
+                }
+
+                if ($parameter->name === 'parent_id') {
+                    $parameter->description('Omit or leave empty for root categories, '
+                        . 'or provide an existing category ID for children.');
+                } elseif ($parameter->name === 'used') {
+                    $parameter->setSchema(Schema::fromType((new IntegerType())->enum([0, 1])))
+                        ->description('Use 1 for categories with available products, including in descendants, '
+                            . 'or 0 to include unused categories.');
+                }
+            }
+        }
+
+        if ($route->named('mobile.requester.v1.products.index')) {
+            $descriptions = [
+                'product_category_ids[]' => 'Match selected categories and their descendants.',
+                'fund_ids[]' => 'Filter products by selected funds.',
+                'organization_id' => 'Filter by provider organization ID.',
+                'from' => 'Minimum calculated product price.',
+                'to' => 'Maximum calculated product price.',
+                'postcode' => 'Used with distance to filter by provider office location.',
+                'distance' => 'Distance in kilometres, used with postcode.',
+                'bookmarked' => 'Use 1 for your bookmarked products. Guests receive an empty list.',
+                'order_by' => 'Sort field. Defaults to created_at.',
+                'order_dir' => 'Sort direction. Defaults to desc.',
+                'page' => 'Page number. Defaults to 1.',
+            ];
+
+            foreach ($operation->parameters as $parameter) {
+                if ($parameter->in !== 'query') {
+                    continue;
+                }
+
+                if (isset($descriptions[$parameter->name])) {
+                    $parameter->description($descriptions[$parameter->name]);
+                }
+
+                if (in_array($parameter->name, ['product_category_ids[]', 'fund_ids[]'], true)
+                    && $parameter->schema instanceof Schema && $parameter->schema->type instanceof ArrayType) {
+                    $parameter->schema->type->setMax(50);
+                }
+
+                if (in_array($parameter->name, [
+                    'qr', 'reservation', 'extra_payment', 'regular', 'discount_fixed', 'discount_percentage',
+                    'free', 'informational', 'bookmarked',
+                ], true)) {
+                    $parameter->setSchema(Schema::fromType(
+                        (new IntegerType())->nullable(true)->enum([0, 1, null]),
+                    ));
+
+                    if ($parameter->name !== 'bookmarked') {
+                        $parameter->description('Use 1 to enable this filter.');
+                    }
+                }
+            }
+
+            $schema = $this->response($operation, 200)->getContent('application/json');
+            $meta = $schema instanceof Schema && $schema->type instanceof ObjectType
+                ? $schema->type->getProperty('meta')
+                : null;
+
+            if (!$meta instanceof ObjectType) {
+                throw new LogicException('Expected pagination metadata for the product list.');
+            }
+
+            $meta->addProperty('price_max', new IntegerType())->addRequired(['price_max']);
+        }
+
+        if ($route->named('mobile.requester.v1.funds.index')) {
+            foreach ($operation->parameters as $parameter) {
+                if ($parameter->in === 'query' && $parameter->name === 'has_providers') {
+                    $parameter->setSchema(Schema::fromType((new IntegerType())->enum([0, 1])->default(1)))
+                        ->description('Use 1 for funds with approved providers or 0 for funds without them.');
                 }
             }
         }
@@ -193,10 +274,10 @@ class MobileOperationTransformer implements OperationTransformer
         }
 
         if ($route->named('mobile.provider.v1.vouchers.show')) {
-            $operation->description .= "\n\nBudget amount fields are included only when you can spend "
+            $operation->description .= "\n\nBudget amount fields are null unless you can spend "
                 . 'the voucher directly. '
                 . 'With Me-app Client-Version ≥ 1, product or reservation permissions can grant access '
-                . 'without those fields. '
+                . 'with null amount fields. '
                 . 'Product vouchers include product details.';
         }
 

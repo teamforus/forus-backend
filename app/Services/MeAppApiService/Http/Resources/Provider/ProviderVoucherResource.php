@@ -69,17 +69,6 @@ class ProviderVoucherResource extends BaseJsonResource
      * @param VoucherToken $voucherToken
      * @param bool $useAsProvider
      * @return array
-     * @scramble-return array{
-     *   fund_id: int, type: 'regular', address: string,
-     *   fund: array{
-     *     id: int, name: string, state: string, type: string|null,
-     *     organization: OrganizationResource, logo: MediaResource|null
-     *   },
-     *   allowed_organizations: list<array{id: int, name: string, logo: MediaResource|null}>,
-     *   allowed_product_organizations: list<array{id: int, name: string, logo: MediaResource|null}>,
-     *   amount?: string, amount_locale?: string, amount_visible?: bool|null,
-     *   created_at: string|null, created_at_locale: string|null
-     * }
      */
     protected function regularVoucher(
         string $identityAddress,
@@ -98,11 +87,9 @@ class ProviderVoucherResource extends BaseJsonResource
             'address' => $voucherToken->address,
             'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
             'allowed_product_organizations' => $this->getAllowedProductOrganizations($voucher, $identityAddress),
-            ...$useAsProvider ? [
-                'amount' => currency_format($voucher->amount_available),
-                'amount_locale' => currency_format_locale($voucher->amount_available),
-                'amount_visible' => $fund->fund_config?->voucher_amount_visible,
-            ] : [],
+            'amount' => $useAsProvider ? currency_format($voucher->amount_available) : null,
+            'amount_locale' => $useAsProvider ? currency_format_locale($voucher->amount_available) : null,
+            'amount_visible' => $useAsProvider ? $fund->fund_config?->voucher_amount_visible : null,
             ...$this->makeTimestamps($this->resource->only([
                 'created_at',
             ])),

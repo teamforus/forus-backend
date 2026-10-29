@@ -99,7 +99,6 @@ class ProviderProductResource extends BaseJsonResource
             'product_category' => [
                 'id' => $product->product_category->id,
                 'key' => $product->product_category->key,
-                /** @var string|null */
                 'name' => $product->product_category->name,
             ],
         ];

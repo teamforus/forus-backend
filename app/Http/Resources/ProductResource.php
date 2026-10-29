@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
@@ -79,7 +80,9 @@ class ProductResource extends BaseJsonResource
             'deleted' => $product->trashed(),
             'funds' => $product->trashed() || !$forWebshop ? [] : $this->getProductFunds($baseRequest, $product),
             'offices' => OfficeResource::collection($product->organization->offices),
-            'product_category' => new ProductCategoryResource($product->product_category),
+            'product_category' => $product->product_category
+                ? new ProductCategoryResource($product->product_category)
+                : null,
             'bookmarked' => $forWebshop ? $product->isBookmarkedBy($baseRequest->identity()) : null,
             ...$priceFields,
             ...$priceFieldsExtra,
@@ -132,8 +135,8 @@ class ProductResource extends BaseJsonResource
      */
     protected function priceFieldsExtra(Product $product): array
     {
-        $price_min = $this->getProductSubsidyPrice($product, 'min');
-        $price_max = $this->getProductSubsidyPrice($product, 'max');
+        $price_min = $this->getProductSubsidyPrice($product, 'max');
+        $price_max = $this->getProductSubsidyPrice($product, 'min');
         $lowest_price = min($product->price, $price_min);
 
         return [
@@ -228,6 +231,7 @@ class ProductResource extends BaseJsonResource
     {
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
+            'payment_type' => FundProviderProduct::PAYMENT_TYPE_SUBSIDY,
         ])->whereHas('fund_provider.fund', function (Builder $builder) {
             $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);

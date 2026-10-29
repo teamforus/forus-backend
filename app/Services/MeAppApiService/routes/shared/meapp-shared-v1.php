@@ -9,6 +9,7 @@ use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Services\MeAppApiService\Http\Controllers\Shared\IdentityController as MobileIdentityController;
+use App\Services\MeAppApiService\Http\Controllers\Shared\ProductCategoriesController;
 use Illuminate\Support\Facades\Route;
 
 // verify the custom API URL response in Android developer options
@@ -18,6 +19,9 @@ Route::get('status', [StatusController::class, 'getStatus'])
         ClientTypeMiddleware::class, ClientVersionMiddleware::class,
         ImplementationKeyMiddleware::class, DomainMiddleware::class,
     ]);
+
+// list product categories
+Route::get('product-categories', [ProductCategoriesController::class, 'index'])->name('product-categories.index');
 
 Route::prefix('identity')->name('identity.')->group(static function (): void {
     // send a login or signup email

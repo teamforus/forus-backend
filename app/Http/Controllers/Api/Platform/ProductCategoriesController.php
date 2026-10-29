@@ -20,8 +20,13 @@ class ProductCategoriesController extends Controller
      */
     public function index(IndexProductCategoriesRequest $request): AnonymousResourceCollection
     {
+        $filters = $request->only([
+            'q', 'parent_id', 'used',
+        ]);
+
+        $filters['show_on_webshop'] = true;
         $disabledCategories = Config::get('forus.product_categories.disabled_top_categories', []);
-        $search = new ProductCategorySearch($request->only('q', 'parent_id', 'used'), ProductCategory::query());
+        $search = new ProductCategorySearch($filters, ProductCategory::query());
         $query = $search->query()->whereNotIn('id', $disabledCategories)->orderBy('id');
 
         return ProductCategoryResource::queryCollection($query, $request);

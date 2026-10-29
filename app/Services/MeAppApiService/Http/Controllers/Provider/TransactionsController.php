@@ -10,7 +10,6 @@ use App\Models\VoucherTransaction;
 use App\Services\MeAppApiService\Http\Resources\Provider\ProviderVoucherTransactionEmployeeResource;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class TransactionsController extends Controller
 {
@@ -20,9 +19,6 @@ class TransactionsController extends Controller
      * @param IndexTransactionsRequest $request
      * @throws AuthorizationException
      * @return AnonymousResourceCollection
-     * @scramble-return AnonymousResourceCollection<
-     *     LengthAwarePaginator<int, VoucherTransaction>, array{}, ProviderVoucherTransactionEmployeeResource
-     * >
      */
     public function index(IndexTransactionsRequest $request): AnonymousResourceCollection
     {

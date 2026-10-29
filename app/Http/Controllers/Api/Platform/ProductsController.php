@@ -54,11 +54,11 @@ class ProductsController extends Controller
             ->mergeBindings($priceQuery->getQuery())
             ->max($priceField);
 
-        if ($from = $request->input('from')) {
+        if (($from = $request->input('from')) !== null) {
             $query = $query->having($priceField, '>=', intval($from));
         }
 
-        if ($to = $request->input('to')) {
+        if (($to = $request->input('to')) !== null) {
             $query = $query->having($priceField, '<=', intval($to));
         }
 

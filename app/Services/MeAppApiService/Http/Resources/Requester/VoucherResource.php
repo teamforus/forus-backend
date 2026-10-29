@@ -3,6 +3,7 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\VoucherResource as LegacyVoucherResource;
 use App\Models\Voucher;
 use Exception;
 use Illuminate\Http\Request;
@@ -48,6 +49,7 @@ class VoucherResource extends BaseJsonResource
     {
         $voucher = $this->resource;
         $deactivationDate = $voucher->deactivated ? $voucher->last_deactivation_log?->created_at : null;
+        $productId = $request->integer('product_id') ?: null;
 
         return [
             ...$voucher->only([
@@ -58,6 +60,7 @@ class VoucherResource extends BaseJsonResource
             'address' => $voucher->token_with_confirmation->address,
             'fund' => new VoucherFundResource($voucher->fund),
             'product_vouchers' => VoucherProductVoucherResource::collection($voucher->product_vouchers),
+            'query_product' => (new LegacyVoucherResource($voucher))->queryProduct($voucher, $productId),
             ...$this->makeTimestamps([
                 'deactivated_at' => $deactivationDate,
                 'last_active_day' => $voucher->last_active_day,
@@ -71,7 +74,7 @@ class VoucherResource extends BaseJsonResource
 
     /**
      * @param Voucher $voucher
-     * @return array{used: bool, product: VoucherProductResource|null, amount: string|null, amount_locale: string|null}
+     * @return array
      */
     protected function getBaseFields(Voucher $voucher): array
     {

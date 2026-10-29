@@ -7,11 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Resources\VoucherCollectionResource as LegacyVoucherCollectionResource;
 use App\Models\Voucher;
+use App\Services\MeAppApiService\Http\Requests\Requester\ShowVoucherRequest;
 use App\Services\MeAppApiService\Http\Resources\Requester\VoucherResource;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class VouchersController extends Controller
 {
@@ -21,7 +21,6 @@ class VouchersController extends Controller
      * @param IndexVouchersRequest $request
      * @throws AuthorizationException
      * @return AnonymousResourceCollection
-     * @scramble-return AnonymousResourceCollection<LengthAwarePaginator<int, Voucher>, array{}, VoucherResource>
      */
     public function index(IndexVouchersRequest $request): AnonymousResourceCollection
     {
@@ -38,11 +37,12 @@ class VouchersController extends Controller
     /**
      * Get voucher details.
      *
+     * @param ShowVoucherRequest $request
      * @param Voucher $voucher
      * @throws AuthorizationException
      * @return VoucherResource
      */
-    public function show(Voucher $voucher): VoucherResource
+    public function show(ShowVoucherRequest $request, Voucher $voucher): VoucherResource
     {
         $response = resolve(LegacyVouchersController::class)->show($voucher);
 
@@ -55,7 +55,6 @@ class VouchersController extends Controller
      * @param Voucher $voucher
      * @throws AuthorizationException
      * @return JsonResponse
-     * @scramble-return JsonResponse<array{}, 200>
      */
     public function sendEmail(Voucher $voucher): JsonResponse
     {

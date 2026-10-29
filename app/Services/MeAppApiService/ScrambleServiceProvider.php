@@ -7,7 +7,11 @@ use App\Services\MeAppApiService\Documentation\Extractors\DeleteBodyParametersEx
 use App\Services\MeAppApiService\Documentation\Extractors\MobileFormRequestExtractor;
 use App\Services\MeAppApiService\Documentation\Inference\ArraySpreadInference;
 use App\Services\MeAppApiService\Documentation\Inference\BaseJsonResourceInference;
+use App\Services\MeAppApiService\Documentation\Inference\BooleanExpressionInference;
+use App\Services\MeAppApiService\Documentation\Inference\ContainerResolveInference;
 use App\Services\MeAppApiService\Documentation\Inference\EmptyObjectCastInference;
+use App\Services\MeAppApiService\Documentation\Inference\ResourcePropertyInference;
+use App\Services\MeAppApiService\Documentation\Inference\TranslatedAttributeInference;
 use App\Services\MeAppApiService\Documentation\Inference\TranslatedColumnsInference;
 use App\Services\MeAppApiService\Documentation\Responses\ViewResponse;
 use App\Services\MeAppApiService\Documentation\Transformers\DeleteRequestBodyExtension;
@@ -41,7 +45,11 @@ class ScrambleServiceProvider extends ServiceProvider
 
         Scramble::registerExtension(ArraySpreadInference::class);
         Scramble::registerExtension(BaseJsonResourceInference::class);
+        Scramble::registerExtension(BooleanExpressionInference::class);
+        Scramble::registerExtension(ContainerResolveInference::class);
         Scramble::registerExtension(EmptyObjectCastInference::class);
+        Scramble::registerExtension(ResourcePropertyInference::class);
+        Scramble::registerExtension(TranslatedAttributeInference::class);
         Scramble::registerExtension(TranslatedColumnsInference::class);
         Scramble::registerExtension(ViewResponse::class);
 

@@ -19,7 +19,7 @@ class IdentityResource extends BaseJsonResource
      * Transform the resource into an array.
      *
      * @param Request $request
-     * @return array{address: string, email: string|null}
+     * @return array
      */
     public function toArray(Request $request): array
     {

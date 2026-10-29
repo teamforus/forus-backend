@@ -18,7 +18,7 @@ class MediaResource extends BaseJsonResource
 
     /**
      * @param Request $request
-     * @return array{sizes: array{thumbnail: string|null, large: string|null}}|null
+     * @return array|null
      */
     public function toArray(Request $request): ?array
     {
@@ -29,12 +29,15 @@ class MediaResource extends BaseJsonResource
         $presets = $media->presets->keyBy('key');
         /** @var MediaPreset|null $thumbnail */
         $thumbnail = $presets->get('thumbnail');
+        /** @var MediaPreset|null $small */
+        $small = $presets->get('small');
         /** @var MediaPreset|null $large */
         $large = $presets->get('large');
 
         return [
             'sizes' => [
                 'thumbnail' => $thumbnail?->urlPublic(),
+                'small' => $small?->urlPublic(),
                 'large' => $large?->urlPublic(),
             ],
         ];
