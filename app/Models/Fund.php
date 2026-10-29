@@ -1248,6 +1248,7 @@ class Fund extends Model
                         amount: $formula->amount,
                         expireAt: $expireAt,
                         limitMultiplier: 1,
+                        isMainVoucher: false,
                     );
                 }
 
@@ -1433,6 +1434,7 @@ class Fund extends Model
      * @param Carbon|null $expireAt
      * @param int|null $limitMultiplier
      * @param bool $dispatchCreated
+     * @param bool $isMainVoucher
      * @return Voucher|null
      */
     public function makeVoucher(
@@ -1442,6 +1444,7 @@ class Fund extends Model
         Carbon $expireAt = null,
         ?int $limitMultiplier = null,
         bool $dispatchCreated = true,
+        bool $isMainVoucher = true,
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
@@ -1454,6 +1457,8 @@ class Fund extends Model
 
         // if amount is zero and identity gets additional vouchers by "multiply_vouchers" formulas - only they are created
         if (
+            $isMainVoucher &&
+            ($voucherFields['voucher_type'] ?? null) !== Voucher::VOUCHER_TYPE_PAYOUT &&
             (float) $amount === 0.0 &&
             $this->fund_formulas->contains('type', FundFormula::TYPE_MULTIPLY_VOUCHERS) &&
             $this->amountFundFormulaMultipleVouchers($identity) > 0

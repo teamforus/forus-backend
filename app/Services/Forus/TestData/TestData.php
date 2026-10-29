@@ -288,6 +288,10 @@ class TestData
             $prevalidation->fund->makeFundFormulaMultipleVouchers($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
 
+            if ($voucher === null) {
+                continue;
+            }
+
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
             $product = $productsQuery->inRandomOrder()->first();
