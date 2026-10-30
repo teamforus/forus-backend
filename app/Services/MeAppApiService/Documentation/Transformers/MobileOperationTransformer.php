@@ -52,7 +52,19 @@ class MobileOperationTransformer implements OperationTransformer
         $middleware = resolve(Router::class)->gatherRouteMiddleware($route);
         $forbidden = [];
 
-        if ($operation->security === []) {
+        $hideBearerAuth = $route->named(
+            'mobile.*.v1.status',
+            'mobile.*.v1.identity.store',
+            'mobile.*.v1.identity.proxy.code',
+            'mobile.*.v1.identity.proxy.token',
+            'mobile.*.v1.identity.proxy.check-token',
+            'mobile.*.v1.identity.proxy.email.redirect',
+            'mobile.*.v1.identity.proxy.email.exchange',
+            'mobile.*.v1.identity.proxy.confirmation.redirect',
+            'mobile.*.v1.identity.proxy.confirmation.exchange',
+        );
+
+        if ($operation->security === [] && !$hideBearerAuth) {
             $operation->addSecurity(new SecurityRequirement('http'));
             $operation->addSecurity([]);
         }
