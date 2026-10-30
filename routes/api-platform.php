@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\RequesterImport\Http\Controllers\RequesterImportRowsController;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Env;
 
@@ -1024,6 +1025,26 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'organizations/{organization}/sponsor/identities',
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
     )->only('store', 'index', 'show', 'update');
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports',
+        [RequesterImportRowsController::class, 'index'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch/validate',
+        [RequesterImportRowsController::class, 'storeBatchValidate'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch',
+        [RequesterImportRowsController::class, 'storeBatch'],
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/requester-imports/{requesterImportRow}',
+        [RequesterImportRowsController::class, 'update'],
+    );
 
     $router->resource(
         'organizations/{organization}/sponsor/households',

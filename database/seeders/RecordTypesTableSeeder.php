@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Helpers\Arr;
 use App\Models\RecordType;
+use App\Modules\RequesterImport\Enums\RequesterImportValidationKey;
 
 class RecordTypesTableSeeder extends DatabaseSeeder
 {
@@ -21,10 +22,14 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'key' => 'given_name',
         'name' => 'Voornaam',
         'vouchers' => true,
+        'requester_imports' => true,
+        'requester_import_validation_key' => RequesterImportValidationKey::PERSON_NAME,
     ], [
         'key' => 'family_name',
         'name' => 'Achternaam',
         'vouchers' => true,
+        'requester_imports' => true,
+        'requester_import_validation_key' => RequesterImportValidationKey::PERSON_NAME,
     ], [
         'key' => 'children_nth',
         'name' => 'Number of children',
@@ -45,6 +50,8 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         'type' => RecordType::TYPE_DATE,
         'vouchers' => true,
         'criteria' => true,
+        'requester_imports' => true,
+        'requester_import_validation_key' => RequesterImportValidationKey::BIRTH_DATE,
     ], [
         'key' => 'spouse',
         'name' => 'Spouse',
@@ -264,6 +271,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
                 'control_type' => $baseTypes[$type['type'] ?? null] ?? RecordType::CONTROL_TYPE_TEXT,
                 ...Arr::only($type, [
                     'key', 'name', 'type', 'required', 'criteria', 'system', 'vouchers', 'control_type',
+                    'requester_imports', 'requester_import_validation_key',
                 ]),
             ]);
 

@@ -7,6 +7,10 @@ return [
     // Target languages for translations.
     'target_languages' => explode(',', env('TRANSLATION_SERVICE_TARGETS', 'en,ar')),
 
+    'static_sources' => [
+        'requester_import' => app_path('Modules/RequesterImport/lang'),
+    ],
+
     // Translation provider to use: 'deepl' or 'debug'.
     'provider' => env('TRANSLATION_SERVICE_PROVIDER', 'debug'),
 

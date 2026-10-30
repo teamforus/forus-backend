@@ -84,6 +84,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_requester_imports
  * @property bool $allow_profiles_create
  * @property bool $allow_profiles_relations
  * @property bool $allow_profiles_households
@@ -416,6 +417,7 @@ class Organization extends Model
         'allow_pre_checks' => 'boolean',
         'allow_payouts' => 'boolean',
         'allow_profiles' => 'boolean',
+        'allow_requester_imports' => 'boolean',
         'allow_translations' => 'boolean',
         'reservation_allow_extra_payments' => 'boolean',
         'show_provider_transactions' => 'boolean',

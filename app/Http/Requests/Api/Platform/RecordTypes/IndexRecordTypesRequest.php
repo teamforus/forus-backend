@@ -26,6 +26,7 @@ class IndexRecordTypesRequest extends BaseFormRequest
         return [
             'criteria' => 'nullable|boolean',
             'vouchers' => 'nullable|boolean',
+            'requester_imports' => 'nullable|boolean',
             'organization_id' => 'nullable|exists:organizations,id',
         ];
     }

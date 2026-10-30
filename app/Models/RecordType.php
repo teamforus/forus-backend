@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Translations\RecordTranslationsTrait;
+use App\Modules\RequesterImport\Enums\RequesterImportValidationKey;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $criteria
  * @property bool $vouchers
  * @property bool $pre_check
+ * @property bool $requester_imports
+ * @property RequesterImportValidationKey|null $requester_import_validation_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -117,6 +120,7 @@ class RecordType extends Model
      */
     protected $fillable = [
         'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type', 'pre_check',
+        'requester_imports', 'requester_import_validation_key',
     ];
 
     protected $perPage = 100;
@@ -126,6 +130,8 @@ class RecordType extends Model
         'criteria' => 'bool',
         'vouchers' => 'bool',
         'pre_check' => 'bool',
+        'requester_imports' => 'bool',
+        'requester_import_validation_key' => RequesterImportValidationKey::class,
     ];
 
     /**

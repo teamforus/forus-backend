@@ -28,7 +28,7 @@ class RecordTypeResource extends BaseJsonResource
 
         return [
             ...$recordType->only([
-                'key', 'type', 'system', 'criteria', 'control_type',
+                'key', 'type', 'system', 'criteria', 'control_type', 'requester_imports',
             ]),
             'name' => $recordType->name ?: $recordType->key,
             'validations' => $recordType->getValidations(),

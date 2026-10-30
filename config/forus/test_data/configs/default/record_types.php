@@ -3,6 +3,16 @@
 use App\Models\RecordType;
 
 return [[
+    'key' => 'client_uuid',
+    'name' => 'Client UUID',
+    'type' => RecordType::TYPE_STRING,
+    'control_type' => RecordType::CONTROL_TYPE_TEXT,
+    'system' => true,
+    'vouchers' => false,
+    'criteria' => false,
+    'pre_check' => false,
+    'requester_imports' => true,
+], [
     'key' => 'children_nth',
     'name' => 'Number of children',
     'type' => RecordType::TYPE_NUMBER,

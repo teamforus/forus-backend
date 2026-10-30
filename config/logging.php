@@ -98,6 +98,12 @@ return [
             'level' => 'debug',
         ],
 
+        'requester_imports' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/requester-imports.log'),
+            'level' => 'warning',
+        ],
+
         'mollie' => [
             'driver' => 'single',
             'path' => storage_path('logs/mollie-service.log'),

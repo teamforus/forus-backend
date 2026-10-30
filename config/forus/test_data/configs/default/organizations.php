@@ -24,6 +24,7 @@ return [
             'allow_product_updates' => true,
             'allow_profiles_create' => true,
             'allow_2fa_restrictions' => true,
+            'allow_requester_imports' => true,
             'allow_profiles_relations' => true,
             'allow_profiles_households' => true,
             'allow_fund_product_limits' => true,
