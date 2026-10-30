@@ -50,10 +50,15 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
                 'required',
                 Rule::in([FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED, FundProductLimit::SCOPE_ONLY_SELECTED]),
             ],
+            'limit_by' => [
+                'nullable',
+                Rule::in([FundProductLimit::LIMIT_BY_PRODUCTS, FundProductLimit::LIMIT_BY_AMOUNT]),
+            ],
             'limit' => [
                 'required',
-                'integer',
-                'min:1',
+                ...$this->limitBy() === FundProductLimit::LIMIT_BY_AMOUNT
+                    ? ['numeric', 'min:0.01', 'max:99999999']
+                    : ['integer', 'min:1'],
             ],
             'products' => [
                 'required_if:type,' . FundProductLimit::SCOPE_ONLY_SELECTED,
@@ -68,6 +73,14 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
                 },
             ],
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public function limitBy(): string
+    {
+        return $this->input('limit_by') ?: FundProductLimit::LIMIT_BY_PRODUCTS;
     }
 
     /**

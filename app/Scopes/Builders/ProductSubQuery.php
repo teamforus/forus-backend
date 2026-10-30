@@ -400,12 +400,19 @@ class ProductSubQuery
         $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
             ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
+        $reservedProductsAmount = static::reservationsAmountQuery($fundId, $identityId)
+            ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery(false));
+
         return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ONLY_SELECTED)
             ->whereHas('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
             ))
-            ->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            ->where(fn (Builder $builder) => static::whereLimitReached(
+                $builder,
+                $reservedProductsCount,
+                $reservedProductsAmount,
+            ));
     }
 
     /**
@@ -419,12 +426,46 @@ class ProductSubQuery
             ->whereColumn('product_reservations.product_id', '!=', 'products.id')
             ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
+        $reservedProductsAmount = static::reservationsAmountQuery($fundId, $identityId)
+            ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery(false));
+
         return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED)
             ->whereDoesntHave('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
             ))
-            ->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            ->where(fn (Builder $builder) => static::whereLimitReached(
+                $builder,
+                $reservedProductsCount,
+                $reservedProductsAmount,
+            ));
+    }
+
+    /**
+     * @param Builder|FundProductLimit $builder
+     * @param Builder|ProductReservation $reservedProductsCount
+     * @param Builder|ProductReservation $reservedProductsAmount
+     * @return Builder|FundProductLimit
+     */
+    private static function whereLimitReached(
+        Builder|FundProductLimit $builder,
+        Builder|ProductReservation $reservedProductsCount,
+        Builder|ProductReservation $reservedProductsAmount,
+    ): Builder|FundProductLimit {
+        return $builder
+            ->where(function (Builder $builder) use ($reservedProductsCount) {
+                $builder->where('fund_product_limits.limit_by', FundProductLimit::LIMIT_BY_PRODUCTS);
+                $builder->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            })
+            ->orWhere(function (Builder $builder) use ($reservedProductsAmount) {
+                $builder->where('fund_product_limits.limit_by', FundProductLimit::LIMIT_BY_AMOUNT);
+
+                $builder->where(
+                    $reservedProductsAmount,
+                    '>',
+                    DB::raw('fund_product_limits.limit - products.price'),
+                );
+            });
     }
 
     /**
@@ -448,8 +489,29 @@ class ProductSubQuery
      */
     private static function reservationsUniqueCountQuery(int $fundId, int $identityId): Builder|ProductReservation
     {
+        return static::activeReservationsQuery($fundId, $identityId)
+            ->selectRaw('COUNT(DISTINCT product_reservations.product_id)');
+    }
+
+    /**
+     * @param int $fundId
+     * @param int $identityId
+     * @return ProductReservation|Builder
+     */
+    private static function reservationsAmountQuery(int $fundId, int $identityId): Builder|ProductReservation
+    {
+        return static::activeReservationsQuery($fundId, $identityId)
+            ->selectRaw('COALESCE(SUM(product_reservations.price), 0)');
+    }
+
+    /**
+     * @param int $fundId
+     * @param int $identityId
+     * @return ProductReservation|Builder
+     */
+    private static function activeReservationsQuery(int $fundId, int $identityId): Builder|ProductReservation
+    {
         return ProductReservation::query()
-            ->selectRaw('COUNT(DISTINCT product_reservations.product_id)')
             ->whereRelation('voucher', 'fund_id', $fundId)
             ->whereRelation('voucher', 'identity_id', $identityId)
             ->whereNotIn('state', [
@@ -459,13 +521,15 @@ class ProductSubQuery
     }
 
     /**
+     * @param bool $exceptCurrentProduct
      * @return FundProductLimitProduct|Builder
      */
-    private static function fundProductLimitReservationsSubQuery(): FundProductLimitProduct|Builder
-    {
+    private static function fundProductLimitReservationsSubQuery(
+        bool $exceptCurrentProduct = true,
+    ): FundProductLimitProduct|Builder {
         return FundProductLimitProduct::query()
             ->select('product_id')
             ->whereColumn('fund_product_limit_id', 'fund_product_limits.id')
-            ->whereColumn('product_id', '!=', 'products.id');
+            ->when($exceptCurrentProduct, fn (Builder $q) => $q->whereColumn('product_id', '!=', 'products.id'));
     }
 }
