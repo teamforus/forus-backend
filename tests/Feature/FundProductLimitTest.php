@@ -196,7 +196,7 @@ class FundProductLimitTest extends TestCase
         $this->assertSame($fund->id, $fundProductLimit->fund_id);
         $this->assertSame(FundProductLimit::STATE_ACTIVE, $fundProductLimit->state);
         $this->assertSame(FundProductLimit::SCOPE_ONLY_SELECTED, $fundProductLimit->type);
-        $this->assertSame(2, $fundProductLimit->limit);
+        $this->assertEquals(2, $fundProductLimit->limit);
         $this->assertSame([$product->id], $fundProductLimit->products()->pluck('products.id')->all());
     }
 
@@ -241,7 +241,7 @@ class FundProductLimitTest extends TestCase
         $this->assertSame($fund->id, $fundProductLimit->fund_id);
         $this->assertSame(FundProductLimit::STATE_INACTIVE, $fundProductLimit->state);
         $this->assertSame(FundProductLimit::SCOPE_ONLY_SELECTED, $fundProductLimit->type);
-        $this->assertSame(2, $fundProductLimit->limit);
+        $this->assertEquals(2, $fundProductLimit->limit);
         $this->assertSame([$productB->id], $fundProductLimit->products()->pluck('products.id')->all());
     }
 
@@ -572,6 +572,145 @@ class FundProductLimitTest extends TestCase
     }
 
     /**
+     * Create fund product limit by amount (budget) with limit 50.50
+     * Assert limit_by and formatted limit are returned
+     * Update the limit without limit_by and assert it stays limited by amount
+     * Assert decimal limit is not accepted when limited by products.
+     * @return void
+     */
+    public function testStoreAndUpdateFundProductLimitByAmount(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_fund_product_limits' => true,
+        ]);
+
+        $fund = $this->makeTestFund($organization);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund]);
+
+        $data = [
+            'fund_id' => $fund->id,
+            'state' => FundProductLimit::STATE_ACTIVE,
+            'type' => FundProductLimit::SCOPE_ONLY_SELECTED,
+            'products' => [$product->id],
+        ];
+
+        $response = $this->apiMakeFundProductLimitRequest($organization, [
+            ...$data,
+            'limit_by' => FundProductLimit::LIMIT_BY_AMOUNT,
+            'limit' => 50.5,
+        ], $organization->identity)
+            ->assertSuccessful()
+            ->assertJsonPath('data.limit_by', FundProductLimit::LIMIT_BY_AMOUNT)
+            ->assertJsonPath('data.limit', '50.50')
+            ->assertJsonPath('data.limit_locale', '€ 50,50');
+
+        $fundProductLimit = FundProductLimit::find($response->json('data.id'));
+
+        $this->apiUpdateFundProductLimitRequest($organization, $fundProductLimit, [
+            ...$data,
+            'limit' => 70.25,
+        ], $organization->identity)
+            ->assertSuccessful()
+            ->assertJsonPath('data.limit_by', FundProductLimit::LIMIT_BY_AMOUNT)
+            ->assertJsonPath('data.limit', '70.25');
+
+        $this->apiUpdateFundProductLimitRequest($organization, $fundProductLimit, [
+            ...$data,
+            'limit_by' => FundProductLimit::LIMIT_BY_PRODUCTS,
+            'limit' => 1.5,
+        ], $organization->identity)->assertJsonValidationErrorFor('limit');
+
+        $this->apiUpdateFundProductLimitRequest($organization, $fundProductLimit, [
+            ...$data,
+            'limit_by' => FundProductLimit::LIMIT_BY_PRODUCTS,
+            'limit' => 2,
+        ], $organization->identity)
+            ->assertSuccessful()
+            ->assertJsonPath('data.limit_by', FundProductLimit::LIMIT_BY_PRODUCTS)
+            ->assertJsonPath('data.limit', 2);
+    }
+
+    /**
+     * Make products A (20), B (30), C (20) and D (40) out of the limit
+     * Create fund product limit by amount scope ONLY_SELECTED and products (A,B,C) with limit 50
+     * Reserve product A two times (40)
+     * Assert products A, B and C are not available to reserve (exceeds 50)
+     * Assert product D is available as it not in limit.
+     * @return void
+     */
+    public function testFundProductLimitByAmountSameProductTwice(): void
+    {
+        [$voucher, $productA, $productB, $productC, $productD] = $this->makeFundProductLimitByAmountCase();
+
+        $this->createReservation($voucher, $productA);
+        $this->createReservation($voucher, $productA);
+        $this->createReservation($voucher, $productA, false);
+        $this->createReservation($voucher, $productB, false);
+        $this->createReservation($voucher, $productC, false);
+        $this->createReservation($voucher, $productD);
+    }
+
+    /**
+     * Make products A (20), B (30), C (20) and D (40) out of the limit
+     * Create fund product limit by amount scope ONLY_SELECTED and products (A,B,C) with limit 50
+     * Reserve product A and product B (50)
+     * Assert products C and A are not available to reserve (exceeds 50).
+     * @return void
+     */
+    public function testFundProductLimitByAmountBudgetReached(): void
+    {
+        [$voucher, $productA, $productB, $productC] = $this->makeFundProductLimitByAmountCase();
+
+        $this->createReservation($voucher, $productA);
+        $this->createReservation($voucher, $productB);
+        $this->createReservation($voucher, $productC, false);
+        $this->createReservation($voucher, $productA, false);
+    }
+
+    /**
+     * Make products A (20), B (30), C (20) and D (40) out of the limit
+     * Create fund product limit by amount scope ONLY_SELECTED and products (A,B,C) with limit 50
+     * Reserve product B, assert it is not available to reserve again (exceeds 50)
+     * Cancel reservation for product B
+     * Assert product B is available to reserve again.
+     * @throws Throwable
+     * @return void
+     */
+    public function testFundProductLimitByAmountCanceledReservation(): void
+    {
+        [$voucher, , $productB] = $this->makeFundProductLimitByAmountCase();
+
+        $reservation = $this->createReservation($voucher, $productB);
+        $this->createReservation($voucher, $productB, false);
+
+        $reservation->cancelByClient();
+        $this->createReservation($voucher, $productB);
+    }
+
+    /**
+     * Make products A (20), B (30), C (20) and D (40)
+     * Create fund product limit by amount scope ALL_EXCEPT_SELECTED and product (A) with limit 60
+     * Reserve products B and C (50)
+     * Assert product D is not available to reserve (exceeds 60)
+     * Assert product A is available as it excluded from the limit.
+     * @return void
+     */
+    public function testFundProductLimitByAmountScopeAllExceptSelected(): void
+    {
+        [$voucher, $productA, $productB, $productC, $productD] = $this->makeFundProductLimitByAmountCase(
+            FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED,
+            60,
+        );
+
+        $this->createReservation($voucher, $productB);
+        $this->createReservation($voucher, $productC);
+        $this->createReservation($voucher, $productD, false);
+        $this->createReservation($voucher, $productA);
+    }
+
+    /**
      * @param Voucher $voucher
      * @param Product $product
      * @param bool $assertCreated
@@ -603,5 +742,44 @@ class FundProductLimitTest extends TestCase
         $response->assertJsonValidationErrorFor('product_id');
 
         return null;
+    }
+
+    /**
+     * Make products A (20), B (30), C (20) and D (40)
+     * Create fund product limit by amount with given scope and limit:
+     * ONLY_SELECTED - products (A,B,C) are limited, ALL_EXCEPT_SELECTED - product (A) is excluded.
+     * @param string $type
+     * @param int $limit
+     * @return array
+     */
+    protected function makeFundProductLimitByAmountCase(
+        string $type = FundProductLimit::SCOPE_ONLY_SELECTED,
+        int $limit = 50,
+    ): array {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        // limit multiplier allows to reserve the same product more than once
+        $voucher = $fund->makeVoucher($fund->organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000, limitMultiplier: 3);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $productA = $this->createProductForReservation($provider, [$fund], 20);
+        $productB = $this->createProductForReservation($provider, [$fund], 30);
+        $productC = $this->createProductForReservation($provider, [$fund], 20);
+        $productD = $this->createProductForReservation($provider, [$fund], 40);
+
+        $this->makeFundProductLimit(
+            $fund,
+            $type,
+            $limit,
+            $type === FundProductLimit::SCOPE_ONLY_SELECTED
+                ? [$productA->id, $productB->id, $productC->id]
+                : [$productA->id],
+            FundProductLimit::LIMIT_BY_AMOUNT,
+        );
+
+        return [$voucher, $productA, $productB, $productC, $productD];
     }
 }

@@ -47,8 +47,12 @@ class FundProductLimitController extends Controller
     ): FundProductLimitResource {
         $this->authorize('create', [FundProductLimit::class, $organization]);
 
-        $fundProductLimit = FundProductLimit::create($request->only(['fund_id', 'state', 'type', 'limit']));
-        $fundProductLimit->products()->sync($request->get('products', []));
+        $fundProductLimit = FundProductLimit::create([
+            ...$request->only(['fund_id', 'state', 'type', 'limit']),
+            'limit_by' => $request->limitBy(),
+        ]);
+
+        $fundProductLimit->products()->sync($request->input('products', []));
 
         return FundProductLimitResource::create($fundProductLimit);
     }
@@ -80,8 +84,12 @@ class FundProductLimitController extends Controller
     ): FundProductLimitResource {
         $this->authorize('update', [$fundProductLimit, $organization]);
 
-        $fundProductLimit->update($request->only(['fund_id', 'state', 'type', 'limit']));
-        $fundProductLimit->products()->sync($request->get('products', []));
+        $fundProductLimit->update([
+            ...$request->only(['fund_id', 'state', 'type', 'limit']),
+            'limit_by' => $request->limitBy(),
+        ]);
+
+        $fundProductLimit->products()->sync($request->input('products', []));
 
         return FundProductLimitResource::create($fundProductLimit);
     }

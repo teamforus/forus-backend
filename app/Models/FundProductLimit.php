@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $fund_id
  * @property string $type
  * @property string $state
- * @property int $limit
+ * @property string $limit_by
+ * @property string $limit
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereLimit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereLimitBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FundProductLimit whereUpdatedAt($value)
@@ -40,13 +42,16 @@ class FundProductLimit extends Model
     public const string SCOPE_ALL_EXCEPT_SELECTED = 'all_except_selected';
     public const string SCOPE_ONLY_SELECTED = 'only_selected';
 
+    public const string LIMIT_BY_PRODUCTS = 'products';
+    public const string LIMIT_BY_AMOUNT = 'amount';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'type', 'state', 'limit',
+        'fund_id', 'type', 'state', 'limit_by', 'limit',
     ];
 
     /**
