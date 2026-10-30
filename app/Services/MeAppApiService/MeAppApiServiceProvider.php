@@ -21,16 +21,24 @@ class MeAppApiServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Route::middleware([
-            'api', 'implementation_key', 'client_key', 'client_version', 'forus_session',
-        ])->group(function (): void {
+        Route::middleware('api')->group(function (): void {
             Route::prefix(trim(Config::get('me-app-api.requester.namespace'), '/') . '/v1')
+                ->middleware([
+                    'implementation_key:1,' . implode(',', Config::get('me-app-api.requester.client_keys')),
+                    'client_key:' . implode(',', Config::get('me-app-api.requester.client_types')),
+                    'client_version', 'forus_session',
+                ])
                 ->name('mobile.requester.v1.')
                 ->group(function (): void {
                     $this->loadRoutesFrom(__DIR__ . '/routes/requester/meapp-requester-v1.php');
                 });
 
             Route::prefix(trim(Config::get('me-app-api.provider.namespace'), '/') . '/v1')
+                ->middleware([
+                    'implementation_key:1,' . implode(',', Config::get('me-app-api.provider.client_keys')),
+                    'client_key:' . implode(',', Config::get('me-app-api.provider.client_types')),
+                    'client_version', 'forus_session',
+                ])
                 ->name('mobile.provider.v1.')
                 ->group(function (): void {
                     $this->loadRoutesFrom(__DIR__ . '/routes/provider/meapp-provider-v1.php');

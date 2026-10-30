@@ -10,24 +10,33 @@ use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Services\MeAppApiService\Http\Controllers\Shared\IdentityController as MobileIdentityController;
 use App\Services\MeAppApiService\Http\Controllers\Shared\ProductCategoriesController;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
+
+$clientMiddleware = [
+    ClientTypeMiddleware::class,
+    'client_key:' . implode(',', Config::get('me-app-api.requester.client_types')),
+    'client_key:' . implode(',', Config::get('me-app-api.provider.client_types')),
+    ImplementationKeyMiddleware::class,
+    'implementation_key:1,' . implode(',', Config::get('me-app-api.requester.client_keys')),
+    'implementation_key:1,' . implode(',', Config::get('me-app-api.provider.client_keys')),
+];
 
 // verify the custom API URL response in Android developer options
 Route::get('status', [StatusController::class, 'getStatus'])
     ->name('status')
     ->withoutMiddleware([
-        ClientTypeMiddleware::class, ClientVersionMiddleware::class,
-        ImplementationKeyMiddleware::class, DomainMiddleware::class,
+        ...$clientMiddleware, ClientVersionMiddleware::class, DomainMiddleware::class,
     ]);
 
 // list product categories
 Route::get('product-categories', [ProductCategoriesController::class, 'index'])->name('product-categories.index');
 
-Route::prefix('identity')->name('identity.')->group(static function (): void {
+Route::prefix('identity')->name('identity.')->group(static function () use ($clientMiddleware): void {
     // send a login or signup email
     Route::post('/', [IdentityController::class, 'store'])->name('store');
 
-    Route::prefix('proxy')->name('proxy.')->group(static function (): void {
+    Route::prefix('proxy')->name('proxy.')->group(static function () use ($clientMiddleware): void {
         // create a pending PIN code login
         Route::post('code', [IdentityController::class, 'proxyAuthorizationCode'])->name('code');
 
@@ -37,7 +46,7 @@ Route::prefix('identity')->name('identity.')->group(static function (): void {
         // show the app login link or redirect to the web client
         Route::get('email/redirect/{emailToken}', [IdentityController::class, 'emailTokenRedirect'])
             ->name('email.redirect')
-            ->withoutMiddleware([ClientTypeMiddleware::class, ClientVersionMiddleware::class]);
+            ->withoutMiddleware([...$clientMiddleware, ClientVersionMiddleware::class]);
 
         // exchange an email login token for an access token
         Route::get('email/exchange/{emailToken}', [IdentityController::class, 'emailTokenExchange'])
@@ -46,7 +55,7 @@ Route::prefix('identity')->name('identity.')->group(static function (): void {
         // show the app confirmation link or redirect to the web client
         Route::get('confirmation/redirect/{exchangeToken}', [IdentityController::class, 'emailConfirmationRedirect'])
             ->name('confirmation.redirect')
-            ->withoutMiddleware([ClientTypeMiddleware::class, ClientVersionMiddleware::class]);
+            ->withoutMiddleware([...$clientMiddleware, ClientVersionMiddleware::class]);
 
         // exchange a signup confirmation token for an access token
         Route::get('confirmation/exchange/{exchangeToken}', [IdentityController::class, 'emailConfirmationExchange'])

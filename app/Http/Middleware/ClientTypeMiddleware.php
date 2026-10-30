@@ -27,14 +27,18 @@ class ClientTypeMiddleware
      *
      * @param Request $request
      * @param Closure $next
+     * @param string ...$allowedTypes
      * @return mixed
      */
-    public function handle(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next, string ...$allowedTypes): mixed
     {
         $excludedUrl = in_array($request->route()->getName(), static::EXCEPT, true);
-        $validType = in_array($this->activeType($request), $this->availableTypes(), true);
+        $type = $allowedTypes ? $request->header('Client-Type') : $this->activeType($request);
 
-        if (!$excludedUrl && !$validType) {
+        $isKnownType = in_array($type, $this->availableTypes(), true);
+        $isAllowedType = !$allowedTypes || in_array($type, $allowedTypes, true);
+
+        if (!$excludedUrl && !($isKnownType && $isAllowedType)) {
             return new JsonResponse([
                 'message' => 'unknown_client_type',
             ], 403);

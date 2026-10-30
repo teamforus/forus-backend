@@ -8,7 +8,6 @@ use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
-use App\Models\Implementation;
 use App\Services\MeAppApiService\Documentation\Schemas\PaymentInputSchema;
 use Dedoc\Scramble\Contracts\OperationTransformer;
 use Dedoc\Scramble\OpenApiContext;
@@ -19,6 +18,7 @@ use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\RequestBodyObject;
 use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
+use Dedoc\Scramble\Support\Generator\SecurityRequirement;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
@@ -26,6 +26,7 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Config;
 use LogicException;
 
 class MobileOperationTransformer implements OperationTransformer
@@ -47,8 +48,14 @@ class MobileOperationTransformer implements OperationTransformer
         resolve(Kernel::class);
 
         $route = $routeInfo->route;
+        $appKey = $route->named('mobile.requester.*') ? 'requester' : 'provider';
         $middleware = resolve(Router::class)->gatherRouteMiddleware($route);
         $forbidden = [];
+
+        if ($operation->security === []) {
+            $operation->addSecurity(new SecurityRequirement('http'));
+            $operation->addSecurity([]);
+        }
 
         $summaries = [
             'identity.proxy.token' => 'Create a QR login request.',
@@ -190,17 +197,16 @@ class MobileOperationTransformer implements OperationTransformer
             ));
         }
 
-        if (in_array(ClientTypeMiddleware::class, $middleware, true)) {
+        if (collect($middleware)->contains(
+            static fn (string $value): bool => explode(':', $value, 2)[0] === ClientTypeMiddleware::class,
+        )) {
+            $clientTypes = Config::get("me-app-api.$appKey.client_types");
+
             $operation->addParameters([
-                $this->header(
-                    'Client-Type',
-                    'Client type. Defaults to the configured client type. '
-                    . 'Examples are not exhaustive. Endpoint permissions still apply.',
-                    [
-                        Implementation::ME_APP_REQUESTER_ANDROID, Implementation::ME_APP_REQUESTER_IOS,
-                        Implementation::ME_APP_PROVIDER_ANDROID, Implementation::ME_APP_PROVIDER_IOS,
-                    ],
-                ),
+                Parameter::make('Client-Type', 'header')->required(true)
+                    ->description('Required client type allowed for this API. Endpoint permissions still apply.')
+                    ->setSchema(Schema::fromType((new StringType())->enum($clientTypes)))
+                    ->example($clientTypes[0] ?? null),
             ]);
 
             $forbidden[] = 'unknown_client_type';
@@ -217,13 +223,16 @@ class MobileOperationTransformer implements OperationTransformer
             ]);
         }
 
-        if (in_array(ImplementationKeyMiddleware::class, $middleware, true)) {
+        if (collect($middleware)->contains(
+            static fn (string $value): bool => explode(':', $value, 2)[0] === ImplementationKeyMiddleware::class,
+        )) {
+            $clientKeys = Config::get("me-app-api.$appKey.client_keys");
+
             $operation->addParameters([
-                $this->header(
-                    'Client-Key',
-                    'Configured implementation key. Defaults to `general`.',
-                    [Implementation::KEY_GENERAL],
-                ),
+                Parameter::make('Client-Key', 'header')->required(true)
+                    ->description('Required implementation key allowed for this API.')
+                    ->setSchema(Schema::fromType((new StringType())->enum($clientKeys)))
+                    ->example($clientKeys[0] ?? null),
             ]);
 
             $forbidden[] = 'unknown_implementation_key';
