@@ -10,6 +10,7 @@ final class RequesterImportException extends RuntimeException
 {
     private const array ERRORS = [
         RequesterImportErrorCode::ROW_UNAVAILABLE => ['bsn', 'requester_import::validation.row_unavailable'],
+        RequesterImportErrorCode::IDENTITY_AMBIGUOUS => ['bsn', 'requester_import::validation.identity_ambiguous'],
         RequesterImportErrorCode::CLIENT_UUID_REQUIRED => ['client_uuid', 'requester_import::validation.client_uuid_required'],
         RequesterImportErrorCode::CLIENT_UUID_MISMATCH => ['client_uuid', 'requester_import::validation.client_uuid_mismatch'],
         RequesterImportErrorCode::CLIENT_UUID_CONFLICT => ['client_uuid', 'requester_import::validation.client_uuid_conflict'],

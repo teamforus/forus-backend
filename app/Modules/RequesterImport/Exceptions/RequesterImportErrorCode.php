@@ -5,6 +5,7 @@ namespace App\Modules\RequesterImport\Exceptions;
 final class RequesterImportErrorCode
 {
     public const string ROW_UNAVAILABLE = 'row_unavailable';
+    public const string IDENTITY_AMBIGUOUS = 'identity_ambiguous';
     public const string CLIENT_UUID_REQUIRED = 'client_uuid_required';
     public const string CLIENT_UUID_MISMATCH = 'client_uuid_mismatch';
     public const string CLIENT_UUID_CONFLICT = 'client_uuid_conflict';

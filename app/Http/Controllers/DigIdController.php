@@ -6,6 +6,8 @@ use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Identity;
 use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
@@ -56,18 +58,23 @@ class DigIdController extends Controller
             return $session->makeRedirectErrorResponse($session->getErrorKey());
         }
 
-        // Authentication
-        if ($session->session_request === 'auth') {
-            return $this->_resolveAuth($session, $request);
-        }
+        $service = resolve(IdentityBsnService::class);
 
-        // Fund request
-        if ($session->session_request === 'fund_request') {
-            return $this->_resolveFundRequest($session);
-        }
+        try {
+            return $service->transaction($session->digidBsn(), function () use ($session, $request) {
+                if ($session->session_request === 'auth') {
+                    return $this->_resolveAuth($session, $request);
+                }
 
-        // Default unknown request type error
-        return $session->makeRedirectErrorResponse('unknown_session_type');
+                if ($session->session_request === 'fund_request') {
+                    return $this->_resolveFundRequest($session);
+                }
+
+                return $session->makeRedirectErrorResponse('unknown_session_type');
+            });
+        } catch (IdentityBsnException) {
+            return $session->makeRedirectErrorResponse('uid_used');
+        }
     }
 
     /**
@@ -76,13 +83,14 @@ class DigIdController extends Controller
      */
     protected function handleBsnAssign(DigIdSession $session): RedirectResponse|bool
     {
-        $digidBsn = $session->digidBsn();
-        $digidBsnIdentity = $session->digidBsnIdentity();
+        $service = resolve(IdentityBsnService::class);
+        $digidBsn = $service->normalize($session->digidBsn());
+        $digidBsnIdentity = $service->find($digidBsn, true);
         $sessionIdentity = $session->sessionIdentity();
         $sessionIdentityBsn = $session->sessionIdentityBsn();
 
         // Identity already has a bsn attached, and it's different
-        if ($sessionIdentityBsn && $sessionIdentityBsn !== $digidBsn) {
+        if ($sessionIdentityBsn && $service->normalize($sessionIdentityBsn) !== $digidBsn) {
             return $session->makeRedirectErrorResponse('uid_dont_match');
         }
 
@@ -106,7 +114,7 @@ class DigIdController extends Controller
      */
     private function _resolveAuth(DigIdSession $session, ResolveDigIdRequest $request): RedirectResponse
     {
-        $identity = $session->digidBsnIdentity();
+        $identity = resolve(IdentityBsnService::class)->find($session->digidBsn(), true);
 
         if ($identity?->isManagedByIdentityProvider()) {
             return $session->makeRedirectErrorResponse('managed_requester');
