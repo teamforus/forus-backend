@@ -34,7 +34,7 @@ class RequesterImportProfilesService
         abort_unless($employee->organization_id === $organization->id, 403);
 
         $rows = RequesterImportRow::where('organization_id', $organization->id)->orderBy('id')
-            ->get(['id', 'organization_id']);
+            ->get(['id', 'organization_id', 'bsn']);
         $logger = resolve(RequesterImportLogService::class);
         $results = [];
 
@@ -44,6 +44,7 @@ class RequesterImportProfilesService
             } catch (Throwable $exception) {
                 $results[] = [
                     'id' => $row->id,
+                    'bsn' => $row->bsn,
                     'status' => 'failed',
                     'code' => RequesterImportErrorCode::fromException($exception, RequesterImportErrorCode::SYNC_FAILED),
                     'errors' => match (true) {
@@ -73,7 +74,7 @@ class RequesterImportProfilesService
      * @param Employee $employee
      * @param bool $updateAll
      * @return array{
-     *     id: int, profile_id: int, status: string,
+     *     id: int, bsn: string, profile_id: int, identity_id: int, status: string,
      *     records_synced: int, records_updated: int,
      * }
      */
@@ -128,7 +129,9 @@ class RequesterImportProfilesService
 
             return [
                 'id' => $row->id,
+                'bsn' => $row->bsn,
                 'profile_id' => $profile->id,
+                'identity_id' => $profile->identity_id,
                 'status' => $profile->wasRecentlyCreated ? 'created' : ($created->isNotEmpty() ? 'updated' : 'unchanged'),
                 'records_synced' => $records->count(),
                 'records_updated' => $created->count(),
