@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * App\Models\Profile.
@@ -97,29 +99,32 @@ class Profile extends Model
      * @param array $records
      * @param Employee|null $employee
      * @param string|null $source
-     * @return void
+     * @return Collection<string, ProfileRecord>
      */
-    public function updateRecords(array $records, ?Employee $employee = null, ?string $source = null): void
+    public function updateRecords(array $records, ?Employee $employee = null, ?string $source = null): Collection
     {
-        foreach ($records as $recordKey => $recordValue) {
-            $recordType = RecordType::findByKey($recordKey);
+        return DB::transaction(function () use ($records, $employee, $source): Collection {
+            $profile = self::query()->lockForUpdate()->findOrFail($this->id);
+            $created = new Collection();
 
-            $currentValue = $this->profile_records()->where([
-                'record_type_id' => $recordType?->id,
-            ])->latest('created_at')->first()?->value ?: '';
+            foreach ($records as $recordKey => $recordValue) {
+                $recordType = RecordType::findByKey($recordKey);
+                $currentValue = $profile->profile_records()->where('record_type_id', $recordType?->id)
+                    ->lockForUpdate()->first()?->value ?? '';
 
-            if (trim($currentValue) !== trim($recordValue)) {
-                if (empty(trim($recordValue)) && empty(trim($currentValue))) {
+                if (trim($currentValue) === trim($recordValue ?? '')) {
                     continue;
                 }
 
-                $this->profile_records()->create([
-                    'value' => trim($recordValue),
+                $created->put($recordKey, $profile->profile_records()->create([
+                    'value' => trim($recordValue ?? ''),
                     'employee_id' => $employee?->id,
                     'source' => $source,
                     'record_type_id' => $recordType?->id,
-                ]);
+                ]));
             }
-        }
+
+            return $created;
+        });
     }
 }

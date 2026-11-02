@@ -3,6 +3,7 @@
 namespace App\Modules\RequesterImport\Models;
 
 use App\Models\Organization;
+use App\Models\Profile;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,12 +13,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $organization_id
  * @property string $bsn
+ * @property int|null $profile_id
  */
 class RequesterImportRow extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['organization_id', 'bsn'];
+    protected $fillable = ['organization_id', 'bsn', 'profile_id'];
+
+    /**
+     * @return BelongsTo
+     */
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(Profile::class);
+    }
 
     /**
      * @return BelongsTo

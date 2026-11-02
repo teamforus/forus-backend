@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Modules\RequesterImport\Models\RequesterImportRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $profile_id
  * @property int|null $employee_id
  * @property string|null $source
+ * @property int|null $requester_import_record_id
  * @property int $record_type_id
  * @property string $value
  * @property string|null $deleted_at
@@ -37,10 +39,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProfileRecord extends Model
 {
     public const string SOURCE_ENTRA = 'entra';
+    public const string SOURCE_REQUESTER_IMPORT = 'requester_import';
 
     protected $fillable = [
-        'value', 'record_type_id', 'profile_id', 'employee_id', 'source',
+        'value', 'record_type_id', 'profile_id', 'employee_id', 'source', 'requester_import_record_id',
     ];
+
+    /**
+     * @return BelongsTo
+     */
+    public function requester_import_record(): BelongsTo
+    {
+        return $this->belongsTo(RequesterImportRecord::class)->withTrashed();
+    }
 
     /**
      * @return BelongsTo
