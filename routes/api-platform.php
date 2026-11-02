@@ -1046,6 +1046,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         [RequesterImportRowsController::class, 'update'],
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/sync',
+        [RequesterImportRowsController::class, 'sync'],
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/households',
         'Api\Platform\Organizations\Sponsor\HouseholdsController'

@@ -2,6 +2,11 @@
 
 namespace App\Modules\RequesterImport\Exceptions;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Validation\ValidationException;
+use Throwable;
+
 final class RequesterImportErrorCode
 {
     public const string ROW_UNAVAILABLE = 'row_unavailable';
@@ -14,4 +19,22 @@ final class RequesterImportErrorCode
     public const string DUPLICATE_IDENTIFIER = 'duplicate_identifier';
     public const string IMPORT_FAILED = 'import_failed';
     public const string UPDATE_FAILED = 'update_failed';
+    public const string SYNC_FAILED = 'sync_failed';
+    public const string VALIDATION_FAILED = 'validation_failed';
+
+    /**
+     * @param Throwable $exception
+     * @param string $fallbackCode
+     * @return string
+     */
+    public static function fromException(Throwable $exception, string $fallbackCode): string
+    {
+        return match (true) {
+            $exception instanceof RequesterImportException => $exception->errorCode(),
+            $exception instanceof ValidationException => self::VALIDATION_FAILED,
+            $exception instanceof ModelNotFoundException => self::ROW_UNAVAILABLE,
+            $exception instanceof UniqueConstraintViolationException => self::DUPLICATE_IDENTIFIER,
+            default => $fallbackCode,
+        };
+    }
 }

@@ -9,12 +9,14 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class RequesterImportLogService
 {
     public const string OPERATION_IMPORT = 'import';
     public const string OPERATION_UPDATE = 'update';
+    public const string OPERATION_SYNC = 'sync';
 
     private const array CONTEXT_KEYS = ['organization_id', 'employee_id', 'row_id', 'row_index'];
 
@@ -29,14 +31,10 @@ class RequesterImportLogService
     {
         $diagnosticId = Str::uuid()->toString();
         $expected = $exception instanceof RequesterImportException ||
+            $exception instanceof ValidationException ||
             $exception instanceof UniqueConstraintViolationException || $exception instanceof ModelNotFoundException;
 
-        $errorCode = match (true) {
-            $exception instanceof RequesterImportException => $exception->errorCode(),
-            $exception instanceof UniqueConstraintViolationException => RequesterImportErrorCode::DUPLICATE_IDENTIFIER,
-            $exception instanceof ModelNotFoundException => RequesterImportErrorCode::ROW_UNAVAILABLE,
-            default => $fallbackCode,
-        };
+        $errorCode = RequesterImportErrorCode::fromException($exception, $fallbackCode);
 
         if ($exception instanceof RequesterImportException && $exception->rowId !== null) {
             $context['row_id'] = $exception->rowId;

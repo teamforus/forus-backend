@@ -8,11 +8,13 @@ use App\Modules\RequesterImport\Exceptions\RequesterImportErrorCode;
 use App\Modules\RequesterImport\Exceptions\RequesterImportException;
 use App\Modules\RequesterImport\Http\Requests\RequesterImportRows\IndexRequesterImportRowsRequest;
 use App\Modules\RequesterImport\Http\Requests\RequesterImportRows\StoreRequesterImportRowsRequest;
+use App\Modules\RequesterImport\Http\Requests\RequesterImportRows\SyncRequesterImportRowsRequest;
 use App\Modules\RequesterImport\Http\Requests\RequesterImportRows\UpdateRequesterImportRowRequest;
 use App\Modules\RequesterImport\Http\Resources\RequesterImportRowResource;
 use App\Modules\RequesterImport\Models\RequesterImportRow;
 use App\Modules\RequesterImport\Searches\RequesterImportRowsSearch;
 use App\Modules\RequesterImport\Services\RequesterImportLogService;
+use App\Modules\RequesterImport\Services\RequesterImportProfilesService;
 use App\Modules\RequesterImport\Services\RequesterImportRowsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -75,6 +77,26 @@ class RequesterImportRowsController extends Controller
                 $request->validated('rows'),
                 $request->employee($organization),
             ),
+        ]);
+    }
+
+    /**
+     * @param SyncRequesterImportRowsRequest $request
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return JsonResponse
+     */
+    public function sync(SyncRequesterImportRowsRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('sync', [RequesterImportRow::class, $organization]);
+
+        $service = resolve(RequesterImportProfilesService::class);
+        $employee = $request->employee($organization);
+
+        abort_unless($employee, 403);
+
+        return new JsonResponse([
+            'data' => $service->syncOrganization($organization, $employee, $request->boolean('update_all')),
         ]);
     }
 

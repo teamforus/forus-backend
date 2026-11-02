@@ -45,6 +45,16 @@ class RequesterImportRowPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function sync(Identity $identity, Organization $organization): bool
+    {
+        return $this->canManage($identity, $organization);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
     private function canManage(Identity $identity, Organization $organization): bool
     {
         return

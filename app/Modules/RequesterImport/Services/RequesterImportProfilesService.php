@@ -18,18 +18,68 @@ use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
 use App\Services\IdentityBsnService\IdentityBsnService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class RequesterImportProfilesService
 {
     /**
+     * @param Organization $organization
+     * @param Employee $employee
+     * @param bool $updateAll
+     * @return array
+     */
+    public function syncOrganization(Organization $organization, Employee $employee, bool $updateAll = false): array
+    {
+        abort_unless($employee->organization_id === $organization->id, 403);
+
+        $rows = RequesterImportRow::where('organization_id', $organization->id)->orderBy('id')
+            ->get(['id', 'organization_id']);
+        $logger = resolve(RequesterImportLogService::class);
+        $results = [];
+
+        foreach ($rows as $row) {
+            try {
+                $results[] = $this->syncRow($row, $employee, $updateAll);
+            } catch (Throwable $exception) {
+                $results[] = [
+                    'id' => $row->id,
+                    'status' => 'failed',
+                    'code' => RequesterImportErrorCode::fromException($exception, RequesterImportErrorCode::SYNC_FAILED),
+                    'errors' => match (true) {
+                        $exception instanceof RequesterImportException,
+                        $exception instanceof ValidationException => $exception->errors(),
+                        default => [],
+                    },
+                    'diagnostic_id' => $logger->failure(
+                        RequesterImportLogService::OPERATION_SYNC,
+                        $exception,
+                        [
+                            'organization_id' => $organization->id,
+                            'employee_id' => $employee->id,
+                            'row_id' => $row->id,
+                        ],
+                        RequesterImportErrorCode::SYNC_FAILED,
+                    ),
+                ];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * @param RequesterImportRow $row
      * @param Employee $employee
      * @param bool $updateAll
-     * @return Profile
+     * @return array{
+     *     id: int, profile_id: int, status: string,
+     *     records_synced: int, records_updated: int,
+     * }
      */
-    public function syncRow(RequesterImportRow $row, Employee $employee, bool $updateAll = false): Profile
+    public function syncRow(RequesterImportRow $row, Employee $employee, bool $updateAll = false): array
     {
-        return DB::transaction(function () use ($row, $employee, $updateAll): Profile {
+        return DB::transaction(function () use ($row, $employee, $updateAll): array {
             $row = RequesterImportRow::where('organization_id', $row->organization_id)
                 ->lockForUpdate()->findOrFail($row->id);
 
@@ -76,7 +126,13 @@ class RequesterImportProfilesService
             RequesterImportRecord::withoutTimestamps(fn () => $row->records()->whereKey($records->modelKeys())
                 ->update(['synced_at' => now()]));
 
-            return $profile;
+            return [
+                'id' => $row->id,
+                'profile_id' => $profile->id,
+                'status' => $profile->wasRecentlyCreated ? 'created' : ($created->isNotEmpty() ? 'updated' : 'unchanged'),
+                'records_synced' => $records->count(),
+                'records_updated' => $created->count(),
+            ];
         });
     }
 
