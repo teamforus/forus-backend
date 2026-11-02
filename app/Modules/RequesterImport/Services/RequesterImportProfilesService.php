@@ -24,11 +24,12 @@ class RequesterImportProfilesService
     /**
      * @param RequesterImportRow $row
      * @param Employee $employee
+     * @param bool $updateAll
      * @return Profile
      */
-    public function syncRow(RequesterImportRow $row, Employee $employee): Profile
+    public function syncRow(RequesterImportRow $row, Employee $employee, bool $updateAll = false): Profile
     {
-        return DB::transaction(function () use ($row, $employee): Profile {
+        return DB::transaction(function () use ($row, $employee, $updateAll): Profile {
             $row = RequesterImportRow::where('organization_id', $row->organization_id)
                 ->lockForUpdate()->findOrFail($row->id);
 
@@ -40,8 +41,13 @@ class RequesterImportProfilesService
             ], RecordType::query()->where('key', '!=', RequesterImportRecord::CLIENT_UUID));
 
             $recordTypes = $search->query()->with('record_type_options.translations')->get()->keyBy('key');
-            $records = $row->records()->whereIn('record_type_key', $recordTypes->keys())
-                ->whereNull('synced_at')->lockForUpdate()->get()->keyBy('record_type_key');
+            $recordsQuery = $row->records()->whereIn('record_type_key', $recordTypes->keys());
+
+            if (!$updateAll) {
+                $recordsQuery->whereNull('synced_at');
+            }
+
+            $records = $recordsQuery->lockForUpdate()->get()->keyBy('record_type_key');
 
             $values = $records->mapWithKeys(fn (RequesterImportRecord $record) => [
                 $record->record_type_key => $record->value === '' ? null : $record->value,
