@@ -285,7 +285,12 @@ class TestData
             $prevalidation->assignToIdentity($identity);
 
             $voucher = $prevalidation->fund->makeVoucher(identity: $identity);
+            $prevalidation->fund->makeFundFormulaMultipleVouchers($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
+
+            if ($voucher === null) {
+                continue;
+            }
 
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
@@ -1267,11 +1272,12 @@ class TestData
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
+                $identity = $this->makeIdentity();
 
                 $fund->makeVoucher(identity: $identity, voucherFields: compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, voucherFields: compact('note'));
+                $fund->makeFundFormulaMultipleVouchers($identity, voucherFields: compact('note'));
             }
         }
     }
