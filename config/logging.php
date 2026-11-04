@@ -50,6 +50,12 @@ return [
             'level' => 'debug',
         ],
 
+        'microsoft-graph' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/microsoft-graph.log'),
+            'level' => 'error',
+        ],
+
         'query-counter' => [
             'driver' => 'single',
             'path' => storage_path('logs/query-counter.log'),
