@@ -35,6 +35,9 @@ class FundFormula extends Model
 {
     public const string TYPE_FIXED = 'fixed';
     public const string TYPE_MULTIPLY = 'multiply';
+    public const string TYPE_MULTIPLY_VOUCHERS = 'multiply_vouchers';
+
+    public const int MULTIPLY_VOUCHERS_MAX = 100;
 
     protected $fillable = [
         'id', 'fund_id', 'type', 'amount', 'record_type_key',
@@ -58,6 +61,7 @@ class FundFormula extends Model
         return match ($this->type) {
             self::TYPE_FIXED => trans('fund.fund_formulas.fixed'),
             self::TYPE_MULTIPLY => trans('fund.fund_formulas.multiply'),
+            self::TYPE_MULTIPLY_VOUCHERS => trans('fund.fund_formulas.multiply_vouchers'),
             default => $this->type,
         };
     }
