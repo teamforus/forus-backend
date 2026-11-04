@@ -19,6 +19,7 @@ return [
     'fund_formulas' => [
         'fixed' => 'Vastgesteld',
         'multiply' => 'Multiply',
+        'multiply_vouchers' => 'Multiply vouchers',
     ],
     'pre_check' => [
         'fixed_amount' => 'Vastbedrag',

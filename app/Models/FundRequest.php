@@ -442,8 +442,11 @@ class FundRequest extends Model
             'total' => $formula->product->name,
         ]);
 
-        $formula = $this->fund->fund_formulas->map(function ($formula) use ($values, &$totalAmount) {
-            $count = $formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1;
+        $formula = $this->fund->fund_formulas->map(function (FundFormula $formula) use ($values, &$totalAmount) {
+            $count = $formula->type === FundFormula::TYPE_MULTIPLY_VOUCHERS
+                ? $this->fund->getFormulaMultipleVouchersCount($formula, $this->identity, $values)
+                : ($formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1);
+
             $total = (float) $formula->amount * $count;
             $totalAmount += $total;
 
