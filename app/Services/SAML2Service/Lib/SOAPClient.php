@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Log;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\ArtifactResolve;
 use SAML2\ArtifactResponse;
-use SAML2\DOMDocumentFactory;
 use SAML2\Exception\InvalidArgumentException;
 use SAML2\Exception\RuntimeException;
 use SAML2\Exception\UnparseableXmlException;
 use SAML2\Utils;
+use SimpleSAML\XML\DOMDocumentFactory;
 use Throwable;
 
 /**
