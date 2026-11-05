@@ -69,6 +69,8 @@ services:
   selenium:
     image: selenium/standalone-chrome
     shm_size: '1gb'
+    environment:
+      SE_NODE_MAX_SESSIONS: 2
     profiles:
       - testing
     depends_on:
