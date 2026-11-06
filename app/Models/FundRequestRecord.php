@@ -51,6 +51,8 @@ class FundRequestRecord extends Model
     use HasLogs;
 
     public const string EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const string EVENT_CLARIFICATION_UPDATED = 'clarification_updated';
+    public const string EVENT_CLARIFICATION_CLOSED = 'clarification_closed';
     public const string EVENT_CLARIFICATION_RECEIVED = 'clarification_received';
     public const string EVENT_UPDATED = 'updated';
 

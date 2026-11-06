@@ -268,7 +268,8 @@ class VoucherSubscriber
             'deactivation_date_locale' => format_date_locale(now()),
             'note' => $voucherDeactivated->getNote(),
             'notify_by_email' => $voucherDeactivated->shouldNotifyByEmail(),
-        ]);
+            ...$voucherDeactivated->getSource() ? ['source' => $voucherDeactivated->getSource()] : [],
+        ], useRequestIdentity: $voucherDeactivated->getSource() === null);
 
         IdentityVoucherDeactivatedNotification::send($logModel);
     }

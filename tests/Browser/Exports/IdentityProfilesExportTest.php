@@ -90,6 +90,6 @@ class IdentityProfilesExportTest extends DuskTestCase
         array $fields
     ): void {
         $this->assertExportHeaders($rows, $fields);
-        $this->assertExportCell($rows, $identity->email, 3);
+        $this->assertSame($identity->email, array_combine($rows[0], $rows[1])[IdentityProfilesExport::trans('email')]);
     }
 }

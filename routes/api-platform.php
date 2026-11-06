@@ -159,10 +159,37 @@ $router->group([], static function () use ($router) {
         ],
     );
 
+    $router->group(['prefix' => 'identity-providers/entra'], static function (Router $router) {
+        $router
+            ->get('oidc/callback', 'Api\Platform\IdentityProviderCallbackController@oidcCallback')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges')
+            ->name('identityProviderEntraOidcCallback');
+
+        $router
+            ->get('admin-consent/callback', 'Api\Platform\IdentityProviderCallbackController@adminConsentCallback')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges')
+            ->name('identityProviderEntraAdminConsentCallback');
+
+        $router
+            ->post('login', 'Api\Platform\IdentityProviderLoginController@login')
+            ->middleware('throttle:identity-providers-entra-authorization');
+
+        $router
+            ->post('exchange', 'Api\Platform\IdentityProviderLoginController@exchange')
+            ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges');
+    });
+
     $router->middleware('domain.digid')->group(function (Router $router) {
         $router->post('/digid', 'DigIdController@start')->name('digidStart');
-        $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
+        $router->post('/digid/complete', 'DigIdController@complete')->name('digidComplete');
         $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
+    });
+
+    $router->group([], function (Router $router) {
+        $router->post('/tvs', 'TvsController@start')->name('tvs.start');
+        $router->post('/tvs/complete', 'TvsController@complete')->name('tvs.complete');
+        $router->get('/tvs/resolve', 'TvsController@resolve')->name('tvs.resolve');
+        $router->get('/tvs/metadata', 'TvsController@metadata')->name('tvs.metadata');
     });
 
     $router->resource('provider-invitations', "Api\Platform\FundProviderInvitationsController")
@@ -179,6 +206,24 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
  * Authorization required.
  */
 $router->group(['middleware' => 'api.auth'], static function () use ($router) {
+    $router->get('/identity-providers/entra/links', 'Api\Platform\IdentityProviderLinksController@index');
+
+    $router
+        ->post(
+            '/identity-providers/entra/links/{identity_provider_oidc_session}/complete',
+            'Api\Platform\IdentityProviderLinksController@complete',
+        )
+        ->middleware('throttle:identity-providers-entra-callbacks-and-exchanges');
+
+    $router
+        ->post(
+            '/identity-providers/entra/connections/{identity_provider_connection}/links',
+            'Api\Platform\IdentityProviderLinksController@store',
+        )
+        ->middleware('throttle:identity-providers-entra-authorization');
+
+    $router->delete('/identity-providers/entra/links/{identity_provider_link}', 'Api\Platform\IdentityProviderLinksController@destroy');
+
     $router->get('/profile', "Api\Platform\ProfileController@profile");
     $router->patch('/profile', "Api\Platform\ProfileController@updateProfile");
 
@@ -189,6 +234,56 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         $router->patch('update-reservation-fields', "Api\Platform\OrganizationsController@updateReservationFields");
         $router->patch('update-accept-reservations', "Api\Platform\OrganizationsController@updateAcceptReservations");
         $router->get('features', "Api\Platform\OrganizationsController@getFeatures");
+
+        $router->get(
+            'identity-providers/entra',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@current',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections/{identity_provider_connection}',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@show',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@history',
+        );
+
+        $router->get(
+            'identity-providers/entra/connections/{identity_provider_connection}/events',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@events',
+        );
+
+        $router
+            ->post(
+                'identity-providers/entra/consent',
+                'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@startConsent',
+            )
+            ->middleware('throttle:identity-providers-entra-authorization');
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/pause',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@pause',
+        );
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/resume',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@resume',
+        );
+
+        $router->post(
+            'identity-providers/entra/connections/{identity_provider_connection}/disconnect',
+            'Api\Platform\Organizations\IdentityProviders\IdentityProviderConnectionsController@disconnect',
+        );
+
+        $router->group([
+            'prefix' => 'identity-providers/entra/connections/{identity_provider_connection}/scim-credentials',
+            'namespace' => 'Api\Platform\Organizations\IdentityProviders',
+        ], function () use ($router) {
+            $router->post('', 'IdentityProviderScimCredentialsController@store');
+            $router->delete('{scim_credential}', 'IdentityProviderScimCredentialsController@destroy');
+        });
     });
 
     $router->resource('organizations', "Api\Platform\OrganizationsController")
@@ -556,7 +651,12 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
             "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
         )->parameters([
             'clarifications' => 'fund_request_clarification',
-        ])->only('index', 'store', 'show');
+        ])->only('index', 'store', 'show', 'update');
+
+        $router->post(
+            'organizations/{organization}/fund-requests/{fund_request}/clarifications/{fund_request_clarification}/close',
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController@close"
+        );
 
         $router->get(
             'organizations/{organization}/fund-requests/export-fields',

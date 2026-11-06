@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
+use App\Events\FundRequestClarifications\FundRequestClarificationUpdated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\CloseFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\IndexFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\StoreFundRequestClarificationsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\UpdateFundRequestClarificationsRequest;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Throwable;
 
 class FundRequestClarificationsController extends Controller
 {
@@ -48,25 +53,30 @@ class FundRequestClarificationsController extends Controller
      * @param StoreFundRequestClarificationsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @return FundRequestClarificationResource
+     * @throws Throwable
      */
     public function store(
         StoreFundRequestClarificationsRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): FundRequestClarificationResource {
-        $record = $fundRequest->records()->findOrFail($request->input('fund_request_record_id'));
-        $this->authorize('create', [FundRequestClarification::class, $fundRequest, $record, $organization]);
+        return DB::transaction(function () use ($request, $organization, $fundRequest) {
+            $record = $fundRequest->records()
+                ->lockForUpdate()
+                ->findOrFail($request->input('fund_request_record_id'));
 
-        $clarification = $fundRequest->clarifications()->create([
-            ...$request->only(['question', 'text_requirement', 'files_requirement']),
-            'fund_request_record_id' => $record->id,
-        ]);
+            $this->authorize('create', [FundRequestClarification::class, $fundRequest, $record, $organization]);
 
-        Event::dispatch(new FundRequestClarificationRequested($clarification));
+            $clarification = $fundRequest->clarifications()->create([
+                ...$request->only(['question', 'text_requirement', 'files_requirement']),
+                'fund_request_record_id' => $record->id,
+            ]);
 
-        return FundRequestClarificationResource::create($clarification);
+            Event::dispatch(new FundRequestClarificationRequested($clarification));
+
+            return FundRequestClarificationResource::create($clarification);
+        });
     }
 
     /**
@@ -88,5 +98,82 @@ class FundRequestClarificationsController extends Controller
         ]);
 
         return FundRequestClarificationResource::create($fundRequestClarification);
+    }
+
+    /**
+     * @param UpdateFundRequestClarificationsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param FundRequestClarification $fundRequestClarification
+     * @throws Throwable
+     * @return FundRequestClarificationResource
+     */
+    public function update(
+        UpdateFundRequestClarificationsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+        FundRequestClarification $fundRequestClarification
+    ): FundRequestClarificationResource {
+        return DB::transaction(function () use ($request, $organization, $fundRequest, $fundRequestClarification) {
+            $fundRequestClarification = FundRequestClarification::query()
+                ->lockForUpdate()
+                ->findOrFail($fundRequestClarification->id);
+
+            $this->authorize('updateValidator', [
+                $fundRequestClarification, $fundRequest, $organization,
+            ]);
+
+            $previousQuestion = $fundRequestClarification->question;
+
+            $fundRequestClarification->fill($request->only([
+                'question', 'text_requirement', 'files_requirement',
+            ]));
+
+            if ($fundRequestClarification->isDirty()) {
+                $fundRequestClarification->changed_at = now();
+                $fundRequestClarification->save();
+
+                Event::dispatch(new FundRequestClarificationUpdated(
+                    $fundRequestClarification,
+                    $previousQuestion,
+                    $request->boolean('notify_requester'),
+                ));
+            }
+
+            return FundRequestClarificationResource::create($fundRequestClarification);
+        });
+    }
+
+    /**
+     * @param CloseFundRequestClarificationsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @param FundRequestClarification $fundRequestClarification
+     * @throws Throwable
+     * @return FundRequestClarificationResource
+     */
+    public function close(
+        CloseFundRequestClarificationsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest,
+        FundRequestClarification $fundRequestClarification
+    ): FundRequestClarificationResource {
+        return DB::transaction(function () use ($request, $organization, $fundRequest, $fundRequestClarification) {
+            $fundRequestClarification = FundRequestClarification::query()
+                ->lockForUpdate()
+                ->findOrFail($fundRequestClarification->id);
+
+            $this->authorize('closeValidator', [
+                $fundRequestClarification, $fundRequest, $organization,
+            ]);
+
+            $fundRequestClarification->close(
+                $request->input('note'),
+                $request->boolean('notify_requester'),
+                $request->employee($organization)
+            );
+
+            return FundRequestClarificationResource::create($fundRequestClarification);
+        });
     }
 }

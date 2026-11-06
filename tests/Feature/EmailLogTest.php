@@ -599,6 +599,9 @@ class EmailLogTest extends TestCase
         $fundRequest1 = $this->setCriteriaAndMakeFundRequest($identity, $fund1, ['children_nth' => 3]);
         $fundRequest2 = $this->setCriteriaAndMakeFundRequest($identity, $fund2, ['children_nth' => 3]);
 
+        $fundRequest1->assignEmployee($organization1->findEmployee($identity));
+        $fundRequest2->assignEmployee($organization2->findEmployee($identity));
+
         $this->requestFundRequestClarification($organization1, $fundRequest1);
         $this->requestFundRequestClarification($organization2, $fundRequest2);
 

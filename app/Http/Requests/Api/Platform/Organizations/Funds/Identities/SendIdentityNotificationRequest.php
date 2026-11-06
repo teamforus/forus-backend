@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds\Identities;
 
 use App\Traits\ThrottleWithMeta;
+use Illuminate\Support\Facades\Config;
 
 class SendIdentityNotificationRequest extends IndexIdentitiesRequest
 {
@@ -26,8 +27,8 @@ class SendIdentityNotificationRequest extends IndexIdentitiesRequest
      */
     public function rules(): array
     {
-        $this->maxAttempts = env('FUND_CUSTOM_NOTIFICATION_ATTEMPTS', 10);
-        $this->decayMinutes = env('FUND_CUSTOM_NOTIFICATION_DECAY', 60 * 24);
+        $this->maxAttempts = Config::get('forus.throttles.fund_custom_notification.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.fund_custom_notification.decay');
 
         if ($this->input('target') !== 'self') {
             $this->throttleWithKey('to_many_attempts', $this, 'fund_custom_notification');

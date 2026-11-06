@@ -2,7 +2,6 @@
 
 namespace Tests\Browser;
 
-use App\Mail\User\EmailActivationMail;
 use App\Models\DemoTransaction;
 use App\Models\Fund;
 use App\Models\FundProvider;
@@ -21,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
+use Tests\Browser\Traits\HasSignUpActions;
 use Tests\DuskTestCase;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
@@ -32,6 +32,7 @@ class ProviderSignUpTest extends DuskTestCase
     use MakesTestFunds;
     use AssertsSentEmails;
     use HasFrontendActions;
+    use HasSignUpActions;
     use MakesTestIdentities;
     use MakesTestOrganizations;
 
@@ -62,17 +63,17 @@ class ProviderSignUpTest extends DuskTestCase
 
             $this->signUpWithEmail($browser, $email, $startTime);
 
-            $this->addOrganization($browser);
-            $this->next($browser);
+            $this->fillSignUpOrganizationForm($browser);
+            $this->nextSignUpStep($browser);
 
             $this->addOffice($browser);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             $this->addEmployee($browser);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             $this->applyToFunds($browser, $organization);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             $browser
                 ->waitFor('@stepProcessNotice')
@@ -114,7 +115,7 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@stepGeneral')
                 ->assertVisible('@stepGeneral');
 
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * INFO ME APP
@@ -123,7 +124,7 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@stepInfoMeApp')
                 ->assertVisible('@stepInfoMeApp');
 
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * CREATE PROFILE
@@ -137,7 +138,7 @@ class ProviderSignUpTest extends DuskTestCase
                 ->select('@deviceOptionSelect', 'android-phone')
                 ->waitFor('@phoneInput');
 
-            $this->fillInput($browser, '@phoneInput', '0634444444');
+            $this->fillSignUpInput($browser, '@phoneInput', '0634444444');
 
             $browser
                 ->waitFor('@phoneFormSubmitBtn')
@@ -169,26 +170,26 @@ class ProviderSignUpTest extends DuskTestCase
             /*
              * ORGANIZATION CREATE
              */
-            $this->addOrganization($browser);
-            $this->next($browser);
+            $this->fillSignUpOrganizationForm($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * OFFICES
              */
             $this->addOffice($browser);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * EMPLOYEES
              */
             $this->addEmployee($browser);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * FUND APPLICATIONS
              */
             $this->applyToFunds($browser);
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * PROCESS NOTICE
@@ -197,7 +198,7 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@stepProcessNotice')
                 ->assertVisible('@stepProcessNotice');
 
-            $this->next($browser);
+            $this->nextSignUpStep($browser);
 
             /*
              * DEMO TRANSACTION
@@ -224,14 +225,7 @@ class ProviderSignUpTest extends DuskTestCase
                 'state' => $demoTransaction::STATE_ACCEPTED,
             ]);
 
-            /*
-             * FINISH
-             */
-            $browser
-                ->waitFor('@stepFinished')
-                ->assertVisible('@stepFinished')
-                ->waitFor('@finishBtn')
-                ->click('@finishBtn');
+            $this->finishSignUp($browser);
 
             $this->assertIdentityAuthenticatedOnProviderDashboard($browser, $identity);
             $this->logout($browser);
@@ -254,15 +248,15 @@ class ProviderSignUpTest extends DuskTestCase
             $this->signUpWithEmail($browser, $email, $startTime);
 
             // create first organization
-            $this->addOrganization($browser);
-            $this->next($browser);
+            $this->fillSignUpOrganizationForm($browser);
+            $this->nextSignUpStep($browser);
 
             // assert visible step OFFICES
             $browser
                 ->waitFor('@stepOffices')
                 ->assertVisible('@stepOffices');
 
-            $this->previous($browser);
+            $this->previousSignUpStep($browser);
 
             // as we already have organization previous step must be organization select step
             $browser
@@ -281,7 +275,7 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@stepOffices')
                 ->assertVisible('@stepOffices');
 
-            $this->previous($browser);
+            $this->previousSignUpStep($browser);
 
             // go to previous step and add new organization
             $browser
@@ -290,14 +284,14 @@ class ProviderSignUpTest extends DuskTestCase
                 ->waitFor('@addOrganizationBtn')
                 ->click('@addOrganizationBtn');
 
-            $this->addOrganization($browser);
-            $this->next($browser);
+            $this->fillSignUpOrganizationForm($browser);
+            $this->nextSignUpStep($browser);
 
             $browser
                 ->waitFor('@stepOffices')
                 ->assertVisible('@stepOffices');
 
-            $this->previous($browser);
+            $this->previousSignUpStep($browser);
 
             // go to previous step and accept that two created organization are visible
             $browser
@@ -335,7 +329,7 @@ class ProviderSignUpTest extends DuskTestCase
             $email = $this->makeUniqueEmail('provider');
 
             $this->signUpWithEmail($browser, $email, $startTime);
-            $this->addOrganizationWithValidation($browser);
+            $this->assertSignUpOrganizationFormValidation($browser);
         });
     }
 
@@ -354,13 +348,13 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@stepGeneral')
             ->assertVisible('@stepGeneral');
 
-        $this->next($browser);
+        $this->nextSignUpStep($browser);
 
         $browser
             ->waitFor('@stepInfoMeApp')
             ->assertVisible('@stepInfoMeApp');
 
-        $this->next($browser);
+        $this->nextSignUpStep($browser);
 
         $browser
             ->waitFor('@stepCreateProfile')
@@ -368,108 +362,7 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@signupByEmail')
             ->click('@signupByEmail');
 
-        $browser
-            ->waitFor('@emailForm')
-            ->assertVisible('@emailForm');
-
-        $this->fillInput($browser, '@emailInput', $email);
-
-        $browser
-            ->waitFor('@emailFormSubmit')
-            ->click('@emailFormSubmit')
-            ->waitFor('@authEmailSent')
-            ->assertVisible('@authEmailSent');
-
-        $this->assertMailableSent($email, EmailActivationMail::class, $startTime);
-        $this->assertEmailConfirmationLinkSent($email, $startTime);
-
-        $browser->visit($this->findFirstEmailConfirmationLink($email, $startTime));
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @throws \Facebook\WebDriver\Exception\TimeoutException
-     * @return void
-     */
-    protected function addOrganization(Browser $browser): void
-    {
-        $browser
-            ->waitFor('@stepOrganizationAdd')
-            ->assertVisible('@stepOrganizationAdd');
-
-        $this->fillInput($browser, '@nameInput', 'Test Organization');
-
-        $iban = $this->makeIban();
-
-        $this
-            ->fillInput($browser, '@ibanInput', $iban)
-            ->fillInput($browser, '@ibanConfirmationInput', $iban);
-
-        $this
-            ->fillInput($browser, '@emailInput', $this->makeUniqueEmail())
-            ->fillInput($browser, '@phoneInput', '31612345678')
-            ->fillInput($browser, '@websiteInput', 'https://example.com', true);
-
-        $browser
-            ->waitFor('@emailPublicCheckbox')->click('@emailPublicCheckbox')
-            ->waitFor('@phonePublicCheckbox')->click('@phonePublicCheckbox')
-            ->waitFor('@websitePublicCheckbox')->click('@websitePublicCheckbox');
-
-        $this->changeSelectControl($browser, '@businessTypeSelect', index: 0);
-
-        $this
-            ->fillInput($browser, '@kvkInput', '00000000')
-            ->fillInput($browser, '@btwInput', 'NL123456789B01');
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @throws \Facebook\WebDriver\Exception\TimeoutException
-     * @return void
-     */
-    protected function addOrganizationWithValidation(Browser $browser): void
-    {
-        // first fill with valid data
-        $this->addOrganization($browser);
-
-        $this->fillInput($browser, '@nameInput', '', true);
-
-        $this->next($browser);
-        $browser->waitFor('@nameError1')->assertVisible('@nameError1');
-
-        $invalidIban = 'invalid_iban';
-
-        $this
-            ->fillInput($browser, '@ibanInput', $invalidIban, true)
-            ->fillInput($browser, '@ibanConfirmationInput', $invalidIban, true);
-
-        $this->next($browser);
-        $browser->waitFor('@ibanError1')->assertVisible('@ibanError1');
-
-        $this->fillInput($browser, '@emailInput', 'invalid@email', true);
-
-        $this->next($browser);
-        $browser->waitFor('@emailError1')->assertVisible('@emailError1');
-
-        $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
-
-        $this->next($browser);
-        $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
-
-        $this->fillInput($browser, '@websiteInput', 'invalid_website', true);
-
-        $this->next($browser);
-        $browser->waitFor('@websiteError1')->assertVisible('@websiteError1');
-
-        $this->fillInput($browser, '@kvkInput', 'invalid_kvk', true);
-
-        $this->next($browser);
-        $browser->waitFor('@kvkError1')->assertVisible('@kvkError1');
-        $browser->waitFor('@kvkError2')->assertVisible('@kvkError2');
+        $this->submitSignUpEmailForm($browser, $email, $startTime);
     }
 
     /**
@@ -506,7 +399,7 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@phoneInput')
             ->assertInputValue('@phoneInput', Arr::get($data, 'phone'));
 
-        $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
+        $this->fillSignUpInput($browser, '@phoneInput', 'invalid_phone', true);
         $browser->click('@saveAddressBtn');
         $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
 
@@ -578,7 +471,7 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@stepEmployees')
             ->assertVisible('@stepEmployees');
 
-        $this->fillInput($browser, '@emailInput', $employeeEmail);
+        $this->fillSignUpInput($browser, '@emailInput', $employeeEmail);
 
         $browser
             ->waitFor('@submitEmployeeForm')
@@ -682,14 +575,14 @@ class ProviderSignUpTest extends DuskTestCase
 
         $browser->waitFor('@addressError1')->assertVisible('@addressError1');
 
-        $this->fillInput($browser, '@phoneInput', 'invalid_phone', true);
+        $this->fillSignUpInput($browser, '@phoneInput', 'invalid_phone', true);
         $browser->click('@saveAddressBtn');
         $browser->waitFor('@phoneError1')->assertVisible('@phoneError1');
         $browser->assertVisible('@addressError1');
 
         $this
-            ->fillInput($browser, '@addressInput', Arr::get($data, 'address'))
-            ->fillInput($browser, '@phoneInput', Arr::get($data, 'phone'), true);
+            ->fillSignUpInput($browser, '@addressInput', Arr::get($data, 'address'))
+            ->fillSignUpInput($browser, '@phoneInput', Arr::get($data, 'phone'), true);
 
         $browser
             ->waitFor('@officeSameHours')
@@ -731,55 +624,6 @@ class ProviderSignUpTest extends DuskTestCase
             ->waitFor('@saveAddressBtn')
             ->click('@saveAddressBtn')
             ->waitFor('@office0');
-    }
-
-    /**
-     * @param Browser $browser
-     * @param string $selector
-     * @param string|int $value
-     * @param bool $clear
-     * @throws TimeoutException
-     * @return $this
-     */
-    private function fillInput(
-        Browser $browser,
-        string $selector,
-        string|int $value,
-        bool $clear = false
-    ): static {
-        $browser->waitFor($selector);
-
-        if ($clear) {
-            $this->clearField($browser, $selector);
-        }
-
-        $browser->type($selector, $value);
-
-        return $this;
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @throws \Facebook\WebDriver\Exception\TimeoutException
-     * @return void
-     */
-    private function next(Browser $browser): void
-    {
-        $browser->waitFor('@nextBtn')->click('@nextBtn');
-    }
-
-    /**
-     * @param Browser $browser
-     * @throws \Facebook\WebDriver\Exception\ElementClickInterceptedException
-     * @throws \Facebook\WebDriver\Exception\NoSuchElementException
-     * @throws \Facebook\WebDriver\Exception\TimeoutException
-     * @return void
-     */
-    private function previous(Browser $browser): void
-    {
-        $browser->waitFor('@previousBtn')->click('@previousBtn');
     }
 
     /**

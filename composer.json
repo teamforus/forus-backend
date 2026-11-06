@@ -24,6 +24,7 @@
         "bunq/sdk_php": "1.27.17.30",
         "dusterio/laravel-aws-worker": "^2.0",
         "eduardokum/laravel-mail-auto-embed": "^2.0",
+        "facile-it/php-openid-client": "^0.4.0",
         "fakerphp/faker": "^1.20",
         "geoip2/geoip2": "^3.1.0",
         "graham-campbell/markdown": "^16.0",
@@ -106,6 +107,7 @@
         "sort-packages": true,
         "optimize-autoloader": true,
         "allow-plugins": {
+            "php-http/discovery": true,
             "simplesamlphp/composer-xmlprovider-installer": true
         }
     }

@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Validator as ValidationValidator;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 class AppServiceProvider extends ServiceProvider
@@ -204,24 +205,49 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function extendValidator(): void
     {
-        Validator::extend('city_name', function ($attribute, $value) {
-            return preg_match('/^[A-Za-z\- ]{0,100}$/', $value);
+        Validator::extend('city_name', function (
+            string $attribute,
+            mixed $value,
+            array $parameters,
+            ValidationValidator $validator,
+        ): bool {
+            return $validator->validateRegex($attribute, $value, ['/^[A-Za-z\- ]{0,100}$/']);
         });
 
-        Validator::extend('street_name', function ($attribute, $value) {
-            return preg_match('/^[A-Za-z\- ]{0,80}$/', $value);
+        Validator::extend('street_name', function (
+            string $attribute,
+            mixed $value,
+            array $parameters,
+            ValidationValidator $validator,
+        ): bool {
+            return $validator->validateRegex($attribute, $value, ['/^[A-Za-z\- ]{0,80}$/']);
         });
 
-        Validator::extend('house_number', function ($attribute, $value) {
-            return preg_match('/^[1-9][0-9]{0,4}$/', $value);
+        Validator::extend('house_number', function (
+            string $attribute,
+            mixed $value,
+            array $parameters,
+            ValidationValidator $validator,
+        ): bool {
+            return $validator->validateRegex($attribute, $value, ['/^[1-9][0-9]{0,4}$/']);
         });
 
-        Validator::extend('postcode', function ($attribute, $value) {
-            return preg_match('/^[1-9][0-9]{3} ?[a-zA-Z]{2}$/', $value);
+        Validator::extend('postcode', function (
+            string $attribute,
+            mixed $value,
+            array $parameters,
+            ValidationValidator $validator,
+        ): bool {
+            return $validator->validateRegex($attribute, $value, ['/^[1-9][0-9]{3} ?[a-zA-Z]{2}$/']);
         });
 
-        Validator::extend('house_addition', function ($attribute, $value) {
-            return preg_match('/^[a-zA-Z0-9\-]{1,4}$/', $value);
+        Validator::extend('house_addition', function (
+            string $attribute,
+            mixed $value,
+            array $parameters,
+            ValidationValidator $validator,
+        ): bool {
+            return $validator->validateRegex($attribute, $value, ['/^[a-zA-Z0-9\-]{1,4}$/']);
         });
     }
 }

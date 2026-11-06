@@ -8,11 +8,13 @@ use App\Models\FundCriterion;
 use App\Models\FundRequest;
 use App\Models\RecordType;
 use App\Models\Voucher;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\FundFormulaProductTestTrait;
@@ -20,6 +22,7 @@ use Tests\Traits\MakesTestFundProviders;
 use Tests\Traits\MakesTestFundRequests;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
 use Throwable;
 
@@ -28,6 +31,7 @@ class FundCriteriaTest extends TestCase
     use WithFaker;
     use MakesTestFunds;
     use MakesTestIdentities;
+    use MakesTestIdentityProviders;
     use DatabaseTransactions;
     use MakesTestFundRequests;
     use MakesTestOrganizations;
@@ -607,6 +611,46 @@ class FundCriteriaTest extends TestCase
 
         $response = $this->makeFundRequest($identity, $fund, $records, false);
         $response->assertSuccessful();
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testInactiveRequesterCannotAcquireVouchers(): void
+    {
+        $sponsor = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_providers' => true,
+        ]);
+
+        $membership = $this->makeIdentityProviderRequester($this->makeEntraConnection($sponsor));
+        $identity = $membership->identity;
+        $automaticFund = $this->makeTestFund($sponsor);
+        $prevalidationFund = $this->makeTestFund($sponsor);
+
+        $automaticFund->criteria()->delete();
+        $automaticFund->refresh();
+        $this->addTestCriteriaToFund($prevalidationFund);
+
+        $voucher = $automaticFund->makeVoucher(amount: 25)->makeActivationCode();
+        $prevalidation = $this->makePrevalidationForTestCriteria($sponsor, $prevalidationFund);
+        $gate = Gate::forUser($identity);
+
+        $this->assertTrue($gate->allows('apply', [$automaticFund, 'apply']));
+        $this->assertTrue($gate->allows('redeem', $voucher));
+        $this->assertTrue($gate->allows('redeem', $prevalidation));
+
+        foreach ([
+            IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+            IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ] as $status) {
+            $membership->update(['provisioning_status' => $status]);
+            $gate = Gate::forUser($identity->refresh());
+
+            $this->assertTrue($gate->denies('apply', [$automaticFund, 'apply']));
+            $this->assertTrue($gate->denies('redeem', $voucher));
+            $this->assertTrue($gate->denies('redeem', $prevalidation));
+        }
     }
 
     /**

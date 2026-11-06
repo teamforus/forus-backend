@@ -183,8 +183,12 @@ class OrganizationSearch extends BaseSearch
             });
         }
 
-        $queryTransactions = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $this->getFilters());
-        $queryTransactions->whereColumn('organization_id', 'organizations.id');
+        $queryTransactions = (new FinancialStatisticQueries())
+            ->getFilterTransactionsQuery($sponsor, [
+                ...$this->getFilters(),
+                'exclude_canceled' => true,
+            ])
+            ->whereColumn('organization_id', 'organizations.id');
 
         $builder->addSelect([
             'total_spent' => (clone $queryTransactions)->selectRaw('sum(`amount`)'),

@@ -29,11 +29,9 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
     protected function getMailExtraData(array $data): array
     {
         $linkTitle = 'Bekijk de aanvraag';
-        $question = $data['fund_request_clarification_question'] ?? '';
         $link = $data['webshop_clarification_link'];
 
         return [
-            'fund_request_clarification_question' => nl2br(e($question)),
             'webshop_clarification_link' => $this->makeLink($link, $linkTitle),
             'webshop_clarification_button' => $this->makeButton($link, $linkTitle),
         ];

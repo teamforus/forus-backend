@@ -37,7 +37,7 @@ class FundRequestClarificationResource extends BaseJsonResource
             'fund_request_record_id' => $this->resource->fund_request_record_id,
             'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
             ...$this->makeTimestamps($this->resource->only([
-                'answered_at', 'created_at', 'updated_at',
+                'resolved_at', 'created_at', 'updated_at', 'changed_at',
             ])),
         ];
     }

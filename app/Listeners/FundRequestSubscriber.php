@@ -2,8 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Events\FundRequestClarifications\FundRequestClarificationClosed;
 use App\Events\FundRequestClarifications\FundRequestClarificationReceived;
 use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
+use App\Events\FundRequestClarifications\FundRequestClarificationUpdated;
 use App\Events\FundRequestRecords\FundRequestRecordUpdated;
 use App\Events\FundRequests\FundRequestAssigned;
 use App\Events\FundRequests\FundRequestCreated;
@@ -17,6 +19,8 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Notifications\Identities\Employee\IdentityAssignedToFundRequestBySupervisorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestClarificationClosedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestClarificationUpdatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
@@ -26,6 +30,7 @@ use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceiv
 use App\Scopes\Builders\FundQuery;
 use Exception;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class FundRequestSubscriber
@@ -107,6 +112,7 @@ class FundRequestSubscriber
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity)->allows('apply', [$fund, $logScope])) {
                     $amount = $fund->id === $fundRequest->fund_id ? $fundRequest->getPaymentAmount() : null;
+                    $voucherFields = ['fund_request_id' => $fundRequest->id];
 
                     if ($fund->fund_config->isPayoutOutcome()) {
                         $fund->makePayout(
@@ -117,26 +123,22 @@ class FundRequestSubscriber
                                 $fundRequest->getIban(),
                                 $fundRequest->getIbanName(),
                             ),
-                            voucherFields: [
-                                'fund_request_id' => $fundRequest->id,
-                            ],
+                            voucherFields: $voucherFields,
                         );
                     } else {
                         $fund->makeVoucher(
                             identity: $fundRequest->identity,
-                            voucherFields: [
-                                'fund_request_id' => $fundRequest->id,
-                            ],
+                            voucherFields: $voucherFields,
                             amount: $amount,
+                        );
+
+                        $fund->makeFundFormulaMultipleVouchers(
+                            identity: $fundRequest->identity,
+                            voucherFields: $voucherFields,
                         );
                     }
 
-                    $fund->makeFundFormulaProductVouchers(
-                        $fundRequest->identity,
-                        voucherFields: [
-                            'fund_request_id' => $fundRequest->id,
-                        ]
-                    );
+                    $fund->makeFundFormulaProductVouchers($fundRequest->identity, voucherFields: $voucherFields);
                 }
             }
 
@@ -214,10 +216,9 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        IdentityFundRequestRecordFeedbackRequestedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_REQUESTED,
-            $eventModels
-        ));
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_REQUESTED, $eventModels);
+
+        DB::afterCommit(fn () => IdentityFundRequestRecordFeedbackRequestedNotification::send($log));
     }
 
     /**
@@ -234,10 +235,9 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        FundRequestRecordFeedbackReceivedNotification::send($fundRequestRecord->log(
-            $fundRequestRecord::EVENT_CLARIFICATION_RECEIVED,
-            $eventModels
-        ));
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_RECEIVED, $eventModels);
+
+        DB::afterCommit(fn () => FundRequestRecordFeedbackReceivedNotification::send($log));
     }
 
     /**
@@ -262,6 +262,48 @@ class FundRequestSubscriber
     }
 
     /**
+     * @param FundRequestClarificationUpdated $event
+     */
+    public function onFundRequestClarificationUpdated(
+        FundRequestClarificationUpdated $event
+    ): void {
+        $clarification = $event->getFundRequestClarification();
+        $fundRequestRecord = $clarification->fund_request_record;
+
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_UPDATED, $eventModels, [
+            'fund_request_clarification_previous_question' => $event->getPreviousQuestion(),
+        ]);
+
+        if ($event->getNotifyRequester()) {
+            DB::afterCommit(fn () => IdentityFundRequestClarificationUpdatedNotification::send($log));
+        }
+    }
+
+    /**
+     * @param FundRequestClarificationClosed $event
+     */
+    public function onFundRequestClarificationClosed(
+        FundRequestClarificationClosed $event
+    ): void {
+        $clarification = $event->getFundRequestClarification();
+        $fundRequestRecord = $clarification->fund_request_record;
+
+        $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord, [
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_CLOSED, $eventModels);
+
+        if ($event->getNotifyRequester()) {
+            DB::afterCommit(fn () => IdentityFundRequestClarificationClosedNotification::send($log));
+        }
+    }
+
+    /**
      * The events dispatcher.
      *
      * @param Dispatcher $events
@@ -282,6 +324,8 @@ class FundRequestSubscriber
 
         $events->listen(FundRequestClarificationRequested::class, "$class@onFundRequestClarificationRequested");
         $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
+        $events->listen(FundRequestClarificationUpdated::class, "$class@onFundRequestClarificationUpdated");
+        $events->listen(FundRequestClarificationClosed::class, "$class@onFundRequestClarificationClosed");
     }
 
     /**

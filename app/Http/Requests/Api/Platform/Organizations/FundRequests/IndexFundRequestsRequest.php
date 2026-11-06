@@ -36,7 +36,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'assigned' => 'nullable|boolean',
             'from' => 'nullable|date:Y-m-d',
             'to' => 'nullable|date:Y-m-d',
-            'state_group' => 'nullable|in:all,pending,assigned,resolved',
+            'state_group' => 'nullable|in:all,pending,assigned,resolved,expired',
             'identity_id' => 'nullable|exists:identities,id',
             'fund_id' => [
                 'nullable',

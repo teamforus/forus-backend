@@ -2,67 +2,33 @@
 
 namespace App\Services\DigIdService\Repositories\Interfaces;
 
-use App\Services\DigIdService\DigIdException;
-use App\Services\DigIdService\Objects\ClientTls;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
+use App\Services\DigIdService\Objects\DigIdResolveContext;
+use App\Services\DigIdService\Objects\DigIdStartContext;
+use App\Services\SAML2Service\Responses\SamlArtifactResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 abstract class DigIdRepo
 {
-    protected array $configs = [];
+    public const string ERROR_CANCELLED = 'cancelled';
 
     /**
-     * @param string $redirectUrl
-     * @param string $sessionSecret
-     * @param ClientTls|null $tlsCert
+     * @param DigIdStartContext $context
+     * @throws Throwable
      * @return DigidAuthRequestData
      */
-    abstract public function makeAuthRequest(
-        string $redirectUrl,
-        string $sessionSecret,
-        ?ClientTls $tlsCert = null,
-    ): DigidAuthRequestData;
+    abstract public function makeAuthRequest(DigIdStartContext $context): DigidAuthRequestData;
 
     /**
-     * @param Request $request
-     * @param string $requestId
-     * @param string $sessionSecret
-     * @param ClientTls|null $tlsCert
+     * @param Request|SamlArtifactResponse $response
+     * @param DigIdResolveContext $context
+     * @throws Throwable
      * @return DigidAuthResolveData
      */
     abstract public function resolveResponse(
-        Request $request,
-        string $requestId,
-        string $sessionSecret,
-        ?ClientTls $tlsCert = null,
+        Request|SamlArtifactResponse $response,
+        DigIdResolveContext $context,
     ): DigidAuthResolveData;
-
-    /**
-     * @param Request $request
-     * @param string $session_secret
-     * @return bool
-     */
-    abstract public function validateResolveResponse(
-        Request $request,
-        string $session_secret
-    ): bool;
-
-    /**
-     * @param string $message
-     * @param string|null $digidCode
-     * @return DigIdException
-     */
-    protected function makeException(
-        string $message,
-        string $digidCode = null
-    ): DigIdException {
-        $exception = new DigIdException($message);
-
-        if ($digidCode) {
-            return $exception->setDigIdCode($digidCode);
-        }
-
-        return $exception;
-    }
 }

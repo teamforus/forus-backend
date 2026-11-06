@@ -19,6 +19,7 @@ class ProductShowcaseCmsBlockConfigTest extends CmsBlockTestCase
         $this->assertSame([
             'section_title',
             'section_description',
+            'content_alignment',
             'section_background_color',
             'section_spacing',
             'product_count',

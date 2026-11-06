@@ -170,6 +170,10 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ): Response|bool {
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
             return $this->deny(__('policies.fund_requests.invalid_endpoint'));
         }
@@ -294,6 +298,10 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ): Response|bool {
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
+        }
+
         if (!$response = $this->resolveAsValidator($identity, $fundRequest, $organization)) {
             return $response;
         }
@@ -367,6 +375,10 @@ class FundRequestPolicy
 
         if (!$fundRequest->isPending()) {
             return $this->deny(__('policies.fund_requests.not_pending'));
+        }
+
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
         }
 
         return true;
@@ -507,6 +519,10 @@ class FundRequestPolicy
         // has to be assigned
         if ($fundRequest->employee?->identity_address !== $identity->address) {
             return $this->deny(__('policies.fund_requests.not_assigned'));
+        }
+
+        if ($fundRequest->expired) {
+            return $this->deny(__('policies.fund_requests.expired'));
         }
 
         return true;

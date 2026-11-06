@@ -145,7 +145,8 @@ class VoucherPolicy
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
             !$voucher->activated &&
-            !$voucher->expired;
+            !$voucher->expired &&
+            ($voucher->identity?->canReceiveVouchers() ?? true);
     }
 
     /**
@@ -229,6 +230,7 @@ class VoucherPolicy
     {
         return
             $identity->exists &&
+            $identity->canReceiveVouchers() &&
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&

@@ -2,22 +2,34 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Employee;
-use App\Models\EmployeeRole;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
-use App\Models\Role;
-use App\Models\RolePermission;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
-use Illuminate\Database\Query\Builder as QBuilder;
 
 class OrganizationQuery
 {
+    /**
+     * @param Builder|Relation|Organization $query
+     * @param Identity $identity
+     * @return Builder|Relation|Organization
+     */
+    public static function whereEligibleForIdentityProviderLink(
+        Builder|Relation|Organization $query,
+        Identity $identity,
+    ): Builder|Relation|Organization {
+        return $query
+            ->where('allow_identity_providers', true)
+            ->where('identity_address', '!=', $identity->address)
+            ->whereHas('employees', fn (Builder $query) => $query
+                ->where('identity_address', $identity->address));
+    }
+
     /**
      * @param Builder|Relation|Organization $builder
      * @param string|array $identityAddress
@@ -416,35 +428,15 @@ class OrganizationQuery
             $identityAddress,
             $permissions
         ) {
-            return $builder->whereIn('id', function (QBuilder $query) use (
-                $identityAddress,
-                $permissions
-            ) {
-                $query->select(['organization_id'])->from((new Employee())->getTable())->where([
-                    'identity_address' => $identityAddress,
-                ])->whereNull('deleted_at')->whereIn('id', function (QBuilder $query) use ($permissions) {
-                    $query->select('employee_id')->from(
-                        (new EmployeeRole())->getTable()
-                    )->whereIn('role_id', function (QBuilder $query) use ($permissions) {
-                        $query->select(['id'])->from((new Role())->getTable())->whereIn('id', function (
-                            QBuilder $query
-                        ) use ($permissions) {
-                            return $query->select(['role_id'])->from(
-                                (new RolePermission())->getTable()
-                            )->whereIn('permission_id', function (QBuilder $query) use ($permissions) {
-                                $query->select('id')->from((new Permission())->getTable());
-
-                                // allow any permission
-                                if ($permissions !== false) {
-                                    $query->whereIn('key', $permissions);
-                                }
-
-                                return $query;
-                            });
-                        })->get();
-                    });
-                });
-            })->orWhere('identity_address', $identityAddress);
+            return $builder
+                ->whereHas('employees', fn (Builder $query) => $query
+                    ->where('identity_address', $identityAddress)
+                    ->whereHas('roles.permissions', function (Builder $query) use ($permissions) {
+                        if ($permissions !== false) {
+                            $query->whereIn('key', $permissions);
+                        }
+                    }))
+                ->orWhere('identity_address', $identityAddress);
         });
     }
 }

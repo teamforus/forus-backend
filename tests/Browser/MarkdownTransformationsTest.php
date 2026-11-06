@@ -62,11 +62,12 @@ class MarkdownTransformationsTest extends DuskTestCase
                 $browser->assertMissing('.block.block-markdown h4');
                 $browser->assertPresent('.block.block-markdown .table-wrap');
                 $browser->assertPresent('.block.block-markdown .table-wrap table.table-responsive');
-                $browser->assertAttribute(
-                    '.block.block-markdown table tbody tr:nth-child(1) td:nth-child(1)',
-                    'data-title',
-                    $headers[0],
-                );
+                $browser->waitUsing(null, 100, function () use ($browser, $headers): bool {
+                    return $browser->attribute(
+                        '.block.block-markdown table tbody tr:nth-child(1) td:nth-child(1)',
+                        'data-title',
+                    ) === $headers[0];
+                }, 'Waited %s seconds for the Markdown cell to have the expected data-title.');
             } finally {
                 $this->restoreFundDescription($fund, $description);
             }

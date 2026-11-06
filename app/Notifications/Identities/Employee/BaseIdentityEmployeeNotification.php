@@ -19,6 +19,10 @@ abstract class BaseIdentityEmployeeNotification extends BaseIdentityNotification
      */
     public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
+        if ($loggable->identity_provider_managed_membership?->isProvisioningActive() === false) {
+            return collect();
+        }
+
         return Identity::whereAddress($loggable->identity_address)->get();
     }
 }
