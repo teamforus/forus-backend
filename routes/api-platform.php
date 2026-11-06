@@ -1323,4 +1323,9 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router
         ->post('firestore-tokens', 'Api\Platform\FirestoreTokensController@store')
         ->middleware('throttle:30,1');
+
+    $router->get(
+        '/decision-trees',
+        'Api\Platform\DecisionTreeController@index'
+    );
 });

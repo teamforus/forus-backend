@@ -1,0 +1,1060 @@
+{
+  "slug": "rozendaal",
+  "name": "Rozendaal",
+  "is_common": false,
+  "start": "welfare-benefits",
+  "application_url": "https://gelrepas.passcloud.nl/link/pasaanvraaggemeente?orgcode=GEPASS&gemeente=Rozendaal",
+  "nodes": {
+    "welfare-benefits": {
+      "type": "decision",
+      "label": "Bijstand?",
+      "description": "Zie de bijstandsnorm op rijksoverheid.nl.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-welfare-benefits-pass-automatic"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "debt-restructuring"
+        }
+      ]
+    },
+    "debt-restructuring": {
+      "type": "decision",
+      "label": "Schuldsanering of minnelijke regeling?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "student-duo"
+        }
+      ]
+    },
+    "minor-child": {
+      "type": "decision",
+      "label": "Kind t/m 17 jaar?",
+      "description": "Kinderen ouder dan 18 vragen zelf aan.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "home-situation-with-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "home-situation-without-child"
+        }
+      ]
+    },
+    "home-situation-with-child": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "retirement-age-single-parent-minor-child"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "retirement-age-together-kids-minor-child"
+        }
+      ]
+    },
+    "retirement-age-single-parent-minor-child": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-parent-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single-parent-minor-child"
+        }
+      ]
+    },
+    "income-single-parent-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.232,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "eligible-children"
+        }
+      ]
+    },
+    "income-single-parent-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.080,51?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "eligible-children"
+        }
+      ]
+    },
+    "retirement-age-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-kids-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together-kids-minor-child"
+        }
+      ]
+    },
+    "income-together-kids-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,75?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "eligible-children-together"
+        }
+      ]
+    },
+    "income-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "eligible-children-together"
+        }
+      ]
+    },
+    "home-situation-without-child": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "retirement-age-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "retirement-age-together"
+        }
+      ]
+    },
+    "retirement-age-together": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together"
+        }
+      ]
+    },
+    "income-together-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,75?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "income-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "retirement-age-single": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single"
+        }
+      ]
+    },
+    "income-single-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.809,57?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "income-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "student-duo": {
+      "type": "decision",
+      "label": "Student met recht op DUO?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "student-young-adult"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-home-situation"
+        }
+      ]
+    },
+    "student-young-adult": {
+      "type": "decision",
+      "label": "Tussen 18 en 21 jaar?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-home-situation"
+        }
+      ]
+    },
+    "full-home-situation": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "full-retirement-age-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "full-retirement-age-together"
+        },
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "full-retirement-age-single-parent"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "full-retirement-age-together-kids"
+        }
+      ]
+    },
+    "full-retirement-age-single": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-young-adult-single"
+        }
+      ]
+    },
+    "full-income-single-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.809,57?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-retired": {
+      "type": "decision",
+      "label": "Vermogen tot € 7.700?",
+      "description": "Bank, spaar, creditcard, contant, auto, caravan, polissen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-young-adult-single": {
+      "type": "decision",
+      "label": "Tussen 18 en 21 jaar?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-single-young-adult"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-single"
+        }
+      ]
+    },
+    "full-income-single-young-adult": {
+      "type": "decision",
+      "label": "Inkomen tot € 378,67?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-single-young-adult"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-young-adult": {
+      "type": "decision",
+      "label": "Vermogen tot € 7.700?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-income-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-single"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single": {
+      "type": "decision",
+      "label": "Vermogen tot € 7.700?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-retirement-age-together": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-together"
+        }
+      ]
+    },
+    "full-income-together-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,75?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-retired": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income-contact-municipality"
+        }
+      ]
+    },
+    "full-income-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-retirement-age-single-parent": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-minor-child-single-parent-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-minor-child-single-parent"
+        }
+      ]
+    },
+    "full-minor-child-single-parent-retired": {
+      "type": "decision",
+      "label": "Kind t/m 17?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-single-parent-retired-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-single-parent-retired-no-minor-child"
+        }
+      ]
+    },
+    "full-income-single-parent-retired-minor-child": {
+      "type": "category",
+      "label": "Inkomen",
+      "options": [
+        {
+          "label": "Tot € 2.232,68",
+          "value": "low",
+          "next": "not-eligible-income-contact-municipality"
+        },
+        {
+          "label": "Tussen € 2.232,68 en € 2.790,85",
+          "value": "mid",
+          "next": "full-assets-single-parent-retired-minor-child"
+        },
+        {
+          "label": "Meer dan € 2.790,85",
+          "value": "high",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-parent-retired-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-income-single-parent-retired-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.809,57?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-single-parent-retired-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-parent-retired-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 7.770?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-minor-child-single-parent": {
+      "type": "decision",
+      "label": "Kind t/m 17?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-single-parent-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-single-parent-no-minor-child"
+        }
+      ]
+    },
+    "full-income-single-parent-minor-child": {
+      "type": "category",
+      "label": "Inkomen",
+      "options": [
+        {
+          "label": "Tot € 2.080,51",
+          "value": "low",
+          "next": "full-assets-single-parent-minor-child-low-income"
+        },
+        {
+          "label": "Tussen € 2.080,51 en € 2.600,64",
+          "value": "mid",
+          "next": "full-assets-single-parent-minor-child-mid-income"
+        },
+        {
+          "label": "Meer dan € 2.600,64",
+          "value": "high",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-parent-minor-child-low-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family-alt"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-parent-minor-child-mid-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-children"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-income-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-single-parent-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 7.770?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family-alt"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-contact-municipality"
+        }
+      ]
+    },
+    "full-retirement-age-together-kids": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-minor-child-together-kids-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-minor-child-together-kids"
+        }
+      ]
+    },
+    "full-minor-child-together-kids-retired": {
+      "type": "decision",
+      "label": "Kind t/m 17?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-together-kids-retired-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-together-kids-retired-no-minor-child"
+        }
+      ]
+    },
+    "full-income-together-kids-retired-minor-child": {
+      "type": "category",
+      "label": "Inkomen",
+      "options": [
+        {
+          "label": "Tot € 2.480,75",
+          "value": "low",
+          "next": "full-assets-together-kids-retired-minor-child-low-income"
+        },
+        {
+          "label": "Tussen € 2.480,75 en € 3.100,94",
+          "value": "mid",
+          "next": "full-assets-together-kids-retired-minor-child-mid-income"
+        },
+        {
+          "label": "Meer dan € 3.100,94",
+          "value": "high",
+          "next": "not-eligible-income-together-contact-municipality-alt"
+        }
+      ]
+    },
+    "full-assets-together-kids-retired-minor-child-low-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-kids-retired-minor-child-mid-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-children-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-income-together-kids-retired-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,75?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-together-kids-retired-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-kids-retired-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-minor-child-together-kids": {
+      "type": "decision",
+      "label": "Kind t/m 17?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-income-together-kids-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "full-income-together-kids-no-minor-child"
+        }
+      ]
+    },
+    "full-income-together-kids-minor-child": {
+      "type": "category",
+      "label": "Inkomen",
+      "options": [
+        {
+          "label": "Tot € 2.311,68",
+          "value": "low",
+          "next": "full-assets-together-kids-minor-child-low-income"
+        },
+        {
+          "label": "Tussen € 2.311,68 en € 2.889,60",
+          "value": "mid",
+          "next": "full-assets-together-kids-minor-child-mid-income"
+        },
+        {
+          "label": "Meer dan € 2.889,60",
+          "value": "high",
+          "next": "not-eligible-income-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-kids-minor-child-low-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-kids-minor-child-mid-income": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-children-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "full-income-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "full-assets-together-kids-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income-contact-municipality"
+        }
+      ]
+    },
+    "full-assets-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 15.540?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-contact-municipality"
+        }
+      ]
+    },
+    "not-eligible-assets-contact-municipality": {
+      "type": "result",
+      "label": "Niet in aanmerking: te veel vermogen. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-contact-municipality": {
+      "type": "result",
+      "label": "Niet in aanmerking: inkomen te hoog. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-together-contact-municipality": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie inkomen is te hoog. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-together-passes-sent-home": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking. Passen worden gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets-together-contact-municipality": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-assets-together-after-income-contact-municipality": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-together-contact-municipality-alt": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie inkomen is te hoog. Neem contact op met de gemeente Rheden.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-including-family": {
+      "type": "result",
+      "label": "Je komt in aanmerking, ook voor je gezin.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-student": {
+      "type": "result",
+      "label": "Studenten komen niet in aanmerking.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-welfare-benefits-pass-automatic": {
+      "type": "result",
+      "label": "Bij bijstand wordt de pas automatisch thuisgestuurd. Zelf aanvragen hoeft niet. Geen pas ontvangen: contact met de gemeente Rheden.",
+      "eligible": true,
+      "button": false
+    },
+    "eligible-children": {
+      "type": "result",
+      "label": "Je kinderen komen in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-children-together": {
+      "type": "result",
+      "label": "Jullie kinderen komen in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-together": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible": {
+      "type": "result",
+      "label": "Je komt in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-including-family-alt": {
+      "type": "result",
+      "label": "Je komt in aanmerking, ook voor je gezin.",
+      "eligible": true,
+      "button": true
+    }
+  }
+}

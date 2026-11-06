@@ -1,0 +1,85 @@
+{
+  "slug": "common",
+  "name": "Common",
+  "is_common": true,
+  "start": "pass-lost-or-stolen",
+  "application_url": null,
+  "nodes": {
+    "pass-lost-or-stolen": {
+      "type": "decision",
+      "label": "Even ter controle: is jouw pas gestolen of ben je jouw pas kwijt?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "pass-lost-result"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "organization"
+        }
+      ]
+    },
+    "pass-lost-result": {
+      "type": "result",
+      "label": "Mail pashouders@gelrepas.nl of bel 033 3035 464. De pas blokkeren en vervangen kost 5 euro, afgeschreven van het tegoed. Geen formulier.",
+      "eligible": false,
+      "button": false
+    },
+    "organization": {
+      "type": "category",
+      "label": "In welke gemeente woon je?",
+      "options": [
+        {
+          "label": "Arnhem",
+          "value": "arnhem",
+          "next": "@organization-start",
+          "tree": "arnhem"
+        },
+        {
+          "label": "Duiven",
+          "value": "duiven",
+          "next": "@organization-start",
+          "tree": "duiven"
+        },
+        {
+          "label": "Renkum",
+          "value": "renkum",
+          "next": "@organization-start",
+          "tree": "renkum"
+        },
+        {
+          "label": "Rheden",
+          "value": "rheden",
+          "next": "@organization-start",
+          "tree": "rheden"
+        },
+        {
+          "label": "Rozendaal",
+          "value": "rozendaal",
+          "next": "@organization-start",
+          "tree": "rozendaal"
+        },
+        {
+          "label": "Westervoort",
+          "value": "westervoort",
+          "next": "@organization-start",
+          "tree": "westervoort"
+        },
+        {
+          "label": "Zevenaar",
+          "value": "zevenaar",
+          "next": "@organization-start",
+          "tree": "zevenaar"
+        },
+        {
+          "label": "Geen van bovenstaande",
+          "value": "other",
+          "next": "@organization-start",
+          "tree": "other"
+        }
+      ]
+    }
+  }
+}

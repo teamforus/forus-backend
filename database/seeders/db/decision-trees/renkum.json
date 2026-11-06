@@ -1,0 +1,446 @@
+{
+  "slug": "renkum",
+  "name": "Renkum",
+  "is_common": false,
+  "start": "welfare-benefits",
+  "application_url": "https://gelrepas.passcloud.nl/link/pasaanvraaggemeente?orgcode=GEPASS&gemeente=Renkum",
+  "nodes": {
+    "welfare-benefits": {
+      "type": "decision",
+      "label": "Bijstand?",
+      "description": "Zie de bijstandsnorm op rijksoverheid.nl.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-welfare-benefits"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "debt-restructuring-or-wsnp"
+        }
+      ]
+    },
+    "debt-restructuring-or-wsnp": {
+      "type": "decision",
+      "label": "Toegelaten tot schuldhulpverlening van Renkum of de WSNP?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-debt-assistance"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "student-duo"
+        }
+      ]
+    },
+    "student-duo": {
+      "type": "decision",
+      "label": "Student met recht op studiefinanciering van DUO?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "home-situation"
+        }
+      ]
+    },
+    "home-situation": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "retirement-age-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "retirement-age-together"
+        },
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "retirement-age-single-parent"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "retirement-age-together-kids"
+        }
+      ]
+    },
+    "retirement-age-single": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single"
+        }
+      ]
+    },
+    "retirement-age-together": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together"
+        }
+      ]
+    },
+    "retirement-age-single-parent": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-parent-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single-parent"
+        }
+      ]
+    },
+    "retirement-age-together-kids": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-kids-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together-kids"
+        }
+      ]
+    },
+    "income-single-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.904,81?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "assets-single-retired": {
+      "type": "decision",
+      "label": "Vermogen tot € 8.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "income-together-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.611,32?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "income-single-parent-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.877,63?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-together-kids-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 3.264,15?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "assets-single-parent-retired": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "assets-together-retired": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "income-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.703,35?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "assets-single": {
+      "type": "decision",
+      "label": "Vermogen tot € 8.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "income-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.433,35?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "income-single-parent": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.877,63?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-together-kids": {
+      "type": "decision",
+      "label": "Inkomen tot € 3.041,69?",
+      "description": "Maandbedrag exclusief vakantiegeld, inclusief alimentatie, onderhuur of kostgangers en heffingskortingen.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income"
+        }
+      ]
+    },
+    "assets-together": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "assets-single-parent": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "eligible-pass-sent-home": {
+      "type": "result",
+      "label": "Je komt in aanmerking. De pas wordt gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets": {
+      "type": "result",
+      "label": "Niet in aanmerking: te veel vermogen.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: inkomen te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-together": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie inkomen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-together-passes-sent-home": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking. Passen worden gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets-together": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-assets-together-after-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-including-family": {
+      "type": "result",
+      "label": "Je komt in aanmerking, ook voor je gezin.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-student": {
+      "type": "result",
+      "label": "Studenten komen niet in aanmerking.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-welfare-benefits": {
+      "type": "result",
+      "label": "Je hebt een bijstandsuitkering en komt in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-debt-assistance": {
+      "type": "result",
+      "label": "Je zit in schuldhulpverlening en komt in aanmerking.",
+      "eligible": true,
+      "button": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "duiven",
+  "name": "Duiven",
+  "is_common": false,
+  "start": "check-organization-website",
+  "application_url": "https://duiven.nl/minimaregelingen",
+  "nodes": {
+    "check-organization-website": {
+      "type": "result",
+      "label": "Check verder op de website van de gemeente en vraag daar aan.",
+      "eligible": true,
+      "button": true
+    }
+  }
+}
