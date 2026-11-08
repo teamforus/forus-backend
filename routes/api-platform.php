@@ -397,6 +397,35 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'physical-cards' => 'physical_card',
     ])->only('index', 'store');
 
+    $router->post(
+        'organizations/{organization}/dcp-orders/{dcp_order}/reset-payload',
+        "Api\Platform\Organizations\DCPOrdersController@resetPayload"
+    );
+
+    $router->post(
+        'organizations/{organization}/dcp-orders/{dcp_order}/order-id-dcp',
+        "Api\Platform\Organizations\DCPOrdersController@setOrderIdDcp"
+    );
+
+    $router->post(
+        'organizations/{organization}/dcp-orders/{dcp_order}/retry',
+        "Api\Platform\Organizations\DCPOrdersController@retry"
+    );
+
+    $router->resource(
+        'organizations/{organization}/dcp-orders',
+        "Api\Platform\Organizations\DCPOrdersController",
+    )->parameters([
+        'dcp-orders' => 'dcp_order',
+    ])->only('index', 'show', 'update');
+
+    $router->resource(
+        'organizations/{organization}/dcp-order-bulks',
+        "Api\Platform\Organizations\DCPOrderBulksController",
+    )->parameters([
+        'dcp-order-bulks' => 'dcp_order_bulk',
+    ])->only('index', 'show', 'store');
+
     $router->resource(
         'organizations/{organization}/sponsor/product-reservations',
         "Api\Platform\Organizations\Sponsor\ProductReservationsController",
@@ -443,6 +472,26 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD",
+    );
+
+    $router->get(
+        'organizations/{organization}/implementations/{implementation}/dcp-connection',
+        "Api\Platform\Organizations\Implementations\DCPConnectionController@show",
+    );
+
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/dcp-connection',
+        "Api\Platform\Organizations\Implementations\DCPConnectionController@update",
+    );
+
+    $router->get(
+        'organizations/{organization}/implementations/{implementation}/dcp-connection/options',
+        "Api\Platform\Organizations\Implementations\DCPConnectionController@options",
+    );
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/dcp-connection/test',
+        "Api\Platform\Organizations\Implementations\DCPConnectionController@test",
     );
 
     $router->patch(

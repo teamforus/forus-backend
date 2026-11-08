@@ -36,6 +36,8 @@ use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Policies\BankConnectionPolicy;
 use App\Policies\BIConnectionPolicy;
+use App\Policies\DCPOrderBulkPolicy;
+use App\Policies\DCPOrderPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
 use App\Policies\FundFormPolicy;
@@ -74,6 +76,8 @@ use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DCPService\Models\DCPOrder;
+use App\Services\DCPService\Models\DCPOrderBulk;
 use App\Services\FileService\Models\File;
 use App\Services\MediaService\Models\Media;
 use App\Services\MollieService\Models\MollieConnection;
@@ -99,8 +103,10 @@ class AuthServiceProvider extends ServiceProvider
         Voucher::class => VoucherPolicy::class,
         Employee::class => EmployeePolicy::class,
         FundForm::class => FundFormPolicy::class,
+        DCPOrder::class => DCPOrderPolicy::class,
         Household::class => HouseholdPolicy::class,
         FundRequest::class => FundRequestPolicy::class,
+        DCPOrderBulk::class => DCPOrderBulkPolicy::class,
         Organization::class => OrganizationPolicy::class,
         FundProvider::class => FundProviderPolicy::class,
         PhysicalCard::class => PhysicalCardPolicy::class,

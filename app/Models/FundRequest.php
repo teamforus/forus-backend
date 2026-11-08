@@ -545,6 +545,7 @@ class FundRequest extends Model
         /** @var PhysicalCardRequest $cardRequest */
         $cardRequest = $this->physical_card_requests()->create(Arr::only($address, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id', 'physical_card_type_id',
+            'first_name', 'last_name',
         ]));
 
         Event::dispatch(new FundRequestPhysicalCardRequestEvent($this, $cardRequest));

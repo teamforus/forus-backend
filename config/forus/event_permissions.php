@@ -80,4 +80,21 @@ return [
             // 'fund_product_revoked',
         ],
     ],
+
+    'dcp_order' => [
+        'permissions' => [
+            Permission::MANAGE_VOUCHERS,
+        ],
+        'events' => [
+            'created',
+            'approved',
+            'sent',
+            'failed',
+            'status_changed',
+            'retried',
+            'payload_updated',
+            'payload_reset',
+            'order_id_dcp_set',
+        ],
+    ],
 ];

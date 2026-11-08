@@ -19,7 +19,7 @@ class PhysicalCardRequestResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return $this->resource->only([
-            'id', 'address', 'house', 'house_addition', 'postcode', 'city',
+            'id', 'address', 'house', 'house_addition', 'postcode', 'city', 'first_name', 'last_name',
         ]);
     }
 }

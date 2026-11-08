@@ -219,6 +219,7 @@ return [
 
         App\Services\EventLogService\EventLogServiceProvider::class,
         App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
+        App\Services\DCPService\DCPServiceProvider::class,
 
         App\Services\BNGService\BNGServiceProvider::class,
         App\Services\MailDatabaseLoggerService\MailDatabaseLoggerServiceProvider::class,

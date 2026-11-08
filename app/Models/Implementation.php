@@ -11,6 +11,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Searches\AnnouncementSearch;
+use App\Services\DCPService\Models\DCPConnection;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\TvsService;
 use App\Services\FileService\FileUploadConfigService;
@@ -130,6 +131,7 @@ use Illuminate\Validation\ValidationException;
  * @property-read EloquentCollection|\App\Models\Announcement[] $announcements_webshop
  * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
+ * @property-read DCPConnection|null $dcp_connection
  * @property-read Media|null $email_logo
  * @property-read EloquentCollection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
@@ -510,6 +512,15 @@ class Implementation extends Model
             'id',
             'fund_id'
         );
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function dcp_connection(): HasOne
+    {
+        return $this->hasOne(DCPConnection::class);
     }
 
     /**

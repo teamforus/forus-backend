@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\BankConnectionSubscriber;
+use App\Listeners\DCPOrderSubscriber;
 use App\Listeners\EmployeeSubscriber;
 use App\Listeners\EventLogSubscriber;
 use App\Listeners\FundProviderSubscriber;
@@ -31,6 +32,7 @@ class EventServiceProvider extends ServiceProvider
         FundSubscriber::class,
         VoucherSubscriber::class,
         ProductSubscriber::class,
+        DCPOrderSubscriber::class,
         EventLogSubscriber::class,
         EmployeeSubscriber::class,
         FundRequestSubscriber::class,

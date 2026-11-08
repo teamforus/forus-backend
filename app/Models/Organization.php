@@ -10,6 +10,8 @@ use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DCPService\Models\DCPConnection;
+use App\Services\DCPService\Models\DCPOrder;
 use App\Services\DigIdService\TvsService;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -869,6 +871,23 @@ class Organization extends Model
             $this->allow_identity_provider_requester_provisioning ||
             ($this->allow_identity_provider_employee_provisioning &&
                 $this->allow_identity_provider_employee_provisioning_profiles);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasDCP(): bool
+    {
+        if (!$this->allow_physical_cards) {
+            return false;
+        }
+
+        $hasConnection = DCPOrder::isEnabled() && DCPConnection::query()
+            ->where('enabled', true)
+            ->whereRelation('implementation', 'organization_id', $this->id)
+            ->exists();
+
+        return $hasConnection || DCPOrder::where('organization_id', $this->id)->exists();
     }
 
     /**

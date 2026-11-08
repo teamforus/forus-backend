@@ -72,6 +72,8 @@ class FundRequestsController extends Controller
                     'house_addition' => $request->input('physical_card_request_address.house_nr_addition'),
                     'postcode' => $request->input('physical_card_request_address.postal_code'),
                     'city' => $request->input('physical_card_request_address.city'),
+                    'first_name' => $request->input('physical_card_request_address.first_name'),
+                    'last_name' => $request->input('physical_card_request_address.last_name'),
                     'physical_card_type_id' => $type->id,
                 ]);
             }

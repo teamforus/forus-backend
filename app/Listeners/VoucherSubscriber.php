@@ -364,6 +364,8 @@ class VoucherSubscriber
         if ($event->shouldNotifyRequester()) {
             IdentityVoucherPhysicalCardRequestedNotification::send($eventLog);
         }
+
+        $physicalCardRequest->makeDCPOrder();
     }
 
     /**

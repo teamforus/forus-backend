@@ -164,7 +164,33 @@ class PhysicalCardsTest extends TestCase
             ->assertJsonPath('data.description', $updatedData['description'])
             // code blocks and size cant be updated
             ->assertJsonPath('data.code_blocks', $data['code_blocks'])
-            ->assertJsonPath('data.code_block_size', $data['code_block_size']);
+            ->assertJsonPath('data.code_block_size', $data['code_block_size'])
+            ->assertJsonPath('data.send_to_dcp', false);
+
+        $type = $organization->physical_card_types[0];
+
+        $this->apiUpdatePhysicalCardTypeRequest($organization, $type, $organization->identity, [
+            ...$updatedData,
+            'send_to_dcp' => true,
+        ])->assertSuccessful()->assertJsonPath('data.send_to_dcp', true);
+
+        $this->apiUpdatePhysicalCardTypeRequest($organization, $type, $organization->identity, $updatedData)
+            ->assertSuccessful()
+            ->assertJsonPath('data.send_to_dcp', true);
+
+        $this->apiUpdatePhysicalCardTypeRequest($organization, $type, $organization->identity, [
+            ...$updatedData,
+            'send_to_dcp' => 'yes',
+        ])->assertJsonValidationErrorFor('send_to_dcp');
+
+        $this->apiUpdatePhysicalCardTypeRequest($organization, $type, $organization->identity, [
+            ...$updatedData,
+            'send_to_dcp' => false,
+        ])->assertSuccessful()->assertJsonPath('data.send_to_dcp', false);
+
+        $this->apiMakePhysicalCardTypeRequest($organization, $organization->identity, [...$data, 'send_to_dcp' => true])
+            ->assertSuccessful()
+            ->assertJsonPath('data.send_to_dcp', true);
     }
 
     /**

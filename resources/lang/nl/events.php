@@ -12,6 +12,20 @@ return [
             // 'rejected' => ':bank connection has been rejected',
         ],
     ],
+    'dcp_order' => [
+        'webshop' => [],
+        'dashboard' => [
+            'created' => 'Bestelling is aangemaakt',
+            'approved' => 'Bestelling is goedgekeurd in <a href=":dashboard_url/organizations/:organization_id/dcp-orders/bulks/:bulk_id" class="text-primary text-medium">bulk #:bulk_id</a>',
+            'sent' => 'Bestelling is ontvangen door DCP (DCP id: :order_id_dcp)',
+            'failed' => 'Versturen naar DCP is mislukt: :message',
+            'status_changed' => 'DCP status is gewijzigd van ":previous_status" naar ":status"',
+            'retried' => 'Bestelling is opnieuw aangeboden',
+            'payload_updated' => 'Gegevens van de bestelling zijn aangepast: :fields',
+            'payload_reset' => 'Aanpassingen zijn ongedaan gemaakt, de gegevens zijn opnieuw opgehaald uit de aanvraag',
+            'order_id_dcp_set' => 'Ordernummer DCP is ingevuld voor de dubbele bestelling (DCP id: :order_id_dcp)',
+        ],
+    ],
     'employees' => [
         'webshop' => [],
         'dashboard' => [
@@ -50,6 +64,7 @@ return [
         'employees' => 'Medewerker: <a href=":dashboard_url/organizations/:organization_id/employees" class="text-primary text-medium">#:employee_id</a>',
         'voucher' => 'Tegoed: <a href=":dashboard_url/organizations/:sponsor_id/vouchers/:voucher_id" class="text-primary text-medium">#:voucher_number</a>',
         'bank_connection' => '<a href=":dashboard_url/organizations/:organization_id/bank-connections" class="text-primary text-medium">Bank koppelingen</a>',
+        'dcp_order' => 'DCP bestelling: <a href=":dashboard_url/organizations/:organization_id/dcp-orders/:dcp_order_id" class="text-primary text-medium">#:dcp_order_id</a>',
     ],
     'physical_card_request' => [
         'created' => 'Pas is besteld',

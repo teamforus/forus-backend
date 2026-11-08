@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
+use App\Services\DCPService\Models\DCPOrder;
+use App\Services\DCPService\Models\DCPOrderBulk;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Random\RandomException;
+use RuntimeException;
 
 /**
  * App\Models\PhysicalCardType.
@@ -21,6 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $code_prefix
  * @property int $code_blocks
  * @property int $code_block_size
+ * @property bool $send_to_dcp
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -60,7 +66,14 @@ class PhysicalCardType extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 'description', 'organization_id', 'code_blocks', 'code_block_size', 'code_prefix',
+        'name', 'description', 'organization_id', 'code_blocks', 'code_block_size', 'code_prefix', 'send_to_dcp',
+    ];
+
+    /**
+     * @var array
+     */
+    protected $casts = [
+        'send_to_dcp' => 'boolean',
     ];
 
     /**
@@ -119,5 +132,47 @@ class PhysicalCardType extends Model
     public function fund_physical_card_types(): HasMany
     {
         return $this->hasMany(FundPhysicalCardType::class);
+    }
+
+    /**
+     * @throws RandomException
+     * @return string
+     */
+    public function makeUniqueCode(): string
+    {
+        $prefix = (string) $this->code_prefix;
+        $length = $this->code_blocks * $this->code_block_size - strlen($prefix);
+
+        for ($i = 0; $i < 100; $i++) {
+            $code = $prefix . implode('', array_map(fn () => random_int(0, 9), range(1, max($length, 1))));
+
+            if (
+                !PhysicalCard::where('code', $code)->exists() &&
+                !PhysicalCardRequest::where('card_code', $code)->exists()
+            ) {
+                return $code;
+            }
+        }
+
+        throw new RuntimeException("Could not generate unique code for physical card type [$this->id].");
+    }
+
+    /**
+     * @return void
+     */
+    public function failPendingDCPOrders(): void
+    {
+        $orders = DCPOrder::query()
+            ->where('state', DCPOrder::STATE_PENDING)
+            ->whereHasMorph('orderable', PhysicalCardRequest::class, function (Builder $builder) {
+                $builder->where('physical_card_type_id', $this->id);
+            })
+            ->get();
+
+        $orders->each(fn (DCPOrder $order) => $order->fail(trans('dcp.errors.card_type_not_sent')));
+
+        DCPOrderBulk::whereIn('id', $orders->pluck('dcp_order_bulk_id')->filter()->unique())
+            ->get()
+            ->each(fn (DCPOrderBulk $bulk) => $bulk->updateState());
     }
 }

@@ -60,6 +60,7 @@ class PhysicalCardRequestsController extends Controller
         $cardRequest = $voucher->makePhysicalCardRequest([
             ...$request->only([
                 'address', 'house', 'house_addition', 'postcode', 'city', 'physical_card_type_id',
+                'first_name', 'last_name',
             ]),
             'physical_card_type_id' => $fundPhysicalCardType->physical_card_type_id,
         ], true);
