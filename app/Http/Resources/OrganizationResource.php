@@ -135,6 +135,9 @@ class OrganizationResource extends BaseJsonResource
                 'allow_identity_provider_employee_provisioning', 'allow_identity_provider_requester_provisioning',
             ]),
             'show_identity_provider_profile_status' => $organization->showsIdentityProviderProfileStatus(),
+            ...$request->isSponsorDashboard() ? [
+                'has_dcp' => $organization->hasDCP(),
+            ] : [],
             ...$request->isProviderDashboard() ? [
                 'allow_extra_payments_by_sponsor' => $organization->canUseExtraPaymentsAsProvider(),
                 'can_receive_extra_payments' => $organization->canReceiveExtraPayments(),

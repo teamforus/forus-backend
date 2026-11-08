@@ -107,7 +107,7 @@ if (!function_exists('cache_optional')) {
         string $key,
         callable $callback,
         float $minutes = 1,
-        string $driver = null,
+        ?string $driver = null,
         bool $reset = false
     ): mixed {
         try {

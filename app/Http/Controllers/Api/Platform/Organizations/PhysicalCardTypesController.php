@@ -53,9 +53,10 @@ class PhysicalCardTypesController extends Controller
         $this->authorize('store', [PhysicalCardType::class, $organization]);
 
         /** @var PhysicalCardType $physicalCardType */
-        $physicalCardType = $organization->physical_card_types()->create($request->only([
-            'name', 'description', 'code_blocks', 'code_block_size',
-        ]));
+        $physicalCardType = $organization->physical_card_types()->create([
+            ...$request->only(['name', 'description', 'code_blocks', 'code_block_size']),
+            ...$request->has('send_to_dcp') ? ['send_to_dcp' => $request->boolean('send_to_dcp')] : [],
+        ]);
 
         $physicalCardType->attachMediaByUid($request->input('media_uid'));
 
@@ -97,9 +98,14 @@ class PhysicalCardTypesController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$physicalCardType, $organization]);
 
-        $physicalCardType->update($request->only([
-            'name', 'description',
-        ]));
+        $physicalCardType->update([
+            ...$request->only(['name', 'description']),
+            ...$request->has('send_to_dcp') ? ['send_to_dcp' => $request->boolean('send_to_dcp')] : [],
+        ]);
+
+        if ($physicalCardType->wasChanged('send_to_dcp') && !$physicalCardType->send_to_dcp) {
+            $physicalCardType->failPendingDCPOrders();
+        }
 
         $physicalCardType->attachMediaByUid($request->input('media_uid'));
 

@@ -26,6 +26,32 @@ return [
             //     'client_secret' => 'your-client-secret',
             //     'from_email' => 'sender@example.com',
             // ],
+            'dcp_connection' => [
+                'enabled' => true,
+                'url' => env('DCP_API_URL', 'https://api-acc.dcp.nl'),
+                'username' => env('DCP_API_USERNAME'),
+                'password' => env('DCP_API_PASSWORD'),
+                'order_types' => [
+                    'physical_card_request' => [
+                        'label' => 'Gelrepas',
+                        'item' => 'card',
+                        'tags' => [
+                            ['key' => 'printedCardType', 'source' => 'card_type.name'],
+                            ['key' => 'printedFirstName', 'source' => 'recipient.first_name', 'required' => true],
+                            ['key' => 'printedLastName', 'source' => 'recipient.last_name', 'required' => true],
+                            [
+                                'key' => 'printedDateOfBirth',
+                                'source' => 'recipient.birth_date',
+                                'format' => 'date:d-m-Y',
+                                'required' => true,
+                            ],
+                            ['key' => 'printedCityCode', 'value' => '1245', 'required' => true],
+                            ['key' => 'printedQrCode', 'source' => 'voucher.qr_code', 'required' => true],
+                            ['key' => 'printedCardNumber', 'source' => 'card.number', 'required' => true],
+                        ],
+                    ],
+                ],
+            ],
         ],
     ],
     'Stadjerspas' => [

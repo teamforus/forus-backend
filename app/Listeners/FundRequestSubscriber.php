@@ -142,6 +142,8 @@ class FundRequestSubscriber
                 }
             }
 
+            $this->makeFundRequestDCPOrders($fundRequest);
+
             IdentityFundRequestApprovedNotification::send($eventLog);
         } elseif (!$fundRequest->isDisregarded()) {
             IdentityFundRequestDeniedNotification::send($eventLog);
@@ -326,6 +328,28 @@ class FundRequestSubscriber
         $events->listen(FundRequestClarificationReceived::class, "$class@onFundRequestClarificationReceived");
         $events->listen(FundRequestClarificationUpdated::class, "$class@onFundRequestClarificationUpdated");
         $events->listen(FundRequestClarificationClosed::class, "$class@onFundRequestClarificationClosed");
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return void
+     */
+    protected function makeFundRequestDCPOrders(FundRequest $fundRequest): void
+    {
+        $voucher = $fundRequest->vouchers()
+            ->where('fund_id', $fundRequest->fund_id)
+            ->whereNull('product_id')
+            ->whereNull('parent_id')
+            ->orderBy('id')
+            ->first();
+
+        if (!$voucher) {
+            return;
+        }
+
+        foreach ($fundRequest->physical_card_requests()->doesntHave('dcp_order')->get() as $cardRequest) {
+            $cardRequest->makeDCPOrder($voucher);
+        }
     }
 
     /**

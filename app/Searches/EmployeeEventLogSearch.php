@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\Permission;
 use App\Models\Voucher;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Services\DCPService\Models\DCPOrder;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,7 @@ class EmployeeEventLogSearch extends BaseSearch
         'voucher' => 'fund.organization',
         'employees' => 'organization',
         'bank_connection' => 'organization',
+        'dcp_order' => 'organization',
     ];
 
     /**
@@ -61,6 +63,7 @@ class EmployeeEventLogSearch extends BaseSearch
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, BankConnection::class));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Employee::class));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Fund::class));
+            $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, DCPOrder::class));
         });
 
         if (empty($this->getFilter('loggable', []))) {

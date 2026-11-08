@@ -39,6 +39,8 @@ class StorePhysicalCardRequestRequest extends BaseFormRequest
             'house_addition' => 'nullable|house_addition',
             'postcode' => 'required|postcode',
             'city' => 'required|city_name',
+            'first_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
             'fund_physical_card_type_id' => [
                 'required',
                 Rule::exists('fund_physical_card_types', 'id')->where('fund_id', $voucher->fund_id),

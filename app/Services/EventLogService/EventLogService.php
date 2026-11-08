@@ -28,6 +28,7 @@ use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DCPService\Models\DCPOrder;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\MollieService\Models\MollieConnection;
 
@@ -70,6 +71,7 @@ class EventLogService implements IEventLogService
             'bi_connection' => fn () => $this->biConnectionMeta($model),
             'prevalidation_request' => fn () => $this->prevalidationRequestMeta($model),
             'prevalidation_request_record' => fn () => $this->prevalidationRequestRecordMeta($model),
+            'dcp_order' => fn () => $this->dcpOrderMeta($model),
         ];
 
         return $modelMeta[$type] ? $modelMeta[$type]() : [];
@@ -410,6 +412,30 @@ class EventLogService implements IEventLogService
             'monetary_account_iban' => $account->monetary_account_iban,
             'monetary_account_name' => $account->monetary_account_name,
         ], 'bank_connection_account_');
+    }
+
+    /**
+     * Only the state of the order, the personal data from the payload is not stored in the logs.
+     *
+     * @param DCPOrder $order
+     * @return array
+     */
+    protected function dcpOrderMeta(DCPOrder $order): array
+    {
+        return $this->keyPrepend([
+            'id' => $order->id,
+            'order_id' => $order->order_id,
+            'order_id_dcp' => $order->order_id_dcp,
+            'dcp_order_bulk_id' => $order->dcp_order_bulk_id,
+            'orderable_type' => $order->orderable_type,
+            'orderable_id' => $order->orderable_id,
+            'state' => $order->state,
+            'status_id' => $order->status_id,
+            'status_message' => $order->status_message,
+            'response_code' => $order->response_code,
+            'attempts' => $order->attempts,
+            'payload_edited_at' => $order->payload_edited_at?->format('Y-m-d H:i:s'),
+        ], 'dcp_order_');
     }
 
     /**

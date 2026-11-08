@@ -47,6 +47,7 @@ use App\Models\VoucherTransactionBulk;
 use App\Notifications\DatabaseChannel;
 use App\Observers\FundProviderObserver;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DCPService\Models\DCPOrder;
 use App\Services\MediaService\MediaService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -75,6 +76,7 @@ class AppServiceProvider extends ServiceProvider
         'product' => Product::class,
         'identity' => Identity::class,
         'employees' => Employee::class,
+        'dcp_order' => DCPOrder::class,
         'fund_request' => FundRequest::class,
         'organization' => Organization::class,
         'bi_connection' => BIConnection::class,

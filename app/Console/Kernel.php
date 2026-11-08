@@ -33,6 +33,8 @@ use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateRolesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
+use App\Services\DCPService\Commands\SendDCPOrdersCommand;
+use App\Services\DCPService\Commands\UpdateDCPOrdersStatusCommand;
 use App\Services\FileService\Commands\FilesCleanupCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
 use App\Services\MailDatabaseLoggerService\Commands\MailDatabaseLoggerClearUnusedAttachmentsCommand;
@@ -110,6 +112,8 @@ class Kernel extends ConsoleKernel
         MigratePhysicalCardsCommand::class,
         UpdateSessionsExpirationCommand::class,
         SendBackofficeLogsCommand::class,
+        SendDCPOrdersCommand::class,
+        UpdateDCPOrdersStatusCommand::class,
 
         // bank connections
         BankConnectionsInspectCommand::class,
@@ -321,6 +325,7 @@ class Kernel extends ConsoleKernel
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
         $this->scheduleBackoffice($schedule);
+        $this->scheduleDCP($schedule);
         $this->scheduleQueue($schedule);
         $this->scheduleAuthExpiration($schedule);
         $this->scheduleMollieConnections($schedule);
@@ -370,6 +375,23 @@ class Kernel extends ConsoleKernel
         $schedule->command('funds.backoffice:send-logs')
             ->withoutOverlapping()
             ->everyMinute()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleDCP(Schedule $schedule): void
+    {
+        $schedule->command('dcp:send-orders')
+            ->withoutOverlapping()
+            ->everyMinute()
+            ->onOneServer();
+
+        $schedule->command('dcp:update-status')
+            ->withoutOverlapping()
+            ->everyFifteenMinutes()
             ->onOneServer();
     }
 

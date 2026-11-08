@@ -49,6 +49,8 @@ class StoreFundRequestRequest extends BaseFormRequest
             'physical_card_request_address.house_nr' => trans('validation.attributes.house_nr'),
             'physical_card_request_address.house_nr_addition' => trans('validation.attributes.house_nr_addition'),
             'physical_card_request_address.postal_code' => trans('validation.attributes.postal_code'),
+            'physical_card_request_address.first_name' => trans('validation.attributes.first_name'),
+            'physical_card_request_address.last_name' => trans('validation.attributes.last_name'),
         ];
     }
 
@@ -175,6 +177,8 @@ class StoreFundRequestRequest extends BaseFormRequest
             'physical_card_request_address.house_nr' => ['required', 'house_number'],
             'physical_card_request_address.house_nr_addition' => ['nullable', 'house_addition'],
             'physical_card_request_address.postal_code' => ['required', 'postcode'],
+            'physical_card_request_address.first_name' => ['nullable', 'string', 'max:100'],
+            'physical_card_request_address.last_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 

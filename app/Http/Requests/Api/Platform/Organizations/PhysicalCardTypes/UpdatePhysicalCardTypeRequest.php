@@ -18,6 +18,7 @@ class UpdatePhysicalCardTypeRequest extends StorePhysicalCardTypeRequest
             'name' => 'required|string|max:200',
             'media_uid' => ['sometimes', new MediaUidRule('physical_card_type_photo')],
             'description' => 'nullable|string|max:2000',
+            'send_to_dcp' => 'sometimes|boolean',
         ];
     }
 }

@@ -1414,7 +1414,7 @@ class Voucher extends Model
     {
         return $this->physical_cards()->create([
             'code' => $code,
-            'identity_address' => $this->identity->address,
+            'identity_address' => $this->identity?->address,
             'physical_card_type_id' => $type?->id,
         ]);
     }
@@ -1430,6 +1430,7 @@ class Voucher extends Model
     ): PhysicalCardRequest|Model {
         $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id', 'physical_card_type_id',
+            'first_name', 'last_name',
         ]));
 
         Event::dispatch(new VoucherPhysicalCardRequestedEvent($this, $cardRequest, $shouldNotifyRequester));

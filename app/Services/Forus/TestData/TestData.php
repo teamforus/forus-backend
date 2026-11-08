@@ -574,8 +574,9 @@ class TestData
 
         $languages = $configData['languages'] ?? [];
         $languages = Language::whereIn('locale', $languages)->pluck('id')->toArray();
+        $dcpConnection = $configData['dcp_connection'] ?? null;
 
-        unset($configData['languages']);
+        unset($configData['languages'], $configData['dcp_connection']);
 
         $implementation = Implementation::forceCreate([
             'key' => $key,
@@ -669,6 +670,10 @@ class TestData
         }
 
         $implementation->languages()->sync($languages);
+
+        if ($dcpConnection) {
+            $implementation->dcp_connection()->create($dcpConnection);
+        }
 
         return $implementation;
     }
@@ -1257,6 +1262,8 @@ class TestData
                 'code_prefix' => '100',
                 'code_blocks' => 4,
                 'code_block_size' => 4,
+                // the requests are ordered at DCP when the organization has a DCP connection
+                'send_to_dcp' => $organization->hasDCP(),
             ]);
 
             $fundConfigs = FundConfig::query()

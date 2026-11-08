@@ -152,6 +152,25 @@ class ImplementationPolicy
     }
 
     /**
+     * @param Identity $identity
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function manageDCPConnection(
+        Identity $identity,
+        Implementation $implementation,
+        Organization $organization
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization) || !$organization->allow_physical_cards) {
+            return false;
+        }
+
+        return $organization->identityCan($identity, Permission::MANAGE_IMPLEMENTATION);
+    }
+
+    /**
      * Determine whether the user can update the implementation auth page.
      *
      * @param Identity $identity

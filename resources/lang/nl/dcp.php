@@ -1,0 +1,98 @@
+<?php
+
+return [
+    'statuses' => [
+        '-1' => 'Niet gevonden bij DCP',
+        '100' => 'Ontvangen door DCP',
+        '200' => 'Geaccepteerd door DCP',
+        '300' => 'In behandeling',
+        '400' => 'Geproduceerd',
+        '500' => 'Verzonden',
+        '1000' => 'Afgerond',
+        '9000' => 'Verwijderd',
+        '9001' => 'Geannuleerd',
+        '9422' => 'Niet verwerkbaar',
+    ],
+    'orderable_types' => [
+        'physical_card_request' => 'Pasaanvraag',
+    ],
+    'bulk_states' => [
+        'pending' => 'Wordt verstuurd',
+        'sent' => 'Verstuurd',
+        'error' => 'Mislukt',
+    ],
+    'errors' => [
+        'disabled' => 'Het versturen van bestellingen naar DCP is niet ingeschakeld.',
+        'sending' => 'Er worden al bestellingen naar DCP verstuurd. Probeer het later opnieuw.',
+        'unexpected' => 'Er ging iets mis bij het versturen naar DCP.',
+        'nothing_to_approve' => 'Er zijn geen bestellingen die op goedkeuring wachten.',
+        'orderable_missing' => 'De aanvraag van deze bestelling bestaat niet meer.',
+        'card_type_not_sent' => 'Bestellen via DCP is uitgeschakeld voor het type pas van deze aanvraag.',
+        'voucher_missing' => 'Het tegoed van de aanvraag bestaat niet meer.',
+        'voucher_deactivated' => 'Het tegoed is gedeactiveerd.',
+        'voucher_expired' => 'Het tegoed is verlopen.',
+        'duplicate_order' => 'De bestelling was al door DCP ontvangen.',
+        'not_editable' => 'De bestelling kan niet meer worden aangepast, deze is goedgekeurd of al verstuurd.',
+        'connection_missing' => 'Er is geen DCP koppeling voor deze bestelling.',
+        'order_type_missing' => 'De DCP koppeling heeft geen instellingen voor dit type bestelling.',
+        'label_missing' => 'Het DCP label ontbreekt in de instellingen van de koppeling.',
+        'address_field_missing' => 'Het veld ":field" van het bezorgadres ontbreekt.',
+        'tag_field_missing' => 'Het veld ":field" ontbreekt.',
+        'tag_field_too_long' => 'Het veld ":field" mag maximaal :max tekens bevatten.',
+        'not_duplicate' => 'Het ordernummer kan alleen worden ingevuld voor een dubbele bestelling zonder ordernummer.',
+        'order_id_dcp_not_found' => 'DCP heeft geen bestelling met dit ordernummer.',
+        'order_id_dcp_unverified' => 'Het ordernummer kon niet worden gecontroleerd bij DCP. Probeer het later opnieuw.',
+    ],
+    'fixed_value' => 'Vaste waarde',
+    'formats' => [
+        'upper' => 'Hoofdletters',
+        'lower' => 'Kleine letters',
+        'date' => 'Datum (:format)',
+    ],
+    'attributes' => [
+        'order_id_dcp' => 'ordernummer DCP',
+        'url' => 'omgeving',
+        'username' => 'gebruikersnaam',
+        'password' => 'wachtwoord',
+        'label' => 'label',
+        'item' => 'item',
+        'tags' => 'velden',
+        'tag_key' => 'veldnaam',
+        'tag_source' => 'bron',
+        'tag_value' => 'vaste waarde',
+        'tag_format' => 'opmaak',
+        'tag_max' => 'maximale lengte',
+    ],
+    'connection_test' => [
+        'success' => 'De koppeling met DCP werkt.',
+        'unauthorized' => 'DCP heeft de gebruikersnaam of het wachtwoord geweigerd.',
+        'unreachable' => 'DCP is niet bereikbaar.',
+        'failed' => 'DCP gaf een onverwacht antwoord (status :status).',
+        'missing' => 'Vul de omgeving, gebruikersnaam en wachtwoord in.',
+    ],
+    'source_fields' => [
+        'physical_card_request' => [
+            'recipient' => [
+                'first_name' => 'Voornaam',
+                'last_name' => 'Achternaam',
+                'full_name' => 'Volledige naam',
+                'birth_date' => 'Geboortedatum',
+            ],
+            'card' => [
+                'code' => 'Pasnummer',
+                'number' => 'Pasnummer (in blokken)',
+            ],
+            'card_type' => [
+                'name' => 'Type pas',
+            ],
+            'voucher' => [
+                'number' => 'Tegoednummer',
+                'address' => 'Tegoedadres',
+                'qr_code' => 'QR-code van het tegoed',
+            ],
+            'fund' => [
+                'name' => 'Fonds',
+            ],
+        ],
+    ],
+];

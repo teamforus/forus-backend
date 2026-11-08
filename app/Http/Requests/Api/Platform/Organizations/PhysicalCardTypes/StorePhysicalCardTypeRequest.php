@@ -30,6 +30,7 @@ class StorePhysicalCardTypeRequest extends BaseFormRequest
             'description' => 'nullable|string|max:2000',
             'code_blocks' => 'required|integer|min:1|max:10',
             'code_block_size' => 'required|integer|min:1|max:10',
+            'send_to_dcp' => 'sometimes|boolean',
         ];
     }
 }

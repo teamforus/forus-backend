@@ -10,6 +10,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\DCPService\Models\DCPOrder;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Lang;
 
 /**
  * App\Services\EventLogService\Models\EventLog.
@@ -204,6 +206,10 @@ class EventLog extends Model
             ];
         }
 
+        if ($this->loggable_type === (new DCPOrder())->getMorphClass()) {
+            $attributes = $this->dcpOrderLocaleAttributes();
+        }
+
         $attributes['dashboard_url'] = rtrim(Implementation::active()->urlSponsorDashboard(), '/');
 
         foreach ($attributes as $key => $attribute) {
@@ -250,5 +256,29 @@ class EventLog extends Model
     public function getIdentityEmail(Employee $employee): ?string
     {
         return $this->isSameOrganization($employee) ? $this->identity?->email : null;
+    }
+
+    /**
+     * @return array
+     */
+    protected function dcpOrderLocaleAttributes(): array
+    {
+        $statusLocale = function (?int $statusId): ?string {
+            if (is_null($statusId)) {
+                return null;
+            }
+
+            return Lang::has("dcp.statuses.$statusId") ? trans("dcp.statuses.$statusId") : (string) $statusId;
+        };
+
+        return [
+            'organization_id' => Arr::get($this->data, 'organization_id'),
+            'bulk_id' => Arr::get($this->data, 'dcp_order_dcp_order_bulk_id'),
+            'order_id_dcp' => Arr::get($this->data, 'dcp_order_order_id_dcp') ?: '-',
+            'status' => $statusLocale(Arr::get($this->data, 'dcp_order_status_id')) ?: '-',
+            'previous_status' => $statusLocale(Arr::get($this->data, 'dcp_order_previous_status_id')) ?: '-',
+            'message' => Arr::get($this->data, 'dcp_order_status_message') ?: '-',
+            'fields' => implode(', ', (array) Arr::get($this->data, 'dcp_order_changed_fields', [])) ?: '-',
+        ];
     }
 }

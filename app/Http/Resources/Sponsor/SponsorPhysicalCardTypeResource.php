@@ -42,6 +42,7 @@ class SponsorPhysicalCardTypeResource extends BaseJsonResource
                 'id', 'name', 'description', 'organization_id', 'code_prefix', 'code_blocks', 'code_block_size',
                 'physical_cards_count', 'funds_count',
             ]),
+            'send_to_dcp' => $cardType->send_to_dcp,
             'photo' => new MediaResource($cardType->photo),
             'in_use' =>
                 $cardType->funds_count > 0 ||
