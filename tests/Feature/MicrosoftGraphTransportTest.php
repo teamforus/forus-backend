@@ -6,6 +6,7 @@ use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Vouchers\VoucherSendToEmailBySponsorEvent;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Vouchers\SendVoucherBySponsorMail;
+use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Client\Request;
@@ -203,6 +204,78 @@ class MicrosoftGraphTransportTest extends TestCase
         Http::assertNotSent(function ($request) {
             return $request->url() === 'https://graph.microsoft.com/v1.0/users/sender@example.com/sendMail';
         });
+    }
+
+    /**
+     * The email log has the mailbox of Microsoft Graph as sender (the address the email is really sent from),
+     * the mails which don't use the custom mailer keep the sender of the implementation.
+     *
+     * @return void
+     */
+    public function testEmailLogHasMicrosoftGraphMailboxAsSender(): void
+    {
+        $this->fakeMicrosoftGraph([
+            'tenant-id' => 'test-access-token',
+        ]);
+
+        $startDate = Carbon::now();
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $implementation = $this->makeTestImplementation($organization);
+        $fund = $this->makeTestFund($organization, implementation: $implementation);
+
+        $implementation->forceFill([
+            'email_from_name' => 'Implementation sender',
+            'email_from_address' => 'implementation@example.com',
+            'custom_mailer_config' => $this->makeCustomMailerConfig(),
+        ])->save();
+
+        // without name in the config: the address of the mailbox, the name of the implementation
+        $email = $this->makeIdentity($this->makeUniqueEmail())->email;
+        Event::dispatch(new VoucherSendToEmailBySponsorEvent($fund->makeVoucher(), $email));
+
+        $this->assertGraphMailSent('sender@example.com', 'test-access-token');
+        $this->assertEmailLogSender($email, $startDate, 'sender@example.com', 'Implementation sender');
+
+        // with name in the config
+        $implementation->forceFill([
+            'custom_mailer_config' => $this->makeCustomMailerConfig(['from_name' => 'Graph mailbox']),
+        ])->save();
+
+        $email = $this->makeIdentity($this->makeUniqueEmail())->email;
+        Event::dispatch(new VoucherSendToEmailBySponsorEvent($fund->makeVoucher(), $email));
+
+        $this->assertEmailLogSender($email, $startDate, 'sender@example.com', 'Graph mailbox');
+
+        // mail which doesn't use the custom mailer
+        Event::dispatch(new FundBalanceLowEvent($fund));
+
+        $this->assertEmailLogSender(
+            $organization->identity->email,
+            $startDate,
+            'implementation@example.com',
+            'Implementation sender',
+        );
+    }
+
+    /**
+     * @param string $email
+     * @param Carbon $after
+     * @param string $fromAddress
+     * @param string $fromName
+     * @return void
+     */
+    private function assertEmailLogSender(string $email, Carbon $after, string $fromAddress, string $fromName): void
+    {
+        $emailLog = EmailLog::query()
+            ->where('to_address', $email)
+            ->where('created_at', '>=', $after)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($emailLog, "No email logged for $email.");
+        $this->assertSame($fromAddress, $emailLog->from_address);
+        $this->assertSame($fromName, $emailLog->from_name);
+        $this->assertStringContainsString("From: $fromName <$fromAddress>", $emailLog->headers);
     }
 
     /**
