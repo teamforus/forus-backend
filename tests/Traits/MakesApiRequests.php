@@ -917,6 +917,24 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakeProductReservationAsProviderRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/product-reservations",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
      * @param array $data
      * @param Identity $identity
      * @return ProductReservation

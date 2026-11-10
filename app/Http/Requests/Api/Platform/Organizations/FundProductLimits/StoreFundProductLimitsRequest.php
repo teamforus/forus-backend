@@ -58,7 +58,7 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
                 'required',
                 ...$this->limitBy() === FundProductLimit::LIMIT_BY_AMOUNT
                     ? ['numeric', 'min:0.01', 'max:99999999']
-                    : ['integer', 'min:1'],
+                    : ['integer', 'min:1', 'max:99999999'],
             ],
             'products' => [
                 'required_if:type,' . FundProductLimit::SCOPE_ONLY_SELECTED,
@@ -80,7 +80,9 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
      */
     public function limitBy(): string
     {
-        return $this->input('limit_by') ?: FundProductLimit::LIMIT_BY_PRODUCTS;
+        $limitBy = $this->input('limit_by');
+
+        return is_string($limitBy) && $limitBy ? $limitBy : FundProductLimit::LIMIT_BY_PRODUCTS;
     }
 
     /**

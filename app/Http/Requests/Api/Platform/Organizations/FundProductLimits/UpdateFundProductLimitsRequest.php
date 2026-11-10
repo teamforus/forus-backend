@@ -27,6 +27,8 @@ class UpdateFundProductLimitsRequest extends StoreFundProductLimitsRequest
      */
     public function limitBy(): string
     {
-        return $this->input('limit_by') ?: $this->fund_product_limit->limit_by;
+        $limitBy = $this->input('limit_by');
+
+        return is_string($limitBy) && $limitBy ? $limitBy : $this->fund_product_limit->limit_by;
     }
 }
