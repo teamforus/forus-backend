@@ -41,6 +41,10 @@ class FundSearch extends BaseSearch
             FundQuery::whereIsConfiguredByForus($builder);
         }
 
+        if ($this->getFilter('voucher_creation_from_profiles', false)) {
+            FundQuery::whereVoucherCreationFromProfilesFilter($builder);
+        }
+
         if ($tag = $this->getFilter('tag')) {
             $builder->whereHas('tags_provider', fn (Builder $q) => $q->where('key', $tag));
         }

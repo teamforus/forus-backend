@@ -98,6 +98,18 @@ return [
             'level' => 'debug',
         ],
 
+        'requester_imports' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/requester-imports.log'),
+            'level' => 'warning',
+        ],
+
+        'voucher_awards' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/voucher-awards.log'),
+            'level' => 'warning',
+        ],
+
         'mollie' => [
             'driver' => 'single',
             'path' => storage_path('logs/mollie-service.log'),

@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\RequesterImport\Http\Controllers\RequesterImportRowsController;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Env;
 
@@ -594,6 +595,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
             "Api\Platform\Organizations\FundRequestsController@formula"
         );
 
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/profile-copy-preview',
+            "Api\Platform\Organizations\FundRequestsController@profileCopyPreview"
+        );
+
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/assign',
             "Api\Platform\Organizations\FundRequestsController@assign"
@@ -1032,6 +1038,46 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
     )->only('store', 'index', 'show', 'update');
 
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports',
+        [RequesterImportRowsController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports/configs',
+        [RequesterImportRowsController::class, 'configs'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch/validate',
+        [RequesterImportRowsController::class, 'storeBatchValidate'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch',
+        [RequesterImportRowsController::class, 'storeBatch'],
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/requester-imports/{requesterImportRow}',
+        [RequesterImportRowsController::class, 'update'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports/sync/ids',
+        [RequesterImportRowsController::class, 'syncIds'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/sync/preview',
+        [RequesterImportRowsController::class, 'syncPreview'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/sync',
+        [RequesterImportRowsController::class, 'sync'],
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/households',
         'Api\Platform\Organizations\Sponsor\HouseholdsController'
@@ -1096,6 +1142,21 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post(
         'organizations/{organization}/sponsor/vouchers/batch/validate',
         "Api\Platform\Organizations\Sponsor\VouchersController@storeBatchValidate"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/from-profiles/ids',
+        'Api\Platform\Organizations\Sponsor\VouchersController@fromProfilesIds'
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/from-profiles',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeFromProfiles"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/from-profiles/preview',
+        "Api\Platform\Organizations\Sponsor\VouchersController@previewFromProfiles"
     );
 
     $router->post(

@@ -70,27 +70,54 @@ class SponsorIdentityProfilesTest extends TestCase
      */
     public function testSponsorCanCreateNewIdentity(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
 
-        $payload = [
-            'given_name' => 'Alice',
-            'family_name' => 'Doe',
-            'birth_date' => '1990-05-10',
-            'city' => 'Testville',
-            'street' => 'Main Street',
-            'house_number' => '123',
-            'postal_code' => '1234AB',
-            'house_composition' => RecordTypeOption::query()
-                ->whereRelation('record_type', 'key', 'house_composition')
-                ->inRandomOrder()
-                ->first()
-                ->value,
-            'living_arrangement' => RecordTypeOption::query()
-                ->whereRelation('record_type', 'key', 'living_arrangement')
-                ->inRandomOrder()
-                ->first()
-                ->value,
-        ];
+        $payload = ['records' => [
+            [
+                'record_type_key' => 'given_name',
+                'value' => 'Alice',
+            ],
+            [
+                'record_type_key' => 'family_name',
+                'value' => 'Doe',
+            ],
+            [
+                'record_type_key' => 'birth_date',
+                'value' => '1990-05-10',
+            ],
+            [
+                'record_type_key' => 'city',
+                'value' => 'Testville',
+            ],
+            [
+                'record_type_key' => 'street',
+                'value' => 'Main Street',
+            ],
+            [
+                'record_type_key' => 'house_number',
+                'value' => '123',
+            ],
+            [
+                'record_type_key' => 'postal_code',
+                'value' => '1234AB',
+            ],
+            [
+                'record_type_key' => 'house_composition',
+                'value' => RecordTypeOption::query()
+                    ->whereRelation('record_type', 'key', 'house_composition')
+                    ->inRandomOrder()
+                    ->first()
+                    ->value,
+            ],
+            [
+                'record_type_key' => 'living_arrangement',
+                'value' => RecordTypeOption::query()
+                    ->whereRelation('record_type', 'key', 'living_arrangement')
+                    ->inRandomOrder()
+                    ->first()
+                    ->value,
+            ],
+        ]];
 
         $organization->forceFill([
             'allow_profiles_create' => false,
@@ -174,7 +201,7 @@ class SponsorIdentityProfilesTest extends TestCase
      */
     public function testSponsorCanUpdateIdentity(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
         $fund = $this->makeTestFund($organization);
 
         $identity1 = $this->makeIdentity();
@@ -184,11 +211,11 @@ class SponsorIdentityProfilesTest extends TestCase
         $fund->makeVoucher($identity1);
         $fund->makeFundRequest($identity2, []);
 
-        $payload = [
-            'given_name' => 'Updated',
-            'family_name' => 'Person',
-            'city' => 'Teststad',
-        ];
+        $payload = ['records' => [
+            ['record_type_key' => 'given_name', 'value' => 'Updated'],
+            ['record_type_key' => 'family_name', 'value' => 'Person'],
+            ['record_type_key' => 'city', 'value' => 'Teststad'],
+        ]];
 
         /**
          * @var Identity $identity
@@ -335,7 +362,7 @@ class SponsorIdentityProfilesTest extends TestCase
         $this->apiUpdateIdentityRequest(
             $sponsor1->id,
             $identity2->id,
-            ['given_name' => 'Hacker'],
+            ['records' => [['record_type_key' => 'given_name', 'value' => 'Hacker']]],
             $sponsor1->identity
         )->assertForbidden();
 
@@ -407,19 +434,24 @@ class SponsorIdentityProfilesTest extends TestCase
         $manager = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::MANAGE_IDENTITIES]);
         $membership = $this->provisionIdentityProviderUser($connection, $token, $this->makeIdentityProviderScimUserPayload());
         $identity = $membership->identity;
-        $otherSponsor = $this->makeTestOrganization($this->makeIdentity());
+        $otherSponsor = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
         $otherManager = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::MANAGE_IDENTITIES]);
         $this->makeTestFund($otherSponsor)->makeVoucher($identity);
 
         $this->apiUpdateIdentityRequest($otherSponsor->id, $identity->id, [
-            'given_name' => 'Other sponsor edit',
+            'records' => [
+                ['record_type_key' => 'given_name', 'value' => 'Other sponsor edit'],
+            ],
         ], $otherManager->identity)->assertOk();
 
         $this->apiViewIdentityRequest($sponsor->id, $identity->id, $manager->identity)
-            ->assertOk()->assertJsonPath('data.records.given_name.0.value', 'Jane');
+            ->assertOk()
+            ->assertJsonPath('data.records.given_name.0.value', 'Jane');
 
         $this->apiUpdateIdentityRequest($sponsor->id, $identity->id, [
-            'given_name' => 'Local edit',
+            'records' => [
+                ['record_type_key' => 'given_name', 'value' => 'Local edit'],
+            ],
         ], $manager->identity)->assertOk();
 
         $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [

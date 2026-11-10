@@ -87,6 +87,9 @@ use Illuminate\Validation\ValidationException;
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_requester_imports
+ * @property string $requester_import_mapping_key
+ * @property bool $allow_vouchers_from_profiles
  * @property bool $allow_profiles_create
  * @property bool $allow_profiles_relations
  * @property bool $allow_profiles_households
@@ -419,6 +422,8 @@ class Organization extends Model
         'allow_pre_checks' => 'boolean',
         'allow_payouts' => 'boolean',
         'allow_profiles' => 'boolean',
+        'allow_requester_imports' => 'boolean',
+        'allow_vouchers_from_profiles' => 'boolean',
         'allow_translations' => 'boolean',
         'reservation_allow_extra_payments' => 'boolean',
         'show_provider_transactions' => 'boolean',
@@ -1103,12 +1108,20 @@ class Organization extends Model
             ->delete();
 
         foreach ($fields as $order => $item) {
-            $this->reservation_fields()->updateOrCreate([
-                'id' => Arr::get($item, 'id'),
-            ], [
-                ...Arr::only($item, ['label', 'type', 'description', 'required', 'fillable_by']),
+            $field = $this->reservation_fields()->find(Arr::get($item, 'id'));
+
+            $values = [
+                ...Arr::only($item, [
+                    'label', 'type', 'description', 'required', 'fillable_by',
+                ]),
                 'order' => $order,
-            ]);
+            ];
+
+            if ($field) {
+                $field->update($values);
+            } else {
+                $this->reservation_fields()->create($values);
+            }
         }
     }
 

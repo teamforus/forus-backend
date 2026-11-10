@@ -328,4 +328,19 @@ return [
             'digid_enabled' => false,
         ],
     ],
+    'Gelrepas' => [
+        'implementation' => [
+            'key' => 'gelrepas',
+            'title' => 'Gelrepas',
+            'page_title_suffix' => 'Gelrepas',
+            'email_from_name' => 'Gelrepas',
+            'pre_check_enabled' => false,
+            'show_privacy_checkbox' => true,
+            'informal_communication' => false,
+            'allow_per_fund_notification_templates' => false,
+            'digid_enabled' => true,
+            'digid_required' => true,
+            'digid_sign_up_allowed' => true,
+        ],
+    ],
 ];

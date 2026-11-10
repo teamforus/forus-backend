@@ -887,13 +887,21 @@ class Product extends Model
             ->delete();
 
         foreach ($fields as $order => $item) {
-            $this->reservation_fields()->updateOrCreate([
-                'id' => Arr::get($item, 'id'),
-            ], [
-                ...Arr::only($item, ['label', 'type', 'description', 'required', 'fillable_by']),
+            $field = $this->reservation_fields()->find(Arr::get($item, 'id'));
+
+            $values = [
+                ...Arr::only($item, [
+                    'label', 'type', 'description', 'required', 'fillable_by',
+                ]),
                 'order' => $order,
                 'organization_id' => $this->organization_id,
-            ]);
+            ];
+
+            if ($field) {
+                $field->update($values);
+            } else {
+                $this->reservation_fields()->create($values);
+            }
         }
     }
 

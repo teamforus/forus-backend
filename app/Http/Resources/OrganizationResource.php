@@ -133,6 +133,7 @@ class OrganizationResource extends BaseJsonResource
                 'allow_profiles', 'allow_profiles_create', 'allow_profiles_relations', 'allow_profiles_households',
                 'allow_prevalidation_requests', 'allow_fund_product_limits', 'allow_identity_providers',
                 'allow_identity_provider_employee_provisioning', 'allow_identity_provider_requester_provisioning',
+                'allow_requester_imports', 'allow_vouchers_from_profiles',
             ]),
             'show_identity_provider_profile_status' => $organization->showsIdentityProviderProfileStatus(),
             ...$request->isProviderDashboard() ? [

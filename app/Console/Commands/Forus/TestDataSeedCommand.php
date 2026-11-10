@@ -63,6 +63,16 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Providers created!');
         $testData->separator();
 
+        $testData->info('⇾ Making budget formulas!');
+        $testData->makeFundFormulas();
+        $testData->success('✓ Budget formulas created!');
+        $testData->separator();
+
+        $testData->info('⇾ Making product formulas!');
+        $testData->makeFundFormulaProducts();
+        $testData->success('✓ Product formulas created!');
+        $testData->separator();
+
         $testData->info('⇾ Making reservations!');
         $testData->makeReservations($baseIdentity);
         $testData->success('✓ Reservations created!');

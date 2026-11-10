@@ -222,35 +222,11 @@ class DigIdSession extends Model
     }
 
     /**
-     * @return Identity|null
-     */
-    public function sessionIdentity(): ?Identity
-    {
-        return $this->identity;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function sessionIdentityBsn(): ?string
-    {
-        return $this->identity?->bsn;
-    }
-
-    /**
      * @return string|null
      */
     public function digidBsn(): ?string
     {
         return $this->digid_uid;
-    }
-
-    /**
-     * @return Identity|null
-     */
-    public function digidBsnIdentity(): ?Identity
-    {
-        return Identity::findByBsn($this->digid_uid);
     }
 
     /**
