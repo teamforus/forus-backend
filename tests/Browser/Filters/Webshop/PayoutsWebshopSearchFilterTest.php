@@ -9,6 +9,7 @@ use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
+use Carbon\Carbon;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
 use Tests\Browser\Traits\NavigatesFrontendWebshop;
@@ -38,7 +39,7 @@ class PayoutsWebshopSearchFilterTest extends BaseWebshopSearchFilter
     {
         $implementation = Implementation::byKey('nijmegen');
         $organization = $implementation->organization;
-        $organization->update(['allow_payouts' => true]);
+        $organization->forceFill(['allow_payouts' => true])->save();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $fundConfigsData = [
@@ -93,7 +94,7 @@ class PayoutsWebshopSearchFilterTest extends BaseWebshopSearchFilter
             voucherFields: [ 'fund_request_id' => $fundRequest->id ],
         );
 
-        $payout->setPaid(null, now());
+        $payout->setPaid(null, Carbon::now());
 
         return $payout;
     }

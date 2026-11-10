@@ -61,7 +61,7 @@ class VoucherTransactionBatchUploadTest extends DuskTestCase
 
             $this->goToTransactionsPage($browser);
 
-            $startDate = now();
+            $startDate = Carbon::now();
             $voucher = $this->getVouchersForBatchTransactionsQuery($implementation->organization)->first();
             $this->assertNotNull($voucher);
 

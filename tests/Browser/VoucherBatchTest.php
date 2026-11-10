@@ -97,7 +97,7 @@ class VoucherBatchTest extends DuskTestCase
         $this->assertNotEmpty($funds);
 
         $this->browse(function (Browser $browser) use ($implementation, $organization, $funds, $testCase) {
-            $startDate = now();
+            $startDate = Carbon::now();
             $type = $testCase['assign_by'];
             $count = $testCase['vouchers_count'];
             $sameCode = $testCase['same_code_for_fund'];

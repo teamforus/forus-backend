@@ -45,7 +45,7 @@ class EmailLogTest extends DuskTestCase
      */
     public function testEmailLogForIdentity(): void
     {
-        $this->startTime = now();
+        $this->startTime = Carbon::now();
         Cache::clear();
 
         $implementation = Implementation::byKey('nijmegen');
@@ -87,7 +87,7 @@ class EmailLogTest extends DuskTestCase
      */
     public function testEmailLogForFundRequest(): void
     {
-        $this->startTime = now();
+        $this->startTime = Carbon::now();
         Cache::clear();
 
         $implementation = Implementation::byKey('nijmegen');

@@ -7,6 +7,7 @@ use App\Mail\User\EmailActivationMail;
 use App\Models\Identity;
 use App\Models\Implementation;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -29,7 +30,7 @@ class AuthenticationTest extends DuskTestCase
     public function testSignInByEmailExample(): void
     {
         Cache::clear();
-        $startTime = now();
+        $startTime = Carbon::now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
             // Find first existing user and nijmegen implementation
@@ -89,7 +90,7 @@ class AuthenticationTest extends DuskTestCase
     public function testSignUpByEmailExample(): void
     {
         Cache::clear();
-        $startTime = now();
+        $startTime = Carbon::now();
 
         $this->browse(function (Browser $browser) use ($startTime) {
             // Find nijmegen implementation and define target email

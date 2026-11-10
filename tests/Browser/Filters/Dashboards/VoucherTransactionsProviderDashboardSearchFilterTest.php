@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Searches\VoucherTransactionsSearch;
+use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Dusk\Browser;
@@ -156,7 +157,7 @@ class VoucherTransactionsProviderDashboardSearchFilterTest extends DuskTestCase
             'shared' => true,
         ]);
 
-        $transaction->setPaid(null, now());
+        $transaction->setPaid(null, Carbon::now());
     }
 
     /**

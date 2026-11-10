@@ -126,7 +126,7 @@ class IdentityEmailTest extends DuskTestCase
             $identityEmail = $identity->emails()->get()->where('email', $email)[0] ?? null;
             $this->assertNotNull($identityEmail);
 
-            $startTime = now();
+            $startTime = Carbon::now();
             $this->resendEmailVerification($browser, $identityEmail, $startTime);
 
             // Verify email
@@ -249,7 +249,7 @@ class IdentityEmailTest extends DuskTestCase
      */
     private function addNewEmail(Browser $browser, Identity $identity): string
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $email = $this->makeUniqueEmail();
 
         $browser->waitFor('@btnIdentityNewEmail');

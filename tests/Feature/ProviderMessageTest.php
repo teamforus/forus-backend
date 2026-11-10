@@ -8,6 +8,7 @@ use App\Models\Identity;
 use App\Models\ProductReservation;
 use App\Models\ProviderMessage;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
@@ -272,7 +273,7 @@ class ProviderMessageTest extends TestCase
 
         $fundProvider->update(['allow_provider_messages' => true]);
         $message = "First line\n<img src=\"https://example.invalid/track\"> & second line";
-        $startTime = now();
+        $startTime = Carbon::now();
 
         $this->apiStoreProductReservationProviderMessageRequest(
             $reservation,
