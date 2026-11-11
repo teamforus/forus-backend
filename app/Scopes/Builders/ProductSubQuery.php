@@ -54,6 +54,10 @@ class ProductSubQuery
         $limitByFundAvailable = self::limitByFundAvailableSubQuery($options);
 
         $query->selectRaw('*,
+            CAST(
+                `limit_by_fund_vouchers` > 0 AND `limit_by_fund_vouchers_available` = 0 AS SIGNED
+            ) AS `limit_by_fund_reached`,
+
             CAST(IF(
                 ISNULL(`limit_total`),
                 GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
@@ -365,12 +369,19 @@ class ProductSubQuery
         $reservedProductsCount = static::reservationsUniqueCountQuery()
             ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
+        $reservedProductsAmount = static::reservationsAmountQuery()
+            ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery(false));
+
         return static::activeFundProductLimitQuery(FundProductLimit::SCOPE_ONLY_SELECTED)
             ->whereHas('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
             ))
-            ->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            ->where(fn (Builder $builder) => static::whereLimitReached(
+                $builder,
+                $reservedProductsCount,
+                $reservedProductsAmount,
+            ));
     }
 
     /**
@@ -382,12 +393,46 @@ class ProductSubQuery
             ->whereColumn('product_reservations.product_id', '!=', 'products.id')
             ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
+        $reservedProductsAmount = static::reservationsAmountQuery()
+            ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery(false));
+
         return static::activeFundProductLimitQuery(FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED)
             ->whereDoesntHave('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
             ))
-            ->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            ->where(fn (Builder $builder) => static::whereLimitReached(
+                $builder,
+                $reservedProductsCount,
+                $reservedProductsAmount,
+            ));
+    }
+
+    /**
+     * @param Builder|FundProductLimit $builder
+     * @param Builder|ProductReservation $reservedProductsCount
+     * @param Builder|ProductReservation $reservedProductsAmount
+     * @return Builder|FundProductLimit
+     */
+    private static function whereLimitReached(
+        Builder|FundProductLimit $builder,
+        Builder|ProductReservation $reservedProductsCount,
+        Builder|ProductReservation $reservedProductsAmount,
+    ): Builder|FundProductLimit {
+        return $builder
+            ->where(function (Builder $builder) use ($reservedProductsCount) {
+                $builder->where('fund_product_limits.limit_by', FundProductLimit::LIMIT_BY_PRODUCTS);
+                $builder->where($reservedProductsCount, '>=', DB::raw('fund_product_limits.limit'));
+            })
+            ->orWhere(function (Builder $builder) use ($reservedProductsAmount) {
+                $builder->where('fund_product_limits.limit_by', FundProductLimit::LIMIT_BY_AMOUNT);
+
+                $builder->where(
+                    $reservedProductsAmount,
+                    '>',
+                    DB::raw('fund_product_limits.limit - products.price'),
+                );
+            });
     }
 
     /**
@@ -417,13 +462,29 @@ class ProductSubQuery
     }
 
     /**
+     * @return ProductReservation|Builder
+     */
+    private static function reservationsAmountQuery(): Builder|ProductReservation
+    {
+        return ProductReservation::query()
+            ->selectRaw('COALESCE(SUM(product_reservations.price), 0)')
+            ->whereColumn('product_reservations.voucher_id', 'vouchers.id')
+            ->whereNotIn('product_reservations.state', [
+                ...ProductReservation::STATES_CANCELED,
+                ProductReservation::STATE_REJECTED,
+            ]);
+    }
+
+    /**
+     * @param bool $exceptCurrentProduct
      * @return FundProductLimitProduct|Builder
      */
-    private static function fundProductLimitReservationsSubQuery(): FundProductLimitProduct|Builder
-    {
+    private static function fundProductLimitReservationsSubQuery(
+        bool $exceptCurrentProduct = true,
+    ): FundProductLimitProduct|Builder {
         return FundProductLimitProduct::query()
             ->select('product_id')
             ->whereColumn('fund_product_limit_id', 'fund_product_limits.id')
-            ->whereColumn('product_id', '!=', 'products.id');
+            ->when($exceptCurrentProduct, fn (Builder $q) => $q->whereColumn('product_id', '!=', 'products.id'));
     }
 }

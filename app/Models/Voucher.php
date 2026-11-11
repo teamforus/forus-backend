@@ -20,12 +20,14 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Models\Traits\HasUniqueNumber;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductSubQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,6 +44,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Excel as ExcelModel;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
@@ -1047,6 +1050,39 @@ class Voucher extends Model
     public function isPayoutType(): bool
     {
         return $this->voucher_type === self::VOUCHER_TYPE_PAYOUT;
+    }
+
+    /**
+     * Production callers must start this transaction before any snapshot reads.
+     *
+     * @template T
+     * @param Product $product
+     * @param Closure(Voucher, Product): T $callback
+     * @throws Throwable
+     * @return T
+     */
+    public function transactionWithReservationLock(Product $product, Closure $callback): mixed
+    {
+        return DB::transaction(function () use ($product, $callback): mixed {
+            if ($this->identity_id) {
+                Identity::query()->whereKey($this->identity_id)->lockForUpdate()->firstOrFail();
+            }
+
+            $voucher = self::query()->findOrFail($this->id);
+
+            /** @var Product $product */
+            $product = ProductSubQuery::appendReservationStats([
+                'voucher_id' => $voucher->id,
+            ], Product::query()->whereKey($product->id))->firstOrFail();
+
+            if ($product['limit_by_fund_reached']) {
+                throw ValidationException::withMessages([
+                    'product_id' => [__('validation.product_reservation.no_identity_stock')],
+                ]);
+            }
+
+            return $callback($voucher, $product);
+        });
     }
 
     /**

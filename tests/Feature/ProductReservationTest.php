@@ -87,6 +87,36 @@ class ProductReservationTest extends TestCase
      * @throws Throwable
      * @return void
      */
+    public function testProviderCreatesAcceptedReservationWithPhysicalCard(): void
+    {
+        $sponsor = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($sponsor, fundConfigsData: ['allow_physical_cards' => true]);
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $product = $this->createProductForReservation($provider, [$fund], 30);
+        $voucher = $this->makeTestVoucher($fund, identity: $this->makeIdentity(), amount: 100);
+        $cardNumber = (string) random_int(1000000000000000, 9999999999999999);
+
+        $voucher->addPhysicalCard($cardNumber);
+
+        $response = $this->apiMakeProductReservationAsProviderRequest($provider, [
+            'number' => $cardNumber,
+            'product_id' => $product->id,
+        ], $provider->identity);
+
+        $response->assertSuccessful();
+        $response->assertJsonPath('data.state', ProductReservation::STATE_ACCEPTED);
+
+        $this->assertAcceptedProviderReservation(
+            ProductReservation::findOrFail($response->json('data.id')),
+            $voucher,
+            $product,
+        );
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
     public function testReservationArchiving(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity());

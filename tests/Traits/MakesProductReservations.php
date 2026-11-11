@@ -130,6 +130,28 @@ trait MakesProductReservations
     }
 
     /**
+     * @param ProductReservation $reservation
+     * @param Voucher $voucher
+     * @param Product $product
+     * @return void
+     */
+    protected function assertAcceptedProviderReservation(
+        ProductReservation $reservation,
+        Voucher $voucher,
+        Product $product,
+    ): void {
+        $this->assertSame(ProductReservation::STATE_ACCEPTED, $reservation->state);
+        $this->assertSame($voucher->id, $reservation->voucher_id);
+        $this->assertSame($product->id, $reservation->product_id);
+        $this->assertNotNull($reservation->voucher_transaction);
+        $this->assertNotNull($reservation->product_voucher);
+        $this->assertSame($voucher->id, $reservation->product_voucher->parent_id);
+        $this->assertSame($reservation->product_voucher->id, $reservation->voucher_transaction->voucher_id);
+        $this->assertSame($product->organization_id, $reservation->voucher_transaction->organization_id);
+        $this->assertEquals($product->price, $reservation->voucher_transaction->amount);
+    }
+
+    /**
      * @param bool $withReservation
      * @return array{
      *     fund: Fund,

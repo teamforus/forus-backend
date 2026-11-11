@@ -37,6 +37,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -97,11 +98,14 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
         $employee = $organization->findEmployee($request->auth_address());
 
-        $reservation = $voucher->reserveProduct($product, $employee, extraData: $request->only([
-            'note',
-        ]));
-
-        $reservation->acceptProvider();
+        $reservation = $voucher->transactionWithReservationLock($product, function (
+            Voucher $voucher,
+            Product $product,
+        ) use ($request, $employee): ProductReservation {
+            return $voucher->reserveProduct($product, $employee, extraData: $request->only([
+                'note',
+            ]))->acceptProvider();
+        });
 
         return ProviderProductReservationResource::create($reservation);
     }
@@ -140,11 +144,25 @@ class ProductReservationsController extends Controller
                 $product = Product::find(Arr::get($item, 'product_id'));
                 $voucher = Voucher::findByAddressOrPhysicalCard(Arr::get($item, 'number'));
 
-                $reservation = $voucher->reserveProduct($product, $employee, extraData: Arr::only($item, [
-                    'note',
-                ]));
+                try {
+                    $createdItems[] = $voucher->transactionWithReservationLock($product, function (
+                        Voucher $voucher,
+                        Product $product,
+                    ) use ($item, $employee): int {
+                        return $voucher->reserveProduct($product, $employee, extraData: Arr::only($item, [
+                            'note',
+                        ]))->acceptProvider($employee)->id;
+                    });
+                } catch (ValidationException $exception) {
+                    $rowIndex = array_key_first($slice);
 
-                $createdItems[] = $reservation->acceptProvider($employee)->id;
+                    $errorsItems[] = [
+                        'reservations.' . $rowIndex => array_map(
+                            fn (string $message) => sprintf('Rij: %s: %s', (int) $rowIndex + 1, $message),
+                            Arr::flatten($exception->errors()),
+                        ),
+                    ];
+                }
             } else {
                 $errorsItems[] = $validator->messages()->toArray();
             }

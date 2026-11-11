@@ -13,11 +13,12 @@ use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Searches\ProductReservationsSearch;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class ProductReservationsController extends Controller
@@ -60,71 +61,73 @@ class ProductReservationsController extends Controller
     public function store(StoreProductReservationRequest $request): ProductReservationResource|JsonResponse
     {
         $this->authorize('create', ProductReservation::class);
-        DB::beginTransaction();
 
         try {
             $product = Product::find($request->input('product_id'));
             $voucher = Voucher::find($request->input('voucher_id'));
-            $postCode = $request->input('postal_code') ?: '';
-            $extraPaymentRequired = $product->fundPrice($voucher->fund) > $voucher->amount_available;
 
-            if ($extraPaymentRequired) {
-                $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
-            }
+            return $voucher->transactionWithReservationLock($product, function (
+                Voucher $voucher,
+                Product $product,
+            ) use ($request): ProductReservationResource|JsonResponse {
+                $postCode = $request->input('postal_code') ?: '';
+                $extraPaymentRequired = $product->fundPrice($voucher->fund) > $voucher->amount_available;
 
-            $reservationFields = [
-                ...($product->isReservationPhoneFieldRequested() ? $request->only([
-                    'phone',
-                ]) : []),
-                ...($product->isReservationBirthDateFieldRequested() ? $request->only([
-                    'birth_date',
-                ]) : []),
-                ...($product->reservation_fields_enabled ? $request->only(['custom_fields']) : []),
-                ...($product->isReservationAddressFieldRequested() ? [
-                    ...$request->only([
-                        'street', 'house_nr', 'house_nr_addition', 'city',
-                    ]),
-                    ...Arr::whereNotNull([
-                        'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
-                    ]),
-                ] : []),
-            ];
-
-            $reservation = $voucher->reserveProduct(
-                product: $product,
-                extraData: [...$request->only('first_name', 'last_name', 'user_note'), ...$reservationFields],
-                hasExtraPayment: $extraPaymentRequired
-            );
-
-            if ($extraPaymentRequired) {
-                $payment = $reservation->createExtraPayment($request->implementation());
-
-                if ($payment) {
-                    DB::commit();
-
-                    return new JsonResponse([
-                        'id' => $reservation->id,
-                        'checkout_url' => $payment->getCheckoutUrl(),
-                    ], 200);
+                if ($extraPaymentRequired) {
+                    $this->authorize('createExtraPayment', [ProductReservation::class, $product, $voucher]);
                 }
 
-                DB::rollBack();
+                $reservationFields = [
+                    ...($product->isReservationPhoneFieldRequested() ? $request->only([
+                        'phone',
+                    ]) : []),
+                    ...($product->isReservationBirthDateFieldRequested() ? $request->only([
+                        'birth_date',
+                    ]) : []),
+                    ...($product->reservation_fields_enabled ? $request->only([
+                        'custom_fields',
+                    ]) : []),
+                    ...($product->isReservationAddressFieldRequested() ? [
+                        ...$request->only([
+                            'street', 'house_nr', 'house_nr_addition', 'city',
+                        ]),
+                        ...Arr::whereNotNull([
+                            'postal_code' => strtoupper(preg_replace("/\s+/", '', $postCode)),
+                        ]),
+                    ] : []),
+                ];
 
-                return new JsonResponse([
-                    'message' => 'Could prepare the extra payment.',
-                ], 503);
-            }
+                $reservation = $voucher->reserveProduct(
+                    product: $product,
+                    extraData: [...$request->only('first_name', 'last_name', 'user_note'), ...$reservationFields],
+                    hasExtraPayment: $extraPaymentRequired
+                );
 
-            if ($reservation->product->autoAcceptsReservations()) {
-                $reservation->acceptProvider();
-            }
+                if ($extraPaymentRequired) {
+                    $payment = $reservation->createExtraPayment($request->implementation());
 
-            DB::commit();
+                    if ($payment) {
+                        return new JsonResponse([
+                            'id' => $reservation->id,
+                            'checkout_url' => $payment->getCheckoutUrl(),
+                        ], 200);
+                    }
 
-            return ProductReservationResource::create($reservation);
+                    throw new HttpResponseException(new JsonResponse([
+                        'message' => 'Could prepare the extra payment.',
+                    ], 503));
+                }
+
+                if ($reservation->product->autoAcceptsReservations()) {
+                    $reservation->acceptProvider();
+                }
+
+                return ProductReservationResource::create($reservation);
+            });
+        } catch (ValidationException|HttpResponseException $exception) {
+            throw $exception;
         } catch (Throwable $exception) {
             Log::error($exception);
-            DB::rollBack();
         }
 
         return new JsonResponse([
