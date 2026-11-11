@@ -54,6 +54,10 @@ class ProductSubQuery
         $limitByFundAvailable = self::limitByFundAvailableSubQuery($options);
 
         $query->selectRaw('*,
+            CAST(
+                `limit_by_fund_vouchers` > 0 AND `limit_by_fund_vouchers_available` = 0 AS SIGNED
+            ) AS `limit_by_fund_reached`,
+
             CAST(IF(
                 ISNULL(`limit_total`),
                 GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),

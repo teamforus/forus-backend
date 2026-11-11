@@ -1075,7 +1075,7 @@ class Voucher extends Model
                 'voucher_id' => $voucher->id,
             ], Product::query()->whereKey($product->id))->firstOrFail();
 
-            if ($product['limit_by_fund'] > 0) {
+            if ($product['limit_by_fund_reached']) {
                 throw ValidationException::withMessages([
                     'product_id' => [__('validation.product_reservation.no_identity_stock')],
                 ]);

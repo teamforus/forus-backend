@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFundProductLimits;
@@ -343,6 +344,58 @@ class FundProductLimitTest extends TestCase
         $this->createReservation($voucher, $productB, false);
         $this->createReservation($voucher, $productC);
         $this->createReservation($voucher, $productA);
+    }
+
+    /**
+     * The reservation lock checks the fund product limits again inside the transaction (the request validation can
+     * be passed by two reservations at the same time).
+     * Create fund product limit scope ONLY_SELECTED with products (A,B) and limit 1, reserve product A
+     * Assert product B is refused inside the lock and the callback isn't called
+     * Assert product A (reserved already) and product C (not in the limit) are allowed.
+     * @throws Throwable
+     * @return void
+     */
+    public function testReservationLockRefusesReachedFundProductLimit(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $voucher = $fund->makeVoucher($fund->organization->identity, [
+            'state' => Voucher::STATE_ACTIVE,
+        ], amount: 10000);
+
+        $provider = $this->makeTestProviderOrganization($this->makeIdentity());
+        $productA = $this->createProductForReservation($provider, [$fund]);
+        $productB = $this->createProductForReservation($provider, [$fund]);
+        $productC = $this->createProductForReservation($provider, [$fund]);
+
+        $this->makeFundProductLimit($fund, FundProductLimit::SCOPE_ONLY_SELECTED, 1, [$productA->id, $productB->id]);
+        $this->createReservation($voucher, $productA);
+
+        $callbackCalled = false;
+
+        try {
+            $voucher->transactionWithReservationLock($productB, function () use (&$callbackCalled) {
+                $callbackCalled = true;
+            });
+
+            $this->fail('The reservation of a product with a reached fund product limit is not refused.');
+        } catch (ValidationException $e) {
+            $this->assertSame([
+                'product_id' => [__('validation.product_reservation.no_identity_stock')],
+            ], $e->errors());
+        }
+
+        $this->assertFalse($callbackCalled, 'The callback is called for a reached fund product limit.');
+
+        foreach ([$productA, $productC] as $product) {
+            $result = $voucher->transactionWithReservationLock(
+                $product,
+                fn (Voucher $lockedVoucher, Product $lockedProduct) => [$lockedVoucher->id, $lockedProduct->id],
+            );
+
+            $this->assertSame([$voucher->id, $product->id], $result);
+        }
     }
 
     /**
