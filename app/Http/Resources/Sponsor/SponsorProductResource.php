@@ -10,9 +10,11 @@ use App\Http\Resources\ProductCategoryResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
+use App\Models\FundProviderProductExclusion;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Services\EventLogService\Models\EventLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -107,7 +109,9 @@ class SponsorProductResource extends BaseJsonResource
             $product,
         )->pluck('id')->toArray();
 
-        return $funds->map(function (Fund $fund) use ($product, $approvedIds) {
+        $excludedFundProviderIds = $this->getExcludedFundProviderIds($funds, $product);
+
+        return $funds->map(function (Fund $fund) use ($product, $approvedIds, $excludedFundProviderIds) {
             $fundProviderId = $fund->providers->where('organization_id', $product->organization_id)->first()?->id;
 
             return [
@@ -118,6 +122,7 @@ class SponsorProductResource extends BaseJsonResource
                     'id', 'name',
                 ]),
                 'fund_provider_id' => $fundProviderId,
+                'excluded' => $fundProviderId && in_array($fundProviderId, $excludedFundProviderIds),
                 'state' => in_array($fund->id, $approvedIds) ? 'approved' : ($fundProviderId ? 'pending' : 'not_applied'),
                 'state_locale' => in_array($fund->id, $approvedIds) ? 'Goedgekeurd' : (
                     $fundProviderId ? 'In behandeling' : 'Niet van toepassing'
@@ -128,6 +133,25 @@ class SponsorProductResource extends BaseJsonResource
                 'organization_name' => $fund->organization->name,
             ];
         })->toArray();
+    }
+
+    /**
+     * @param Collection $funds
+     * @param Product $product
+     * @return array
+     */
+    protected function getExcludedFundProviderIds(Collection $funds, Product $product): array
+    {
+        $fundProviderIds = $funds
+            ->flatMap(fn (Fund $fund) => $fund->providers->where('organization_id', $product->organization_id))
+            ->pluck('id')
+            ->toArray();
+
+        return FundProviderProductExclusion::query()
+            ->whereIn('fund_provider_id', $fundProviderIds)
+            ->where(fn (Builder $builder) => $builder->whereNull('product_id')->orWhere('product_id', $product->id))
+            ->pluck('fund_provider_id')
+            ->toArray();
     }
 
     /**
