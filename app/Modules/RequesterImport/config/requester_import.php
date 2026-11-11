@@ -122,7 +122,7 @@ return [
                 ],
                 'has_pet' => [
                     'column' => 'heeft_huisdier',
-                    'required' => true,
+                    'required' => false,
                     'values' => [
                         'TRUE' => 'Ja',
                         'FALSE' => 'Nee',
