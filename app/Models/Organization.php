@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
 use App\Models\Traits\HasTags;
+use App\Modules\VoucherPass\Models\VoucherPass;
+use App\Modules\VoucherPass\Models\VoucherPassType;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\IdentityQuery;
@@ -90,6 +92,7 @@ use Illuminate\Validation\ValidationException;
  * @property bool $allow_requester_imports
  * @property string $requester_import_mapping_key
  * @property bool $allow_vouchers_from_profiles
+ * @property bool $allow_voucher_passes
  * @property bool $allow_profiles_create
  * @property bool $allow_profiles_relations
  * @property bool $allow_profiles_households
@@ -424,6 +427,7 @@ class Organization extends Model
         'allow_profiles' => 'boolean',
         'allow_requester_imports' => 'boolean',
         'allow_vouchers_from_profiles' => 'boolean',
+        'allow_voucher_passes' => 'boolean',
         'allow_translations' => 'boolean',
         'reservation_allow_extra_payments' => 'boolean',
         'show_provider_transactions' => 'boolean',
@@ -594,6 +598,22 @@ class Organization extends Model
     public function profiles(): HasMany
     {
         return $this->hasMany(Profile::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function voucher_passes(): HasMany
+    {
+        return $this->hasMany(VoucherPass::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function voucher_pass_types(): HasMany
+    {
+        return $this->hasMany(VoucherPassType::class);
     }
 
     /**

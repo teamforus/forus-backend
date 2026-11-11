@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $organization_id
  * @property string $bsn
  * @property int|null $profile_id
+ * @property-read Profile|null $profile
  */
 class RequesterImportRow extends Model
 {

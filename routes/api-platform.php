@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\RequesterImport\Http\Controllers\RequesterImportRowsController;
+use App\Modules\VoucherPass\Http\Controllers\VoucherPassesController;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Env;
 
@@ -1037,6 +1038,31 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'organizations/{organization}/sponsor/identities',
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
     )->only('store', 'index', 'show', 'update');
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes',
+        [VoucherPassesController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes/configs',
+        [VoucherPassesController::class, 'configs'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/batch/validate',
+        [VoucherPassesController::class, 'storeBatchValidate'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/batch',
+        [VoucherPassesController::class, 'storeBatch'],
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/voucher-passes/{voucherPass}',
+        [VoucherPassesController::class, 'update'],
+    );
 
     $router->get(
         'organizations/{organization}/sponsor/requester-imports',

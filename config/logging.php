@@ -104,6 +104,12 @@ return [
             'level' => 'warning',
         ],
 
+        'voucher_passes' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/voucher-passes.log'),
+            'level' => 'warning',
+        ],
+
         'voucher_awards' => [
             'driver' => 'single',
             'path' => storage_path('logs/voucher-awards.log'),

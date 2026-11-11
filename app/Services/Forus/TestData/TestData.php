@@ -166,6 +166,31 @@ class TestData
     }
 
     /**
+     * @param Organization[] $sponsors
+     * @throws Throwable
+     * @return void
+     */
+    public function makeVoucherPassTypes(array $sponsors): void
+    {
+        foreach ($sponsors as $organization) {
+            $types = $this->config("organizations.$organization->name.voucher_pass_types", []);
+
+            if ($types === []) {
+                continue;
+            }
+
+            foreach ($types as $name => $fundKeys) {
+                $fundIds = array_map(function (string $key) use ($organization): int {
+                    return $organization->funds()->whereRelation('fund_config', 'key', $key)->sole()->id;
+                }, $fundKeys);
+
+                $type = $organization->voucher_pass_types()->firstOrCreate(['name' => $name]);
+                $type->funds()->sync($fundIds);
+            }
+        }
+    }
+
+    /**
      * @return void
      */
     public function makeSponsorRecordTypes(): void

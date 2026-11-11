@@ -470,7 +470,18 @@ return [
     ],
     'Arnhem' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => [
+                'gelrepas-arnhem-adult-2027', 'gelrepas-arnhem-veterinary-2027', 'gelrepas-arnhem-id-cards-2027',
+            ],
+            'Gelrepas Kind' => [
+                'gelrepas-arnhem-child-2027', 'gelrepas-arnhem-clothing-2027', 'gelrepas-arnhem-toddler-2027',
+                'gelrepas-arnhem-school-2027', 'gelrepas-arnhem-id-cards-2027',
+            ],
+            'Gelrepas Begeleider' => ['gelrepas-arnhem-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -498,7 +509,12 @@ return [
     ],
     'Brummen' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-brummen-adult-2027'],
+            'Gelrepas Begeleider' => ['gelrepas-brummen-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -526,7 +542,15 @@ return [
     ],
     'Duiven' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-duiven-adult-2027'],
+            'Gelrepas Kind' => [
+                'gelrepas-duiven-child-2027', 'gelrepas-duiven-clothing-2027', 'gelrepas-duiven-school-2027',
+            ],
+            'Gelrepas Begeleider' => ['gelrepas-duiven-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -554,7 +578,13 @@ return [
     ],
     'Renkum' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-renkum-adult-2027'],
+            'Gelrepas Kind' => ['gelrepas-renkum-child-2027', 'gelrepas-renkum-clothing-school-2027'],
+            'Gelrepas Begeleider' => ['gelrepas-renkum-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -582,7 +612,15 @@ return [
     ],
     'Rheden' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-rheden-adult-2027'],
+            'Gelrepas Kind' => [
+                'gelrepas-rheden-child-2027', 'gelrepas-rheden-clothing-2027', 'gelrepas-rheden-school-2027',
+            ],
+            'Gelrepas Begeleider' => ['gelrepas-rheden-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -610,7 +648,15 @@ return [
     ],
     'Rozendaal' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-rozendaal-adult-2027'],
+            'Gelrepas Kind' => [
+                'gelrepas-rozendaal-child-2027', 'gelrepas-rozendaal-clothing-2027', 'gelrepas-rozendaal-school-2027',
+            ],
+            'Gelrepas Begeleider' => ['gelrepas-rozendaal-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -638,7 +684,16 @@ return [
     ],
     'Westervoort' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-westervoort-adult-2027'],
+            'Gelrepas Kind' => [
+                'gelrepas-westervoort-child-2027', 'gelrepas-westervoort-clothing-2027',
+                'gelrepas-westervoort-school-2027',
+            ],
+            'Gelrepas Begeleider' => ['gelrepas-westervoort-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,
@@ -666,7 +721,13 @@ return [
     ],
     'Zevenaar' => [
         'offices_count' => 0,
+        'voucher_pass_types' => [
+            'Gelrepas' => ['gelrepas-zevenaar-adult-2027'],
+            'Gelrepas Kind' => ['gelrepas-zevenaar-child-2027'],
+            'Gelrepas Begeleider' => ['gelrepas-zevenaar-companion-2027'],
+        ],
         'organization' => [
+            'allow_voucher_passes' => true,
             'business_type_id' => 585,
             'is_sponsor' => true,
             'is_provider' => false,

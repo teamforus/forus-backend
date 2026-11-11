@@ -9,6 +9,7 @@ return [
 
     'static_sources' => [
         'requester_import' => app_path('Modules/RequesterImport/lang'),
+        'voucher_pass' => app_path('Modules/VoucherPass/lang'),
     ],
 
     // Translation provider to use: 'deepl' or 'debug'.
