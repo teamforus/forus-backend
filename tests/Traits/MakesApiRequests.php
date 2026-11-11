@@ -26,6 +26,7 @@ use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\FileService\Models\File;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
@@ -542,6 +543,45 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiApplyForFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/apply",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiCheckFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/check",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiRedeemFundRequest(Fund $fund, array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/funds/redeem', $data, $this->makeWebshopHeaders($identity, $fund));
+    }
+
+    /**
      * @param Organization $organization
      * @param array $query
      * @param Identity $identity
@@ -631,6 +671,16 @@ trait MakesApiRequests
             [],
             $this->makeApiHeaders($identity),
         );
+    }
+
+    /**
+     * @param Product $product
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
     }
 
     /**
@@ -734,12 +784,18 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param Identity $identity
+     * @param bool $validate
      * @return TestResponse
      */
-    public function apiMakeVoucherAsSponsorRequest(Organization $organization, Fund $fund, array $data, Identity $identity): TestResponse
-    {
+    public function apiMakeVoucherAsSponsorRequest(
+        Organization $organization,
+        Fund $fund,
+        array $data,
+        Identity $identity,
+        bool $validate = false,
+    ): TestResponse {
         return $this->postJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers",
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers" . ($validate ? '/validate' : ''),
             ['fund_id' => $fund->id, 'amount' => '1000', ...$data],
             $this->makeApiHeaders($identity),
         );
@@ -1241,6 +1297,48 @@ trait MakesApiRequests
             "/api/v1/platform/organizations/$organizationId/sponsor/identities/export-fields",
             $this->makeApiHeaders($authIdentity),
         );
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return array
+     */
+    protected function makeWebshopHeaders(Identity $identity, Fund $fund): array
+    {
+        return $this->makeApiHeaders($identity, [
+            'Client-Type' => 'webshop',
+            'Client-Key' => $fund->getImplementation()->key,
+        ]);
+    }
+
+    /**
+     * @param string $transport
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiCompleteDigIdRequest(string $transport, array $data, array $headers = []): TestResponse
+    {
+        return $this->postJson("/api/v1/platform/$transport/complete", $data, $headers);
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiResolveDigIdRequest(
+        DigIdSession $session,
+        array $data = [],
+        array $headers = [],
+    ): TestResponse {
+        $url = $session->isConnectionTypeTvs()
+            ? '/api/v1/platform/tvs/resolve'
+            : "/api/v1/platform/digid/$session->session_uid/resolve";
+
+        return $this->getJson($url . ($data ? '?' . http_build_query($data) : ''), $headers);
     }
 
     /**
@@ -1890,14 +1988,18 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param array $data
      * @param bool $appendFileData
+     * @param bool $validate
      * @return TestResponse
      */
     protected function apiMakeVoucherRequestBatchRequest(
         Organization $organization,
         array $data,
         bool $appendFileData = false,
+        bool $validate = false,
     ): TestResponse {
-        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch", [
+        $apiUrl = "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch";
+
+        return $this->postJson($apiUrl . ($validate ? '/validate' : ''), [
             ...$data,
             ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'vouchers')) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
