@@ -129,9 +129,9 @@ trait DoesTesting
 
     /**
      * @throws Throwable
-     * @return int
+     * @return string
      */
-    protected function randomFakeBsn(): int
+    protected function randomFakeBsn(): string
     {
         return TestData::randomFakeBsn();
     }

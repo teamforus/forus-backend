@@ -187,16 +187,17 @@ class FundRequestValidatorTest extends TestCase
         DB::rollBack();
 
         DB::beginTransaction();
+        $this->apiFundRequestDeclineRequest($fundRequest, [], $employee)->assertSuccessful();
+        DB::rollBack();
+
+        DB::beginTransaction();
         $this->apiFundRequestDisregardRequest($fundRequest, ['notify' => true], $employee)->assertSuccessful();
+        DB::commit();
+
         $this->apiGetOrganizationEmailLogsRequest($fund->organization, ['fund_request_id' => $fundRequest->id])
             ->assertSuccessful()
             ->assertJsonPath('data', fn ($list) => count($list) == 2)
             ->assertJsonPath('data', fn ($list) => collect($list)->where('type', 'fund_request_disregarded')->count() == 1);
-        DB::rollBack();
-
-        DB::beginTransaction();
-        $this->apiFundRequestDeclineRequest($fundRequest, [], $employee)->assertSuccessful();
-        DB::rollBack();
     }
 
     /**

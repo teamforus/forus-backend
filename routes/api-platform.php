@@ -1,5 +1,10 @@
 <?php
 
+use App\Modules\DCP\Http\Controllers\DCPOrderBulksController;
+use App\Modules\DCP\Http\Controllers\DCPOrdersController;
+use App\Modules\RequesterImport\Http\Controllers\RequesterImportRowsController;
+use App\Modules\VoucherPass\Http\Controllers\VoucherPassDCPController;
+use App\Modules\VoucherPass\Http\Controllers\VoucherPassesController;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Env;
 
@@ -594,6 +599,11 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
             "Api\Platform\Organizations\FundRequestsController@formula"
         );
 
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/profile-copy-preview',
+            "Api\Platform\Organizations\FundRequestsController@profileCopyPreview"
+        );
+
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/assign',
             "Api\Platform\Organizations\FundRequestsController@assign"
@@ -1032,6 +1042,126 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
         'Api\Platform\Organizations\Sponsor\IdentitiesController',
     )->only('store', 'index', 'show', 'update');
 
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-orders',
+        [DCPOrdersController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-orders/{dcpOrder}',
+        [DCPOrdersController::class, 'show'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-orders/{dcpOrder}/logs',
+        [DCPOrdersController::class, 'logs'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks',
+        [DCPOrderBulksController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/ready-count',
+        [DCPOrderBulksController::class, 'readyCount'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/dcp-order-bulks',
+        [DCPOrderBulksController::class, 'store'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/{dcpOrderBulk}',
+        [DCPOrderBulksController::class, 'show'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/{dcpOrderBulk}/logs',
+        [DCPOrderBulksController::class, 'logs'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes',
+        [VoucherPassesController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/ids',
+        [VoucherPassDCPController::class, 'ids'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/preview',
+        [VoucherPassDCPController::class, 'preview'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/sync',
+        [VoucherPassDCPController::class, 'sync'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes/configs',
+        [VoucherPassesController::class, 'configs'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/batch/validate',
+        [VoucherPassesController::class, 'storeBatchValidate'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/batch',
+        [VoucherPassesController::class, 'storeBatch'],
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/voucher-passes/{voucherPass}',
+        [VoucherPassesController::class, 'update'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports',
+        [RequesterImportRowsController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports/configs',
+        [RequesterImportRowsController::class, 'configs'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch/validate',
+        [RequesterImportRowsController::class, 'storeBatchValidate'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/batch',
+        [RequesterImportRowsController::class, 'storeBatch'],
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/requester-imports/{requesterImportRow}',
+        [RequesterImportRowsController::class, 'update'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/requester-imports/sync/ids',
+        [RequesterImportRowsController::class, 'syncIds'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/sync/preview',
+        [RequesterImportRowsController::class, 'syncPreview'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/requester-imports/sync',
+        [RequesterImportRowsController::class, 'sync'],
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/households',
         'Api\Platform\Organizations\Sponsor\HouseholdsController'
@@ -1096,6 +1226,21 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     $router->post(
         'organizations/{organization}/sponsor/vouchers/batch/validate',
         "Api\Platform\Organizations\Sponsor\VouchersController@storeBatchValidate"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/from-profiles/ids',
+        'Api\Platform\Organizations\Sponsor\VouchersController@fromProfilesIds'
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/from-profiles',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeFromProfiles"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/from-profiles/preview',
+        "Api\Platform\Organizations\Sponsor\VouchersController@previewFromProfiles"
     );
 
     $router->post(

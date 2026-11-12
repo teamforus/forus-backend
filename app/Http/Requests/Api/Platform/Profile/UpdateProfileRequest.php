@@ -5,6 +5,8 @@ namespace App\Http\Requests\Api\Platform\Profile;
 use AllowDynamicProperties;
 use App\Exceptions\AuthorizationJsonException;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\RecordType;
+use App\Rules\ProfileRecordValueRule;
 use Illuminate\Support\Facades\Config;
 
 #[AllowDynamicProperties]
@@ -35,14 +37,27 @@ class UpdateProfileRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
-            'mobile' => 'sometimes|nullable|string|min:2|max:40',
-            'telephone' => 'sometimes|nullable|string|min:2|max:40',
-            'city' => 'sometimes|nullable|string|city_name',
-            'street' => 'sometimes|nullable|string|street_name',
-            'house_number' => 'sometimes|nullable|string|house_number',
-            'house_number_addition' => 'sometimes|nullable|string|house_addition',
-            'postal_code' => 'sometimes|nullable|string|postcode',
+        $keys = [
+            'mobile', 'telephone', 'city', 'street', 'house_number', 'house_number_addition', 'postal_code',
         ];
+
+        $recordTypes = RecordType::searchRecordTypes(
+            organizationId: $this->implementation()->organization_id,
+            profileRecords: true,
+            requesterEditable: true,
+            includeKeys: $keys,
+        );
+
+        $rules = [];
+
+        foreach ($keys as $key) {
+            $recordType = $recordTypes->get($key);
+
+            $rules[$key] = $recordType ?
+                ['sometimes', 'nullable', 'string', new ProfileRecordValueRule($recordType)] :
+                ['missing'];
+        }
+
+        return $rules;
     }
 }

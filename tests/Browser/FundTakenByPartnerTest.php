@@ -33,7 +33,7 @@ class FundTakenByPartnerTest extends DuskTestCase
         $fund = $this->createFund($implementation->organization);
 
         $partnerWithPendingRequest = $this->makeIdentity($this->makeUniqueEmail());
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), 123456789);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
 
         $this->rollbackModels([], function () use ($implementation, $fund, $partnerWithPendingRequest, $requester) {
             $this->browse(function (Browser $browser) use ($implementation, $fund, $partnerWithPendingRequest, $requester) {
@@ -45,7 +45,12 @@ class FundTakenByPartnerTest extends DuskTestCase
                 $browser->waitFor('@fundRequestOptions')->assertPresent('@fundRequestOptions');
                 $browser->assertMissing('@takenByPartnerPendingFundRequest');
 
-                $fundRequest = $this->makeFundRequestWithRecord($partnerWithPendingRequest, $fund, 'partner_bsn', 123456789);
+                $fundRequest = $this->makeFundRequestWithRecord(
+                    $partnerWithPendingRequest,
+                    $fund,
+                    'partner_bsn',
+                    $requester->bsn,
+                );
 
                 $this->logout($browser);
 
@@ -68,7 +73,12 @@ class FundTakenByPartnerTest extends DuskTestCase
 
                 // set partner_bsn record to partnerWithPendingRequest and create new fund request but without partner_bsn record
                 // assert taken_by_partner by pending fund request block is visible
-                $this->makeValidatedIdentityRecordForFund($partnerWithPendingRequest, $fund, 'partner_bsn', 123456789);
+                $this->makeValidatedIdentityRecordForFund(
+                    $partnerWithPendingRequest,
+                    $fund,
+                    'partner_bsn',
+                    $requester->bsn,
+                );
                 $this->setCriteriaAndMakeFundRequest($partnerWithPendingRequest, $fund, ['children_nth' => 3]);
 
                 $browser->refresh();
@@ -92,7 +102,7 @@ class FundTakenByPartnerTest extends DuskTestCase
         $fund = $this->createFund($implementation->organization);
 
         $partnerWithVoucher = $this->makeIdentity($this->makeUniqueEmail());
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), 123456789);
+        $requester = $this->makeIdentity($this->makeUniqueEmail(), $this->randomFakeBsn());
 
         $this->rollbackModels([], function () use ($implementation, $fund, $partnerWithVoucher, $requester) {
             $this->browse(function (Browser $browser) use ($implementation, $fund, $partnerWithVoucher, $requester) {
@@ -104,7 +114,7 @@ class FundTakenByPartnerTest extends DuskTestCase
                 $browser->waitFor('@fundRequestOptions')->assertPresent('@fundRequestOptions');
                 $browser->assertMissing('@takenByPartnerVoucher');
 
-                $fundRequest = $this->makeFundRequestWithRecord($partnerWithVoucher, $fund, 'partner_bsn', 123456789);
+                $fundRequest = $this->makeFundRequestWithRecord($partnerWithVoucher, $fund, 'partner_bsn', $requester->bsn);
 
                 // approve fund request and assert voucher created
                 $employee = $fund->organization->employees()->first();

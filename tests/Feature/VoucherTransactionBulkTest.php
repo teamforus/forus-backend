@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Artisan;
@@ -84,7 +85,7 @@ class VoucherTransactionBulkTest extends TestCase
         // make paid transactions, so they must not be included in total amount for bulk
         $paidTransactions = $this
             ->makeTransactions($fund)
-            ->each(fn (VoucherTransaction $t) => $t->setPaid(null, now()));
+            ->each(fn (VoucherTransaction $t) => $t->setPaid(null, Carbon::now()));
 
         $transactions = $this->makeTransactions($fund);
         $this->makeBankConnection($organization);

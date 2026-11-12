@@ -30,7 +30,6 @@ use App\Notifications\Organizations\FundRequests\FundRequestRecordFeedbackReceiv
 use App\Scopes\Builders\FundQuery;
 use Exception;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class FundRequestSubscriber
@@ -218,7 +217,7 @@ class FundRequestSubscriber
 
         $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_REQUESTED, $eventModels);
 
-        DB::afterCommit(fn () => IdentityFundRequestRecordFeedbackRequestedNotification::send($log));
+        IdentityFundRequestRecordFeedbackRequestedNotification::send($log);
     }
 
     /**
@@ -237,7 +236,7 @@ class FundRequestSubscriber
 
         $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_RECEIVED, $eventModels);
 
-        DB::afterCommit(fn () => FundRequestRecordFeedbackReceivedNotification::send($log));
+        FundRequestRecordFeedbackReceivedNotification::send($log);
     }
 
     /**
@@ -279,7 +278,7 @@ class FundRequestSubscriber
         ]);
 
         if ($event->getNotifyRequester()) {
-            DB::afterCommit(fn () => IdentityFundRequestClarificationUpdatedNotification::send($log));
+            IdentityFundRequestClarificationUpdatedNotification::send($log);
         }
     }
 
@@ -299,7 +298,7 @@ class FundRequestSubscriber
         $log = $fundRequestRecord->log($fundRequestRecord::EVENT_CLARIFICATION_CLOSED, $eventModels);
 
         if ($event->getNotifyRequester()) {
-            DB::afterCommit(fn () => IdentityFundRequestClarificationClosedNotification::send($log));
+            IdentityFundRequestClarificationClosedNotification::send($log);
         }
     }
 

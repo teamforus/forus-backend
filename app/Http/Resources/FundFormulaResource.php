@@ -14,6 +14,10 @@ class FundFormulaResource extends BaseJsonResource
         'record_type.translation',
     ];
 
+    public const array LOAD_NESTED = [
+        'conditions' => FundFormulaConditionResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -26,6 +30,7 @@ class FundFormulaResource extends BaseJsonResource
             'id', 'type', 'amount', 'amount_locale', 'record_type_key',
         ]), [
             'record_type_name' => $this->resource->record_type?->name,
+            'conditions' => FundFormulaConditionResource::collection($this->resource->conditions),
         ], $this->makeTimestamps($this->resource->only([
             'created_at', 'updated_at',
         ])));

@@ -1,6 +1,21 @@
 <?php
 
 return [
+    'dcp_order' => [
+        'dashboard' => [
+            'created' => 'Print order created.',
+            'updated' => 'Draft printing details updated.',
+            'sending' => 'Print order submission started.',
+            'accepted' => 'Print order accepted by DCP.',
+            'rejected' => 'Print order rejected by DCP.',
+            'unknown' => 'Print order submission outcome is unknown.',
+            'blocked' => 'Print order blocked before submission.',
+            'status_changed' => 'DCP order status updated.',
+        ],
+    ],
+    'dcp_order_bulk' => [
+        'dashboard' => ['approved' => 'Print order bulk approved.'],
+    ],
     'bank_connection' => [
         'webshop' => [],
         'dashboard' => [

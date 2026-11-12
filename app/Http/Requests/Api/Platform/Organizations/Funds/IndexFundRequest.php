@@ -40,6 +40,7 @@ class IndexFundRequest extends BaseFormRequest
             'order_by' => 'nullable|in:created_at',
             'order_dir' => 'nullable|in:asc,desc',
             'configured' => 'nullable|bool',
+            'voucher_creation_from_profiles' => 'nullable|bool',
             'with_archived' => 'nullable|bool',
             'with_external' => 'nullable|bool',
             'archived' => 'nullable|bool',

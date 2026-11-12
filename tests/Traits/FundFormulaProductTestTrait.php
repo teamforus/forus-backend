@@ -26,6 +26,8 @@ trait FundFormulaProductTestTrait
     ): void {
         assertCount(3, $fund->fund_formula_products);
 
+        $values = $fund->formulaTrustedRecordValues($identity);
+
         foreach ($fund->fund_formula_products as $formulaProduct) {
             $productVoucherCount = Voucher::query()
                 ->where('identity_id', $identity?->id ?: null)
@@ -36,7 +38,7 @@ trait FundFormulaProductTestTrait
                 ->count();
 
             $this->assertEquals(
-                $formulaProduct->getIdentityMultiplier($identity),
+                $formulaProduct->getIdentityMultiplier($identity, $values),
                 $productVoucherCount,
             );
         }

@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Role;
 use App\Models\VoucherTransaction;
+use Carbon\Carbon;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeOutException;
@@ -191,7 +192,7 @@ class ProductsWebshopSearchFilterTest extends BaseWebshopSearchFilter
                 'product_id' => $products[1]->id,
                 'organization_id' => $products[1]->organization_id,
             ])
-            ->setPaid(null, now());
+            ->setPaid(null, Carbon::now());
 
         return $products;
     }
