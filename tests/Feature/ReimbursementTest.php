@@ -8,6 +8,7 @@ use App\Models\Note;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Arr;
@@ -148,7 +149,7 @@ class ReimbursementTest extends TestCase
         $reimbursement = $this->makeReimbursement($voucher, true);
         $employee = $this->makeReimbursementValidatorEmployee($reimbursement);
 
-        $this->expireVoucherAndFund($reimbursement->voucher, now()->subDay())->refresh();
+        $this->expireVoucherAndFund($reimbursement->voucher, Carbon::now()->subDay())->refresh();
 
         $voucher->fund->fund_config->update([
             'reimbursement_approve_offset' => 0,
@@ -324,7 +325,7 @@ class ReimbursementTest extends TestCase
      */
     protected function submitDraftReimbursement(Reimbursement $reimbursement): Reimbursement
     {
-        $submitTime = now();
+        $submitTime = Carbon::now();
         $requesterEmail = $reimbursement->voucher->identity->email;
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($reimbursement->voucher->identity));
 

@@ -18,6 +18,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\VouchersFromProfilesRequest;
 use App\Http\Resources\Arr\ExportFieldVoucherArrResource;
 use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
@@ -26,11 +27,13 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherRelation;
+use App\Modules\Voucher\Services\ProfileVoucherAwardService;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Searches\VouchersSearch;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Event;
 use Throwable;
@@ -342,6 +345,75 @@ class VouchersController extends Controller
         StoreBatchVoucherRequest $request,
         Organization $organization,
     ): void {
+    }
+
+    /**
+     * Create vouchers from organization profiles.
+     *
+     * @param VouchersFromProfilesRequest $request
+     * @param Organization $organization
+     * @throws Throwable
+     * @return JsonResponse
+     */
+    public function storeFromProfiles(VouchersFromProfilesRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        $employee = $request->employee($organization);
+
+        abort_unless($employee !== null, 403);
+
+        $service = resolve(ProfileVoucherAwardService::class);
+
+        return new JsonResponse(['data' => $service->makeVouchersFromProfiles(
+            $organization,
+            $employee,
+            $request->validated('fund_ids'),
+            $request->validated('profile_ids'),
+        )]);
+    }
+
+    /**
+     * Preview vouchers from organization profiles.
+     *
+     * @param VouchersFromProfilesRequest $request
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return JsonResponse
+     */
+    public function previewFromProfiles(VouchersFromProfilesRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        $employee = $request->employee($organization);
+
+        abort_unless($employee !== null, 403);
+
+        $service = resolve(ProfileVoucherAwardService::class);
+
+        return new JsonResponse(['data' => $service->previewVouchersFromProfiles(
+            $organization,
+            $employee,
+            $request->validated('fund_ids'),
+            $request->validated('profile_ids'),
+        )]);
+    }
+
+    /**
+     * Get candidate profile IDs for voucher creation.
+     *
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return JsonResponse
+     */
+    public function fromProfilesIds(Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        return new JsonResponse(['data' => resolve(ProfileVoucherAwardService::class)->candidateIds($organization)]);
     }
 
     /**

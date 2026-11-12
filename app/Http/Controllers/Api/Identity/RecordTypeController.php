@@ -20,7 +20,7 @@ class RecordTypeController extends Controller
     public function index(IndexRecordTypesRequest $request): JsonResponse
     {
         $search = new RecordTypeSearch($request->only([
-            'vouchers', 'criteria', 'organization_id',
+            'vouchers', 'criteria', 'requester_imports', 'profile_records', 'organization_id',
         ]), RecordType::query());
 
         $recordTypesCollection = RecordTypeResource::queryCollection($search->query(), 1000);

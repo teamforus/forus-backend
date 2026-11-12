@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Traits\DoesTesting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Collection;
@@ -92,7 +93,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
             ->makeVouchers($fund, $vouchersCount, $childrenCount)
             ->each(fn (Voucher $voucher) => $voucher->makeTransactionBySponsor($fund->organization->employees[0], [
                 'amount' => $transactionAmount,
-            ])->setPaid(null, now()));
+            ])->setPaid(null, Carbon::now()));
     }
 
     /**
@@ -295,7 +296,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $vouchers->each(function (Voucher $voucher) use ($employee, $transactionAmount) {
             $voucher
                 ->makeTransactionBySponsor($employee, ['amount' => $transactionAmount])
-                ->setPaid(null, now());
+                ->setPaid(null, Carbon::now());
 
             $voucher->deactivate();
         });
@@ -389,7 +390,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
         $vouchers->each(function (Voucher $voucher) use ($employee, $transactionAmount) {
             $voucher
                 ->makeTransactionBySponsor($employee, ['amount' => $transactionAmount])
-                ->setPaid(null, now());
+                ->setPaid(null, Carbon::now());
 
             $voucher->update(['expire_at' => now()->startOfYear()->subDays(10)]);
         });
@@ -439,7 +440,7 @@ class FundStatisticsOverviewBudgetVouchersTest extends TestCase
             $vouchers->each(function (Voucher $voucher) use ($employee, $transactionAmount) {
                 $voucher
                     ->makeTransactionBySponsor($employee, ['amount' => $transactionAmount])
-                    ->setPaid(null, now());
+                    ->setPaid(null, Carbon::now());
             });
         }
 

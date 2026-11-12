@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use App\Scopes\Builders\VoucherSubQuery;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Carbon;
@@ -335,6 +336,8 @@ class VouchersSearch extends BaseSearch
         }
 
         if ($this->hasFilter('bsn') && $bsn = $this->getFilter('bsn')) {
+            $bsn = resolve(IdentityBsnService::class)->normalizeBsn($bsn);
+
             $builder->where(static function (Builder $builder) use ($bsn) {
                 $builder->where('identity_id', Identity::findByBsn($bsn)?->id ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {

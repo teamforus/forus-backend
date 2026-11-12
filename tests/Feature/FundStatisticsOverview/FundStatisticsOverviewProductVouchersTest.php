@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Traits\DoesTesting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Collection;
@@ -105,7 +106,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
                     'target' => VoucherTransaction::TARGET_PROVIDER,
                     'organization_id' => $voucher->product->organization_id,
                 ];
-                $voucher->makeTransaction($params)->setPaid(null, now());
+                $voucher->makeTransaction($params)->setPaid(null, Carbon::now());
             });
     }
 
@@ -312,7 +313,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
                 'branch_number' => $employee?->office?->branch_number,
                 'target' => VoucherTransaction::TARGET_PROVIDER,
                 'organization_id' => $voucher->product->organization_id,
-            ])->setPaid(null, now());
+            ])->setPaid(null, Carbon::now());
 
             $voucher->deactivate();
         });
@@ -424,7 +425,7 @@ class FundStatisticsOverviewProductVouchersTest extends TestCase
                 'organization_id' => $voucher->product->organization_id,
             ];
 
-            $voucher->makeTransaction($params)->setPaid(null, now());
+            $voucher->makeTransaction($params)->setPaid(null, Carbon::now());
             $voucher->update(['expire_at' => now()->startOfYear()->subDays(10)]);
         });
     }

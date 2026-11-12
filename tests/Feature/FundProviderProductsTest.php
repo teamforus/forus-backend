@@ -448,7 +448,7 @@ class FundProviderProductsTest extends TestCase
         $product2 = $this->apiMakeProduct($fundProvider->organization, ['price' => 5], $fundProvider->organization->identity);
 
         $voucher = $this->setupVoucher($fundProvider, 20);
-        $expireAt = now()->addDays(7);
+        $expireAt = Carbon::now()->addDays(7);
         $implementation = $fundProvider->fund->getImplementation();
 
         // assert voucher balance and products prices

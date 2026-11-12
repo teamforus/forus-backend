@@ -5,6 +5,13 @@ namespace App\Rules;
 class BsnRule extends BaseRule
 {
     /**
+     * @param bool $exactlyNineDigits
+     */
+    public function __construct(protected bool $exactlyNineDigits = false)
+    {
+    }
+
+    /**
      * Validates if the given value is a valid Dutch BSN number.
      *
      * The function trims the input, checks its length and format, normalizes it,
@@ -20,7 +27,7 @@ class BsnRule extends BaseRule
     {
         $value = (string) $value;
 
-        if (!preg_match('/^[0-9]{8,9}$/', $value)) {
+        if (!preg_match($this->exactlyNineDigits ? '/^[0-9]{9}$/' : '/^[0-9]{8,9}$/', $value)) {
             return false;
         }
 

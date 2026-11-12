@@ -43,7 +43,6 @@ class PrevalidationRequestCsvUploadTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('forus.person_bsn.test_response_profile', 'default');
         Config::set('forus.person_bsn.fund_prefill_cache_time', 0);
         Cache::flush();
     }

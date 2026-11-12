@@ -7,6 +7,12 @@ return [
     // Target languages for translations.
     'target_languages' => explode(',', env('TRANSLATION_SERVICE_TARGETS', 'en,ar')),
 
+    'static_sources' => [
+        'requester_import' => app_path('Modules/RequesterImport/lang'),
+        'voucher_pass' => app_path('Modules/VoucherPass/lang'),
+        'dcp' => app_path('Modules/DCP/lang'),
+    ],
+
     // Translation provider to use: 'deepl' or 'debug'.
     'provider' => env('TRANSLATION_SERVICE_PROVIDER', 'debug'),
 
@@ -14,6 +20,7 @@ return [
     'models' => [
         \App\Models\Tag::class => ['name'],
         \App\Models\RecordType::class => ['name'],
+        \App\Models\ProfileRecordGroup::class => ['name'],
         \App\Models\BusinessType::class => ['name'],
         \App\Models\ProductCategory::class => ['name'],
         \App\Models\RecordTypeOption::class => ['name'],

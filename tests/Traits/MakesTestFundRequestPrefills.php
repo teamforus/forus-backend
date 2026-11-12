@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Throwable;
 
 trait MakesTestFundRequestPrefills
 {
@@ -127,6 +128,7 @@ trait MakesTestFundRequestPrefills
      * @param string $bsn
      * @param array $headers
      * @param array $data
+     * @throws Throwable
      * @return TestResponse
      */
     protected function makeFundRequestWithBsn(

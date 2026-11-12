@@ -7,6 +7,7 @@ use App\Mail\Vouchers\SendProductVoucherBySponsorMail;
 use App\Mail\Vouchers\SendVoucherBySponsorMail;
 use App\Services\MailDatabaseLoggerService\Models\EmailLog;
 use App\Traits\DoesTesting;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Event;
@@ -36,7 +37,7 @@ class VoucherSharedMailTest extends TestCase
      */
     public function testVoucherShareMail(): void
     {
-        $startDate = now();
+        $startDate = Carbon::now();
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization);
 
@@ -65,7 +66,7 @@ class VoucherSharedMailTest extends TestCase
 
         // wait 1 sec to assert that passed email ignored if voucher is granted
         sleep(1);
-        $startDate = now();
+        $startDate = Carbon::now();
 
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $voucher->assignToIdentity($identity);
@@ -81,7 +82,7 @@ class VoucherSharedMailTest extends TestCase
      */
     public function testSponsorVoucherShareMailReplacesAmountAndExpirationDate(): void
     {
-        $startDate = now();
+        $startDate = Carbon::now();
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, fundConfigsData: [
             'show_qr_code' => true,
@@ -103,7 +104,7 @@ class VoucherSharedMailTest extends TestCase
      */
     public function testSponsorProductVoucherShareMailIncludesProductAndProvider(): void
     {
-        $startDate = now();
+        $startDate = Carbon::now();
         $organization = $this->makeTestOrganization($this->makeIdentity());
         $fund = $this->makeTestFund($organization, fundConfigsData: [
             'show_qr_code' => true,

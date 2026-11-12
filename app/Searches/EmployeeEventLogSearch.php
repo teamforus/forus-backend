@@ -7,6 +7,8 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Permission;
 use App\Models\Voucher;
+use App\Modules\DCP\Models\DCPOrder;
+use App\Modules\DCP\Models\DCPOrderBulk;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +31,8 @@ class EmployeeEventLogSearch extends BaseSearch
         'voucher' => 'fund.organization',
         'employees' => 'organization',
         'bank_connection' => 'organization',
+        'dcp_order' => 'organization',
+        'dcp_order_bulk' => 'organization',
     ];
 
     /**
@@ -56,16 +60,15 @@ class EmployeeEventLogSearch extends BaseSearch
         }
 
         $builder->where(function (Builder $builder) {
-            $builder->where(fn (Builder $q) => $this->whereVoucherExported($q));
+            $builder->whereRaw('FALSE');
+            $builder->orWhere(fn (Builder $q) => $this->whereVoucherExported($q));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Voucher::class));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, BankConnection::class));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Employee::class));
             $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, Fund::class));
+            $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, DCPOrder::class));
+            $builder->orWhere(fn (Builder $q) => $this->whereEvents($q, DCPOrderBulk::class));
         });
-
-        if (empty($this->getFilter('loggable', []))) {
-            return $builder->whereRaw('FALSE');
-        }
 
         return $builder->orderByDesc('created_at');
     }

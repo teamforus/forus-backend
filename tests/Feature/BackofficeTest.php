@@ -7,8 +7,6 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
-use App\Services\Forus\TestData\TestData;
-use Exception;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Testing\TestResponse;
@@ -40,7 +38,7 @@ class BackofficeTest extends TestCase
     {
         // Generate test backoffice credentials, fund, identity and a product approved for the fund
         $credentials = self::generateTestBackofficeCredentials();
-        $bsn = TestData::randomFakeBsn();
+        $bsn = $this->randomFakeBsn();
 
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $fund2 = $this->makeAndSetupBackofficeTestFund('fund_002', $credentials);
@@ -85,7 +83,7 @@ class BackofficeTest extends TestCase
     /**
      * Tests the complete logs happy flow for vouchers created via voucher generator.
      *
-     * @throws Exception
+     * @throws Throwable
      * @return void
      */
     public function testCompleteVoucherGeneratorHappyFlowForExistingBsnIdentities(): void
@@ -94,7 +92,7 @@ class BackofficeTest extends TestCase
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $identity = $this->makeIdentity();
-        $bsn = TestData::randomFakeBsn();
+        $bsn = $this->randomFakeBsn();
 
         // Set up backoffice responses with the generated credentials
         $this->setupBackofficeResponses($credentials, fundKeys: [$fund->fund_config->key]);
@@ -139,6 +137,7 @@ class BackofficeTest extends TestCase
     /**
      * Tests the complete voucher generator happy flow for assign type bsn.
      *
+     * @throws Throwable
      * @return void
      */
     public function testCompleteVoucherGeneratorHappyFlowForAssignTypeBsn(): void
@@ -146,8 +145,8 @@ class BackofficeTest extends TestCase
         // Generate test backoffice credentials, fund, identity and a product approved for the fund
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
-        $bsn = TestData::randomFakeBsn();
-        $bsn2 = TestData::randomFakeBsn();
+        $bsn = $this->randomFakeBsn();
+        $bsn2 = $this->randomFakeBsn();
         $identity = $this->makeIdentity();
         $identity2 = $this->makeIdentity();
 
@@ -196,6 +195,7 @@ class BackofficeTest extends TestCase
     /**
      * Tests the complete voucher generator happy flow for claimed BSN identities.
      *
+     * @throws Throwable
      * @return void
      */
     public function testCompleteVoucherGeneratorHappyFlowForClaimedBsnIdentities(): void
@@ -204,7 +204,7 @@ class BackofficeTest extends TestCase
         $credentials = self::generateTestBackofficeCredentials();
         $fund = $this->makeAndSetupBackofficeTestFund('fund_001', $credentials);
         $identity = $this->makeIdentity();
-        $bsn = TestData::randomFakeBsn();
+        $bsn = $this->randomFakeBsn();
 
         // Set up backoffice responses with the generated credentials
         $this->setupBackofficeResponses($credentials, fundKeys: [$fund->fund_config->key]);

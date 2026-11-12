@@ -6,6 +6,7 @@ use App\Exports\VoucherTransactionsProviderExport;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -97,7 +98,7 @@ class VoucherTransactionsProviderExportTest extends TestCase
                     'organization_id' => $voucher->product->organization_id,
                 ];
 
-                $voucher->makeTransaction($params)->setPaid(null, now());
+                $voucher->makeTransaction($params)->setPaid(null, Carbon::now());
             });
 
         $transaction = $fund->vouchers()->first()->transactions->first();

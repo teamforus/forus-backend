@@ -6,9 +6,8 @@ use App\Models\Fund;
 use App\Rules\Base\IbanNameRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\BsnRule;
-use App\Rules\ProductIdInStockRule;
+use App\Rules\Vouchers\VoucherBatchRules;
 use App\Rules\Vouchers\VoucherRecipientRule;
-use App\Rules\VouchersArraySumAmountsRule;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +22,8 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
     {
         $fund = $this->getFund();
         $bsn_enabled = $this->organization->bsn_enabled;
+        $vouchers = $this->input('vouchers');
+        $voucher_counts = collect($vouchers)->countBy('product_id')->all();
 
         return [
             'fund_id' => $this->fundIdRule(),
@@ -38,8 +39,8 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
                     return ['bsn' => [new VoucherRecipientRule(byBsn: true)]];
                 }),
             ],
-            'vouchers.*.amount' => $this->amountRule($fund),
-            'vouchers.*.product_id' => $this->productIdRule($fund),
+            'vouchers.*.amount' => VoucherBatchRules::ruleAmount($fund, $vouchers),
+            'vouchers.*.product_id' => VoucherBatchRules::ruleProductId($fund, $voucher_counts),
             'vouchers.*.expire_at' => $this->expireAtRule($fund),
             'vouchers.*.note' => 'nullable|string|max:280',
             'vouchers.*.email' => [
@@ -54,7 +55,7 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'vouchers.*.activate' => 'boolean',
             'vouchers.*.activation_code' => 'boolean',
             'vouchers.*.client_uid' => 'nullable|string|max:20',
-            'vouchers.*.limit_multiplier' => 'nullable|numeric|min:1|max:1000',
+            'vouchers.*.limit_multiplier' => VoucherBatchRules::ruleLimitMultiplier(),
             'vouchers.*.notify_provider' => 'nullable|boolean',
             'vouchers.*.records' => $this->recordsRule(),
             ...$this->uploadedCSVFileRules(),
@@ -137,37 +138,6 @@ class StoreBatchVoucherRequest extends BaseStoreVouchersRequest
             'date_format:Y-m-d',
             'after:' . $fund->start_date->format('Y-m-d'),
             'before_or_equal:' . $fund->end_date->format('Y-m-d'),
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @return string|string[]
-     */
-    private function amountRule(Fund $fund): array|string
-    {
-        return [
-            'nullable',
-            'required_without:vouchers.*.product_id',
-            'numeric',
-            'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
-            new VouchersArraySumAmountsRule($fund, $this->input('vouchers')),
-        ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @return string[]
-     */
-    private function productIdRule(Fund $fund): array
-    {
-        $vouchers = $this->input('vouchers');
-
-        return [
-            'nullable',
-            'required_without:vouchers.*.amount',
-            'exists:products,id',
-            new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray()),
         ];
     }
 

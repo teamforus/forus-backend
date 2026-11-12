@@ -116,11 +116,12 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     }
 
     /**
+     * @param int $max
      * @return string
      */
-    public function qRule(): string
+    public function qRule(int $max = 400): string
     {
-        return 'nullable|string';
+        return "nullable|string|max:$max";
     }
 
     /**
@@ -137,7 +138,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      */
     public function pageRule(): string
     {
-        return 'nullable|numeric|min:1';
+        return 'nullable|integer|min:1';
     }
 
     /**

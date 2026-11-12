@@ -226,6 +226,7 @@ class FundResource extends BaseJsonResource
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
                 'custom_amount_min', 'custom_amount_max', 'allow_physical_cards',
+                'allow_fund_request_profile_copy',
             ]) : [],
         ];
     }
