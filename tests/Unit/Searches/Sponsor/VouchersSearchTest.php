@@ -193,6 +193,32 @@ class VouchersSearchTest extends SearchTestCase
     }
 
     /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testBsnFilterMatchesCanonicalIdentityAndUnassignedRelation(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $foreignOrganization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
+        $fund = $this->makeTestFund($organization);
+        $foreignFund = $this->makeTestFund($foreignOrganization);
+        $bsn = $this->makeUniqueBsn(leadingZero: true);
+        $identity = $this->makeIdentity($this->makeUniqueEmail(), $bsn);
+        $assigned = $this->makeTestVoucher($fund, $identity);
+        $unassigned = $this->makeTestVoucher($fund);
+        $unrelated = $this->makeTestVoucher($fund);
+        $foreign = $this->makeTestVoucher($foreignFund);
+
+        $unassigned->setBsnRelation($bsn, VoucherRelation::REPORT_TYPE_USER);
+        $unrelated->setBsnRelation($this->makeUniqueBsn(), VoucherRelation::REPORT_TYPE_USER);
+        $foreign->setBsnRelation($bsn, VoucherRelation::REPORT_TYPE_USER);
+        $this->makeTestVoucher($foreignFund, $identity);
+
+        $this->assertSearchIds(['bsn' => $bsn], [$assigned->id, $unassigned->id], $organization);
+        $this->assertSearchIds(['bsn' => substr($bsn, 1)], [$assigned->id, $unassigned->id], $organization);
+    }
+
+    /**
      * @return void
      */
     public function testFiltersByImplementationIdOrImplementationKey(): void
