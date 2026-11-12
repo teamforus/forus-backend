@@ -7,6 +7,8 @@ use App\Models\Record;
 use App\Models\RecordType;
 use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
 use Closure;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -68,6 +70,32 @@ class IdentityBsnService
         }
 
         return $matches->first();
+    }
+
+    /**
+     * Return distinct matches keyed by the supplied BSNs, including empty and ambiguous groups.
+     *
+     * @param string[] $bsns
+     * @return SupportCollection<string, Collection<int, Identity>>
+     */
+    public function findIdentityMatchesByBsns(array $bsns): SupportCollection
+    {
+        if ($bsns === []) {
+            return collect();
+        }
+
+        $normalized = collect($bsns)->mapWithKeys(fn (string $bsn) => [$bsn => $this->normalizeBsn($bsn)]);
+
+        $records = Record::query()
+            ->whereIn('value', $normalized->unique())
+            ->where('record_type_id', RecordType::findByKey(RecordType::KEY_BSN)?->id)
+            ->with('identity')->distinct()->get(['value', 'identity_address']);
+
+        $matches = $records->groupBy('value')->map(fn (Collection $records) => new Collection(
+            $records->pluck('identity')->filter()->unique('id')->values()->all(),
+        ));
+
+        return $normalized->map(fn (string $bsn) => $matches->get($bsn, new Collection()));
     }
 
     /**

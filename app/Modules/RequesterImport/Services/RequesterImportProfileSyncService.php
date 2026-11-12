@@ -19,6 +19,8 @@ use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
 use App\Services\IdentityBsnService\IdentityBsnService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -53,10 +55,31 @@ class RequesterImportProfileSyncService
         abort_unless($employee->organization_id === $organization->id, 403);
 
         $results = [];
+        $recordTypes = null;
+        $identityMatches = null;
+        $recordTypeIds = new SupportCollection();
+        $rows = $this->organizationRows($organization, $rowIds);
 
-        foreach ($this->organizationRows($organization, $rowIds) as $row) {
+        foreach ($rows as $row) {
             try {
-                $results[] = $this->previewRow($row, $updateAll);
+                $recordTypes ??= $this->syncRecordTypes($organization->id);
+
+                if (!$row->relationLoaded('records')) {
+                    $rows->load(['records' => function (HasMany $query) use ($recordTypes, $updateAll) {
+                        $query->select(['id', 'requester_import_row_id', 'record_type_key', 'value']);
+                        $query->whereIn('record_type_key', $recordTypes->keys());
+
+                        if (!$updateAll) {
+                            $query->whereNull('synced_at');
+                        }
+                    }]);
+                }
+
+                $identityMatches ??= resolve(IdentityBsnService::class)->findIdentityMatchesByBsns(
+                    $rows->pluck('bsn')->all(),
+                );
+
+                $results[] = $this->previewRow($row, $recordTypes, $recordTypeIds, $identityMatches->get($row->bsn));
             } catch (Throwable $exception) {
                 $expected = $exception instanceof RequesterImportException || $exception instanceof ValidationException;
 
@@ -104,10 +127,12 @@ class RequesterImportProfileSyncService
 
         $logger = resolve(RequesterImportLogService::class);
         $results = [];
+        $recordTypes = null;
 
         foreach ($this->organizationRows($organization, $rowIds) as $row) {
             try {
-                $results[] = $this->syncRow($row, $employee, $updateAll);
+                $recordTypes ??= $this->syncRecordTypes($organization->id);
+                $results[] = $this->syncRow($row, $employee, $updateAll, $recordTypes);
             } catch (Throwable $exception) {
                 $results[] = [
                     'id' => $row->id,
@@ -143,15 +168,20 @@ class RequesterImportProfileSyncService
      * @param RequesterImportRow $row
      * @param Employee $employee
      * @param bool $updateAll
+     * @param SupportCollection<string, RecordType>|null $recordTypes
      * @throws Throwable
      * @return array{
      *     id: int, bsn: string, profile_id: int, identity_id: int, status: string,
      *     records_synced: int, records_updated: int,
      * }
      */
-    public function syncRow(RequesterImportRow $row, Employee $employee, bool $updateAll = false): array
-    {
-        return DB::transaction(function () use ($row, $employee, $updateAll): array {
+    public function syncRow(
+        RequesterImportRow $row,
+        Employee $employee,
+        bool $updateAll = false,
+        ?SupportCollection $recordTypes = null,
+    ): array {
+        return DB::transaction(function () use ($row, $employee, $updateAll, $recordTypes): array {
             $row = RequesterImportRow::query()
                 ->where('organization_id', $row->organization_id)
                 ->lockForUpdate()
@@ -159,7 +189,8 @@ class RequesterImportProfileSyncService
 
             abort_unless($row->organization_id === $employee->organization_id, 403);
 
-            $records = $this->selectSyncRecords($row, $updateAll, lock: true);
+            $recordTypes ??= $this->syncRecordTypes($row->organization_id);
+            $records = $this->selectSyncRecords($row, $recordTypes, $updateAll);
             $values = $this->syncRecordValues($records);
 
             $profile = $this->resolveProfile($row, $employee);
@@ -229,37 +260,54 @@ class RequesterImportProfileSyncService
 
     /**
      * @param RequesterImportRow $row
+     * @param SupportCollection<string, RecordType> $recordTypes
      * @param bool $updateAll
-     * @param bool $lock
      * @throws ValidationException
      * @return Collection<string, RequesterImportRecord>
      */
-    private function selectSyncRecords(RequesterImportRow $row, bool $updateAll, bool $lock): Collection
-    {
-        $recordTypes = RecordType::searchRecordTypes(
-            organizationId: $row->organization_id,
-            profileRecords: true,
-            requesterImports: true,
-        );
-
+    private function selectSyncRecords(
+        RequesterImportRow $row,
+        SupportCollection $recordTypes,
+        bool $updateAll,
+    ): Collection {
         $query = $row->records()->whereIn('record_type_key', $recordTypes->keys());
 
         if (!$updateAll) {
             $query->whereNull('synced_at');
         }
 
-        if ($lock) {
-            $query->lockForUpdate();
-        }
-
         /** @var Collection<string, RequesterImportRecord> $records */
-        $records = $query->get()->keyBy('record_type_key');
+        $records = $query->lockForUpdate()->get()->keyBy('record_type_key');
 
+        $this->validateSyncRecords($records, $recordTypes);
+
+        return $records;
+    }
+
+    /**
+     * @param Collection<string, RequesterImportRecord> $records
+     * @param SupportCollection<string, RecordType> $recordTypes
+     * @throws ValidationException
+     * @return void
+     */
+    private function validateSyncRecords(Collection $records, SupportCollection $recordTypes): void
+    {
         Validator::make(['records' => $this->syncRecordValues($records)], [
             'records' => [new RequesterImportRecordTypesRule($recordTypes, batch: false)],
         ])->validate();
+    }
 
-        return $records;
+    /**
+     * @param int $organizationId
+     * @return SupportCollection<string, RecordType>
+     */
+    private function syncRecordTypes(int $organizationId): SupportCollection
+    {
+        return RecordType::searchRecordTypes(
+            organizationId: $organizationId,
+            profileRecords: true,
+            requesterImports: true,
+        );
     }
 
     /**
@@ -302,21 +350,29 @@ class RequesterImportProfileSyncService
 
     /**
      * @param RequesterImportRow $row
-     * @param bool $updateAll
+     * @param SupportCollection<string, RecordType> $recordTypes
+     * @param SupportCollection<string, int|null> $recordTypeIds
+     * @param Collection<int, Identity> $identityMatches
      * @throws ValidationException
      * @throws RequesterImportException
      * @return RequesterImportSyncPreview
      */
-    private function previewRow(RequesterImportRow $row, bool $updateAll): RequesterImportSyncPreview
-    {
-        $records = $this->selectSyncRecords($row, $updateAll, lock: false);
+    private function previewRow(
+        RequesterImportRow $row,
+        SupportCollection $recordTypes,
+        SupportCollection $recordTypeIds,
+        Collection $identityMatches,
+    ): RequesterImportSyncPreview {
+        /** @var Collection<string, RequesterImportRecord> $records */
+        $records = $row->records->keyBy('record_type_key');
 
-        try {
-            $identity = resolve(IdentityBsnService::class)->findIdentityByBsn($row->bsn);
-        } catch (IdentityBsnException $exception) {
-            throw $this->mapRowIdentityException($row, $exception);
+        $this->validateSyncRecords($records, $recordTypes);
+
+        if ($identityMatches->count() > 1) {
+            throw $this->mapRowIdentityException($row, new IdentityBsnException(IdentityBsnException::AMBIGUOUS));
         }
 
+        $identity = $identityMatches->first();
         $profile = $identity?->profiles()->where('organization_id', $row->organization_id)->first();
 
         $this->assertProfileLink($row, $profile);
@@ -327,10 +383,12 @@ class RequesterImportProfileSyncService
         $changes = [];
 
         foreach ($this->syncRecordValues($records) as $key => $value) {
-            $recordType = RecordType::findByKey($key);
+            if (!$recordTypeIds->has($key)) {
+                $recordTypeIds->put($key, RecordType::findByKey($key)?->id);
+            }
 
             /** @var ProfileRecord|null $current */
-            $current = $currentRecords?->get($recordType?->id);
+            $current = $currentRecords?->get($recordTypeIds->get($key));
 
             if (!Profile::shouldUpdateRecord($current, $value, ProfileRecord::SOURCE_REQUESTER_IMPORT)) {
                 continue;

@@ -132,29 +132,38 @@ class Profile extends Model
             $profile = self::query()->lockForUpdate()->findOrFail($this->id);
             $created = new Collection();
 
-            $isRequesterImport = $source === ProfileRecord::SOURCE_REQUESTER_IMPORT;
+            if ($records === []) {
+                return $created;
+            }
+
+            $recordTypeIds = RecordType::query()->whereIn('key', array_keys($records))->pluck('id', 'key');
+
+            $recordsQuery = $profile->profile_records()->whereIn('record_type_id', $recordTypeIds->values());
+
+            if ($source === ProfileRecord::SOURCE_REQUESTER_IMPORT) {
+                $recordsQuery->whereNull('deleted_at');
+            }
+
+            $currentRecords = $recordsQuery->lockForUpdate()->get()->unique('record_type_id')->keyBy('record_type_id');
 
             foreach ($records as $recordKey => $recordValue) {
-                $recordType = RecordType::findByKey($recordKey);
-                $recordsQuery = $profile->profile_records()->where('record_type_id', $recordType?->id);
-
-                if ($isRequesterImport) {
-                    $recordsQuery->whereNull('deleted_at');
-                }
-
-                $currentRecord = $recordsQuery->lockForUpdate()->first();
+                $recordTypeId = $recordTypeIds->get($recordKey);
+                $currentRecord = $currentRecords->get($recordTypeId);
                 $recordValue = trim($recordValue ?? '');
 
                 if (!self::shouldUpdateRecord($currentRecord, $recordValue, $source)) {
                     continue;
                 }
 
-                $created->put($recordKey, $profile->profile_records()->create([
+                $record = $profile->profile_records()->create([
                     'value' => $recordValue,
                     'employee_id' => $employee?->id,
                     'source' => $source,
-                    'record_type_id' => $recordType?->id,
-                ]));
+                    'record_type_id' => $recordTypeId,
+                ]);
+
+                $created->put($recordKey, $record);
+                $currentRecords->put($recordTypeId, $record);
             }
 
             return $created;
