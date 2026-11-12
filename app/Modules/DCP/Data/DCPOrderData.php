@@ -60,7 +60,7 @@ readonly class DCPOrderData
         return new self(
             $address,
             new GelrepasCardData(
-                $tag['printedCardType'],
+                $tag['printedCardType'] ?? '',
                 $tag['printedFirstName'],
                 $tag['printedLastName'],
                 CarbonImmutable::createFromFormat('!d-m-Y', $tag['printedDateOfBirth']),
@@ -188,7 +188,7 @@ readonly class DCPOrderData
                 'printedCityCode', 'printedQrCode', 'printedCardNumber',
             ])],
             'orderRows.0.tagIds.0.key' => ['required', 'string'],
-            'orderRows.0.tagIds.0.printedCardType' => ['required', 'string', 'max:200'],
+            'orderRows.0.tagIds.0.printedCardType' => ['sometimes', 'string', 'max:200'],
             'orderRows.0.tagIds.0.printedFirstName' => ['required', 'string', 'max:200'],
             'orderRows.0.tagIds.0.printedLastName' => ['required', 'string', 'max:200'],
             'orderRows.0.tagIds.0.printedDateOfBirth' => ['required', 'date_format:d-m-Y'],

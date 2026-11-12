@@ -47,7 +47,7 @@ readonly class GelrepasCardData
     {
         return [
             'key' => $this->tagKey,
-            'printedCardType' => $this->printLabel,
+            ...($this->printLabel !== '' ? ['printedCardType' => $this->printLabel] : []),
             'printedFirstName' => $this->firstName,
             'printedLastName' => $this->lastName,
             'printedDateOfBirth' => $this->birthDate->format('d-m-Y'),

@@ -28,7 +28,7 @@ class VoucherPassRowsRule implements ValidationRule
             'type_names.*' => ['required', 'string', 'max:200'],
             'fund_ids' => ['present', 'array', 'list'],
             'fund_ids.*' => ['required', 'integer', 'min:1'],
-            'print_label' => ['required', 'string', 'max:200'],
+            'print_label' => ['present', 'nullable', 'string', 'max:200'],
             'state' => ['required', Rule::in([VoucherPass::STATE_ACTIVE, VoucherPass::STATE_DEACTIVATED])],
             'print_requested' => ['required', 'boolean'],
             'code' => ['missing'],
@@ -49,6 +49,10 @@ class VoucherPassRowsRule implements ValidationRule
                     $row[$key] = null;
                 }
             }
+        }
+
+        if (array_key_exists('print_label', $row) && $row['print_label'] === null) {
+            $row['print_label'] = '';
         }
 
         if (is_array($row['type_names'] ?? null)) {

@@ -22,7 +22,7 @@ return [
         ],
         'print_label' => [
             'column' => 'pas_label',
-            'required' => true,
+            'required' => false,
         ],
         'state' => [
             'column' => 'pas_status',

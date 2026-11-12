@@ -155,13 +155,16 @@ readonly class VoucherPassDCPService
 
         $data = $this->buildOrderData($pass, lock: !$preview);
         $attributes = $order ? $this->orders->changedDraftAttributes($order, $data) : $data->toAttributes();
-        $previousValues = $order ? Arr::dot($order->only(array_keys($data->toAttributes()))) : [];
+        $previousValues = $order ? Arr::dot($order->only(array_keys($attributes))) : [];
+        $values = Arr::dot($attributes);
         $changes = [];
 
-        foreach (Arr::dot($attributes) as $key => $value) {
+        foreach (array_unique([...array_keys($values), ...array_keys($previousValues)]) as $key) {
             if (in_array($key, ['order_rows.0.key', 'order_rows.0.item', 'order_rows.0.tagIds.0.key'], true)) {
                 continue;
             }
+
+            $value = $values[$key] ?? null;
 
             if (($previousValues[$key] ?? null) !== $value) {
                 $changes[] = new VoucherPassChange($key, $previousValues[$key] ?? null, $value);

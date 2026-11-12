@@ -28,8 +28,8 @@ readonly class VoucherPassChange implements JsonSerializable
             'previous_value' => $this->previousValue,
             'value' => $this->value,
             'action' => match (true) {
-                $this->previousValue === null || $this->previousValue === [] => 'add',
-                $this->value === null || $this->value === [] => 'clear',
+                in_array($this->previousValue, [null, '', []], true) => 'add',
+                in_array($this->value, [null, '', []], true) => 'clear',
                 default => 'update',
             },
         ];
