@@ -6,6 +6,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Permission;
 use App\Models\ProfileRecord;
+use App\Models\RecordType;
 use App\Models\RecordTypeOption;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
@@ -20,6 +21,7 @@ use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
 use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestRecords;
 use Throwable;
 
 class SponsorIdentityProfilesTest extends TestCase
@@ -31,6 +33,7 @@ class SponsorIdentityProfilesTest extends TestCase
     use MakesTestIdentityProviders;
     use MakesTestFunds;
     use MakesRequesterVoucherPayouts;
+    use MakesTestRecords;
 
     /**
      * Tests that a sponsor can list identities associated with their organization.
@@ -71,6 +74,7 @@ class SponsorIdentityProfilesTest extends TestCase
     public function testSponsorCanCreateNewIdentity(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $customType = $this->makeProfileRecordType();
 
         $payload = ['records' => [
             [
@@ -119,6 +123,8 @@ class SponsorIdentityProfilesTest extends TestCase
             ],
         ]];
 
+        $payload['records'][] = ['record_type_key' => $customType->key, 'value' => 'Custom value'];
+
         $organization->forceFill([
             'allow_profiles_create' => false,
         ])->save();
@@ -132,6 +138,7 @@ class SponsorIdentityProfilesTest extends TestCase
         $this->apiMakeIdentityRequest($organization->id, $payload, $organization->identity)
             ->assertSuccessful()
             ->assertJsonPath('data.profile.organization_id', $organization->id)
+            ->assertJsonPath('data.records.' . $customType->key . '.0.value', 'Custom value')
             ->assertJsonPath('data.records.given_name.0.value', 'Alice')
             ->assertJsonPath('data.records.family_name.0.value', 'Doe');
     }
@@ -202,6 +209,8 @@ class SponsorIdentityProfilesTest extends TestCase
     public function testSponsorCanUpdateIdentity(): void
     {
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $customType = $this->makeProfileRecordType($organization);
+        $untouchedType = $this->makeProfileRecordType($organization);
         $fund = $this->makeTestFund($organization);
 
         $identity1 = $this->makeIdentity();
@@ -215,22 +224,150 @@ class SponsorIdentityProfilesTest extends TestCase
             ['record_type_key' => 'given_name', 'value' => 'Updated'],
             ['record_type_key' => 'family_name', 'value' => 'Person'],
             ['record_type_key' => 'city', 'value' => 'Teststad'],
+            ['record_type_key' => $customType->key, 'value' => 'Custom update'],
         ]];
 
         /**
          * @var Identity $identity
          */
         foreach ([$identity1, $identity2, $identity3] as $identity) {
+            $profile = $organization->findOrMakeProfile($identity);
+            $untouched = $this->makeProfileRecord($profile, $untouchedType, 'Keep this');
+
             $this->apiUpdateIdentityRequest($organization->id, $identity->id, $payload, $organization->identity)
                 ->assertSuccessful()
-                ->assertJsonCount(3, 'data.records')
+                ->assertJsonCount(5, 'data.records')
                 ->assertJsonPath('data.profile.id', $identity->profiles[0]->id)
                 ->assertJsonPath('data.profile.identity_id', $identity->id)
                 ->assertJsonPath('data.profile.organization_id', $organization->id)
                 ->assertJsonPath('data.records.given_name.0.value', 'Updated')
                 ->assertJsonPath('data.records.family_name.0.value', 'Person')
-                ->assertJsonPath('data.records.city.0.value', 'Teststad');
+                ->assertJsonPath('data.records.city.0.value', 'Teststad')
+                ->assertJsonPath('data.records.' . $customType->key . '.0.value', 'Custom update')
+                ->assertJsonPath('data.records.' . $untouchedType->key . '.0.value', 'Keep this');
+
+            $this->assertSame(
+                [$untouched->id],
+                $profile->profile_records()->where('record_type_id', $untouchedType->id)->pluck('id')->all(),
+            );
         }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRejectsProfileRecordsOutsideTheEditableCatalog(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $other = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $type = $this->makeProfileRecordType($organization);
+        $this->makeProfileRecord($profile, $type, 'Keep this');
+        $disabled = $this->makeProfileRecordType($organization, ['profile_records' => false]);
+        $foreign = $this->makeProfileRecordType($other);
+        $before = $profile->profile_records()->get()->toArray();
+
+        foreach ([$disabled->key, $foreign->key, RecordType::KEY_BSN] as $key) {
+            $this
+                ->apiUpdateIdentityRequest($organization->id, $identity->id, ['records' => [
+                    ['record_type_key' => $type->key, 'value' => 'Must not save'],
+                    ['record_type_key' => $key, 'value' => '123456782'],
+                ]], $organization->identity)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('records.1.record_type_key');
+        }
+
+        $this->assertSame($before, $profile->profile_records()->get()->toArray());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRejectsDuplicateProfileRecordKeysAndInvalidValues(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $type = $this->makeProfileRecordType($organization);
+        $number = $this->makeProfileRecordType($organization, ['type' => RecordType::TYPE_NUMBER]);
+        $this->makeProfileRecord($profile, $type, 'Keep this');
+        $before = $profile->profile_records()->get()->toArray();
+
+        foreach ([
+            [['record_type_key' => $type->key, 'value' => 'Duplicate'], 'records.1.record_type_key'],
+            [['record_type_key' => $number->key, 'value' => 'not numeric'], 'records.1.value'],
+        ] as [$invalid, $error]) {
+            $this
+                ->apiUpdateIdentityRequest($organization->id, $identity->id, [
+                    'records' => [['record_type_key' => $type->key, 'value' => 'Must not save'], $invalid],
+                ], $organization->identity)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors($error);
+        }
+
+        $this->assertSame($before, $profile->profile_records()->get()->toArray());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdatesLiteralDottedRecordKey(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $type = $this->makeProfileRecordType($organization, ['key' => 'c05.field.' . $organization->id]);
+
+        $response = $this->apiUpdateIdentityRequest(
+            $organization->id,
+            $identity->id,
+            ['records' => [['record_type_key' => $type->key, 'value' => 'Literal value']]],
+            $organization->identity,
+        )->assertOk();
+
+        $this->assertSame('Literal value', $response->json('data.records')[$type->key][0]['value']);
+
+        $this->assertDatabaseHas('profile_records', [
+            'profile_id' => $response->json('data.profile.id'), 'record_type_id' => $type->id, 'value' => 'Literal value',
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testClearsSubmittedProfileValueAndPreservesOmittedValues(): void
+    {
+        $this->freezeTime();
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $clearType = $this->makeProfileRecordType($organization);
+        $keepType = $this->makeProfileRecordType($organization);
+        $old = $this->makeProfileRecord($profile, $clearType, 'Old value');
+        $kept = $this->makeProfileRecord($profile, $keepType, 'Keep this');
+        $this->travel(1)->seconds();
+
+        $this
+            ->apiUpdateIdentityRequest($organization->id, $identity->id, ['records' => [
+                ['record_type_key' => $clearType->key, 'value' => null],
+            ]], $organization->identity)
+            ->assertOk()
+            ->assertJsonPath('data.records.' . $clearType->key . '.0.value', '')
+            ->assertJsonPath('data.records.' . $keepType->key . '.0.value', 'Keep this');
+
+        $records = $profile->profile_records()->where('record_type_id', $clearType->id)->get();
+
+        $this->assertSame(['', 'Old value'], $records->pluck('value')->all());
+        $this->assertSame($old->id, $records->last()->id);
+
+        $this->assertSame(
+            [$kept->id],
+            $profile->profile_records()->where('record_type_id', $keepType->id)->pluck('id')->all(),
+        );
     }
 
     /**

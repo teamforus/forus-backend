@@ -52,6 +52,40 @@ trait MakesApiRequests
      * @param Identity|bool $identity
      * @return TestResponse
      */
+    public function apiGetRequesterImportSyncIdsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/sync/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|bool $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiSyncRequesterImportRowsRequest(
+        Organization $organization,
+        array $data,
+        Identity|bool $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/sync" .
+            ($preview ? '/preview' : ''),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
     public function apiGetRequesterImportConfigurationRequest(
         Organization $organization,
         Identity|bool $identity,
@@ -176,6 +210,31 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Identity $identity
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiUpdateProfileRequest(Identity $identity, array $data, array $headers = []): TestResponse
+    {
+        return $this->patchJson('/api/v1/platform/profile', $data, $this->makeApiHeaders($identity, $headers));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $filters
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiGetRecordTypesRequest(Identity $identity, array $filters, array $headers = []): TestResponse
+    {
+        return $this->getJson(
+            '/api/v1/identity/record-types?' . http_build_query($filters),
+            $this->makeApiHeaders($identity, $headers),
+        );
+    }
+
+    /**
      * @param array $data
      * @param Identity|IdentityProxy $identity
      * @return TestResponse
@@ -183,6 +242,24 @@ trait MakesApiRequests
     public function apiMakeOrganizationRequest(array $data, Identity|IdentityProxy $identity): TestResponse
     {
         return $this->postJson('/api/v1/platform/organizations', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiUpdateOrganizationReservationFieldsRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/update-reservation-fields",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
