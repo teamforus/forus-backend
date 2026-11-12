@@ -26,6 +26,7 @@ use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Modules\RequesterImport\Models\RequesterImportRow;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\FileService\Models\File;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
@@ -45,6 +46,75 @@ trait MakesApiRequests
     use DoesTesting;
     use MakesTestProducts;
     use TestsReservations;
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetRequesterImportConfigurationRequest(
+        Organization $organization,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/configs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetRequesterImportRowsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $rows
+     * @param Identity|bool $identity
+     * @param bool $validate
+     * @return TestResponse
+     */
+    public function apiStoreRequesterImportRowsRequest(
+        Organization $organization,
+        array $rows,
+        Identity|bool $identity,
+        bool $validate = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/batch" .
+            ($validate ? '/validate' : ''),
+            ['rows' => $rows],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param RequesterImportRow $row
+     * @param array $data
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiUpdateRequesterImportRowRequest(
+        Organization $organization,
+        RequesterImportRow $row,
+        array $data,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/$row->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
 
     /**
      * @param Identity|IdentityProxy $identity
