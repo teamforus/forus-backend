@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
+use App\Models\Profile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -58,21 +59,6 @@ class IdentityQuery
      * @param string $bsn
      * @return Builder|Relation|Identity
      */
-    public static function whereBsn(
-        Builder|Relation|Identity $builder,
-        string $bsn,
-    ): Builder|Relation|Identity {
-        return $builder->whereHas('records', function (Builder $builder) use ($bsn) {
-            $builder->where('value', '=', $bsn);
-            $builder->whereRelation('record_type', 'record_types.key', '=', 'bsn');
-        });
-    }
-
-    /**
-     * @param Builder|Relation|Identity $builder
-     * @param string $bsn
-     * @return Builder|Relation|Identity
-     */
     public static function whereBsnLike(
         Builder|Relation|Identity $builder,
         string $bsn,
@@ -94,7 +80,7 @@ class IdentityQuery
         array|int $organizationId,
         array|int $fundId = null,
     ): Builder|Relation|Identity {
-        return $builder->where(function (Builder $builder) use ($organizationId, $fundId) {
+        return $builder->where(function (Builder|Relation|Identity $builder) use ($organizationId, $fundId) {
             $builder->whereHas('vouchers.fund', function (Builder $builder) use ($organizationId, $fundId) {
                 $builder->whereIn('organization_id', (array) $organizationId);
 
@@ -122,10 +108,15 @@ class IdentityQuery
                     fn (Builder $builder) => $builder->whereIn('organization_id', (array) $organizationId),
                 );
 
-                $builder->orWhereHas('profiles', fn (Builder $query) => $query
+                $builder->orWhereHas('profiles', fn (Builder|Profile $query) => $query
                     ->whereIn('organization_id', (array) $organizationId)
                     ->whereHas('identity.identity_provider_managed_membership.connection', fn (Builder $query) => $query
                         ->whereColumn('identity_provider_connections.organization_id', 'profiles.organization_id')));
+
+                $builder->orWhereHas('profiles', fn (Builder|Profile $query) => $query
+                    ->whereIn('organization_id', (array) $organizationId)
+                    ->whereHas('requester_import_rows', fn (Builder $query) => $query
+                        ->whereColumn('requester_import_rows.organization_id', 'profiles.organization_id')));
             }
         });
     }

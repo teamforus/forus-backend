@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RecordValidationKey;
 use App\Models\Traits\Translations\RecordTranslationsTrait;
 use App\Services\TranslationService\Traits\HasTranslationCaches;
 use Astrotomic\Translatable\Translatable;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * App\Models\RecordType.
@@ -23,6 +25,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $criteria
  * @property bool $vouchers
  * @property bool $pre_check
+ * @property bool $requester_imports
+ * @property bool $profile_records
+ * @property int|null $profile_record_group_id
+ * @property int $profile_sort_order
+ * @property-read ProfileRecordGroup|null $profile_record_group
+ * @property bool $profile_requester_editable
+ * @property RecordValidationKey|null $validation_key
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundCriterion[] $fund_criteria
@@ -68,6 +77,8 @@ class RecordType extends Model
     use Translatable;
     use RecordTranslationsTrait;
     use HasTranslationCaches;
+
+    public const string KEY_BSN = 'bsn';
 
     public const string TYPE_BOOL = 'bool';
     public const string TYPE_IBAN = 'iban';
@@ -117,6 +128,8 @@ class RecordType extends Model
      */
     protected $fillable = [
         'key', 'type', 'system', 'criteria', 'vouchers', 'organization_id', 'control_type', 'pre_check',
+        'requester_imports', 'profile_records', 'profile_requester_editable', 'validation_key',
+        'profile_record_group_id', 'profile_sort_order',
     ];
 
     protected $perPage = 100;
@@ -126,6 +139,11 @@ class RecordType extends Model
         'criteria' => 'bool',
         'vouchers' => 'bool',
         'pre_check' => 'bool',
+        'requester_imports' => 'bool',
+        'profile_records' => 'bool',
+        'profile_sort_order' => 'integer',
+        'profile_requester_editable' => 'bool',
+        'validation_key' => RecordValidationKey::class,
     ];
 
     /**
@@ -156,6 +174,57 @@ class RecordType extends Model
     }
 
     /**
+     * An organization filter includes global definitions. Null flags leave availability unrestricted.
+     *
+     * @param int|null $organizationId
+     * @param bool|null $profileRecords
+     * @param bool|null $requesterImports
+     * @param bool|null $requesterEditable
+     * @param string[]|null $includeKeys Null includes all keys, an empty array includes none.
+     * @param string[] $excludeKeys
+     * @return SupportCollection<string, RecordType>
+     */
+    public static function searchRecordTypes(
+        ?int $organizationId = null,
+        ?bool $profileRecords = null,
+        ?bool $requesterImports = null,
+        ?bool $requesterEditable = null,
+        ?array $includeKeys = null,
+        array $excludeKeys = [],
+    ): SupportCollection {
+        $query = static::query()->with(['translations', 'record_type_options.translations']);
+
+        if ($organizationId !== null) {
+            $query->where(function (Builder $query) use ($organizationId) {
+                $query->whereNull('organization_id');
+                $query->orWhere('organization_id', $organizationId);
+            });
+        }
+
+        if ($profileRecords !== null) {
+            $query->where('profile_records', $profileRecords);
+        }
+
+        if ($requesterImports !== null) {
+            $query->where('requester_imports', $requesterImports);
+
+            if ($requesterImports) {
+                $query->where('key', '!=', self::KEY_BSN);
+            }
+        }
+
+        if ($requesterEditable !== null) {
+            $query->where('profile_requester_editable', $requesterEditable);
+        }
+
+        if ($includeKeys !== null) {
+            $query->whereIn('key', $includeKeys);
+        }
+
+        return $query->whereNotIn('key', $excludeKeys)->get()->keyBy('key');
+    }
+
+    /**
      * @return BelongsTo
      * @noinspection PhpUnused
      */
@@ -165,12 +234,28 @@ class RecordType extends Model
     }
 
     /**
+     * @return BelongsTo
+     */
+    public function profile_record_group(): BelongsTo
+    {
+        return $this->belongsTo(ProfileRecordGroup::class);
+    }
+
+    /**
      * @return HasMany
      * @noinspection PhpUnused
      */
     public function record_type_options(): HasMany
     {
         return $this->hasMany(RecordTypeOption::class);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeDate(): bool
+    {
+        return $this->type === self::TYPE_DATE;
     }
 
     /**

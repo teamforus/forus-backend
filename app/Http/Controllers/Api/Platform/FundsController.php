@@ -12,6 +12,7 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
@@ -19,7 +20,6 @@ use App\Scopes\Builders\ImplementationQuery;
 use App\Searches\FundSearch;
 use App\Services\IConnectApiService\IConnectPrefill;
 use Exception;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
@@ -68,6 +68,7 @@ class FundsController extends Controller
 
     /**
      * @param RedeemFundsRequest $request
+     * @throws Throwable
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
@@ -100,27 +101,31 @@ class FundsController extends Controller
      *
      * @param BaseFormRequest $request
      * @param Fund $fund
-     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
+     * @throws Throwable
      * @return VoucherResource|null
      */
     public function apply(BaseFormRequest $request, Fund $fund): ?VoucherResource
     {
-        $this->authorize('apply', [$fund, 'apply']);
+        $voucher = $request->identity()->transactionWithFundAwardLock(function (
+            Identity $identity,
+        ) use ($fund): ?Voucher {
+            Gate::forUser($identity)->authorize('apply', [$fund, 'apply']);
 
-        if ($error = $fund->getResolvingError()) {
-            $fund->logError('[invalid_iban_record_keys]', ['action' => 'fund_apply']);
-            throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
-        }
+            if ($error = $fund->getResolvingError()) {
+                $fund->logError('[invalid_iban_record_keys]', ['action' => 'fund_apply']);
+                throw new Exception(App::hasDebugModeEnabled() ? $error : 'Niet beschikbaar.', 403);
+            }
 
-        $voucher = $fund->makeVoucher(identity: $request->identity());
-        $multipleVouchers = $fund->makeFundFormulaMultipleVouchers($request->identity());
-        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->identity());
+            $voucher = $fund->makeVoucher(identity: $identity);
+            $multipleVouchers = $fund->makeFundFormulaMultipleVouchers($identity);
+            $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($identity);
 
-        $additionalVouchers = [...$formulaProductVouchers, ...$multipleVouchers];
+            $additionalVouchers = [...$formulaProductVouchers, ...$multipleVouchers];
 
-        $voucher = $voucher ?: Arr::first($additionalVouchers) ?: $fund->vouchers()->where([
-            'identity_id' => $request->auth_id(),
-        ])->first();
+            return $voucher ?: Arr::first($additionalVouchers) ?: $fund->vouchers()->where([
+                'identity_id' => $identity->id,
+            ])->first();
+        });
 
         return $voucher ? VoucherResource::create($voucher) : null;
     }
@@ -130,7 +135,7 @@ class FundsController extends Controller
      *
      * @param CheckFundRequest $request
      * @param Fund $fund
-     * @throws AuthorizationException
+     * @throws Throwable
      * @return JsonResponse
      */
     public function check(CheckFundRequest $request, Fund $fund): JsonResponse

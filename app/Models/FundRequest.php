@@ -7,9 +7,11 @@ use App\Events\FundRequests\FundRequestPhysicalCardRequestEvent;
 use App\Events\FundRequests\FundRequestResigned;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Helpers\Validation;
+use App\Models\Data\FundRequestProfileRecordPreview;
 use App\Models\Traits\ApprovesMissedRecords;
 use App\Models\Traits\HasNotes;
 use App\Rules\Base\IbanRule;
+use App\Rules\ProfileRecordValueRule;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Constants\DiffOptions;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +21,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -289,22 +296,74 @@ class FundRequest extends Model
     }
 
     /**
+     * @param Employee|null $employee
+     * @param array $attributes
+     * @param string|null $note
+     * @param bool $copyToProfile
+     * @throws Throwable
      * @return FundRequest
      */
-    public function approve(): self
-    {
-        $this->update([
-            'state' => FundRequest::STATE_APPROVED,
-            'resolved_at' => now(),
-        ]);
+    public function approve(
+        ?Employee $employee = null,
+        array $attributes = [],
+        ?string $note = null,
+        bool $copyToProfile = false,
+    ): self {
+        return $this->identity->transactionWithFundAwardLock(function (Identity $identity) use (
+            $employee,
+            $attributes,
+            $note,
+            $copyToProfile,
+        ): self {
+            $locked = self::query()->lockForUpdate()->findOrFail($this->id);
 
-        $this->records()->get()->each(function (FundRequestRecord $record) {
-            $record->makeValidation();
+            $this->setRawAttributes($locked->getAttributes(), true);
+            $this->setRelations(['identity' => $identity]);
+
+            $records = $this->records()->orderBy('id')->lockForUpdate()->get();
+            $this->setRelation('records', $records);
+
+            if ($employee || $copyToProfile) {
+                Gate::forUser($employee?->identity)->authorize(
+                    $copyToProfile ? 'copyToProfileAsValidator' : 'approveAsValidator',
+                    [$this, $this->fund->organization],
+                );
+            }
+
+            if (!$this->isPending()) {
+                return $this;
+            }
+
+            if ($copyToProfile) {
+                $prepared = $this->prepareProfileRecords($records, $this->profileRecordTypesForCopy($records));
+                $values = array_map(fn (array $record): string => $record['value'], $prepared);
+                $profile = $this->fund->organization->findOrMakeProfile($identity);
+
+                foreach ($profile->updateRecords($values, $employee) as $key => $profileRecord) {
+                    $profileRecord->origin()->associate($prepared[$key]['record'])->save();
+                }
+            }
+
+            $this->forceFill([
+                ...Arr::only($attributes, [
+                    'amount', 'fund_amount_preset_id',
+                ]),
+                'state' => FundRequest::STATE_APPROVED,
+                'resolved_at' => now(),
+            ])->save();
+
+            $records->each(function (FundRequestRecord $record) {
+                $record->makeValidation();
+            });
+
+            FundRequestResolved::dispatch($this);
+
+            if ($note) {
+                $this->addNote($note, $employee);
+            }
+
+            return $this;
         });
-
-        FundRequestResolved::dispatch($this);
-
-        return $this;
     }
 
     /**
@@ -434,30 +493,36 @@ class FundRequest extends Model
         $totalAmount = 0;
         $values = $this->getTrustedAndPendingRecordValues();
 
-        $products = $this->fund->fund_formula_products->sortByDesc('product_id')->map(fn ($formula) => [
-            'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
-            'type' => $formula->record_type_key_multiplier ? 'Multiply' : 'Vastgesteld',
-            'value' => $formula->product->name,
-            'count' => $formula->record_type_key_multiplier ? Arr::get($values, $formula->record_type_key_multiplier) : 1,
-            'total' => $formula->product->name,
-        ]);
+        $products = $this->fund
+            ->matchingProductFormulas($values)
+            ->sortByDesc('product_id')
+            ->values()
+            ->map(fn ($formula) => [
+                'record' => $formula->record_type ? $formula->record_type->name : 'Product tegoed',
+                'type' => $formula->record_type_key_multiplier ? 'Multiply' : 'Vastgesteld',
+                'value' => $formula->product->name,
+                'count' => $formula->record_type_key_multiplier ? Arr::get($values, $formula->record_type_key_multiplier) : 1,
+                'total' => $formula->product->name,
+            ]);
 
-        $formula = $this->fund->fund_formulas->map(function (FundFormula $formula) use ($values, &$totalAmount) {
-            $count = $formula->type === FundFormula::TYPE_MULTIPLY_VOUCHERS
-                ? $this->fund->getFormulaMultipleVouchersCount($formula, $this->identity, $values)
-                : ($formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1);
+        $formula = $this->fund->matchingBudgetFormulas($values)
+            ->map(function (FundFormula $formula) use ($values, &$totalAmount) {
+                $isMultiplyVouchers = $formula->type === FundFormula::TYPE_MULTIPLY_VOUCHERS;
+                $count = $isMultiplyVouchers
+                    ? $this->fund->getFormulaMultipleVouchersCount($formula, $this->identity, $values)
+                    : ($formula->record_type_key ? (float) Arr::get($values, $formula->record_type_key) : 1);
 
-            $total = (float) $formula->amount * $count;
-            $totalAmount += $total;
+                $total = $isMultiplyVouchers ? $formula->amount * $count : $formula->calculateAmount($values);
+                $totalAmount += $total;
 
-            return [
-                'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
-                'type' => $formula->type_locale,
-                'value' => $formula->amount_locale,
-                'count' => $count,
-                'total' => currency_format_locale($total),
-            ];
-        });
+                return [
+                    'record' => $formula->record_type ? $formula->record_type->name : 'Vastbedrag',
+                    'type' => $formula->type_locale,
+                    'value' => $formula->amount_locale,
+                    'count' => $count,
+                    'total' => currency_format_locale($total),
+                ];
+            });
 
         return [
             'total_products' => $products->sum('count'),
@@ -605,16 +670,135 @@ class FundRequest extends Model
     }
 
     /**
+     * @throws ValidationException
+     * @return array{profile_id: int|null, records: array<int, FundRequestProfileRecordPreview>}
+     */
+    public function profileCopyPreview(): array
+    {
+        $records = $this->records()->orderBy('id')->get();
+        $recordTypes = $this->profileRecordTypesForCopy($records);
+        $prepared = $this->prepareProfileRecords($records, $recordTypes);
+        $profile = $this->identity->profiles()->where('organization_id', $this->fund->organization_id)->first();
+
+        $currentRecords = $profile?->profile_records()
+            ->whereIn('record_type_id', $recordTypes->pluck('id'))
+            ->get()
+            ->unique('record_type_id')
+            ->keyBy('record_type_id');
+
+        $preview = [];
+
+        foreach ($records->unique('record_type_key') as $record) {
+            $key = $record->record_type_key;
+            $recordType = $recordTypes->get($key);
+
+            if (!$recordType) {
+                continue;
+            }
+
+            /** @var ProfileRecord|null $current */
+            $current = $currentRecords?->get($recordType->id);
+            $value = $prepared[$key]['value'] ?? null;
+
+            $preview[] = new FundRequestProfileRecordPreview(
+                recordTypeKey: $key,
+                recordTypeName: $recordType->name ?: $key,
+                currentValue: $current?->value,
+                applicationValue: $value,
+                action: match (true) {
+                    $value === null => 'not_copied',
+                    !Profile::shouldUpdateRecord($current, $value, null) => 'unchanged',
+                    $current === null => 'add',
+                    default => 'update',
+                },
+            );
+        }
+
+        return ['profile_id' => $profile?->id, 'records' => $preview];
+    }
+
+    /**
+     * @param Collection<int, FundRequestRecord> $records
+     * @return SupportCollection<string, RecordType>
+     */
+    private function profileRecordTypesForCopy(Collection $records): SupportCollection
+    {
+        return RecordType::searchRecordTypes(
+            organizationId: $this->fund->organization_id,
+            profileRecords: true,
+            includeKeys: $records->pluck('record_type_key')->unique()->all(),
+            excludeKeys: [RecordType::KEY_BSN],
+        );
+    }
+
+    /**
+     * @param Collection<int, FundRequestRecord> $records
+     * @param SupportCollection<string, RecordType> $recordTypes
+     * @throws ValidationException
+     * @return array<string, array{value: string, record: FundRequestRecord}>
+     */
+    private function prepareProfileRecords(Collection $records, SupportCollection $recordTypes): array
+    {
+        $prepared = [];
+        $errors = [];
+
+        foreach ($records as $record) {
+            $key = $record->record_type_key;
+            $recordType = $recordTypes->get($key);
+            $value = trim($record->value ?? '');
+
+            if (!$recordType || $value === '') {
+                continue;
+            }
+
+            if ($recordType->type === RecordType::TYPE_DATE) {
+                $validator = Validator::make(['value' => $value], [
+                    'value' => 'date_format:d-m-Y',
+                ], attributes: ['value' => $recordType->name ?: $key]);
+
+                if ($validator->fails()) {
+                    $errors['records.' . $key] = $validator->errors()->all();
+
+                    continue;
+                }
+
+                $value = Carbon::createFromFormat('!d-m-Y', $value)->format('Y-m-d');
+            }
+
+            (new ProfileRecordValueRule($recordType))->validate(
+                $key,
+                $value,
+                function (string $message) use (&$errors, $key): void {
+                    $errors['records.' . $key][] = $message;
+                },
+            );
+
+            if (array_key_exists($key, $prepared)) {
+                if ($prepared[$key]['value'] !== $value) {
+                    $errors['records.' . $key][] = trans('fund_request.profile_record_value_conflict', [
+                        'key' => $recordType->name ?: $key,
+                    ]);
+                }
+
+                continue;
+            }
+
+            $prepared[$key] = ['value' => $value, 'record' => $record];
+        }
+
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $prepared;
+    }
+
+    /**
      * @return array
      */
     private function getTrustedAndPendingRecordValues(): array
     {
-        $recordTypes = array_unique([
-            ...$this->fund->fund_formula_products->pluck('record_type_key_multiplier')->filter(),
-            ...$this->fund->fund_formulas->pluck('record_type_key')->filter(),
-        ]);
-
-        $trustedValues = $this->fund->getTrustedRecordOfTypes($this->identity, $recordTypes);
+        $trustedValues = $this->fund->formulaTrustedRecordValues($this->identity);
 
         return  [
             ...$trustedValues,

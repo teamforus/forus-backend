@@ -9,6 +9,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use Carbon\Carbon;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\ExportTrait;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -94,7 +95,7 @@ class ProviderFinancesExportTest extends DuskTestCase
                     'organization_id' => $voucher->product->organization_id,
                 ];
 
-                $voucher->makeTransaction($params)->setPaid(null, now());
+                $voucher->makeTransaction($params)->setPaid(null, Carbon::now());
             });
 
         $providerOrganization = $fund->vouchers()->first()->product->organization;

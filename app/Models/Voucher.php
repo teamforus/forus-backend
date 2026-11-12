@@ -26,6 +26,7 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -1342,7 +1343,7 @@ class Voucher extends Model
 
         /** @var VoucherRelation $voucher_relation */
         return $this->voucher_relation()->create([
-            'bsn' => $bsn,
+            'bsn' => resolve(IdentityBsnService::class)->normalizeBsn($bsn),
             'report_type' => $reportType,
         ]);
     }

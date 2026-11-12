@@ -58,9 +58,29 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Funds created!');
         $testData->separator();
 
+        $testData->info('⇾ Making voucher pass types!');
+        $testData->makeVoucherPassTypes($sponsors);
+        $testData->success('✓ Voucher pass types created!');
+        $testData->separator();
+
+        $testData->info('⇾ Making DCP connections!');
+        $testData->makeDCPConnections($sponsors);
+        $testData->success('✓ DCP connections created!');
+        $testData->separator();
+
         $testData->info('⇾ Making providers!');
         $testData->makeProviders($baseIdentity->address);
         $testData->success('✓ Providers created!');
+        $testData->separator();
+
+        $testData->info('⇾ Making budget formulas!');
+        $testData->makeFundFormulas();
+        $testData->success('✓ Budget formulas created!');
+        $testData->separator();
+
+        $testData->info('⇾ Making product formulas!');
+        $testData->makeFundFormulaProducts();
+        $testData->success('✓ Product formulas created!');
         $testData->separator();
 
         $testData->info('⇾ Making reservations!');
