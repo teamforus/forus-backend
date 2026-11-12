@@ -120,6 +120,7 @@ class OrganizationResource extends BaseJsonResource
     {
         return $request->identity() && $organization->isEmployee($request->identity(), false) ? [
             'has_bank_connection' => !empty($organization->bank_connection_active),
+            'has_dcp' => $organization->dcp_connection_id !== null,
             'implementations' => $organization->implementations->map(fn ($implementation) => $implementation->only([
                 'id', 'name',
             ])),

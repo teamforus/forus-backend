@@ -4,6 +4,7 @@ namespace App\Modules\VoucherPass\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Modules\DCP\Models\DCPOrder;
 use App\Modules\VoucherPass\Http\Requests\VoucherPasses\IndexVoucherPassesRequest;
 use App\Modules\VoucherPass\Http\Requests\VoucherPasses\StoreBatchVoucherPassesRequest;
 use App\Modules\VoucherPass\Http\Requests\VoucherPasses\UpdateVoucherPassRequest;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -34,7 +36,9 @@ class VoucherPassesController extends Controller
             'q', 'state', 'print_requested',
         ]), $organization->voucher_passes());
 
-        return VoucherPassResource::queryCollection($search->query(), $request);
+        return VoucherPassResource::queryCollection($search->query(), $request)->additional([
+            'meta' => ['can_prepare_dcp' => Gate::allows('create', [DCPOrder::class, $organization])],
+        ]);
     }
 
     /**

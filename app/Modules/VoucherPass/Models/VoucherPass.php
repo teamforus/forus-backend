@@ -7,10 +7,13 @@ use App\Models\Fund;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Traits\HasDbTokens;
+use App\Modules\DCP\Contracts\DCPOrderable;
+use App\Modules\DCP\Models\DCPOrder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Random\RandomException;
 
@@ -34,7 +37,7 @@ use Random\RandomException;
  * @property-read Collection<int, VoucherPassType> $types
  * @property-read Collection<int, Fund> $explicit_funds
  */
-class VoucherPass extends Model
+class VoucherPass extends Model implements DCPOrderable
 {
     use HasDbTokens;
 
@@ -58,7 +61,7 @@ class VoucherPass extends Model
     {
         return strtoupper(static::makeUniqueTokenCallback(function (string $value): bool {
             return static::query()->where('code', strtoupper($value))->doesntExist();
-        }, 4, 3));
+        }, 4, 4));
     }
 
     /**
@@ -112,6 +115,38 @@ class VoucherPass extends Model
     public function explicit_funds(): BelongsToMany
     {
         return $this->belongsToMany(Fund::class, 'voucher_pass_funds', 'voucher_pass_id', 'fund_id');
+    }
+
+    /**
+     * @return MorphMany
+     */
+    public function dcp_orders(): MorphMany
+    {
+        return $this->morphMany(DCPOrder::class, 'orderable');
+    }
+
+    /**
+     * @return int
+     */
+    public function dcpOrganizationId(): int
+    {
+        return $this->organization_id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function dcpPrintRequested(): bool
+    {
+        return $this->print_requested;
+    }
+
+    /**
+     * @return string
+     */
+    public function dcpPrintCode(): string
+    {
+        return $this->code;
     }
 
     /**

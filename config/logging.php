@@ -116,6 +116,12 @@ return [
             'level' => 'warning',
         ],
 
+        'dcp' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/dcp.log'),
+            'level' => 'warning',
+        ],
+
         'mollie' => [
             'driver' => 'single',
             'path' => storage_path('logs/mollie-service.log'),

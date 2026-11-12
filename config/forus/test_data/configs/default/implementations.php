@@ -329,6 +329,15 @@ return [
         ],
     ],
     'Gelrepas' => [
+        'dcp_connection' => [
+            'environment' => 'sandbox',
+            'enabled' => false,
+            'username' => null,
+            'password' => null,
+            'organizations' => [
+                'Arnhem', 'Brummen', 'Duiven', 'Renkum', 'Rheden', 'Rozendaal', 'Westervoort', 'Zevenaar',
+            ],
+        ],
         'implementation' => [
             'key' => 'gelrepas',
             'title' => 'Gelrepas',

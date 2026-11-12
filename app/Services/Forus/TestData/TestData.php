@@ -36,6 +36,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
 use App\Models\VoucherTransaction;
+use App\Modules\DCP\Models\DCPConnection;
 use App\Rules\BsnRule;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -186,6 +187,48 @@ class TestData
 
                 $type = $organization->voucher_pass_types()->firstOrCreate(['name' => $name]);
                 $type->funds()->sync($fundIds);
+            }
+        }
+    }
+
+    /**
+     * @param Organization[] $sponsors
+     * @return void
+     */
+    public function makeDCPConnections(array $sponsors): void
+    {
+        $sponsorsByName = collect($sponsors)->keyBy('name');
+
+        foreach ($this->config('implementations', []) as $name => $configuration) {
+            $configuration = $configuration['dcp_connection'] ?? null;
+
+            if ($configuration === null) {
+                continue;
+            }
+
+            $implementation = Implementation::where('name', $name)->first();
+
+            if ($implementation === null) {
+                continue;
+            }
+
+            $connection = DCPConnection::query()->firstOrCreate([
+                'implementation_id' => $implementation->id,
+                'environment' => $configuration['environment'],
+            ], [
+                'enabled' => $configuration['enabled'],
+                'username' => $configuration['username'] ?? null,
+                'password' => $configuration['password'] ?? null,
+            ]);
+
+            foreach ($configuration['organizations'] as $organizationName) {
+                /** @var Organization|null $organization */
+                $organization = $sponsorsByName->get($organizationName);
+
+                if ($organization !== null) {
+                    $organization->dcp_connection()->associate($connection);
+                    $organization->save();
+                }
             }
         }
     }

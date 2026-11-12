@@ -1,6 +1,9 @@
 <?php
 
+use App\Modules\DCP\Http\Controllers\DCPOrderBulksController;
+use App\Modules\DCP\Http\Controllers\DCPOrdersController;
 use App\Modules\RequesterImport\Http\Controllers\RequesterImportRowsController;
+use App\Modules\VoucherPass\Http\Controllers\VoucherPassDCPController;
 use App\Modules\VoucherPass\Http\Controllers\VoucherPassesController;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Env;
@@ -1040,8 +1043,63 @@ $router->group(['middleware' => 'api.auth'], static function () use ($router) {
     )->only('store', 'index', 'show', 'update');
 
     $router->get(
+        'organizations/{organization}/sponsor/dcp-orders',
+        [DCPOrdersController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-orders/{dcpOrder}',
+        [DCPOrdersController::class, 'show'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-orders/{dcpOrder}/logs',
+        [DCPOrdersController::class, 'logs'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks',
+        [DCPOrderBulksController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/ready-count',
+        [DCPOrderBulksController::class, 'readyCount'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/dcp-order-bulks',
+        [DCPOrderBulksController::class, 'store'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/{dcpOrderBulk}',
+        [DCPOrderBulksController::class, 'show'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/dcp-order-bulks/{dcpOrderBulk}/logs',
+        [DCPOrderBulksController::class, 'logs'],
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/voucher-passes',
         [VoucherPassesController::class, 'index'],
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/ids',
+        [VoucherPassDCPController::class, 'ids'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/preview',
+        [VoucherPassDCPController::class, 'preview'],
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/voucher-passes/dcp/sync',
+        [VoucherPassDCPController::class, 'sync'],
     );
 
     $router->get(

@@ -63,6 +63,11 @@ class TestDataSeedCommand extends BaseCommand
         $testData->success('✓ Voucher pass types created!');
         $testData->separator();
 
+        $testData->info('⇾ Making DCP connections!');
+        $testData->makeDCPConnections($sponsors);
+        $testData->success('✓ DCP connections created!');
+        $testData->separator();
+
         $testData->info('⇾ Making providers!');
         $testData->makeProviders($baseIdentity->address);
         $testData->success('✓ Providers created!');

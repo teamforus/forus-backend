@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
 use App\Models\Traits\HasTags;
+use App\Modules\DCP\Models\DCPConnection;
 use App\Modules\VoucherPass\Models\VoucherPass;
 use App\Modules\VoucherPass\Models\VoucherPassType;
 use App\Scopes\Builders\EmployeeQuery;
@@ -42,6 +43,8 @@ use Illuminate\Validation\ValidationException;
  * App\Models\Organization.
  *
  * @property int $id
+ * @property int|null $dcp_connection_id
+ * @property-read DCPConnection|null $dcp_connection
  * @property array<array-key, mixed>|null $tvs_digid_config
  * @property string|null $identity_address
  * @property string $name
@@ -504,6 +507,14 @@ class Organization extends Model
     public function implementations(): HasMany
     {
         return $this->hasMany(Implementation::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function dcp_connection(): BelongsTo
+    {
+        return $this->belongsTo(DCPConnection::class);
     }
 
     /**

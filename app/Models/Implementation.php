@@ -7,6 +7,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
+use App\Modules\DCP\Models\DCPConnection;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -519,6 +520,14 @@ class Implementation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function dcp_connections(): HasMany
+    {
+        return $this->hasMany(DCPConnection::class);
     }
 
     /**
