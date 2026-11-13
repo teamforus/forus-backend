@@ -27,6 +27,7 @@ use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Modules\RequesterImport\Models\RequesterImportRow;
+use App\Modules\VoucherPass\Models\VoucherPass;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\FileService\Models\File;
 use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
@@ -46,6 +47,75 @@ trait MakesApiRequests
     use DoesTesting;
     use MakesTestProducts;
     use TestsReservations;
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassConfigurationRequest(
+        Organization $organization,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/configs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassesRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $rows
+     * @param Identity|bool $identity
+     * @param bool $validate
+     * @return TestResponse
+     */
+    public function apiStoreVoucherPassesRequest(
+        Organization $organization,
+        array $rows,
+        Identity|bool $identity,
+        bool $validate = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/batch" .
+            ($validate ? '/validate' : ''),
+            ['rows' => $rows],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherPass $pass
+     * @param array $data
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiUpdateVoucherPassRequest(
+        Organization $organization,
+        VoucherPass $pass,
+        array $data,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/$pass->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
 
     /**
      * @param Organization $organization
