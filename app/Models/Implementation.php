@@ -1217,6 +1217,7 @@ class Implementation extends Model
             'client_id' => 'required|string',
             'client_secret' => 'required|string',
             'from_email' => 'required|email',
+            'from_name' => 'nullable|string|max:200',
         ])->validate();
     }
 
