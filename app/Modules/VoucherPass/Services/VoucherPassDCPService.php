@@ -34,7 +34,7 @@ readonly class VoucherPassDCPService
     ];
 
     private const array RECORD_KEYS = [
-        'given_name', 'family_name', 'family_name_prefix', 'birth_date', 'municipality_code',
+        'given_name', 'initials', 'family_name', 'family_name_prefix', 'birth_date', 'municipality_code',
         'street', 'house_number', 'house_letter', 'house_number_addition', 'postal_code', 'city',
         ...self::MAILING_KEYS,
     ];
@@ -231,7 +231,7 @@ readonly class VoucherPassDCPService
         $prefix = $mailing ? 'mailing_' : '';
 
         $rules = [
-            'owner.given_name' => ['required', 'string'],
+            'owner.initials' => ['required', 'string'],
             'owner.family_name' => ['required', 'string'],
             'owner.birth_date' => ['required', 'date_format:Y-m-d'],
             'owner.municipality_code' => ['required', 'string'],
@@ -268,7 +268,7 @@ readonly class VoucherPassDCPService
             ),
             new GelrepasCardData(
                 $pass->print_label,
-                $ownerValues['given_name'],
+                $ownerValues['initials'],
                 $ownerLastName,
                 CarbonImmutable::createFromFormat('!Y-m-d', $ownerValues['birth_date']),
                 $ownerValues['municipality_code'],
@@ -289,10 +289,10 @@ readonly class VoucherPassDCPService
      */
     private function profileValues(Profile $profile, bool $lock): array
     {
-        $query = $profile->profile_records()->whereNull('deleted_at')
-            ->whereHas('record_type', function (Builder $query) {
-                $query->whereIn('key', self::RECORD_KEYS);
-            })->with('record_type');
+        $query = $profile->profile_records()
+            ->whereNull('deleted_at')
+            ->whereHas('record_type', fn (Builder $query) => $query->whereIn('key', self::RECORD_KEYS))
+            ->with('record_type');
 
         $records = ($lock ? $query->lockForUpdate() : $query)->get()->unique('record_type.key');
 

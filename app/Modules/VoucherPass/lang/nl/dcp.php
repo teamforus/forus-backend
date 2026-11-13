@@ -15,7 +15,7 @@ return [
         'unchanged' => 'The draft printing details are unchanged.',
     ],
     'fields' => [
-        'owner.given_name' => 'owner first name',
+        'owner.initials' => 'owner initials',
         'owner.family_name' => 'owner last name',
         'owner.birth_date' => 'owner birth date',
         'owner.municipality_code' => 'owner municipality code',

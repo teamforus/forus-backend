@@ -68,7 +68,7 @@ return [
                 ],
                 'initials' => [
                     'column' => 'voorletters',
-                    'required' => false,
+                    'required' => true,
                 ],
                 'family_name_prefix' => [
                     'column' => 'tussenvoegsel',
@@ -85,7 +85,7 @@ return [
                 ],
                 'reference_person_bsn' => [
                     'column' => 'referentiepersoon',
-                    'required' => false,
+                    'required' => true,
                     'normalize' => 'bsn',
                 ],
                 'household_role' => [
