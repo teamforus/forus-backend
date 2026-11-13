@@ -72,7 +72,7 @@ return [
                 ],
                 'family_name_prefix' => [
                     'column' => 'tussenvoegsel',
-                    'required' => true,
+                    'required' => false,
                 ],
                 'family_name' => [
                     'column' => 'achternaam',
@@ -158,11 +158,11 @@ return [
                 ],
                 'mailing_street' => [
                     'column' => 'post_straatnaam',
-                    'required' => true,
+                    'required' => false,
                 ],
                 'mailing_house_number' => [
                     'column' => 'post_huisnummer',
-                    'required' => true,
+                    'required' => false,
                 ],
                 'mailing_house_letter' => [
                     'column' => 'post_huisletter',
@@ -174,11 +174,11 @@ return [
                 ],
                 'mailing_postal_code' => [
                     'column' => 'post_postcode',
-                    'required' => true,
+                    'required' => false,
                 ],
                 'mailing_city' => [
                     'column' => 'post_plaatsnaam',
-                    'required' => true,
+                    'required' => false,
                 ],
             ],
         ],
