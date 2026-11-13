@@ -1557,6 +1557,23 @@ trait MakesApiRequests
 
     /**
      * @param FundRequest $fundRequest
+     * @param Employee $employee
+     * @return TestResponse
+     */
+    protected function apiFundRequestProfileCopyPreviewRequest(
+        FundRequest $fundRequest,
+        Employee $employee,
+    ): TestResponse {
+        $organization = $fundRequest->fund->organization;
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/profile-copy-preview",
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
+     * @param FundRequest $fundRequest
      * @param array $data
      * @param Employee $employee
      * @return TestResponse
