@@ -34,7 +34,7 @@ readonly class VoucherPassDCPService
     ];
 
     private const array RECORD_KEYS = [
-        'given_name', 'family_name', 'family_name_prefix', 'birth_date', 'municipality_code',
+        'given_name', 'initials', 'family_name', 'family_name_prefix', 'birth_date', 'municipality_code',
         'street', 'house_number', 'house_letter', 'house_number_addition', 'postal_code', 'city',
         ...self::MAILING_KEYS,
     ];
@@ -200,62 +200,78 @@ readonly class VoucherPassDCPService
      */
     private function buildOrderData(VoucherPass $pass, bool $lock): DCPOrderData
     {
-        $query = Profile::query()->where('organization_id', $pass->organization_id)
-            ->where('identity_id', $pass->target_identity_id);
-        $profile = ($lock ? $query->lockForUpdate() : $query)->first();
+        $query = Profile::query()
+            ->where('organization_id', $pass->organization_id)
+            ->whereIn('identity_id', [$pass->owner_identity_id, $pass->target_identity_id])
+            ->orderBy('id');
 
-        if ($profile === null) {
-            throw ValidationException::withMessages(['profile' => trans('voucher_pass::dcp.profile_missing')]);
+        $profiles = ($lock ? $query->lockForUpdate() : $query)->get()->keyBy('identity_id');
+        $owner = $profiles->get($pass->owner_identity_id);
+        $recipient = $profiles->get($pass->target_identity_id);
+
+        if ($owner === null) {
+            throw ValidationException::withMessages([
+                'owner' => trans('voucher_pass::dcp.owner_profile_missing'),
+            ]);
         }
 
-        $recordsQuery = $profile->profile_records()->whereNull('deleted_at')
-            ->whereHas('record_type', function (Builder $query) {
-                $query->whereIn('key', self::RECORD_KEYS);
-            })->with('record_type');
+        if ($recipient === null) {
+            throw ValidationException::withMessages([
+                'profile' => trans('voucher_pass::dcp.profile_missing'),
+            ]);
+        }
 
-        $records = ($lock ? $recordsQuery->lockForUpdate() : $recordsQuery)->get()->unique('record_type.key');
+        $ownerValues = $this->profileValues($owner, $lock);
+        $recipientValues = $owner->id === $recipient->id ? $ownerValues : $this->profileValues($recipient, $lock);
 
-        $values = $records->mapWithKeys(fn (ProfileRecord $record) => [
-            $record->record_type->key => trim($record->value),
-        ])->all();
+        $mailing = collect(self::MAILING_KEYS)->contains(function (string $key) use ($recipientValues) {
+            return filled($recipientValues[$key] ?? null);
+        });
 
-        $mailing = collect(self::MAILING_KEYS)->contains(fn (string $key) => filled($values[$key] ?? null));
         $prefix = $mailing ? 'mailing_' : '';
+
         $rules = [
-            'given_name' => ['required', 'string'],
-            'family_name' => ['required', 'string'],
-            'birth_date' => ['required', 'date_format:Y-m-d'],
-            'municipality_code' => ['required', 'string'],
+            'owner.initials' => ['required', 'string'],
+            'owner.family_name' => ['required', 'string'],
+            'owner.birth_date' => ['required', 'date_format:Y-m-d'],
+            'owner.municipality_code' => ['required', 'string'],
+            'recipient.given_name' => ['required', 'string'],
+            'recipient.family_name' => ['required', 'string'],
         ];
 
         foreach (['street', 'house_number', 'postal_code', 'city'] as $key) {
-            $rules[$prefix . $key] = ['required', 'string'];
+            $rules['recipient.' . $prefix . $key] = ['required', 'string'];
         }
 
-        Validator::make($values, $rules, attributes: trans('voucher_pass::dcp.fields'))->validate();
+        Validator::make([
+            'owner' => $ownerValues,
+            'recipient' => $recipientValues,
+        ], $rules, attributes: trans('voucher_pass::dcp.fields'))->validate();
 
-        $lastName = trim(($values['family_name_prefix'] ?? '') . ' ' . $values['family_name']);
+        $ownerLastName = trim(($ownerValues['family_name_prefix'] ?? '') . ' ' . $ownerValues['family_name']);
+        $recipientLastName = trim(($recipientValues['family_name_prefix'] ?? '') . ' ' . $recipientValues['family_name']);
+
         $address = implode(' ', array_filter([
-            $values[$prefix . 'street'],
-            $values[$prefix . 'house_number'],
-            $values[$prefix . 'house_letter'] ?? '',
-            $values[$prefix . 'house_number_addition'] ?? '',
+            $recipientValues[$prefix . 'street'],
+            $recipientValues[$prefix . 'house_number'],
+            $recipientValues[$prefix . 'house_letter'] ?? '',
+            $recipientValues[$prefix . 'house_number_addition'] ?? '',
         ], fn (string $value) => $value !== ''));
 
         $data = new DCPOrderData(
             new DCPDeliveryAddress(
-                $values['given_name'],
-                $lastName,
+                $recipientValues['given_name'],
+                $recipientLastName,
                 $address,
-                $values[$prefix . 'postal_code'],
-                $values[$prefix . 'city'],
+                $recipientValues[$prefix . 'postal_code'],
+                $recipientValues[$prefix . 'city'],
             ),
             new GelrepasCardData(
                 $pass->print_label,
-                $values['given_name'],
-                $lastName,
-                CarbonImmutable::createFromFormat('!Y-m-d', $values['birth_date']),
-                $values['municipality_code'],
+                $ownerValues['initials'],
+                $ownerLastName,
+                CarbonImmutable::createFromFormat('!Y-m-d', $ownerValues['birth_date']),
+                $ownerValues['municipality_code'],
                 $pass->code,
             ),
         );
@@ -264,5 +280,24 @@ readonly class VoucherPassDCPService
         $data->validate();
 
         return $data;
+    }
+
+    /**
+     * @param Profile $profile
+     * @param bool $lock
+     * @return array<string, string>
+     */
+    private function profileValues(Profile $profile, bool $lock): array
+    {
+        $query = $profile->profile_records()
+            ->whereNull('deleted_at')
+            ->whereHas('record_type', fn (Builder $query) => $query->whereIn('key', self::RECORD_KEYS))
+            ->with('record_type');
+
+        $records = ($lock ? $query->lockForUpdate() : $query)->get()->unique('record_type.key');
+
+        return $records->mapWithKeys(fn (ProfileRecord $record) => [
+            $record->record_type->key => trim($record->value),
+        ])->all();
     }
 }
