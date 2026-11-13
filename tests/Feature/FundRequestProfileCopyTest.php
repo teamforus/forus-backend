@@ -44,14 +44,15 @@ class FundRequestProfileCopyTest extends TestCase
 
         $profile = $request->fund->organization->findOrMakeProfile($request->identity);
         $old = $this->makeProfileRecord($profile, $name, 'Old name');
+
         $this->travel(1)->seconds();
-
         $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])->assertOk();
-
         $this->assertApprovedVoucher($request, 300);
 
-        $this->assertSame(['Taylor', 'Old name'], $profile->profile_records()
-            ->where('record_type_id', $name->id)->pluck('value')->all());
+        $this->assertSame(
+            ['Taylor', 'Old name'],
+            $profile->profile_records()->where('record_type_id', $name->id)->pluck('value')->all(),
+        );
 
         $this->assertSame($old->id, $profile->profile_records()->where('record_type_id', $name->id)->get()->last()->id);
 
@@ -75,11 +76,16 @@ class FundRequestProfileCopyTest extends TestCase
     {
         foreach (['custom', 'preset'] as $variant) {
             ['request' => $request, 'employee' => $employee, 'name' => $name] = $this->makeProfileCopyRequest();
-            $request->fund->organization->forceFill(['allow_payouts' => true])->save();
+
+            $request->fund->organization->forceFill([
+                'allow_payouts' => true,
+            ])->save();
 
             $request->fund->updateFundsConfig([
-                'allow_custom_amounts_validator' => true, 'allow_preset_amounts_validator' => true,
-                'custom_amount_min' => 100, 'custom_amount_max' => 200,
+                'allow_custom_amounts_validator' => true,
+                'allow_preset_amounts_validator' => true,
+                'custom_amount_min' => 100,
+                'custom_amount_max' => 200,
             ]);
 
             $payload = $variant === 'custom' ? ['amount' => 150] : [
@@ -156,6 +162,7 @@ class FundRequestProfileCopyTest extends TestCase
             ['request' => $request, 'employee' => $employee, 'name' => $name] = $this->makeProfileCopyRequest();
             $organization = $request->fund->organization;
             $profile = $organization->findOrMakeProfile($request->identity);
+
             $this->makeProfileRecord($profile, $name, 'Protected value');
 
             if ($variant === 'fund_disabled') {
@@ -194,16 +201,22 @@ class FundRequestProfileCopyTest extends TestCase
         ] = $this->makeProfileCopyRequest();
 
         $profile = $request->fund->organization->findOrMakeProfile($request->identity);
+
         $this->makeProfileRecord($profile, $name, 'Previous name');
+
         $same = $this->makeProfileRecordType($request->fund->organization);
         $blank = $this->makeProfileRecordType($request->fund->organization);
+
         $this->makeProfileRecord($profile, $same, 'Same');
         $this->makeProfileRecord($profile, $blank, 'Keep');
+
         $request->records()->create(['record_type_key' => $same->key, 'value' => 'Same']);
         $request->records()->create(['record_type_key' => $blank->key, 'value' => ' ']);
         $before = $this->copyState($request);
 
-        $response = $this->apiFundRequestProfileCopyPreviewRequest($request, $employee)->assertOk()
+        $response = $this
+            ->apiFundRequestProfileCopyPreviewRequest($request, $employee)
+            ->assertOk()
             ->assertJsonPath('profile_id', $profile->id);
 
         $records = collect($response->json('records'))->keyBy('record_type_key');
@@ -230,6 +243,7 @@ class FundRequestProfileCopyTest extends TestCase
         $this->freezeTime();
         ['request' => $request, 'employee' => $employee, 'name' => $name] = $this->makeProfileCopyRequest();
         $profile = $request->fund->organization->findOrMakeProfile($request->identity);
+
         $this->makeProfileRecord($profile, $name, 'Old');
         $this->apiFundRequestProfileCopyPreviewRequest($request, $employee)->assertOk();
         $this->travel(1)->seconds();
@@ -238,11 +252,12 @@ class FundRequestProfileCopyTest extends TestCase
         $this->travel(1)->seconds();
 
         $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])->assertOk();
-
         $this->assertApprovedVoucher($request, 300);
 
-        $this->assertSame(['Fresh answer', 'Interim edit', 'Old'], $profile->profile_records()
-            ->where('record_type_id', $name->id)->pluck('value')->all());
+        $this->assertSame(
+            ['Fresh answer', 'Interim edit', 'Old'],
+            $profile->profile_records()->where('record_type_id', $name->id)->pluck('value')->all(),
+        );
     }
 
     /**
@@ -259,6 +274,7 @@ class FundRequestProfileCopyTest extends TestCase
         $disabled = $this->makeProfileRecordType($request->fund->organization, ['profile_records' => false]);
         $keptDate = $this->makeProfileRecord($profile, $date, '1980-01-01');
         $keptDisabled = $this->makeProfileRecord($profile, $disabled, 'Keep disabled');
+
         $request->records()->where('record_type_key', $date->key)->update(['value' => '']);
         $request->records()->create(['record_type_key' => $disabled->key, 'value' => 'Do not copy']);
 
@@ -267,11 +283,15 @@ class FundRequestProfileCopyTest extends TestCase
         $this->assertApprovedVoucher($request, 300);
         $this->assertSame('Taylor', $profile->profile_records()->where('record_type_id', $name->id)->sole()->value);
 
-        $this->assertSame([$keptDate->id], $profile->profile_records()
-            ->where('record_type_id', $date->id)->pluck('id')->all());
+        $this->assertSame(
+            [$keptDate->id],
+            $profile->profile_records()->where('record_type_id', $date->id)->pluck('id')->all(),
+        );
 
-        $this->assertSame([$keptDisabled->id], $profile->profile_records()
-            ->where('record_type_id', $disabled->id)->pluck('id')->all());
+        $this->assertSame(
+            [$keptDisabled->id],
+            $profile->profile_records()->where('record_type_id', $disabled->id)->pluck('id')->all(),
+        );
     }
 
     /**
@@ -286,13 +306,15 @@ class FundRequestProfileCopyTest extends TestCase
 
         $name->update(['profile_records' => false]);
         $date->update(['profile_records' => false]);
+
         RecordType::findByKey('children_nth')->update(['profile_records' => false]);
 
-        $this->apiFundRequestProfileCopyPreviewRequest($request, $employee)->assertOk()
+        $this
+            ->apiFundRequestProfileCopyPreviewRequest($request, $employee)
+            ->assertOk()
             ->assertExactJson(['profile_id' => null, 'records' => []]);
 
         $this->assertFalse($request->identity->profiles()->exists());
-
         $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])->assertOk();
 
         $this->assertApprovedVoucher($request, 300);
@@ -310,14 +332,13 @@ class FundRequestProfileCopyTest extends TestCase
     {
         ['request' => $request, 'employee' => $employee, 'name' => $name] = $this->makeProfileCopyRequest();
         $first = $request->records()->where('record_type_key', $name->key)->sole();
+
         $request->records()->create(['record_type_key' => $name->key, 'value' => 'Taylor']);
 
         $preview = $this->apiFundRequestProfileCopyPreviewRequest($request, $employee)->assertOk();
 
         $this->assertCount(1, collect($preview->json('records'))->where('record_type_key', $name->key));
-
         $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])->assertOk();
-
         $this->assertApprovedVoucher($request, 300);
 
         $profile = $request->identity->profiles()->where('organization_id', $employee->organization_id)->sole();
@@ -345,10 +366,12 @@ class FundRequestProfileCopyTest extends TestCase
             $before = $this->copyState($request);
 
             $this->apiFundRequestProfileCopyPreviewRequest($request, $employee)
-                ->assertUnprocessable()->assertJsonValidationErrors('records.' . $name->key);
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('records.' . $name->key);
 
             $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])
-                ->assertUnprocessable()->assertJsonValidationErrors('records.' . $name->key);
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('records.' . $name->key);
 
             $this->assertSame($before, $this->copyState($request), $variant);
         }
@@ -379,20 +402,15 @@ class FundRequestProfileCopyTest extends TestCase
                     return;
                 }
 
-                $profile = $request->identity->profiles()
-                    ->where('organization_id', $request->fund->organization_id)->sole();
-
+                $profile = $request->identity->profiles()->where('organization_id', $request->fund->organization_id)->sole();
                 $copiedProfileId = $profile->id;
                 $copiedRecordIds = $profile->profile_records()->pluck('id')->all();
-
-                $validatedRecordIds = $request->identity->records()
-                    ->where('fund_request_id', $request->id)->pluck('id')->all();
+                $validatedRecordIds = $request->identity->records()->where('fund_request_id', $request->id)->pluck('id')->all();
 
                 throw new RuntimeException('Injected award failure.');
             });
 
-            $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])
-                ->assertStatus(500);
+            $this->apiFundRequestApproveRequest($request, $employee, ['copy_to_profile' => true])->assertStatus(500);
         } finally {
             Voucher::setEventDispatcher($dispatcher);
         }
@@ -415,6 +433,7 @@ class FundRequestProfileCopyTest extends TestCase
         ['fund' => $fund, 'employee' => $employee, 'name' => $name, 'date' => $date] = $this->makeProfileCopyFund();
         $identity = $this->makeIdentity($this->makeUniqueEmail(), $this->makeUniqueBsn());
         $request = $this->setCriteriaAndMakeFundRequest($identity, $fund, ['children_nth' => 5]);
+
         $request->assignEmployee($employee);
         $request->records()->create(['record_type_key' => $name->key, 'value' => 'Taylor']);
         $request->records()->create(['record_type_key' => $date->key, 'value' => '15-02-1990']);

@@ -14,6 +14,7 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Scopes\Builders\PrevalidationQuery;
 use App\Searches\PrevalidationSearch;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
@@ -78,33 +79,33 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('create', [Prevalidation::class, $organization]);
 
-        DB::beginTransaction();
+        $prevalidations = DB::transaction(function () use ($request, $organization): Collection|array {
+            $file = $request->post('file');
+            $fund = Fund::find($request->input('fund_id'));
+            $data = $request->input('data', []);
+            $overwrite = $request->input('overwrite', []);
+            $topUp = $request->input('top_up', []);
 
-        $file = $request->post('file');
-        $fund = Fund::find($request->input('fund_id'));
-        $data = $request->input('data', []);
-        $overwrite = $request->input('overwrite', []);
-        $topUp = $request->input('top_up', []);
+            $employee = $request->employee($organization);
+            $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATIONS, $file, $data);
 
-        $employee = $request->employee($organization);
-        $event = $employee?->logCsvUpload($employee::EVENT_UPLOADED_PREVALIDATIONS, $file, $data);
+            $prevalidations = Prevalidation::storePrevalidations(
+                employee: $employee,
+                fund: $fund,
+                data: $data,
+                topUps: $topUp,
+                overwriteKeys: $overwrite,
+            );
 
-        $prevalidations = Prevalidation::storePrevalidations(
-            employee: $employee,
-            fund: $fund,
-            data: $data,
-            topUps: $topUp,
-            overwriteKeys: $overwrite,
-        );
+            $event?->forceFill([
+                'data->uploaded_file_meta->state' => 'success',
+                'data->uploaded_file_meta->top_up' => $topUp,
+                'data->uploaded_file_meta->overwrite' => $overwrite,
+                'data->uploaded_file_meta->created_ids' => $prevalidations->pluck('id')->toArray(),
+            ])?->update();
 
-        $event?->forceFill([
-            'data->uploaded_file_meta->state' => 'success',
-            'data->uploaded_file_meta->top_up' => $topUp,
-            'data->uploaded_file_meta->overwrite' => $overwrite,
-            'data->uploaded_file_meta->created_ids' => $prevalidations->pluck('id')->toArray(),
-        ])?->update();
-
-        DB::commit();
+            return $prevalidations;
+        });
 
         return PrevalidationResource::createCollection($prevalidations);
     }

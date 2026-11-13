@@ -708,6 +708,102 @@ trait MakesApiRequests
      * @param Identity $identity
      * @return TestResponse
      */
+    public function apiGetOrganizationFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id",
+            $this->makeApiHeaders($identity, ['Client-Type' => Implementation::FRONTEND_SPONSOR_DASHBOARD]),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @param array $filters
+     * @return TestResponse
+     */
+    public function apiGetOrganizationFundsRequest(
+        Organization $organization,
+        Identity $identity,
+        array $filters = [],
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/funds?" . http_build_query($filters),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProfileVoucherCandidateIdsRequest(
+        Organization $organization,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/from-profiles/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiStoreVouchersFromProfilesRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/from-profiles" .
+            ($preview ? '/preview' : ''),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiCalculatePreCheckRequest(Implementation $implementation, array $data): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/pre-checks/calculate', $data, $this->makeApiHeaders(false, [
+            'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+            'Client-Key' => $implementation->key,
+        ]));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiExportOrganizationFinancesRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/finances-overview-export?" . http_build_query($data),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
     public function apiCheckFundRequest(Fund $fund, Identity $identity): TestResponse
     {
         return $this->postJson(
@@ -1367,6 +1463,26 @@ trait MakesApiRequests
         ], [
             $fund->fund_config->csv_primary_key => $primaryKey ?: token_generator()->generate(32),
         ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiUpdateFundRequest(
+        Organization $organization,
+        Fund $fund,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/funds/$fund->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
@@ -2073,6 +2189,7 @@ trait MakesApiRequests
      * @param array $data
      * @param array $overwrite
      * @param bool $appendFileData
+     * @param array $topUp
      * @return TestResponse
      */
     protected function makeStorePrevalidationBatchRequest(
@@ -2081,11 +2198,13 @@ trait MakesApiRequests
         array $data,
         array $overwrite = [],
         bool $appendFileData = false,
+        array $topUp = [],
     ): TestResponse {
         return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
             'fund_id' => $fund->id,
             'data' => $data,
             'overwrite' => $overwrite,
+            'top_up' => $topUp,
             ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
