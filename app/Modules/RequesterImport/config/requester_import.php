@@ -72,7 +72,7 @@ return [
                 ],
                 'family_name_prefix' => [
                     'column' => 'tussenvoegsel',
-                    'required' => true,
+                    'required' => false,
                 ],
                 'family_name' => [
                     'column' => 'achternaam',
