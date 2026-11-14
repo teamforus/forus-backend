@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestBusinessType;
 use Tests\Traits\MakesTestFunds;
+use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesTestOrganizations;
 use Throwable;
 
@@ -22,6 +23,7 @@ class FundProviderSearchTest extends SearchTestCase
     use MakesTestBusinessType;
     use MakesTestOrganizations;
     use MakesProductReservations;
+    use MakesTestOrganizationOffices;
 
     protected Identity $identity;
     protected Organization $sponsor;
@@ -226,6 +228,75 @@ class FundProviderSearchTest extends SearchTestCase
 
         $this->assertSearchIds(['q' => $namePart1], [$fundProvider1->id], $this->sponsor);
         $this->assertSearchIds(['q' => $namePart2], [$fundProvider2->id], $this->sponsor);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFiltersByQueryMatchesFundProviderByBusinessType(): void
+    {
+        $businessType1 = $this->makeTestBusinessType('provider_search_business_type_one');
+        $businessType2 = $this->makeTestBusinessType('provider_search_business_type_two');
+
+        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
+            'business_type_id' => $businessType1->id,
+        ]);
+
+        $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
+            'business_type_id' => $businessType2->id,
+        ]);
+
+        $fund = $this->sponsor->funds()->first();
+
+        $fundProvider1 = $this->makeTestFundProvider($provider1, $fund);
+        $fundProvider2 = $this->makeTestFundProvider($provider2, $fund);
+
+        $this->assertSearchIds(['q' => 'business_type_one'], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => 'business_type_two'], [$fundProvider2->id], $this->sponsor);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFiltersByQueryMatchesFundProviderByOfficeAddress(): void
+    {
+        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity());
+        $provider2 = $this->makeTestProviderOrganization($this->makeIdentity());
+
+        $this->makeOrganizationOffice($provider1, ['address' => 'provider_search_office_one street']);
+        $this->makeOrganizationOffice($provider2, ['address' => 'provider_search_office_two street']);
+
+        $fund = $this->sponsor->funds()->first();
+
+        $fundProvider1 = $this->makeTestFundProvider($provider1, $fund);
+        $fundProvider2 = $this->makeTestFundProvider($provider2, $fund);
+
+        $this->assertSearchIds(['q' => 'provider_search_office_one'], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => 'provider_search_office_two'], [$fundProvider2->id], $this->sponsor);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFiltersByQueryMatchesFundProviderByOrganizationId(): void
+    {
+        $provider1 = $this->makeTestProviderOrganization($this->makeIdentity(), [
+            'email' => 'provider_search_id_one@example.com',
+            'phone' => '',
+        ]);
+
+        $provider2 = $this->makeTestProviderOrganization($this->makeIdentity(), [
+            'email' => 'provider_search_id_two@example.com',
+            'phone' => '',
+        ]);
+
+        $fund = $this->sponsor->funds()->first();
+
+        $fundProvider1 = $this->makeTestFundProvider($provider1, $fund);
+        $fundProvider2 = $this->makeTestFundProvider($provider2, $fund);
+
+        $this->assertSearchIds(['q' => (string) $provider1->id], [$fundProvider1->id], $this->sponsor);
+        $this->assertSearchIds(['q' => (string) $provider2->id], [$fundProvider2->id], $this->sponsor);
     }
 
     /**

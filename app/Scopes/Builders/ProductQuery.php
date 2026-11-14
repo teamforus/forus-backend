@@ -209,13 +209,15 @@ class ProductQuery
     /**
      * @param Builder|Relation|Product $query
      * @param string $q
+     * @param bool $searchById
      * @return Builder|Relation|Product
      */
     public static function queryDeepFilter(
         Builder|Relation|Product $query,
         string $q = '',
+        bool $searchById = false,
     ): Builder|Relation|Product {
-        return $query->where(static function (Builder $query) use ($q) {
+        return $query->where(static function (Builder $query) use ($q, $searchById) {
             $query->where('products.name', 'LIKE', "%$q%");
             $query->orWhere('products.description_text', 'LIKE', "%$q%");
 
@@ -226,6 +228,10 @@ class ProductQuery
                     $builder->where('name', 'LIKE', "%$q%");
                     $builder->where('locale', Lang::locale());
                 });
+            }
+
+            if ($searchById && is_numeric($q)) {
+                $query->orWhere('products.id', '=', $q);
             }
         });
     }

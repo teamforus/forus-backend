@@ -72,6 +72,10 @@ class ProductSearchTest extends SearchTestCase
             'description_text' => "$productDescriptionTextPart2 product description",
         ]);
 
+        // assert by ID
+        $this->assertSearchIds(['q' => $product1->id], [$product1->id]);
+        $this->assertSearchIds(['q' => $product2->id], [$product2->id]);
+
         // assert by product name
         $this->assertSearchIds(['q' => $productNamePart1], [$product1->id]);
         $this->assertSearchIds(['q' => $productNamePart2], [$product2->id]);

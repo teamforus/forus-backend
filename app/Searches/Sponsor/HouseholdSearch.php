@@ -35,6 +35,10 @@ class HouseholdSearch extends BaseSearch
                 $query->orWhere('postal_code', 'LIKE', "%$q%");
                 $query->orWhere('neighborhood_name', 'LIKE', "%$q%");
                 $query->orWhere('municipality_name', 'LIKE', "%$q%");
+
+                if (is_numeric($q)) {
+                    $query->orWhere('id', '=', $q);
+                }
             });
         }
 
