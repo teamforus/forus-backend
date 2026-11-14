@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFormulaConditions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\FundFormulaProduct.
@@ -32,12 +34,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundFormulaProduct extends Model
 {
+    use HasFormulaConditions;
+
     /**
      * @var array
      */
     protected $fillable = [
         'id', 'fund_id', 'product_id', 'price', 'record_type_key_multiplier',
     ];
+
+    protected $with = [
+        'conditions.record_type.translations',
+    ];
+
+    /**
+     * @return HasMany
+     */
+    public function conditions(): HasMany
+    {
+        return $this->hasMany(FundFormulaCondition::class)->orderBy('id');
+    }
 
     /**
      * @return BelongsTo
@@ -65,16 +81,17 @@ class FundFormulaProduct extends Model
 
     /**
      * @param Identity|null $identity
+     * @param array<string, mixed> $values
      * @return int
      */
-    public function getIdentityMultiplier(?Identity $identity = null): int
+    public function getIdentityMultiplier(?Identity $identity, array $values): int
     {
         if (!$identity?->exists() || is_null($this->record_type_key_multiplier)) {
             return 1;
         }
 
-        $record = $this->fund->getTrustedRecordOfType($identity, $this->record_type_key_multiplier);
+        $value = $values[$this->record_type_key_multiplier] ?? null;
 
-        return is_numeric($record?->value) ? intval($record->value) : 0;
+        return is_numeric($value) ? intval($value) : 0;
     }
 }

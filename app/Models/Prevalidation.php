@@ -589,13 +589,17 @@ class Prevalidation extends Model
     /**
      * @param Fund $fund
      * @param Voucher $voucher
-     * @return Voucher|null
+     * @return string|null
      */
     protected function calcVoucherTopUpAmount(Fund $fund, Voucher $voucher): ?string
     {
         $records = $this->records()->get()
             ->mapWithKeys(fn (PrevalidationRecord $record) => [$record->record_type->key => $record->value])
             ->toArray();
+
+        if ($fund->matchingBudgetFormulas($records)->isEmpty()) {
+            return null;
+        }
 
         $amount = $fund->amountForIdentity(identity: null, records: $records);
 

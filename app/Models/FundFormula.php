@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFormulaConditions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\FundFormula.
@@ -33,6 +35,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundFormula extends Model
 {
+    use HasFormulaConditions;
+
     public const string TYPE_FIXED = 'fixed';
     public const string TYPE_MULTIPLY = 'multiply';
     public const string TYPE_MULTIPLY_VOUCHERS = 'multiply_vouchers';
@@ -42,6 +46,33 @@ class FundFormula extends Model
     protected $fillable = [
         'id', 'fund_id', 'type', 'amount', 'record_type_key',
     ];
+
+    protected $with = [
+        'conditions.record_type.translations',
+    ];
+
+    /**
+     * @return HasMany
+     */
+    public function conditions(): HasMany
+    {
+        return $this->hasMany(FundFormulaCondition::class)->orderBy('id');
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     * @return float
+     */
+    public function calculateAmount(array $values): float
+    {
+        $value = $values[$this->record_type_key] ?? null;
+
+        return match ($this->type) {
+            self::TYPE_FIXED => (float) $this->amount,
+            self::TYPE_MULTIPLY => is_numeric($value) ? $this->amount * $value : 0,
+            default => 0,
+        };
+    }
 
     /**
      * @return string|null

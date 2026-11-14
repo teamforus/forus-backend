@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
@@ -187,7 +188,7 @@ class FundRequestNoEmailTest extends DuskTestCase
             $fund,
             $config,
         ) {
-            $requester = $this->makeIdentity(null, '123456789');
+            $requester = $this->makeIdentity(null, $this->randomFakeBsn());
 
             $this->browse(function (Browser $browser) use ($implementation, $fund, $requester, $config) {
                 $customConfirmationStep = $config['custom_criteria_confirmation'] ?? false;
@@ -222,7 +223,7 @@ class FundRequestNoEmailTest extends DuskTestCase
             $fund,
             $config,
         ) {
-            $requester = $this->makeIdentity(null, '123456789');
+            $requester = $this->makeIdentity(null, $this->randomFakeBsn());
             $email = $config['email'];
 
             $this->browse(function (Browser $browser) use (
@@ -238,7 +239,7 @@ class FundRequestNoEmailTest extends DuskTestCase
                     $this->acceptPrivacyAndTerms($browser);
                 }
 
-                $startTime = now();
+                $startTime = Carbon::now();
                 $browser->within('@fundRequestEmailForm', function (Browser $browser) use ($email) {
                     $browser->type('@fundRequestEmailInput', $email);
                     $browser->click('@fundRequestEmailSubmit');
@@ -405,7 +406,6 @@ class FundRequestNoEmailTest extends DuskTestCase
             $organization,
             RecordType::TYPE_NUMBER,
             RecordType::CONTROL_TYPE_NUMBER,
-            'age_' . now()->timestamp,
         );
 
         $this->makeFundCriteria($fund, [[

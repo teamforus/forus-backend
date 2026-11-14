@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Exports\Base\BaseExport;
 use App\Models\Fund;
+use App\Models\FundFormula;
 use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialOverviewStatisticQueries;
 use Carbon\Carbon;
@@ -170,7 +171,9 @@ class FundsExportDetailed extends BaseExport
                     ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
                 $voucherData = array_merge($voucherData, [
-                    'budget_amount_per_voucher' => currency_format($model->fund_formulas->sum('amount')),
+                    'budget_amount_per_voucher' => $model->fund_formulas->contains(
+                        fn (FundFormula $formula) => $formula->conditions->isNotEmpty(),
+                    ) ? null : currency_format($model->fund_formulas->sum('amount')),
                     'budget_average_per_voucher' => currency_format($averagePerVoucher),
                     'budget_total_spent_amount' => currency_format($usedActiveVouchers),
                     'budget_total_left_amount' => currency_format($budgetLeftAmount),

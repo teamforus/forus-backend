@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\Organization;
 use App\Traits\DoesTesting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\CreatesApplication;
@@ -95,7 +96,7 @@ class FundStatisticsOverviewPayoutVouchersTest extends TestCase
                     $this->faker()->iban(),
                     $this->faker()->name(),
                 ),
-            )->setPaid(null, now());
+            )->setPaid(null, Carbon::now());
         }
     }
 

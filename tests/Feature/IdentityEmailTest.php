@@ -6,6 +6,7 @@ use App\Mail\User\IdentityEmailVerificationMail;
 use App\Models\Identity;
 use App\Models\IdentityEmail;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
@@ -225,7 +226,7 @@ class IdentityEmailTest extends TestCase
     public function testResendEmail(): void
     {
         $identity = $this->makeIdentity();
-        $startTime = now();
+        $startTime = Carbon::now();
         $identityEmail = $this->addEmailAndAssertLinkeSent($identity, $this->makeUniqueEmail());
 
         $this->resendEmail($identity, $identityEmail)->assertSuccessful();
@@ -245,7 +246,7 @@ class IdentityEmailTest extends TestCase
      */
     protected function addEmailAndAssertLinkeSent(Identity $identity, string $email, ?string $target = null): IdentityEmail
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $response = $this->addEmail($identity, $email, $target);
 
         $response->assertStatus(201);
@@ -337,7 +338,7 @@ class IdentityEmailTest extends TestCase
      */
     private function createEmailAndGetVerificationLink(?string $target = null): object
     {
-        $startTime = now();
+        $startTime = Carbon::now();
 
         // Create an identity proxy and store a new email with it
         $identity = $this->makeIdentity();

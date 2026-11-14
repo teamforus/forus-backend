@@ -4,15 +4,16 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasNotes;
-use App\Scopes\Builders\IdentityQuery;
 use App\Services\Forus\Auth2FAService\Auth2FAService;
 use App\Services\Forus\Auth2FAService\Data\Auth2FASecret;
 use App\Services\Forus\Auth2FAService\Models\Auth2FAProvider;
 use App\Services\Forus\Notification\Models\NotificationToken;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
 use App\Services\IdentityProviderService\Queries\IdentityProviderMembershipQuery;
 use App\Services\IdentityProviderService\Services\IdentityProviderSessionService;
+use Closure;
 use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -434,6 +435,19 @@ class Identity extends Model implements Authenticatable
     }
 
     /**
+     * @template T
+     * @param Closure(Identity): T $callback
+     * @throws Throwable
+     * @return T
+     */
+    public function transactionWithFundAwardLock(Closure $callback): mixed
+    {
+        return DB::transaction(function () use ($callback) {
+            return $callback(static::query()->lockForUpdate()->findOrFail($this->id));
+        });
+    }
+
+    /**
      * Get the entity's notifications.
      *
      * @return \Illuminate\Database\Eloquent\Relations\MorphMany
@@ -562,7 +576,7 @@ class Identity extends Model implements Authenticatable
             return null;
         }
 
-        return IdentityQuery::whereBsn(Identity::query(), $bsn)->first();
+        return resolve(IdentityBsnService::class)->findIdentityByBsn($bsn);
     }
 
     /**
@@ -634,6 +648,7 @@ class Identity extends Model implements Authenticatable
      * @param string|null $type
      * @param int|null $organizationId
      * @param int|null $employeeId
+     * @throws Throwable
      * @return Identity
      */
     public static function build(
@@ -684,20 +699,30 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param array|string[] $records
+     * @throws Throwable
      * @return Collection|Record[]
      */
     public function addRecords(array $records = []): Collection|array
     {
+        $bsnRecord = isset($records['bsn']) ? $this->setBsnRecord($records['bsn']) : null;
+        unset($records['bsn']);
+
         $recordTypes = RecordType::pluck('id', 'key')->toArray();
 
-        return $this->records()->createMany(array_map(fn ($key) => [
+        $created = $this->records()->createMany(array_map(fn ($key) => [
             'record_type_id' => $recordTypes[$key],
             'value' => $records[$key],
         ], array_keys($records)));
+
+        if ($bsnRecord) {
+            $created->push($bsnRecord);
+        }
+
+        return $created;
     }
 
     /**
-     * Add new record category to identity.
+     * Add a new record category to identity.
      * @param string $name
      * @param int $order
      * @return RecordCategory|Model
@@ -924,26 +949,12 @@ class Identity extends Model implements Authenticatable
 
     /**
      * @param string $bsnValue
+     * @throws Throwable
      * @return Record|Model
      */
     public function setBsnRecord(string $bsnValue): Record|Model
     {
-        $recordType = RecordType::findByKey('bsn');
-
-        if ($this->bsn && $this->bsn !== $bsnValue) {
-            abort(403, 'record.exceptions.bsn_record_cant_be_changed');
-        }
-
-        $record = $this->records()->create([
-            'order' => 0,
-            'value' => $bsnValue,
-            'record_type_id' => $recordType->id,
-            'record_category_id' => null,
-        ]);
-
-        $this->load('record_bsn');
-
-        return $record;
+        return resolve(IdentityBsnService::class)->assignBsn($this, $bsnValue);
     }
 
     /**

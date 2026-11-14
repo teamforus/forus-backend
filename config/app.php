@@ -225,6 +225,9 @@ return [
         App\Services\Forus\Auth2FAService\Auth2FAServiceProvider::class,
         App\Services\MollieService\MollieServiceProvider::class,
         App\Services\IdentityProviderService\IdentityProviderServiceProvider::class,
+        App\Modules\RequesterImport\RequesterImportServiceProvider::class,
+        App\Modules\VoucherPass\VoucherPassServiceProvider::class,
+        App\Modules\DCP\DCPServiceProvider::class,
 
         App\Services\IConnectApiService\IConnectServiceProvider::class,
 

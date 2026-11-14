@@ -776,8 +776,8 @@ class FundRequestPrefillsTest extends DuskTestCase
                 'optional' => false,
             ]]);
 
-            // create a requester and run the full form flow
-            $requester = $this->makeIdentity($this->makeUniqueEmail(), '999993112');
+            // resolve the requester for the fixed BRP fixture and run the full form flow
+            $requester = Identity::findByBsn('999993112') ?: $this->makeIdentity($this->makeUniqueEmail(), '999993112');
 
             $this->processFundRequestPrefillsCompleteWorkflowTestCase($requester, $implementation, $fund, [
                 'phone' => '0612345678',
@@ -1004,8 +1004,8 @@ class FundRequestPrefillsTest extends DuskTestCase
         Fund $fund,
         array $config,
     ): void {
-        // create a requester and run the form flow
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), $config['bsn']);
+        // resolve the requester for the fixed BRP fixture and run the form flow
+        $requester = Identity::findByBsn($config['bsn']) ?: $this->makeIdentity($this->makeUniqueEmail(), $config['bsn']);
         Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester, $config) {
@@ -1094,8 +1094,8 @@ class FundRequestPrefillsTest extends DuskTestCase
         Fund $fund,
         string $bsn,
     ): void {
-        // create a requester and run the form flow
-        $requester = $this->makeIdentity($this->makeUniqueEmail(), $bsn);
+        // resolve the requester for the fixed BRP fixture and run the form flow
+        $requester = Identity::findByBsn($bsn) ?: $this->makeIdentity($this->makeUniqueEmail(), $bsn);
         Cache::clear();
 
         $this->browse(function (Browser $browser) use ($implementation, $fund, $requester) {

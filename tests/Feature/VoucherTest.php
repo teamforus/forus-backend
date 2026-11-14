@@ -373,7 +373,7 @@ class VoucherTest extends TestCase
      */
     protected function makeVoucherForFundFormulaProduct(Fund $fund, Identity $identity): void
     {
-        $startDate = now();
+        $startDate = Carbon::now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
         $amount = random_int(1, $fund->getMaxAmountPerVoucher());
@@ -435,7 +435,7 @@ class VoucherTest extends TestCase
     protected function storeVoucher(Fund $fund, array $assert, array $products): void
     {
         $assert['vouchers_count'] = 1;
-        $startDate = now();
+        $startDate = Carbon::now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
         $data = [
@@ -516,7 +516,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if (!$voucher->identity) {
-            $startDate = now();
+            $startDate = Carbon::now();
             $params = [];
             $identity = null;
             $assign_by = $assert['sponsor_assign_by'] ?? 'bsn';
@@ -1032,7 +1032,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if ($voucher->identity->email && $voucher->isProductType()) {
-            $startDate = now();
+            $startDate = Carbon::now();
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
             $url = $this->getIdentityApiUrl($voucher, '/share');
 
@@ -1059,7 +1059,7 @@ class VoucherTest extends TestCase
         $voucher->refresh();
 
         if ($voucher->identity->email) {
-            $startDate = now();
+            $startDate = Carbon::now();
             $headers = $this->makeApiHeaders($this->makeIdentityProxy($voucher->identity));
             $url = $this->getIdentityApiUrl($voucher, '/send-email');
 
