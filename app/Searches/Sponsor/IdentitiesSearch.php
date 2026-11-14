@@ -374,6 +374,10 @@ class IdentitiesSearch extends BaseSearch
             });
 
             $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
+
+            if (is_numeric($q)) {
+                $builder->orWhere('id', '=', $q);
+            }
         });
     }
 }

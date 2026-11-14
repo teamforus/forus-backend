@@ -45,6 +45,18 @@ class FundProviderSearch extends BaseSearch
                     $query->orWhere('kvk', 'like', "%$q%");
                     $query->orWhere('email', 'like', "%$q%");
                     $query->orWhere('phone', 'like', "%$q%");
+
+                    $query->orWhereHas('business_type', function (Builder $query) use ($q) {
+                        $query->whereTranslationLike('name', "%$q%");
+                    });
+
+                    $query->orWhereHas('offices', function (Builder $query) use ($q) {
+                        $query->where('address', 'LIKE', "%$q%");
+                    });
+
+                    if (is_numeric($q)) {
+                        $query->orWhere('id', '=', $q);
+                    }
                 });
 
                 $builder->orWhereHas('fund', function (Builder $query) use ($q) {

@@ -151,6 +151,28 @@ class VouchersSearchTest extends SearchTestCase
     /**
      * @return void
      */
+    public function testFiltersByQueryId(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $fund = $this->makeTestFund($organization);
+
+        $voucher1 = $this->makeTestVoucher($fund, $this->makeIdentity());
+        $voucher2 = $this->makeTestVoucher($fund, $this->makeIdentity());
+
+        // make sure the voucher numbers don't contain the ids, so the vouchers can only match by id
+        foreach ([$voucher1, $voucher2] as $voucher) {
+            while (Str::contains($voucher->number, [(string) $voucher1->id, (string) $voucher2->id])) {
+                $voucher->update(['number' => Voucher::makeUniqueNumber()]);
+            }
+        }
+
+        $this->assertSearchIds(['q' => $voucher1->id], [$voucher1->id], $organization);
+        $this->assertSearchIds(['q' => $voucher2->id], [$voucher2->id], $organization);
+    }
+
+    /**
+     * @return void
+     */
     public function testFiltersByIdentity()
     {
         $email1 = $this->makeUniqueEmail();

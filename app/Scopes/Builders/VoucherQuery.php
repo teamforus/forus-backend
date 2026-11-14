@@ -212,6 +212,10 @@ class VoucherQuery
             $builder->orWhereHas('voucher_records', function (Builder $builder) use ($q) {
                 $builder->where('value', 'LIKE', "%$q%");
             });
+
+            if (is_numeric($q)) {
+                $builder->orWhere('id', '=', $q);
+            }
         });
     }
 
