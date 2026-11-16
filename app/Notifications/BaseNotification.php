@@ -16,6 +16,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
@@ -412,9 +413,43 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * Generate and send notifications for EventLog instance.
      *
      * @param EventLog $event
-     * @return bool
+     * @return bool Whether dispatch succeeded or was deferred until commit.
      */
     public static function send(EventLog $event): bool
+    {
+        if (DB::transactionLevel() > 0) {
+            DB::afterCommit(fn () => static::dispatchNotification($event));
+
+            return true;
+        }
+
+        return static::dispatchNotification($event);
+    }
+
+    /**
+     * Get additional data to store in notification.
+     *
+     * @param Model $loggable
+     * @throws Exception
+     * @return array
+     */
+    abstract public static function getMeta(mixed $loggable): array;
+
+    /**
+     * Get identities which are eligible for the notification.
+     *
+     * @param Model $loggable
+     * @param EventLog $eventLog
+     * @throws Exception
+     * @return Collection
+     */
+    abstract public static function eligibleIdentities(mixed $loggable, EventLog $eventLog): Collection;
+
+    /**
+     * @param EventLog $event
+     * @return bool
+     */
+    private static function dispatchNotification(EventLog $event): bool
     {
         try {
             $implementation = Implementation::byKey($event->data['implementation_key']);
@@ -437,23 +472,4 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
         return true;
     }
-
-    /**
-     * Get additional data to store in notification.
-     *
-     * @param Model $loggable
-     * @throws Exception
-     * @return array
-     */
-    abstract public static function getMeta(mixed $loggable): array;
-
-    /**
-     * Get identities which are eligible for the notification.
-     *
-     * @param Model $loggable
-     * @param EventLog $eventLog
-     * @throws Exception
-     * @return Collection
-     */
-    abstract public static function eligibleIdentities(mixed $loggable, EventLog $eventLog): Collection;
 }

@@ -3,6 +3,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\FundConfig;
 use App\Models\FundProvider;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +11,30 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundQuery
 {
+    /**
+     * @param Builder|Relation|Fund $query
+     * @return Builder|Relation|Fund
+     */
+    public static function whereVoucherCreationFromProfilesFilter(
+        Builder|Relation|Fund $query,
+    ): Builder|Relation|Fund {
+        return $query
+            ->where('external', false)
+            ->whereDate('end_date', '>=', today())
+            ->whereHas('fund_config', function (Builder $query) {
+                $query->where('is_configured', true);
+                $query->where('outcome_type', '!=', FundConfig::OUTCOME_TYPE_PAYOUT);
+            })
+            ->where(function (Builder $query) {
+                $query->where('state', Fund::STATE_ACTIVE);
+
+                $query->orWhere(function (Builder $query) {
+                    $query->where('state', Fund::STATE_PAUSED);
+                    $query->whereDate('start_date', '>', today());
+                });
+            });
+    }
+
     /**
      * @param Builder|Relation|Fund $query
      * @return Builder|Relation|Fund

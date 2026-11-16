@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
  */
 class FundFormulaProductResource extends BaseJsonResource
 {
+    public const array LOAD_NESTED = [
+        'conditions' => FundFormulaConditionResource::class,
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -18,8 +22,11 @@ class FundFormulaProductResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        return $this->resource->only([
-            'id', 'product_id', 'record_type_key_multiplier',
-        ]);
+        return [
+            ...$this->resource->only([
+                'id', 'product_id', 'record_type_key_multiplier',
+            ]),
+            'conditions' => FundFormulaConditionResource::collection($this->resource->conditions),
+        ];
     }
 }

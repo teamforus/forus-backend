@@ -11,6 +11,7 @@ use App\Models\Traits\HasFaq;
 use App\Models\Traits\HasTags;
 use App\Rules\FundRequests\BaseFundRequestRule;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\RecordValidationQuery;
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
+use Throwable;
 
 /**
  * App\Models\Fund.
@@ -1192,22 +1194,69 @@ class Fund extends Model
         ?Identity $identity,
         array $records = null,
     ): float {
-        if ($this->fund_formulas->count() === 0 &&
-            $this->fund_formula_products->pluck('price')->sum() === 0) {
-            return 0;
-        }
+        $values = $records ?? $this->formulaTrustedRecordValues($identity);
 
-        return $this->fund_formulas->map(function (FundFormula $formula) use ($identity, $records) {
-            switch ($formula->type) {
-                case FundFormula::TYPE_FIXED: return $formula->amount;
-                case FundFormula::TYPE_MULTIPLY: {
-                    $value = $this->getFormulaRecordValue($formula, $identity, $records);
+        return $this->amountForRecordValues($values);
+    }
 
-                    return is_numeric($value) ? $formula->amount * $value : 0;
-                }
-                default: return 0;
-            }
-        })->sum() + $this->fund_formula_products->pluck('price')->sum();
+    /**
+     * @param array<string, mixed> $values
+     * @return float
+     */
+    public function amountForRecordValues(array $values): float
+    {
+        $budgetAmount = $this->matchingBudgetFormulas($values)->sum(function (FundFormula $formula) use ($values) {
+            return $formula->calculateAmount($values);
+        });
+
+        return $budgetAmount + $this->matchingProductFormulas($values)->sum('price');
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     * @return Collection<int, FundFormula>
+     */
+    public function matchingBudgetFormulas(array $values): Collection
+    {
+        return $this->fund_formulas->filter(function (FundFormula $formula) use ($values) {
+            return $formula->matchesConditions($values);
+        })->values();
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     * @return Collection<int, FundFormulaProduct>
+     */
+    public function matchingProductFormulas(array $values): Collection
+    {
+        return $this->fund_formula_products->filter(fn (FundFormulaProduct $formula) =>
+            $formula->matchesConditions($values))->values();
+    }
+
+    /**
+     * @param Identity|null $identity
+     * @return array<string, mixed>
+     */
+    public function formulaTrustedRecordValues(?Identity $identity): array
+    {
+        return $identity ? $this->getTrustedRecordOfTypes($identity, $this->formulaRecordKeys()) : [];
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function formulaRecordKeys(): array
+    {
+        return $this->fund_formulas->toBase()
+            ->concat($this->fund_formula_products)
+            ->flatMap(fn (FundFormula|FundFormulaProduct $formula) => [
+                ...$formula->conditionRecordKeys(),
+                $formula instanceof FundFormula ? $formula->record_type_key : $formula->record_type_key_multiplier,
+            ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -1216,12 +1265,19 @@ class Fund extends Model
      */
     public function amountFundFormulaMultipleVouchers(?Identity $identity): float
     {
-        return $this->fund_formulas
-            ->filter(fn (FundFormula $fundFormula) => $fundFormula->type === $fundFormula::TYPE_MULTIPLY_VOUCHERS)
-            ->sum(fn (FundFormula $formula) => $formula->amount * $this->getFormulaMultipleVouchersCount(
-                $formula,
-                $identity,
-            ));
+        $formulas = $this->fund_formulas->where('type', FundFormula::TYPE_MULTIPLY_VOUCHERS);
+
+        if ($formulas->isEmpty()) {
+            return 0;
+        }
+
+        $values = $this->formulaTrustedRecordValues($identity);
+
+        return $formulas->sum(fn (FundFormula $formula) => $formula->amount * $this->getFormulaMultipleVouchersCount(
+            $formula,
+            $identity,
+            $values,
+        ));
     }
 
     /**
@@ -1235,10 +1291,17 @@ class Fund extends Model
         array $voucherFields = [],
         Carbon $expireAt = null,
     ): array {
-        return $this->fund_formulas
-            ->filter(fn (FundFormula $fundFormula) => $fundFormula->type === $fundFormula::TYPE_MULTIPLY_VOUCHERS)
-            ->map(function (FundFormula $formula) use ($identity, $voucherFields, $expireAt) {
-                $voucherCount = $this->getFormulaMultipleVouchersCount($formula, $identity);
+        $formulas = $this->fund_formulas->where('type', FundFormula::TYPE_MULTIPLY_VOUCHERS);
+
+        if ($formulas->isEmpty()) {
+            return [];
+        }
+
+        $values = $this->formulaTrustedRecordValues($identity);
+
+        return $formulas
+            ->map(function (FundFormula $formula) use ($identity, $voucherFields, $expireAt, $values) {
+                $voucherCount = $this->getFormulaMultipleVouchersCount($formula, $identity, $values);
                 $vouchers = [];
 
                 for ($i = 0; $i < $voucherCount; $i++) {
@@ -1294,7 +1357,7 @@ class Fund extends Model
         }
 
         if ($fundFormula->filter(static function (FundFormula $formula) {
-            return $formula->type !== FundFormula::TYPE_FIXED;
+            return $formula->type !== FundFormula::TYPE_FIXED || $formula->conditions->isNotEmpty();
         })->count()) {
             return null;
         }
@@ -1324,13 +1387,12 @@ class Fund extends Model
                 ?->pluck('record_type_key')
                 ?->toArray() ?? [];
 
-        $formulaKeys = $this->fund_formulas
-            ?->whereIn('type', [FundFormula::TYPE_MULTIPLY, FundFormula::TYPE_MULTIPLY_VOUCHERS])
-            ?->pluck('record_type_key')
-            ?->toArray() ?? [];
+        $formulaKeys = $this->matchingBudgetFormulas($values)
+            ->whereIn('type', [FundFormula::TYPE_MULTIPLY, FundFormula::TYPE_MULTIPLY_VOUCHERS])
+            ->pluck('record_type_key')->all();
 
         $list = array_filter([
-            $this?->fund_config?->csv_primary_key,
+            $this->fund_config?->csv_primary_key,
             ...$criteriaKeys,
             ...$formulaKeys,
         ]);
@@ -1448,12 +1510,17 @@ class Fund extends Model
     ): ?Voucher {
         $presetModel = $amount instanceof FundAmountPreset ? $amount : null;
 
-        if ($this->fund_formulas->count() === 0 && $amount === null) {
-            return null;
+        if ($amount === null) {
+            $values = $this->formulaTrustedRecordValues($identity);
+
+            if ($this->matchingBudgetFormulas($values)->isEmpty()) {
+                return null;
+            }
+
+            $amount = (string) $this->amountForRecordValues($values);
         }
 
         $amount = $presetModel ? $presetModel->amount : $amount;
-        $amount = $amount === null ? $this->amountForIdentity($identity) : $amount;
 
         // if amount is zero and identity gets additional vouchers by "multiply_vouchers" formulas - only they are created
         if (
@@ -1492,7 +1559,7 @@ class Fund extends Model
      * @param BankAccount $bankAccount
      * @param array $voucherFields
      * @param array $transactionFields
-     * @return VoucherTransaction
+     * @return VoucherTransaction|null
      */
     public function makePayout(
         Identity|null $identity,
@@ -1501,7 +1568,7 @@ class Fund extends Model
         BankAccount $bankAccount,
         array $voucherFields = [],
         array $transactionFields = [],
-    ): VoucherTransaction {
+    ): ?VoucherTransaction {
         $voucher = $this->makeVoucher(
             identity: $identity,
             voucherFields: [
@@ -1512,7 +1579,7 @@ class Fund extends Model
             amount: $amount,
         );
 
-        return $voucher->makeTransactionBySponsor($employee, [
+        return $voucher?->makeTransactionBySponsor($employee, [
             'amount' => $voucher->amount,
             'target' => VoucherTransaction::TARGET_PAYOUT,
             'target_iban' => $bankAccount->getIban(),
@@ -1536,12 +1603,13 @@ class Fund extends Model
     ): array {
         $vouchers = [];
         $fundEndDate = $this->end_date;
+        $values = $this->formulaTrustedRecordValues($identity);
 
-        foreach ($this->fund_formula_products as $formulaProduct) {
+        foreach ($this->matchingProductFormulas($values) as $formulaProduct) {
             $productExpireDate = $formulaProduct->product->expire_at;
             $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
             $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
-            $multiplier = $formulaProduct->getIdentityMultiplier($identity);
+            $multiplier = $formulaProduct->getIdentityMultiplier($identity, $values);
 
             $vouchers = array_merge(
                 $vouchers,
@@ -1614,6 +1682,14 @@ class Fund extends Model
     public function isActive(): bool
     {
         return ($this->state === static::STATE_ACTIVE) && !$this->isExpired();
+    }
+
+    /**
+     * @return bool
+     */
+    public function canCreateVouchersFromProfiles(): bool
+    {
+        return FundQuery::whereVoucherCreationFromProfilesFilter(self::query()->whereKey($this->id))->exists();
     }
 
     /**
@@ -1776,19 +1852,77 @@ class Fund extends Model
     }
 
     /**
+     * @param Profile $profile
+     * @return bool
+     */
+    public function checkProfileCriteria(Profile $profile): bool
+    {
+        $values = $profile->getCurrentRecordsForVoucherAward()->mapWithKeys(function (ProfileRecord $record) {
+            $value = filled($record->value) ? $record->value : null;
+
+            if ($record->record_type->type === RecordType::TYPE_DATE && filled($value)) {
+                $value = Carbon::createFromFormat('!Y-m-d', $value)->format('d-m-Y');
+            }
+
+            return [$record->record_type->key => $value];
+        })->all();
+
+        $criteria = $this->criteria->reject(fn (FundCriterion $criterion) => $criterion->isExcludedByRules($values));
+
+        foreach ($criteria as $criterion) {
+            if (!BaseFundRequestRule::validateRecordValue($criterion, $values[$criterion->record_type_key] ?? null)
+                ->passes()) {
+                return false;
+            }
+        }
+
+        foreach ($this->criteria_groups->where('required', true) as $group) {
+            $groupCriteria = $criteria->where('fund_criteria_group_id', $group->id);
+
+            if (
+                $groupCriteria->isNotEmpty() &&
+                !$groupCriteria->contains(
+                    fn (FundCriterion $criterion) => filled($values[$criterion->record_type_key] ?? null),
+                )
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param array $items
+     * @throws Throwable
      * @return $this
      */
     public function updateFormulaProducts(array $items): self
     {
-        $products = array_map(fn (array $item) => $this->fund_formula_products()->updateOrCreate([
-            'product_id' => Arr::get($item, 'product_id'),
-            'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
-        ])->id, $items);
+        return DB::transaction(function () use ($items) {
+            $products = array_map(function (array $item) {
+                $attributes = [
+                    'product_id' => Arr::get($item, 'product_id'),
+                    'record_type_key_multiplier' => Arr::get($item, 'record_type_key_multiplier'),
+                ];
 
-        $this->fund_formula_products()->whereNotIn('id', $products)->delete();
+                if ($id = Arr::get($item, 'id')) {
+                    $formula = $this->fund_formula_products()->findOrFail($id);
+                    $formula->update($attributes);
 
-        return $this;
+                    return $formula->id;
+                }
+
+                return $this->fund_formula_products()->create($attributes)->id;
+            }, $items);
+
+            $this->fund_formula_products()
+                ->whereNotIn('id', $products)
+                ->whereDoesntHave('conditions')
+                ->delete();
+
+            return $this;
+        });
     }
 
     /**
@@ -1951,65 +2085,76 @@ class Fund extends Model
      */
     public function identityHasActiveVoucher(Identity $identity): bool
     {
-        return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where([
+        $builder = VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where([
             'identity_id' => $identity->id,
-        ])->exists();
+        ]);
+
+        if (DB::transactionLevel() > 0) {
+            $builder->lockForUpdate();
+        }
+
+        return $builder->exists();
     }
 
     /**
      * @param Identity $identity
+     * @throws Throwable
      * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
     public function checkBackofficeIfAvailable(
         Identity $identity,
     ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
-        if (!$identity->canReceiveVouchers()) {
-            return null;
-        }
-
-        $bsn = $identity->bsn;
-        $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
-
-        if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
-            // check for residency
-            $backofficeApi = $this->getBackofficeApi();
-            $residencyResponse = $backofficeApi->residencyCheck($bsn);
-
-            if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
-                return $residencyResponse;
+        return $identity->transactionWithFundAwardLock(function (
+            Identity $identity,
+        ): EligibilityResponse|ResidencyResponse|PartnerBsnResponse|null {
+            if (!$identity->canReceiveVouchers()) {
+                return null;
             }
 
-            // check if taken by partner
-            if ($this->fund_config->backoffice_check_partner) {
-                $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
-                $partner = Identity::findByBsn($partnerBsnResponse->getBsn() ?: null);
+            $bsn = $identity->bsn;
+            $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity);
 
-                if (!$partnerBsnResponse->getLog()->success() ||
-                    ($partner && $this->identityHasActiveVoucher($partner)) ||
-                    $this->isTakenByPartner($identity)) {
-                    return $partnerBsnResponse;
+            if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
+                // check for residency
+                $backofficeApi = $this->getBackofficeApi();
+                $residencyResponse = $backofficeApi->residencyCheck($bsn);
+
+                if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
+                    return $residencyResponse;
                 }
+
+                // check if taken by partner
+                if ($this->fund_config->backoffice_check_partner) {
+                    $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+                    $partner = Identity::findByBsn($partnerBsnResponse->getBsn() ?: null);
+
+                    if (!$partnerBsnResponse->getLog()->success() ||
+                        ($partner && $this->identityHasActiveVoucher($partner)) ||
+                        $this->isTakenByPartner($identity)) {
+                        return $partnerBsnResponse;
+                    }
+                }
+
+                // check again for active vouchers
+                $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
+
+                if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
+                    $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
+                    $voucher = $this->makeVoucher(identity: $identity, voucherFields: $extraFields);
+
+                    $this->makeFundFormulaMultipleVouchers(identity: $identity, voucherFields: $extraFields);
+                    $this->makeFundFormulaProductVouchers($identity, $extraFields);
+
+                    $response->getLog()->update([
+                        'voucher_id' => $voucher?->id,
+                    ]);
+                }
+
+                return $response;
             }
 
-            // check again for active vouchers
-            $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
-
-            if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
-                $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
-                $voucher = $this->makeVoucher(identity: $identity, voucherFields: $extraFields);
-
-                $this->makeFundFormulaMultipleVouchers(identity: $identity, voucherFields: $extraFields);
-                $this->makeFundFormulaProductVouchers($identity, $extraFields);
-
-                $response->getLog()->update([
-                    'voucher_id' => $voucher?->id,
-                ]);
-            }
-
-            return $response;
-        }
-
-        return null;
+            return null;
+        });
     }
 
     /**
@@ -2318,26 +2463,15 @@ class Fund extends Model
         ?Identity $identity,
         ?array $records = null,
     ): int {
-        $value = $this->getFormulaRecordValue($formula, $identity, $records);
+        $values = $records ?? $this->formulaTrustedRecordValues($identity);
 
-        return is_numeric($value) ? min(max(intval($value), 0), FundFormula::MULTIPLY_VOUCHERS_MAX) : 0;
-    }
-
-    /**
-     * @param FundFormula $formula
-     * @param Identity|null $identity
-     * @param array|null $records
-     * @return mixed
-     */
-    protected function getFormulaRecordValue(FundFormula $formula, ?Identity $identity, ?array $records): mixed
-    {
-        if ($records) {
-            return $records[$formula->record_type_key] ?? null;
+        if (!$formula->matchesConditions($values)) {
+            return 0;
         }
 
-        return $identity?->exists
-            ? $this->getTrustedRecordOfType($identity, $formula->record_type_key)?->value
-            : null;
+        $value = $values[$formula->record_type_key] ?? null;
+
+        return is_numeric($value) ? min(max(intval($value), 0), FundFormula::MULTIPLY_VOUCHERS_MAX) : 0;
     }
 
     /**

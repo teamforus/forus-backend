@@ -394,6 +394,7 @@ class IdentityProviderProvisioningService
      * @param IdentityProviderMembership $membership
      * @param array $attributes
      * @param array $current
+     * @throws Throwable
      * @return void
      */
     protected function applyAttributes(

@@ -48,7 +48,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
 
         $this->rollbackModels([], function () use ($implementation, $identity, $provider, $fundProvider) {
             $this->browse(function (Browser $browser) use ($implementation, $identity, $provider, $fundProvider) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity
@@ -117,7 +117,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $fundProvider,
                 $reservation
             ) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity
@@ -182,7 +182,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $fundProvider,
                 $voucher
             ) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity

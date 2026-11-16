@@ -7,6 +7,7 @@ use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Models\Traits\ValidatesValues;
+use App\Modules\DCP\Models\DCPConnection;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ImplementationQuery;
 use App\Scopes\Builders\VoucherQuery;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * App\Models\Implementation.
@@ -518,6 +520,14 @@ class Implementation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function dcp_connections(): HasMany
+    {
+        return $this->hasMany(DCPConnection::class);
     }
 
     /**
@@ -1086,6 +1096,7 @@ class Implementation extends Model
 
     /**
      * @param Identity $identity
+     * @throws Throwable
      * @return array|Voucher[]
      */
     public function makeVouchersInApplicableFunds(Identity $identity): array
@@ -1095,19 +1106,21 @@ class Implementation extends Model
             ->get();
 
         return $funds->reduce(function (array $vouchers, Fund $fund) use ($identity) {
-            if (Gate::forUser($identity)->denies('apply', [$fund, 'apply'])) {
-                return $vouchers;
-            }
+            return $identity->transactionWithFundAwardLock(function (Identity $identity) use ($vouchers, $fund): array {
+                if (Gate::forUser($identity)->denies('apply', [$fund, 'apply'])) {
+                    return $vouchers;
+                }
 
-            if ($voucher = $fund->makeVoucher(identity: $identity)) {
-                $vouchers[] = $voucher;
-            }
+                if ($voucher = $fund->makeVoucher(identity: $identity)) {
+                    $vouchers[] = $voucher;
+                }
 
-            return [
-                ...$vouchers,
-                ...$fund->makeFundFormulaProductVouchers($identity),
-                ...$fund->makeFundFormulaMultipleVouchers($identity),
-            ];
+                return [
+                    ...$vouchers,
+                    ...$fund->makeFundFormulaProductVouchers($identity),
+                    ...$fund->makeFundFormulaMultipleVouchers($identity),
+                ];
+            });
         }, []);
     }
 

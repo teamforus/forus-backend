@@ -7,6 +7,7 @@ use App\Models\FundCriterion;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\Profile;
 use Exception;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -260,53 +261,10 @@ class FundPolicy
      */
     public function apply(Identity $identity, Fund $fund, ?string $logScope): Response|bool
     {
-        if (!$identity->canReceiveVouchers()) {
-            return false;
-        }
+        $restrictions = $this->checkAwardRestrictions($identity, $fund, $logScope);
 
-        if (!$fund->isActive()) {
-            return $this->deny(__('fund.state_' . $fund->state));
-        }
-
-        if ($fund->external) {
-            return $this->deny(__('fund.type_external'));
-        }
-
-        if (!$fund->isConfigured()) {
-            return $this->deny(__('fund.not_configured'));
-        }
-
-        if ($fund->isBackofficeApiAvailable() && $fund->fund_config->backoffice_check_partner && $identity->bsn) {
-            try {
-                $response = $fund->getBackofficeApi()->partnerBsn($identity->bsn);
-
-                if (!$response->getLog()->success()) {
-                    throw new Exception(implode('', [
-                        'Backoffice partner check response error: ',
-                        "scope: $logScope, fund_id: $fund->id, identity_address: $identity->address",
-                    ]));
-                }
-
-                $partnerBsn = $response->getBsn();
-                $partner = $partnerBsn ? Identity::findByBsn($partnerBsn) : false;
-
-                if ($partner && $fund->identityHasActiveVoucher($partner)) {
-                    return $this->deny(__('fund.taken_by_partner'));
-                }
-            } catch (Throwable $e) {
-                logger()->error('FundPolicy@apply: ' . $e->getMessage());
-
-                return $this->deny(__('fund.backoffice_error'));
-            }
-        }
-
-        if ($fund->fund_config->partner_deny && $fund->isTakenByPartner($identity)) {
-            return $this->deny(__('fund.taken_by_partner'));
-        }
-
-        // The same identity can't apply twice to the same fund
-        if ($fund->identityHasActiveVoucher($identity)) {
-            return $this->deny(__('fund.already_received'));
+        if ($restrictions !== true) {
+            return $restrictions;
         }
 
         // Check criteria
@@ -319,6 +277,40 @@ class FundPolicy
         }
 
         return true;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param Profile $profile
+     * @param string|null $logScope
+     * @return Response|bool
+     */
+    public function applyFromProfile(
+        Identity $identity,
+        Fund $fund,
+        Profile $profile,
+        ?string $logScope = null,
+    ): Response|bool {
+        if ($profile->identity_id !== $identity->id || $profile->organization_id !== $fund->organization_id) {
+            return false;
+        }
+
+        if (!$profile->requester_import_rows()->where('organization_id', $fund->organization_id)->exists()) {
+            return false;
+        }
+
+        if ($fund->fund_config?->isPayoutOutcome()) {
+            return $this->deny(__('fund.profile_payout_not_supported'));
+        }
+
+        $restrictions = $this->checkAwardRestrictions($identity, $fund, $logScope, fromProfile: true);
+
+        if ($restrictions !== true) {
+            return $restrictions;
+        }
+
+        return $fund->checkProfileCriteria($profile) ?: $this->deny(__('fund.unmet_criteria'));
     }
 
     /**
@@ -403,5 +395,74 @@ class FundPolicy
             $fund->organization->bsn_enabled &&
             $fund->fund_config->allow_fund_request_prefill &&
             $fund->organization->hasIConnectApiOin();
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @param string|null $logScope
+     * @param bool $fromProfile
+     * @return Response|bool
+     */
+    private function checkAwardRestrictions(
+        Identity $identity,
+        Fund $fund,
+        ?string $logScope,
+        bool $fromProfile = false,
+    ): Response|bool {
+        if (!$identity->canReceiveVouchers()) {
+            return false;
+        }
+
+        if (!$fromProfile && !$fund->isActive()) {
+            return $this->deny(__('fund.state_' . $fund->state));
+        }
+
+        if ($fund->external) {
+            return $this->deny(__('fund.type_external'));
+        }
+
+        if (!$fund->isConfigured()) {
+            return $this->deny(__('fund.not_configured'));
+        }
+
+        if ($fromProfile && !$fund->canCreateVouchersFromProfiles()) {
+            return $this->deny(__('fund.state_' . $fund->state));
+        }
+
+        if ($fund->isBackofficeApiAvailable() && $fund->fund_config->backoffice_check_partner && $identity->bsn) {
+            try {
+                $response = $fund->getBackofficeApi()->partnerBsn($identity->bsn);
+
+                if (!$response->getLog()->success()) {
+                    throw new Exception(implode('', [
+                        'Backoffice partner check response error: ',
+                        "scope: $logScope, fund_id: $fund->id, identity_address: $identity->address",
+                    ]));
+                }
+
+                $partnerBsn = $response->getBsn();
+                $partner = $partnerBsn ? Identity::findByBsn($partnerBsn) : false;
+
+                if ($partner && $fund->identityHasActiveVoucher($partner)) {
+                    return $this->deny(__('fund.taken_by_partner'));
+                }
+            } catch (Throwable $e) {
+                logger()->error('FundPolicy@apply: ' . $e->getMessage());
+
+                return $this->deny(__('fund.backoffice_error'));
+            }
+        }
+
+        if ($fund->fund_config->partner_deny && $fund->isTakenByPartner($identity)) {
+            return $this->deny(__('fund.taken_by_partner'));
+        }
+
+        // The same identity can't apply twice to the same fund
+        if ($fund->identityHasActiveVoucher($identity)) {
+            return $this->deny(__('fund.already_received'));
+        }
+
+        return true;
     }
 }
