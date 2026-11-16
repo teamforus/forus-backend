@@ -80,6 +80,9 @@ class HouseholdSearchTest extends SearchTestCase
 
         $this->assertSearchIds(['q' => $municipalityNamePart1], [$household1->id]);
         $this->assertSearchIds(['q' => $municipalityNamePart2], [$household2->id]);
+
+        $this->assertSearchIds(['q' => $household1->id], [$household1->id]);
+        $this->assertSearchIds(['q' => $household2->id], [$household2->id]);
     }
 
     /**

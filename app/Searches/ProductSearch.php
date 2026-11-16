@@ -40,7 +40,7 @@ class ProductSearch extends BaseSearch
 
         // filter by string query
         if ($this->hasFilter('q') && !empty($q = $this->getFilter('q'))) {
-            ProductQuery::queryDeepFilter($builder, $q);
+            ProductQuery::queryDeepFilter($builder, $q, searchById: true);
         }
 
         if ($this->getFilter('state') === 'approved') {

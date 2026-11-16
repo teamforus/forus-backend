@@ -115,6 +115,16 @@ class IdentitiesSearchTest extends SearchTestCase
         $fund->makeVoucher($identity1);
         $fund->makeVoucher($identity2);
 
+        $this->assertSearchIds([
+            'q' => (string) $identity1->id,
+            'organization_id' => $organization->id,
+        ], [$identity1->id]);
+
+        $this->assertSearchIds([
+            'q' => (string) $identity2->id,
+            'organization_id' => $organization->id,
+        ], [$identity2->id]);
+
         // assert by primary email
         $this->assertSearchIds([
             'q' => $emailPart1,
