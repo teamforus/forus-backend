@@ -26,6 +26,8 @@ use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Modules\DCP\Models\DCPOrder;
+use App\Modules\DCP\Models\DCPOrderBulk;
 use App\Modules\RequesterImport\Models\RequesterImportRow;
 use App\Modules\VoucherPass\Models\VoucherPass;
 use App\Services\DigIdService\Models\DigIdSession;
@@ -47,6 +49,182 @@ trait MakesApiRequests
     use DoesTesting;
     use MakesTestProducts;
     use TestsReservations;
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetOrganizationLogsRequest(
+        Organization $organization,
+        Identity|bool $identity,
+        array $query,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/logs?" . http_build_query($query),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassDCPIdsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/dcp/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|bool $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiPrepareVoucherPassDCPRequest(
+        Organization $organization,
+        array $data,
+        Identity|bool $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/dcp/" .
+            ($preview ? 'preview' : 'sync'),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetDCPOrdersRequest(
+        Organization $organization,
+        Identity|bool $identity,
+        array $query = [],
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders?" . http_build_query($query),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrder $order
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderRequest(
+        Organization $organization,
+        DCPOrder $order,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders/$order->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrder $order
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderLogsRequest(
+        Organization $organization,
+        DCPOrder $order,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders/$order->id/logs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulksRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrderBulk $bulk
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulkRequest(
+        Organization $organization,
+        DCPOrderBulk $bulk,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/$bulk->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrderBulk $bulk
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulkLogsRequest(
+        Organization $organization,
+        DCPOrderBulk $bulk,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/$bulk->id/logs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPReadyCountRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/ready-count",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiApproveDCPOrderBulkRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
 
     /**
      * @param Organization $organization
