@@ -24,13 +24,16 @@ use App\Notifications\Organizations\Products\ProductReservedNotification;
 use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Events\Dispatcher;
+use League\CommonMark\Exception\CommonMarkException;
 
 class ProductSubscriber
 {
     /**
      * @param ProductCreated $productCreated
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function onProductCreated(ProductCreated $productCreated): void
     {
@@ -45,19 +48,26 @@ class ProductSubscriber
             'provider' => $product->organization,
         ]);
 
-        $funds = Fund::whereHas('fund_providers', function (Builder $builder) use ($product) {
-            $builder->where('organization_id', $product->organization_id);
-            $builder->where('state', FundProvider::STATE_ACCEPTED);
-        })->get();
+        $funds = Fund::query()
+            ->whereHas('fund_providers', function (Builder $builder) use ($product) {
+                $builder->where('organization_id', $product->organization_id);
+                $builder->where('state', FundProvider::STATE_ACCEPTED);
+            })
+            ->with(['fund_providers' => function (HasMany $builder) use ($product) {
+                $builder->where('organization_id', $product->organization_id);
+                $builder->where('state', FundProvider::STATE_ACCEPTED);
+            }])
+            ->get();
 
         foreach ($funds as $fund) {
-            FundProductAddedEvent::dispatch($fund, $product);
+            FundProductAddedEvent::dispatch($fund, $fund->fund_providers->first(), $product);
         }
     }
 
     /**
      * @param ProductUpdated $productUpdated
      * @noinspection PhpUnused
+     * @throws CommonMarkException
      */
     public function onProductUpdated(ProductUpdated $productUpdated): void
     {

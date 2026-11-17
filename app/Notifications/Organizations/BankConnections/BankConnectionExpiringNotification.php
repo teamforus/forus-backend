@@ -5,7 +5,9 @@ namespace App\Notifications\Organizations\BankConnections;
 use App\Mail\BankConnections\BankConnectionExpiringMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Notification;
 use App\Models\Permission;
+use App\Services\EventLogService\Models\EventLog;
 
 class BankConnectionExpiringNotification extends BaseBankConnectionsNotification
 {
@@ -25,5 +27,17 @@ class BankConnectionExpiringNotification extends BaseBankConnectionsNotification
         ], $implementation->emailFrom());
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
+    }
+
+    /**
+     * @param Notification $notification
+     * @param EventLog $event
+     * @return array|null
+     */
+    public static function getDashboardRoute(Notification $notification, EventLog $event): ?array
+    {
+        return static::makeDashboardRoute('bank-connections', [
+            'organizationId' => $notification->organization_id,
+        ]);
     }
 }

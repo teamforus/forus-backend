@@ -184,6 +184,7 @@ class FundSubscriber
 
         $eventLog = $fund->log($fund::EVENT_PROVIDER_APPLIED, $this->getFundLogModels($fund, [
             'provider' => $fundProvider->organization,
+            'fund_provider' => $fundProvider,
         ]));
 
         FundProviderAppliedNotification::send($eventLog);
@@ -208,6 +209,7 @@ class FundSubscriber
         $eventLog = $fund->log($fund::EVENT_PROVIDER_REPLIED, $this->getFundLogModels($fund, [
             'product' => $event->getChat()->product,
             'provider' => $event->getChat()->fund_provider->organization,
+            'fund_provider' => $event->getChat()->fund_provider,
         ]));
 
         FundProviderChatMessageNotification::send($eventLog);
@@ -294,10 +296,12 @@ class FundSubscriber
     {
         $fund = $event->getFund();
         $product = $event->getProduct();
+        $fundProvider = $event->getFundProvider();
 
         $eventLog = $fund->log($fund::EVENT_PRODUCT_ADDED, $this->getFundLogModels($fund, [
             'product' => $product,
             'provider' => $product->organization,
+            'fund_provider' => $fundProvider,
         ]));
 
         FundProductAddedNotification::send($eventLog);

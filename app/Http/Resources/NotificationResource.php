@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Implementation;
 use App\Models\Notification;
 use App\Models\NotificationTemplate;
+use App\Notifications\BaseNotification;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Request;
 use Throwable;
@@ -36,6 +37,7 @@ class NotificationResource extends BaseJsonResource
             'id' => $this->resource->id,
             'type' => $this->resource->key,
             'seen' => $this->resource->read_at != null,
+            'route' => $this->getDashboardRoute($event),
         ], $template ? [
             'title' => str_var_replace($template->title, $templateData),
             'description' => str_var_replace($template->content, $templateData),
@@ -62,5 +64,26 @@ class NotificationResource extends BaseJsonResource
 
             throw $e;
         }
+    }
+
+    /**
+     * @param EventLog $event
+     * @return array|null
+     */
+    protected function getDashboardRoute(EventLog $event): ?array
+    {
+        $class = $this->resource->type;
+
+        if (!is_string($class) || !class_exists($class) || !is_subclass_of($class, BaseNotification::class)) {
+            return null;
+        }
+
+        $route = $class::getDashboardRoute($this->resource, $event);
+
+        return $route ? [
+            ...$route,
+            'params' => (object) $route['params'],
+            'query' => (object) $route['query'],
+        ] : null;
     }
 }
