@@ -20,9 +20,6 @@ class StoreProductReservationRequest extends BaseFormRequest
 {
     use ThrottleWithMeta;
 
-    protected int $maxAttempts = 100;
-    protected float $decayMinutes = 180;
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -33,6 +30,7 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $this->throttleKeyPrefix = 'provider_reservations';
         $this->maxAttempts = $this->organization->provider_throttling_value;
+        $this->decayMinutes = 180;
 
         $this->throttleWithKey('to_many_attempts', $this, 'provider_reservation_store');
 
@@ -67,7 +65,7 @@ class StoreProductReservationRequest extends BaseFormRequest
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToReservationRule($this->input('number')),
+                new ProductIdToReservationRule($voucher?->id),
             ],
             'note' => 'nullable|string|max:2000',
         ];
