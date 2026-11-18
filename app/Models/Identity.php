@@ -29,6 +29,7 @@ use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 /**
@@ -767,6 +768,7 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
+     * @throws NotFoundHttpException
      * @return string
      */
     public static function activateAuthorizationEmailProxy(string $token, ?string $ip = null): string
@@ -778,6 +780,7 @@ class Identity extends Model implements Authenticatable
      * Authorize proxy identity by email token.
      * @param string $token
      * @param string|null $ip
+     * @throws NotFoundHttpException
      * @return string
      */
     public static function exchangeEmailConfirmationToken(string $token, ?string $ip = null): string

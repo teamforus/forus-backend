@@ -26,6 +26,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class IdentityController extends Controller
 {
@@ -94,9 +95,7 @@ class IdentityController extends Controller
         IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken
     ): View|RedirectResponse {
-        $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
-
         $clientType = $request->input('client_type', '');
         $implementationKey = $request->input('implementation_key');
 
@@ -134,19 +133,11 @@ class IdentityController extends Controller
         }
 
         if ($isMobile) {
-            $service = resolve(MeAppApiService::class);
-            $sourceUrl = $service->deepLinkBaseUrl($clientType);
-            $redirectUrl = sprintf(
-                $sourceUrl . 'identity-confirmation?%s',
-                http_build_query(compact('token'))
+            return resolve(MeAppApiService::class)->emailConfirmationView(
+                $exchangeToken,
+                $clientType,
+                $implementationKey,
             );
-
-            return view()->make('pages.auth.deep_link', [
-                'type' => 'email_confirmation',
-                'redirectUrl' => $redirectUrl,
-                'exchangeToken' => $exchangeToken,
-                ...$service->authPageContext($clientType, $implementationKey),
-            ]);
         }
 
         abort(404);
@@ -195,10 +186,10 @@ class IdentityController extends Controller
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
     ): View|RedirectResponse {
-        $exchangeToken = $emailToken;
+        $target = $request->input('target');
+        $isMobile = $request->input('is_mobile', false);
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');
-        $isMobile = $request->input('is_mobile', false);
 
         if ((!$isMobile || $clientType) &&
             !in_array($clientType, Arr::flatten(config('forus.clients')), true)) {
@@ -211,34 +202,24 @@ class IdentityController extends Controller
         }
 
         if ($isMobile) {
-            $service = resolve(MeAppApiService::class);
-            $sourceUrl = $service->deepLinkBaseUrl($clientType);
-        } else {
-            $sourceUrl = Implementation::byKey($implementationKey)->urlFrontend($clientType);
+            return resolve(MeAppApiService::class)->emailSignInView($emailToken, $clientType, $implementationKey, $target);
+        }
 
-            if ($clientType == 'website') {
-                $sourceUrl = config('forus.front_ends.website-default');
-            }
+        $sourceUrl = Implementation::byKey($implementationKey)->urlFrontend($clientType);
+
+        if ($clientType == 'website') {
+            $sourceUrl = config('forus.front_ends.website-default');
         }
 
         $redirectUrl = sprintf(
             $sourceUrl . 'identity-restore?%s',
             http_build_query(array_filter([
                 'token' => $emailToken,
-                'target' => $request->input('target'),
+                'target' => $target,
             ], static function ($var) {
                 return $var !== null && $var !== '';
             }))
         );
-
-        if ($isMobile) {
-            return view('pages.auth.deep_link', [
-                'type' => 'email_sign_in',
-                'redirectUrl' => $redirectUrl,
-                'exchangeToken' => $exchangeToken,
-                ...$service->authPageContext($clientType, $implementationKey),
-            ]);
-        }
 
         return redirect($redirectUrl);
     }
@@ -333,6 +314,7 @@ class IdentityController extends Controller
      * Authorize auth code (qr-code) authorization request.
      *
      * @param IdentityAuthorizeTokenRequest $request
+     * @throws NotFoundHttpException
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
@@ -397,15 +379,13 @@ class IdentityController extends Controller
         $accessToken = $request->header('Access-Token');
         $identityProxy = IdentityProxy::findByAccessToken($accessToken);
 
-        if ($identityProxy?->isPending()) {
-            return new JsonResponse(['message' => 'pending']);
-        }
-
-        if ($identityProxy?->isActive() && $identityProxy?->identity) {
-            return new JsonResponse(['message' => 'active']);
-        }
-
-        return new JsonResponse(['message' => 'invalid']);
+        return new JsonResponse([
+            'message' => match (true) {
+                $identityProxy?->isPending() => 'pending',
+                $identityProxy?->isActive() && $identityProxy?->identity => 'active',
+                default => 'invalid',
+            },
+        ]);
     }
 
     /**

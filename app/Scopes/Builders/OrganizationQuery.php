@@ -13,8 +13,8 @@ use App\Models\RolePermission;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Database\Query\Builder as QBuilder;
+use Illuminate\Support\Arr;
 
 class OrganizationQuery
 {
@@ -54,6 +54,19 @@ class OrganizationQuery
                 });
             })->orWhere('organizations.identity_address', $identityAddress);
         });
+    }
+
+    /**
+     * @param string $identityAddress
+     * @return Builder<Organization>
+     */
+    public static function queryForVoucherScanning(string $identityAddress): Builder
+    {
+        return self::whereHasPermissions(
+            Organization::query(),
+            $identityAddress,
+            Permission::SCAN_VOUCHERS,
+        );
     }
 
     /**

@@ -5,13 +5,15 @@ namespace App\Services\MeAppApiService\Documentation\Transformers;
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\ClientVersionMiddleware;
-use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
+use App\Services\MeAppApiService\Documentation\Catalogs\DescriptionCatalog;
 use App\Services\MeAppApiService\Documentation\Schemas\PaymentInputSchema;
+use App\Services\MeAppApiService\Enums\RateLimiterName;
 use Dedoc\Scramble\Contracts\OperationTransformer;
 use Dedoc\Scramble\OpenApiContext;
 use Dedoc\Scramble\Support\Generator\Combined\AnyOf;
+use Dedoc\Scramble\Support\Generator\Header;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Parameter;
 use Dedoc\Scramble\Support\Generator\Reference;
@@ -20,21 +22,23 @@ use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\SecurityRequirement;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
+use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Config;
 use LogicException;
 
-class MobileOperationTransformer implements OperationTransformer
+readonly class MobileOperationTransformer implements OperationTransformer
 {
     /**
      * @param OpenApiContext $context
      */
-    public function __construct(private readonly OpenApiContext $context)
+    public function __construct(private OpenApiContext $context)
     {
     }
 
@@ -49,6 +53,7 @@ class MobileOperationTransformer implements OperationTransformer
 
         $route = $routeInfo->route;
         $appKey = $route->named('mobile.requester.*') ? 'requester' : 'provider';
+        $operation->setAttribute('mobile_route_name', substr($route->getName(), strlen("mobile.$appKey.")));
         $middleware = resolve(Router::class)->gatherRouteMiddleware($route);
         $forbidden = [];
 
@@ -69,144 +74,20 @@ class MobileOperationTransformer implements OperationTransformer
             $operation->addSecurity([]);
         }
 
-        $summaries = [
-            'identity.proxy.token' => 'Create a QR login request.',
-            'identity.proxy.code' => 'Create a PIN login request.',
-            'identity.proxy.authorize.token' => 'Approve a QR login request.',
-            'identity.proxy.check-token' => 'Check login status.',
-            'firestore-tokens.store' => 'Create a Firebase authentication token.',
-        ];
-
-        foreach ($summaries as $name => $summary) {
-            if ($route->named('mobile.*.v1.' . $name)) {
-                $operation->summary($summary);
-                break;
-            }
-        }
-
-        if ($route->named('mobile.provider.v1.transactions.index')) {
-            $operation->addParameters([
-                Parameter::make('order_by', 'query')->setSchema(Schema::fromType(new StringType())),
-                Parameter::make('order_dir', 'query')->setSchema(Schema::fromType(new StringType())),
-            ]);
-        }
-
-        if ($route->named('mobile.requester.v1.vouchers.index', 'mobile.requester.v1.vouchers.show')) {
-            $descriptions = [
-                'product_id' => 'Existing product ID for query_product context. Does not filter vouchers.',
-                'implementation_id' => 'Must reference an existing implementation when non-null.',
-                'implementation_key' => 'Must reference an existing implementation key when non-null.',
-            ];
-
-            foreach ($operation->parameters as $parameter) {
-                if ($parameter->in === 'query' && isset($descriptions[$parameter->name])) {
-                    $parameter->description($descriptions[$parameter->name]);
-                }
-            }
-        }
-
-        if ($route->named('mobile.*.v1.product-categories.index')) {
-            foreach ($operation->parameters as $parameter) {
-                if ($parameter->in !== 'query') {
-                    continue;
-                }
-
-                if ($parameter->name === 'parent_id') {
-                    $parameter->description('Omit or leave empty for root categories, '
-                        . 'or provide an existing category ID for children.');
-                } elseif ($parameter->name === 'used') {
-                    $parameter->setSchema(Schema::fromType((new IntegerType())->enum([0, 1])))
-                        ->description('Use 1 for categories with available products, including in descendants, '
-                            . 'or 0 to include unused categories.');
-                }
-            }
-        }
-
-        if ($route->named('mobile.requester.v1.products.index')) {
-            $descriptions = [
-                'product_category_ids[]' => 'Match selected categories and their descendants.',
-                'fund_ids[]' => 'Filter products by selected funds.',
-                'organization_id' => 'Filter by provider organization ID.',
-                'from' => 'Minimum calculated product price.',
-                'to' => 'Maximum calculated product price.',
-                'postcode' => 'Used with distance to filter by provider office location.',
-                'distance' => 'Distance in kilometres, used with postcode.',
-                'bookmarked' => 'Use 1 for your bookmarked products. Guests receive an empty list.',
-                'order_by' => 'Sort field. Defaults to created_at.',
-                'order_dir' => 'Sort direction. Defaults to desc.',
-                'page' => 'Page number. Defaults to 1.',
-            ];
-
-            foreach ($operation->parameters as $parameter) {
-                if ($parameter->in !== 'query') {
-                    continue;
-                }
-
-                if (isset($descriptions[$parameter->name])) {
-                    $parameter->description($descriptions[$parameter->name]);
-                }
-
-                if (in_array($parameter->name, ['product_category_ids[]', 'fund_ids[]'], true)
-                    && $parameter->schema instanceof Schema && $parameter->schema->type instanceof ArrayType) {
-                    $parameter->schema->type->setMax(50);
-                }
-
-                if (in_array($parameter->name, [
-                    'qr', 'reservation', 'extra_payment', 'regular', 'discount_fixed', 'discount_percentage',
-                    'free', 'informational', 'bookmarked',
-                ], true)) {
-                    $parameter->setSchema(Schema::fromType(
-                        (new IntegerType())->nullable(true)->enum([0, 1, null]),
-                    ));
-
-                    if ($parameter->name !== 'bookmarked') {
-                        $parameter->description('Use 1 to enable this filter.');
-                    }
-                }
-            }
-
-            $schema = $this->response($operation, 200)->getContent('application/json');
-            $meta = $schema instanceof Schema && $schema->type instanceof ObjectType
-                ? $schema->type->getProperty('meta')
-                : null;
-
-            if (!$meta instanceof ObjectType) {
-                throw new LogicException('Expected pagination metadata for the product list.');
-            }
-
-            $meta->addProperty('price_max', new IntegerType())->addRequired(['price_max']);
-        }
-
-        if ($route->named('mobile.requester.v1.funds.index')) {
-            foreach ($operation->parameters as $parameter) {
-                if ($parameter->in === 'query' && $parameter->name === 'has_providers') {
-                    $parameter->setSchema(Schema::fromType((new IntegerType())->enum([0, 1])->default(1)))
-                        ->description('Use 1 for funds with approved providers or 0 for funds without them.');
-                }
-            }
-        }
-
-        $booleanQueryParameters = match (true) {
-            $route->named('mobile.requester.v1.vouchers.index') => ['archived', 'allow_reimbursements'],
-            $route->named('mobile.provider.v1.vouchers.products.index') => ['reservable'],
-            default => [],
-        };
-
         foreach ($operation->parameters as $parameter) {
-            if ($parameter->in === 'query' && in_array($parameter->name, $booleanQueryParameters, true)) {
-                $parameter->setSchema(Schema::fromType((new IntegerType())->enum([0, 1])))
-                    ->description('Use 1 for true and 0 for false. Omit when unused.');
+            if (!$parameter instanceof Parameter || $parameter->in !== 'query' ||
+                !$parameter->schema instanceof Schema || !$parameter->schema->type instanceof BooleanType) {
+                continue;
             }
-        }
 
-        if ($route->named(
-            'mobile.*.v1.identity.proxy.email.redirect',
-            'mobile.*.v1.identity.proxy.confirmation.redirect',
-        )) {
-            $operation->parameters = array_values(array_filter(
-                $operation->parameters,
-                static fn (Parameter $parameter): bool => $parameter->in !== 'query' || $parameter->name !== 'target',
-            ));
+            $nullable = $parameter->schema->type->nullable;
+            $type = (new IntegerType())->nullable($nullable)->enum($nullable ? [0, 1, null] : [0, 1]);
+
+            if ($route->named('mobile.requester.v1.funds.index') && $parameter->name === 'has_providers') {
+                $type->default(1);
+            }
+
+            $parameter->setSchema(Schema::fromType($type));
         }
 
         if (collect($middleware)->contains(
@@ -216,7 +97,6 @@ class MobileOperationTransformer implements OperationTransformer
 
             $operation->addParameters([
                 Parameter::make('Client-Type', 'header')->required(true)
-                    ->description('Required client type allowed for this API. Endpoint permissions still apply.')
                     ->setSchema(Schema::fromType((new StringType())->enum($clientTypes)))
                     ->example($clientTypes[0] ?? null),
             ]);
@@ -224,15 +104,16 @@ class MobileOperationTransformer implements OperationTransformer
             $forbidden[] = 'unknown_client_type';
         }
 
-        if (in_array(ClientVersionMiddleware::class, $middleware, true)) {
+        if (collect($middleware)->contains(
+            static fn (string $value): bool => explode(':', $value, 2)[0] === ClientVersionMiddleware::class,
+        )) {
             $operation->addParameters([
-                $this->header(
-                    'Client-Version',
-                    'Optional integer version. Me-app version 1 or later supports viewing vouchers '
-                    . 'through product or reservation permissions.',
-                    ['1'],
-                ),
+                Parameter::make('Client-Version', 'header')->required(true)
+                    ->setSchema(Schema::fromType((new IntegerType())->setMin(1)))
+                    ->example(1),
             ]);
+
+            $forbidden[] = 'invalid_client_version';
         }
 
         if (collect($middleware)->contains(
@@ -242,7 +123,6 @@ class MobileOperationTransformer implements OperationTransformer
 
             $operation->addParameters([
                 Parameter::make('Client-Key', 'header')->required(true)
-                    ->description('Required implementation key allowed for this API.')
                     ->setSchema(Schema::fromType((new StringType())->enum($clientKeys)))
                     ->example($clientKeys[0] ?? null),
             ]);
@@ -250,56 +130,46 @@ class MobileOperationTransformer implements OperationTransformer
             $forbidden[] = 'unknown_implementation_key';
         }
 
-        if (in_array(DomainMiddleware::class, $middleware, true)) {
-            $forbidden[] = 'invalid_host_name when domain verification is enabled';
+        if (in_array(ApiAuthMiddleware::class, $middleware, true)) {
+            $operation->addResponse(Response::make(401)->setContent('application/json', Schema::fromType(
+                (new AnyOf())->setItems([
+                    (new ObjectType())->addProperty('message', (new StringType())->enum([
+                        'session_expired', 'invalid_access_token', 'proxy_identity_pending',
+                        'proxy_identity_not_active',
+                    ]))->setRequired(['message']),
+                    (new ObjectType())->addProperty('error', (new StringType())->const('2fa'))->setRequired(['error']),
+                ]),
+            )));
         }
 
-        if (in_array(ApiAuthMiddleware::class, $middleware, true)) {
-            $operation->addResponse(Response::make(401)->setDescription(
-                'Session is invalid, expired, or inactive, or requires two-factor confirmation.',
-            )->setContent('application/json', Schema::fromType((new AnyOf())->setItems([
-                (new ObjectType())->addProperty('message', (new StringType())->enum([
-                    'session_expired', 'invalid_access_token', 'proxy_identity_pending', 'proxy_identity_not_active',
-                ]))->setRequired(['message']),
-                (new ObjectType())->addProperty('error', (new StringType())->const('2fa'))->setRequired(['error']),
-            ]))));
+        if ($route->named(
+            'mobile.*.v1.identity.proxy.email.exchange',
+            'mobile.*.v1.identity.proxy.confirmation.exchange',
+            'mobile.provider.v1.identity.proxy.authorize.token',
+        )) {
+            $forbidden[] = DescriptionCatalog::load($appKey)->fragment('token_state');
         }
 
         if ($forbidden) {
-            $operation->addResponse(Response::make(403)->setDescription(
-                'Access denied. Possible causes: ' . implode(', ', $forbidden) . '.',
-            )->setContent('application/json', Schema::fromType(
-                (new ObjectType())->addProperty('message', (new StringType())->nullable(true))
-                    ->setRequired(['message']),
+            $operation->addResponse(Response::make(403)->setContent('application/json', Schema::fromType(
+                (new ObjectType())->addProperty('message', new StringType())->setRequired(['message']),
             )));
         }
 
         if ($route->named('mobile.*.v1.identity.proxy.check-token')) {
             $operation->addParameters([
-                $this->header(
-                    'Access-Token',
-                    'Login token to check, separate from the bearer token. '
-                    . 'Missing or unknown tokens return `invalid`.',
-                ),
+                Parameter::make('Access-Token', 'header')->setSchema(Schema::fromType(new StringType())),
             ]);
         }
 
-        if ($route->named('mobile.*.v1.firestore-tokens.store')) {
-            $operation->addResponse(Response::make(429)->setDescription('Rate limit: 30 requests per minute.'));
-        }
+        $browserRedirect = $route->named(
+            'mobile.*.v1.identity.proxy.email.redirect',
+            'mobile.*.v1.identity.proxy.confirmation.redirect',
+        );
 
-        if ($route->named('mobile.*.v1.identity.show')) {
-            $this->response($operation, 200)->setDescription(
-                'Your identity. Email is null when unavailable.',
-            );
-        }
-
-        if ($route->named('mobile.provider.v1.vouchers.show')) {
-            $operation->description .= "\n\nBudget amount fields are null unless you can spend "
-                . 'the voucher directly. '
-                . 'With Me-app Client-Version ≥ 1, product or reservation permissions can grant access '
-                . 'with null amount fields. '
-                . 'Product vouchers include product details.';
+        if ($browserRedirect) {
+            $operation->addResponse(Response::make(422)
+                ->setContent('text/html', Schema::fromType(new StringType())));
         }
 
         if ($route->named('mobile.provider.v1.vouchers.transactions.store')) {
@@ -309,41 +179,65 @@ class MobileOperationTransformer implements OperationTransformer
             );
 
             $operation->requestBodyObject = RequestBodyObject::make()
-                ->description(
-                    'Input requirements depend on the voucher type. Product vouchers accept an empty body. '
-                    . 'Permissions and available balance are checked by the server.',
-                )
                 ->setContent('application/json', $schema);
 
             $this->response($operation, 200)->setCode(201);
 
-            $operation->addResponse(Response::make(422)->setDescription(
-                'Invalid input. Sending both `amount` and `product_id`, even as null, returns `message` only. '
-                . 'Other validation failures also include `errors`.',
-            )->setContent('application/json', Schema::fromType(
+            $operation->addResponse(Response::make(422)->setContent('application/json', Schema::fromType(
                 (new ObjectType())->addProperty('message', new StringType())
                     ->addProperty('errors', (new ObjectType())->additionalProperties(
                         (new ArrayType())->setItems(new StringType()),
                     ))->setRequired(['message']),
             )));
 
-            $operation->addResponse(Response::make(429)->setDescription(
-                'Too many simultaneous payment requests for this voucher. Try again.',
-            ));
+            $operation->addResponse(Response::make(429));
         }
+
+        $rateLimiterMiddleware = array_map(
+            static fn (RateLimiterName $name): string => ThrottleRequests::class . ':' . $name->value,
+            RateLimiterName::cases(),
+        );
+
+        if (array_intersect($middleware, $rateLimiterMiddleware)) {
+            $this->addThrottleResponses($operation, html: $browserRedirect);
+        }
+
+        $operation->setAttribute('documentation_values', ['causes' => implode(', ', $forbidden)]);
     }
 
     /**
-     * @param string $name
-     * @param string $description
-     * @param array $examples
-     * @return Parameter
+     * @param Operation $operation
+     * @param bool $html
+     * @return void
      */
-    private function header(string $name, string $description, array $examples = []): Parameter
+    private function addThrottleResponses(Operation $operation, bool $html = false): void
     {
-        return Parameter::make($name, 'header')->setSchema(Schema::fromType(
-            (new StringType())->setDescription($description)->examples($examples),
+        $operation->addResponse(Response::make(429)->setContent(
+            $html ? 'text/html' : 'application/json',
+            Schema::fromType($html ? new StringType() : (new ObjectType())
+                ->addProperty('message', new StringType())->setRequired(['message'])),
         ));
+
+        foreach ($operation->responses as $index => $response) {
+            $resolved = $response instanceof Reference ? $response->resolve() : $response;
+            $code = (int) $resolved->code;
+
+            $response = clone $resolved;
+
+            $headers = [
+                'X-RateLimit-Limit', 'X-RateLimit-Remaining',
+                ...($code === 429 ? ['Retry-After', 'X-RateLimit-Reset'] : []),
+            ];
+
+            foreach ($headers as $name) {
+                $response->addHeader($name, new Header(
+                    required: true,
+                    schema: Schema::fromType(new IntegerType()),
+                ));
+            }
+
+            $operation->responses[$index] = $response;
+        }
     }
 
     /**

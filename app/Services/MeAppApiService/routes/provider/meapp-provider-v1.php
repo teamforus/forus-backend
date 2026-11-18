@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\IdentityController;
+use App\Services\MeAppApiService\Enums\RateLimiterName;
 use App\Services\MeAppApiService\Http\Controllers\Provider\DemoTransactionController;
 use App\Services\MeAppApiService\Http\Controllers\Provider\TransactionsController as ProviderTransactionsController;
 use App\Services\MeAppApiService\Http\Controllers\Provider\Vouchers\ProductsController;
@@ -13,11 +14,13 @@ require __DIR__ . '/../shared/meapp-shared-v1.php';
 
 // create a pending QR login
 Route::post('identity/proxy/token', [IdentityController::class, 'proxyAuthorizationToken'])
+    ->middleware('throttle:' . RateLimiterName::AuthCreate->value)
     ->name('identity.proxy.token');
 
 Route::middleware('api.auth')->group(static function (): void {
     // approve a scanned login QR
     Route::post('identity/proxy/authorize/token', [IdentityController::class, 'proxyAuthorizeToken'])
+        ->middleware('throttle:' . RateLimiterName::AuthApprove->value)
         ->name('identity.proxy.authorize.token');
 
     Route::prefix('vouchers/{voucher_address_or_physical_code}')->name('vouchers.')->group(static function (): void {
