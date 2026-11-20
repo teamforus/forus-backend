@@ -5,6 +5,7 @@ namespace App\Notifications\Organizations\FundRequests;
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationReceivedMail;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\Notification;
 use App\Models\Organization;
 use App\Models\Permission;
 use App\Services\EventLogService\Models\EventLog;
@@ -60,5 +61,18 @@ class FundRequestRecordFeedbackReceivedNotification extends BaseFundsRequestsNot
         $identities = parent::eligibleIdentities($loggable, $eventLog);
 
         return $identities->where('address', $loggable->fund_request?->employee?->identity_address);
+    }
+
+    /**
+     * @param Notification $notification
+     * @param EventLog $event
+     * @return array|null
+     */
+    public static function getDashboardRoute(Notification $notification, EventLog $event): ?array
+    {
+        return static::makeDashboardRoute('fund-request', [
+            'organizationId' => $notification->organization_id,
+            'id' => $event->data['fund_request_id'] ?? null,
+        ]);
     }
 }

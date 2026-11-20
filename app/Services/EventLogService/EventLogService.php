@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundConfig;
 use App\Models\FundPeriod;
+use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -50,6 +51,7 @@ class EventLogService implements IEventLogService
             'fund_top_up_transaction' => fn () => $this->fundTopUpTransactionMeta($model),
             'sponsor' => fn () => $this->sponsorMeta($model),
             'provider' => fn () => $this->providerMeta($model),
+            'fund_provider' => fn () => $this->fundProviderMeta($model),
             'product' => fn () => $this->productMeta($model),
             'voucher' => fn () => $this->voucherMeta($model),
             'organization' => fn () => $this->organizationMeta($model),
@@ -193,6 +195,18 @@ class EventLogService implements IEventLogService
             'email' => $provider->email,
             'phone' => $provider->phone,
         ], 'provider_');
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @return array
+     */
+    protected function fundProviderMeta(FundProvider $fundProvider): array
+    {
+        return $this->keyPrepend([
+            'id' => $fundProvider->id,
+            'state' => $fundProvider->state,
+        ], 'fund_provider_');
     }
 
     /**

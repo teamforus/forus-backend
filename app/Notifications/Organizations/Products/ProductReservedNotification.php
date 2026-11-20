@@ -5,7 +5,9 @@ namespace App\Notifications\Organizations\Products;
 use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Notification;
 use App\Models\Permission;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Support\Arr;
 
 /**
@@ -30,5 +32,18 @@ class ProductReservedNotification extends BaseProductsNotification
         ], Implementation::general()->emailFrom());
 
         $this->sendMailNotification($identity->email, $mailable, $this->eventLog);
+    }
+
+    /**
+     * @param Notification $notification
+     * @param EventLog $event
+     * @return array|null
+     */
+    public static function getDashboardRoute(Notification $notification, EventLog $event): ?array
+    {
+        return static::makeDashboardRoute('reservations-show', [
+            'organizationId' => $notification->organization_id,
+            'id' => $event->data['product_reservation_id'] ?? null,
+        ]);
     }
 }
