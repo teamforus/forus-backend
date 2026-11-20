@@ -107,7 +107,9 @@ class SponsorProductResource extends BaseJsonResource
             $product,
         )->pluck('id')->toArray();
 
-        return $funds->map(function (Fund $fund) use ($product, $approvedIds) {
+        $excludedFundProviderIds = $product->product_exclusions->pluck('fund_provider_id')->all();
+
+        return $funds->map(function (Fund $fund) use ($product, $approvedIds, $excludedFundProviderIds) {
             $fundProviderId = $fund->providers->where('organization_id', $product->organization_id)->first()?->id;
 
             return [
@@ -118,6 +120,7 @@ class SponsorProductResource extends BaseJsonResource
                     'id', 'name',
                 ]),
                 'fund_provider_id' => $fundProviderId,
+                'excluded' => $fundProviderId && in_array($fundProviderId, $excludedFundProviderIds),
                 'state' => in_array($fund->id, $approvedIds) ? 'approved' : ($fundProviderId ? 'pending' : 'not_applied'),
                 'state_locale' => in_array($fund->id, $approvedIds) ? 'Goedgekeurd' : (
                     $fundProviderId ? 'In behandeling' : 'Niet van toepassing'
