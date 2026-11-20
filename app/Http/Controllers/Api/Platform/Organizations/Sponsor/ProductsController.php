@@ -30,15 +30,19 @@ class ProductsController extends Controller
         $funds = FundQuery::whereIsConfiguredByForus($organization->funds())->get();
         $fundsIds = $funds->pluck('id')->toArray();
 
+        if (($fundId = $request->validated('fund_id')) !== null) {
+            $fundsIds = array_intersect([(int) $fundId], $fundsIds);
+        }
+
         $search = new ProductSearch([
-            ...$request->only([
-                'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max',
-                'has_reservations', 'fund_id', 'order_by', 'order_dir', 'state',
+            ...$request->safe()->only([
+                'q', 'to', 'from', 'updated_to', 'updated_from', 'price_min', 'price_max', 'has_reservations',
+                'order_by', 'order_dir', 'state', 'unlimited_stock', 'expired', 'sold_out', 'price_types',
             ]),
             'fund_ids' => $fundsIds,
         ], ProductQuery::hasPendingOrAcceptedProviderForFund(Product::query(), $fundsIds));
 
-        $query = $search->query();
+        $query = $search->query()->orderBy('products.id');
 
         return SponsorProductResource::queryCollection($query, $request, [
             'funds' => $funds->load('fund_config.implementation', 'providers'),

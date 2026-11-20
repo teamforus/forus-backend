@@ -721,7 +721,7 @@ class ProductFundLimitsTest extends TestCase
             $fund = Arr::first(Arr::where($productFunds, fn ($item) => $assert['fund_id'] === $item['id']));
 
             $this->assertNotNull($fund, 'Fund not found');
-            $this->assertEquals($assert['limit_available'], $fund['limit_available'], 'Limits not equals');
+            $this->assertSame($assert['limit_available'], $fund['limit'], 'Unexpected product fund limit.');
 
             $vouchers = array_filter($this->vouchers, fn (Voucher $item) => $assert['fund_id'] === $item->fund_id);
             $this->assertNotEmpty($vouchers, 'Vouchers not found');

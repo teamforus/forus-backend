@@ -720,6 +720,37 @@ class Product extends Model
     }
 
     /**
+     * @param Builder<Fund> $funds
+     * @return float
+     */
+    public function minimumPriceForFunds(Builder $funds): float
+    {
+        $maximumSubsidy = $this->fund_provider_products()
+            ->where('payment_type', FundProviderProduct::PAYMENT_TYPE_SUBSIDY)
+            ->whereHas('fund_provider.fund', static function (Builder $query) use ($funds) {
+                $query->whereIn('funds.id', (clone $funds)->select('funds.id'));
+            })
+            ->max('amount');
+
+        return max($this->price - ($maximumSubsidy ?? 0), 0);
+    }
+
+    /**
+     * @param string $minimumPrice
+     * @return string
+     */
+    public function minimumPriceLocale(string $minimumPrice): string
+    {
+        return match ($this->price_type) {
+            self::PRICE_TYPE_INFORMATIONAL => trans('prices.in_store_only'),
+            self::PRICE_TYPE_REGULAR => $minimumPrice === '0.00'
+                ? trans('prices.free')
+                : currency_format_locale($minimumPrice),
+            default => $this->priceLocale(),
+        };
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -803,7 +834,7 @@ class Product extends Model
                 'name', 'description', 'price', 'product_category_id', 'expire_at', 'qr_enabled',
                 'reservation_enabled', 'reservation_policy', 'reservation_phone',
                 'reservation_address', 'reservation_birth_date', 'alternative_text',
-                'reservation_fields_enabled', 'reservation_fields_config', 'reservation_note', 'reservation_note_text',
+                'reservation_fields_enabled', 'reservation_note', 'reservation_note_text',
                 'sku', 'ean', 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$organization->canReceiveExtraPayments() ? $request->only([
@@ -814,6 +845,8 @@ class Product extends Model
             'total_amount' => $total_amount,
             'price_discount' => $price_discount,
             'unlimited_stock' => $price_type === self::PRICE_TYPE_INFORMATIONAL ? true : $unlimited_stock,
+            'reservation_fields_config' => $request->input('reservation_fields_config')
+                ?? self::CUSTOM_RESERVATION_FIELDS_GLOBAL,
         ]);
 
         if ($product->reservation_fields_config === static::CUSTOM_RESERVATION_FIELDS_YES) {

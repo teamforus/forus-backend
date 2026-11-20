@@ -7,9 +7,11 @@ use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ReservationFieldResource;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderProductExclusion;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProviderProductResource extends ProductResource
@@ -46,6 +48,9 @@ class ProviderProductResource extends ProductResource
     {
         return [
             ...$this->getProductData($request, $this->resource, false),
+            'photos' => MediaResource::collection($this->resource->photos),
+            'offices' => OfficeResource::collection($this->resource->organization->offices),
+            ...$this->providerReservationSettings($this->resource),
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'unseen_messages' => $this->hasUnseenMessages(),
@@ -88,5 +93,23 @@ class ProviderProductResource extends ProductResource
         return $this->resource->only([
             'reservation_extra_payments',
         ]);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function providerReservationSettings(Product $product): array
+    {
+        return [
+            ...$product->only([
+                'reservation_phone', 'reservation_fields_enabled', 'reservation_address', 'reservation_birth_date',
+                'reservation_note', 'reservation_note_text', 'reservation_fields_config',
+            ]),
+            'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
+            'available_reservation_fields_for_provider' => ReservationFieldResource::collection(
+                $product->getAvailableReservationFieldsForProvider(),
+            ),
+        ];
     }
 }

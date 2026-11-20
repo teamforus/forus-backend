@@ -188,7 +188,9 @@ class ProductPolicy
         Identity $identity,
         Organization $sponsor,
     ): bool {
-        return $sponsor->identityCan($identity, Permission::MANAGE_PROVIDERS);
+        return $sponsor->identityCan($identity, [
+            Permission::MANAGE_PROVIDERS, Permission::MANAGE_FUNDS, Permission::MANAGE_VOUCHERS,
+        ], false);
     }
 
     /**

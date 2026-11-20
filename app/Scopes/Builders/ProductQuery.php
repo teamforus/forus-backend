@@ -261,6 +261,16 @@ class ProductQuery
      * @param Builder|Relation|Product $query
      * @return Builder|Relation|Product
      */
+    public static function whereExpired(
+        Builder|Relation|Product $query,
+    ): Builder|Relation|Product {
+        return $query->where('products.expire_at', '<', today());
+    }
+
+    /**
+     * @param Builder|Relation|Product $query
+     * @return Builder|Relation|Product
+     */
     public static function whereNotExpired(
         Builder|Relation|Product $query,
     ): Builder|Relation|Product {

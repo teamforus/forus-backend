@@ -81,7 +81,7 @@ class SponsorProductResource extends BaseJsonResource
             'is_available' => $this->isAvailable($product, $fundProvider),
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
             'funds' => $this->funds ? $this->getFundData($this->funds, $product) : [],
-            'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
+            'monitored_changes_count' => $product->logs_monitored_field_changed->count(),
             'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
             'fund_provider_product_chat' => $chat ? new FundProviderChatResource($chat) : null,
             ...$this->productReservationFieldSettings($product),

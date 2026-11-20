@@ -3,6 +3,8 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\ProductUserPriceResource;
+use App\Http\Resources\Traits\FormatsProductPrices;
 use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
@@ -14,6 +16,8 @@ use Illuminate\Http\Request;
  */
 class ProductFundResource extends BaseJsonResource
 {
+    use FormatsProductPrices;
+
     public const array LOAD_NESTED = [
         'logo' => MediaResource::class,
     ];
@@ -21,14 +25,16 @@ class ProductFundResource extends BaseJsonResource
     /**
      * @param Fund $fund
      * @param Product $product
-     * @param int|null $limitAvailable
+     * @param int|null $limit
      * @param FundProviderProduct|null $fundProviderProduct
+     * @param array $features
      */
     public function __construct(
         Fund $fund,
         private readonly Product $product,
-        private readonly ?int $limitAvailable,
+        private readonly ?int $limit,
         private readonly ?FundProviderProduct $fundProviderProduct,
+        public readonly array $features,
     ) {
         parent::__construct($fund);
     }
@@ -41,18 +47,6 @@ class ProductFundResource extends BaseJsonResource
     {
         $fund = $this->resource;
         $product = $this->product;
-        $fundProviderProduct = $this->fundProviderProduct;
-
-        $reservationsEnabled = $product->reservationsEnabled();
-        $reservationsExtraPaymentEnabled = $reservationsEnabled && $product->reservationExtraPaymentsEnabled($fund);
-
-        $scanningEnabled =
-            $product->qr_enabled &&
-            $product->organization->fund_providers
-                ->where('allow_budget', true)
-                ->where('fund_id', $fund->id)
-                ->isNotEmpty() &&
-            (!$fundProviderProduct || $fundProviderProduct->allow_scanning);
 
         return [
             ...$fund->only([
@@ -62,19 +56,15 @@ class ProductFundResource extends BaseJsonResource
                 'name',
             ])),
             'logo' => $fund->logo ? new MediaResource($fund->logo) : null,
-            'limit_available' => $this->limitAvailable,
-            ...$fundProviderProduct?->isPaymentTypeSubsidy() ? [
-                'user_price' => currency_format($fundProviderProduct->user_price),
-                'user_price_locale' => $fundProviderProduct->user_price_locale,
-            ] : [
-                'user_price' => is_null($product->price) ? null : currency_format($product->price),
-                'user_price_locale' => $product->price_locale,
-            ],
-            'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
-            'feature_scanning_enabled' => $scanningEnabled,
-            'feature_reservations_enabled' => $reservationsEnabled,
-            'feature_reservation_extra_payments_enabled' => $reservationsExtraPaymentEnabled,
-            ...$this->makeTimestamps(['end_at' => $fund->end_date], dateOnly: true),
+            'limit' => $this->limit,
+            'user_price' => new ProductUserPriceResource(
+                $product,
+                $this->fundPriceLabel($product, $this->fundProviderProduct),
+            ),
+            ...$this->features,
+            ...$this->makeTimestamps([
+                'end_at' => $fund->end_date,
+            ], dateOnly: true),
         ];
     }
 }

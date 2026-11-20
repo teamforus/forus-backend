@@ -252,6 +252,37 @@ return [
                 ],
             ],
         ],
+        'schemas' => [
+            'ProductResource' => [
+                'fields' => [
+                    'user_price' => 'Catalog price.',
+                    'feature_scanning_enabled' => implode(' ', [
+                        'True if at least one listed fund supports payment for this product',
+                        'by scanning a voucher QR code.',
+                    ]),
+                    'feature_reservations_enabled' =>
+                        'True if at least one listed fund supports reservations for this product.',
+                    'feature_reservation_extra_payments_enabled' => implode(' ', [
+                        'True if at least one listed fund lets the requester pay the difference',
+                        'when reserving this product with an insufficient voucher balance.',
+                    ]),
+                ],
+            ],
+            'ProductFundResource' => [
+                'fields' => [
+                    'user_price' => 'Price with this fund.',
+                    'limit' => implode(' ', [
+                        'Quantity limit to display for this product and fund.',
+                        'Hide when `null`. Show zero when `0`.',
+                    ]),
+                ],
+            ],
+            'ProductUserPriceResource' => [
+                'fields' => [
+                    'value' => 'Localized price label ready to display.',
+                ],
+            ],
+        ],
     ],
     'provider' => [
         'info' => [

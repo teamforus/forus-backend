@@ -152,8 +152,6 @@ class VoucherResource extends BaseJsonResource
 
         return [
             'reservable' => $reservable_enabled && $reservable && ($has_amount || $extra_payment_possible),
-            'reservable_count' => $reservable_count,
-            'reservable_enabled' => $reservable_enabled,
             'reservable_expire_at' => $reservable_expire_at,
             'reservable_expire_at_locale' => format_date_locale($reservable_expire_at ?? null),
         ];
