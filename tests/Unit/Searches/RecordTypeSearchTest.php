@@ -101,6 +101,32 @@ class RecordTypeSearchTest extends SearchTestCase
             'organization_id' => $organizationB->id,
             'without_system' => true,
         ], [...$existingByVoucher, $recordTypeB->id]);
+
+        $recordTypeA->update(['profile_records' => true, 'requester_imports' => false]);
+        $recordTypeB->update(['profile_records' => false, 'requester_imports' => true]);
+
+        RecordType::findByKey(RecordType::KEY_BSN)->update(['requester_imports' => true]);
+
+        $profileIds = $existing->where('profile_records', true)->pluck('id')->all();
+
+        $importIds = $existing->where('requester_imports', true)
+            ->where('key', '!=', RecordType::KEY_BSN)->pluck('id')->all();
+
+        $this->assertSearchIds([
+            'organization_id' => $organizationA->id, 'profile_records' => true,
+        ], [...$profileIds, $recordTypeA->id]);
+
+        $this->assertSearchIds([
+            'organization_id' => $organizationB->id, 'profile_records' => true,
+        ], $profileIds);
+
+        $this->assertSearchIds([
+            'organization_id' => $organizationB->id, 'requester_imports' => true,
+        ], [...$importIds, $recordTypeB->id]);
+
+        $this->assertSearchIds([
+            'organization_id' => $organizationA->id, 'requester_imports' => true,
+        ], $importIds);
     }
 
     /**
