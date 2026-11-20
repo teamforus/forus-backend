@@ -115,8 +115,8 @@ class FundFormSearchTest extends SearchTestCase
         $fund1 = $this->makeTestFund($organization);
         $fund2 = $this->makeTestFund($organization);
 
-        $olderForm = $this->createFundForm($fund1, 'Older Form', now()->subDay());
-        $newerForm = $this->createFundForm($fund2, 'Newer Form', now());
+        $olderForm = $this->createFundForm($fund1, 'Older Form', Carbon::now()->subDay());
+        $newerForm = $this->createFundForm($fund2, 'Newer Form', Carbon::now());
 
         $this->assertSearchOrder([
             'order_by' => 'created_at',

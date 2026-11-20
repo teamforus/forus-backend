@@ -301,7 +301,7 @@ trait VoucherTestTrait
     protected function assertAssignedToNewBsn(Voucher $voucher, array $voucherArr): void
     {
         $this->assertNotNull($voucher->voucher_relation);
-        $this->assertEquals($voucherArr['bsn'], $voucher->voucher_relation->bsn);
+        $this->assertSame($voucherArr['bsn'], $voucher->voucher_relation->bsn);
 
         $identity = $this->makeIdentity(bsn: $voucher->voucher_relation->bsn);
 

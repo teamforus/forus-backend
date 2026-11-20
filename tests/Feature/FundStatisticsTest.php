@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Traits\DoesTesting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\CreatesApplication;
 use Tests\TestCase;
@@ -57,7 +58,7 @@ class FundStatisticsTest extends TestCase
         $this
             ->makeTestVoucher($fund, $this->makeIdentity())
             ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 1000])
-            ->setPaid(null, now());
+            ->setPaid(null, Carbon::now());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id?stats=min",
@@ -72,7 +73,7 @@ class FundStatisticsTest extends TestCase
         $this
             ->makeTestVoucher($fund, $this->makeIdentity())
             ->makeTransactionBySponsor($fund->organization->employees[0], ['amount' => 2000])
-            ->setPaid(null, now());
+            ->setPaid(null, Carbon::now());
 
         $response = $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id?stats=all",
@@ -98,15 +99,15 @@ class FundStatisticsTest extends TestCase
 
         $this->travelTo('2021-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 10000]);
-        $voucher->makeTransactionBySponsor($employee, ['amount' => 1000])->setPaid(null, now());
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 1000])->setPaid(null, Carbon::now());
 
         $this->travelTo('2022-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 20000]);
-        $voucher->makeTransactionBySponsor($employee, ['amount' => 2000])->setPaid(null, now());
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 2000])->setPaid(null, Carbon::now());
 
         $this->travelTo('2023-01-01');
         $fund->getOrCreateTopUp()->transactions()->create(['amount' => 40000]);
-        $voucher->makeTransactionBySponsor($employee, ['amount' => 4000])->setPaid(null, now());
+        $voucher->makeTransactionBySponsor($employee, ['amount' => 4000])->setPaid(null, Carbon::now());
 
         $this->getJson(
             "/api/v1/platform/organizations/$fund->organization_id/funds?stats=all&year=2021",
@@ -145,7 +146,7 @@ class FundStatisticsTest extends TestCase
 
         $this->assertEquals(10000, $fund->refresh()->budget_left);
 
-        $transaction->setPaid(null, now());
+        $transaction->setPaid(null, Carbon::now());
 
         $this->assertTrue($transaction->fresh()->isPaid());
 

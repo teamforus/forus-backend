@@ -38,6 +38,7 @@ class ApproveFundRequestsRequest extends BaseFormRequest
     {
         return [
             'note' => 'nullable|string|between:0,2000',
+            'copy_to_profile' => 'sometimes|boolean',
             'amount' => $this->amountRules($this->fund_request->fund),
             'fund_amount_preset_id' => $this->amountPresetRules($this->fund_request->fund),
         ];

@@ -62,7 +62,7 @@ class EmailLogTest extends TestCase
      */
     public function testVoucherAssignedBudgetMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity2 = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -86,7 +86,7 @@ class EmailLogTest extends TestCase
      */
     public function testVoucherAssignedProductMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -118,7 +118,7 @@ class EmailLogTest extends TestCase
      */
     public function testDeactivationVoucherMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -141,7 +141,7 @@ class EmailLogTest extends TestCase
      */
     public function testVoucherExpireSoonBudgetMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -167,7 +167,7 @@ class EmailLogTest extends TestCase
      */
     public function testRequestPhysicalCardMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -206,7 +206,7 @@ class EmailLogTest extends TestCase
      */
     public function testPaymentSuccessBudgetMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -245,8 +245,8 @@ class EmailLogTest extends TestCase
             'organization_id' => $product2->organization_id,
         ]);
 
-        $transaction1->setPaid(null, now());
-        $transaction2->setPaid(null, now());
+        $transaction1->setPaid(null, Carbon::now());
+        $transaction2->setPaid(null, Carbon::now());
 
         VoucherTransactionCreated::dispatch($transaction1);
         VoucherTransactionCreated::dispatch($transaction2);
@@ -266,7 +266,7 @@ class EmailLogTest extends TestCase
      */
     public function testProductReservationAcceptedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity2 = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -297,7 +297,7 @@ class EmailLogTest extends TestCase
      */
     public function testProductReservationCanceledMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity2 = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -328,7 +328,7 @@ class EmailLogTest extends TestCase
      */
     public function testProductReservationRejectedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $identity2 = $this->makeIdentity($this->makeUniqueEmail());
 
@@ -356,7 +356,7 @@ class EmailLogTest extends TestCase
      */
     public function testReimbursementSubmittedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -387,7 +387,7 @@ class EmailLogTest extends TestCase
      */
     public function testReimbursementApprovedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -427,7 +427,7 @@ class EmailLogTest extends TestCase
      */
     public function testReimbursementDeclinedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
         $organization1 = $this->makeTestOrganization($identity);
         $organization2 = $this->makeTestOrganization($identity);
@@ -462,7 +462,7 @@ class EmailLogTest extends TestCase
      */
     public function testFundRequestCreatedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization1 = $this->makeTestOrganization($identity);
@@ -491,7 +491,7 @@ class EmailLogTest extends TestCase
      */
     public function testFundRequestApprovedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization1 = $this->makeTestOrganization($identity);
@@ -523,7 +523,7 @@ class EmailLogTest extends TestCase
      */
     public function testFundRequestDisregardedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization1 = $this->makeTestOrganization($identity);
@@ -555,7 +555,7 @@ class EmailLogTest extends TestCase
      */
     public function testFundRequestDeniedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization1 = $this->makeTestOrganization($identity);
@@ -587,7 +587,7 @@ class EmailLogTest extends TestCase
      */
     public function testFundRequestClarificationRequestedMailLog(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $identity = $this->makeIdentity($this->makeUniqueEmail());
 
         $organization1 = $this->makeTestOrganization($identity);

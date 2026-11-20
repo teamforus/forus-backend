@@ -7,8 +7,8 @@ use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestFunds;
@@ -30,33 +30,35 @@ class VoucherEmailTest extends TestCase
      */
     public function testProductVoucherEmailToProvider(): void
     {
-        $startDate = now();
+        foreach ([true, false] as $notifyProvider) {
+            $startDate = Carbon::now();
+            $organization = $this->makeTestOrganization($this->makeIdentity());
+            $fund = $this->makeTestFund($organization);
 
-        $organization = $this->makeTestOrganization($this->makeIdentity());
-        $fund = $this->makeTestFund($organization);
+            $product = $this->makeProviderAndProducts($fund)['approved'][0];
+            $provider = $product->organization;
 
-        $product = $this->makeProviderAndProducts($fund)['approved'][0];
-        $provider = $product->organization;
+            $this->storeVoucher($fund, [
+                'product_id' => $product->id,
+                'notify_provider' => $notifyProvider,
+            ]);
 
-        DB::beginTransaction();
-        $this->storeVoucher($fund, [
-            'product_id' => $product->id,
-            'notify_provider' => true,
-        ]);
+            $this->assertMailableNotSent($provider->identity->email, ProductBoughtProviderMail::class, $startDate);
 
-        $this->assertMailableNotSent($provider->identity->email, ProductBoughtProviderMail::class, $startDate);
-        $this->assertMailableSent($provider->identity->email, ProductBoughtProviderBySponsorMail::class, $startDate);
-        DB::rollBack();
-
-        DB::beginTransaction();
-        $this->storeVoucher($fund, [
-            'product_id' => $product->id,
-            'notify_provider' => false,
-        ]);
-
-        $this->assertMailableNotSent($provider->identity->email, ProductBoughtProviderMail::class, $startDate);
-        $this->assertMailableNotSent($provider->identity->email, ProductBoughtProviderBySponsorMail::class, $startDate);
-        DB::rollBack();
+            if ($notifyProvider) {
+                $this->assertMailableSent(
+                    $provider->identity->email,
+                    ProductBoughtProviderBySponsorMail::class,
+                    $startDate,
+                );
+            } else {
+                $this->assertMailableNotSent(
+                    $provider->identity->email,
+                    ProductBoughtProviderBySponsorMail::class,
+                    $startDate,
+                );
+            }
+        }
     }
 
     /**

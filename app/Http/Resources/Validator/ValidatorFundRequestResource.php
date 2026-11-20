@@ -209,6 +209,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 'allow_custom_amounts', 'allow_preset_amounts',
                 'allow_custom_amounts_validator', 'allow_preset_amounts_validator',
                 'custom_amount_min', 'custom_amount_max',
+                'allow_fund_request_profile_copy',
             ]),
             'tags' => TagResource::collection($fund->tags),
             'criteria' => FundCriterionResource::collection($fund->criteria),

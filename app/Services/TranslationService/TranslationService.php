@@ -14,6 +14,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -373,30 +374,57 @@ class TranslationService
      */
     private function getStaticTranslations(string $locale): array
     {
-        $localePath = resource_path("lang/$locale");
-
-        if (!File::exists($localePath)) {
-            throw new RuntimeException("Translation directory for locale '$locale' not found.");
-        }
+        $sources = [
+            '' => resource_path('lang'),
+            ...Config::get('translation-service.static_sources', []),
+        ];
 
         $translations = [];
 
-        foreach (File::allFiles($localePath) as $file) {
-            if ($file->getExtension() === 'php') {
-                $relativePath = $file->getRelativePathname();
-                $content = include $file->getPathname();
+        foreach ($sources as $namespace => $path) {
+            $localePath = "$path/$locale";
 
-                if (is_array($content)) {
-                    $keyPrefix = str_replace(DIRECTORY_SEPARATOR, '.', pathinfo($relativePath, PATHINFO_DIRNAME));
-                    $fileKey = pathinfo($relativePath, PATHINFO_FILENAME);
-
-                    // Add prefix if within a subdirectory
-                    $keyPrefix = $keyPrefix === '.' ? '' : "$keyPrefix.";
-
-                    // Merge translations under their appropriate keys
-                    $translations = array_merge($translations, $this->flattenArray([$keyPrefix . $fileKey => $content]));
-                }
+            if (!File::exists($localePath)) {
+                throw new RuntimeException("Translation directory for locale '$locale' not found: $localePath");
             }
+
+            $translations = array_merge(
+                $translations,
+                $this->readStaticTranslations($localePath, $namespace === '' ? null : $namespace),
+            );
+        }
+
+        return $translations;
+    }
+
+    /**
+     * @param string $localePath
+     * @param string|null $namespace
+     * @return array
+     */
+    private function readStaticTranslations(string $localePath, ?string $namespace = null): array
+    {
+        $translations = [];
+
+        foreach (File::allFiles($localePath) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $content = include $file->getPathname();
+
+            if (!is_array($content)) {
+                continue;
+            }
+
+            $relativePath = $file->getRelativePathname();
+            $keyPrefix = str_replace(DIRECTORY_SEPARATOR, '.', pathinfo($relativePath, PATHINFO_DIRNAME));
+            $fileKey = pathinfo($relativePath, PATHINFO_FILENAME);
+
+            $keyPrefix = $keyPrefix === '.' ? $fileKey : "$keyPrefix.$fileKey";
+            $keyPrefix = $namespace === null ? $keyPrefix : "$namespace::$keyPrefix";
+
+            $translations = array_merge($translations, $this->flattenArray([$keyPrefix => $content]));
         }
 
         return $translations;

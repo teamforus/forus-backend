@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * App\Models\ProfileRecord.
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $profile_id
  * @property int|null $employee_id
  * @property string|null $source
+ * @property string|null $origin_type
+ * @property int|null $origin_id
  * @property int $record_type_id
  * @property string $value
  * @property string|null $deleted_at
@@ -37,10 +40,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProfileRecord extends Model
 {
     public const string SOURCE_ENTRA = 'entra';
+    public const string SOURCE_REQUESTER_IMPORT = 'requester_import';
 
     protected $fillable = [
-        'value', 'record_type_id', 'profile_id', 'employee_id', 'source',
+        'value', 'record_type_id', 'profile_id', 'employee_id', 'source', 'origin_type', 'origin_id',
     ];
+
+    /**
+     * @return MorphTo
+     */
+    public function origin(): MorphTo
+    {
+        return $this->morphTo()->withTrashed();
+    }
 
     /**
      * @return BelongsTo

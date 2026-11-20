@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\RecordValidationKey;
 use App\Models\RecordType;
 
 return [[
     'key' => 'children_nth',
+    'profile_records' => true,
+    'requester_imports' => true,
     'name' => 'Number of children',
     'type' => RecordType::TYPE_NUMBER,
     'control_type' => RecordType::CONTROL_TYPE_STEP,
@@ -40,6 +43,32 @@ return [[
         ['1969', 'Westerkwartier'],
         ['1979', 'Eemsdelta'],
     ],
+], [
+    'key' => 'municipality_code',
+    'name' => 'Municipality',
+    'type' => RecordType::TYPE_SELECT,
+    'control_type' => RecordType::CONTROL_TYPE_SELECT,
+    'criteria' => true,
+    'profile_records' => true,
+    'requester_imports' => true,
+    'options' => [
+        ['2020', 'Arnhem'],
+        ['2021', 'Brummen'],
+        ['2022', 'Duiven'],
+        ['2023', 'Renkum'],
+        ['2024', 'Rheden'],
+        ['2025', 'Rozendaal'],
+        ['2026', 'Westervoort'],
+        ['2027', 'Zevenaar'],
+    ],
+], [
+    'key' => 'has_different_mailing_address',
+    'name' => 'Different mailing address',
+    'type' => RecordType::TYPE_BOOL,
+    'control_type' => RecordType::CONTROL_TYPE_CHECKBOX,
+    'criteria' => true,
+    'profile_records' => false,
+    'requester_imports' => false,
 ], [
     'key' => 'single_parent',
     'name' => 'Civil status',
@@ -79,6 +108,7 @@ return [[
     'criteria' => true,
 ], [
     'key' => 'house_number_addition',
+    'validation_key' => RecordValidationKey::HOUSE_ADDITION,
     'name' => 'House number addition',
     'type' => RecordType::TYPE_STRING,
     'control_type' => RecordType::CONTROL_TYPE_TEXT,
@@ -87,6 +117,7 @@ return [[
     'criteria' => true,
 ], [
     'key' => 'telephone',
+    'validation_key' => RecordValidationKey::SHORT_TEXT,
     'name' => 'Telephone number',
     'type' => RecordType::TYPE_STRING,
     'control_type' => RecordType::CONTROL_TYPE_TEXT,

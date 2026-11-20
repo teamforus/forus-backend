@@ -210,7 +210,7 @@ class VoucherBatchTest extends TestCase
      */
     protected function storeVouchers(Fund $fund, array $assert, array $products): void
     {
-        $startDate = now();
+        $startDate = Carbon::now();
         $headers = $this->makeApiHeaders($this->makeIdentityProxy($fund->organization->identity));
 
         $data = [

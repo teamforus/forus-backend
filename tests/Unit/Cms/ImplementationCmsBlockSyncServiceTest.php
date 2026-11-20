@@ -14,6 +14,7 @@ use App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlockIt
 use App\Services\CmsService\ImplementationBlocks\Models\ImplementationCmsBlockValue;
 use App\Services\MediaService\Models\Media;
 use App\Services\TranslationService\Models\TranslationValue;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -352,8 +353,8 @@ class ImplementationCmsBlockSyncServiceTest extends TestCase
 
         $usageBefore = TranslationValue::getUsage(
             $implementation->organization_id,
-            now(),
-            now(),
+            Carbon::now(),
+            Carbon::now(),
         )['total']['symbols'];
 
         $this->syncService()->sync($page, []);
@@ -379,7 +380,11 @@ class ImplementationCmsBlockSyncServiceTest extends TestCase
         $this->assertDatabaseHas('translation_values', ['id' => $translationValue->id]);
         $this->assertSame(
             $usageBefore,
-            TranslationValue::getUsage($implementation->organization_id, now(), now())['total']['symbols'],
+            TranslationValue::getUsage(
+                $implementation->organization_id,
+                Carbon::now(),
+                Carbon::now(),
+            )['total']['symbols'],
         );
     }
 

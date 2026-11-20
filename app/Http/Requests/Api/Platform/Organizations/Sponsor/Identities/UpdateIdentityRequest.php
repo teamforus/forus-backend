@@ -4,51 +4,57 @@ namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Identities;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\RecordType;
+use App\Rules\ProfileRecordValueRule;
 use Illuminate\Validation\Rule;
 
 class UpdateIdentityRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * @return bool
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->getRouteOrganization()->allow_profiles;
     }
 
+    /**
+     * @return array
+     */
     public function rules(): array
     {
+        $recordTypes = RecordType::searchRecordTypes(
+            organizationId: $this->getRouteOrganization()->id,
+            profileRecords: true,
+            excludeKeys: [RecordType::KEY_BSN],
+        );
+
         return [
-            'given_name' => 'sometimes|nullable|string|min:2|max:40',
-            'family_name' => 'sometimes|nullable|string|min:2|max:40',
-            'telephone' => 'sometimes|nullable|string|min:2|max:40',
-            'mobile' => 'sometimes|nullable|string|min:2|max:40',
-            'birth_date' => 'sometimes|nullable|date_format:Y-m-d|before_or_equal:today',
-            'city' => 'sometimes|nullable|string|city_name',
-            'street' => 'sometimes|nullable|string|street_name',
-            'house_number' => 'sometimes|nullable|string|house_number',
-            'house_number_addition' => 'sometimes|nullable|string|house_addition',
-            'postal_code' => 'sometimes|nullable|string|postcode',
-            'client_number' => 'sometimes|nullable|string|min:2|max:40',
-            'municipality_name' => 'sometimes|nullable|string|min:2|max:40',
-            'gender' => $this->recordTypeOptionRule(RecordType::findByKey('gender')),
-            'marital_status' => $this->recordTypeOptionRule(RecordType::findByKey('marital_status')),
-            'neighborhood_name' => 'sometimes|nullable|string|min:2|max:40',
-            'house_composition' => $this->recordTypeOptionRule(RecordType::findByKey('house_composition')),
-            'living_arrangement' => $this->recordTypeOptionRule(RecordType::findByKey('living_arrangement')),
+            'records' => ['sometimes', 'array', 'list'],
+            'records.*' => ['bail', 'required', 'array:record_type_key,value'],
+            'records.*.record_type_key' => [
+                'bail', 'required', 'string', 'distinct:strict', Rule::in($recordTypes->keys()->all()),
+            ],
+            'records.*.value' => Rule::forEach(function (
+                mixed $value,
+                string $attribute,
+                array $data,
+                mixed $record,
+            ) use ($recordTypes): array {
+                $key = is_array($record) ? ($record['record_type_key'] ?? null) : null;
+                $recordType = is_string($key) ? $recordTypes->get($key) : null;
+
+                return ['present', 'nullable', ...($recordType ? [new ProfileRecordValueRule($recordType)] : [])];
+            }),
         ];
     }
 
     /**
-     * @param RecordType $type
-     * @return array
+     * @return array<string, string|null>
      */
-    protected function recordTypeOptionRule(RecordType $type): array
+    public function profileRecords(): array
     {
-        return [
-            'sometimes',
-            'nullable',
-            Rule::exists('record_type_options', 'value')->where('record_type_id', $type->id),
-        ];
+        return array_column($this->validated('records', []), 'value', 'record_type_key');
     }
 }

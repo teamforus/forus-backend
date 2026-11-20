@@ -5,9 +5,12 @@ namespace App\Services\DigIdService\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DigID\CompleteDigIdRequest;
 use App\Models\Identity;
+use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\DigIdServiceLogger;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Objects\DigidAuthRequestData;
+use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use App\Services\SAML2Service\Responses\SamlArtifactResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +20,13 @@ use Throwable;
 
 abstract class BaseDigIdController extends Controller
 {
+    /**
+     * @param IdentityBsnService $identityBsnService
+     */
+    public function __construct(protected IdentityBsnService $identityBsnService)
+    {
+    }
+
     /**
      * @param DigIdSession $session
      * @param DigidAuthRequestData|null $authRequest
@@ -160,11 +170,23 @@ abstract class BaseDigIdController extends Controller
                 $this->rejectCompletion('organization_not_found', $session->id);
             }
 
-            $response = match (true) {
-                $session->isSessionRequestAuth() => $this->_resolveAuth($session, $request),
-                $session->isSessionRequestFundRequest() => $this->_resolveFundRequest($session),
-                default => $this->makeRedirectErrorResponse($session, 'unknown_error'),
-            };
+            try {
+                $response = $this->identityBsnService->transactionWithBsnLock(
+                    $session->digidBsn(),
+                    fn () => match (true) {
+                        $session->isSessionRequestAuth() => $this->_resolveAuth($session, $request),
+                        $session->isSessionRequestFundRequest() => $this->_resolveFundRequest($session),
+                        default => $this->makeRedirectErrorResponse($session, 'unknown_error'),
+                    },
+                );
+            } catch (IdentityBsnException|DigIdException $exception) {
+                $session->refresh();
+
+                $response = $this->makeRedirectErrorResponse(
+                    $session,
+                    $exception instanceof IdentityBsnException ? 'uid_used' : ($exception->getDigIdCode() ?? 'unknown_error'),
+                );
+            }
 
             $session->update([
                 'meta' => [
@@ -223,28 +245,29 @@ abstract class BaseDigIdController extends Controller
 
     /**
      * @param DigIdSession $session
-     * @return RedirectResponse|bool
+     * @throws Throwable
+     * @return bool
      */
-    protected function handleBsnAssign(DigIdSession $session): RedirectResponse|bool
+    protected function handleBsnAssign(DigIdSession $session): bool
     {
-        $digidBsn = $session->digidBsn();
-        $digidBsnIdentity = $session->digidBsnIdentity();
-        $sessionIdentity = $session->sessionIdentity();
-        $sessionIdentityBsn = $session->sessionIdentityBsn();
+        $digidBsn = $this->identityBsnService->normalizeBsn($session->digidBsn());
+        $digidBsnIdentity = $this->identityBsnService->findIdentityByBsnForUpdate($digidBsn);
+        $sessionIdentity = $session->identity()->lockForUpdate()->firstOrFail();
+        $sessionIdentityBsn = $sessionIdentity->record_bsn()->lockForUpdate()->first()?->value;
 
         // Identity already has a bsn attached, and it's different
-        if ($sessionIdentityBsn && $sessionIdentityBsn !== $digidBsn) {
-            return $this->makeRedirectErrorResponse($session, 'uid_dont_match');
+        if ($sessionIdentityBsn && $this->identityBsnService->normalizeBsn($sessionIdentityBsn) !== $digidBsn) {
+            throw DigIdException::make('The identity already has a different BSN.', 'uid_dont_match');
         }
 
         // The digid bsn is already in the system but belongs to someone else
         if ($digidBsnIdentity && $digidBsnIdentity->address !== $sessionIdentity->address) {
-            return $this->makeRedirectErrorResponse($session, 'uid_used');
+            throw DigIdException::make('The BSN is already assigned to another identity.', 'uid_used');
         }
 
-        // The session organization have bsn_enabled and
+        // Assign the BSN when enabled for the session organization.
         if ($session->sessionOrganization()->bsn_enabled) {
-            return (bool) $session->identity->setBsnRecord($session->digid_uid);
+            return (bool) $sessionIdentity->setBsnRecord($digidBsn);
         }
 
         return false;
@@ -258,7 +281,7 @@ abstract class BaseDigIdController extends Controller
      */
     protected function _resolveAuth(DigIdSession $session, CompleteDigIdRequest $request): RedirectResponse
     {
-        $identity = $session->digidBsnIdentity();
+        $identity = $this->identityBsnService->findIdentityByBsnForUpdate($session->digidBsn());
 
         if ($identity?->isManagedByIdentityProvider()) {
             return $this->makeRedirectErrorResponse($session, 'managed_requester');
@@ -276,12 +299,7 @@ abstract class BaseDigIdController extends Controller
         $identity->activateAuthorizationShortTokenProxy($proxy->exchange_token, $request->ip());
 
         $session->setIdentity($identity);
-        $assignResult = $this->handleBsnAssign($session);
-
-        // Redirect with an error
-        if ($assignResult instanceof RedirectResponse) {
-            return $assignResult;
-        }
+        $this->handleBsnAssign($session);
 
         return $this->makeRedirectResponse($session, [
             'token' => $proxy->exchange_token,
@@ -290,16 +308,12 @@ abstract class BaseDigIdController extends Controller
 
     /**
      * @param DigIdSession $session
+     * @throws Throwable
      * @return RedirectResponse
      */
     protected function _resolveFundRequest(DigIdSession $session): RedirectResponse
     {
         $assignResult = $this->handleBsnAssign($session);
-
-        // Redirect with an error
-        if ($assignResult instanceof RedirectResponse) {
-            return $assignResult;
-        }
 
         return $this->makeRedirectResponse($session, array_merge([
             'digid_success' => $assignResult ? 'signed_up' : 'signed_in',

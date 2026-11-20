@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Modules\RequesterImport\Models\RequesterImportRow;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * App\Models\Profile.
@@ -94,32 +98,93 @@ class Profile extends Model
     }
 
     /**
+     * @return HasMany
+     */
+    public function requester_import_rows(): HasMany
+    {
+        return $this->hasMany(RequesterImportRow::class);
+    }
+
+    /**
+     * @return Collection<string, ProfileRecord>
+     */
+    public function getCurrentRecordsForVoucherAward(): Collection
+    {
+        $this->loadMissing('profile_records.record_type');
+
+        return $this->profile_records
+            ->whereNull('deleted_at')
+            ->unique('record_type_id')
+            ->where('source', ProfileRecord::SOURCE_REQUESTER_IMPORT)
+            ->keyBy(fn (ProfileRecord $record) => $record->record_type->key);
+    }
+
+    /**
      * @param array $records
      * @param Employee|null $employee
      * @param string|null $source
-     * @return void
+     * @throws Throwable
+     * @return Collection<string, ProfileRecord>
      */
-    public function updateRecords(array $records, ?Employee $employee = null, ?string $source = null): void
+    public function updateRecords(array $records, ?Employee $employee = null, ?string $source = null): Collection
     {
-        foreach ($records as $recordKey => $recordValue) {
-            $recordType = RecordType::findByKey($recordKey);
+        return DB::transaction(function () use ($records, $employee, $source): Collection {
+            $profile = self::query()->lockForUpdate()->findOrFail($this->id);
+            $created = new Collection();
 
-            $currentValue = $this->profile_records()->where([
-                'record_type_id' => $recordType?->id,
-            ])->latest('created_at')->first()?->value ?: '';
+            if ($records === []) {
+                return $created;
+            }
 
-            if (trim($currentValue) !== trim($recordValue)) {
-                if (empty(trim($recordValue)) && empty(trim($currentValue))) {
+            $recordTypeIds = RecordType::query()->whereIn('key', array_keys($records))->pluck('id', 'key');
+
+            $recordsQuery = $profile->profile_records()->whereIn('record_type_id', $recordTypeIds->values());
+
+            if ($source === ProfileRecord::SOURCE_REQUESTER_IMPORT) {
+                $recordsQuery->whereNull('deleted_at');
+            }
+
+            $currentRecords = $recordsQuery->lockForUpdate()->get()->unique('record_type_id')->keyBy('record_type_id');
+
+            foreach ($records as $recordKey => $recordValue) {
+                $recordTypeId = $recordTypeIds->get($recordKey);
+                $currentRecord = $currentRecords->get($recordTypeId);
+                $recordValue = trim($recordValue ?? '');
+
+                if (!self::shouldUpdateRecord($currentRecord, $recordValue, $source)) {
                     continue;
                 }
 
-                $this->profile_records()->create([
-                    'value' => trim($recordValue),
+                $record = $profile->profile_records()->create([
+                    'value' => $recordValue,
                     'employee_id' => $employee?->id,
                     'source' => $source,
-                    'record_type_id' => $recordType?->id,
+                    'record_type_id' => $recordTypeId,
                 ]);
+
+                $created->put($recordKey, $record);
+                $currentRecords->put($recordTypeId, $record);
             }
-        }
+
+            return $created;
+        });
+    }
+
+    /**
+     * @param ProfileRecord|null $currentRecord
+     * @param string|null $value
+     * @param string|null $source
+     * @return bool
+     */
+    public static function shouldUpdateRecord(?ProfileRecord $currentRecord, ?string $value, ?string $source): bool
+    {
+        $valueUnchanged = trim($currentRecord?->value ?? '') === trim($value ?? '');
+
+        $shouldSetRequesterImportSource =
+            $source === ProfileRecord::SOURCE_REQUESTER_IMPORT &&
+            $currentRecord !== null &&
+            $currentRecord->source !== ProfileRecord::SOURCE_REQUESTER_IMPORT;
+
+        return !$valueUnchanged || $shouldSetRequesterImportSource;
     }
 }
