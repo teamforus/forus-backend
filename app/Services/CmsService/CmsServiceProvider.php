@@ -5,6 +5,7 @@ namespace App\Services\CmsService;
 use App\Services\CmsService\ImplementationBlocks\Commands\CleanupStaleBlockValuesCommand;
 use App\Services\CmsService\ImplementationBlocks\Configs\BannerCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CalloutCmsBlockConfig;
+use App\Services\CmsService\ImplementationBlocks\Configs\DecisionTreeCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\FaqCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\InfoCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\LinkPanelsCmsBlockConfig;
@@ -54,6 +55,7 @@ class CmsServiceProvider extends ServiceProvider
             new ProductCategoriesCmsBlockConfig(),
             new ProductShowcaseCmsBlockConfig(),
             new ProviderSignUpCmsBlockConfig(),
+            new DecisionTreeCmsBlockConfig(),
         ]);
 
         $this->app->singleton(ImplementationCmsBlockService::class);

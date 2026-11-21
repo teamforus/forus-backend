@@ -1,0 +1,7 @@
+TVS_SLO_URL=https://pp2.toegang.overheid.nl/kvs/rd/request_logout
+TVS_ACS_URL=https://test-tvs.forus.io/api/v1/platform/tvs/resolve
+TVS_LC_ENTITY_ID=urn:nl-eid-gdi:1.0:LC:00000003825367750000:entities:9001
+TVS_RD_SSO_URL=https://pp2.toegang.overheid.nl/kvs/rd/request_authentication
+TVS_RD_SLO_URL=https://pp2.toegang.overheid.nl/kvs/rd/request_logout
+TVS_RD_ARS_URL=https://artifact-pp2.toegang.overheid.nl/kvs/rd/resolve_artifact
+TVS_RD_ENTITY_ID=urn:nl-eid-gdi:1.0:RD:00000004000000149000:entities:9002

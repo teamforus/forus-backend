@@ -6,6 +6,7 @@ use App\Models\ImplementationPage;
 use App\Services\CmsService\ImplementationBlocks\Configs\BannerCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CalloutCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CmsBlockConfig;
+use App\Services\CmsService\ImplementationBlocks\Configs\DecisionTreeCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\FaqCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\InfoCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\LinkPanelsCmsBlockConfig;
@@ -327,6 +328,24 @@ abstract class CmsBlockTestCase extends TestCase
                     'description' => 'Bij aangesloten aanbieders.',
                 ],
             ]],
+        ]];
+    }
+
+    /**
+     * @return array
+     */
+    protected function makeValidCmsDecisionTreeBlocksPayload(): array
+    {
+        return [[
+            'block_type_key' => DecisionTreeCmsBlockConfig::KEY,
+            'values' => [
+                'section_title' => 'Wat lijkt jou leuk om te doen?',
+                'section_description' => 'Klik op een thema en je ziet meteen uit welk aanbod je kan kiezen.',
+                'section_background_color' => null,
+                'section_spacing' => CmsBlockConfig::SECTION_SPACING_DEFAULT,
+                'section_title_color' => '#315EFD',
+            ],
+            'items' => [],
         ]];
     }
 

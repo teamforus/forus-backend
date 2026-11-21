@@ -6,6 +6,7 @@ use App\Models\ImplementationPage;
 use App\Models\Organization;
 use App\Services\CmsService\ImplementationBlocks\Configs\BannerCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\CalloutCmsBlockConfig;
+use App\Services\CmsService\ImplementationBlocks\Configs\DecisionTreeCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\FaqCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\InfoCmsBlockConfig;
 use App\Services\CmsService\ImplementationBlocks\Configs\LinkPanelsCmsBlockConfig;
@@ -51,6 +52,7 @@ class ImplementationPageCmsBlockValidationTest extends ImplementationCmsTestCase
             ProvidersMapCmsBlockConfig::KEY,
             ProductCategoriesCmsBlockConfig::KEY,
             ProductShowcaseCmsBlockConfig::KEY,
+            DecisionTreeCmsBlockConfig::KEY,
         ], array_column($response->json('data'), 'key'));
 
         $configs = collect($response->json('data'))->keyBy('key');

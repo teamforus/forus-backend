@@ -1,0 +1,15 @@
+{
+  "slug": "other",
+  "name": "Geen van bovenstaande",
+  "is_common": false,
+  "start": "not-eligible-outside-region",
+  "application_url": null,
+  "nodes": {
+    "not-eligible-outside-region": {
+      "type": "result",
+      "label": "Alleen inwoners van de zeven Gelrepas-gemeenten.",
+      "eligible": false,
+      "button": false
+    }
+  }
+}

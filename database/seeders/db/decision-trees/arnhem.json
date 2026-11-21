@@ -1,0 +1,662 @@
+{
+  "slug": "arnhem",
+  "name": "Arnhem",
+  "is_common": false,
+  "start": "welfare-benefits",
+  "application_url": "https://arnhem.nl/product/gelrepas-aanvragen",
+  "nodes": {
+    "welfare-benefits": {
+      "type": "decision",
+      "label": "Bijstand?",
+      "description": "Zie de bijstandsnorm op rijksoverheid.nl.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-welfare-benefits-no-pass-received"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "debt-restructuring"
+        }
+      ]
+    },
+    "debt-restructuring": {
+      "type": "decision",
+      "label": "Schuldsanering, minnelijke regeling of kwijtschelding van gemeentelijke belastingen?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "possibly-eligible-continue-to-application"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "home-situation"
+        }
+      ]
+    },
+    "home-situation": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "student-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "student-together"
+        },
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "minor-child-single-parent"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "minor-child-together-kids"
+        }
+      ]
+    },
+    "student-single": {
+      "type": "decision",
+      "label": "Student (MBO/HBO/WO)?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student-income"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "retirement-age-single"
+        }
+      ]
+    },
+    "retirement-age-single": {
+      "type": "decision",
+      "label": "Pensioenleeftijd?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single"
+        }
+      ]
+    },
+    "income-single-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.809,56?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,19?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "assets-single": {
+      "type": "decision",
+      "label": "Vermogen tot € 8.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "student-together": {
+      "type": "decision",
+      "label": "Student?",
+      "description": "Een niet-studerende partner kan wél recht hebben.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student-partner-may-qualify"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "retirement-age-together"
+        }
+      ]
+    },
+    "retirement-age-together": {
+      "type": "decision",
+      "label": "Pensioenleeftijd van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together"
+        }
+      ]
+    },
+    "income-together-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,76?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "income-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "assets-together": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "minor-child-single-parent": {
+      "type": "decision",
+      "label": "Kind onder 18?",
+      "description": "Jongeren van 18+ vragen zelf aan.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "retirement-age-single-parent-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "student-single-parent-no-minor-child"
+        }
+      ]
+    },
+    "retirement-age-single-parent-minor-child": {
+      "type": "decision",
+      "label": "Pensioenleeftijd?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-parent-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single-parent-minor-child"
+        }
+      ]
+    },
+    "income-single-parent-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.960,36?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-single-parent-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.753,04?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "assets-single-parent-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-young-adults-apply-themselves"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "student-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Student?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student-young-adults-apply-themselves"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "retirement-age-single-parent-no-minor-child"
+        }
+      ]
+    },
+    "retirement-age-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Pensioenleeftijd?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-parent-no-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single-parent-no-minor-child"
+        }
+      ]
+    },
+    "income-single-parent-no-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.809,56?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,19?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-single-parent-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "assets-single-parent-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 8.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-young-adults-apply-themselves"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets"
+        }
+      ]
+    },
+    "minor-child-together-kids": {
+      "type": "decision",
+      "label": "Kind onder 18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "student-together-kids-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "student-together-kids-no-minor-child"
+        }
+      ]
+    },
+    "student-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Student?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student-partner-may-qualify"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "retirement-age-together-kids-minor-child"
+        }
+      ]
+    },
+    "retirement-age-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Pensioenleeftijd van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-kids-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together-kids-minor-child"
+        }
+      ]
+    },
+    "income-together-kids-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.687,49?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-kids-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income"
+        }
+      ]
+    },
+    "income-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.504,32?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-kids-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "assets-together-kids-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-young-adults-apply-themselves"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "student-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Student?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student-partner-may-qualify"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "retirement-age-together-kids-no-minor-child"
+        }
+      ]
+    },
+    "retirement-age-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Pensioenleeftijd van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-kids-no-minor-child-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together-kids-no-minor-child"
+        }
+      ]
+    },
+    "income-together-kids-no-minor-child-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.480,76?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-kids-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "income-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "description": "Inkomen exclusief vakantiegeld, inclusief kinder- en partneralimentatie.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "assets-together-kids-no-minor-child"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income"
+        }
+      ]
+    },
+    "assets-together-kids-no-minor-child": {
+      "type": "decision",
+      "label": "Vermogen tot € 16.000?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-young-adults-apply-themselves"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together"
+        }
+      ]
+    },
+    "eligible-pass-sent-home": {
+      "type": "result",
+      "label": "Je komt in aanmerking. De pas wordt gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets": {
+      "type": "result",
+      "label": "Niet in aanmerking: te veel vermogen.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: inkomen te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-together": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie inkomen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-together-passes-sent-home": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking. Passen worden gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets-together": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-assets-together-after-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-welfare-benefits-no-pass-received": {
+      "type": "result",
+      "label": "Je komt in aanmerking. Geen pas ontvangen? Alsnog aanvragen of contact opnemen.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-student-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: inkomen te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "possibly-eligible-continue-to-application": {
+      "type": "result",
+      "label": "Je komt mogelijk in aanmerking. De knop gaat door naar de aanvraag.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-student-partner-may-qualify": {
+      "type": "result",
+      "label": "Studenten komen niet in aanmerking. Een niet-studerende partner kan wél recht hebben.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-student-young-adults-apply-themselves": {
+      "type": "result",
+      "label": "Studenten komen niet in aanmerking. Jongeren van 18 jaar en ouder vragen zelf aan.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-young-adults-apply-themselves": {
+      "type": "result",
+      "label": "Je komt in aanmerking. Jongeren van 18 jaar en ouder vragen zelf aan.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-together-young-adults-apply-themselves": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking. Jongeren van 18 jaar en ouder vragen zelf aan.",
+      "eligible": true,
+      "button": true
+    }
+  }
+}

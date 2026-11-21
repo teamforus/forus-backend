@@ -1,0 +1,436 @@
+{
+  "slug": "zevenaar",
+  "name": "Zevenaar",
+  "is_common": false,
+  "start": "welfare-benefits",
+  "application_url": "https://gelrepas.passcloud.nl/link/pasaanvraaggemeente?orgcode=GEPASS&gemeente=Zevenaar",
+  "nodes": {
+    "welfare-benefits": {
+      "type": "decision",
+      "label": "Bijstand?",
+      "description": "Zie de bijstandsnorm op rijksoverheid.nl.",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-welfare-benefits"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "debt-restructuring"
+        }
+      ]
+    },
+    "debt-restructuring": {
+      "type": "decision",
+      "label": "Schuldsanering of minnelijke regeling?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "possibly-eligible-continue-to-application"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "student-duo"
+        }
+      ]
+    },
+    "student-duo": {
+      "type": "decision",
+      "label": "Student met recht op DUO?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "not-eligible-student"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "institution"
+        }
+      ]
+    },
+    "institution": {
+      "type": "decision",
+      "label": "Verblijf je in een instelling?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "home-situation-institution"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "home-situation"
+        }
+      ]
+    },
+    "home-situation-institution": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "income-institution-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "income-institution-together"
+        },
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "income-institution-single-parent"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "income-institution-together-kids"
+        }
+      ]
+    },
+    "income-institution-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 565,94?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-institution-single-parent": {
+      "type": "decision",
+      "label": "Inkomen tot € 565,94?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-institution-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 917,82?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "income-institution-together-kids": {
+      "type": "decision",
+      "label": "Inkomen tot € 917,82?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "home-situation": {
+      "type": "category",
+      "label": "Wat is je thuissituatie?",
+      "options": [
+        {
+          "label": "Alleenstaand",
+          "value": "single",
+          "next": "retirement-age-single"
+        },
+        {
+          "label": "Getrouwd/samenwonend",
+          "value": "together",
+          "next": "retirement-age-together"
+        },
+        {
+          "label": "Alleenstaande ouder",
+          "value": "single_parent",
+          "next": "retirement-age-single-parent"
+        },
+        {
+          "label": "Getrouwd/samenwonend met kinderen",
+          "value": "together_kids",
+          "next": "retirement-age-together-kids"
+        }
+      ]
+    },
+    "retirement-age-single": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single"
+        }
+      ]
+    },
+    "income-single-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.897,86?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-single": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-pass-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "retirement-age-together": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together"
+        }
+      ]
+    },
+    "income-together-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.601,91?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-assets-together-after-income"
+        }
+      ]
+    },
+    "income-together": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "retirement-age-single-parent": {
+      "type": "decision",
+      "label": "Pensioen 67+?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-single-parent-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-single-parent"
+        }
+      ]
+    },
+    "income-single-parent-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.897,86?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family-alt"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "income-single-parent": {
+      "type": "decision",
+      "label": "Inkomen tot € 1.618,18?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-including-family-alt"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income"
+        }
+      ]
+    },
+    "retirement-age-together-kids": {
+      "type": "decision",
+      "label": "Pensioen 67+ van een van jullie?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "income-together-kids-retired"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "income-together-kids"
+        }
+      ]
+    },
+    "income-together-kids-retired": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.601,91?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "income-together-kids": {
+      "type": "decision",
+      "label": "Inkomen tot € 2.311,68?",
+      "options": [
+        {
+          "label": "Ja",
+          "value": "yes",
+          "next": "eligible-together-passes-sent-home"
+        },
+        {
+          "label": "Nee",
+          "value": "no",
+          "next": "not-eligible-income-together"
+        }
+      ]
+    },
+    "eligible-pass-sent-home": {
+      "type": "result",
+      "label": "Je komt in aanmerking. De pas wordt gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: inkomen te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-income-together": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie inkomen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "eligible-together-passes-sent-home": {
+      "type": "result",
+      "label": "Jullie komen in aanmerking. Passen worden gratis thuisgestuurd.",
+      "eligible": true,
+      "button": true
+    },
+    "not-eligible-assets-together-after-income": {
+      "type": "result",
+      "label": "Niet in aanmerking: jullie vermogen is te hoog.",
+      "eligible": false,
+      "button": false
+    },
+    "not-eligible-student": {
+      "type": "result",
+      "label": "Studenten komen niet in aanmerking.",
+      "eligible": false,
+      "button": false
+    },
+    "possibly-eligible-continue-to-application": {
+      "type": "result",
+      "label": "Je komt mogelijk in aanmerking. De knop gaat door naar de aanvraag.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-welfare-benefits": {
+      "type": "result",
+      "label": "Je hebt een bijstandsuitkering en komt in aanmerking.",
+      "eligible": true,
+      "button": true
+    },
+    "eligible-including-family-alt": {
+      "type": "result",
+      "label": "Je komt in aanmerking, ook voor je gezin.",
+      "eligible": true,
+      "button": true
+    }
+  }
+}
