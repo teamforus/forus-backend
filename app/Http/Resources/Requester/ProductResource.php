@@ -2,9 +2,12 @@
 
 namespace App\Http\Resources\Requester;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\ReservationFieldResource;
 use App\Http\Resources\Small\MediaSmallResource;
 use App\Http\Resources\Small\OfficeSmallResource;
+use App\Http\Resources\Traits\Products\ResolvesProductFeatures;
+use App\Http\Resources\Traits\Products\ResolvesProductFunds;
 use App\Models\Implementation;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +15,9 @@ use Illuminate\Http\Request;
 
 class ProductResource extends \App\Http\Resources\ProductResource
 {
+    use ResolvesProductFeatures;
+    use ResolvesProductFunds;
+
     public const array LOAD = [
         ...parent::LOAD,
         'organization.reservation_fields',
@@ -26,17 +32,20 @@ class ProductResource extends \App\Http\Resources\ProductResource
 
     /**
      * @param Request $request
-     * @param Product $product
-     * @param bool $forWebshop
      * @return array
      */
-    protected function getProductData(Request $request, Product $product, bool $forWebshop): array
+    public function toArray(Request $request): array
     {
-        $data = parent::getProductData($request, $product, $forWebshop);
+        $product = $this->resource;
+        $baseRequest = BaseFormRequest::createFrom($request);
+        $funds = $product->trashed() ? collect() : $this->getProductFunds($baseRequest, $product);
 
         return [
-            ...$data,
-            ...($forWebshop ? $this->productFeatures(collect($data['funds'])) : []),
+            ...parent::toArray($request),
+            'bookmarked' => $product->isBookmarkedBy($baseRequest->identity()),
+            ...$this->minimumPriceFields($product, $this->fundsQuery()),
+            'funds' => $funds,
+            ...$this->productFeatures($funds),
             'photos' => MediaSmallResource::collection($product->photos),
             'offices' => OfficeSmallResource::collection($product->organization->offices),
             'reservation' => $this->requesterReservationFields($product),

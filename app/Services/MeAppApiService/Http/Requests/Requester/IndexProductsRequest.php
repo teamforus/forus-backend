@@ -2,6 +2,7 @@
 
 namespace App\Services\MeAppApiService\Http\Requests\Requester;
 
+use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Requests\BaseFormRequest;
 
 class IndexProductsRequest extends BaseFormRequest
@@ -26,8 +27,8 @@ class IndexProductsRequest extends BaseFormRequest
             'fund_ids' => 'nullable|array|max:50',
             'fund_ids.*' => 'nullable|integer|exists:funds,id',
             'organization_id' => 'nullable|integer|exists:organizations,id',
-            'from' => 'nullable|integer|max:10000',
-            'to' => 'nullable|integer|max:10000',
+            'from' => SearchProductsRequest::PRICE_BOUND_RULE,
+            'to' => SearchProductsRequest::PRICE_BOUND_RULE,
             'postcode' => 'nullable|string|max:100',
             'distance' => 'nullable|integer|max:1000',
             'qr' => 'nullable|boolean',

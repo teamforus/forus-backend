@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Services\MeAppApiService\Http\Resources\Requester;
+namespace App\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\ProductUserPriceResource;
-use App\Http\Resources\Traits\FormatsProductPrices;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Http\Resources\Traits\Products\FormatsProductPrices;
 use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 /**
  * @property-read Fund $resource
@@ -19,13 +20,14 @@ class ProductFundResource extends BaseJsonResource
     use FormatsProductPrices;
 
     public const array LOAD_NESTED = [
-        'logo' => MediaResource::class,
+        'logo' => MediaSmallResource::class,
     ];
 
     /**
      * @param Fund $fund
      * @param Product $product
      * @param int|null $limit
+     * @param Carbon $expireAt
      * @param FundProviderProduct|null $fundProviderProduct
      * @param array $features
      */
@@ -33,6 +35,7 @@ class ProductFundResource extends BaseJsonResource
         Fund $fund,
         private readonly Product $product,
         private readonly ?int $limit,
+        private readonly Carbon $expireAt,
         private readonly ?FundProviderProduct $fundProviderProduct,
         public readonly array $features,
     ) {
@@ -55,7 +58,7 @@ class ProductFundResource extends BaseJsonResource
             ...$fund->translateColumns($fund->only([
                 'name',
             ])),
-            'logo' => $fund->logo ? new MediaResource($fund->logo) : null,
+            'logo' => $fund->logo ? new MediaSmallResource($fund->logo) : null,
             'limit' => $this->limit,
             'user_price' => new ProductUserPriceResource(
                 $product,
@@ -64,6 +67,7 @@ class ProductFundResource extends BaseJsonResource
             ...$this->features,
             ...$this->makeTimestamps([
                 'end_at' => $fund->end_date,
+                'expire_at' => $this->expireAt,
             ], dateOnly: true),
         ];
     }

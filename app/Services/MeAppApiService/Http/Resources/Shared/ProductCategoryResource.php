@@ -2,14 +2,14 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Shared;
 
-use App\Http\Resources\BaseJsonResource;
 use App\Models\ProductCategory;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use Illuminate\Http\Request;
 
 /**
  * @property-read ProductCategory $resource
  */
-class ProductCategoryResource extends BaseJsonResource
+class ProductCategoryResource extends MobileBaseJsonResource
 {
     public const array LOAD = [
         'translations',

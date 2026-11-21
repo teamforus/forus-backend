@@ -72,7 +72,7 @@ use ZipArchive;
  * @property Carbon|null $updated_at
  * @property int|null $product_id
  * @property int|null $parent_id
- * @property Carbon|null $expire_at
+ * @property Carbon $expire_at
  * @property-read Collection|\App\Models\VoucherTransaction[] $all_transactions
  * @property-read int|null $all_transactions_count
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
@@ -103,7 +103,7 @@ use ZipArchive;
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
- * @property-read \Illuminate\Support\Carbon|null $last_active_day
+ * @property-read \Illuminate\Support\Carbon $last_active_day
  * @property-read bool $reimbursement_approval_time_expired
  * @property-read bool $reservation_approval_time_expired
  * @property-read string $source_locale
@@ -856,10 +856,10 @@ class Voucher extends Model
     }
 
     /**
-     * @return Carbon|null
+     * @return Carbon
      * @noinspection PhpUnused
      */
-    public function getLastActiveDayAttribute(): ?Carbon
+    public function getLastActiveDayAttribute(): Carbon
     {
         return $this->expire_at;
     }

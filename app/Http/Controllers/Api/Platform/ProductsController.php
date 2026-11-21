@@ -55,15 +55,15 @@ class ProductsController extends Controller
             ->max($priceField);
 
         if (($from = $request->input('from')) !== null) {
-            $query = $query->having($priceField, '>=', intval($from));
+            $query = $query->having($priceField, '>=', $from);
         }
 
         if (($to = $request->input('to')) !== null) {
-            $query = $query->having($priceField, '<=', intval($to));
+            $query = $query->having($priceField, '<=', $to);
         }
 
         return ProductResource::queryCollection($query, $request)->additional([
-            'meta' => [ 'price_max' => intval($priceMax ?: 0) ],
+            'meta' => ['price_max' => currency_format($priceMax)],
         ]);
     }
 

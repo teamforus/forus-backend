@@ -3,7 +3,9 @@
 namespace App\Services\MeAppApiService\Http\Resources\Provider;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Models\Enums\FundState;
+use App\Models\Enums\FundType;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Permission;
@@ -11,7 +13,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use App\Services\MeAppApiService\Http\Resources\Shared\OrganizationResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -21,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * @property-read Voucher $resource
  */
-class ProviderVoucherResource extends BaseJsonResource
+class ProviderVoucherResource extends MobileBaseJsonResource
 {
     public const array LOAD = [
         'token_without_confirmation',
@@ -31,7 +33,7 @@ class ProviderVoucherResource extends BaseJsonResource
     ];
 
     public const array LOAD_NESTED = [
-        'fund.logo' => MediaResource::class,
+        'fund.logo' => MediaSmallResource::class,
         'fund.organization' => OrganizationResource::class,
         'product' => ProviderProductResource::class,
     ];
@@ -132,10 +134,12 @@ class ProviderVoucherResource extends BaseJsonResource
     {
         return [
             ...$fund->only([
-                'id', 'name', 'state', 'type',
+                'id', 'name',
             ]),
+            'state' => FundState::forFund($fund),
+            'type' => FundType::forFund($fund),
             'organization' => (new OrganizationResource($fund->organization))->toArray($this->request),
-            'logo' => (new MediaResource($fund->logo))->toArray($this->request),
+            'logo' => (new MediaSmallResource($fund->logo))->toArray($this->request),
         ];
     }
 
@@ -192,13 +196,13 @@ class ProviderVoucherResource extends BaseJsonResource
      */
     protected function organizationsQueryToList(Builder $builder): Collection
     {
-        $organizations = $builder->with(['logo', ...MediaResource::load('logo')])->orderBy('name')->get();
+        $organizations = $builder->with(['logo', ...MediaSmallResource::load('logo')])->orderBy('name')->get();
 
         return $organizations->map(fn (Organization $organization) => [
             ...$organization->only([
                 'id', 'name',
             ]),
-            'logo' => (new MediaResource($organization->logo))->toArray($this->request),
+            'logo' => (new MediaSmallResource($organization->logo))->toArray($this->request),
         ]);
     }
 

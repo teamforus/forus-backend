@@ -2,16 +2,16 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
-use App\Http\Resources\BaseJsonResource;
-use App\Http\Resources\VoucherResource as LegacyVoucherResource;
+use App\Models\Enums\VoucherType;
 use App\Models\Voucher;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use Exception;
 use Illuminate\Http\Request;
 
 /**
  * @property-read Voucher $resource
  */
-class VoucherResource extends BaseJsonResource
+class VoucherResource extends MobileBaseJsonResource
 {
     /**
      * @var array
@@ -21,7 +21,6 @@ class VoucherResource extends BaseJsonResource
         'last_transaction',
         'transactions',
         'reimbursements_pending',
-        'last_deactivation_log',
         'top_up_transactions',
     ];
 
@@ -48,26 +47,23 @@ class VoucherResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         $voucher = $this->resource;
-        $deactivationDate = $voucher->deactivated ? $voucher->last_deactivation_log?->created_at : null;
-        $productId = $request->integer('product_id') ?: null;
 
         return [
             ...$voucher->only([
-                'id', 'fund_id', 'expired', 'deactivated', 'type', 'state', 'state_locale', 'external',
+                'id', 'expired', 'deactivated', 'external',
             ]),
+            'address' => $voucher->token_with_confirmation->address,
+            'type' => VoucherType::forVoucher($voucher),
             ...$this->getBaseFields($voucher),
             ...$this->getOptionalFields($voucher),
-            'address' => $voucher->token_with_confirmation->address,
             'fund' => new VoucherFundResource($voucher->fund),
             'product_vouchers' => VoucherProductVoucherResource::collection($voucher->product_vouchers),
-            'query_product' => (new LegacyVoucherResource($voucher))->queryProduct($voucher, $productId),
             ...$this->makeTimestamps([
-                'deactivated_at' => $deactivationDate,
                 'last_active_day' => $voucher->last_active_day,
                 'last_transaction_at' => $voucher->last_transaction?->created_at,
             ], dateOnly: true),
             ...$this->makeTimestamps($voucher->only([
-                'expire_at', 'created_at',
+                'expire_at',
             ])),
         ];
     }
@@ -96,7 +92,6 @@ class VoucherResource extends BaseJsonResource
 
         return [
             'used' => $voucher->transactions_count > 0,
-            'product' => new VoucherProductResource($voucher->product),
             ...($voucher->fund->fund_config->hide_voucher_amount ? [
                 'amount' => null,
                 'amount_locale' => null,
@@ -104,6 +99,7 @@ class VoucherResource extends BaseJsonResource
                 'amount' => currency_format($voucher->amount),
                 'amount_locale' => currency_format_locale($voucher->amount),
             ]),
+            'product' => new VoucherProductResource($voucher->product),
         ];
     }
 

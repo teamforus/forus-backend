@@ -34,11 +34,11 @@ class MeAppBasicRoutersTest extends TestCase
         $pushId = Str::random();
 
         //platform/devices/register-push
-        $this->postJson('/api/v1/platform/devices/register-push', ['id' => $pushId], $headers)->assertSuccessful();
+        $this->postJson('/api/v1/platform/devices/register-push', ['id' => $pushId], $headers)->assertNoContent();
         $this->assertNotEmpty($identity->notification_tokens()->where('token', $pushId)->first());
 
         //platform/devices/delete-push
-        $this->deleteJson('/api/v1/platform/devices/delete-push', ['id' => $pushId], $headers)->assertSuccessful();
+        $this->deleteJson('/api/v1/platform/devices/delete-push', ['id' => $pushId], $headers)->assertNoContent();
         $this->assertEmpty($identity->notification_tokens()->where('token', $pushId)->first());
     }
 

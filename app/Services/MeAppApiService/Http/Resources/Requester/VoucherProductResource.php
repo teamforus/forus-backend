@@ -3,8 +3,8 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
 use App\Models\Product;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
 use App\Services\MeAppApiService\Http\Resources\Shared\OrganizationResource;
 use Illuminate\Http\Request;
 
@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 class VoucherProductResource extends BaseJsonResource
 {
     public const array LOAD_NESTED = [
-        'photos' => MediaResource::class,
+        'photos' => MediaSmallResource::class,
         'organization' => OrganizationResource::class,
     ];
 
@@ -34,7 +34,7 @@ class VoucherProductResource extends BaseJsonResource
                 'name',
             ])),
             'price_locale' => $product->priceLocale(),
-            'photos' => MediaResource::collection($product->photos),
+            'photos' => MediaSmallResource::collection($product->photos),
             'organization' => new OrganizationResource($product->organization),
         ];
     }

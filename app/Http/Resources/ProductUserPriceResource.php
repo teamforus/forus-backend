@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\ProductPriceType;
+use App\Models\Enums\ProductPriceType;
 use App\Models\Product;
 use Illuminate\Http\Request;
 

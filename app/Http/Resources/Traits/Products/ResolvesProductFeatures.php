@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Resources\Traits;
+namespace App\Http\Resources\Traits\Products;
 
+use App\Http\Resources\Requester\ProductFundResource;
 use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
@@ -36,11 +37,13 @@ trait ResolvesProductFeatures
     }
 
     /**
-     * @param Collection $fundFeatures
+     * @param Collection<int, ProductFundResource> $funds
      * @return array
      */
-    protected function productFeatures(Collection $fundFeatures): array
+    protected function productFeatures(Collection $funds): array
     {
+        $fundFeatures = $funds->map(static fn (ProductFundResource $fund) => $fund->features);
+
         return [
             'feature_scanning_enabled' => $fundFeatures->contains('feature_scanning_enabled', true),
             'feature_reservations_enabled' => $fundFeatures->contains('feature_reservations_enabled', true),

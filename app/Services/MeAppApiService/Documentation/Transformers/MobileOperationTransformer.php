@@ -28,9 +28,12 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Reflector;
+use Illuminate\Support\Str;
 use LogicException;
 
 readonly class MobileOperationTransformer implements OperationTransformer
@@ -203,6 +206,49 @@ readonly class MobileOperationTransformer implements OperationTransformer
         }
 
         $operation->setAttribute('documentation_values', ['causes' => implode(', ', $forbidden)]);
+        $this->addQueryRequestSchema($operation, $routeInfo);
+    }
+
+    /**
+     * @param Operation $operation
+     * @param RouteInfo $routeInfo
+     * @return void
+     */
+    private function addQueryRequestSchema(Operation $operation, RouteInfo $routeInfo): void
+    {
+        $request = array_first($routeInfo->route->signatureParameters(FormRequest::class));
+        $class = $request ? Reflector::getParameterClassName($request) : null;
+        $components = $this->context->openApi->components;
+
+        if (!$class || $operation->requestBodyObject || $components->hasSchema($class)) {
+            return;
+        }
+
+        $type = new ObjectType();
+
+        foreach ($operation->parameters as $parameter) {
+            if (!$parameter instanceof Parameter || $parameter->in !== 'query' || !$parameter->schema instanceof Schema) {
+                continue;
+            }
+
+            $name = Str::beforeLast($parameter->name, '[]');
+            $property = clone $parameter->schema->type;
+
+            if ($parameter->description !== '') {
+                $property->description = $parameter->description;
+            }
+
+            $type->addProperty($name, $property);
+            $parameter->setAttribute('query_request_property', $property);
+
+            if ($parameter->required) {
+                $type->addRequired([$name]);
+            }
+        }
+
+        if ($type->properties) {
+            $components->addSchema($class, Schema::fromType($type));
+        }
     }
 
     /**

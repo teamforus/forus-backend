@@ -251,6 +251,19 @@ class DescriptionCatalog
         array $values,
         string $path,
     ): bool {
+        if (str_starts_with($field, 'anyOf[].')) {
+            $matched = false;
+
+            foreach ($schema['anyOf'] ?? [] as $index => $branch) {
+                if ($this->describeField($branch, substr($field, 8), $text, $components, $values, $path)) {
+                    $schema['anyOf'][$index] = $branch;
+                    $matched = true;
+                }
+            }
+
+            return $matched;
+        }
+
         $segments = explode('.', str_replace('[]', '.[]', $field));
 
         return !in_array('', $segments, true) &&

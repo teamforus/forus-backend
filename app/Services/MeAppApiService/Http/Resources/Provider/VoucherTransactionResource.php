@@ -3,6 +3,8 @@
 namespace App\Services\MeAppApiService\Http\Resources\Provider;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Models\Enums\VoucherTransactionState;
+use App\Models\Enums\VoucherTransactionTarget;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
 
@@ -23,8 +25,11 @@ class VoucherTransactionResource extends BaseJsonResource
 
         return [
             ...$transaction->only([
-                'id', 'organization_id', 'product_id', 'state', 'state_locale', 'target',
+                'id', 'organization_id', 'product_id',
             ]),
+            'state' => VoucherTransactionState::forTransaction($transaction),
+            'state_locale' => $transaction->state_locale,
+            'target' => VoucherTransactionTarget::forTransaction($transaction),
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
             'amount_extra_cash' => currency_format($transaction->amount_extra_cash),

@@ -3,6 +3,9 @@
 namespace App\Services\MeAppApiService\Documentation\Inference;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Services\MeAppApiService\Http\Resources\MobileAnonymousResourceCollection;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
+use Carbon\Carbon;
 use Dedoc\Scramble\Infer\Extensions\Event\MethodCallEvent;
 use Dedoc\Scramble\Infer\Extensions\Event\PropertyFetchEvent;
 use Dedoc\Scramble\Infer\Extensions\Event\StaticMethodCallEvent;
@@ -84,11 +87,15 @@ class BaseJsonResourceInference implements
                 $date->setAttribute('format', 'date');
             }
 
-            $items[$item->key] = new ArrayItemType_($item->key, new Union([$date, new NullType()]));
+            $localized = new StringType();
 
-            $items[$item->key . '_locale'] = new ArrayItemType_($item->key . '_locale', new Union([
-                new StringType(), new NullType(),
-            ]));
+            if (!$item->value->isInstanceOf(Carbon::class)) {
+                $date = new Union([$date, new NullType()]);
+                $localized = new Union([$localized, new NullType()]);
+            }
+
+            $items[$item->key] = new ArrayItemType_($item->key, $date);
+            $items[$item->key . '_locale'] = new ArrayItemType_($item->key . '_locale', $localized);
         }
 
         return $items ? new KeyedArrayType(array_values($items)) : null;
@@ -104,10 +111,14 @@ class BaseJsonResourceInference implements
             return null;
         }
 
+        $collection = is_a($event->callee, MobileBaseJsonResource::class, true)
+            ? MobileAnonymousResourceCollection::class
+            : AnonymousResourceCollection::class;
+
         if ($event->name === 'queryCollection') {
             $model = (new ObjectType($event->callee))->getPropertyType('resource', $event->scope);
 
-            return new Generic(AnonymousResourceCollection::class, [
+            return new Generic($collection, [
                 new Generic(LengthAwarePaginator::class, [new IntegerType(), $model]),
                 new ArrayType(),
                 new ObjectType($event->callee),
@@ -118,7 +129,7 @@ class BaseJsonResourceInference implements
             return null;
         }
 
-        return new Generic(AnonymousResourceCollection::class, [
+        return new Generic($collection, [
             $event->getArg('resource', 0), new ArrayType(), new ObjectType($event->callee),
         ]);
     }

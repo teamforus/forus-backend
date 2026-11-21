@@ -7,6 +7,8 @@ use App\Models\Product;
 
 class SearchProductsRequest extends BaseFormRequest
 {
+    public const string PRICE_BOUND_RULE = 'nullable|numeric|decimal:0,2|max:99999999.99';
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -41,8 +43,8 @@ class SearchProductsRequest extends BaseFormRequest
             'simplified' => 'nullable|bool',
             'postcode' => 'nullable|string|max:100',
             'distance' => 'nullable|integer|max:1000',
-            'from' => 'nullable|integer|max:10000',
-            'to' => 'nullable|integer|max:10000',
+            'from' => self::PRICE_BOUND_RULE,
+            'to' => self::PRICE_BOUND_RULE,
             'qr' => 'nullable|bool',
             'reservation' => 'nullable|bool',
             'extra_payment' => 'nullable|bool',

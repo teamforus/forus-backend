@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Traits;
+namespace App\Http\Resources\Traits\Products;
 
 use App\Models\Fund;
 use App\Models\FundProviderProduct;

@@ -3,8 +3,10 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Models\Enums\VoucherTransactionState;
+use App\Models\Enums\VoucherTransactionTarget;
 use App\Models\VoucherTransaction;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
 use Illuminate\Http\Request;
 
 /**
@@ -20,8 +22,8 @@ class VoucherTransactionResource extends BaseJsonResource
     ];
 
     public const array LOAD_NESTED = [
-        'provider.logo' => MediaResource::class,
-        'product.photos' => MediaResource::class,
+        'provider.logo' => MediaSmallResource::class,
+        'product.photos' => MediaSmallResource::class,
     ];
 
     /**
@@ -37,8 +39,11 @@ class VoucherTransactionResource extends BaseJsonResource
 
         return [
             ...$transaction->only([
-                'id', 'organization_id', 'product_id', 'address', 'state', 'state_locale', 'target',
+                'id', 'organization_id', 'product_id', 'address',
             ]),
+            'state' => VoucherTransactionState::forTransaction($transaction),
+            'state_locale' => $transaction->state_locale,
+            'target' => VoucherTransactionTarget::forTransaction($transaction),
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
             'amount_extra_cash' => currency_format($transaction->amount_extra_cash),
@@ -47,7 +52,7 @@ class VoucherTransactionResource extends BaseJsonResource
                 ...$transaction->provider->only([
                     'id', 'name',
                 ]),
-                'logo' => $transaction->provider->logo ? new MediaResource($transaction->provider->logo) : null,
+                'logo' => $transaction->provider->logo ? new MediaSmallResource($transaction->provider->logo) : null,
             ] : null,
             'product' => $product ? [
                 ...$product->only([
@@ -60,7 +65,7 @@ class VoucherTransactionResource extends BaseJsonResource
                 'organization' => $product->organization->only([
                     'id', 'name',
                 ]),
-                'photo' => $product->photos->isNotEmpty() ? new MediaResource($product->photos->first()) : null,
+                'photo' => $product->photos->isNotEmpty() ? new MediaSmallResource($product->photos->first()) : null,
             ] : null,
             'fund' => $transaction->voucher->fund->only([
                 'id', 'name',

@@ -3,8 +3,8 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
 use App\Models\Office;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
 use App\Services\MeAppApiService\Http\Resources\Shared\OrganizationResource;
 use Illuminate\Http\Request;
 
@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 class VoucherOfficeResource extends BaseJsonResource
 {
     public const array LOAD_NESTED = [
-        'photo' => MediaResource::class,
+        'photo' => MediaSmallResource::class,
         'organization' => OrganizationResource::class,
         'schedules' => OfficeScheduleResource::class,
     ];
@@ -34,7 +34,7 @@ class VoucherOfficeResource extends BaseJsonResource
                 'id', 'organization_id', 'address', 'phone', 'lon', 'lat',
                 'postcode', 'postcode_number', 'postcode_addition',
             ]),
-            'photo' => $office->photo ? new MediaResource($office->photo) : null,
+            'photo' => $office->photo ? new MediaSmallResource($office->photo) : null,
             'organization' => new OrganizationResource($office->organization),
             'schedule' => OfficeScheduleResource::collection($office->schedules),
         ];

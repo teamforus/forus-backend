@@ -13,7 +13,9 @@ use App\Services\MeAppApiService\Documentation\Inference\EmptyObjectCastInferenc
 use App\Services\MeAppApiService\Documentation\Inference\ResourcePropertyInference;
 use App\Services\MeAppApiService\Documentation\Inference\TranslatedAttributeInference;
 use App\Services\MeAppApiService\Documentation\Inference\TranslatedColumnsInference;
+use App\Services\MeAppApiService\Documentation\Responses\NoContentResponseExtension;
 use App\Services\MeAppApiService\Documentation\Responses\ViewResponse;
+use App\Services\MeAppApiService\Documentation\Transformers\DecimalRuleTransformer;
 use App\Services\MeAppApiService\Documentation\Transformers\DocumentationExamples;
 use App\Services\MeAppApiService\Documentation\Transformers\DocumentationText;
 use App\Services\MeAppApiService\Documentation\Transformers\EmptyValidationErrorResponsesExtension;
@@ -22,6 +24,7 @@ use App\Services\MeAppApiService\Documentation\Transformers\MobileRequestBodyExt
 use App\Services\MeAppApiService\Documentation\Transformers\SchemaGroups;
 use Dedoc\Scramble\Configuration\OperationTransformers;
 use Dedoc\Scramble\Configuration\ParametersExtractors;
+use Dedoc\Scramble\OpenApiVersion;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
 use Dedoc\Scramble\Support\OperationExtensions\ErrorResponsesExtension;
@@ -54,6 +57,7 @@ class ScrambleServiceProvider extends ServiceProvider
         Scramble::registerExtension(ResourcePropertyInference::class);
         Scramble::registerExtension(TranslatedAttributeInference::class);
         Scramble::registerExtension(TranslatedColumnsInference::class);
+        Scramble::registerExtension(NoContentResponseExtension::class);
         Scramble::registerExtension(ViewResponse::class);
 
         $descriptions = require __DIR__ . '/Documentation/descriptions.php';
@@ -62,6 +66,7 @@ class ScrambleServiceProvider extends ServiceProvider
             $namespace = Config::get("me-app-api.$appKey.namespace");
 
             Scramble::registerApi($appKey, [
+                'openapi_version' => OpenApiVersion::V3_1,
                 'api_path' => trim($namespace, '/') . '/v1',
                 'export_path' => storage_path("app/openapi-$appKey.json"),
                 'ui' => ['title' => data_get(
@@ -74,6 +79,7 @@ class ScrambleServiceProvider extends ServiceProvider
                     'version' => '1.0.0',
                 ],
             ])->routes(static fn (Route $route): bool => $route->named("mobile.$appKey.v1.*"))
+                ->withRuleTransformers(DecimalRuleTransformer::class)
                 ->withParametersExtractors(static function (ParametersExtractors $extractors): void {
                     $extractors->use(array_map(
                         static fn (string $extractor): string => $extractor === FormRequestParametersExtractor::class

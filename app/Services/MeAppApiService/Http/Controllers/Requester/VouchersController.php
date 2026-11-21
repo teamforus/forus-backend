@@ -4,10 +4,9 @@ namespace App\Services\MeAppApiService\Http\Controllers\Requester;
 
 use App\Http\Controllers\Api\Platform\VouchersController as LegacyVouchersController;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Resources\VoucherCollectionResource as LegacyVoucherCollectionResource;
 use App\Models\Voucher;
-use App\Services\MeAppApiService\Http\Requests\Requester\ShowVoucherRequest;
+use App\Services\MeAppApiService\Http\Requests\Requester\IndexVouchersRequest;
 use App\Services\MeAppApiService\Http\Resources\Requester\VoucherResource;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -37,12 +36,11 @@ class VouchersController extends Controller
     /**
      * Get voucher details.
      *
-     * @param ShowVoucherRequest $request
      * @param Voucher $voucher
      * @throws AuthorizationException
      * @return VoucherResource
      */
-    public function show(ShowVoucherRequest $request, Voucher $voucher): VoucherResource
+    public function show(Voucher $voucher): VoucherResource
     {
         $response = resolve(LegacyVouchersController::class)->show($voucher);
 

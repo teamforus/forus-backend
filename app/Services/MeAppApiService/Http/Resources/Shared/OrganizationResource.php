@@ -3,6 +3,7 @@
 namespace App\Services\MeAppApiService\Http\Resources\Shared;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,7 @@ use Illuminate\Http\Request;
 class OrganizationResource extends BaseJsonResource
 {
     public const array LOAD_NESTED = [
-        'logo' => MediaResource::class,
+        'logo' => MediaSmallResource::class,
     ];
 
     /**
@@ -31,7 +32,7 @@ class OrganizationResource extends BaseJsonResource
             ]),
             'email' => $organization->email ?: null,
             'phone' => $organization->phone ?: null,
-            'logo' => $organization->logo ? new MediaResource($organization->logo) : null,
+            'logo' => $organization->logo ? new MediaSmallResource($organization->logo) : null,
         ];
     }
 }

@@ -20,8 +20,7 @@ use Illuminate\Support\Facades\Config;
 class DocumentationText implements DocumentTransformer
 {
     private DescriptionCatalog $catalog;
-    private array $components31;
-    private array $components32;
+    private array $components;
     private array $targets = [];
 
     /**
@@ -46,30 +45,8 @@ class DocumentationText implements DocumentTransformer
             $document->info->{$key} = $this->catalog->render($text, $values, "info.$key");
         }
 
-        $schemas = [];
-        $variants = [];
-
-        foreach ($document->components->schemas as $class => $schema) {
-            $name = $document->components->uniqueSchemaName($class);
-            $schemas[$name] = $class;
-            $variants[$name] = $schema->type->getAttribute('description_variants', []);
-        }
-
-        $this->refreshComponents($document);
-        $this->components31 = $this->catalog->describeComponents($this->components31, $values, $variants);
-        $this->components32 = $this->catalog->describeComponents($this->components32, $values, $variants);
-
-        foreach (array_keys($this->catalog->section('schemas')) as $name) {
-            $class = $schemas[$name];
-            $document->components->schemas[$class] = new DescribedSchema(
-                $document->components->schemas[$class],
-                $this->components31[$name],
-                $this->components32[$name],
-            );
-        }
-
         $endpoints = $this->catalog->section('endpoints');
-        $appliedEndpoints = [];
+        $defaultParameters = $this->catalog->section('parameters');
 
         foreach ($endpoints as $name => $entry) {
             $this->catalog->checkKeys($entry, [
@@ -81,9 +58,47 @@ class DocumentationText implements DocumentTransformer
             foreach ($path->operations as $operation) {
                 $name = $operation->getAttribute('mobile_route_name');
                 $operationValues = [...$values, ...$operation->getAttribute('documentation_values', [])];
+                $this->applyParameters($operation, $defaultParameters, $operationValues, 'defaults.parameters', false);
+
+                if (array_key_exists('parameters', $endpoints[$name] ?? [])) {
+                    $parameterPath = "endpoints.$name.parameters";
+                    $parameters = $this->catalog->map($endpoints[$name]['parameters'], $parameterPath);
+                    $this->applyParameters($operation, $parameters, $operationValues, $parameterPath, true);
+                }
+            }
+        }
+
+        $schemas = [];
+        $variants = [];
+
+        foreach ($document->components->schemas as $class => $schema) {
+            $name = $document->components->uniqueSchemaName($class);
+            $schemas[$name] = $class;
+            $variants[$name] = $schema->type->getAttribute('description_variants', []);
+        }
+
+        $this->components = $this->catalog->describeComponents(
+            $document->components->serializeAs31()['schemas'] ?? [],
+            $values,
+            $variants,
+        );
+
+        foreach (array_keys($this->catalog->section('schemas')) as $name) {
+            $class = $schemas[$name];
+            $document->components->schemas[$class] = new DescribedSchema(
+                $document->components->schemas[$class],
+                $this->components[$name],
+            );
+        }
+
+        $appliedEndpoints = [];
+
+        foreach ($document->paths as $path) {
+            foreach ($path->operations as $operation) {
+                $name = $operation->getAttribute('mobile_route_name');
+                $operationValues = [...$values, ...$operation->getAttribute('documentation_values', [])];
 
                 $this->applyOperation($operation, [
-                    'parameters' => $this->catalog->section('parameters'),
                     'responses' => $this->catalog->section('responses'),
                     'response_headers' => $this->catalog->section('response_headers'),
                 ], $operationValues, 'defaults', false);
@@ -124,16 +139,6 @@ class DocumentationText implements DocumentTransformer
     }
 
     /**
-     * @param OpenApi $document
-     * @return void
-     */
-    private function refreshComponents(OpenApi $document): void
-    {
-        $this->components31 = $document->components->serializeAs31()['schemas'] ?? [];
-        $this->components32 = $document->components->serializeAs32()['schemas'] ?? [];
-    }
-
-    /**
      * @param Operation $operation
      * @param array $entry
      * @param array $values
@@ -143,7 +148,7 @@ class DocumentationText implements DocumentTransformer
      */
     private function applyOperation(Operation $operation, array $entry, array $values, string $path, bool $strict): void
     {
-        foreach (['parameters', 'responses', 'response_headers', 'request'] as $key) {
+        foreach (['responses', 'response_headers', 'request'] as $key) {
             if (array_key_exists($key, $entry)) {
                 $this->catalog->map($entry[$key], "$path.$key");
             }
@@ -154,14 +159,6 @@ class DocumentationText implements DocumentTransformer
                 $operation->{$key} = $this->catalog->render($entry[$key], $values, "$path.$key");
             }
         }
-
-        $this->applyParameters(
-            $operation,
-            $this->catalog->map($entry['parameters'] ?? [], "$path.parameters"),
-            $values,
-            "$path.parameters",
-            $strict,
-        );
 
         if (isset($entry['request'])) {
             if (!$operation->requestBodyObject) {
@@ -253,6 +250,11 @@ class DocumentationText implements DocumentTransformer
                     $this->targets["parameters.$location.$name"] = true;
                     $parameter = clone $parameter;
                     $parameter->description = $this->catalog->render($text, $values, "$path.$location.$name");
+
+                    if ($property = $parameter->getAttribute('query_request_property')) {
+                        $property->description = $parameter->description;
+                    }
+
                     $operation->parameters[$index] = $parameter;
                 }
 
@@ -324,7 +326,7 @@ class DocumentationText implements DocumentTransformer
      */
     private function applyBodyFields(Response|RequestBodyObject $target, array $fields, array $values, string $path): void
     {
-        $missing31 = $missing32 = $fields;
+        $missing = $fields;
 
         foreach ($target->content as $mediaType => $content) {
             if ($content instanceof Reference && $content->referenceType === 'mediaTypes') {
@@ -339,31 +341,25 @@ class DocumentationText implements DocumentTransformer
             }
 
             $source = $source instanceof Reference ? Schema::fromType($source) : $source;
-            $schema31 = (array) $source->serializeAs31();
-            $schema32 = (array) $source->serializeAs32();
+            $schema = (array) $source->serializeAs31();
             $matched = false;
 
             foreach ($fields as $field => $text) {
                 $fieldPath = "$path.fields.$field";
 
-                if ($this->catalog->describeField($schema31, $field, $text, $this->components31, $values, $fieldPath)) {
-                    unset($missing31[$field]);
-                    $matched = true;
-                }
-
-                if ($this->catalog->describeField($schema32, $field, $text, $this->components32, $values, $fieldPath)) {
-                    unset($missing32[$field]);
+                if ($this->catalog->describeField($schema, $field, $text, $this->components, $values, $fieldPath)) {
+                    unset($missing[$field]);
                     $matched = true;
                 }
             }
 
             if ($matched) {
-                $content->schema = new DescribedSchema($source, $schema31, $schema32);
+                $content->schema = new DescribedSchema($source, $schema);
                 $target->addContent($mediaType, $content);
             }
         }
 
-        foreach (array_keys($missing31 + $missing32) as $field) {
+        foreach (array_keys($missing) as $field) {
             $this->catalog->fail("$path.fields.$field", 'Field does not exist in any body content schema.');
         }
     }

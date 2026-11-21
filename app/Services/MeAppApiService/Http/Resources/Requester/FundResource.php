@@ -2,14 +2,14 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
-use App\Http\Resources\BaseJsonResource;
 use App\Models\Fund;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use Illuminate\Http\Request;
 
 /**
  * @property-read Fund $resource
  */
-class FundResource extends BaseJsonResource
+class FundResource extends MobileBaseJsonResource
 {
     /**
      * @param Request $request

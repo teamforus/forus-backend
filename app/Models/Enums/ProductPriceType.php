@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Enums;
+namespace App\Models\Enums;
 
 use App\Models\Product;
 

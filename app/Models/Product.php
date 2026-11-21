@@ -106,6 +106,8 @@ use Illuminate\Support\Facades\Event;
  * @property-read int|null $product_reservations_pending_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ReservationField[] $reservation_fields
  * @property-read int|null $reservation_fields_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|VoucherTransaction[] $voucher_transactions_sold
+ * @property-read int|null $voucher_transactions_sold_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\TranslationService\Models\TranslationValue[] $translation_values
  * @property-read int|null $translation_values_count
@@ -334,6 +336,14 @@ class Product extends Model
     public function voucher_transactions(): HasMany
     {
         return $this->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function voucher_transactions_sold(): HasMany
+    {
+        return $this->voucher_transactions()->where('state', '!=', VoucherTransaction::STATE_CANCELED);
     }
 
     /**
@@ -611,6 +621,10 @@ class Product extends Model
      */
     public function countReservedCached(?Fund $fund = null): int
     {
+        if ($fund === null && isset($this->product_reservations_pending_count)) {
+            return (int) $this->product_reservations_pending_count;
+        }
+
         return $this->product_reservations_pending->filter(function (ProductReservation $reservation) use ($fund) {
             return !$fund || $reservation->voucher->fund_id === $fund->id;
         })->count();
@@ -624,9 +638,7 @@ class Product extends Model
      */
     public function countSold(?Fund $fund = null): int
     {
-        return $this->voucher_transactions()->where(function (Builder $builder) use ($fund) {
-            $builder->where('state', '!=', VoucherTransaction::STATE_CANCELED);
-
+        return $this->voucher_transactions_sold()->where(function (Builder $builder) use ($fund) {
             if ($fund) {
                 $builder->whereRelation('voucher', 'fund_id', $fund->id);
             }
@@ -634,20 +646,18 @@ class Product extends Model
     }
 
     /**
-     * Count actually sold products using the loaded relation.
+     * Count actually sold products using the loaded count or relation.
      *
      * @param Fund|null $fund
      * @return int
      */
     public function countSoldCached(?Fund $fund = null): int
     {
-        return $this->voucher_transactions->filter(function (VoucherTransaction $transaction) use ($fund) {
-            if ($transaction->state === VoucherTransaction::STATE_CANCELED) {
-                return false;
-            }
+        if ($fund === null) {
+            return $this->voucher_transactions_sold_count ?? $this->voucher_transactions_sold->count();
+        }
 
-            return !$fund || $transaction->voucher?->fund_id === $fund->id;
-        })->count();
+        return $this->voucher_transactions_sold->where('voucher.fund_id', $fund->id)->count();
     }
 
     /**
@@ -660,13 +670,16 @@ class Product extends Model
             return null;
         }
 
-        return $this->total_amount - ($this->countReservedCached() + $this->voucher_transactions->count());
+        return $this->total_amount - ($this->countReservedCached() + $this->countSoldCached());
     }
 
     /**
      * Update sold out state for the product.
+     *
+     * @param bool $notifySoldOut
+     * @return void
      */
-    public function updateSoldOutState(): void
+    public function updateSoldOutState(bool $notifySoldOut = true): void
     {
         if (!$this->unlimited_stock && !$this->isInformational()) {
             $totalProducts = $this->countReserved() + $this->countSold();
@@ -674,7 +687,7 @@ class Product extends Model
             $sold_out = $totalProducts >= $this->total_amount;
             $this->update(compact('sold_out'));
 
-            if ($sold_out) {
+            if ($sold_out && $notifySoldOut) {
                 broadcast(new ProductSoldOut($this));
             }
         }

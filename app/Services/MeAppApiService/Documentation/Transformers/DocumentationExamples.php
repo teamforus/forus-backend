@@ -46,7 +46,6 @@ class DocumentationExamples implements DocumentTransformer
             $document->components->schemas[$class] = new DescribedSchema(
                 $schema,
                 $this->applySchema((array) $schema->serializeAs31(), $entry, $variants, "schemas.$name"),
-                $this->applySchema((array) $schema->serializeAs32(), $entry, $variants, "schemas.$name"),
             );
         }
 

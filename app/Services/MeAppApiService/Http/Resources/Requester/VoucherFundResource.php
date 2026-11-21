@@ -3,8 +3,9 @@
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
 use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Models\Enums\FundType;
 use App\Models\Fund;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
 use App\Services\MeAppApiService\Http\Resources\Shared\OrganizationResource;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class VoucherFundResource extends BaseJsonResource
     ];
 
     public const array LOAD_NESTED = [
-        'logo' => MediaResource::class,
+        'logo' => MediaSmallResource::class,
         'organization' => OrganizationResource::class,
     ];
 
@@ -32,13 +33,14 @@ class VoucherFundResource extends BaseJsonResource
 
         return [
             ...$fund->only([
-                'id', 'name', 'type',
+                'id', 'name',
             ]),
+            'type' => FundType::forFund($fund),
             ...$fund->translateColumns($fund->only([
                 'name',
             ])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
-            'logo' => $fund->logo ? new MediaResource($fund->logo) : null,
+            'logo' => $fund->logo ? new MediaSmallResource($fund->logo) : null,
             'organization' => new OrganizationResource($fund->organization),
         ];
     }

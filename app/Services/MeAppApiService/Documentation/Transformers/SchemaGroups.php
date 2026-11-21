@@ -5,6 +5,7 @@ namespace App\Services\MeAppApiService\Documentation\Transformers;
 use Dedoc\Scramble\Contracts\DocumentTransformer;
 use Dedoc\Scramble\OpenApiContext;
 use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\Tag;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,7 @@ class SchemaGroups implements DocumentTransformer
      */
     public function handle(OpenApi $document, OpenApiContext $context): void
     {
+        array_push($document->tags, new Tag('Enums'), new Tag('Requests'), new Tag('Resources'));
         $classes = [];
 
         foreach ($context->references->schemas->items as $class => $references) {
@@ -29,6 +31,7 @@ class SchemaGroups implements DocumentTransformer
             $group = match (true) {
                 is_a($class, FormRequest::class, true) => 'Requests',
                 is_a($class, JsonResource::class, true) => 'Resources',
+                enum_exists($class) => 'Enums',
                 default => null,
             };
 

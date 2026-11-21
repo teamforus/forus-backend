@@ -2,21 +2,22 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Provider;
 
-use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Models\Enums\ProductPriceType;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Models\Voucher;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use App\Services\MeAppApiService\Http\Resources\Shared\OrganizationResource;
 use Illuminate\Http\Request;
 
 /**
  * @property-read Product $resource
  */
-class ProviderProductResource extends BaseJsonResource
+class ProviderProductResource extends MobileBaseJsonResource
 {
     public const array LOAD_NESTED = [
-        'photos' => MediaResource::class,
+        'photos' => MediaSmallResource::class,
         'organization' => OrganizationResource::class,
     ];
 
@@ -53,7 +54,7 @@ class ProviderProductResource extends BaseJsonResource
             ])),
             'price' => $product->price === null ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
-            'photos' => MediaResource::collection($product->photos),
+            'photos' => MediaSmallResource::collection($product->photos),
             'organization' => new OrganizationResource($product->organization),
             'price_user' => currency_format(0),
             'price_user_locale' => 'Gratis',
@@ -85,15 +86,17 @@ class ProviderProductResource extends BaseJsonResource
 
         return [
             ...$product->only([
-                'id', 'name', 'organization_id', 'price_type', 'price_discount',
+                'id', 'name', 'organization_id',
             ]),
+            'price_type' => ProductPriceType::forProduct($product),
+            'price_discount' => $product->price_discount,
             'price' => currency_format($price),
             'price_locale' => $product->price_locale,
             'price_user' => currency_format($price_user),
             'price_user_locale' => $price_user_local,
             'sponsor_subsidy' => currency_format($sponsor_subsidy),
             'sponsor_subsidy_locale' => currency_format_locale($sponsor_subsidy),
-            'photos' => MediaResource::collection($product->photos),
+            'photos' => MediaSmallResource::collection($product->photos),
             'sponsor' => new OrganizationResource($fund->organization),
             'organization' => new OrganizationResource($product->organization),
             'product_category' => [

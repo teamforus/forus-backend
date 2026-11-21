@@ -2,15 +2,16 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Provider;
 
-use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
+use App\Models\Enums\VoucherTransactionState;
 use App\Models\VoucherTransaction;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use Illuminate\Http\Request;
 
 /**
  * @property-read VoucherTransaction $resource
  */
-class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
+class ProviderVoucherTransactionEmployeeResource extends MobileBaseJsonResource
 {
     public const array LOAD = [
         'notes',
@@ -18,8 +19,8 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
     ];
 
     public const array LOAD_NESTED = [
-        'provider.logo' => MediaResource::class,
-        'product.photos' => MediaResource::class,
+        'provider.logo' => MediaSmallResource::class,
+        'product.photos' => MediaSmallResource::class,
     ];
 
     /**
@@ -34,8 +35,9 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
 
         return [
             ...$transaction->only([
-                'id', 'organization_id', 'product_id', 'state',
+                'id', 'organization_id', 'product_id',
             ]),
+            'state' => VoucherTransactionState::forTransaction($transaction),
             'note' => $transaction->notes->where('group', 'provider')[0]->message ?? null,
             'amount' => currency_format($transaction->amount),
             'amount_locale' => currency_format_locale($transaction->amount),
@@ -45,13 +47,13 @@ class ProviderVoucherTransactionEmployeeResource extends BaseJsonResource
                 ...$transaction->provider->only([
                     'id', 'name',
                 ]),
-                'logo' => $transaction->provider->logo ? new MediaResource($transaction->provider->logo) : null,
+                'logo' => $transaction->provider->logo ? new MediaSmallResource($transaction->provider->logo) : null,
             ],
             'product' => $transaction->product ? [
                 ...$transaction->product->only([
                     'id', 'name', 'organization_id',
                 ]),
-                'photos' => MediaResource::collection($transaction->product->photos),
+                'photos' => MediaSmallResource::collection($transaction->product->photos),
             ] : null,
             'fund' => [
                 ...$transaction->voucher->fund->only([

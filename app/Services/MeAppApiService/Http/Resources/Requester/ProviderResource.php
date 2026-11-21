@@ -2,18 +2,18 @@
 
 namespace App\Services\MeAppApiService\Http\Resources\Requester;
 
-use App\Http\Resources\BaseJsonResource;
+use App\Http\Resources\Small\MediaSmallResource;
 use App\Models\Organization;
-use App\Services\MeAppApiService\Http\Resources\Shared\MediaResource;
+use App\Services\MeAppApiService\Http\Resources\MobileBaseJsonResource;
 use Illuminate\Http\Request;
 
 /**
  * @property-read Organization $resource
  */
-class ProviderResource extends BaseJsonResource
+class ProviderResource extends MobileBaseJsonResource
 {
     public const array LOAD_NESTED = [
-        'logo' => MediaResource::class,
+        'logo' => MediaSmallResource::class,
         'business_type' => BusinessTypeResource::class,
     ];
 
@@ -31,7 +31,7 @@ class ProviderResource extends BaseJsonResource
             ]),
             'email' => $provider->email_public ? $provider->email : null,
             'phone' => $provider->phone_public ? $provider->phone : null,
-            'logo' => $provider->logo ? new MediaResource($provider->logo) : null,
+            'logo' => $provider->logo ? new MediaSmallResource($provider->logo) : null,
             'business_type' => $provider->business_type ? new BusinessTypeResource($provider->business_type) : null,
         ];
     }

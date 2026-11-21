@@ -9,9 +9,7 @@ use App\Models\FundProviderProductExclusion;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\ProductReservation;
 use App\Models\Voucher;
-use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -428,23 +426,14 @@ class ProductQuery
     public static function stockAmountSubQuery(
         Builder|Relation|Product $query,
     ): Builder|Relation|Product {
-        $query->addSelect([
-            'reservations_count' => ProductReservation::query()
-                ->whereIn('state', [
-                    ProductReservation::STATE_WAITING,
-                    ProductReservation::STATE_PENDING,
-                ])
-                ->whereColumn('product_id', 'products.id')
-                ->selectRaw('COUNT(*)'),
-            'transactions_count' => VoucherTransaction::query()
-                ->whereColumn('product_id', 'products.id')
-                ->selectRaw('COUNT(*)'),
-        ]);
+        $query->withCount(['product_reservations_pending', 'voucher_transactions_sold']);
 
         return Product::query()
             ->withoutGlobalScope(SoftDeletingScope::class)
             ->fromSub($query, 'products')
-            ->selectRaw('*, IF(`unlimited_stock`, NULL, `total_amount` - (`reservations_count` + `transactions_count`)) as `stock_amount`');
+            ->select('products.*')
+            ->selectRaw('IF(unlimited_stock, NULL,
+                total_amount - (product_reservations_pending_count + voucher_transactions_sold_count)) AS stock_amount');
     }
 
     /**

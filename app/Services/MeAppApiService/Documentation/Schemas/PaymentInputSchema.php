@@ -66,12 +66,4 @@ class PaymentInputSchema extends ObjectType
             ],
         ];
     }
-
-    /**
-     * @return array
-     */
-    public function serializeAs32(): array
-    {
-        return $this->serializeAs31();
-    }
 }

@@ -4,6 +4,7 @@ namespace App\Services\MeAppApiService\Http\Resources\Provider;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Models\DemoTransaction;
+use App\Models\Enums\DemoTransactionState;
 use Illuminate\Http\Request;
 
 /**
@@ -20,9 +21,8 @@ class DemoTransactionResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return [
-            ...$this->resource->only([
-                'id', 'state',
-            ]),
+            'id' => $this->resource->id,
+            'state' => DemoTransactionState::forTransaction($this->resource),
             ...$this->makeTimestamps($this->resource->only([
                 'created_at',
             ])),
