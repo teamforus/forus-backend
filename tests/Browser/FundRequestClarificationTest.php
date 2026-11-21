@@ -6,6 +6,7 @@ use App\Mail\Auth\UserLoginMail;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Traits\HasFrontendActions;
@@ -32,7 +33,7 @@ class FundRequestClarificationTest extends DuskTestCase
      */
     public function testWebshopFundRequestClarificationRedirect(): void
     {
-        $startTime = now();
+        $startTime = Carbon::now();
         $headers = [
             'Accept' => 'application/json',
             'client_type' => 'webshop',

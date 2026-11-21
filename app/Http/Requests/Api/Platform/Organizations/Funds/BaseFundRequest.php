@@ -93,6 +93,10 @@ abstract class BaseFundRequest extends BaseFormRequest
         return $formulaProductsEditable ? [
             'formula_products' => 'nullable|array',
             'formula_products.*' => 'required|array',
+            'formula_products.*.id' => [
+                'nullable', 'integer', 'distinct',
+                Rule::exists('fund_formula_products', 'id')->where('fund_id', $this->fund?->id),
+            ],
             'formula_products.*.product_id' => [
                 'required',
                 Rule::exists('products', 'id')->where('unlimited_stock', true),

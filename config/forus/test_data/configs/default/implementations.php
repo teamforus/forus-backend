@@ -19,6 +19,14 @@ return [
             'languages' => [
                 'en', 'de', 'ru', 'uk', 'ro', 'ar',
             ],
+            // 'custom_mailer_config' => [
+            //     'transport' => 'microsoft-graph',
+            //     'tenant_id' => 'your-tenant-id',
+            //     'client_id' => 'your-client-id',
+            //     'client_secret' => 'your-client-secret',
+            //     'from_email' => 'sender@example.com',
+            //     'from_name' => 'Sender name',
+            // ],
         ],
     ],
     'Stadjerspas' => [
@@ -319,6 +327,30 @@ return [
             'show_product_map' => true,
             'allow_per_fund_notification_templates' => true,
             'digid_enabled' => false,
+        ],
+    ],
+    'Gelrepas' => [
+        'dcp_connection' => [
+            'environment' => 'sandbox',
+            'enabled' => false,
+            'username' => null,
+            'password' => null,
+            'organizations' => [
+                'Arnhem', 'Brummen', 'Duiven', 'Renkum', 'Rheden', 'Rozendaal', 'Westervoort', 'Zevenaar',
+            ],
+        ],
+        'implementation' => [
+            'key' => 'gelrepas',
+            'title' => 'Gelrepas',
+            'page_title_suffix' => 'Gelrepas',
+            'email_from_name' => 'Gelrepas',
+            'pre_check_enabled' => false,
+            'show_privacy_checkbox' => true,
+            'informal_communication' => false,
+            'allow_per_fund_notification_templates' => false,
+            'digid_enabled' => true,
+            'digid_required' => true,
+            'digid_sign_up_allowed' => true,
         ],
     ],
 ];

@@ -11,6 +11,8 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Identity;
+use App\Models\IdentityEmail;
+use App\Models\IdentityProxy;
 use App\Models\Implementation;
 use App\Models\Note;
 use App\Models\Organization;
@@ -24,7 +26,16 @@ use App\Models\ReservationField;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Modules\DCP\Models\DCPOrder;
+use App\Modules\DCP\Models\DCPOrderBulk;
+use App\Modules\RequesterImport\Models\RequesterImportRow;
+use App\Modules\VoucherPass\Models\VoucherPass;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\FileService\Models\File;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use App\Services\IdentityProviderService\Models\IdentityProviderOidcSession;
+use App\Services\IdentityProviderService\Models\IdentityProviderScimCredential;
 use App\Traits\DoesTesting;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -40,13 +51,481 @@ trait MakesApiRequests
     use TestsReservations;
 
     /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetOrganizationLogsRequest(
+        Organization $organization,
+        Identity|bool $identity,
+        array $query,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/logs?" . http_build_query($query),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassDCPIdsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/dcp/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|bool $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiPrepareVoucherPassDCPRequest(
+        Organization $organization,
+        array $data,
+        Identity|bool $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/dcp/" .
+            ($preview ? 'preview' : 'sync'),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetDCPOrdersRequest(
+        Organization $organization,
+        Identity|bool $identity,
+        array $query = [],
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders?" . http_build_query($query),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrder $order
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderRequest(
+        Organization $organization,
+        DCPOrder $order,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders/$order->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrder $order
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderLogsRequest(
+        Organization $organization,
+        DCPOrder $order,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-orders/$order->id/logs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulksRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrderBulk $bulk
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulkRequest(
+        Organization $organization,
+        DCPOrderBulk $bulk,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/$bulk->id",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param DCPOrderBulk $bulk
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPOrderBulkLogsRequest(
+        Organization $organization,
+        DCPOrderBulk $bulk,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/$bulk->id/logs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetDCPReadyCountRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks/ready-count",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiApproveDCPOrderBulkRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/dcp-order-bulks",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassConfigurationRequest(
+        Organization $organization,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/configs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetVoucherPassesRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $rows
+     * @param Identity|bool $identity
+     * @param bool $validate
+     * @return TestResponse
+     */
+    public function apiStoreVoucherPassesRequest(
+        Organization $organization,
+        array $rows,
+        Identity|bool $identity,
+        bool $validate = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/batch" .
+            ($validate ? '/validate' : ''),
+            ['rows' => $rows],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param VoucherPass $pass
+     * @param array $data
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiUpdateVoucherPassRequest(
+        Organization $organization,
+        VoucherPass $pass,
+        array $data,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/voucher-passes/$pass->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetRequesterImportSyncIdsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/sync/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity|bool $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiSyncRequesterImportRowsRequest(
+        Organization $organization,
+        array $data,
+        Identity|bool $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/sync" .
+            ($preview ? '/preview' : ''),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetRequesterImportConfigurationRequest(
+        Organization $organization,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/configs",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiGetRequesterImportRowsRequest(Organization $organization, Identity|bool $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $rows
+     * @param Identity|bool $identity
+     * @param bool $validate
+     * @return TestResponse
+     */
+    public function apiStoreRequesterImportRowsRequest(
+        Organization $organization,
+        array $rows,
+        Identity|bool $identity,
+        bool $validate = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/batch" .
+            ($validate ? '/validate' : ''),
+            ['rows' => $rows],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param RequesterImportRow $row
+     * @param array $data
+     * @param Identity|bool $identity
+     * @return TestResponse
+     */
+    public function apiUpdateRequesterImportRowRequest(
+        Organization $organization,
+        RequesterImportRow $row,
+        array $data,
+        Identity|bool $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/requester-imports/$row->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityRequest(Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson('/api/v1/identity', $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityEmailRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson("/api/v1/identity/emails/$email->id", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param array $data
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStoreIdentityEmailRequest(array $data, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/identity/emails', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiSetIdentityEmailPrimaryRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->patchJson("/api/v1/identity/emails/$email->id/primary", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityEmail $email
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiDeleteIdentityEmailRequest(IdentityEmail $email, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->deleteJson("/api/v1/identity/emails/$email->id", [], $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Identity|IdentityProxy $identity
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiGetProfileRequest(Identity|IdentityProxy $identity, array $headers = []): TestResponse
+    {
+        return $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders($identity, $headers));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiUpdateProfileRequest(Identity $identity, array $data, array $headers = []): TestResponse
+    {
+        return $this->patchJson('/api/v1/platform/profile', $data, $this->makeApiHeaders($identity, $headers));
+    }
+
+    /**
+     * @param Identity $identity
+     * @param array $filters
+     * @param array $headers
+     * @return TestResponse
+     */
+    public function apiGetRecordTypesRequest(Identity $identity, array $filters, array $headers = []): TestResponse
+    {
+        return $this->getJson(
+            '/api/v1/identity/record-types?' . http_build_query($filters),
+            $this->makeApiHeaders($identity, $headers),
+        );
+    }
+
+    /**
+     * @param array $data
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiMakeOrganizationRequest(array $data, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/organizations', $data, $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param Organization $organization
      * @param array $data
      * @param Identity $identity
      * @return TestResponse
      */
-    public function apiMakeOrganizationRequest(array $data, Identity $identity): TestResponse
-    {
-        return $this->postJson('/api/v1/platform/organizations', $data, $this->makeApiHeaders($identity));
+    public function apiUpdateOrganizationReservationFieldsRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/update-reservation-fields",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Employee $employee
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiTransferOrganizationOwnershipRequest(
+        Organization $organization,
+        Employee $employee,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/transfer-ownership",
+            ['employee_id' => $employee->id],
+            $this->makeApiHeaders($identity),
+        );
     }
 
     /**
@@ -95,6 +574,329 @@ trait MakesApiRequests
 
     /**
      * @param Organization $organization
+     * @param Identity|IdentityProxy $identity
+     * @param IdentityProviderConnection|null $connection
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionRequest(
+        Organization $organization,
+        Identity|IdentityProxy $identity,
+        ?IdentityProviderConnection $connection = null,
+    ): TestResponse {
+        $url = "/api/v1/platform/organizations/$organization->id/identity-providers/entra";
+
+        return $this->getJson(
+            $connection ? "$url/connections/$connection->uid" : $url,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param Identity|IdentityProxy $identity
+     * @param string $accountType
+     * @return TestResponse
+     */
+    public function apiIssueIdentityProviderScimCredentialRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        Identity|IdentityProxy $identity,
+        string $accountType = IdentityProviderMembership::ACCOUNT_TYPE_REQUESTER,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/scim-credentials",
+            ['account_type' => $accountType],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param IdentityProviderScimCredential $credential
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiRevokeIdentityProviderScimCredentialRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        IdentityProviderScimCredential $credential,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $url = "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid";
+
+        return $this->deleteJson(
+            "$url/scim-credentials/$credential->uid",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderConnection $connection
+     * @param string $token
+     * @param string|null $uid
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderScimUsersRequest(
+        IdentityProviderConnection $connection,
+        string $token,
+        ?string $uid = null,
+        array $query = [],
+    ): TestResponse {
+        return $this->apiIdentityProviderScimUsersRequest('GET', $connection, $token, $query, $uid);
+    }
+
+    /**
+     * @param string $method
+     * @param IdentityProviderConnection $connection
+     * @param string $token
+     * @param array $data
+     * @param string|null $uid
+     * @return TestResponse
+     */
+    public function apiIdentityProviderScimUsersRequest(
+        string $method,
+        IdentityProviderConnection $connection,
+        string $token,
+        array $data = [],
+        ?string $uid = null,
+    ): TestResponse {
+        $url = "/api/v1/scim/$connection->uid/v2/Users" . ($uid ? "/$uid" : '');
+
+        if ($method === 'GET' && $data) {
+            $url .= '?' . http_build_query($data);
+            $data = [];
+        }
+
+        $headers = $this->defaultHeaders;
+        $this->flushHeaders();
+
+        try {
+            return $this->json($method, $url, $data, [
+                'Accept' => 'application/scim+json',
+                'Authorization' => "Bearer $token",
+            ]);
+        } finally {
+            $this->defaultHeaders = $headers;
+        }
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $query
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionHistoryRequest(
+        Organization $organization,
+        array $query,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param array $query
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderConnectionEventsRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        array $query,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/events$queryString",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param IdentityProviderConnection $connection
+     * @param string $action
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiChangeIdentityProviderConnectionStateRequest(
+        Organization $organization,
+        IdentityProviderConnection $connection,
+        string $action,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/connections/$connection->uid/$action",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderConsentRequest(
+        Organization $organization,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/identity-providers/entra/consent",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiIdentityProviderOidcCallbackRequest(array $query): TestResponse
+    {
+        return $this->get('/api/v1/platform/identity-providers/entra/oidc/callback?' . http_build_query($query));
+    }
+
+    /**
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiIdentityProviderAdminConsentCallbackRequest(array $query): TestResponse
+    {
+        return $this->get('/api/v1/platform/identity-providers/entra/admin-consent/callback?' . http_build_query($query));
+    }
+
+    /**
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderLoginRequest(array $data = []): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/identity-providers/entra/login', $data);
+    }
+
+    /**
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiExchangeIdentityProviderLoginRequest(array $data): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/identity-providers/entra/exchange', $data);
+    }
+
+    /**
+     * @param string $type
+     * @param IdentityProxy|false $sourceProxy
+     * @return TestResponse
+     */
+    public function apiCreateIdentityProxyRequest(string $type, IdentityProxy|false $sourceProxy = false): TestResponse
+    {
+        return $this->postJson("/api/v1/identity/proxy/$type", [], $this->makeApiHeaders($sourceProxy));
+    }
+
+    /**
+     * @param string $type
+     * @param array $data
+     * @param IdentityProxy $sourceProxy
+     * @return TestResponse
+     */
+    public function apiAuthorizeIdentityProxyRequest(string $type, array $data, IdentityProxy $sourceProxy): TestResponse
+    {
+        return $this->postJson("/api/v1/identity/proxy/authorize/$type", $data, $this->makeApiHeaders($sourceProxy));
+    }
+
+    /**
+     * @param string $type
+     * @param string $token
+     * @return TestResponse
+     */
+    public function apiExchangeIdentityProxyRequest(string $type, string $token): TestResponse
+    {
+        return $this->getJson("/api/v1/identity/proxy/$type/exchange/$token");
+    }
+
+    /**
+     * @param string $accessToken
+     * @return TestResponse
+     */
+    public function apiCheckIdentityProxyTokenRequest(string $accessToken): TestResponse
+    {
+        return $this->getJson('/api/v1/identity/proxy/check-token', ['Access-Token' => $accessToken]);
+    }
+
+    /**
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetIdentityProviderLinksRequest(Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson('/api/v1/platform/identity-providers/entra/links', $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param IdentityProviderConnection $connection
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiStartIdentityProviderLinkRequest(
+        IdentityProviderConnection $connection,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/identity-providers/entra/connections/$connection->uid/links",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderMembership $membership
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiDeleteIdentityProviderLinkRequest(
+        IdentityProviderMembership $membership,
+        Identity|IdentityProxy $identity,
+    ): TestResponse {
+        return $this->deleteJson(
+            "/api/v1/platform/identity-providers/entra/links/$membership->uid",
+            [],
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param IdentityProviderOidcSession $session
+     * @param array $data
+     * @param Identity|IdentityProxy|false $identity
+     * @return TestResponse
+     */
+    public function apiCompleteIdentityProviderLinkRequest(
+        IdentityProviderOidcSession $session,
+        array $data,
+        Identity|IdentityProxy|false $identity = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/identity-providers/entra/links/$session->uid/complete",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
      * @param array $data
      * @param Identity $identity
      * @return TestResponse
@@ -133,6 +935,141 @@ trait MakesApiRequests
         $this->travelBack();
 
         return $organization->funds()->findOrFail($response->json('data.id'));
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiApplyForFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/apply",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetOrganizationFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id",
+            $this->makeApiHeaders($identity, ['Client-Type' => Implementation::FRONTEND_SPONSOR_DASHBOARD]),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @param array $filters
+     * @return TestResponse
+     */
+    public function apiGetOrganizationFundsRequest(
+        Organization $organization,
+        Identity $identity,
+        array $filters = [],
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/funds?" . http_build_query($filters),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetProfileVoucherCandidateIdsRequest(
+        Organization $organization,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/from-profiles/ids",
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @param bool $preview
+     * @return TestResponse
+     */
+    public function apiStoreVouchersFromProfilesRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+        bool $preview = false,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/from-profiles" .
+            ($preview ? '/preview' : ''),
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @param array $data
+     * @return TestResponse
+     */
+    public function apiCalculatePreCheckRequest(Implementation $implementation, array $data): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/pre-checks/calculate', $data, $this->makeApiHeaders(false, [
+            'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+            'Client-Key' => $implementation->key,
+        ]));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiExportOrganizationFinancesRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/sponsor/finances-overview-export?" . http_build_query($data),
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiCheckFundRequest(Fund $fund, Identity $identity): TestResponse
+    {
+        return $this->postJson(
+            "/api/v1/platform/funds/$fund->id/check",
+            [],
+            $this->makeWebshopHeaders($identity, $fund),
+        );
+    }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiRedeemFundRequest(Fund $fund, array $data, Identity $identity): TestResponse
+    {
+        return $this->postJson('/api/v1/platform/funds/redeem', $data, $this->makeWebshopHeaders($identity, $fund));
     }
 
     /**
@@ -225,6 +1162,16 @@ trait MakesApiRequests
             [],
             $this->makeApiHeaders($identity),
         );
+    }
+
+    /**
+     * @param Product $product
+     * @param Identity|IdentityProxy $identity
+     * @return TestResponse
+     */
+    public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
+    {
+        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
     }
 
     /**
@@ -328,12 +1275,18 @@ trait MakesApiRequests
      * @param Fund $fund
      * @param array $data
      * @param Identity $identity
+     * @param bool $validate
      * @return TestResponse
      */
-    public function apiMakeVoucherAsSponsorRequest(Organization $organization, Fund $fund, array $data, Identity $identity): TestResponse
-    {
+    public function apiMakeVoucherAsSponsorRequest(
+        Organization $organization,
+        Fund $fund,
+        array $data,
+        Identity $identity,
+        bool $validate = false,
+    ): TestResponse {
         return $this->postJson(
-            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers",
+            "/api/v1/platform/organizations/$organization->id/sponsor/vouchers" . ($validate ? '/validate' : ''),
             ['fund_id' => $fund->id, 'amount' => '1000', ...$data],
             $this->makeApiHeaders($identity),
         );
@@ -761,6 +1714,127 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Identity $identity
+     * @param array $data
+     * @return TestResponse
+     */
+    protected function apiUpdateFundRequest(
+        Organization $organization,
+        Fund $fund,
+        Identity $identity,
+        array $data = [],
+    ): TestResponse {
+        return $this->patchJson(
+            "/api/v1/platform/organizations/$organization->id/funds/$fund->id",
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param int $identityId
+     * @param Identity $authIdentity
+     * @return TestResponse
+     */
+    protected function apiViewIdentityRequest(int $organizationId, int $identityId, Identity $authIdentity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiListIdentitiesRequest(int $organizationId, Identity $authIdentity, array $query = []): TestResponse
+    {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities$queryString",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @param array $query
+     * @return TestResponse
+     */
+    protected function apiExportIdentitiesRequest(int $organizationId, Identity $authIdentity, array $query = []): TestResponse
+    {
+        $queryString = http_build_query(['data_format' => 'csv', ...$query]);
+
+        return $this->get(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export?$queryString",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param int $organizationId
+     * @param Identity $authIdentity
+     * @return TestResponse
+     */
+    protected function apiGetIdentitiesExportFieldsRequest(int $organizationId, Identity $authIdentity): TestResponse
+    {
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export-fields",
+            $this->makeApiHeaders($authIdentity),
+        );
+    }
+
+    /**
+     * @param Identity $identity
+     * @param Fund $fund
+     * @return array
+     */
+    protected function makeWebshopHeaders(Identity $identity, Fund $fund): array
+    {
+        return $this->makeApiHeaders($identity, [
+            'Client-Type' => 'webshop',
+            'Client-Key' => $fund->getImplementation()->key,
+        ]);
+    }
+
+    /**
+     * @param string $transport
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiCompleteDigIdRequest(string $transport, array $data, array $headers = []): TestResponse
+    {
+        return $this->postJson("/api/v1/platform/$transport/complete", $data, $headers);
+    }
+
+    /**
+     * @param DigIdSession $session
+     * @param array $data
+     * @param array $headers
+     * @return TestResponse
+     */
+    protected function apiResolveDigIdRequest(
+        DigIdSession $session,
+        array $data = [],
+        array $headers = [],
+    ): TestResponse {
+        $url = $session->isConnectionTypeTvs()
+            ? '/api/v1/platform/tvs/resolve'
+            : "/api/v1/platform/digid/$session->session_uid/resolve";
+
+        return $this->getJson($url . ($data ? '?' . http_build_query($data) : ''), $headers);
+    }
+
+    /**
      * @param ProductReservation $reservation
      * @return string
      */
@@ -841,6 +1915,23 @@ trait MakesApiRequests
         return $this->patchJson(
             "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/approve",
             $data,
+            $this->makeApiHeaders($employee->identity),
+        );
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @param Employee $employee
+     * @return TestResponse
+     */
+    protected function apiFundRequestProfileCopyPreviewRequest(
+        FundRequest $fundRequest,
+        Employee $employee,
+    ): TestResponse {
+        $organization = $fundRequest->fund->organization;
+
+        return $this->getJson(
+            "/api/v1/platform/organizations/$organization->id/fund-requests/$fundRequest->id/profile-copy-preview",
             $this->makeApiHeaders($employee->identity),
         );
     }
@@ -1346,6 +2437,7 @@ trait MakesApiRequests
      * @param array $data
      * @param array $overwrite
      * @param bool $appendFileData
+     * @param array $topUp
      * @return TestResponse
      */
     protected function makeStorePrevalidationBatchRequest(
@@ -1354,11 +2446,13 @@ trait MakesApiRequests
         array $data,
         array $overwrite = [],
         bool $appendFileData = false,
+        array $topUp = [],
     ): TestResponse {
         return $this->postJson("/api/v1/platform/organizations/$organization->id/prevalidations/collection", [
             'fund_id' => $fund->id,
             'data' => $data,
             'overwrite' => $overwrite,
+            'top_up' => $topUp,
             ...$appendFileData ? $this->appendFileDataToBatchRequest($data) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));
     }
@@ -1407,14 +2501,18 @@ trait MakesApiRequests
      * @param Organization $organization
      * @param array $data
      * @param bool $appendFileData
+     * @param bool $validate
      * @return TestResponse
      */
     protected function apiMakeVoucherRequestBatchRequest(
         Organization $organization,
         array $data,
         bool $appendFileData = false,
+        bool $validate = false,
     ): TestResponse {
-        return $this->postJson("/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch", [
+        $apiUrl = "/api/v1/platform/organizations/$organization->id/sponsor/vouchers/batch";
+
+        return $this->postJson($apiUrl . ($validate ? '/validate' : ''), [
             ...$data,
             ...$appendFileData ? $this->appendFileDataToBatchRequest(Arr::get($data, 'vouchers')) : [],
         ], $this->makeApiHeaders($this->makeIdentityProxy($organization->identity)));

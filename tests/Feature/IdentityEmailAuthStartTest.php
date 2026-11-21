@@ -2,18 +2,84 @@
 
 namespace Tests\Feature;
 
+use App\Mail\Auth\IdentityProviderLoginMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\MakesTestIdentityProviders;
+use Tests\Traits\MakesTestOrganizations;
 
 class IdentityEmailAuthStartTest extends TestCase
 {
+    use DatabaseTransactions;
+    use MakesTestIdentityProviders;
+    use MakesTestOrganizations;
+
     /**
      * @var int
      */
     protected int $requestIpIndex = 1;
+
+    /**
+     * @return void
+     */
+    public function testManagedAccountsReceiveGuidanceInsteadOfEmailLoginTokens(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_providers' => true,
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $connection = $this->makeEntraConnection($organization);
+
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            foreach ([
+                IdentityProviderMembership::PROVISIONING_STATUS_ACTIVE,
+                IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+                IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+            ] as $status) {
+                foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
+                    $membership = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                        ? $this->makeIdentityProviderEmployee($connection, ['provisioning_status' => $status])
+                        : $this->makeIdentityProviderRequester($connection, ['provisioning_status' => $status]);
+
+                    $this->assertManagedEmailGuidance($uri, $membership->identity);
+                }
+            }
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testDisablingProvisioningDoesNotRestoreManagedAccountEmailLogin(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_providers' => true,
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $connection = $this->makeEntraConnection($organization);
+
+        $organization->forceFill([
+            'allow_identity_provider_employee_provisioning' => false,
+            'allow_identity_provider_requester_provisioning' => false,
+        ])->save();
+
+        foreach (IdentityProviderMembership::ACCOUNT_TYPES as $accountType) {
+            $membership = $accountType === IdentityProviderMembership::ACCOUNT_TYPE_EMPLOYEE
+                ? $this->makeIdentityProviderEmployee($connection)
+                : $this->makeIdentityProviderRequester($connection);
+
+            foreach (['/api/v1/identity', '/api/v1/identity/proxy/email'] as $uri) {
+                $this->assertManagedEmailGuidance($uri, $membership->identity);
+            }
+        }
+    }
 
     /**
      * @return void
@@ -216,6 +282,24 @@ class IdentityEmailAuthStartTest extends TestCase
         return $this->withServerVariables([
             'REMOTE_ADDR' => sprintf('10.0.0.%s', $this->requestIpIndex++),
         ])->postJson($uri, $data);
+    }
+
+    /**
+     * @param string $uri
+     * @param Identity $identity
+     * @return void
+     */
+    protected function assertManagedEmailGuidance(string $uri, Identity $identity): void
+    {
+        $emails = $this->getEmailOfTypeQuery($identity->email, IdentityProviderLoginMail::class);
+        $count = $emails->count();
+
+        $this->assertUnifiedStartResponse($this->postAuthJson($uri, ['email' => $identity->email]));
+
+        $this->assertSame($count + 1, $emails->count());
+        $this->assertFalse($identity->proxies()->exists());
+        $this->assertNull($this->findFirstEmailRestoreEmail($identity->email));
+        $this->assertNull($this->findFirstEmailConfirmationEmail($identity->email));
     }
 
     /**

@@ -20,6 +20,8 @@ class IdentityProfilesExport extends BaseExport
      */
     protected static array $exportFields = [
         'id',
+        'type',
+        'identity_provider_status',
         'given_name',
         'family_name',
         'email',
@@ -60,6 +62,10 @@ class IdentityProfilesExport extends BaseExport
                 return $list;
             }
 
+            if ($key === 'identity_provider_status' && !$organization?->showsIdentityProviderProfileStatus()) {
+                return $list;
+            }
+
             return [...$list, [
                 'key' => $key,
                 'name' => static::trans($key),
@@ -67,13 +73,29 @@ class IdentityProfilesExport extends BaseExport
         }, []);
     }
 
+    /**
+     * @param Model|Identity $model
+     * @return array
+     */
     protected function getRow(Model|Identity $model): array
     {
         $profile = $model->profiles?->firstWhere('organization_id', $this->organization->id);
         $records = SponsorIdentityResource::getProfileRecords($profile, true);
+        $membership = $model->identity_provider_managed_membership;
+        $provisioningStatus = '-';
+
+        if ($membership && $membership->connection->organization_id === $this->organization->id) {
+            $provisioningStatus = $membership->isProvisioningActive()
+                ? __('export.identity_profiles.identity_provider_statuses.active')
+                : __('export.identity_profiles.identity_provider_statuses.disabled');
+        }
 
         return [
             'id' => $model->id ?: '',
+            'type' => !$model->creator_organization_id || $model->creator_organization_id === $this->organization->id
+                ? $model->type_locale
+                : '-',
+            'identity_provider_status' => $provisioningStatus,
             'given_name' => Arr::get($records, 'given_name.0.value_locale', '-'),
             'family_name' => Arr::get($records, 'family_name.0.value_locale', '-'),
             'email' => $model->email,

@@ -48,7 +48,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
 
         $this->rollbackModels([], function () use ($implementation, $identity, $provider, $fundProvider) {
             $this->browse(function (Browser $browser) use ($implementation, $identity, $provider, $fundProvider) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity
@@ -117,7 +117,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $fundProvider,
                 $reservation
             ) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity
@@ -182,7 +182,7 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
                 $fundProvider,
                 $voucher
             ) {
-                $startDate = now();
+                $startDate = Carbon::now();
                 $browser->visit($implementation->urlProviderDashboard());
 
                 // Authorize identity
@@ -285,14 +285,14 @@ class ProviderFundsUnsubscribeTest extends DuskTestCase
         $browser->waitFor("@btnApplyFund$fundProvider->id");
         $browser->press("@btnApplyFund$fundProvider->id");
 
-        $browser->waitFor('@modalNotification');
+        $browser->waitFor('@modalProviderFundApplied');
 
-        $browser->within('@modalNotification', function (Browser $browser) {
+        $browser->within('@modalProviderFundApplied', function (Browser $browser) {
             $browser->waitFor('@submitBtn');
             $browser->press('@submitBtn');
         });
 
-        $browser->waitUntilMissing('@modalNotification');
+        $browser->waitUntilMissing('@modalProviderFundApplied');
     }
 
     /**

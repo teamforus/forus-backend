@@ -39,23 +39,21 @@ class ProductSubQuery
             'limit_total_used' => self::limitTotalUsedSubQuery($options, true),
             'limit_per_identity' => self::limitPerIdentitySubQuery($options),
             'limit_per_identity_used' => self::limitTotalUsedSubQuery($options),
-            'limit_by_fund_scope_all_except_selected' => self::limitByFund(
-                $options,
-                FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED,
-            ),
-            'limit_by_fund_scope_only_selected' => self::limitByFund($options, FundProductLimit::SCOPE_ONLY_SELECTED),
+            'limit_by_fund_vouchers' => self::limitByFundVouchersQuery($options)
+                ->selectRaw('COUNT(*)'),
+            'limit_by_fund_vouchers_available' => self::limitByFundVouchersQuery($options)
+                ->whereNotExists(self::limitReachedScopeOnlySelectedQuery())
+                ->whereNotExists(self::limitReachedScopeAllExceptSelectedQuery())
+                ->selectRaw('COUNT(*)'),
             'reservations_enabled' => Organization::query()
                 ->whereColumn('id', 'organization_id')
                 ->select('reservations_enabled'),
         ])->getQuery();
 
         $query = Product::query()->fromSub($baseQuery, 'products');
+        $limitByFundAvailable = self::limitByFundAvailableSubQuery($options);
 
         $query->selectRaw('*,
-            CAST(
-                limit_by_fund_scope_all_except_selected + limit_by_fund_scope_only_selected AS SIGNED
-            ) as limit_by_fund,
-
             CAST(IF(
                 ISNULL(`limit_total`),
                 GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
@@ -67,9 +65,7 @@ class ProductSubQuery
             ) AS `limit_identity_available`,
 
             IF(
-                CAST(
-                    limit_by_fund_scope_all_except_selected + limit_by_fund_scope_only_selected AS SIGNED
-                ) > 0,
+                `limit_by_fund_vouchers` > 0 AND `limit_by_fund_vouchers_available` = 0,
                 0,
                 CAST(GREATEST(
                     LEAST(
@@ -78,76 +74,21 @@ class ProductSubQuery
                             GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
                             GREATEST(`limit_total` - `limit_total_used`, 0)
                         ),
-                        GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)
+                        GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0),
+                        IF(
+                            `limit_by_fund_vouchers_available` < `limit_by_fund_vouchers`
+                            AND `limit_per_identity` > `limit_per_identity_used`
+                            AND (ISNULL(`limit_total`) OR `limit_total` > `limit_total_used`),
+                            COALESCE((
+                                ' . $limitByFundAvailable->toSql() . '
+                            ), GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)),
+                            GREATEST(`limit_per_identity` - `limit_per_identity_used`, 0)
+                        )
                     ), 0
                 ) AS SIGNED)
-            ) as `limit_available`');
+            ) as `limit_available`', $limitByFundAvailable->getBindings());
 
         return Product::query()->fromSub($query, 'products');
-    }
-
-    /**
-     * @param array $options
-     * @param int $productId
-     * @return bool
-     */
-    public static function fundProductLimitReached(array $options, int $productId)
-    {
-        $fundId = Arr::get($options, 'fund_id', Voucher::find(Arr::get($options, 'voucher_id'))?->fund_id);
-        $identityId = Arr::get($options, 'identity_id', Voucher::find(Arr::get($options, 'voucher_id'))?->identity_id);
-
-        $limits = FundProductLimit::where('fund_id', $fundId)
-            ->where(function (Builder $builder) use ($productId) {
-                $builder->where(function (Builder $builder) use ($productId) {
-                    $builder->where('type', FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED);
-                    $builder->whereDoesntHave(
-                        'fund_products',
-                        fn (Builder $builder) => $builder->where('product_id', $productId),
-                    );
-                });
-                $builder->orWhere(function (Builder $builder) use ($productId) {
-                    $builder->where('type', FundProductLimit::SCOPE_ONLY_SELECTED);
-                    $builder->whereHas(
-                        'fund_products',
-                        fn (Builder $builder) => $builder->where('product_id', $productId),
-                    );
-                });
-            })
-            ->get();
-
-        foreach ($limits as $limit) {
-            if ($limit->type == FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED) {
-                $excludedProductIds = [
-                    ...$limit->fund_products->pluck('product_id')->toArray(),
-                    $productId,
-                ];
-
-                $builder = Product::query()->whereNotIn('id', $excludedProductIds);
-            } else {
-                $productIds = $limit->fund_products
-                    ->pluck('product_id')
-                    ->filter(fn (int $id) => $id !== $productId)
-                    ->toArray();
-                $builder = Product::query()->whereIn('id', $productIds);
-            }
-
-            $usedUniqueProducts = ProductReservation::query()
-                ->selectRaw('COUNT(DISTINCT product_id) as total')
-                ->whereRelation('voucher', 'identity_id', $identityId)
-                ->whereNotIn('state', [
-                    ...ProductReservation::STATES_CANCELED,
-                    ProductReservation::STATE_REJECTED,
-                ])
-                ->whereIn('product_id', $builder->select('id'))
-                ->value('total');
-
-            if ($usedUniqueProducts >= $limit->limit) {
-                // limit reached
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -365,42 +306,66 @@ class ProductSubQuery
 
     /**
      * @param array $options
-     * @param string $scope
-     * @return Builder|FundProductLimit
+     * @return QBuilder
      */
-    private static function limitByFund(array $options, string $scope): Builder|FundProductLimit
+    private static function limitByFundAvailableSubQuery(array $options): QBuilder
     {
-        $voucher = null;
+        $vouchers = self::limitByFundVouchersQuery($options)
+            ->whereNotExists(self::limitReachedScopeOnlySelectedQuery())
+            ->whereNotExists(self::limitReachedScopeAllExceptSelectedQuery())
+            ->select(['vouchers.id', 'vouchers.limit_multiplier']);
 
-        if (!Arr::has($options, 'fund_id') || !Arr::has($options, 'identity_id')) {
-            $voucher = Voucher::find(Arr::get($options, 'voucher_id'));
-        }
+        $voucherOptions = [
+            'voucher_id' => [DB::raw('fund_limit_vouchers.id')],
+        ];
 
-        $fundId = Arr::get($options, 'fund_id', $voucher?->fund_id);
-        $identityId = Arr::get($options, 'identity_id', $voucher?->identity_id);
+        $limits = DB::query()->fromSub($vouchers, 'fund_limit_vouchers')->select([
+            'limit_per_voucher' => self::limitPerIdentitySubQuery($voucherOptions),
+            'limit_per_voucher_used' => self::limitTotalUsedSubQuery($voucherOptions),
+        ]);
 
-        if ($fundId && $identityId) {
-            return $scope === FundProductLimit::SCOPE_ONLY_SELECTED
-                ? static::limitByFundScopeOnlySelected($fundId, $identityId)
-                : static::limitByFundScopeAllExceptSelected($fundId, $identityId);
-        }
-
-        return FundProductLimit::query()
-            ->selectRaw('COUNT(*)')
-            ->whereRaw('FALSE');
+        return DB::query()->fromSub($limits, 'fund_limit_voucher_limits')->selectRaw('CAST(IF(
+            COUNT(*) = COUNT(`limit_per_voucher`),
+            COALESCE(SUM(GREATEST(`limit_per_voucher` - `limit_per_voucher_used`, 0)), 0),
+            NULL
+        ) AS SIGNED)');
     }
 
     /**
-     * @param int $fundId
-     * @param int $identityId
-     * @return FundProductLimit|Builder
+     * @param array $options
+     * @return Builder|Voucher
      */
-    private static function limitByFundScopeOnlySelected(int $fundId, int $identityId): Builder|FundProductLimit
+    private static function limitByFundVouchersQuery(array $options): Builder|Voucher
     {
-        $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
+        $fundId = Arr::get($options, 'fund_id');
+        $voucherId = Arr::get($options, 'voucher_id');
+        $identityId = Arr::get($options, 'identity_id');
+
+        if ($voucherId) {
+            return VoucherQuery::whereNotExpiredAndActive(
+                Voucher::query()->whereIn('vouchers.id', (array) $voucherId)
+            );
+        }
+
+        if ($fundId && $identityId) {
+            return VoucherQuery::whereNotExpiredAndActive(Voucher::query()
+                ->whereIn('vouchers.fund_id', (array) $fundId)
+                ->whereIn('vouchers.identity_id', (array) $identityId)
+                ->whereNull('vouchers.product_id'));
+        }
+
+        return Voucher::query()->whereRaw('FALSE');
+    }
+
+    /**
+     * @return Builder|FundProductLimit
+     */
+    private static function limitReachedScopeOnlySelectedQuery(): Builder|FundProductLimit
+    {
+        $reservedProductsCount = static::reservationsUniqueCountQuery()
             ->whereIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
-        return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ONLY_SELECTED)
+        return static::activeFundProductLimitQuery(FundProductLimit::SCOPE_ONLY_SELECTED)
             ->whereHas('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
@@ -409,17 +374,15 @@ class ProductSubQuery
     }
 
     /**
-     * @param int $fundId
-     * @param int $identityId
-     * @return FundProductLimit|Builder
+     * @return Builder|FundProductLimit
      */
-    private static function limitByFundScopeAllExceptSelected(int $fundId, int $identityId): Builder|FundProductLimit
+    private static function limitReachedScopeAllExceptSelectedQuery(): Builder|FundProductLimit
     {
-        $reservedProductsCount = static::reservationsUniqueCountQuery($fundId, $identityId)
+        $reservedProductsCount = static::reservationsUniqueCountQuery()
             ->whereColumn('product_reservations.product_id', '!=', 'products.id')
             ->whereNotIn('product_reservations.product_id', static::fundProductLimitReservationsSubQuery());
 
-        return static::activeFundProductLimitQuery($fundId, FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED)
+        return static::activeFundProductLimitQuery(FundProductLimit::SCOPE_ALL_EXCEPT_SELECTED)
             ->whereDoesntHave('fund_products', fn (Builder $q) => $q->whereColumn(
                 'fund_product_limit_products.product_id',
                 'products.id'
@@ -428,31 +391,26 @@ class ProductSubQuery
     }
 
     /**
-     * @param int $fundId
      * @param string $scope
-     * @return FundProductLimit|Builder
+     * @return Builder|FundProductLimit
      */
-    private static function activeFundProductLimitQuery(int $fundId, string $scope): Builder|FundProductLimit
+    private static function activeFundProductLimitQuery(string $scope): Builder|FundProductLimit
     {
         return FundProductLimit::query()
-            ->selectRaw('COUNT(*)')
-            ->where('fund_id', $fundId)
-            ->where('state', FundProductLimit::STATE_ACTIVE)
-            ->where('type', $scope);
+            ->whereColumn('fund_product_limits.fund_id', 'vouchers.fund_id')
+            ->where('fund_product_limits.state', FundProductLimit::STATE_ACTIVE)
+            ->where('fund_product_limits.type', $scope);
     }
 
     /**
-     * @param int $fundId
-     * @param int $identityId
      * @return ProductReservation|Builder
      */
-    private static function reservationsUniqueCountQuery(int $fundId, int $identityId): Builder|ProductReservation
+    private static function reservationsUniqueCountQuery(): Builder|ProductReservation
     {
         return ProductReservation::query()
             ->selectRaw('COUNT(DISTINCT product_reservations.product_id)')
-            ->whereRelation('voucher', 'fund_id', $fundId)
-            ->whereRelation('voucher', 'identity_id', $identityId)
-            ->whereNotIn('state', [
+            ->whereColumn('product_reservations.voucher_id', 'vouchers.id')
+            ->whereNotIn('product_reservations.state', [
                 ...ProductReservation::STATES_CANCELED,
                 ProductReservation::STATE_REJECTED,
             ]);

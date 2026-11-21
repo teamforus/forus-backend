@@ -11,6 +11,7 @@ use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Role;
+use App\Services\EventLogService\Models\EventLog;
 use Facebook\WebDriver\Exception\ElementClickInterceptedException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
@@ -435,6 +436,7 @@ class FundRequestValidatorTest extends DuskTestCase
                 $browser->within(
                     "@fundRequestRecordTabs$record->id",
                     function (Browser $browser) use ($record) {
+                        /** @var EventLog $log */
                         $log = $record->historyLogs()->first();
                         $this->assertNotNull($log);
 
@@ -867,12 +869,13 @@ class FundRequestValidatorTest extends DuskTestCase
     /**
      * @param Fund $fund
      * @param int $filesPerRecord
+     * @throws Throwable
      * @return FundRequest
      */
     protected function makeIdentityAndFundRequest(Fund $fund, int $filesPerRecord = 0): FundRequest
     {
         // create sponsor and requester identities
-        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: 123456789);
+        $identity = $this->makeIdentity(email: $this->makeUniqueEmail(), bsn: $this->randomFakeBsn());
 
         $records = [[
             'fund_criterion_id' => $fund->criteria[0]?->id,

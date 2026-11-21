@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 /**
  * App\Models\SystemNotification.
@@ -321,21 +320,23 @@ class SystemNotification extends Model
     }
 
     /**
-     * @param array $fundIds
-     * @return Carbon|null
+     * @param array<int> $fundIds
+     * @return Collection<int, Carbon|null>
      */
-    public function getLastSentDate(array $fundIds): ?Carbon
+    public function getLastSentDatesByFund(array $fundIds): Collection
     {
+        if (!$fundIds) {
+            return new Collection();
+        }
+
         return EmailLog::query()
-            ->where('system_notification_key', $this->key)
-            ->whereExists(function (QueryBuilder $builder) use ($fundIds) {
-                $builder->select(DB::raw(1))
-                    ->from('event_log_relations as elr')
-                    ->whereColumn('elr.event_log_id', 'email_logs.event_log_id')
-                    ->whereIn('elr.fund_id', $fundIds);
-            })
-            ->latest('created_at')
-            ->first()
-            ?->created_at;
+            ->join('event_log_relations as elr', 'elr.event_log_id', '=', 'email_logs.event_log_id')
+            ->where('email_logs.system_notification_key', $this->key)
+            ->whereIn('elr.fund_id', $fundIds)
+            ->select('elr.fund_id')
+            ->selectRaw('MAX(email_logs.created_at) as created_at')
+            ->groupBy('elr.fund_id')
+            ->get()
+            ->pluck('created_at', 'fund_id');
     }
 }

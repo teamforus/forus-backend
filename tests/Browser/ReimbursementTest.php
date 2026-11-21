@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\Reimbursement;
 use App\Models\Voucher;
 use App\Services\MailDatabaseLoggerService\Traits\AssertsSentEmails;
+use Carbon\Carbon;
 use Facebook\WebDriver\Exception\TimeOutException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Cache;
@@ -491,7 +492,7 @@ class ReimbursementTest extends DuskTestCase
         $this->assertNotNull($reimbursement);
         $duskSelector = "@listReimbursementsRow$reimbursement->id";
 
-        $submitTime = now();
+        $submitTime = Carbon::now();
         $requesterEmail = $reimbursement->voucher->identity->email;
 
         $this->selectReimbursementTabByState($browser, $reimbursement);

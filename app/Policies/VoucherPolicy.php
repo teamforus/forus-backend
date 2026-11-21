@@ -86,6 +86,21 @@ class VoucherPolicy
 
     /**
      * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     */
+    public function storeFromProfilesSponsor(Identity $identity, Organization $organization): bool
+    {
+        return
+            $organization->is_sponsor &&
+            $organization->allow_vouchers_from_profiles &&
+            $organization->allow_profiles &&
+            $organization->bsn_enabled &&
+            $organization->identityCan($identity, Permission::MANAGE_VOUCHERS);
+    }
+
+    /**
+     * @param Identity $identity
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
@@ -145,7 +160,8 @@ class VoucherPolicy
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&
             !$voucher->activated &&
-            !$voucher->expired;
+            !$voucher->expired &&
+            ($voucher->identity?->canReceiveVouchers() ?? true);
     }
 
     /**
@@ -229,6 +245,7 @@ class VoucherPolicy
     {
         return
             $identity->exists &&
+            $identity->canReceiveVouchers() &&
             $voucher->exists &&
             $voucher->fund->isConfigured() &&
             !$voucher->fund->external &&

@@ -12,6 +12,7 @@ use App\Models\RecordType;
 use App\Traits\DoesTesting;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
+use Throwable;
 
 trait MakesTestFundRequests
 {
@@ -24,6 +25,7 @@ trait MakesTestFundRequests
      * @param bool $validate
      * @param array $headers
      * @param array $data
+     * @throws Throwable
      * @return TestResponse
      */
     protected function makeFundRequest(
@@ -36,7 +38,7 @@ trait MakesTestFundRequests
     ): TestResponse {
         $url = "/api/v1/platform/funds/$fund->id/requests" . ($validate ? '/validate' : '');
         $proxy = $this->makeIdentityProxy($identity);
-        $identity->setBsnRecord($identity->bsn ?: '123456789');
+        $identity->setBsnRecord($identity->bsn ?: (string) $this->randomFakeBsn());
 
         return $this->postJson($url, [...compact('records'), ...$data], $this->makeApiHeaders($proxy, $headers));
     }

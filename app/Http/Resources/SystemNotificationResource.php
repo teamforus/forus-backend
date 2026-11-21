@@ -8,8 +8,10 @@ use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Models\SystemNotificationConfig;
 use App\Notifications\BaseNotification;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * @property SystemNotification $resource
@@ -40,6 +42,11 @@ class SystemNotificationResource extends BaseJsonResource
 
         $configs = $notification->system_notification_configs->where('implementation_id', $implementation->id);
         $config = $configs->whereNull('fund_id')->first();
+        $loadLatestSendDate = $notification->key === 'notifications_identities.voucher_expire_soon_budget';
+
+        $lastSentDates = $this->withLastSentData && $loadLatestSendDate
+            ? $notification->getLastSentDatesByFund($implementation->funds->pluck('id')->all())
+            : null;
 
         return [
             ...$notification->only([
@@ -57,29 +64,13 @@ class SystemNotificationResource extends BaseJsonResource
             'templates_default' => NotificationTemplateResource::collection(
                 $this->getTemplates($templates, Implementation::general(), $formal),
             ),
-            ...($this->withLastSentData
-                ? $this->getLastSentData($notification, $implementation->funds->pluck('id')->toArray())
-                : []),
+            ...($lastSentDates !== null ? $this->makeTimestamps([
+                'last_sent_date' => $lastSentDates->max(),
+            ], true) : []),
             'funds' => $supportsFundTemplates
-                ? $this->getFunds($notification, $implementation, $configs, $this->withLastSentData)
+                ? $this->getFunds($notification, $implementation, $configs, $lastSentDates)
                 : null,
         ];
-    }
-
-    /**
-     * @param SystemNotification $systemNotification
-     * @param array $fundIds
-     * @return array
-     */
-    public function getLastSentData(SystemNotification $systemNotification, array $fundIds): array
-    {
-        if ($systemNotification->key === 'notifications_identities.voucher_expire_soon_budget') {
-            return $this->makeTimestamps([
-                'last_sent_date' => $systemNotification->getLastSentDate($fundIds),
-            ], true);
-        }
-
-        return [];
     }
 
     /**
@@ -112,19 +103,19 @@ class SystemNotificationResource extends BaseJsonResource
      * @param SystemNotification $notification
      * @param Implementation $implementation
      * @param Collection|SystemNotificationConfig $configs
-     * @param bool $withLastSentData
+     * @param SupportCollection<int, Carbon|null>|null $lastSentDates
      * @return array
      */
     protected function getFunds(
         SystemNotification $notification,
         Implementation $implementation,
         Collection|SystemNotificationConfig $configs,
-        bool $withLastSentData,
+        ?SupportCollection $lastSentDates,
     ): array {
         return $implementation
             ->funds
             ->sortBy('id')
-            ->map(function (Fund $fund) use ($notification, $configs, $withLastSentData) {
+            ->map(function (Fund $fund) use ($notification, $configs, $lastSentDates) {
                 $fundConfig = $notification->optional
                     ? $configs->where('fund_id', $fund->id)->first()
                     : null;
@@ -136,7 +127,9 @@ class SystemNotificationResource extends BaseJsonResource
                     'enable_mail' => $fundConfig?->enable_mail ?? true,
                     'enable_push' => $fundConfig?->enable_push ?? true,
                     'enable_database' => $fundConfig?->enable_database ?? true,
-                    ...($withLastSentData ? $this->getLastSentData($notification, [$fund->id]) : []),
+                    ...($lastSentDates !== null ? $this->makeTimestamps([
+                        'last_sent_date' => $lastSentDates->get($fund->id),
+                    ], true) : []),
                 ];
             })
             ->values()

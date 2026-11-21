@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use App\Traits\ThrottleWithMeta;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -24,8 +25,8 @@ class UpdateTransactionBulksRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        $this->maxAttempts = env('RESET_BULKS_ATTEMPTS', 10);
-        $this->decayMinutes = env('RESET_BULKS_DECAY', 10);
+        $this->maxAttempts = Config::get('forus.throttles.reset_bulks.attempts');
+        $this->decayMinutes = Config::get('forus.throttles.reset_bulks.decay');
 
         $this->throttleWithKey('to_many_attempts', $this, 'voucher_transaction_bulks', 'bulk_reset');
 

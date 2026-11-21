@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Profile\ShowProfileRequest;
 use App\Http\Requests\Api\Platform\Profile\UpdateProfileRequest;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\Sponsor\SponsorIdentityResource;
+use Throwable;
 
 class ProfileController extends Controller
 {
@@ -36,20 +37,20 @@ class ProfileController extends Controller
 
     /**
      * @param UpdateProfileRequest $request
+     * @throws Throwable
      * @return ProfileResource
      */
     public function updateProfile(UpdateProfileRequest $request): ProfileResource
     {
         $identity = $request->identity();
-        $organization = $request->implementation()?->organization;
+        $organization = $request->implementation()->organization;
+        $profile = $organization->findOrMakeProfile($identity);
 
-        $profile = $organization?->findOrMakeProfile($identity);
-
-        $profile->updateRecords($request->only([
+        $profile->updateRecords($request->safe()->only([
             'telephone', 'mobile', 'city', 'street', 'house_number', 'house_number_addition', 'postal_code',
         ]));
 
-        return ProfileResource::create($request->identity(), $organization?->allow_profiles ? [
+        return ProfileResource::create($request->identity(), $organization->allow_profiles ? [
             'profile' => true,
             'records' => SponsorIdentityResource::getProfileRecords($profile),
             'bank_accounts' => SponsorIdentityResource::getBankAccounts($identity, $organization, $profile),

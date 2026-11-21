@@ -41,6 +41,7 @@ use League\CommonMark\Exception\CommonMarkException;
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_fund_request_prefill
+ * @property bool $allow_fund_request_profile_copy
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
@@ -299,7 +300,7 @@ class FundConfig extends Model
         'iconnect_cert', 'iconnect_cert_pass', 'iconnect_cert_trust',
         'allow_direct_payments', 'allow_voucher_top_ups', 'allow_voucher_records',
         'limit_voucher_top_up_amount', 'limit_voucher_total_amount', 'allow_generator_direct_payments',
-        'allow_provider_sign_up', 'allow_fund_request_prefill',
+        'allow_provider_sign_up', 'allow_fund_request_prefill', 'allow_fund_request_profile_copy',
     ];
 
     /**
@@ -312,6 +313,7 @@ class FundConfig extends Model
         'backoffice_fallback' => 'boolean',
         'allow_fund_requests' => 'boolean',
         'allow_fund_request_prefill' => 'boolean',
+        'allow_fund_request_profile_copy' => 'boolean',
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
         'allow_direct_requests' => 'boolean',

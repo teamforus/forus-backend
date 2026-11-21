@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Employees\IndexEmployeesRequest;
 use App\Http\Resources\EmployeeResource;
-use App\Models\Employee;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeesController extends Controller
@@ -18,14 +16,10 @@ class EmployeesController extends Controller
     public function index(IndexEmployeesRequest $request): AnonymousResourceCollection
     {
         $role = $request->input('role');
-        $employees = Employee::where('identity_address', $request->auth_address());
+        $employees = $request->identity()->employees();
 
         if ($role) {
-            $employees = $employees->whereHas('roles', function (
-                Builder $builder
-            ) use ($role) {
-                $builder->where('key', $role);
-            });
+            $employees->whereRelation('roles', 'key', $role);
         }
 
         return EmployeeResource::queryCollection($employees, $request->input('per_page', 20));

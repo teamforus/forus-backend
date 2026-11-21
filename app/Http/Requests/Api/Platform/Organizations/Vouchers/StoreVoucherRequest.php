@@ -6,6 +6,8 @@ use App\Models\Fund;
 use App\Models\VoucherRelation;
 use App\Rules\BsnRule;
 use App\Rules\ProductIdInStockRule;
+use App\Rules\Vouchers\VoucherRecipientRule;
+use App\Rules\VouchersArraySumAmountsRule;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Validation\Rule;
 
@@ -28,6 +30,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
                 'nullable',
                 'required_if:assign_by_type,email',
                 ...$this->emailRules(),
+                new VoucherRecipientRule(),
             ],
             'amount' => $this->amountRule($fund),
             'records' => $this->recordsRule(),
@@ -101,6 +104,7 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
             'required_without:product_id',
             'numeric',
             'between:0,' . currency_format($fund->getMaxAmountPerVoucher()),
+            new VouchersArraySumAmountsRule($fund, [$this->only(['amount', 'email', 'product_id'])]),
         ];
     }
 
@@ -139,7 +143,10 @@ class StoreVoucherRequest extends BaseStoreVouchersRequest
     private function bsnRule(bool $bsn_enabled): array
     {
         return $bsn_enabled ? [
-            'nullable', 'required_if:assign_by_type,bsn', new BsnRule(),
+            'nullable',
+            'required_if:assign_by_type,bsn',
+            new BsnRule(),
+            ...($this->input('email') ? [] : [new VoucherRecipientRule(byBsn: true)]),
         ] : [
             'nullable', 'in:',
         ];

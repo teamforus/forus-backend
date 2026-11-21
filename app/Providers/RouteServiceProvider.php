@@ -181,7 +181,9 @@ class RouteServiceProvider extends ServiceProvider
             return DigIdSession::where([
                 'state' => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid' => $digid_session_uid,
-            ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
+            ])->whereIn('connection_type', [DigIdSession::CONNECTION_TYPE_CGI, DigIdSession::CONNECTION_TYPE_SAML])
+                ->where('created_at', '>=', $sessionExpireTime)
+                ->firstOrFail();
         });
 
         $router->bind('bngBankConnectionToken', static function ($token) {

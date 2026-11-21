@@ -135,6 +135,22 @@ trait MakesTestFunds
     }
 
     /**
+     * @param Fund $fund
+     * @param float $budget
+     * @return void
+     */
+    protected function setTestFundBudget(Fund $fund, float $budget): void
+    {
+        $fund->top_up_transactions()->update(['amount' => 0]);
+
+        $fund->getOrCreateTopUp()->transactions()->create([
+            'amount' => $fund->budget_used + $budget,
+        ]);
+
+        $this->assertEquals($budget, $fund->refresh()->budget_left);
+    }
+
+    /**
      * @param Organization $organization
      * @param array $implementationData
      * @return Implementation

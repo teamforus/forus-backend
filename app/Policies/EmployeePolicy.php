@@ -28,11 +28,18 @@ class EmployeePolicy
     /**
      * @param Identity $identity
      * @param Organization $organization
-     * @return bool
+     * @param string $email
+     * @return Response|bool
      */
-    public function store(Identity $identity, Organization $organization): bool
+    public function store(Identity $identity, Organization $organization, string $email): Response|bool
     {
-        return $organization->identityCan($identity, Permission::MANAGE_EMPLOYEES);
+        if (!$organization->identityCan($identity, Permission::MANAGE_EMPLOYEES)) {
+            return false;
+        }
+
+        return Identity::findByEmail($email)?->isManagedByIdentityProvider()
+            ? $this->deny(__('policies.employees.managed_identity'))
+            : true;
     }
 
     /**
@@ -87,6 +94,6 @@ class EmployeePolicy
             return $this->deny(__('policies.employees.cant_delete_if_default_validator_exists'));
         }
 
-        return $this->update($identity, $employee, $organization);
+        return $this->update($identity, $employee, $organization) && !$employee->identity_provider_managed_membership;
     }
 }

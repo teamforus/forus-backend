@@ -315,6 +315,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('digid:session-clean')
             ->everyMinute()->withoutOverlapping()->onOneServer();
 
+        $schedule->command('identity-provider:sessions-clean')
+            ->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
+
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
         $this->scheduleBackoffice($schedule);
@@ -322,6 +325,7 @@ class Kernel extends ConsoleKernel
         $this->scheduleAuthExpiration($schedule);
         $this->scheduleMollieConnections($schedule);
         $this->scheduleReservationExtraPayments($schedule);
+        $this->scheduleDCP($schedule);
     }
 
     /**
@@ -353,6 +357,19 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->everyMinute()
             ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleDCP(Schedule $schedule): void
+    {
+        $schedule->command('dcp:send-orders')
+            ->cron(Config::get('dcp.send_schedule'))->withoutOverlapping()->onOneServer();
+
+        $schedule->command('dcp:update-status')
+            ->cron(Config::get('dcp.status_schedule'))->withoutOverlapping()->onOneServer();
     }
 
     /**

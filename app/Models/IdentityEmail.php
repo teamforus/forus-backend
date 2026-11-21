@@ -88,10 +88,11 @@ class IdentityEmail extends Model
 
     /**
      * Make this identity email as primary.
+     * @return IdentityEmail
      */
     public function setPrimary(): IdentityEmail
     {
-        $this->identity->emails()->update([
+        $this->identity->emails()->whereKeyNot($this->id)->update([
             'primary' => false,
         ]);
 

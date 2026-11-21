@@ -37,11 +37,23 @@ class RecordTypeSearch extends BaseSearch
             $builder->where('criteria', true);
         }
 
-        if ($this->getFilter('organization_id')) {
+        if ($this->getFilter('requester_imports')) {
+            $builder->where('requester_imports', true)->where('key', '!=', 'bsn');
+        }
+
+        if ($this->getFilter('organization_id') !== null) {
             $builder->where(function (Builder|RecordType $builder) {
                 $builder->whereNull('organization_id');
                 $builder->orWhere('organization_id', $this->getFilter('organization_id'));
             });
+        }
+
+        if ($this->getFilter('profile_records')) {
+            $builder->where('profile_records', true);
+        }
+
+        if ($this->getFilter('profile_requester_editable')) {
+            $builder->where('profile_requester_editable', true);
         }
 
         return $builder;

@@ -27,6 +27,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -35,6 +36,11 @@ class IdentitiesController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @param IndexIdentitiesRequest $request
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return AnonymousResourceCollection
      */
     public function index(
         IndexIdentitiesRequest $request,
@@ -46,10 +52,10 @@ class IdentitiesController extends Controller
 
         $search = new IdentitiesSearch([
             ...$request->only([
-                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
+                'q', 'type', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
-                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
+                'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',
             ]),
             'organization_id' => $organization->id,
         ], $query);
@@ -61,7 +67,12 @@ class IdentitiesController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Create a sponsor identity.
+     *
+     * @param StoreIdentityRequest $request
+     * @param Organization $organization
+     * @throws Throwable
+     * @return SponsorIdentityResource
      */
     public function store(
         StoreIdentityRequest $request,
@@ -69,15 +80,18 @@ class IdentitiesController extends Controller
     ): SponsorIdentityResource {
         $this->authorize('storeSponsorIdentities', [$organization]);
 
-        $employee = $request->employee($organization);
-        $identity = Identity::build(type: Identity::TYPE_PROFILE, employeeId: $employee->id, organizationId: $organization->id);
+        $identity = DB::transaction(function () use ($request, $organization): Identity {
+            $employee = $request->employee($organization);
+            $identity = Identity::build(
+                type: Identity::TYPE_PROFILE,
+                employeeId: $employee->id,
+                organizationId: $organization->id,
+            );
 
-        $organization->findOrMakeProfile($identity)->updateRecords(Arr::only($request->validated(), [
-            'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
-            'street', 'house_number', 'house_number_addition', 'postal_code',
-            'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
-            'living_arrangement', 'marital_status', 'client_number',
-        ]), $request->employee($organization));
+            $organization->findOrMakeProfile($identity)->updateRecords($request->profileRecords(), $employee);
+
+            return $identity;
+        });
 
         return SponsorIdentityResource::create($identity, [
             'detailed' => true,
@@ -102,6 +116,12 @@ class IdentitiesController extends Controller
 
     /**
      * Update the specified resource in storage.
+     *
+     * @param UpdateIdentityRequest $request
+     * @param Organization $organization
+     * @param Identity $identity
+     * @throws Throwable
+     * @return SponsorIdentityResource
      */
     public function update(
         UpdateIdentityRequest $request,
@@ -110,12 +130,12 @@ class IdentitiesController extends Controller
     ): SponsorIdentityResource {
         $this->authorize('updateSponsorIdentities', [$organization, $identity]);
 
-        $organization->findOrMakeProfile($identity)->updateRecords(Arr::only($request->validated(), [
-            'given_name', 'family_name', 'telephone', 'mobile', 'birth_date', 'city',
-            'street', 'house_number', 'house_number_addition', 'postal_code',
-            'house_composition', 'gender', 'neighborhood_name', 'municipality_name',
-            'living_arrangement', 'marital_status', 'client_number',
-        ]), $request->employee($organization));
+        DB::transaction(function () use ($request, $organization, $identity): void {
+            $organization->findOrMakeProfile($identity)->updateRecords(
+                $request->profileRecords(),
+                $request->employee($organization),
+            );
+        });
 
         return SponsorIdentityResource::create($identity, [
             'detailed' => true,
@@ -218,10 +238,10 @@ class IdentitiesController extends Controller
 
         $search = new IdentitiesSearch([
             ...$request->only([
-                'q', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
+                'q', 'type', 'fund_id', 'birth_date_from', 'birth_date_to', 'postal_code', 'city', 'has_bsn',
                 'municipality_name', 'last_activity_from', 'last_activity_to', 'last_login_from',
                 'last_login_to', 'order_by', 'order_dir', 'household_id',
-                'exclude_id', 'exclude_relation_id', 'exclude_household_id',
+                'exclude_id', 'exclude_relation_id', 'exclude_household_id', 'identity_provider_status',
             ]),
             'organization_id' => $organization->id,
         ], IdentityQuery::relatedToOrganization(Identity::query(), $organization->id));

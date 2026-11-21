@@ -50,6 +50,12 @@ return [
             'level' => 'debug',
         ],
 
+        'microsoft-graph' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/microsoft-graph.log'),
+            'level' => 'error',
+        ],
+
         'query-counter' => [
             'driver' => 'single',
             'path' => storage_path('logs/query-counter.log'),
@@ -84,6 +90,36 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/digid-service.log'),
             'level' => 'debug',
+        ],
+
+        'openid' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/openid-service.log'),
+            'level' => 'debug',
+        ],
+
+        'requester_imports' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/requester-imports.log'),
+            'level' => 'warning',
+        ],
+
+        'voucher_passes' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/voucher-passes.log'),
+            'level' => 'warning',
+        ],
+
+        'voucher_awards' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/voucher-awards.log'),
+            'level' => 'warning',
+        ],
+
+        'dcp' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/dcp.log'),
+            'level' => 'warning',
         ],
 
         'mollie' => [

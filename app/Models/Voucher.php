@@ -26,6 +26,7 @@ use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -1342,7 +1343,7 @@ class Voucher extends Model
 
         /** @var VoucherRelation $voucher_relation */
         return $this->voucher_relation()->create([
-            'bsn' => $bsn,
+            'bsn' => resolve(IdentityBsnService::class)->normalizeBsn($bsn),
             'report_type' => $reportType,
         ]);
     }
@@ -1365,7 +1366,7 @@ class Voucher extends Model
             ->get();
 
         return $vouchers
-            ->each(fn (Voucher $voucher) => $voucher->voucher_relation->assignByBsnIfExists())
+            ->filter(fn (Voucher $voucher) => $voucher->voucher_relation->assignByBsnIfExists())
             ->count();
     }
 
@@ -1395,7 +1396,7 @@ class Voucher extends Model
             }, 4, 2);
         }
 
-        if (!is_null($client_uid) && $oldVoucher = $queryUsed->first()) {
+        if (!is_null($client_uid) && ($oldVoucher = $queryUsed->first()) && $oldVoucher->identity->canReceiveVouchers()) {
             $this->assignToIdentity($oldVoucher->identity);
         }
 
@@ -1458,11 +1459,32 @@ class Voucher extends Model
             'state' => self::STATE_ACTIVE,
         ]);
 
-        $this->log(self::EVENT_ACTIVATED, [
-            'voucher' => $this,
-            'employee' => $employee,
-            'sponsor' => $this->fund->organization,
-        ], compact('note'));
+        $this->log(
+            self::EVENT_ACTIVATED,
+            ['voucher' => $this, 'employee' => $employee, 'sponsor' => $this->fund->organization],
+            ['note' => $note],
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param string $note
+     * @param string $source
+     * @return Voucher
+     */
+    public function activateAsSystem(string $note, string $source): Voucher
+    {
+        $this->update([
+            'state' => self::STATE_ACTIVE,
+        ]);
+
+        $this->log(
+            self::EVENT_ACTIVATED,
+            ['voucher' => $this, 'sponsor' => $this->fund->organization],
+            ['note' => $note, 'source' => $source],
+            useRequestIdentity: false,
+        );
 
         return $this;
     }
@@ -1471,6 +1493,7 @@ class Voucher extends Model
      * @param string $note
      * @param bool $notifyByEmail
      * @param Employee|null $employee
+     * @param string|null $source
      * @throws Throwable
      * @return $this
      */
@@ -1478,8 +1501,9 @@ class Voucher extends Model
         string $note = '',
         bool $notifyByEmail = false,
         ?Employee $employee = null,
+        ?string $source = null,
     ): Voucher {
-        DB::transaction(function () use ($employee, $note, $notifyByEmail) {
+        DB::transaction(function () use ($employee, $note, $notifyByEmail, $source) {
             $this->update([
                 'state' => self::STATE_DEACTIVATED,
             ]);
@@ -1495,7 +1519,7 @@ class Voucher extends Model
                 }
             }
 
-            Event::dispatch(new VoucherDeactivated($this, $note, $employee, $notifyByEmail));
+            Event::dispatch(new VoucherDeactivated($this, $note, $employee, $notifyByEmail, $source));
         });
 
         return $this;

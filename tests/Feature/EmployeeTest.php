@@ -13,6 +13,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestIdentityProviders;
+use Tests\Traits\MakesTestOrganizationOffices;
 use Tests\Traits\MakesTestOrganizations;
 
 class EmployeeTest extends TestCase
@@ -21,6 +23,8 @@ class EmployeeTest extends TestCase
     use MakesTestIdentities;
     use DatabaseTransactions;
     use MakesTestOrganizations;
+    use MakesTestIdentityProviders;
+    use MakesTestOrganizationOffices;
 
     /**
      * @var array|string[]
@@ -195,6 +199,29 @@ class EmployeeTest extends TestCase
         $organization->refresh();
         $this->assertFalse($organization->isOwner($identity));
         $this->assertTrue($organization->isOwner($employee->identity));
+    }
+
+    /**
+     * @return void
+     */
+    public function testManagedEmployeeCanChangeRolesAndOfficeButCannotBeRemovedManually(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $membership = $this->makeIdentityProviderEmployee($this->makeEntraConnection($organization));
+        $employee = $membership->employee;
+        $role = Role::where('key', 'admin')->firstOrFail();
+        $office = $this->makeOrganizationOffice($organization);
+        $headers = $this->makeApiHeaders($organization->identity);
+
+        $updated = $this->updateEmployee($organization, $employee, [
+            'roles' => [$role->id], 'office_id' => $office->id,
+        ], $headers);
+
+        $this->assertSame([$role->id], $updated->roles()->pluck('roles.id')->all());
+        $this->assertSame($office->id, $updated->office_id);
+        $this->deleteEmployee($organization, $employee, $headers)->assertForbidden();
+
+        $this->assertFalse($employee->refresh()->trashed());
     }
 
     /**

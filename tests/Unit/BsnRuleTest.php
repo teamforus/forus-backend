@@ -27,10 +27,22 @@ class BsnRuleTest extends TestCase
         $this->assertTrue(Validation::check(null, [new BsnRule()])->fails());
         $this->assertTrue(Validation::check('6058012900', [new BsnRule()])->fails());
         $this->assertTrue(Validation::check('6058012', [new BsnRule()])->fails());
+        $this->assertTrue(Validation::check('569657223', [new BsnRule()])->fails());
         $this->assertTrue(Validation::check('', ['required', new BsnRule()])->fails());
 
         $this->assertTrue(Validation::check('569657222', [new BsnRule()])->passes());
         $this->assertTrue(Validation::check('834884148', [new BsnRule()])->passes());
         $this->assertTrue(Validation::check('', [new BsnRule()])->passes());
+    }
+
+    /**
+     * @return void
+     */
+    public function testAcceptsEightDigitBsnOnlyWhenCanonicalLengthIsNotRequired(): void
+    {
+        $this->assertTrue(Validation::check('12345672', [new BsnRule()])->passes());
+        $this->assertTrue(Validation::check('012345672', [new BsnRule()])->passes());
+        $this->assertTrue(Validation::check('12345672', [new BsnRule(exactlyNineDigits: true)])->fails());
+        $this->assertTrue(Validation::check('012345672', [new BsnRule(exactlyNineDigits: true)])->passes());
     }
 }

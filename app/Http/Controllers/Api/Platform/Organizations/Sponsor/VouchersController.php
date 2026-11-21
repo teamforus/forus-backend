@@ -18,6 +18,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\VouchersFromProfilesRequest;
 use App\Http\Resources\Arr\ExportFieldVoucherArrResource;
 use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
@@ -26,11 +27,13 @@ use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherRelation;
+use App\Modules\Voucher\Services\ProfileVoucherAwardService;
 use App\Scopes\Builders\VoucherSubQuery;
 use App\Searches\VouchersSearch;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Event;
 use Throwable;
@@ -100,6 +103,7 @@ class VouchersController extends Controller
         $employee_id = $organization->findEmployee($request->auth_address())->id;
         $voucherFields = compact('note', 'employee_id');
         $productVouchers = [];
+        $multipleVouchers = [];
         $allowVoucherRecords = $fund->fund_config?->allow_voucher_records;
 
         $identity = $email ? Identity::findOrBuild(
@@ -132,11 +136,20 @@ class VouchersController extends Controller
                 limitMultiplier: $multiplier,
             );
 
+            $multipleVouchers = $fund->makeFundFormulaMultipleVouchers(
+                identity: $identity,
+                voucherFields: $voucherFields,
+                expireAt: $expire_at,
+            );
+
             $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
         }
 
         /** @var Voucher[] $vouchers */
-        $vouchers = array_merge([$mainVoucher], $productVouchers);
+        $vouchers = array_filter(array_merge([$mainVoucher], $productVouchers, $multipleVouchers));
+
+        // main voucher is not created when amount is zero and multiply vouchers are created instead
+        $mainVoucher = $mainVoucher ?: Arr::first($multipleVouchers);
         $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
         foreach ($vouchers as $voucher) {
@@ -227,6 +240,9 @@ class VouchersController extends Controller
             $payment_iban = $voucher['direct_payment_iban'] ?? null;
             $payment_name = $voucher['direct_payment_name'] ?? null;
 
+            $productVouchers = [];
+            $multipleVouchers = [];
+
             $identity = $email ? Identity::findOrBuild(
                 email: $email,
                 type: Identity::TYPE_VOUCHER,
@@ -257,11 +273,21 @@ class VouchersController extends Controller
                     limitMultiplier: $multiplier,
                 );
 
+                $multipleVouchers = $fund->makeFundFormulaMultipleVouchers(
+                    identity: $identity,
+                    voucherFields: $voucherFields,
+                    expireAt: $expire_at,
+                );
+
                 $productVouchers = $fund->makeFundFormulaProductVouchers($identity, $voucherFields, $expire_at);
             }
 
             /** @var Voucher[] $vouchers */
-            $vouchers = array_merge([$mainVoucher], $productVouchers ?? []);
+            $vouchers = array_filter(array_merge([$mainVoucher], $productVouchers, $multipleVouchers));
+
+            // main voucher is not created when amount is zero and multiply vouchers are created instead
+            $isMainVoucherCreated = (bool) $mainVoucher;
+            $mainVoucher = $mainVoucher ?: Arr::first($multipleVouchers);
             $mainVoucher->appendRecords($allowVoucherRecords ? $records : []);
 
             foreach ($vouchers as $voucherModel) {
@@ -288,7 +314,12 @@ class VouchersController extends Controller
                 }
             }
 
-            if ($payment_iban && $mainVoucher->isBudgetType() && $fund->generatorDirectPaymentsAllowed()) {
+            if (
+                $isMainVoucherCreated &&
+                $payment_iban &&
+                $mainVoucher->isBudgetType() &&
+                $fund->generatorDirectPaymentsAllowed()
+            ) {
                 $mainVoucher->makeDirectPayment($payment_iban, $payment_name, $employee);
             }
 
@@ -314,6 +345,75 @@ class VouchersController extends Controller
         StoreBatchVoucherRequest $request,
         Organization $organization,
     ): void {
+    }
+
+    /**
+     * Create vouchers from organization profiles.
+     *
+     * @param VouchersFromProfilesRequest $request
+     * @param Organization $organization
+     * @throws Throwable
+     * @return JsonResponse
+     */
+    public function storeFromProfiles(VouchersFromProfilesRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        $employee = $request->employee($organization);
+
+        abort_unless($employee !== null, 403);
+
+        $service = resolve(ProfileVoucherAwardService::class);
+
+        return new JsonResponse(['data' => $service->makeVouchersFromProfiles(
+            $organization,
+            $employee,
+            $request->validated('fund_ids'),
+            $request->validated('profile_ids'),
+        )]);
+    }
+
+    /**
+     * Preview vouchers from organization profiles.
+     *
+     * @param VouchersFromProfilesRequest $request
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return JsonResponse
+     */
+    public function previewFromProfiles(VouchersFromProfilesRequest $request, Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        $employee = $request->employee($organization);
+
+        abort_unless($employee !== null, 403);
+
+        $service = resolve(ProfileVoucherAwardService::class);
+
+        return new JsonResponse(['data' => $service->previewVouchersFromProfiles(
+            $organization,
+            $employee,
+            $request->validated('fund_ids'),
+            $request->validated('profile_ids'),
+        )]);
+    }
+
+    /**
+     * Get candidate profile IDs for voucher creation.
+     *
+     * @param Organization $organization
+     * @throws AuthorizationException
+     * @return JsonResponse
+     */
+    public function fromProfilesIds(Organization $organization): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('storeFromProfilesSponsor', [Voucher::class, $organization]);
+
+        return new JsonResponse(['data' => resolve(ProfileVoucherAwardService::class)->candidateIds($organization)]);
     }
 
     /**

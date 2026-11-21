@@ -1,8 +1,21 @@
 <?php
 
 use App\Models\Permission;
+use App\Modules\DCP\Enums\DCPEventType;
 
 return [
+    'dcp_order' => [
+        'permissions' => [Permission::MANAGE_IDENTITIES],
+        'events' => [
+            DCPEventType::CREATED->value, DCPEventType::UPDATED->value, DCPEventType::SENDING->value,
+            DCPEventType::ACCEPTED->value, DCPEventType::REJECTED->value, DCPEventType::UNKNOWN->value,
+            DCPEventType::BLOCKED->value, DCPEventType::STATUS_CHANGED->value,
+        ],
+    ],
+    'dcp_order_bulk' => [
+        'permissions' => [Permission::MANAGE_IDENTITIES],
+        'events' => [DCPEventType::BULK_APPROVED->value],
+    ],
     'bank_connection' => [
         'permissions' => [
             Permission::MANAGE_BANK_CONNECTIONS,

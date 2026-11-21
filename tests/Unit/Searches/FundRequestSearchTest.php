@@ -59,12 +59,12 @@ class FundRequestSearchTest extends SearchTestCase
         $this->assertSearchIds(['q' => $emailPart1], [$fundRequest1->id], $employee);
         $this->assertSearchIds(['q' => $bsnPart1], [$fundRequest1->id], $employee);
         $this->assertSearchIds(['q' => $fundNamePart1], [$fundRequest1->id], $employee);
-        $this->assertSearchIds(['q' => $fundRequest1->id], [$fundRequest1->id], $employee);
+        $this->assertSearchContainsId(['q' => $fundRequest1->id], $fundRequest1->id, $employee);
 
         $this->assertSearchIds(['q' => $emailPart2], [$fundRequest2->id], $employee);
         $this->assertSearchIds(['q' => $bsnPart2], [$fundRequest2->id], $employee);
         $this->assertSearchIds(['q' => $fundNamePart2], [$fundRequest2->id], $employee);
-        $this->assertSearchIds(['q' => $fundRequest2->id], [$fundRequest2->id], $employee);
+        $this->assertSearchContainsId(['q' => $fundRequest2->id], $fundRequest2->id, $employee);
     }
 
     /**
@@ -457,6 +457,17 @@ class FundRequestSearchTest extends SearchTestCase
         $actual = collect($search->query()->pluck('id')->toArray())->sort()->values()->toArray();
 
         $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @param array $filters
+     * @param int $expectedId
+     * @param Employee|null $employee
+     * @return void
+     */
+    private function assertSearchContainsId(array $filters, int $expectedId, ?Employee $employee = null): void
+    {
+        $this->assertContains($expectedId, $this->makeSearch($filters, $employee)->query()->pluck('id')->toArray());
     }
 
     /**

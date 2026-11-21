@@ -4,15 +4,20 @@ namespace App\Models;
 
 use App\Events\Employees\EmployeeCreated;
 use App\Models\Traits\HasTags;
+use App\Modules\DCP\Models\DCPConnection;
+use App\Modules\VoucherPass\Models\VoucherPass;
+use App\Modules\VoucherPass\Models\VoucherPassType;
 use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\IdentityQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\BankService\Models\Bank;
 use App\Services\BIConnectionService\Models\BIConnection;
+use App\Services\DigIdService\TvsService;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IdentityProviderService\Models\IdentityProviderConnection;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MollieService\Models\MollieConnection;
@@ -32,11 +37,15 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Validation\ValidationException;
 
 /**
  * App\Models\Organization.
  *
  * @property int $id
+ * @property int|null $dcp_connection_id
+ * @property-read DCPConnection|null $dcp_connection
+ * @property array<array-key, mixed>|null $tvs_digid_config
  * @property string|null $identity_address
  * @property string $name
  * @property string|null $description
@@ -74,11 +83,19 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property bool $allow_2fa_restrictions
  * @property bool $allow_fund_request_record_edit
  * @property bool $allow_bi_connection
+ * @property bool $allow_identity_providers
+ * @property bool $allow_identity_provider_employee_provisioning
+ * @property bool $allow_identity_provider_requester_provisioning
+ * @property bool $allow_identity_provider_employee_provisioning_profiles
  * @property bool $allow_physical_cards
  * @property bool $allow_provider_extra_payments
  * @property bool $allow_pre_checks
  * @property bool $allow_payouts
  * @property bool $allow_profiles
+ * @property bool $allow_requester_imports
+ * @property string $requester_import_mapping_key
+ * @property bool $allow_vouchers_from_profiles
+ * @property bool $allow_voucher_passes
  * @property bool $allow_profiles_create
  * @property bool $allow_profiles_relations
  * @property bool $allow_profiles_households
@@ -156,6 +173,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read int|null $funds_active_count
  * @property-read string $description_html
  * @property-read \App\Models\Identity|null $identity
+ * @property-read IdentityProviderConnection|null $identity_provider_connection
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections
+ * @property-read int|null $identity_provider_connections_count
+ * @property-read Collection|IdentityProviderConnection[] $identity_provider_connections_disconnected
+ * @property-read int|null $identity_provider_connections_disconnected_count
  * @property-read Collection|\App\Models\Implementation[] $implementations
  * @property-read int|null $implementations_count
  * @property-read Session|null $last_employee_session
@@ -210,6 +232,9 @@ use Illuminate\Support\Collection as SupportCollection;
  * @method static EloquentBuilder<static>|Organization whereAllowCustomFundNotifications($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundProductLimits($value)
  * @method static EloquentBuilder<static>|Organization whereAllowFundRequestRecordEdit($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviderEmployeeProvisioning($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviderRequesterProvisioning($value)
+ * @method static EloquentBuilder<static>|Organization whereAllowIdentityProviders($value)
  * @method static EloquentBuilder<static>|Organization whereAllowManualBulkProcessing($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPayouts($value)
  * @method static EloquentBuilder<static>|Organization whereAllowPhysicalCards($value)
@@ -383,6 +408,10 @@ class Organization extends Model
         'allow_2fa_restrictions' => 'boolean',
         'allow_fund_request_record_edit' => 'boolean',
         'allow_bi_connection' => 'boolean',
+        'allow_identity_providers' => 'boolean',
+        'allow_identity_provider_employee_provisioning' => 'boolean',
+        'allow_identity_provider_requester_provisioning' => 'boolean',
+        'allow_identity_provider_employee_provisioning_profiles' => 'boolean',
         'allow_physical_cards' => 'boolean',
         'allow_product_updates' => 'boolean',
         'allow_profiles_create' => 'boolean',
@@ -399,6 +428,9 @@ class Organization extends Model
         'allow_pre_checks' => 'boolean',
         'allow_payouts' => 'boolean',
         'allow_profiles' => 'boolean',
+        'allow_requester_imports' => 'boolean',
+        'allow_vouchers_from_profiles' => 'boolean',
+        'allow_voucher_passes' => 'boolean',
         'allow_translations' => 'boolean',
         'reservation_allow_extra_payments' => 'boolean',
         'show_provider_transactions' => 'boolean',
@@ -417,6 +449,7 @@ class Organization extends Model
         'bank_reservation_invoice_number' => 'boolean',
         'allow_prevalidation_requests' => 'boolean',
         'allow_fund_product_limits' => 'boolean',
+        'tvs_digid_config' => 'array',
     ];
 
     /**
@@ -425,7 +458,7 @@ class Organization extends Model
     protected $hidden = [
         'iconnect_api_oin', 'iconnect_target_binding', 'iconnect_base_url', 'iconnect_env',
         'iconnect_key', 'iconnect_key_pass', 'iconnect_cert', 'iconnect_cert_pass',
-        'iconnect_cert_trust',
+        'iconnect_cert_trust', 'tvs_digid_config',
     ];
 
     /**
@@ -474,6 +507,14 @@ class Organization extends Model
     public function implementations(): HasMany
     {
         return $this->hasMany(Implementation::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function dcp_connection(): BelongsTo
+    {
+        return $this->belongsTo(DCPConnection::class);
     }
 
     /**
@@ -568,6 +609,22 @@ class Organization extends Model
     public function profiles(): HasMany
     {
         return $this->hasMany(Profile::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function voucher_passes(): HasMany
+    {
+        return $this->hasMany(VoucherPass::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function voucher_pass_types(): HasMany
+    {
+        return $this->hasMany(VoucherPassType::class);
     }
 
     /**
@@ -693,6 +750,31 @@ class Organization extends Model
     }
 
     /**
+     * @return HasOne
+     */
+    public function identity_provider_connection(): HasOne
+    {
+        return $this->hasOne(IdentityProviderConnection::class)
+            ->where('status', '!=', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections(): HasMany
+    {
+        return $this->hasMany(IdentityProviderConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function identity_provider_connections_disconnected(): HasMany
+    {
+        return $this->identity_provider_connections()->where('status', IdentityProviderConnection::STATUS_DISCONNECTED);
+    }
+
+    /**
      * @return HasOneThrough
      * @noinspection PhpUnused
      */
@@ -815,6 +897,17 @@ class Organization extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function showsIdentityProviderProfileStatus(): bool
+    {
+        return
+            $this->allow_identity_provider_requester_provisioning ||
+            ($this->allow_identity_provider_employee_provisioning &&
+                $this->allow_identity_provider_employee_provisioning_profiles);
+    }
+
+    /**
      * @param string|array $role
      * @return EloquentBuilder|Relation
      */
@@ -887,9 +980,7 @@ class Organization extends Model
     public function isEmployee(Identity $identity, bool $fresh = true): bool
     {
         if (!$fresh) {
-            return $this->employees
-                ->where('identity_address', $identity->address)
-                ->isNotEmpty();
+            return $this->employees->where('identity_address', $identity->address)->isNotEmpty();
         }
 
         return $this->employees()->where('identity_address', $identity->address)->exists();
@@ -1048,12 +1139,20 @@ class Organization extends Model
             ->delete();
 
         foreach ($fields as $order => $item) {
-            $this->reservation_fields()->updateOrCreate([
-                'id' => Arr::get($item, 'id'),
-            ], [
-                ...Arr::only($item, ['label', 'type', 'description', 'required', 'fillable_by']),
+            $field = $this->reservation_fields()->find(Arr::get($item, 'id'));
+
+            $values = [
+                ...Arr::only($item, [
+                    'label', 'type', 'description', 'required', 'fillable_by',
+                ]),
                 'order' => $order,
-            ]);
+            ];
+
+            if ($field) {
+                $field->update($values);
+            } else {
+                $this->reservation_fields()->create($values);
+            }
         }
     }
 
@@ -1122,6 +1221,27 @@ class Organization extends Model
             'base_url' => $this->iconnect_base_url,
             'target_binding' => $this->iconnect_target_binding,
         ];
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTvsDigidConfig(): bool
+    {
+        return $this->tvs_digid_config !== null;
+    }
+
+    /**
+     * @throws ValidationException
+     * @return array|null
+     */
+    public function getTvsDigidConfig(): ?array
+    {
+        if (!$this->hasTvsDigidConfig()) {
+            return null;
+        }
+
+        return resolve(TvsService::class)->validateConfiguration($this->tvs_digid_config);
     }
 
     /**

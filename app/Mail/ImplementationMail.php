@@ -9,11 +9,15 @@ use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Mail\Factory;
+use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\SentMessage;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use League\CommonMark\Exception\CommonMarkException;
 use Mews\Purifier\Facades\Purifier;
@@ -47,6 +51,11 @@ class ImplementationMail extends Mailable implements ShouldQueue
      * @var array|false|null
      */
     protected mixed $dataKeys = null;
+
+    /**
+     * @var array{email: string, name: string|null}|null
+     */
+    protected ?array $customMailerFrom = null;
 
     /**
      * @param array $data
@@ -134,7 +143,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $data = $this->getTransData();
         $subject = $this->getSubject(trans($this->subject, $data));
 
-        return $this->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+        return $this->from($this->getFromEmail(), $this->getFromName())
             ->with(compact('subject', 'data'))
             ->subject($subject)
             ->view($this->viewKey, $data);
@@ -172,7 +181,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
             $this->viewData['emailBody'] = $emailBody;
 
             return $this
-                ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+                ->from($this->getFromEmail(), $this->getFromName())
                 ->view('emails.mail-builder-template')
                 ->subject($subject);
         }
@@ -191,6 +200,54 @@ class ImplementationMail extends Mailable implements ShouldQueue
         if ($logger = logger()) {
             $logger->error('Error sending digest: `' . $e->getMessage() . '`');
         }
+    }
+
+    /**
+     * @return Implementation|null
+     */
+    public function getImplementation(): ?Implementation
+    {
+        return Implementation::byKey($this->implementationKey());
+    }
+
+    /**
+     * @param Factory|Mailer $mailer
+     * @return SentMessage|null
+     */
+    public function send($mailer): ?SentMessage
+    {
+        $this->customMailerFrom = null;
+
+        if (in_array(static::class, Config::get('forus.mail.custom_mailer_allowlist', []), true)) {
+            $transport = $this->getImplementation()?->getCustomMailerConfig();
+
+            if ($transport !== null) {
+                $mailer = Mail::build($transport);
+
+                $this->customMailerFrom = [
+                    'email' => $transport['from_email'],
+                    'name' => ($transport['from_name'] ?? null) ?: $this->emailFrom->getName(),
+                ];
+            }
+        }
+
+        return parent::send($mailer);
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function getFromEmail(): ?string
+    {
+        return $this->customMailerFrom['email'] ?? $this->emailFrom->getEmail();
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function getFromName(): ?string
+    {
+        return $this->customMailerFrom['name'] ?? $this->emailFrom->getName();
     }
 
     /**
@@ -268,7 +325,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $this->viewData['emailBody'] = $emailBody;
 
         return $this
-            ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+            ->from($this->getFromEmail(), $this->getFromName())
             ->view('emails.mail-builder-template')
             ->subject($this->getSubject(str_var_replace($this->subject, $data)));
     }
@@ -293,7 +350,7 @@ class ImplementationMail extends Mailable implements ShouldQueue
         $this->viewData['emailBody'] = $emailBody;
 
         return $this
-            ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+            ->from($this->getFromEmail(), $this->getFromName())
             ->view('emails.mail-builder-template')
             ->subject($subject);
     }

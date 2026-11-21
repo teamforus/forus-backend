@@ -1,14 +1,6 @@
 <?php
 
 return [
-    'useRoutes' => true,
-    'routesPrefix' => '/saml2',
-    'routesMiddleware' => [],
-    'retrieveParametersFromServer' => false,
-    'loginRoute' => null,
-    'logoutRoute' => null,
-    'errorRoute' => null,
-
     'strict' => true,
     'debug' => false,
     'baseurl' => null,

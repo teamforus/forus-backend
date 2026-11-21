@@ -25,6 +25,7 @@ use App\Searches\FundRequestSearch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -101,6 +102,22 @@ class FundRequestsController extends Controller
     }
 
     /**
+     * Preview profile changes from approval.
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @throws AuthorizationException
+     * @throws ValidationException
+     * @return JsonResponse
+     */
+    public function profileCopyPreview(Organization $organization, FundRequest $fundRequest): JsonResponse
+    {
+        $this->authorize('copyToProfileAsValidator', [$fundRequest, $organization]);
+
+        return new JsonResponse($fundRequest->profileCopyPreview());
+    }
+
+    /**
      * Assign fund request to employee.
      *
      * @param BaseFormRequest $request
@@ -149,7 +166,7 @@ class FundRequestsController extends Controller
      * @param ApproveFundRequestsRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws Throwable
      * @return ValidatorFundRequestResource
      */
     public function approve(
@@ -160,15 +177,19 @@ class FundRequestsController extends Controller
         $this->authorize('approveAsValidator', [$fundRequest, $organization]);
 
         $data = $request->input('fund_amount_preset_id') ?
-            $request->only('fund_amount_preset_id') :
-            $request->only('amount');
+            $request->safe()->only([
+                'fund_amount_preset_id',
+            ]) :
+            $request->safe()->only([
+                'amount',
+            ]);
 
-        $fundRequest->forceFill($data)->save();
-        $fundRequest->approve();
-
-        if ($request->input('note')) {
-            $fundRequest->addNote($request->input('note'), $request->employee($organization));
-        }
+        $fundRequest->approve(
+            employee: $request->employee($organization),
+            attributes: $data,
+            note: $request->validated('note'),
+            copyToProfile: $request->boolean('copy_to_profile'),
+        );
 
         return ValidatorFundRequestResource::create($fundRequest);
     }

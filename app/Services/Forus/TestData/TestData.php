@@ -22,6 +22,7 @@ use App\Models\FundCriteriaStep;
 use App\Models\FundCriterion;
 use App\Models\FundForm;
 use App\Models\FundFormula;
+use App\Models\FundFormulaProduct;
 use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Implementation;
@@ -35,12 +36,15 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RecordType;
 use App\Models\VoucherTransaction;
+use App\Modules\DCP\Models\DCPConnection;
 use App\Rules\BsnRule;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\DigIdService\TvsService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownBlockGenerator;
 use App\Services\Forus\TestData\FakeGenerators\MarkdownPageGenerator;
+use App\Services\IdentityBsnService\IdentityBsnService;
 use Carbon\Carbon;
 use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 use Exception;
@@ -52,6 +56,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Kalnoy\Nestedset\Collection as NestedsetCollection;
 use Throwable;
@@ -96,6 +101,7 @@ class TestData
     /**
      * @param string|null $email
      * @param bool $print
+     * @throws Throwable
      * @return Identity|null
      */
     public function makeIdentity(?string $email = null, bool $print = false): ?Identity
@@ -125,6 +131,7 @@ class TestData
     }
 
     /**
+     * @throws Throwable
      * @return Identity|null
      */
     public function makePrimaryIdentity(): ?Identity
@@ -157,6 +164,73 @@ class TestData
         }
 
         return $organizations;
+    }
+
+    /**
+     * @param Organization[] $sponsors
+     * @throws Throwable
+     * @return void
+     */
+    public function makeVoucherPassTypes(array $sponsors): void
+    {
+        foreach ($sponsors as $organization) {
+            $types = $this->config("organizations.$organization->name.voucher_pass_types", []);
+
+            if ($types === []) {
+                continue;
+            }
+
+            foreach ($types as $name => $fundKeys) {
+                $fundIds = array_map(function (string $key) use ($organization): int {
+                    return $organization->funds()->whereRelation('fund_config', 'key', $key)->sole()->id;
+                }, $fundKeys);
+
+                $type = $organization->voucher_pass_types()->firstOrCreate(['name' => $name]);
+                $type->funds()->sync($fundIds);
+            }
+        }
+    }
+
+    /**
+     * @param Organization[] $sponsors
+     * @return void
+     */
+    public function makeDCPConnections(array $sponsors): void
+    {
+        $sponsorsByName = collect($sponsors)->keyBy('name');
+
+        foreach ($this->config('implementations', []) as $name => $configuration) {
+            $configuration = $configuration['dcp_connection'] ?? null;
+
+            if ($configuration === null) {
+                continue;
+            }
+
+            $implementation = Implementation::where('name', $name)->first();
+
+            if ($implementation === null) {
+                continue;
+            }
+
+            $connection = DCPConnection::query()->firstOrCreate([
+                'implementation_id' => $implementation->id,
+                'environment' => $configuration['environment'],
+            ], [
+                'enabled' => $configuration['enabled'],
+                'username' => $configuration['username'] ?? null,
+                'password' => $configuration['password'] ?? null,
+            ]);
+
+            foreach ($configuration['organizations'] as $organizationName) {
+                /** @var Organization|null $organization */
+                $organization = $sponsorsByName->get($organizationName);
+
+                if ($organization !== null) {
+                    $organization->dcp_connection()->associate($connection);
+                    $organization->save();
+                }
+            }
+        }
     }
 
     /**
@@ -276,7 +350,7 @@ class TestData
         $prevalidations = Prevalidation::query()
             ->where('state', Prevalidation::STATE_PENDING)
             ->where('identity_address', $identity->address)
-            ->orderBy('fund_id', 'desc')
+            ->orderByDesc('fund_id')
             ->get()
             ->groupBy('fund_id')
             ->map(fn (SupportCollection $arr) => $arr->first());
@@ -285,7 +359,12 @@ class TestData
             $prevalidation->assignToIdentity($identity);
 
             $voucher = $prevalidation->fund->makeVoucher(identity: $identity);
+            $prevalidation->fund->makeFundFormulaMultipleVouchers($identity);
             $prevalidation->fund->makeFundFormulaProductVouchers($identity);
+
+            if ($voucher === null) {
+                continue;
+            }
 
             /** @var Product $product */
             $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
@@ -362,6 +441,16 @@ class TestData
         array $fields = [],
         int $offices_count = 0
     ): Organization {
+        $tvsConfiguration = $this->config("organizations.$name.tvs_digid_config", []);
+
+        if ($tvsConfiguration !== []) {
+            $tvsConfiguration = Validator::make(['tvs_digid_config' => $tvsConfiguration], [
+                'tvs_digid_config' => 'required|array',
+            ])->validate()['tvs_digid_config'];
+
+            $tvsConfiguration = resolve(TvsService::class)->validateConfiguration($tvsConfiguration);
+        }
+
         $data = [
             'kvk' => Organization::GENERIC_KVK,
             'iban' => $this->faker->iban('NL'),
@@ -379,6 +468,10 @@ class TestData
             ...$this->config("organizations.$name.organization", []),
             ...$fields,
         ];
+
+        if ($tvsConfiguration !== []) {
+            $data['tvs_digid_config'] = $tvsConfiguration;
+        }
 
         $organization = Organization::forceCreate(array_merge($data, [
             'name' => $name,
@@ -511,6 +604,25 @@ class TestData
         }
 
         return $fund;
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function updateGeneralImplementation(): void
+    {
+        $attributes = $this->config('general_implementation', []);
+
+        if (!is_array($attributes) || $attributes === []) {
+            return;
+        }
+
+        if (Arr::hasAny($attributes, ['id', 'key'])) {
+            throw new Exception('General implementation configuration cannot override id or key.');
+        }
+
+        Implementation::where('key', Implementation::KEY_GENERAL)->firstOrFail()->forceFill($attributes)->save();
     }
 
     /**
@@ -671,7 +783,8 @@ class TestData
         $data = array_merge($defaultData, $backofficeConfig, $config);
         $fundConfig = $fund->fund_config()->forceCreate($data);
 
-        $this->makeFundCriteriaAndFormula($fund);
+        $this->makeFundCriteria($fund);
+        $fund->syncAmountPresets($this->config("funds.$fund->name.fund_amount_presets", []));
         $this->makeFundForm($fund);
 
         return $fundConfig;
@@ -681,12 +794,9 @@ class TestData
      * @param Fund $fund
      * @return void
      */
-    public function makeFundCriteriaAndFormula(Fund $fund): void
+    public function makeFundCriteria(Fund $fund): void
     {
-        $configFormula = $this->config("funds.$fund->name.fund_formula");
         $configCriteria = $this->config("funds.$fund->name.fund_criteria");
-        $configFundPresets = $this->config("funds.$fund->name.fund_amount_presets", []);
-        $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
 
         $eligibility_key = sprintf('%s_eligible', $fund->load('fund_config')->fund_config->key);
         $criteria = [];
@@ -714,18 +824,6 @@ class TestData
                 'show_attachment' => false,
             ];
         }
-
-        $limitMultiplier = $configLimitMultiplier ?: [[
-            'record_type_key' => 'children_nth',
-            'multiplier' => 1,
-            'fund_id' => $fund->id,
-        ]];
-
-        $fundFormula = $configFormula ?: [[
-            'type' => FundFormula::TYPE_FIXED,
-            'amount' => $this->config('voucher_amount'),
-            'fund_id' => $fund->id,
-        ]];
 
         foreach (($configCriteria ?: $criteria) as $criterion) {
             $stepTitle = Arr::get($criterion, 'step', Arr::get($criterion, 'step.title'));
@@ -765,10 +863,55 @@ class TestData
                 $criterionModel->fund_criterion_rules()->forceCreate($rule);
             }
         }
+    }
 
-        $fund->fund_formulas()->createMany($fundFormula);
-        $fund->fund_limit_multipliers()->createMany($limitMultiplier);
-        $fund->syncAmountPresets($configFundPresets);
+    /**
+     * @return void
+     */
+    public function makeFundFormulas(): void
+    {
+        foreach (Fund::get() as $fund) {
+            $configFormula = $this->config("funds.$fund->name.fund_formula");
+            $configLimitMultiplier = $this->config("funds.$fund->name.fund_limit_multiplier");
+
+            $limitMultiplier = $configLimitMultiplier ?? [[
+                'record_type_key' => 'children_nth',
+                'multiplier' => 1,
+                'fund_id' => $fund->id,
+            ]];
+
+            $fundFormula = $configFormula ?? [[
+                'type' => FundFormula::TYPE_FIXED,
+                'amount' => $this->config('voucher_amount'),
+                'fund_id' => $fund->id,
+            ]];
+
+            foreach ($fundFormula as $formula) {
+                $model = $fund->fund_formulas()->create(Arr::except($formula, ['conditions']));
+                $this->makeFundFormulaConditions($model, $formula['conditions'] ?? []);
+            }
+
+            $fund->fund_limit_multipliers()->createMany($limitMultiplier);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function makeFundFormulaProducts(): void
+    {
+        foreach (Fund::get() as $fund) {
+            foreach ($this->config("funds.$fund->name.fund_formula_products", []) as $formula) {
+                $product = Product::findOrFail($formula['product_id']);
+
+                $model = $fund->fund_formula_products()->create([
+                    ...Arr::except($formula, ['conditions']),
+                    'price' => $formula['price'] ?? $product->price,
+                ]);
+
+                $this->makeFundFormulaConditions($model, $formula['conditions'] ?? []);
+            }
+        }
     }
 
     /**
@@ -987,11 +1130,11 @@ class TestData
     public static function randomFakeBsn(): string
     {
         static $generated = [];
-        static $rule = new BsnRule();
+        static $rule = new BsnRule(exactlyNineDigits: true);
 
         do {
             try {
-                $bsn = (string) random_int(10_000_000, 999_999_999);
+                $bsn = resolve(IdentityBsnService::class)->normalizeBsn((string) random_int(10_000_000, 999_999_999));
             } catch (Throwable) {
                 continue;
             }
@@ -1018,8 +1161,10 @@ class TestData
             ->get();
 
         foreach ($funds as $fund) {
+            $criteria = $fund->criteria->keyBy('id');
+
             foreach ($requesters as $requester) {
-                $records = $fund->criteria->map(fn (FundCriterion $criterion) => [
+                $records = $criteria->map(fn (FundCriterion $criterion) => [
                     'value' => match($criterion->operator) {
                         '=' => $criterion->value,
                         '>',
@@ -1033,19 +1178,33 @@ class TestData
                             default => (int) ((int) $criterion->value / 2),
                         },
                         '*' => match ($criterion->record_type_key) {
+                            'given_name' => $this->faker->firstName(),
+                            'family_name' => $this->faker->lastName(),
+                            'birth_date' => now()->subYears(20)->format('d-m-Y'),
                             'iban' => 'NL50RABO3741207772',
                             'iban_name' => 'John Doe',
                             default => '',
                         },
                         default => '',
                     },
-                    'files' => array_map(
-                        fn () => $this->makeFundRequestFile()->uid,
-                        range(1, $fundRequestFilesCount),
-                    ),
                     'record_type_key' => $criterion->record_type_key,
                     'fund_criterion_id' => $criterion->id,
-                ])->toArray();
+                ]);
+
+                $recordValues = $records->pluck('value', 'record_type_key')->all();
+
+                $records = $records
+                    ->reject(fn (array $record) => $criteria[$record['fund_criterion_id']]
+                        ->isExcludedByRules($recordValues))
+                    ->map(fn (array $record) => [
+                        ...$record,
+                        'files' => array_map(
+                            fn () => $this->makeFundRequestFile()->uid,
+                            range(1, $fundRequestFilesCount),
+                        ),
+                    ])
+                    ->values()
+                    ->all();
 
                 $fund->makeFundRequest($requester, $records);
             }
@@ -1267,11 +1426,12 @@ class TestData
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $vouchersPerFund; ++$i) {
-                $identity = $this->makeIdentity();
                 $note = 'Test data seeder!';
+                $identity = $this->makeIdentity();
 
                 $fund->makeVoucher(identity: $identity, voucherFields: compact('note'));
-                $fund->makeFundFormulaProductVouchers($identity, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity, voucherFields: compact('note'));
+                $fund->makeFundFormulaMultipleVouchers($identity, voucherFields: compact('note'));
             }
         }
     }
@@ -1392,6 +1552,22 @@ class TestData
             UploadedFile::fake()->image(Str::random() . '.jpg', 50, 50),
             'fund_request_record_proof',
         );
+    }
+
+    /**
+     * @param FundFormula|FundFormulaProduct $formula
+     * @param array $conditions
+     * @return void
+     */
+    private function makeFundFormulaConditions(FundFormula|FundFormulaProduct $formula, array $conditions): void
+    {
+        foreach ($conditions as $condition) {
+            $formula->conditions()->create([
+                'record_type_id' => RecordType::where('key', $condition['record_type_key'])->firstOrFail()->id,
+                'operator' => $condition['operator'],
+                'value' => $condition['value'],
+            ]);
+        }
     }
 
     /**

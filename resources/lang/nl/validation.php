@@ -13,6 +13,8 @@ return [
     |
     */
 
+    'record_validation_preset_incompatible' => 'Validation preset :preset cannot be used with type :type for record :key.',
+    'missing' => 'The :attribute field must not be present.',
     'header' => 'De opgegeven gegevens waren ongeldig.',
     'prohibited' => ':attribute is niet toegestaan.',
     'prohibited_if' => ':attribute is niet toegestaan indien :other gelijk is aan :value.',
@@ -192,6 +194,8 @@ return [
         'count_reached' => 'Het maximale aantal uitbetalingen voor dit tegoed (:count) is bereikt.',
     ],
     'voucher' => [
+        'managed_requester_inactive' =>
+            'Dit beheerde account is uitgeschakeld. Activeer het account via provisioning voordat u een tegoed toekent.',
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
         'deactivated' => 'De QR-code is sinds :deactivation_date niet meer geldig.',
@@ -252,6 +256,11 @@ return [
         'record_edit_forbidden' => 'U kunt dit gegeven niet aanpassen.',
     ],
     'attributes' => [
+        'exchange_token' => 'uitwisselingstoken',
+        'browser_token' => 'browsertoken',
+        'target' => 'bestemming na het inloggen',
+        'entra_login_enabled' => 'inloggen met Microsoft',
+        'identity_provider_status' => 'provisioningstatus',
         'pin_code' => 'pincode',
         'records' => 'Eigenschappen',
         'email' => 'e-mail',

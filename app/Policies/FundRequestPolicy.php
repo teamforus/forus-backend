@@ -240,6 +240,28 @@ class FundRequestPolicy
      * @param FundRequest $fundRequest
      * @param Organization $organization
      * @return Response|bool
+     */
+    public function copyToProfileAsValidator(
+        Identity $identity,
+        FundRequest $fundRequest,
+        Organization $organization,
+    ): Response|bool {
+        $response = $this->approveAsValidator($identity, $fundRequest, $organization);
+
+        if ($response !== true) {
+            return $response;
+        }
+
+        return $organization->allow_profiles &&
+            $fundRequest->fund->fund_config->allow_fund_request_profile_copy &&
+            $organization->identityCan($identity, Permission::MANAGE_IDENTITIES);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return Response|bool
      * @noinspection PhpUnused
      */
     public function approveMissedRecords(

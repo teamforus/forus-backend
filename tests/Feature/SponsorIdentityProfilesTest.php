@@ -3,16 +3,26 @@
 namespace Tests\Feature;
 
 use App\Models\Identity;
+use App\Models\Implementation;
+use App\Models\Permission;
+use App\Models\ProfileRecord;
+use App\Models\RecordType;
 use App\Models\RecordTypeOption;
 use App\Services\IConnectApiService\Exceptions\PersonBsnApiException;
+use App\Services\IdentityProviderService\Models\IdentityProviderMembership;
+use App\Services\IdentityProviderService\Support\IdentityProviderScimUserPayload;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesApiRequests;
 use Tests\Traits\MakesRequesterVoucherPayouts;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestIdentities;
+use Tests\Traits\MakesTestIdentityProviders;
 use Tests\Traits\MakesTestOrganizations;
+use Tests\Traits\MakesTestRecords;
+use Throwable;
 
 class SponsorIdentityProfilesTest extends TestCase
 {
@@ -20,8 +30,10 @@ class SponsorIdentityProfilesTest extends TestCase
     use MakesApiRequests;
     use MakesTestOrganizations;
     use MakesTestIdentities;
+    use MakesTestIdentityProviders;
     use MakesTestFunds;
     use MakesRequesterVoucherPayouts;
+    use MakesTestRecords;
 
     /**
      * Tests that a sponsor can list identities associated with their organization.
@@ -61,27 +73,57 @@ class SponsorIdentityProfilesTest extends TestCase
      */
     public function testSponsorCanCreateNewIdentity(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $customType = $this->makeProfileRecordType();
 
-        $payload = [
-            'given_name' => 'Alice',
-            'family_name' => 'Doe',
-            'birth_date' => '1990-05-10',
-            'city' => 'Testville',
-            'street' => 'Main Street',
-            'house_number' => '123',
-            'postal_code' => '1234AB',
-            'house_composition' => RecordTypeOption::query()
-                ->whereRelation('record_type', 'key', 'house_composition')
-                ->inRandomOrder()
-                ->first()
-                ->value,
-            'living_arrangement' => RecordTypeOption::query()
-                ->whereRelation('record_type', 'key', 'living_arrangement')
-                ->inRandomOrder()
-                ->first()
-                ->value,
-        ];
+        $payload = ['records' => [
+            [
+                'record_type_key' => 'given_name',
+                'value' => 'Alice',
+            ],
+            [
+                'record_type_key' => 'family_name',
+                'value' => 'Doe',
+            ],
+            [
+                'record_type_key' => 'birth_date',
+                'value' => '1990-05-10',
+            ],
+            [
+                'record_type_key' => 'city',
+                'value' => 'Testville',
+            ],
+            [
+                'record_type_key' => 'street',
+                'value' => 'Main Street',
+            ],
+            [
+                'record_type_key' => 'house_number',
+                'value' => '123',
+            ],
+            [
+                'record_type_key' => 'postal_code',
+                'value' => '1234AB',
+            ],
+            [
+                'record_type_key' => 'house_composition',
+                'value' => RecordTypeOption::query()
+                    ->whereRelation('record_type', 'key', 'house_composition')
+                    ->inRandomOrder()
+                    ->first()
+                    ->value,
+            ],
+            [
+                'record_type_key' => 'living_arrangement',
+                'value' => RecordTypeOption::query()
+                    ->whereRelation('record_type', 'key', 'living_arrangement')
+                    ->inRandomOrder()
+                    ->first()
+                    ->value,
+            ],
+        ]];
+
+        $payload['records'][] = ['record_type_key' => $customType->key, 'value' => 'Custom value'];
 
         $organization->forceFill([
             'allow_profiles_create' => false,
@@ -96,6 +138,7 @@ class SponsorIdentityProfilesTest extends TestCase
         $this->apiMakeIdentityRequest($organization->id, $payload, $organization->identity)
             ->assertSuccessful()
             ->assertJsonPath('data.profile.organization_id', $organization->id)
+            ->assertJsonPath('data.records.' . $customType->key . '.0.value', 'Custom value')
             ->assertJsonPath('data.records.given_name.0.value', 'Alice')
             ->assertJsonPath('data.records.family_name.0.value', 'Doe');
     }
@@ -133,7 +176,7 @@ class SponsorIdentityProfilesTest extends TestCase
     /**
      * Tests that sponsor identity details include fund request bank accounts.
      *
-     * @throws \Throwable
+     * @throws Throwable
      * @return void
      */
     public function testSponsorIdentityShowsFundRequestBankAccount(): void
@@ -165,7 +208,9 @@ class SponsorIdentityProfilesTest extends TestCase
      */
     public function testSponsorCanUpdateIdentity(): void
     {
-        $organization = $this->makeTestOrganization($this->makeIdentity());
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $customType = $this->makeProfileRecordType($organization);
+        $untouchedType = $this->makeProfileRecordType($organization);
         $fund = $this->makeTestFund($organization);
 
         $identity1 = $this->makeIdentity();
@@ -175,26 +220,154 @@ class SponsorIdentityProfilesTest extends TestCase
         $fund->makeVoucher($identity1);
         $fund->makeFundRequest($identity2, []);
 
-        $payload = [
-            'given_name' => 'Updated',
-            'family_name' => 'Person',
-            'city' => 'Teststad',
-        ];
+        $payload = ['records' => [
+            ['record_type_key' => 'given_name', 'value' => 'Updated'],
+            ['record_type_key' => 'family_name', 'value' => 'Person'],
+            ['record_type_key' => 'city', 'value' => 'Teststad'],
+            ['record_type_key' => $customType->key, 'value' => 'Custom update'],
+        ]];
 
         /**
          * @var Identity $identity
          */
         foreach ([$identity1, $identity2, $identity3] as $identity) {
+            $profile = $organization->findOrMakeProfile($identity);
+            $untouched = $this->makeProfileRecord($profile, $untouchedType, 'Keep this');
+
             $this->apiUpdateIdentityRequest($organization->id, $identity->id, $payload, $organization->identity)
                 ->assertSuccessful()
-                ->assertJsonCount(3, 'data.records')
+                ->assertJsonCount(5, 'data.records')
                 ->assertJsonPath('data.profile.id', $identity->profiles[0]->id)
                 ->assertJsonPath('data.profile.identity_id', $identity->id)
                 ->assertJsonPath('data.profile.organization_id', $organization->id)
                 ->assertJsonPath('data.records.given_name.0.value', 'Updated')
                 ->assertJsonPath('data.records.family_name.0.value', 'Person')
-                ->assertJsonPath('data.records.city.0.value', 'Teststad');
+                ->assertJsonPath('data.records.city.0.value', 'Teststad')
+                ->assertJsonPath('data.records.' . $customType->key . '.0.value', 'Custom update')
+                ->assertJsonPath('data.records.' . $untouchedType->key . '.0.value', 'Keep this');
+
+            $this->assertSame(
+                [$untouched->id],
+                $profile->profile_records()->where('record_type_id', $untouchedType->id)->pluck('id')->all(),
+            );
         }
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRejectsProfileRecordsOutsideTheEditableCatalog(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $other = $this->makeTestOrganization($this->makeIdentity());
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $type = $this->makeProfileRecordType($organization);
+        $this->makeProfileRecord($profile, $type, 'Keep this');
+        $disabled = $this->makeProfileRecordType($organization, ['profile_records' => false]);
+        $foreign = $this->makeProfileRecordType($other);
+        $before = $profile->profile_records()->get()->toArray();
+
+        foreach ([$disabled->key, $foreign->key, RecordType::KEY_BSN] as $key) {
+            $this
+                ->apiUpdateIdentityRequest($organization->id, $identity->id, ['records' => [
+                    ['record_type_key' => $type->key, 'value' => 'Must not save'],
+                    ['record_type_key' => $key, 'value' => '123456782'],
+                ]], $organization->identity)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('records.1.record_type_key');
+        }
+
+        $this->assertSame($before, $profile->profile_records()->get()->toArray());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testRejectsDuplicateProfileRecordKeysAndInvalidValues(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $type = $this->makeProfileRecordType($organization);
+        $number = $this->makeProfileRecordType($organization, ['type' => RecordType::TYPE_NUMBER]);
+        $this->makeProfileRecord($profile, $type, 'Keep this');
+        $before = $profile->profile_records()->get()->toArray();
+
+        foreach ([
+            [['record_type_key' => $type->key, 'value' => 'Duplicate'], 'records.1.record_type_key'],
+            [['record_type_key' => $number->key, 'value' => 'not numeric'], 'records.1.value'],
+        ] as [$invalid, $error]) {
+            $this
+                ->apiUpdateIdentityRequest($organization->id, $identity->id, [
+                    'records' => [['record_type_key' => $type->key, 'value' => 'Must not save'], $invalid],
+                ], $organization->identity)
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors($error);
+        }
+
+        $this->assertSame($before, $profile->profile_records()->get()->toArray());
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testUpdatesLiteralDottedRecordKey(): void
+    {
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $type = $this->makeProfileRecordType($organization, ['key' => 'c05.field.' . $organization->id]);
+
+        $response = $this->apiUpdateIdentityRequest(
+            $organization->id,
+            $identity->id,
+            ['records' => [['record_type_key' => $type->key, 'value' => 'Literal value']]],
+            $organization->identity,
+        )->assertOk();
+
+        $this->assertSame('Literal value', $response->json('data.records')[$type->key][0]['value']);
+
+        $this->assertDatabaseHas('profile_records', [
+            'profile_id' => $response->json('data.profile.id'), 'record_type_id' => $type->id, 'value' => 'Literal value',
+        ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testClearsSubmittedProfileValueAndPreservesOmittedValues(): void
+    {
+        $this->freezeTime();
+        $organization = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $identity = $this->makeIdentity(type: Identity::TYPE_PROFILE, organizationId: $organization->id);
+        $profile = $organization->findOrMakeProfile($identity);
+        $clearType = $this->makeProfileRecordType($organization);
+        $keepType = $this->makeProfileRecordType($organization);
+        $old = $this->makeProfileRecord($profile, $clearType, 'Old value');
+        $kept = $this->makeProfileRecord($profile, $keepType, 'Keep this');
+        $this->travel(1)->seconds();
+
+        $this
+            ->apiUpdateIdentityRequest($organization->id, $identity->id, ['records' => [
+                ['record_type_key' => $clearType->key, 'value' => null],
+            ]], $organization->identity)
+            ->assertOk()
+            ->assertJsonPath('data.records.' . $clearType->key . '.0.value', '')
+            ->assertJsonPath('data.records.' . $keepType->key . '.0.value', 'Keep this');
+
+        $records = $profile->profile_records()->where('record_type_id', $clearType->id)->get();
+
+        $this->assertSame(['', 'Old value'], $records->pluck('value')->all());
+        $this->assertSame($old->id, $records->last()->id);
+
+        $this->assertSame(
+            [$kept->id],
+            $profile->profile_records()->where('record_type_id', $keepType->id)->pluck('id')->all(),
+        );
     }
 
     /**
@@ -326,7 +499,7 @@ class SponsorIdentityProfilesTest extends TestCase
         $this->apiUpdateIdentityRequest(
             $sponsor1->id,
             $identity2->id,
-            ['given_name' => 'Hacker'],
+            ['records' => [['record_type_key' => 'given_name', 'value' => 'Hacker']]],
             $sponsor1->identity
         )->assertForbidden();
 
@@ -339,18 +512,108 @@ class SponsorIdentityProfilesTest extends TestCase
     }
 
     /**
-     * Sends a GET request to list all identities under an organization.
-     *
-     * @param int $organizationId
-     * @param Identity $authIdentity
-     * @return TestResponse
+     * @return void
      */
-    protected function apiListIdentitiesRequest(int $organizationId, Identity $authIdentity): TestResponse
+    public function testProfileStaffCanViewOwnRequestersBeforeVouchersWithoutExposingOtherSponsorsManagement(): void
     {
-        return $this->getJson(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities",
-            $this->makeApiHeaders($authIdentity),
+        $sponsor = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_providers' => true,
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $connection = $this->makeEntraConnection($sponsor);
+        $viewer = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::VIEW_IDENTITIES]);
+        $active = $this->makeIdentityProviderRequester($connection);
+
+        $disabled = $this->makeIdentityProviderRequester($connection, [
+            'provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_DISABLED,
+        ]);
+
+        $deleted = $this->makeIdentityProviderRequester($connection, [
+            'provisioning_status' => IdentityProviderMembership::PROVISIONING_STATUS_DELETED,
+        ]);
+
+        $otherSponsor = $this->makeTestOrganization($this->makeIdentity(), [
+            'allow_identity_provider_requester_provisioning' => true,
+        ]);
+
+        $otherViewer = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::VIEW_IDENTITIES]);
+        $this->makeIdentityProviderRequester($this->makeEntraConnection($otherSponsor));
+
+        $response = $this->apiListIdentitiesRequest($sponsor->id, $viewer->identity)->assertOk();
+
+        $this->assertEqualsCanonicalizing(
+            [$active->identity_id, $disabled->identity_id, $deleted->identity_id],
+            $response->json('data.*.id'),
         );
+
+        foreach ([[$active, 'active'], [$disabled, 'disabled'], [$deleted, 'disabled']] as [$membership, $status]) {
+            $this->apiViewIdentityRequest($sponsor->id, $membership->identity_id, $viewer->identity)
+                ->assertOk()->assertJsonPath('data.identity_provider_management', ['provider' => 'entra', 'status' => $status]);
+        }
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $active->identity_id, $otherViewer->identity)->assertForbidden();
+        $this->makeTestFund($otherSponsor)->makeVoucher($active->identity);
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $active->identity_id, $otherViewer->identity)
+            ->assertOk()->assertJsonPath('data.id', $active->identity_id)->assertJsonPath('data.identity_provider_management', null);
+    }
+
+    /**
+     * @return void
+     */
+    public function testScimNameUpdatesPreserveProfileHistoryAndOtherSponsorsEdits(): void
+    {
+        Config::set('identity_providers.enabled', true);
+        [$connection, $token] = $this->makeIdentityProviderScimContext();
+        $sponsor = $connection->organization;
+        $sponsor->forceFill(['allow_profiles' => true])->save();
+        $manager = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::MANAGE_IDENTITIES]);
+        $membership = $this->provisionIdentityProviderUser($connection, $token, $this->makeIdentityProviderScimUserPayload());
+        $identity = $membership->identity;
+        $otherSponsor = $this->makeTestOrganization($this->makeIdentity(), ['allow_profiles' => true]);
+        $otherManager = $this->makeTestEmployeeWithPermissions($otherSponsor, [Permission::MANAGE_IDENTITIES]);
+        $this->makeTestFund($otherSponsor)->makeVoucher($identity);
+
+        $this->apiUpdateIdentityRequest($otherSponsor->id, $identity->id, [
+            'records' => [
+                ['record_type_key' => 'given_name', 'value' => 'Other sponsor edit'],
+            ],
+        ], $otherManager->identity)->assertOk();
+
+        $this->apiViewIdentityRequest($sponsor->id, $identity->id, $manager->identity)
+            ->assertOk()
+            ->assertJsonPath('data.records.given_name.0.value', 'Jane');
+
+        $this->apiUpdateIdentityRequest($sponsor->id, $identity->id, [
+            'records' => [
+                ['record_type_key' => 'given_name', 'value' => 'Local edit'],
+            ],
+        ], $manager->identity)->assertOk();
+
+        $this->apiIdentityProviderScimUsersRequest('PATCH', $connection, $token, [
+            'schemas' => [IdentityProviderScimUserPayload::SCHEMA_PATCH],
+            'Operations' => [['op' => 'replace', 'path' => 'name.givenName', 'value' => 'Entra update']],
+        ], $membership->uid)->assertOk();
+
+        $this->apiViewIdentityRequest($sponsor->id, $identity->id, $manager->identity)
+            ->assertOk()
+            ->assertJsonPath('data.records.given_name.*.value', ['Entra update', 'Local edit', 'Jane'])
+            ->assertJsonPath('data.records.given_name.*.source', [ProfileRecord::SOURCE_ENTRA, null, ProfileRecord::SOURCE_ENTRA])
+            ->assertJsonPath('data.records.given_name.*.employee.id', [null, $manager->id, null]);
+
+        $this->apiViewIdentityRequest($otherSponsor->id, $identity->id, $otherManager->identity)
+            ->assertOk()->assertJsonPath('data.records.given_name.*.value', ['Other sponsor edit']);
+
+        $implementation = $this->makeTestImplementation($sponsor);
+        $proxy = $this->makeIdentityProviderProxy($membership);
+
+        $this->getJson('/api/v1/platform/profile', $this->makeApiHeaders($proxy, [
+            'Client-Type' => Implementation::FRONTEND_WEBSHOP,
+            'Client-Key' => $implementation->key,
+        ]))->assertOk()
+            ->assertJsonPath('records.given_name.0.value', 'Entra update')
+            ->assertJsonPath('records.given_name.0.source', ProfileRecord::SOURCE_ENTRA);
     }
 
     /**
@@ -366,22 +629,6 @@ class SponsorIdentityProfilesTest extends TestCase
         return $this->postJson(
             "/api/v1/platform/organizations/$organizationId/sponsor/identities",
             $payload,
-            $this->makeApiHeaders($authIdentity),
-        );
-    }
-
-    /**
-     * Sends a GET request to view a specific identity under an organization.
-     *
-     * @param int $organizationId
-     * @param int $identityId
-     * @param Identity $authIdentity
-     * @return TestResponse
-     */
-    protected function apiViewIdentityRequest(int $organizationId, int $identityId, Identity $authIdentity): TestResponse
-    {
-        return $this->getJson(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId",
             $this->makeApiHeaders($authIdentity),
         );
     }
@@ -472,21 +719,6 @@ class SponsorIdentityProfilesTest extends TestCase
         return $this->deleteJson(
             "/api/v1/platform/organizations/$organizationId/sponsor/identities/$identityId/bank-accounts/$bankAccountId",
             [],
-            $this->makeApiHeaders($authIdentity),
-        );
-    }
-
-    /**
-     * Sends a GET request to export identities for a specific organization in CSV format.
-     *
-     * @param int $organizationId
-     * @param Identity $authIdentity
-     * @return TestResponse
-     */
-    protected function apiExportIdentitiesRequest(int $organizationId, Identity $authIdentity): TestResponse
-    {
-        return $this->get(
-            "/api/v1/platform/organizations/$organizationId/sponsor/identities/export?data_format=csv",
             $this->makeApiHeaders($authIdentity),
         );
     }

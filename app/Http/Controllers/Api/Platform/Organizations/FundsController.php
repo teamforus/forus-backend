@@ -21,18 +21,19 @@ use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
+use App\Models\FundFormulaCondition;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use App\Searches\FundSearch;
 use App\Statistics\Funds\FinancialOverviewStatistic;
 use App\Statistics\Funds\FinancialStatistic;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -58,6 +59,7 @@ class FundsController extends Controller
             ...$request->only([
                 'tag', 'organization_id', 'fund_id', 'fund_ids', 'q', 'implementation_id', 'order_by',
                 'order_dir', 'with_archived', 'with_external', 'configured', 'physical_card_type_id',
+                'voucher_creation_from_profiles',
             ]),
             'state' => $request->input('state') === 'active_paused_and_closed' ? [
                 Fund::STATE_CLOSED,
@@ -492,7 +494,7 @@ class FundsController extends Controller
      *
      * @param Organization $organization
      * @param Fund $fund
-     * @throws \Illuminate\Auth\Access\AuthorizationException|Exception
+     * @throws AuthorizationException|Throwable
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Organization $organization, Fund $fund): JsonResponse
@@ -500,8 +502,15 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 
-        $fund->fund_formula_products()->delete();
-        $fund->delete();
+        DB::transaction(function () use ($fund) {
+            FundFormulaCondition::query()
+                ->whereIn('fund_formula_id', $fund->fund_formulas()->select('id'))
+                ->orWhereIn('fund_formula_product_id', $fund->fund_formula_products()->select('id'))
+                ->delete();
+
+            $fund->fund_formula_products()->delete();
+            $fund->delete();
+        });
 
         return new JsonResponse([]);
     }

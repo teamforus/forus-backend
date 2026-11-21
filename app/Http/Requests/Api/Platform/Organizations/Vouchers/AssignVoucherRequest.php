@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Models\Permission;
 use App\Models\Voucher;
 use App\Rules\BsnRule;
+use App\Rules\Vouchers\VoucherRecipientRule;
 
 /**
  * @property-read Organization $organization
@@ -38,12 +39,18 @@ class AssignVoucherRequest extends BaseFormRequest
             'email' => [
                 'required_without:bsn',
                 ...$this->emailRules(),
+                new VoucherRecipientRule(),
             ],
-            'bsn' => ['required_without:email', new BsnRule()],
+            'bsn' => [
+                'required_without:email',
+                new BsnRule(),
+                ...($this->input('email') ? [] : [new VoucherRecipientRule(byBsn: true)]),
+            ],
         ] : [
             'email' => [
                 'required',
                 ...$this->emailRules(),
+                new VoucherRecipientRule(),
             ],
             'bsn' => 'nullable|in:',
         ];
