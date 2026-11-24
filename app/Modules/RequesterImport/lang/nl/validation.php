@@ -1,16 +1,19 @@
 <?php
 
 return [
-    'mapping_unavailable' => 'The configured CSV mapping is unavailable. Contact your administrator.',
-    'mapping_columns_ambiguous' => 'The CSV mapping contains duplicate column names. Contact your administrator.',
-    'mapping_records_unavailable' => 'The CSV mapping uses unavailable fields. Contact your administrator.',
-    'record_type_not_configured' => 'The record type :key is not configured.',
-    'row_unavailable' => 'This BSN belongs to a deleted row and cannot be imported.',
-    'identity_ambiguous' => 'This BSN matches more than one identity. Resolve the duplicate identities before syncing.',
-    'profile_mismatch' => 'This BSN now resolves to a different profile. Review the identity assignment before syncing.',
-    'client_number_required' => 'This BSN already exists. Supply its client number to update the row.',
-    'client_number_mismatch' => 'This client number does not match the existing row for this BSN.',
-    'client_number_conflict' => 'This client number belongs to a row with a different BSN.',
-    'client_number_immutable' => 'An existing client number cannot be changed or cleared.',
-    'update_failed' => 'The requester record could not be saved. Please try again.',
+    'mapping_unavailable' => 'De ingestelde CSV-kolomkoppeling is niet beschikbaar. Neem contact op met uw beheerder.',
+    'mapping_columns_ambiguous' => 'De CSV-kolomkoppeling bevat dubbele kolomnamen. Neem contact op met uw beheerder.',
+    'mapping_records_unavailable' => 'De CSV-kolomkoppeling gebruikt velden die niet beschikbaar zijn. ' .
+        'Neem contact op met uw beheerder.',
+    'record_type_not_configured' => 'Het gegevenstype :key is niet ingesteld.',
+    'row_unavailable' => 'Dit BSN hoort bij een verwijderde rij en kan niet worden geïmporteerd.',
+    'identity_ambiguous' => 'Dit BSN komt overeen met meer dan één account. Los de dubbele accounts op voordat ' .
+        'u gegevens overneemt bij Personen.',
+    'profile_mismatch' => 'Dit BSN verwijst nu naar een andere persoon. Controleer de accountkoppeling voordat ' .
+        'u gegevens overneemt bij Personen.',
+    'client_number_required' => 'Dit BSN bestaat al. Geef het bijbehorende klantnummer op om de rij bij te werken.',
+    'client_number_mismatch' => 'Dit klantnummer komt niet overeen met de bestaande rij voor dit BSN.',
+    'client_number_conflict' => 'Dit klantnummer hoort bij een rij met een ander BSN.',
+    'client_number_immutable' => 'Een bestaand klantnummer kan niet worden gewijzigd of gewist.',
+    'update_failed' => 'De aanvragergegevens konden niet worden opgeslagen. Probeer het opnieuw.',
 ];
