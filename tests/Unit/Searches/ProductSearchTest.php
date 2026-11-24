@@ -72,21 +72,27 @@ class ProductSearchTest extends SearchTestCase
             'description_text' => "$productDescriptionTextPart2 product description",
         ]);
 
+        $candidateIds = [$product1->id, $product2->id];
+
+        // assert by ID
+        $this->assertSearchIds(['q' => $product1->id], [$product1->id], $candidateIds);
+        $this->assertSearchIds(['q' => $product2->id], [$product2->id], $candidateIds);
+
         // assert by product name
-        $this->assertSearchIds(['q' => $productNamePart1], [$product1->id]);
-        $this->assertSearchIds(['q' => $productNamePart2], [$product2->id]);
+        $this->assertSearchIds(['q' => $productNamePart1], [$product1->id], $candidateIds);
+        $this->assertSearchIds(['q' => $productNamePart2], [$product2->id], $candidateIds);
 
         // assert by product description
-        $this->assertSearchIds(['q' => $productDescriptionTextPart1], [$product1->id]);
-        $this->assertSearchIds(['q' => $productDescriptionTextPart2], [$product2->id]);
+        $this->assertSearchIds(['q' => $productDescriptionTextPart1], [$product1->id], $candidateIds);
+        $this->assertSearchIds(['q' => $productDescriptionTextPart2], [$product2->id], $candidateIds);
 
         // assert by product category name
-        $this->assertSearchIds(['q' => $categoryNamePart1], [$product1->id]);
-        $this->assertSearchIds(['q' => $categoryNamePart2], [$product2->id]);
+        $this->assertSearchIds(['q' => $categoryNamePart1], [$product1->id], $candidateIds);
+        $this->assertSearchIds(['q' => $categoryNamePart2], [$product2->id], $candidateIds);
 
         // assert by organization name
-        $this->assertSearchIds(['q' => $organizationNamePart1], [$product1->id]);
-        $this->assertSearchIds(['q' => $organizationNamePart2], [$product2->id]);
+        $this->assertSearchIds(['q' => $organizationNamePart1], [$product1->id], $candidateIds);
+        $this->assertSearchIds(['q' => $organizationNamePart2], [$product2->id], $candidateIds);
     }
 
     /**
@@ -369,11 +375,12 @@ class ProductSearchTest extends SearchTestCase
         ], [$productApproved->id]);
 
         // filter by same name but assert that only not approved products returned
+        $candidateIds = [$productApproved->id, $productPending->id, $productWithoutFund->id];
         $this->assertSearchIds([
             'q' => $productName,
             'fund_ids' => [$fund->id],
             'state' => 'pending',
-        ], [$productPending->id, $productWithoutFund->id]);
+        ], [$productPending->id, $productWithoutFund->id], $candidateIds);
     }
 
     /**
@@ -592,13 +599,13 @@ class ProductSearchTest extends SearchTestCase
             'source' => 'archive',
             'order_by' => 'stock_amount',
             'order_dir' => 'asc',
-        ], [$productA->id, $productB->id]);
+        ], [$productA->id, $productB->id], $organization->id);
 
         $this->assertSearchOrder([
             'source' => 'archive',
             'order_by' => 'stock_amount',
             'order_dir' => 'desc',
-        ], [$productB->id, $productA->id]);
+        ], [$productB->id, $productA->id], $organization->id);
     }
 
     /**
@@ -613,27 +620,36 @@ class ProductSearchTest extends SearchTestCase
     /**
      * @param array $filters
      * @param array $expectedIds
+     * @param array|null $candidateIds
      * @return void
      */
-    private function assertSearchIds(array $filters, array $expectedIds): void
+    private function assertSearchIds(array $filters, array $expectedIds, ?array $candidateIds = null): void
     {
         $expected = collect($expectedIds)->sort()->values()->toArray();
-        $search = $this->makeSearch($filters);
-        $actual = collect($search->query()->pluck('id')->toArray())->sort()->values()->toArray();
+        $query = $this->makeSearch($filters)->query();
 
+        if ($candidateIds !== null) {
+            $query->whereKey($candidateIds);
+        }
+
+        $actual = $query->pluck('id')->sort()->values()->toArray();
         $this->assertSame($expected, $actual);
     }
 
     /**
      * @param array $filters
      * @param array $expectedIds
+     * @param int|null $organizationId
      * @return void
      */
-    private function assertSearchOrder(array $filters, array $expectedIds): void
+    private function assertSearchOrder(array $filters, array $expectedIds, ?int $organizationId = null): void
     {
-        $search = $this->makeSearch($filters);
-        $actual = $search->query()->pluck('id')->toArray();
+        $query = $this->makeSearch($filters)->query();
 
-        $this->assertSame($expectedIds, $actual);
+        if ($organizationId !== null) {
+            $query->where('organization_id', $organizationId);
+        }
+
+        $this->assertSame($expectedIds, $query->pluck('id')->toArray());
     }
 }

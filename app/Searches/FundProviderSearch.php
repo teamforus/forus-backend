@@ -32,19 +32,32 @@ class FundProviderSearch extends BaseSearch
         /** @var Builder|Relation|FundProvider $builder */
         $builder = parent::query();
 
+        $q = $this->getFilter('q');
         $allow_products = $this->getFilter('allow_products');
         $has_products = $this->getFilter('has_products');
 
         $fundsQuery = $this->organization->funds()->where('archived', false);
         $builder->whereIn('fund_id', $fundsQuery->select('id')->getQuery());
 
-        if ($q = $this->getFilter('q')) {
+        if ($q !== null && $q !== '') {
             $builder->where(static function (Builder $builder) use ($q) {
                 $builder->whereHas('organization', function (Builder $query) use ($q) {
                     $query->where('name', 'like', "%$q%");
                     $query->orWhere('kvk', 'like', "%$q%");
                     $query->orWhere('email', 'like', "%$q%");
                     $query->orWhere('phone', 'like', "%$q%");
+
+                    $query->orWhereHas('business_type', function (Builder $query) use ($q) {
+                        $query->whereTranslationLike('name', "%$q%");
+                    });
+
+                    $query->orWhereHas('offices', function (Builder $query) use ($q) {
+                        $query->where('address', 'LIKE', "%$q%");
+                    });
+
+                    if (ctype_digit((string) $q)) {
+                        $query->orWhere('id', '=', $q);
+                    }
                 });
 
                 $builder->orWhereHas('fund', function (Builder $query) use ($q) {

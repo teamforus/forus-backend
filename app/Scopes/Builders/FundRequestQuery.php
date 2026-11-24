@@ -162,7 +162,7 @@ class FundRequestQuery
                 IdentityQuery::whereBsnLike($builder, $q);
             });
 
-            if (is_numeric($q)) {
+            if (ctype_digit($q)) {
                 $query->orWhere('id', '=', $q);
             }
         });
