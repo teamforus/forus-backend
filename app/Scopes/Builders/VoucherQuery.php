@@ -213,7 +213,7 @@ class VoucherQuery
                 $builder->where('value', 'LIKE', "%$q%");
             });
 
-            if (is_numeric($q)) {
+            if (ctype_digit($q)) {
                 $builder->orWhere('id', '=', $q);
             }
         });

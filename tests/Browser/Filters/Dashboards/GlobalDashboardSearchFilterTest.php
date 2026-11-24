@@ -64,12 +64,12 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
                 $this->assertSearchBlockWorks($browser, 'providers', $data['provider']->id, [
                     $data['provider']->name,
                     (string) $data['provider']->id,
-                ], $data['provider']->name, '@tableProviderRow');
+                ], $data['provider']->name, '@tableProviderRow', ['state_group' => 'active']);
 
                 $this->assertSearchBlockWorks($browser, 'products', $data['product']->id, [
                     $data['product']->name,
                     (string) $data['product']->id,
-                ], $data['product']->name, '@tableSponsorProductRow');
+                ], $data['product']->name, '@tableSponsorProductRow', ['state' => 'all']);
 
                 $this->assertSearchBlockWorks($browser, 'vouchers', $data['voucher']->id, [
                     $data['voucher']->number,
@@ -86,7 +86,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
         }, function () use ($data) {
             $this->deleteFund($data['fund']);
             $data['household']->delete();
-            $data['product']->delete();
+            $data['product']->forceDelete();
         });
     }
 
@@ -157,7 +157,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
                 $this->assertSearchBlockWorks($browser, 'products', $data['product']->id, [
                     $data['product']->name,
                     (string) $data['product']->id,
-                ], $data['product']->name, '@tableProductRow');
+                ], $data['product']->name, '@tableProductRow', ['source' => 'all']);
 
                 $this->assertSearchBlockWorks($browser, 'reservations', $data['reservation']->id, [
                     $data['reservation']->code,
@@ -247,6 +247,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
     }
 
     /**
+     * @throws Throwable
      * @return array
      */
     protected function prepareSponsorSearchData(): array
@@ -348,7 +349,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
     protected function deleteProviderSearchData(array $data): void
     {
         $this->deleteFund($data['fund']);
-        $data['product']->delete();
+        $data['product']->forceDelete();
     }
 
     /**
@@ -396,6 +397,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
      * @param string[] $queries
      * @param string $itemText
      * @param string $listRowSelector
+     * @param array<string, string> $listFilters
      * @throws ElementClickInterceptedException
      * @throws NoSuchElementException
      * @throws TimeoutException
@@ -408,6 +410,7 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
         array $queries,
         string $itemText,
         string $listRowSelector,
+        array $listFilters = [],
     ): void {
         foreach ($queries as $query) {
             $this->searchHeader($browser, $query);
@@ -417,17 +420,31 @@ class GlobalDashboardSearchFilterTest extends DuskTestCase
         // open the list with the last query and assert the entity is shown
         $browser->click("@headerSearchBlockLink_$block");
         $browser->waitFor("$listRowSelector$id");
+
+        $routeUrl = Str::after($browser->driver->getCurrentURL(), '#');
+        parse_str(parse_url($routeUrl, PHP_URL_QUERY) ?? '', $params);
+
+        foreach (['q' => $queries[array_key_last($queries)], ...$listFilters] as $key => $expected) {
+            $this->assertSame($expected, $params[$key] ?? null, "Unexpected '$key' in the $block list URL.");
+        }
     }
 
     /**
      * @param Browser $browser
      * @param string $query
+     * @throws ElementClickInterceptedException
+     * @throws NoSuchElementException
      * @throws TimeoutException
      * @return void
      */
     protected function searchHeader(Browser $browser, string $query): void
     {
         $browser->waitFor('@headerSearchInput');
+
+        if ($browser->value('@headerSearchInput') != '') {
+            $browser->click('@headerSearchClear');
+        }
+
         $this->typeSearchInput($browser, '@headerSearchInput', $query);
 
         $browser->waitUsing(null, 100, function () use ($browser, $query) {

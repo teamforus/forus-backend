@@ -28,15 +28,18 @@ class HouseholdSearch extends BaseSearch
         /** @var Builder|Household|Relation $builder */
         $builder = parent::query();
 
-        if ($q = $this->getFilter('q')) {
+        $q = $this->getFilter('q');
+
+        if ($q !== null && $q !== '') {
             $builder->where(function (Builder $query) use ($q) {
                 $query->where('city', 'LIKE', "%$q%");
+                $query->orWhere('uid', '=', (string) $q);
                 $query->orWhere('street', 'LIKE', "%$q%");
                 $query->orWhere('postal_code', 'LIKE', "%$q%");
                 $query->orWhere('neighborhood_name', 'LIKE', "%$q%");
                 $query->orWhere('municipality_name', 'LIKE', "%$q%");
 
-                if (is_numeric($q)) {
+                if (ctype_digit((string) $q)) {
                     $query->orWhere('id', '=', $q);
                 }
             });

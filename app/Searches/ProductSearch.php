@@ -31,6 +31,8 @@ class ProductSearch extends BaseSearch
     {
         /** @var Builder|Relation|Product $builder */
         $builder = parent::query();
+
+        $q = $this->getFilter('q');
         $fundsIds = $this->getFilter('fund_ids', []);
 
         // filter by unlimited stock
@@ -39,7 +41,7 @@ class ProductSearch extends BaseSearch
         }
 
         // filter by string query
-        if ($this->hasFilter('q') && !empty($q = $this->getFilter('q'))) {
+        if ($q !== null && $q !== '') {
             ProductQuery::queryDeepFilter($builder, $q, searchById: true);
         }
 

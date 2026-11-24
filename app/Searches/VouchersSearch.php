@@ -71,6 +71,8 @@ class VouchersSearch extends BaseSearch
         /** @var Relation|Builder|Voucher $builder */
         $builder = parent::query();
 
+        $q = $this->getFilter('q');
+
         $builder = VoucherQuery::whereVisibleToSponsor($builder);
         $builder->where('voucher_type', Voucher::VOUCHER_TYPE_VOUCHER);
 
@@ -85,7 +87,7 @@ class VouchersSearch extends BaseSearch
                 : VoucherQuery::whereNotExpired($builder);
         }
 
-        if ($q = $this->getFilter('q')) {
+        if ($q !== null && $q !== '') {
             $builder = VoucherQuery::whereSearchSponsorQuery($builder, $q);
         }
 

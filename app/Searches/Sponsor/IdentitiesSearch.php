@@ -47,6 +47,7 @@ class IdentitiesSearch extends BaseSearch
         /** @var Builder|Relation|Identity $builder */
         $builder = parent::query();
 
+        $q = $this->getFilter('q');
         $orderBy = $this->getFilter('order_by', 'created_at');
         $orderDir = $this->getFilter('order_dir', 'desc');
         $fundId = $this->getFilter('fund_id');
@@ -97,8 +98,8 @@ class IdentitiesSearch extends BaseSearch
             }
         }
 
-        if ($this->getFilter('q')) {
-            $builder = $this->querySearchIdentity($builder, $this->getFilter('q'), $organizationId);
+        if ($q !== null && $q !== '') {
+            $builder = $this->querySearchIdentity($builder, $q, $organizationId);
         }
 
         if ($householdId = $this->getFilter('household_id')) {
@@ -375,7 +376,7 @@ class IdentitiesSearch extends BaseSearch
 
             $builder->orWhereRelation('notes', 'description', 'like', "%$q%");
 
-            if (is_numeric($q)) {
+            if (ctype_digit($q)) {
                 $builder->orWhere('id', '=', $q);
             }
         });

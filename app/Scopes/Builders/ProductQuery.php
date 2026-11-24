@@ -230,7 +230,7 @@ class ProductQuery
                 });
             }
 
-            if ($searchById && is_numeric($q)) {
+            if ($searchById && ctype_digit($q)) {
                 $query->orWhere('products.id', '=', $q);
             }
         });

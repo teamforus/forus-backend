@@ -32,13 +32,14 @@ class FundProviderSearch extends BaseSearch
         /** @var Builder|Relation|FundProvider $builder */
         $builder = parent::query();
 
+        $q = $this->getFilter('q');
         $allow_products = $this->getFilter('allow_products');
         $has_products = $this->getFilter('has_products');
 
         $fundsQuery = $this->organization->funds()->where('archived', false);
         $builder->whereIn('fund_id', $fundsQuery->select('id')->getQuery());
 
-        if ($q = $this->getFilter('q')) {
+        if ($q !== null && $q !== '') {
             $builder->where(static function (Builder $builder) use ($q) {
                 $builder->whereHas('organization', function (Builder $query) use ($q) {
                     $query->where('name', 'like', "%$q%");
@@ -54,7 +55,7 @@ class FundProviderSearch extends BaseSearch
                         $query->where('address', 'LIKE', "%$q%");
                     });
 
-                    if (is_numeric($q)) {
+                    if (ctype_digit((string) $q)) {
                         $query->orWhere('id', '=', $q);
                     }
                 });

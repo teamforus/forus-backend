@@ -34,11 +34,13 @@ class FundRequestSearch extends BaseSearch
         /** @var Builder|Relation|FundRequest $builder */
         $builder = parent::query();
 
+        $q = $this->getFilter('q');
+
         if ($this->employee) {
             FundRequestQuery::whereEmployeeIsValidatorOrSupervisor($builder, $this->employee);
         }
 
-        if ($this->hasFilter('q') && $q = $this->getFilter('q')) {
+        if ($q !== null && $q !== '') {
             FundRequestQuery::whereQueryFilter($builder, $q);
         }
 

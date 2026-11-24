@@ -29,12 +29,10 @@ class ProductReservationsSearch extends BaseSearch
         /** @var Builder|Relation|ProductReservation $builder */
         $builder = parent::query();
 
-        if ($this->hasFilter('q') && $this->getFilter('q')) {
-            $builder = ProductReservationQuery::whereQueryFilter(
-                $builder,
-                $this->getFilter('q'),
-                $this->getFilter('q_type')
-            );
+        $q = $this->getFilter('q');
+
+        if ($q !== null && $q !== '') {
+            $builder = ProductReservationQuery::whereQueryFilter($builder, $q, $this->getFilter('q_type'));
         }
 
         if ($this->hasFilter('state')) {
