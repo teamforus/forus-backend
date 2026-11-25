@@ -1167,11 +1167,15 @@ trait MakesApiRequests
     /**
      * @param Product $product
      * @param Identity|IdentityProxy $identity
+     * @param array $headers
      * @return TestResponse
      */
-    public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
-    {
-        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
+    public function apiGetProductRequest(
+        Product $product,
+        Identity|IdentityProxy $identity,
+        array $headers = [],
+    ): TestResponse {
+        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity, $headers));
     }
 
     /**

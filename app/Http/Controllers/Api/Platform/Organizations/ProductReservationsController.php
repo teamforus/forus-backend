@@ -102,9 +102,11 @@ class ProductReservationsController extends Controller
             Voucher $voucher,
             Product $product,
         ) use ($request, $employee): ProductReservation {
+            $voucher->ensureSufficientBalanceForProduct($product);
+
             return $voucher->reserveProduct($product, $employee, extraData: $request->only([
                 'note',
-            ]))->acceptProvider();
+            ]))->acceptProvider($employee);
         });
 
         return ProviderProductReservationResource::create($reservation);
@@ -149,6 +151,8 @@ class ProductReservationsController extends Controller
                         Voucher $voucher,
                         Product $product,
                     ) use ($item, $employee): int {
+                        $voucher->ensureSufficientBalanceForProduct($product);
+
                         return $voucher->reserveProduct($product, $employee, extraData: Arr::only($item, [
                             'note',
                         ]))->acceptProvider($employee)->id;

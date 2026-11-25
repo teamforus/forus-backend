@@ -131,7 +131,7 @@ class ProductIdToReservationRule extends BaseRule
     protected function isExtraPaymentEnabled(Voucher $voucher, Product $product): bool
     {
         if (!$this->allowExtraPayment) {
-            return true;
+            return false;
         }
 
         return $product->reservationExtraPaymentsEnabled($voucher->fund, $voucher->amount_available);

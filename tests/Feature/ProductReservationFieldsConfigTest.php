@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\ReservationField;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
-use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
@@ -218,20 +217,6 @@ class ProductReservationFieldsConfigTest extends TestCase
     /**
      * @param Organization $organization
      * @param Product $product
-     * @return TestResponse
-     */
-    protected function makeWebshopProductGetRequest(
-        Organization $organization,
-        Product $product,
-    ): TestResponse {
-        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($organization->identity, [
-            'Client-Type' => 'webshop',
-        ]));
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Product $product
      * @param array $fields
      * @return Product
      */
@@ -279,7 +264,7 @@ class ProductReservationFieldsConfigTest extends TestCase
         Product $product,
         array $fields,
     ): void {
-        $response = $this->makeWebshopProductGetRequest($organization, $product);
+        $response = $this->apiGetProductRequest($product, $organization->identity, ['Client-Type' => 'webshop']);
         $response->assertSuccessful();
         $data = $response->json('data.reservation.fields');
 

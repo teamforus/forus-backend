@@ -42,6 +42,7 @@ return [
     'confirmed' => ':attribute bevestiging komt niet overeen.',
     'date' => ':attribute is geen geldige datum.',
     'date_format' => ':attribute komt niet overeen met het formaat :format.',
+    'decimal' => 'Vul een getal in met :decimal decimalen.',
     'different' => ':attribute en :other dienen verschillend te zijn.',
     'digits' => ':attribute moet :digits cijfers zijn.',
     'digits_between' => ':attribute moet tussen :min en :max cijfers zijn.',

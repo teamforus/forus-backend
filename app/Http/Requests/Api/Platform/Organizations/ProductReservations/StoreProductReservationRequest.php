@@ -12,6 +12,7 @@ use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * @property Organization $organization
@@ -63,8 +64,9 @@ class StoreProductReservationRequest extends BaseFormRequest
                 ...($sponsorIsValid && $addressIsValid) ? [] : ['in:'],
             ],
             'product_id' => [
+                'bail',
                 'required',
-                'exists:products,id',
+                Rule::exists('products', 'id')->where('organization_id', $this->getRouteOrganization()->id),
                 new ProductIdToReservationRule($voucher?->id),
             ],
             'note' => 'nullable|string|max:2000',

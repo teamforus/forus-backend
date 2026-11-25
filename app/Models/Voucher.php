@@ -1069,7 +1069,7 @@ class Voucher extends Model
                 Identity::query()->whereKey($this->identity_id)->lockForUpdate()->firstOrFail();
             }
 
-            $voucher = self::query()->findOrFail($this->id);
+            $voucher = self::query()->lockForUpdate()->findOrFail($this->id);
 
             /** @var Product $product */
             $product = ProductSubQuery::appendReservationStats([
@@ -1084,6 +1084,20 @@ class Voucher extends Model
 
             return $callback($voucher, $product);
         });
+    }
+
+    /**
+     * @param Product $product
+     * @throws ValidationException
+     * @return void
+     */
+    public function ensureSufficientBalanceForProduct(Product $product): void
+    {
+        if ($product->fundPrice($this->fund) > $this->amount_available) {
+            throw ValidationException::withMessages([
+                'product_id' => [__('validation.product_reservation.not_enough_voucher_funds')],
+            ]);
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Fund;
 use App\Models\FundProductLimit;
 use App\Models\FundProvider;
+use App\Models\Identity;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -827,16 +828,16 @@ class FundProductLimitTest extends TestCase
         ]);
 
         $this->createReservation($voucher1, $productA);
-        $this->assertEquals(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+        $this->assertEquals(0, $this->getProductFundLimitAvailable($organization->identity, $fund, $productC));
 
         $voucher2 = $fund->makeVoucher($organization->identity, [
             'state' => Voucher::STATE_ACTIVE,
         ], amount: 10000);
 
-        $this->assertGreaterThan(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+        $this->assertGreaterThan(0, $this->getProductFundLimitAvailable($organization->identity, $fund, $productC));
 
         $this->createReservation($voucher2, $productB);
-        $this->assertEquals(0, $this->getProductFundLimitAvailable($voucher1, $productC));
+        $this->assertEquals(0, $this->getProductFundLimitAvailable($organization->identity, $fund, $productC));
     }
 
     /**
@@ -879,7 +880,7 @@ class FundProductLimitTest extends TestCase
         $this->createReservation($voucher1, $product1, false);
         $this->createReservation($voucher2, $product1, false);
 
-        $this->assertSame(0, $this->getProductFundLimitAvailable($voucher1, $product1));
+        $this->assertSame(0, $this->getProductFundLimitAvailable($organization->identity, $fund, $product1));
     }
 
     /**
@@ -917,15 +918,16 @@ class FundProductLimitTest extends TestCase
     }
 
     /**
-     * @param Voucher $voucher
+     * @param Identity $identity
+     * @param Fund $fund
      * @param Product $product
      * @return int|null
      */
-    protected function getProductFundLimitAvailable(Voucher $voucher, Product $product): ?int
+    protected function getProductFundLimitAvailable(Identity $identity, Fund $fund, Product $product): ?int
     {
-        $response = $this->apiGetProductRequest($product, $voucher->identity)->assertSuccessful();
+        $response = $this->apiGetProductRequest($product, $identity)->assertSuccessful();
 
-        return collect($response->json('data.funds'))->firstWhere('id', $voucher->fund_id)['limit_available'] ?? null;
+        return collect($response->json('data.funds'))->firstWhere('id', $fund->id)['limit_available'] ?? null;
     }
 
     /**

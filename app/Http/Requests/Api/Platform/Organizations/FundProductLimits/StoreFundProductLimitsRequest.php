@@ -57,7 +57,7 @@ class StoreFundProductLimitsRequest extends BaseFormRequest
             'limit' => [
                 'required',
                 ...$this->limitBy() === FundProductLimit::LIMIT_BY_AMOUNT
-                    ? ['numeric', 'min:0.01', 'max:99999999']
+                    ? ['numeric', 'decimal:0,2', 'min:0.01', 'max:99999999']
                     : ['integer', 'min:1', 'max:99999999'],
             ],
             'products' => [
