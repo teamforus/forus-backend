@@ -2,8 +2,8 @@
 
 return [
     'exceptions' => [
-        'bsn_ambiguous' => 'This BSN matches more than one identity.',
-        'bsn_already_assigned' => 'This BSN is already assigned to another identity.',
+        'bsn_ambiguous' => 'Dit BSN komt overeen met meer dan één account.',
+        'bsn_already_assigned' => 'Dit BSN is al aan een ander account toegewezen.',
         'unknown_identity' => 'Deze gegevens zijn niet bekend',
         'invalid_pin_code' => 'Ongeldige invoer van de oude code',
     ],

@@ -1,13 +1,14 @@
 <?php
 
 return [
-    'source_unavailable' => 'This source cannot be used to prepare a print order for this organization.',
-    'print_not_requested' => 'Printing is not requested for this pass.',
-    'connection_missing' => 'No DCP connection is assigned to this organization.',
-    'connection_changed' => 'This pass already has a print order for another DCP connection.',
-    'order_frozen' => 'Only unapproved draft orders can be updated.',
-    'code_mismatch' => 'The print code must match the source pass code.',
-    'employee_mismatch' => 'The employee does not belong to this organization.',
-    'no_ready_orders' => 'There are no orders ready for approval.',
-    'connection_unavailable' => 'The DCP connection is not available for sending.',
+    'source_unavailable' => 'Deze bron kan niet worden gebruikt om een printopdracht voor deze organisatie voor ' .
+        'te bereiden.',
+    'print_not_requested' => 'Voor deze pas is afdrukken niet aangevraagd.',
+    'connection_missing' => 'Er is geen DCP-koppeling aan deze organisatie toegewezen.',
+    'connection_changed' => 'Deze pas heeft al een printopdracht voor een andere DCP-koppeling.',
+    'order_frozen' => 'Alleen conceptprintopdrachten die nog niet zijn goedgekeurd, kunnen worden bijgewerkt.',
+    'code_mismatch' => 'De afdrukcode moet overeenkomen met de code van de bronpas.',
+    'employee_mismatch' => 'De medewerker hoort niet bij deze organisatie.',
+    'no_ready_orders' => 'Er staan geen printopdrachten klaar voor goedkeuring.',
+    'connection_unavailable' => 'De DCP-koppeling is niet beschikbaar voor verzending.',
 ];
