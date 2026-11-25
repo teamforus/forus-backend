@@ -29,10 +29,14 @@ trait MakesTestOrganizations
     /**
      * @param Identity $identity
      * @param array $organizationData
+     * @param bool $withEmployee
      * @return Organization
      */
-    protected function makeTestOrganization(Identity $identity, array $organizationData = []): Organization
-    {
+    protected function makeTestOrganization(
+        Identity $identity,
+        array $organizationData = [],
+        bool $withEmployee = true,
+    ): Organization {
         $organization = Organization::forceCreate([
             'name' => fake()->text(30),
             'email' => fake()->email(),
@@ -49,7 +53,9 @@ trait MakesTestOrganizations
             ...$organizationData,
         ]);
 
-        $organization->addEmployee($identity, Role::pluck('id')->toArray());
+        if ($withEmployee) {
+            $organization->addEmployee($identity, Role::pluck('id')->toArray());
+        }
 
         return $organization;
     }

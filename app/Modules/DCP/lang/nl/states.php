@@ -2,14 +2,14 @@
 
 return [
     'orders' => [
-        'draft' => 'Draft',
-        'approved' => 'Approved',
-        'sending' => 'Submitting',
-        'accepted' => 'Accepted by DCP',
-        'rejected' => 'Rejected by DCP',
-        'unknown' => 'Submission outcome unknown',
-        'closed' => 'Closed by DCP',
-        'canceled' => 'Canceled by DCP',
-        'blocked' => 'Blocked before submission',
+        'draft' => 'Concept',
+        'approved' => 'Goedgekeurd',
+        'sending' => 'Wordt naar DCP verstuurd',
+        'accepted' => 'Geaccepteerd door DCP',
+        'rejected' => 'Geweigerd door DCP',
+        'unknown' => 'Uitkomst van verzending naar DCP onbekend',
+        'closed' => 'Afgesloten door DCP',
+        'canceled' => 'Geannuleerd door DCP',
+        'blocked' => 'Geblokkeerd vóór verzending naar DCP',
     ],
 ];

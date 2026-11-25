@@ -4,6 +4,7 @@ namespace Tests\Feature\Exports;
 
 use App\Exports\FundsExportDetailed;
 use App\Models\Fund;
+use App\Models\FundFormula;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Illuminate\Testing\TestResponse;
@@ -72,6 +73,35 @@ class FundDetailedExportTest extends TestCase
         $this->assertExportedData($response, $fund, [
             FundsExportDetailed::trans('name'),
         ]);
+    }
+
+    /**
+     * @throws Throwable
+     * @return void
+     */
+    public function testExportsUnconditionalBudgetAmountPerVoucher(): void
+    {
+        $this->travelTo('2026-11-13 12:00:00');
+        $organization = $this->makeTestOrganization($this->makeIdentity($this->makeUniqueEmail()));
+        $fund = $this->makeTestFund($organization);
+        $fund->fund_formulas()->delete();
+
+        foreach ([20, 30] as $amount) {
+            $fund->fund_formulas()->create(['type' => FundFormula::TYPE_FIXED, 'amount' => $amount]);
+        }
+
+        $response = $this->apiExportOrganizationFinancesRequest($organization, [
+            'year' => 2026,
+            'detailed' => true,
+            'data_format' => 'csv',
+            'fields' => ['name', 'budget_amount_per_voucher'],
+        ], $organization->identity);
+
+        $rows = $this->assertCsvExportResponse($response);
+
+        $this->assertCount(2, $rows);
+        $this->assertExportCell($rows, $fund->name, 0);
+        $this->assertExportCell($rows, '50.00 €', 1);
     }
 
     /**
