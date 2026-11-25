@@ -766,17 +766,28 @@ class VoucherTest extends TestCase
      */
     protected function assertAbilityCreateTopUp(Voucher $voucher): void
     {
-        $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => false]);
-        $this->makeTopUp($voucher, false);
+        $fundConfig = $voucher->fund->fund_config;
+        $totalAmountLimit = $fundConfig->limit_voucher_total_amount;
 
-        $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => true]);
-        $this->makeTopUp($voucher);
+        $fundConfig->forceFill([
+            'limit_voucher_total_amount' => max($totalAmountLimit, $voucher->amount_total + 100),
+        ])->save();
 
-        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
-        $this->makeTopUp($voucher);
+        try {
+            $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => false]);
+            $this->makeTopUp($voucher, false);
 
-        $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
-        $this->makeTopUp($voucher);
+            $voucher->fund->fund_config()->update(['allow_voucher_top_ups' => true]);
+            $this->makeTopUp($voucher);
+
+            $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_EXTERNAL]);
+            $this->makeTopUp($voucher);
+
+            $voucher->fund->fund_config()->update(['vouchers_type' => FundConfig::VOUCHERS_TYPE_INTERNAL]);
+            $this->makeTopUp($voucher);
+        } finally {
+            $fundConfig->forceFill(['limit_voucher_total_amount' => $totalAmountLimit])->save();
+        }
     }
 
     /**

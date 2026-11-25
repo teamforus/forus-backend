@@ -670,26 +670,6 @@ class PhysicalCardsTest extends TestCase
 
     /**
      * @param Organization $organization
-     * @param Fund $fund
-     * @param Identity $identity
-     * @param array $data
-     * @return TestResponse
-     */
-    protected function apiUpdateFundRequest(
-        Organization $organization,
-        Fund $fund,
-        Identity $identity,
-        array $data = [],
-    ): TestResponse {
-        return $this->patchJson(
-            "/api/v1/platform/organizations/$organization->id/funds/$fund->id",
-            $data,
-            $this->makeApiHeaders($identity),
-        );
-    }
-
-    /**
-     * @param Organization $organization
      * @param Identity $identity
      * @param array $data
      * @return TestResponse

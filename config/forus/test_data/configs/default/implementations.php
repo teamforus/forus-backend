@@ -25,6 +25,7 @@ return [
             //     'client_id' => 'your-client-id',
             //     'client_secret' => 'your-client-secret',
             //     'from_email' => 'sender@example.com',
+            //     'from_name' => 'Sender name',
             // ],
         ],
     ],

@@ -3,18 +3,18 @@
 return [
     'dcp_order' => [
         'dashboard' => [
-            'created' => 'Print order created.',
-            'updated' => 'Draft printing details updated.',
-            'sending' => 'Print order submission started.',
-            'accepted' => 'Print order accepted by DCP.',
-            'rejected' => 'Print order rejected by DCP.',
-            'unknown' => 'Print order submission outcome is unknown.',
-            'blocked' => 'Print order blocked before submission.',
-            'status_changed' => 'DCP order status updated.',
+            'created' => 'Printopdracht aangemaakt.',
+            'updated' => 'Afdrukgegevens van het concept bijgewerkt.',
+            'sending' => 'Verzending van printopdracht naar DCP gestart.',
+            'accepted' => 'Printopdracht geaccepteerd door DCP.',
+            'rejected' => 'Printopdracht geweigerd door DCP.',
+            'unknown' => 'Uitkomst van verzending van printopdracht naar DCP onbekend.',
+            'blocked' => 'Printopdracht geblokkeerd vóór verzending naar DCP.',
+            'status_changed' => 'DCP-status van printopdracht bijgewerkt.',
         ],
     ],
     'dcp_order_bulk' => [
-        'dashboard' => ['approved' => 'Print order bulk approved.'],
+        'dashboard' => ['approved' => 'Printbulk goedgekeurd.'],
     ],
     'bank_connection' => [
         'webshop' => [],
