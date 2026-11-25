@@ -30,7 +30,7 @@ class ProductsController extends Controller
         Fund $fund,
         FundProvider $fundProvider
     ): AnonymousResourceCollection {
-        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
+        $this->authorize('viewSponsorProducts', [$fundProvider, $organization, $fund]);
 
         $query = $fundProvider->organization->providerProductsQuery($fund->id);
 
@@ -64,7 +64,7 @@ class ProductsController extends Controller
         FundProvider $fundProvider,
         Product $product
     ): SponsorProductResource {
-        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
+        $this->authorize('showSponsorProduct', [$fundProvider, $organization, $fund, $product]);
 
         return SponsorProductResource::create($product, [
             'fundProvider' => $fundProvider,

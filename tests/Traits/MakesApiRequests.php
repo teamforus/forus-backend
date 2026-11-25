@@ -56,6 +56,22 @@ trait MakesApiRequests
     }
 
     /**
+     * @param Identity $identity
+     * @param string $clientType
+     * @param array $query
+     * @return TestResponse
+     */
+    public function apiGetNotificationsRequest(Identity $identity, string $clientType, array $query = []): TestResponse
+    {
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson(
+            "/api/v1/platform/notifications$queryString",
+            $this->makeApiHeaders($identity, ['Client-Type' => $clientType]),
+        );
+    }
+
+    /**
      * @param IdentityEmail $email
      * @param Identity|IdentityProxy $identity
      * @return TestResponse
@@ -681,6 +697,39 @@ trait MakesApiRequests
     public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
     {
         return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @param array $query
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetSponsorFundProviderProductsRequest(
+        FundProvider $fundProvider,
+        array $query,
+        Identity $identity,
+    ): TestResponse {
+        $url = $this->sponsorFundProviderProductsUrl($fundProvider);
+        $queryString = $query ? '?' . http_build_query($query) : '';
+
+        return $this->getJson($url . $queryString, $this->makeApiHeaders($identity, ['Client-Type' => 'sponsor']));
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @param Product $product
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiGetSponsorFundProviderProductRequest(
+        FundProvider $fundProvider,
+        Product $product,
+        Identity $identity,
+    ): TestResponse {
+        $url = $this->sponsorFundProviderProductsUrl($fundProvider);
+
+        return $this->getJson("$url/$product->id", $this->makeApiHeaders($identity, ['Client-Type' => 'sponsor']));
     }
 
     /**
@@ -2446,6 +2495,18 @@ trait MakesApiRequests
         fclose($fp);
 
         return $csvContent;
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @return string
+     */
+    private function sponsorFundProviderProductsUrl(FundProvider $fundProvider): string
+    {
+        $fund = $fundProvider->fund;
+
+        return "/api/v1/platform/organizations/$fund->organization_id/funds/$fund->id" .
+            "/providers/$fundProvider->id/products";
     }
 
     /**

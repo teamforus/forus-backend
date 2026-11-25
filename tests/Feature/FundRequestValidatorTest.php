@@ -370,6 +370,67 @@ class FundRequestValidatorTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testClarificationReplyLinksAssignedValidatorToFundRequest(): void
+    {
+        $fund = $this->setupNewFundAndCriteria();
+        $sponsor = $fund->organization;
+        $assigned = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::VALIDATE_RECORDS]);
+        $other = $this->makeTestEmployeeWithPermissions($sponsor, [Permission::VALIDATE_RECORDS]);
+
+        $recordType = $this->makeRecordType($sponsor, RecordType::TYPE_STRING, 'clarification_reply_text');
+        $fund->criteria()->create($this->makeCriterion($recordType->key, 'yes', '='));
+
+        $requester = $this->makeIdentity($this->makeUniqueEmail());
+        $fundRequest = $this->setCriteriaAndMakeFundRequest($requester, $fund->fresh(), [
+            'children_nth' => 5,
+            $recordType->key => 'yes',
+        ]);
+
+        $fundRequest->assignEmployee($assigned);
+
+        foreach ($fundRequest->records as $record) {
+            $clarificationId = $this
+                ->apiMakeFundRequestClarificationRequest($fundRequest, $assigned, [
+                    'fund_request_record_id' => $record->id,
+                    'question' => 'Can you confirm this value?',
+                    'text_requirement' => 'required',
+                    'files_requirement' => 'no',
+                ])
+                ->assertSuccessful()
+                ->json('data.id');
+
+            $clarification = $fundRequest->clarifications()->findOrFail($clarificationId);
+
+            $this
+                ->apiRespondFundRequestClarificationRequest($clarification, $requester, ['answer' => 'Yes.'])
+                ->assertOk();
+        }
+
+        $query = ['organization_id' => $sponsor->id];
+        $type = 'notifications_fund_requests.clarification_received';
+
+        $notifications = $this
+            ->apiGetNotificationsRequest($assigned->identity, 'validator', $query)
+            ->assertOk()
+            ->collect('data')
+            ->where('type', $type);
+
+        $this->assertCount(2, $notifications);
+        $expectedParams = ['organizationId' => $sponsor->id, 'id' => $fundRequest->id];
+
+        foreach ($notifications as $notification) {
+            $this->assertSame('fund-request', $notification['route']['name']);
+            $this->assertEquals($expectedParams, $notification['route']['params']);
+        }
+
+        $otherFeed = $this->apiGetNotificationsRequest($other->identity, 'validator', $query)->assertOk();
+
+        $this->assertCount(0, $otherFeed->collect('data')->where('type', $type));
+    }
+
+    /**
      * Test the functionality of listing fund request clarifications.
      *
      * @return void
