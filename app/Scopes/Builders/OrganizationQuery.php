@@ -69,6 +69,19 @@ class OrganizationQuery
     }
 
     /**
+     * @param string $identityAddress
+     * @return Builder<Organization>
+     */
+    public static function queryForVoucherScanning(string $identityAddress): Builder
+    {
+        return self::whereHasPermissions(
+            Organization::query(),
+            $identityAddress,
+            Permission::SCAN_VOUCHERS,
+        );
+    }
+
+    /**
      * @param Builder|Relation|Organization $query
      * @param string $identity_address
      * @param Voucher $voucher

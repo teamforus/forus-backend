@@ -927,7 +927,7 @@ class FundProductLimitTest extends TestCase
     {
         $response = $this->apiGetProductRequest($product, $identity)->assertSuccessful();
 
-        return collect($response->json('data.funds'))->firstWhere('id', $fund->id)['limit_available'] ?? null;
+        return collect($response->json('data.funds'))->firstWhere('id', $fund->id)['limit'] ?? null;
     }
 
     /**

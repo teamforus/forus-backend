@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Requests\BaseFormRequest;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,17 +16,21 @@ class ClientVersionMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  Closure  $next
+     * @param Request $request
+     * @param Closure $next
+     * @param bool $required
      * @return mixed
      */
-    public function handle(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next, bool $required = false): mixed
     {
         $excluded = in_array($request->route()->getName(), static::EXCEPT);
-        $baseRequest = BaseFormRequest::createFrom($request);
-        $clientVersion = $baseRequest->client_version();
+        $clientVersion = $request->header('Client-Version');
 
-        if ($excluded || is_null($clientVersion) || is_numeric($clientVersion)) {
+        $isValidVersion = $required
+            ? filter_var($clientVersion, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false
+            : is_null($clientVersion) || is_numeric($clientVersion);
+
+        if ($excluded || $isValidVersion) {
             return $next($request);
         }
 

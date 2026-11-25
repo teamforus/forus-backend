@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Organization;
-use App\Models\Permission;
 use App\Scopes\Builders\OrganizationQuery;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Validation\Rule;
 
 class IndexProductVouchersRequest extends BaseFormRequest
 {
@@ -26,14 +26,18 @@ class IndexProductVouchersRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $organizationsQuery = OrganizationQuery::whereHasPermissions(
-            Organization::query(),
-            $this->auth_address(),
-            Permission::SCAN_VOUCHERS
-        );
-
         return [
-            'organization_id' => 'nullable|in:' . $organizationsQuery->pluck('id')->join(','),
+            'organization_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('organizations', 'id')->where(function (QueryBuilder $query): void {
+                    $identityAddress = $this->auth_address();
+
+                    $query->whereIn('id', $identityAddress
+                        ? OrganizationQuery::queryForVoucherScanning($identityAddress)->select('organizations.id')
+                        : []);
+                }),
+            ],
             'per_page' => 'numeric|between:1,100',
         ];
     }

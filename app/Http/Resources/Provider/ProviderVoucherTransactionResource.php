@@ -4,7 +4,7 @@ namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\ProductReservationResource;
-use App\Http\Resources\ProductResource;
+use App\Http\Resources\Small\ProductSmallResource;
 use App\Http\Resources\Tiny\FundTinyResource;
 use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
@@ -24,7 +24,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
     public const array LOAD_NESTED = [
         'provider' => OrganizationTinyResource::class,
         'voucher.fund' => FundTinyResource::class,
-        'product' => ProductResource::class,
+        'product' => ProductSmallResource::class,
         'product_reservation' => ProductReservationResource::class,
         'notes_provider' => VoucherTransactionNoteResource::class,
     ];
@@ -53,7 +53,7 @@ class ProviderVoucherTransactionResource extends BaseJsonResource
             'transfer_in' => $transaction->daysBeforeTransaction(),
             'fund' => new FundTinyResource($transaction->voucher->fund),
             'notes' => VoucherTransactionNoteResource::collection($transaction->notes_provider),
-            'product' => new ProductResource($transaction->product),
+            'product' => new ProductSmallResource($transaction->product),
             'reservation' => new ProductReservationResource($transaction->product_reservation),
             'organization' => new OrganizationTinyResource($transaction->provider),
         ], $this->timestamps($transaction, 'created_at', 'updated_at'));

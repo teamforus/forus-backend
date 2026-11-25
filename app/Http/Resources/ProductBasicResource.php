@@ -24,6 +24,9 @@ class ProductBasicResource extends ProductResource
      */
     public function toArray(Request $request): array
     {
-        return $this->baseFields($this->resource);
+        return [
+            ...$this->baseFields($this->resource),
+            ...$this->resource->only(self::SCANNING_AND_RESERVATION_FIELDS),
+        ];
     }
 }

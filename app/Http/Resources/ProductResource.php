@@ -2,37 +2,32 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
+use App\Http\Resources\Traits\Products\FormatsProductPrices;
 use App\Models\Product;
-use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\ProductSubQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 /**
  * @property Product $resource
  */
-class ProductResource extends BaseJsonResource
+abstract class ProductResource extends BaseJsonResource
 {
+    use FormatsProductPrices;
+
     public const array LOAD = [
-        'voucher_transactions',
-        'product_reservations_pending',
         'organization.fund_providers',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
         'organization.mollie_connection',
-        'organization.reservation_fields',
         'bookmarks',
-        'reservation_fields',
     ];
 
     public const array LOAD_NESTED = [
-        'photos' => MediaResource::class,
         'product_category' => ProductCategoryResource::class,
         'organization' => OrganizationBasicResource::class,
-        'organization.offices' => OfficeResource::class,
+    ];
+
+    protected const array SCANNING_AND_RESERVATION_FIELDS = [
+        'qr_enabled', 'reservation_enabled', 'reservation_policy',
     ];
 
     /**
@@ -43,47 +38,21 @@ class ProductResource extends BaseJsonResource
      */
     public function toArray(Request $request): array
     {
-        $baseRequest = BaseFormRequest::createFrom($request);
-
-        return $this->getProductData($request, $this->resource, $baseRequest->isWebshop());
-    }
-
-    /**
-     * @param Request $request
-     * @param Product $product
-     * @param bool $forWebshop
-     * @return array
-     */
-    protected function getProductData(Request $request, Product $product, bool $forWebshop): array
-    {
-        $baseRequest = BaseFormRequest::createFrom($request);
-
-        $priceFields = $this->priceFields($product);
-        $priceFieldsExtra = $forWebshop ? $this->priceFieldsExtra($product) : [];
-        $productReservationFields = $this->productReservationFieldSettings($product);
+        $product = $this->resource;
 
         return [
             ...$this->baseFields($product),
-            'photos' => MediaResource::collection($product->photos),
-            'organization' => new OrganizationBasicResource($product->organization),
-            'total_amount' => $product->total_amount,
-            'unlimited_stock' => $product->unlimited_stock,
-            'reserved_amount' => $product->countReservedCached(),
-            'sold_amount' => $product->countSoldCached(),
-            'stock_amount' => $product->stock_amount,
+            'price_type' => $product->price_type,
             'expire_at' => $product->expire_at?->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
             'deleted_at' => $product->deleted_at?->format('Y-m-d'),
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => $product->trashed(),
-            'funds' => $product->trashed() || !$forWebshop ? [] : $this->getProductFunds($baseRequest, $product),
-            'offices' => OfficeResource::collection($product->organization->offices),
-            'product_category' => new ProductCategoryResource($product->product_category),
-            'bookmarked' => $forWebshop ? $product->isBookmarkedBy($baseRequest->identity()) : null,
-            ...$priceFields,
-            ...$priceFieldsExtra,
-            ...$productReservationFields,
+            'organization' => new OrganizationBasicResource($product->organization),
+            'product_category' => $product->product_category
+                ? new ProductCategoryResource($product->product_category)
+                : null,
         ];
     }
 
@@ -95,9 +64,7 @@ class ProductResource extends BaseJsonResource
     {
         return [
             ...$product->only([
-                'id', 'name', 'description', 'product_category_id', 'sold_out', 'qr_enabled',
-                'organization_id', 'reservation_enabled', 'reservation_policy', 'alternative_text',
-                'description_html',
+                'id', 'name', 'sold_out', 'organization_id', 'alternative_text', 'description_html',
                 'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
             ]),
             ...$product->translateColumns(
@@ -108,172 +75,8 @@ class ProductResource extends BaseJsonResource
                         'info_duration', 'info_when', 'info_where', 'info_more_info', 'info_attention',
                     ]),
             ),
-            'price' => is_null($product->price) ? null : currency_format($product->price),
-            'price_locale' => $product->price_locale,
+            ...$this->basePriceFields($product),
             'organization' => $product->organization->only('id', 'name'),
-        ];
-    }
-
-    /**
-     * @param Product $product
-     * @return array
-     */
-    protected function priceFields(Product $product): array
-    {
-        return [
-            'price_type' => $product->price_type,
-            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
-        ];
-    }
-
-    /**
-     * @param Product $product
-     * @return array
-     */
-    protected function priceFieldsExtra(Product $product): array
-    {
-        $price_min = $this->getProductSubsidyPrice($product, 'min');
-        $price_max = $this->getProductSubsidyPrice($product, 'max');
-        $lowest_price = min($product->price, $price_min);
-
-        return [
-            'price_discount_locale' => $product->price_discount_locale,
-            'price_min' => currency_format($price_min),
-            'price_min_locale' => currency_format_locale($price_min),
-            'price_max' => currency_format($price_max),
-            'price_max_locale' => currency_format_locale($price_max),
-            'lowest_price' => $product->price_type === 'regular' ? currency_format($lowest_price) : null,
-            'lowest_price_locale' => $product->price_type === 'regular' ? currency_format_locale($lowest_price) : null,
-        ];
-    }
-
-    /**
-     * @return Builder
-     */
-    protected function fundsQuery(): Builder
-    {
-        return Fund::query();
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Product $product
-     * @return Collection
-     */
-    private function getProductFunds(BaseFormRequest $request, Product $product): Collection
-    {
-        $fundsQuery = FundQuery::whereProductsAreApprovedAndActiveFilter($this->fundsQuery(), $product);
-        $fundsQuery->with([
-            'organization', 'logo',
-        ]);
-
-        return $fundsQuery->get()->map(function (Fund $fund) use ($product, $request) {
-            $fundProviderProduct = $product->getFundProviderProduct($fund);
-
-            $reservationsEnabled = $product->reservationsEnabled();
-            $reservationsExtraPaymentEnabled = $reservationsEnabled && $product->reservationExtraPaymentsEnabled($fund);
-
-            $scanningEnabled =
-                $product->qr_enabled &&
-                $product->organization->fund_providers
-                    ->where('allow_budget', true)
-                    ->where('fund_id', $fund->id)
-                    ->isNotEmpty() &&
-                (!$fundProviderProduct || $fundProviderProduct->allow_scanning);
-
-            $data = [
-                'id' => $fund->id,
-                ...$fund->translateColumns($fund->only(['name'])),
-                'logo' => new MediaResource($fund->logo),
-                'organization' => $fund->organization->only([
-                    'id', 'name',
-                ]),
-                'end_at' => $fund->end_date?->format('Y-m-d'),
-                'end_at_locale' => format_date_locale($fund->end_date ?? null),
-                'feature_reservations_enabled' => $reservationsEnabled,
-                'feature_reservation_extra_payments_enabled' => $reservationsExtraPaymentEnabled,
-                'feature_scanning_enabled' => $scanningEnabled,
-            ];
-
-            $productData = ProductSubQuery::appendReservationStats([
-                'identity_id' => $request->auth_id(),
-                'fund_id' => $fund->id,
-            ], Product::whereId($product->id))->firstOrFail()->only([
-                'limit_total', 'limit_per_identity', 'limit_available',
-            ]);
-
-            $fundProviderProduct = $product->getFundProviderProduct($fund);
-
-            return [
-                ...$data,
-                ...$productData,
-                ...$fundProviderProduct?->isPaymentTypeSubsidy() ? [
-                    'user_price' => $fundProviderProduct->user_price,
-                    'user_price_locale' => $fundProviderProduct->user_price_locale,
-                ] : [
-                    'user_price' => $product->price,
-                    'user_price_locale' => $product->price_locale,
-                ],
-                'limit_per_identity' => $fundProviderProduct?->limit_per_identity,
-            ];
-        })->values();
-    }
-
-    /**
-     * @param Product $product
-     * @param string $type
-     * @return float
-     */
-    private function getProductSubsidyPrice(Product $product, string $type): float
-    {
-        return max($product->price - $product->fund_provider_products()->where([
-            'product_id' => $product->id,
-        ])->whereHas('fund_provider.fund', function (Builder $builder) {
-            $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
-        })->$type('amount'), 0);
-    }
-
-    /**
-     * @param Product $product
-     * @return array
-     */
-    private function productReservationFieldSettings(Product $product): array
-    {
-        $request = BaseFormRequest::createFromBase(request());
-        $organization = $product->organization;
-
-        if ($request->isWebshop()) {
-            return [
-                'reservation' => $product->reservation_fields_enabled ? [
-                    'phone' => $product->getReservationPhoneField(),
-                    'address' => $product->getReservationAddressField(),
-                    'birth_date' => $product->getReservationBirthDateField(),
-                    'note' => $organization->reservation_user_note,
-                    'fields' => ReservationFieldResource::collection(
-                        $product->getAvailableReservationFieldsForRequester(),
-                    ),
-                ] : [
-                    'phone' => $product::RESERVATION_FIELD_NO,
-                    'address' => $product::RESERVATION_FIELD_NO,
-                    'birth_date' => $product::RESERVATION_FIELD_NO,
-                    'note' => $organization->reservation_user_note,
-                    'fields' => [],
-                ],
-            ];
-        }
-
-        return [
-            'reservation_phone' => $product->reservation_phone,
-            'reservation_fields_enabled' => $product->reservation_fields_enabled,
-            'reservation_address' => $product->reservation_address,
-            'reservation_birth_date' => $product->reservation_birth_date,
-            'reservation_note' => $product->reservation_note,
-            'reservation_note_text' => $product->reservation_note_text,
-            'reservation_fields_config' => $product->reservation_fields_config,
-            'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
-            'available_reservation_fields_for_provider' => ReservationFieldResource::collection(
-                $product->getAvailableReservationFieldsForProvider()
-            ),
         ];
     }
 }

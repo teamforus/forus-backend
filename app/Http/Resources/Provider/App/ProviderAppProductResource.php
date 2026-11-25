@@ -48,6 +48,9 @@ class ProviderAppProductResource extends ProductResource
 
         return [
             ...$data,
+            ...$this->resource->only([
+                'description', 'product_category_id', ...self::SCANNING_AND_RESERVATION_FIELDS,
+            ]),
             'photo' => MediaResource::create($this->resource->photos[0] ?? null),
             'photos' => MediaResource::collection($this->resource->photos),
             'organization' => new OrganizationBasicResource($this->resource->organization),

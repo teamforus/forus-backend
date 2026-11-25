@@ -6,6 +6,10 @@ return [
     'mobile' => array_merge([
         Implementation::ME_APP_ANDROID,
         Implementation::ME_APP_IOS,
+        Implementation::ME_APP_REQUESTER_ANDROID,
+        Implementation::ME_APP_REQUESTER_IOS,
+        Implementation::ME_APP_PROVIDER_ANDROID,
+        Implementation::ME_APP_PROVIDER_IOS,
     ], env('DISABLE_FALLBACK_TRANSACTIONS', false) ? [] : [
         Implementation::ME_APP_DEPRECATED,
     ]),
