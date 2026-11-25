@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Mail\ImplementationMail;
 use App\Models\Identity;
 use App\Models\Implementation;
+use App\Models\Notification as NotificationModel;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Notification\NotificationService;
@@ -287,6 +288,16 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * @param NotificationModel $notification
+     * @param EventLog $event
+     * @return array{name: string, params: array, query: array}|null
+     */
+    public static function getDashboardRoute(NotificationModel $notification, EventLog $event): ?array
+    {
+        return null;
+    }
+
+    /**
      * @return array
      */
     public function getChannels(): array
@@ -444,6 +455,23 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * @return Collection
      */
     abstract public static function eligibleIdentities(mixed $loggable, EventLog $eventLog): Collection;
+
+    /**
+     * @param string $name
+     * @param array $params
+     * @param array $query
+     * @return array{name: string, params: array, query: array}|null
+     */
+    protected static function makeDashboardRoute(string $name, array $params, array $query = []): ?array
+    {
+        foreach (array_merge($params, $query) as $value) {
+            if (empty($value)) {
+                return null;
+            }
+        }
+
+        return compact('name', 'params', 'query');
+    }
 
     /**
      * @param EventLog $event

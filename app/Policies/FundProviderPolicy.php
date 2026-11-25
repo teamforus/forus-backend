@@ -7,6 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
@@ -92,21 +93,54 @@ class FundProviderPolicy
         Organization $organization,
         Fund $fund
     ): bool {
-        if ($organization->id != $fundProvider->fund->organization_id) {
-            return false;
+        return $this->canViewFundProviderAsSponsor($identity, $fundProvider, $organization, $fund);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundProvider $fundProvider
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return bool
+     */
+    public function viewSponsorProducts(
+        Identity $identity,
+        FundProvider $fundProvider,
+        Organization $organization,
+        Fund $fund,
+    ): bool {
+        return $fund->organization_id === $organization->id
+            && $fundProvider->fund_id === $fund->id
+            && $organization->identityCan($identity, [
+                Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
+            ], false);
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundProvider $fundProvider
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Product $product
+     * @return Response
+     */
+    public function showSponsorProduct(
+        Identity $identity,
+        FundProvider $fundProvider,
+        Organization $organization,
+        Fund $fund,
+        Product $product,
+    ): Response {
+        if (!$this->viewSponsorProducts($identity, $fundProvider, $organization, $fund)) {
+            return $this->deny();
         }
 
-        if ($fund->id != $fundProvider->fund_id) {
-            return false;
+        if ($product->organization_id !== $fundProvider->organization_id ||
+            ($product->sponsor_organization_id !== null && $product->sponsor_organization_id !== $organization->id)) {
+            return $this->denyAsNotFound(__('exceptions.not_found.default'));
         }
 
-        if ($fund->public) {
-            return true;
-        }
-
-        return $organization->identityCan($identity, [
-            Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
-        ], false);
+        return $this->allow();
     }
 
     /**
@@ -232,5 +266,35 @@ class FundProviderPolicy
         }
 
         return true;
+    }
+
+    /**
+     * @param Identity $identity
+     * @param FundProvider $fundProvider
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return bool
+     */
+    private function canViewFundProviderAsSponsor(
+        Identity $identity,
+        FundProvider $fundProvider,
+        Organization $organization,
+        Fund $fund,
+    ): bool {
+        if ($organization->id != $fundProvider->fund->organization_id) {
+            return false;
+        }
+
+        if ($fund->id != $fundProvider->fund_id) {
+            return false;
+        }
+
+        if ($fund->public) {
+            return true;
+        }
+
+        return $organization->identityCan($identity, [
+            Permission::VIEW_FINANCES, Permission::MANAGE_PROVIDERS,
+        ], false);
     }
 }
