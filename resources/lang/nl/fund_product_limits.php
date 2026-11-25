@@ -5,4 +5,8 @@ return [
         'all_except_selected' => 'Alle producten behalve geselecteerde producten',
         'only_selected' => 'Alleen geselecteerde producten',
     ],
+    'limit_by' => [
+        'products' => 'Aantal producten',
+        'amount' => 'Budget',
+    ],
 ];

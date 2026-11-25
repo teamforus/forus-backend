@@ -1167,11 +1167,15 @@ trait MakesApiRequests
     /**
      * @param Product $product
      * @param Identity|IdentityProxy $identity
+     * @param array $headers
      * @return TestResponse
      */
-    public function apiGetProductRequest(Product $product, Identity|IdentityProxy $identity): TestResponse
-    {
-        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity));
+    public function apiGetProductRequest(
+        Product $product,
+        Identity|IdentityProxy $identity,
+        array $headers = [],
+    ): TestResponse {
+        return $this->getJson("/api/v1/platform/products/$product->id", $this->makeApiHeaders($identity, $headers));
     }
 
     /**
@@ -1458,6 +1462,24 @@ trait MakesApiRequests
     ): TestResponse {
         return $this->postJson(
             '/api/v1/platform/product-reservations',
+            $data,
+            $this->makeApiHeaders($identity),
+        );
+    }
+
+    /**
+     * @param Organization $organization
+     * @param array $data
+     * @param Identity $identity
+     * @return TestResponse
+     */
+    public function apiMakeProductReservationAsProviderRequest(
+        Organization $organization,
+        array $data,
+        Identity $identity,
+    ): TestResponse {
+        return $this->postJson(
+            "/api/v1/platform/organizations/$organization->id/product-reservations",
             $data,
             $this->makeApiHeaders($identity),
         );

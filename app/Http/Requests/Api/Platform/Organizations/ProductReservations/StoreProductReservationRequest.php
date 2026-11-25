@@ -12,6 +12,7 @@ use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * @property Organization $organization
@@ -19,9 +20,6 @@ use Illuminate\Support\Str;
 class StoreProductReservationRequest extends BaseFormRequest
 {
     use ThrottleWithMeta;
-
-    protected int $maxAttempts = 100;
-    protected float $decayMinutes = 180;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -33,6 +31,7 @@ class StoreProductReservationRequest extends BaseFormRequest
     {
         $this->throttleKeyPrefix = 'provider_reservations';
         $this->maxAttempts = $this->organization->provider_throttling_value;
+        $this->decayMinutes = 180;
 
         $this->throttleWithKey('to_many_attempts', $this, 'provider_reservation_store');
 
@@ -65,9 +64,10 @@ class StoreProductReservationRequest extends BaseFormRequest
                 ...($sponsorIsValid && $addressIsValid) ? [] : ['in:'],
             ],
             'product_id' => [
+                'bail',
                 'required',
-                'exists:products,id',
-                new ProductIdToReservationRule($this->input('number')),
+                Rule::exists('products', 'id')->where('organization_id', $this->getRouteOrganization()->id),
+                new ProductIdToReservationRule($voucher?->id),
             ],
             'note' => 'nullable|string|max:2000',
         ];

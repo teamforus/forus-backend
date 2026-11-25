@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\ProductReservation;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tests\Traits\MakesAssertStoreUploadedCsvFile;
+use Tests\Traits\MakesProductReservations;
 use Tests\Traits\MakesTestFunds;
 use Tests\Traits\MakesTestOrganizations;
 use Throwable;
@@ -17,6 +19,7 @@ class ProductReservationsUploadBatchTest extends TestCase
     use DatabaseTransactions;
     use MakesTestOrganizations;
     use MakesAssertStoreUploadedCsvFile;
+    use MakesProductReservations;
 
     /**
      * @throws Throwable
@@ -39,7 +42,17 @@ class ProductReservationsUploadBatchTest extends TestCase
         $voucher = $fund->makeVoucher($this->makeIdentity());
         $voucher->addPhysicalCard($data['number']);
 
-        $this->apiMakeReservationRequestBatchRequest($provider, [$data], true)->assertSuccessful();
+        $response = $this->apiMakeReservationRequestBatchRequest($provider, [$data], true)
+            ->assertSuccessful()
+            ->assertJsonCount(1, 'reserved')
+            ->assertJsonPath('reserved.0.state', ProductReservation::STATE_ACCEPTED)
+            ->assertJsonPath('errors', []);
+
+        $this->assertAcceptedProviderReservation(
+            ProductReservation::findOrFail($response->json('reserved.0.id')),
+            $voucher,
+            $product,
+        );
 
         $employee = $provider->findEmployee($provider->identity);
         $log = $this->assertLogCreated($employee, $employee::EVENT_UPLOADED_RESERVATIONS, 1);

@@ -21,4 +21,14 @@ class UpdateFundProductLimitsRequest extends StoreFundProductLimitsRequest
     {
         return Gate::allows('update', [$this->fund_product_limit, $this->organization]);
     }
+
+    /**
+     * @return string
+     */
+    public function limitBy(): string
+    {
+        $limitBy = $this->input('limit_by');
+
+        return is_string($limitBy) && $limitBy ? $limitBy : $this->fund_product_limit->limit_by;
+    }
 }
