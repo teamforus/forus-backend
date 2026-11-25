@@ -13,8 +13,9 @@ return [
     |
     */
 
-    'record_validation_preset_incompatible' => 'Validation preset :preset cannot be used with type :type for record :key.',
-    'missing' => 'The :attribute field must not be present.',
+    'record_validation_preset_incompatible' => 'Validatievoorinstelling :preset kan niet worden gebruikt ' .
+        'met type :type voor het gegeven :key.',
+    'missing' => 'Het veld :attribute mag niet aanwezig zijn.',
     'header' => 'De opgegeven gegevens waren ongeldig.',
     'prohibited' => ':attribute is niet toegestaan.',
     'prohibited_if' => ':attribute is niet toegestaan indien :other gelijk is aan :value.',

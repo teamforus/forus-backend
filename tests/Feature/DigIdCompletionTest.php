@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use App\Models\Identity;
 use App\Models\IdentityProxy;
 use App\Models\Implementation;
+use App\Models\Record;
+use App\Models\RecordType;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Objects\DigidAuthResolveData;
 use App\Services\DigIdService\Objects\DigIdSessionData;
 use App\Services\DigIdService\Repositories\Interfaces\DigIdRepo;
 use App\Services\DigIdService\TvsService;
+use App\Services\IdentityBsnService\Exceptions\IdentityBsnException;
 use App\Services\SAML2Service\Responses\SamlArtifactResponse;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Route;
@@ -226,15 +229,42 @@ class DigIdCompletionTest extends TestCase
     /**
      * @param string $connectionType
      * @throws Throwable
+     * @return void
+     */
+    #[DataProvider('connectionTypes')]
+    public function testLoginCompletionReusesImportedIdentityWithCanonicalBsn(string $connectionType): void
+    {
+        $this->assertLoginReusesImportedIdentity($connectionType);
+    }
+
+    /**
+     * @param string $connectionType
+     * @throws Throwable
+     * @return void
+     */
+    #[DataProvider('connectionTypes')]
+    public function testLoginCompletionRollsBackNewIdentityWhenBsnAssignmentFails(string $connectionType): void
+    {
+        $this->assertLoginAssignmentFailureRollsBackIdentity($connectionType);
+    }
+
+    /**
+     * @param string $connectionType
+     * @param string|null $bsn
+     * @param bool $createIdentity
+     * @throws Throwable
      * @return array{
-     *     identity: Identity, session: DigIdSession, transport: string,
+     *     identity: Identity|null, session: DigIdSession, transport: string,
      *     headers: array<string, string>, proof: array<string, string>
      * }
      */
-    protected function makeLoginCompletionFixture(string $connectionType): array
-    {
-        $bsn = (string) $this->randomFakeBsn();
-        $identity = $this->makeIdentity($this->makeUniqueEmail(), $bsn);
+    protected function makeLoginCompletionFixture(
+        string $connectionType,
+        ?string $bsn = null,
+        bool $createIdentity = true,
+    ): array {
+        $bsn ??= $this->makeUniqueBsn();
+        $identity = $createIdentity ? $this->makeIdentity($this->makeUniqueEmail(), $bsn) : null;
         $organization = $this->makeTestOrganization($this->makeIdentity(), ['bsn_enabled' => true]);
 
         $implementation = $this->makeTestImplementation($organization, [
@@ -267,6 +297,95 @@ class DigIdCompletionTest extends TestCase
         ];
 
         return compact('identity', 'session', 'transport', 'headers', 'proof');
+    }
+
+    /**
+     * @param string $connectionType
+     * @throws Throwable
+     * @return void
+     */
+    protected function assertLoginReusesImportedIdentity(string $connectionType): void
+    {
+        $bsn = $this->makeUniqueBsn(leadingZero: true);
+
+        [
+            'identity' => $identity, 'session' => $session, 'transport' => $transport,
+            'headers' => $headers, 'proof' => $proof,
+        ] = $this->makeLoginCompletionFixture($connectionType, substr($bsn, 1));
+
+        $this->assertNotNull($identity);
+
+        $identity->update([
+            'type' => Identity::TYPE_PROFILE,
+            'creator_organization_id' => $session->organization_id,
+        ]);
+
+        $profile = $session->organization->findOrMakeProfile($identity);
+        $identityCount = Identity::count();
+
+        $this->assertLoginCompleted($this->apiCompleteDigIdRequest($transport, $proof, $headers), $identity);
+        $this->assertSame($identityCount, Identity::count());
+        $this->assertSame($bsn, $identity->refresh()->bsn);
+        $this->assertSame($identity->address, $session->refresh()->identity_address);
+        $this->assertSame($profile->id, $identity->profiles()->where('organization_id', $session->organization_id)->sole()->id);
+    }
+
+    /**
+     * @param string $connectionType
+     * @throws Throwable
+     * @return void
+     */
+    protected function assertLoginAssignmentFailureRollsBackIdentity(string $connectionType): void
+    {
+        $bsn = $this->makeUniqueBsn();
+
+        ['session' => $session, 'transport' => $transport, 'headers' => $headers, 'proof' => $proof] =
+            $this->makeLoginCompletionFixture($connectionType, $bsn, createIdentity: false);
+
+        $session->implementation->forceFill(['digid_sign_up_allowed' => true])->save();
+
+        $identityCount = Identity::count();
+        $proxyCount = IdentityProxy::withTrashed()->count();
+        $createdIdentityAddress = null;
+        $createdProxyId = null;
+        $bsnTypeId = RecordType::findByKey(RecordType::KEY_BSN)->id;
+        $dispatcher = Record::getEventDispatcher();
+        Record::setEventDispatcher(clone $dispatcher);
+
+        try {
+            Record::creating(function (Record $record) use (
+                $bsn,
+                $bsnTypeId,
+                &$createdIdentityAddress,
+                &$createdProxyId,
+            ) {
+                if ($record->record_type_id !== $bsnTypeId || $record->value !== $bsn) {
+                    return;
+                }
+
+                $identity = Identity::whereAddress($record->identity_address)->firstOrFail();
+                $createdIdentityAddress = $identity->address;
+                $createdProxyId = $identity->proxies()->where('state', IdentityProxy::STATE_ACTIVE)->sole()->id;
+
+                throw new IdentityBsnException(IdentityBsnException::ALREADY_ASSIGNED);
+            });
+
+            $this->apiCompleteDigIdRequest($transport, $proof, $headers)->assertOk()->assertExactJson([
+                'redirect_url' => url_extend_get_params($session->session_final_url, ['digid_error' => 'uid_used']),
+            ]);
+        } finally {
+            Record::setEventDispatcher($dispatcher);
+        }
+
+        $this->assertNotNull($createdIdentityAddress);
+        $this->assertNotNull($createdProxyId);
+        $this->assertDatabaseMissing('identities', ['address' => $createdIdentityAddress]);
+        $this->assertDatabaseMissing('identity_proxies', ['id' => $createdProxyId]);
+        $this->assertDatabaseMissing('records', ['record_type_id' => $bsnTypeId, 'value' => $bsn]);
+        $this->assertSame($identityCount, Identity::count());
+        $this->assertSame($proxyCount, IdentityProxy::withTrashed()->count());
+        $this->assertNull($session->refresh()->identity_address);
+        $this->assertTrue($session->meta['completion_consumed']);
     }
 
     /**
