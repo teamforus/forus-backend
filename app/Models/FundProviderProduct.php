@@ -186,10 +186,10 @@ class FundProviderProduct extends Model
         string $price_discount
     ): string {
         switch ($price_type) {
-            case $this->product::PRICE_TYPE_REGULAR: return currency_format_locale($price);
-            case $this->product::PRICE_TYPE_FREE: return trans('prices.free');
-            case $this->product::PRICE_TYPE_DISCOUNT_FIXED:
-            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+            case Product::PRICE_TYPE_REGULAR: return currency_format_locale($price);
+            case Product::PRICE_TYPE_FREE: return trans('prices.free');
+            case Product::PRICE_TYPE_DISCOUNT_FIXED:
+            case Product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
                 return trans('prices.discount', [
                     'amount' => $this->getPriceDiscountLocale($price_type, $price_discount),
                 ]);
@@ -214,8 +214,8 @@ class FundProviderProduct extends Model
     public function getPriceDiscountLocale(string $price_type, string $price_discount): string
     {
         switch ($price_type) {
-            case $this->product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
-            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+            case Product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
+            case Product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
                 $isWhole = (float) ($price_discount - round($price_discount)) === 0.0;
 
                 return currency_format($price_discount, $isWhole ? 0 : 2) . '%';

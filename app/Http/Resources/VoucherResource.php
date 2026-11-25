@@ -9,7 +9,6 @@ use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
 use App\Services\EventLogService\Models\EventLog;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -26,19 +25,15 @@ class VoucherResource extends BaseJsonResource
      */
     public const array LOAD = [
         'logs',
-        'parent',
         'token_with_confirmation',
         'last_transaction',
         'transactions',
         'product_vouchers.fund',
         'product_vouchers.product.photos.presets',
-        'product_vouchers.token_with_confirmation',
         'product_vouchers.product_reservation',
         'reimbursements_pending',
         'fund.fund_config.implementation',
-        'last_deactivation_log',
         'top_up_transactions',
-        'fund_request.records',
         'fund.fund_payout_formulas',
     ];
 
@@ -71,17 +66,14 @@ class VoucherResource extends BaseJsonResource
     {
         $voucher = $this->resource;
         $physicalCard = $voucher->physical_cards[0] ?? null;
-        $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher) : null;
 
         return [
             ...$voucher->only([
-                'id', 'number', 'identity_id', 'fund_id', 'returnable', 'transactions_count',
-                'requester_payouts_count', 'expired', 'deactivated', 'type', 'state', 'state_locale', 'external',
+                'id', 'number', 'returnable',
+                'requester_payouts_count', 'expired', 'deactivated', 'type', 'external',
             ]),
             ...$this->getBaseFields($voucher),
             ...$this->getOptionalFields($voucher),
-            'deactivated_at' => $deactivationDate?->format('Y-m-d'),
-            'deactivated_at_locale' => format_date_locale($deactivationDate),
             'history' => $this->getStateHistory($voucher),
             'expire_at' => [
                 'date' => $voucher->expire_at->format('Y-m-d H:i:s.00000'),
@@ -97,22 +89,13 @@ class VoucherResource extends BaseJsonResource
             'address' => $voucher->token_with_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
             'fund' => $this->getFundResource($voucher),
-            'parent' => $voucher->parent ? [
-                ...$voucher->parent->only(['identity_id', 'fund_id']),
-                'created_at' => $voucher->parent->created_at_string,
-            ] : null,
             'physical_card' => new PhysicalCardResource($physicalCard),
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
-            'fund_request' => $voucher->fund_request ? [
-                'iban' => $voucher->fund_request->getIban(false),
-                'iban_name' => $voucher->fund_request->getIbanName(false),
-            ] : null,
             'voucher_payout_partial_amounts' => $voucher->getPayoutPartialAmounts(),
             'voucher_payout_partial_amounts_label_type' => $voucher->getPayoutPartialAmountsLabelType(),
             'voucher_payout_has_valid_records' => $voucher->identityHasValidRecordsForPayout(),
             ...$this->getRecords($voucher),
-            ...$this->timestamps($voucher, 'created_at'),
         ];
     }
 
@@ -152,8 +135,6 @@ class VoucherResource extends BaseJsonResource
 
         return [
             'reservable' => $reservable_enabled && $reservable && ($has_amount || $extra_payment_possible),
-            'reservable_count' => $reservable_count,
-            'reservable_enabled' => $reservable_enabled,
             'reservable_expire_at' => $reservable_expire_at,
             'reservable_expire_at_locale' => format_date_locale($reservable_expire_at ?? null),
         ];
@@ -175,15 +156,6 @@ class VoucherResource extends BaseJsonResource
             'records' => VoucherRecordResource::collection($records),
             'records_title' => $voucher->getRecordsTitle(),
         ];
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @return Carbon|null
-     */
-    protected function getDeactivationDate(Voucher $voucher): ?Carbon
-    {
-        return $voucher->last_deactivation_log?->created_at;
     }
 
     /**
@@ -225,8 +197,6 @@ class VoucherResource extends BaseJsonResource
                     'name', 'description_html',
                 ])),
                 'price_locale' => $voucher->product->priceLocale(),
-                'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : '',
-                'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photos' => MediaResource::collection($voucher->product->photos),
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
             ];
@@ -270,17 +240,12 @@ class VoucherResource extends BaseJsonResource
             ...$fund->translateColumns($fund->only(['name', 'description_short', 'how_it_works_html'])),
             'url_webshop' => $fund->fund_config->implementation->url_webshop ?? null,
             'logo' => new MediaCompactResource($fund->logo),
-            'start_date' => $fund->start_date->format('Y-m-d H:i'),
-            'start_date_locale' => format_datetime_locale($fund->start_date),
-            'end_date' => $fund->end_date->format('Y-m-d H:i'),
-            'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
             'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
             'fund_physical_card_types' => FundPhysicalCardTypeResource::collection($fund->fund_physical_card_types),
             ...$fund->fund_config->only([
-                'allow_reimbursements', 'allow_reservations', 'key', 'show_qr_code',
-                'allow_voucher_payouts', 'allow_voucher_payouts_partial', 'allow_voucher_payout_count',
+                'allow_reimbursements', 'show_qr_code', 'allow_voucher_payouts', 'allow_voucher_payout_count',
                 'hide_voucher_amount', 'allow_voucher_payout_note',
             ]),
             'allow_voucher_payout_buttons' => $fund->fund_config->getAllowedVoucherPayoutButtonsMap(),
@@ -296,14 +261,8 @@ class VoucherResource extends BaseJsonResource
         Collection|array|null $product_vouchers
     ): SupportCollection|array|null {
         return $product_vouchers?->map(fn (Voucher $product_voucher) => [
-            ...$product_voucher->only([
-                'identity_id', 'fund_id', 'returnable',
-            ]),
-            'address' => $product_voucher->token_with_confirmation?->address,
             'amount' => currency_format($product_voucher->amount),
             'amount_locale' => currency_format_locale($product_voucher->amount),
-            'date' => $product_voucher->created_at->format('M d, Y'),
-            'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
             'timestamp' => $product_voucher->created_at->timestamp,
             'product' => self::getProductDetails($product_voucher),
             'product_reservation' => $product_voucher->product_reservation?->only('id', 'code'),

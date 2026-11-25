@@ -3,6 +3,7 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
+use App\Models\Implementation;
 use Illuminate\Mail\Mailable;
 use League\CommonMark\Exception\CommonMarkException;
 use Symfony\Component\Mime\Email;
@@ -40,8 +41,12 @@ class EmailActivationMail extends ImplementationMail
             'provider' => 'het aanmeldformulier voor aanbieders',
             'validator' => 'het aanmeldformulier voor validators',
             'website' => 'de website',
-            'me_app-android' => 'de Me-app',
-            'me_app-ios' => 'de Me-app',
+            Implementation::ME_APP_ANDROID => 'de Me-app',
+            Implementation::ME_APP_IOS => 'de Me-app',
+            Implementation::ME_APP_REQUESTER_ANDROID => 'de Me-app',
+            Implementation::ME_APP_REQUESTER_IOS => 'de Me-app',
+            Implementation::ME_APP_PROVIDER_ANDROID => 'de Me-app',
+            Implementation::ME_APP_PROVIDER_IOS => 'de Me-app',
         ];
 
         return [

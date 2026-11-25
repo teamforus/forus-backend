@@ -22,15 +22,24 @@ class ImplementationKeyMiddleware
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  Closure  $next
+     * @param bool $required
+     * @param string ...$allowedKeys
      * @return mixed
      */
-    public function handle(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next, bool $required = false, string ...$allowedKeys): mixed
     {
         if (in_array($request->route()->getName(), $this->except, true)) {
             return $next($request);
         }
 
-        if (Implementation::implementationKeysAvailable()->search($this->implementationKey($request)) === false) {
+        $key = $required ? $request->header('Client-Key') : $this->implementationKey($request);
+        $hasRequiredKey = !$required || ($key !== null && $key !== '' && $allowedKeys !== []);
+        $isAllowedKey = !$allowedKeys || in_array($key, $allowedKeys, true);
+
+        $isValidKey = $hasRequiredKey && $isAllowedKey &&
+            Implementation::implementationKeysAvailable()->search($key) !== false;
+
+        if (!$isValidKey) {
             return new JsonResponse([
                 'message' => 'unknown_implementation_key',
             ], 403);

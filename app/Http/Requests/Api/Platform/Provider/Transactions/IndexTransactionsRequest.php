@@ -4,10 +4,9 @@ namespace App\Http\Requests\Api\Platform\Provider\Transactions;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Models\Organization;
-use App\Models\Permission;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\OrganizationQuery;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Validation\Rule;
 
 class IndexTransactionsRequest extends BaseFormRequest
@@ -30,11 +29,17 @@ class IndexTransactionsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
-                Organization::query(),
-                $this->auth_address(),
-                Permission::SCAN_VOUCHERS
-            )->pluck('id')->toArray())],
+            'organization_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('organizations', 'id')->where(function (QueryBuilder $query): void {
+                    $identityAddress = $this->auth_address();
+
+                    $query->whereIn('id', $identityAddress
+                        ? OrganizationQuery::queryForVoucherScanning($identityAddress)->select('organizations.id')
+                        : []);
+                }),
+            ],
             'q' => 'nullable|string',
             'state' => Rule::in(VoucherTransaction::STATES),
             'fund_state' => Rule::in(Fund::STATES),
@@ -43,6 +48,7 @@ class IndexTransactionsRequest extends BaseFormRequest
             'amount_min' => 'numeric|min:0',
             'amount_max' => 'numeric|min:0',
             'per_page' => $this->perPageRule(),
+            ...$this->orderByRules(...array_diff(VoucherTransaction::SORT_BY_FIELDS, ['payment_type', 'relation'])),
         ];
     }
 }

@@ -32,6 +32,9 @@ class ProductSmallResource extends ProductResource
 
         return [
             ...$this->baseFields($product),
+            ...$product->only([
+                'description', 'product_category_id', ...self::SCANNING_AND_RESERVATION_FIELDS,
+            ]),
             'photo' => new MediaResource($product->photos[0] ?? null),
             'photos' => MediaResource::collection($product->photos),
         ];

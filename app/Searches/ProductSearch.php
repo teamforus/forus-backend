@@ -38,6 +38,22 @@ class ProductSearch extends BaseSearch
             ProductQuery::unlimitedStockFilter($builder, filter_bool($this->getFilter('unlimited_stock')));
         }
 
+        if ($this->hasFilter('sold_out')) {
+            $builder->where('sold_out', filter_bool($this->getFilter('sold_out')));
+        }
+
+        if ($this->hasFilter('expired')) {
+            if (filter_bool($this->getFilter('expired'))) {
+                ProductQuery::whereExpired($builder);
+            } else {
+                ProductQuery::whereNotExpired($builder);
+            }
+        }
+
+        if ($this->hasFilter('price_types')) {
+            $builder->whereIn('price_type', $this->getFilter('price_types'));
+        }
+
         // filter by string query
         if ($this->hasFilter('q') && !empty($q = $this->getFilter('q'))) {
             ProductQuery::queryDeepFilter($builder, $q);

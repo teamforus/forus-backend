@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Requester\ProductResource as RequesterProductResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
@@ -56,7 +57,7 @@ class SearchResource extends BaseJsonResource
     {
         return match (get_class($model)) {
             Fund::class => FundResource::create($model),
-            Product::class => ProductResource::create($model),
+            Product::class => RequesterProductResource::create($model),
             Organization::class => ProviderResource::create($model),
             default => throw new Exception('Unknown search type!'),
         };

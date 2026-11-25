@@ -27,10 +27,12 @@ use Illuminate\Support\Arr;
 class SponsorProductResource extends BaseJsonResource
 {
     public const array LOAD = [
-        'product_reservations_pending',
+        'product_reservations_pending:id,product_id,voucher_id',
+        'product_reservations_pending.voucher:id,fund_id',
         'product_exclusions',
         'fund_provider_chats.fund_provider',
-        'voucher_transactions.voucher',
+        'voucher_transactions_sold:id,product_id,voucher_id',
+        'voucher_transactions_sold.voucher:id,fund_id',
         'logs_monitored_field_changed',
         'logs_last_monitored_field_changed',
     ];
@@ -81,7 +83,7 @@ class SponsorProductResource extends BaseJsonResource
             'is_available' => $this->isAvailable($product, $fundProvider),
             'deals_history' => $fundProvider ? $this->getDealsHistory($product, $fundProvider) : null,
             'funds' => $this->funds ? $this->getFundData($this->funds, $product) : [],
-            'monitored_changes_count' => $product->logs_monitored_field_changed()->count(),
+            'monitored_changes_count' => $product->logs_monitored_field_changed->count(),
             'monitored_history' => $this->with_monitored_history ? $this->getMonitoredHistory($product) : null,
             'fund_provider_product_chat' => $chat ? new FundProviderChatResource($chat) : null,
             ...$this->productReservationFieldSettings($product),

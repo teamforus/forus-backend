@@ -44,6 +44,10 @@ class ProductCategorySearch extends BaseSearch
                     filterExcludedProviders: true
                 );
 
+                if ($this->hasFilter('show_on_webshop')) {
+                    $productBuilder->where('show_on_webshop', $this->getFilter('show_on_webshop'));
+                }
+
                 $ids = $productBuilder->distinct()->pluck('product_category_id')->toArray();
 
                 $builder->whereIn('id', $ids);

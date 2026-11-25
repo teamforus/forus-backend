@@ -21,7 +21,7 @@ use Throwable;
  * @property int $id
  * @property string $type
  * @property string|null $identity_address
- * @property string|null $access_token
+ * @property string $access_token
  * @property string $exchange_token
  * @property string $state
  * @property string|null $identity_2fa_uuid

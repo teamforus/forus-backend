@@ -291,6 +291,10 @@ class UpdateSessionsExpirationCommand extends BaseCommand
                         Implementation::ME_APP_DEPRECATED,
                         Implementation::ME_APP_ANDROID,
                         Implementation::ME_APP_IOS,
+                        Implementation::ME_APP_REQUESTER_ANDROID,
+                        Implementation::ME_APP_REQUESTER_IOS,
+                        Implementation::ME_APP_PROVIDER_ANDROID,
+                        Implementation::ME_APP_PROVIDER_IOS,
                     ]);
                 });
             });

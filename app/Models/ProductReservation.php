@@ -553,6 +553,7 @@ class ProductReservation extends Model
         bool $addNoteToRequesterNotification = false,
     ): self {
         DB::transaction(function () use ($employee, $note, $addNoteToRequesterNotification) {
+            $product = $this->product()->lockForUpdate()->firstOrFail();
             $isRefund = $this->isAccepted();
 
             $this->update($isRefund ? [
@@ -570,6 +571,8 @@ class ProductReservation extends Model
             if ($this->voucher_transaction && $this->voucher_transaction->isCancelable()) {
                 $this->voucher_transaction->cancelPending($employee, false);
             }
+
+            $product->updateSoldOutState(notifySoldOut: false);
 
             if ($isRefund) {
                 Event::dispatch(new ProductReservationCanceled($this, $addNoteToRequesterNotification));
@@ -697,6 +700,7 @@ class ProductReservation extends Model
     public function cancelByState(string $state): bool
     {
         DB::transaction(function () use ($state) {
+            $product = $this->product()->lockForUpdate()->firstOrFail();
             $this->product_voucher?->delete();
 
             $this->update([
@@ -704,6 +708,7 @@ class ProductReservation extends Model
                 'canceled_at' => now(),
             ]);
 
+            $product->updateSoldOutState(notifySoldOut: false);
             Event::dispatch(new ProductReservationCanceled($this));
         });
 

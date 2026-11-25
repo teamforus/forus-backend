@@ -3,19 +3,20 @@
 namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\MediaResource;
-use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ReservationFieldResource;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderProductExclusion;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProviderProductResource extends ProductResource
 {
     public const array LOAD = [
-        'voucher_transactions',
+        'voucher_transactions_sold',
         'product_reservations_pending',
         'organization.fund_providers_allowed_extra_payments',
         'organization.fund_providers_allowed_extra_payments_full',
@@ -23,7 +24,6 @@ class ProviderProductResource extends ProductResource
         'organization.reservation_fields',
         'organization.fund_providers.fund',
         'organization.fund_providers.product_exclusions',
-        'bookmarks',
         'reservation_fields',
         'fund_provider_chats.messages',
     ];
@@ -32,7 +32,6 @@ class ProviderProductResource extends ProductResource
         'photos' => MediaResource::class,
         'product_category' => ProductCategoryResource::class,
         'organization' => OrganizationBasicResource::class,
-        'organization.offices' => OfficeResource::class,
         'sponsor_organization' => OrganizationBasicResource::class,
     ];
 
@@ -45,7 +44,17 @@ class ProviderProductResource extends ProductResource
     public function toArray(Request $request): array
     {
         return [
-            ...$this->getProductData($request, $this->resource, false),
+            ...parent::toArray($request),
+            'total_amount' => $this->resource->total_amount,
+            'sold_amount' => $this->resource->countSoldCached(),
+            'stock_amount' => $this->resource->stock_amount,
+            'unlimited_stock' => $this->resource->unlimited_stock,
+            'reserved_amount' => $this->resource->countReservedCached(),
+            'price_discount' => $this->resource->price_discount
+                ? currency_format($this->resource->price_discount)
+                : null,
+            'photos' => MediaResource::collection($this->resource->photos),
+            ...$this->providerReservationSettings($this->resource),
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'unseen_messages' => $this->hasUnseenMessages(),
@@ -58,13 +67,11 @@ class ProviderProductResource extends ProductResource
                         )
                     );
                 })
-                ->map(fn (FundProvider $fundProvider) => $fundProvider->fund?->only([
-                    'id', 'name', 'state',
-                ]))
+                ->map(fn (FundProvider $fundProvider) => $fundProvider->fund?->only(['id']))
                 ->filter()
                 ->values(),
             ...$this->resource->only([
-                'sku', 'ean',
+                'sku', 'ean', 'description', 'product_category_id', ...self::SCANNING_AND_RESERVATION_FIELDS,
             ]),
             ...$this->extraPaymentConfigs(),
         ];
@@ -88,5 +95,23 @@ class ProviderProductResource extends ProductResource
         return $this->resource->only([
             'reservation_extra_payments',
         ]);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    private function providerReservationSettings(Product $product): array
+    {
+        return [
+            ...$product->only([
+                'reservation_phone', 'reservation_fields_enabled', 'reservation_address', 'reservation_birth_date',
+                'reservation_note', 'reservation_note_text', 'reservation_fields_config',
+            ]),
+            'reservation_fields' => ReservationFieldResource::collection($product->reservation_fields),
+            'available_reservation_fields_for_provider' => ReservationFieldResource::collection(
+                $product->getAvailableReservationFieldsForProvider(),
+            ),
+        ];
     }
 }

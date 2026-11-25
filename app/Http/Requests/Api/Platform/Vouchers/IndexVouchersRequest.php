@@ -27,7 +27,7 @@ class IndexVouchersRequest extends BaseFormRequest
         return [
             'state' => 'nullable|in:' . implode(',', Voucher::STATES),
             'per_page' => $this->perPageRule(),
-            'product_id' => 'nullable|exists:products,id',
+            'product_id' => 'nullable|integer|exists:products,id',
             'type' => 'nullable|in:' . implode(',', Voucher::TYPES),
             'archived' => 'nullable|boolean',
             'allow_reimbursements' => 'nullable|boolean',
